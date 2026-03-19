@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-19T11:45:50Z",
+  "generated_at": "2026-03-19T11:47:17Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 58,
-      "pending": 3875,
+      "failed": 56,
+      "pending": 3877,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 58,
-        "pending": 3852,
+        "failed": 56,
+        "pending": 3854,
         "success": 1326
       }
     },
@@ -68,7 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 21,
+        "failed": 19,
+        "pending": 2,
         "success": 54,
         "total": 75
       },
@@ -534,15 +535,6 @@
           "next_retry_at": "2026-03-26T09:46:35Z"
         },
         {
-          "id": "rubygems:cassandra",
-          "name": "cassandra",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-19T09:57:45Z"
-        },
-        {
           "id": "rubygems:cdo",
           "name": "cdo",
           "ecosystem": "rubygems",
@@ -858,6 +850,15 @@
           "next_retry_at": "2026-03-22T21:13:06Z"
         },
         {
+          "id": "rubygems:lemon",
+          "name": "lemon",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-22T03:46:24Z"
+        },
+        {
           "id": "rubygems:less",
           "name": "less",
           "ecosystem": "rubygems",
@@ -865,15 +866,6 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-19T15:57:32Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 125,
-          "next_retry_at": "1733-12-08T09:59:18Z"
         },
         {
           "id": "rubygems:lsof",
@@ -930,15 +922,6 @@
           "next_retry_at": "2026-03-24T12:36:10Z"
         },
         {
-          "id": "npm:protoc-gen-js",
-          "name": "protoc-gen-js",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-19T11:15:53Z"
-        },
-        {
           "id": "npm:q",
           "name": "q",
           "ecosystem": "npm",
@@ -966,6 +949,15 @@
           "next_retry_at": "2026-03-26T08:00:01Z"
         },
         {
+          "id": "pypi:vllm",
+          "name": "vllm",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-26T11:46:24Z"
+        },
+        {
           "id": "npm:wartremover",
           "name": "wartremover",
           "ecosystem": "npm",
@@ -973,15 +965,6 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-21T10:06:25Z"
-        },
-        {
-          "id": "npm:webdav",
-          "name": "webdav",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-19T10:06:07Z"
         }
       ],
       "pending": [
@@ -4152,6 +4135,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:cassandra",
+          "name": "cassandra",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-19T09:57:45Z"
         },
         {
           "id": "homebrew:cassandra-reaper",
@@ -13167,15 +13159,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:lemon",
-          "name": "lemon",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-19T06:37:50Z"
-        },
-        {
           "id": "homebrew:leoafarias/fvm/fvm",
           "name": "leoafarias/fvm/fvm",
           "ecosystem": "homebrew",
@@ -13230,6 +13213,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 125,
+          "next_retry_at": "1733-12-08T09:59:18Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -20056,6 +20048,15 @@
           "failure_count": 0
         },
         {
+          "id": "npm:protoc-gen-js",
+          "name": "protoc-gen-js",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-19T11:15:53Z"
+        },
+        {
           "id": "homebrew:protonpass/tap/pass-cli",
           "name": "protonpass/tap/pass-cli",
           "ecosystem": "homebrew",
@@ -26827,15 +26828,6 @@
           "failure_count": 0
         },
         {
-          "id": "pypi:vllm",
-          "name": "vllm",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-19T06:31:31Z"
-        },
-        {
           "id": "homebrew:vmware-tanzu/carvel/vendir",
           "name": "vmware-tanzu/carvel/vendir",
           "ecosystem": "homebrew",
@@ -27212,6 +27204,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:webdav",
+          "name": "webdav",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-19T10:06:07Z"
         },
         {
           "id": "rubygems:webhook",
