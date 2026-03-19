@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-19T13:07:12Z",
+  "updated_at": "2026-03-19T14:17:26Z",
   "entries": [
     {
       "name": "node",
@@ -6806,11 +6806,11 @@
       "name": "cdo",
       "source": "rubygems:cdo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-03-19T12:16:00.020914581Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-03-26T14:17:26.162257179Z"
     },
     {
       "name": "cdogs-sdl",
@@ -10236,11 +10236,11 @@
       "name": "datasette",
       "source": "npm:datasette",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-03-19T12:16:00.020914581Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-03-26T14:17:26.162257179Z"
     },
     {
       "name": "datawire/blackbird/telepresence",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 126,
