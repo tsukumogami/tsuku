@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-19T15:59:07Z",
+  "generated_at": "2026-03-19T16:00:32Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -68,21 +68,19 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
-        "pending": 1,
+        "failed": 21,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 32,
-        "pending": 47,
+        "failed": 30,
+        "pending": 49,
         "success": 9,
         "total": 89
       }
@@ -562,15 +560,6 @@
           "next_retry_at": "2026-03-26T02:07:22Z"
         },
         {
-          "id": "rubygems:chisel",
-          "name": "chisel",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-19T15:41:15Z"
-        },
-        {
           "id": "rubygems:chroma",
           "name": "chroma",
           "ecosystem": "rubygems",
@@ -769,6 +758,15 @@
           "next_retry_at": "2026-03-24T04:40:56Z"
         },
         {
+          "id": "rubygems:htmldoc",
+          "name": "htmldoc",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-24T23:59:43Z"
+        },
+        {
           "id": "rubygems:httpx",
           "name": "httpx",
           "ecosystem": "rubygems",
@@ -859,22 +857,13 @@
           "next_retry_at": "2026-03-22T03:46:24Z"
         },
         {
-          "id": "rubygems:less",
-          "name": "less",
-          "ecosystem": "rubygems",
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-19T15:57:32Z"
-        },
-        {
-          "id": "rubygems:lsof",
-          "name": "lsof",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-19T14:36:47Z"
+          "failure_count": 128,
+          "next_retry_at": "1733-12-08T16:12:26Z"
         },
         {
           "id": "npm:mailhog",
@@ -974,6 +963,15 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-21T10:06:25Z"
+        },
+        {
+          "id": "npm:webdav",
+          "name": "webdav",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-22T07:59:43Z"
         }
       ],
       "pending": [
@@ -4482,6 +4480,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:chisel",
+          "name": "chisel",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-19T15:41:15Z"
         },
         {
           "id": "homebrew:chisel-tunnel",
@@ -11078,15 +11085,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:htmldoc",
-          "name": "htmldoc",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-19T12:43:29Z"
-        },
-        {
           "id": "homebrew:htmlhint",
           "name": "htmlhint",
           "ecosystem": "homebrew",
@@ -13189,6 +13187,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:less",
+          "name": "less",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-19T15:57:32Z"
+        },
+        {
           "id": "homebrew:lesspipe",
           "name": "lesspipe",
           "ecosystem": "homebrew",
@@ -13222,15 +13229,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 126,
-          "next_retry_at": "1733-12-08T13:19:55Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -14588,6 +14586,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:lsof",
+          "name": "lsof",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-19T14:36:47Z"
         },
         {
           "id": "homebrew:lspmux",
@@ -27204,15 +27211,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:webdav",
-          "name": "webdav",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-19T10:06:07Z"
         },
         {
           "id": "rubygems:webhook",
