@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-19T14:16:48Z",
+  "generated_at": "2026-03-19T14:18:05Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 56,
-      "pending": 3877,
+      "failed": 57,
+      "pending": 3876,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 56,
-        "pending": 3854,
+        "failed": 57,
+        "pending": 3853,
         "success": 1326
       }
     },
@@ -68,20 +68,21 @@
         "total": 1
       },
       "npm": {
-        "failed": 19,
-        "pending": 2,
+        "failed": 20,
+        "pending": 1,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 31,
-        "pending": 48,
+        "failed": 32,
+        "pending": 47,
         "success": 9,
         "total": 89
       }
@@ -543,6 +544,15 @@
           "next_retry_at": "2026-03-26T13:07:12Z"
         },
         {
+          "id": "rubygems:cdo",
+          "name": "cdo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-26T14:17:26Z"
+        },
+        {
           "id": "npm:chainsaw",
           "name": "chainsaw",
           "ecosystem": "npm",
@@ -604,6 +614,15 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-21T04:33:12Z"
+        },
+        {
+          "id": "npm:datasette",
+          "name": "datasette",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-26T14:17:26Z"
         },
         {
           "id": "rubygems:dict",
@@ -847,15 +866,6 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-19T15:57:32Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 126,
-          "next_retry_at": "1733-12-08T13:19:55Z"
         },
         {
           "id": "rubygems:lsof",
@@ -4227,15 +4237,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:cdo",
-          "name": "cdo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-19T12:16:00Z"
-        },
-        {
           "id": "homebrew:ceres-solver",
           "name": "ceres-solver",
           "ecosystem": "homebrew",
@@ -6007,15 +6008,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:datasette",
-          "name": "datasette",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-19T12:16:00Z"
         },
         {
           "id": "homebrew:datawire/blackbird/telepresence",
@@ -13230,6 +13222,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 126,
+          "next_retry_at": "1733-12-08T13:19:55Z"
         },
         {
           "id": "homebrew:libaacs",
