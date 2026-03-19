@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-19T09:46:35Z",
+  "updated_at": "2026-03-19T11:46:24Z",
   "entries": [
     {
       "name": "node",
@@ -6606,7 +6606,7 @@
       "name": "cassandra",
       "source": "rubygems:cassandra",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -25056,11 +25056,11 @@
       "name": "lemon",
       "source": "rubygems:lemon",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-19T06:37:50.691329551Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-22T03:46:24.88054804Z"
     },
     {
       "name": "lensfun",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 125,
@@ -38126,7 +38126,7 @@
       "name": "protoc-gen-js",
       "source": "npm:protoc-gen-js",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
@@ -50306,11 +50306,11 @@
       "name": "vllm",
       "source": "pypi:vllm",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-03-19T06:31:31.215983728Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-03-26T11:46:24.88054804Z"
     },
     {
       "name": "vmware-tanzu/carvel/vendir",
@@ -50986,7 +50986,7 @@
       "name": "webdav",
       "source": "npm:webdav",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
