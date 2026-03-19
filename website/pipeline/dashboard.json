@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-19T02:06:33Z",
+  "generated_at": "2026-03-19T02:08:04Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 58,
-      "pending": 3875,
+      "failed": 59,
+      "pending": 3874,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 58,
-        "pending": 3852,
+        "failed": 59,
+        "pending": 3851,
         "success": 1326
       }
     },
@@ -74,8 +74,7 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -553,6 +552,15 @@
           "next_retry_at": "2026-03-19T12:16:00Z"
         },
         {
+          "id": "npm:chainsaw",
+          "name": "chainsaw",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-26T02:07:22Z"
+        },
+        {
           "id": "rubygems:chisel",
           "name": "chisel",
           "ecosystem": "rubygems",
@@ -805,6 +813,15 @@
           "next_retry_at": "2026-03-21T08:22:08Z"
         },
         {
+          "id": "rubygems:influxdb",
+          "name": "influxdb",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-21T18:07:22Z"
+        },
+        {
           "id": "rubygems:ipfs",
           "name": "ipfs",
           "ecosystem": "rubygems",
@@ -821,15 +838,6 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-22T00:14:04Z"
-        },
-        {
-          "id": "rubygems:kor",
-          "name": "kor",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-19T02:06:40Z"
         },
         {
           "id": "npm:lcm",
@@ -857,6 +865,15 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-19T15:57:32Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 122,
+          "next_retry_at": "1733-12-08T02:20:05Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -911,15 +928,6 @@
           "category": "install_failed",
           "failure_count": 9,
           "next_retry_at": "2026-03-25T18:06:25Z"
-        },
-        {
-          "id": "npm:pocketbase",
-          "name": "pocketbase",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-18T23:19:35Z"
         },
         {
           "id": "npm:protoc-gen-js",
@@ -4330,15 +4338,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:chainsaw",
-          "name": "chainsaw",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-18T21:00:32Z"
         },
         {
           "id": "homebrew:changie",
@@ -11539,15 +11538,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:influxdb",
-          "name": "influxdb",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-18T21:13:06Z"
-        },
-        {
           "id": "homebrew:influxdb-cli",
           "name": "influxdb-cli",
           "ecosystem": "homebrew",
@@ -12801,6 +12791,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:kor",
+          "name": "kor",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-19T02:06:40Z"
+        },
+        {
           "id": "homebrew:kotlin",
           "name": "kotlin",
           "ecosystem": "homebrew",
@@ -13240,15 +13239,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 120,
-          "next_retry_at": "1733-12-07T20:53:39Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -19581,6 +19571,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:pocketbase",
+          "name": "pocketbase",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-18T23:19:35Z"
         },
         {
           "id": "homebrew:poco",
