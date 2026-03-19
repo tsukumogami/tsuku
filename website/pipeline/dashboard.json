@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-19T06:03:37Z",
+  "generated_at": "2026-03-19T06:04:50Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 59,
-      "pending": 3874,
+      "failed": 57,
+      "pending": 3876,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 59,
-        "pending": 3851,
+        "failed": 57,
+        "pending": 3853,
         "success": 1326
       }
     },
@@ -68,7 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 21,
+        "failed": 20,
+        "pending": 1,
         "success": 54,
         "total": 75
       },
@@ -80,8 +81,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 33,
-        "pending": 46,
+        "failed": 32,
+        "pending": 47,
         "success": 9,
         "total": 89
       }
@@ -462,6 +463,15 @@
       ],
       "failed": [
         {
+          "id": "rubygems:amp",
+          "name": "amp",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-03-26T06:04:13Z"
+        },
+        {
           "id": "rubygems:arturo",
           "name": "arturo",
           "ecosystem": "rubygems",
@@ -505,15 +515,6 @@
           "category": "install_failed",
           "failure_count": 9,
           "next_retry_at": "2026-03-25T18:06:25Z"
-        },
-        {
-          "id": "rubygems:bullet",
-          "name": "bullet",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-19T04:38:13Z"
         },
         {
           "id": "rubygems:bup",
@@ -577,15 +578,6 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-20T02:41:46Z"
-        },
-        {
-          "id": "npm:countdown",
-          "name": "countdown",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-19T04:38:13Z"
         },
         {
           "id": "rubygems:cowsay",
@@ -867,13 +859,13 @@
           "next_retry_at": "2026-03-19T15:57:32Z"
         },
         {
-          "id": "rubygems:libnotify",
-          "name": "libnotify",
-          "ecosystem": "rubygems",
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-19T05:12:03Z"
+          "failure_count": 124,
+          "next_retry_at": "1733-12-08T06:16:56Z"
         },
         {
           "id": "rubygems:lsof",
@@ -955,15 +947,6 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-20T12:43:48Z"
-        },
-        {
-          "id": "pypi:tctl",
-          "name": "tctl",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-19T04:38:13Z"
         },
         {
           "id": "pypi:vllm",
@@ -1710,15 +1693,6 @@
           "priority": 3,
           "category": "generation_failed",
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:amp",
-          "name": "amp",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-03-19T04:20:14Z"
         },
         {
           "id": "homebrew:amplitude/ampli/ampli",
@@ -3864,6 +3838,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:bullet",
+          "name": "bullet",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-19T04:38:13Z"
+        },
+        {
           "id": "homebrew:bulletty",
           "name": "bulletty",
           "ecosystem": "homebrew",
@@ -5418,6 +5401,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:countdown",
+          "name": "countdown",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-19T04:38:13Z"
         },
         {
           "id": "homebrew:coursier",
@@ -13241,15 +13233,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 122,
-          "next_retry_at": "1733-12-08T02:20:05Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -13579,6 +13562,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:libnotify",
+          "name": "libnotify",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-19T05:12:03Z"
         },
         {
           "id": "homebrew:libolm",
@@ -24970,6 +24962,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:tctl",
+          "name": "tctl",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-19T04:38:13Z"
         },
         {
           "id": "homebrew:tdlib",
