@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-19T13:06:29Z",
+  "generated_at": "2026-03-19T13:07:59Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -74,15 +74,14 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 32,
-        "pending": 47,
+        "failed": 31,
+        "pending": 48,
         "success": 9,
         "total": 89
       }
@@ -535,13 +534,13 @@
           "next_retry_at": "2026-03-26T09:46:35Z"
         },
         {
-          "id": "rubygems:cdo",
-          "name": "cdo",
+          "id": "rubygems:cassandra",
+          "name": "cassandra",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-19T12:16:00Z"
+          "failure_count": 9,
+          "next_retry_at": "2026-03-26T13:07:12Z"
         },
         {
           "id": "npm:chainsaw",
@@ -605,15 +604,6 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-21T04:33:12Z"
-        },
-        {
-          "id": "npm:datasette",
-          "name": "datasette",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-19T12:16:00Z"
         },
         {
           "id": "rubygems:dict",
@@ -760,15 +750,6 @@
           "next_retry_at": "2026-03-24T04:40:56Z"
         },
         {
-          "id": "rubygems:htmldoc",
-          "name": "htmldoc",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-19T12:43:29Z"
-        },
-        {
           "id": "rubygems:httpx",
           "name": "httpx",
           "ecosystem": "rubygems",
@@ -868,6 +849,15 @@
           "next_retry_at": "2026-03-19T15:57:32Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 126,
+          "next_retry_at": "1733-12-08T13:19:55Z"
+        },
+        {
           "id": "rubygems:lsof",
           "name": "lsof",
           "ecosystem": "rubygems",
@@ -920,6 +910,15 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-24T12:36:10Z"
+        },
+        {
+          "id": "npm:protoc-gen-js",
+          "name": "protoc-gen-js",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-24T21:07:12Z"
         },
         {
           "id": "npm:q",
@@ -4137,15 +4136,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:cassandra",
-          "name": "cassandra",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-19T09:57:45Z"
-        },
-        {
           "id": "homebrew:cassandra-reaper",
           "name": "cassandra-reaper",
           "ecosystem": "homebrew",
@@ -4235,6 +4225,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:cdo",
+          "name": "cdo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-19T12:16:00Z"
         },
         {
           "id": "homebrew:ceres-solver",
@@ -6008,6 +6007,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:datasette",
+          "name": "datasette",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-19T12:16:00Z"
         },
         {
           "id": "homebrew:datawire/blackbird/telepresence",
@@ -11078,6 +11086,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:htmldoc",
+          "name": "htmldoc",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-19T12:43:29Z"
+        },
+        {
           "id": "homebrew:htmlhint",
           "name": "htmlhint",
           "ecosystem": "homebrew",
@@ -13213,15 +13230,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 125,
-          "next_retry_at": "1733-12-08T09:59:18Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -20046,15 +20054,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:protoc-gen-js",
-          "name": "protoc-gen-js",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-19T11:15:53Z"
         },
         {
           "id": "homebrew:protonpass/tap/pass-cli",
