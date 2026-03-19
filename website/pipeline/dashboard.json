@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-19T09:46:08Z",
+  "generated_at": "2026-03-19T09:47:15Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 55,
-      "pending": 3878,
+      "failed": 58,
+      "pending": 3875,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 55,
-        "pending": 3855,
+        "failed": 58,
+        "pending": 3852,
         "success": 1326
       }
     },
@@ -39,8 +39,8 @@
       },
       "crates.io": {
         "excluded": 5,
-        "failed": 2,
-        "pending": 75,
+        "failed": 3,
+        "pending": 74,
         "success": 23,
         "total": 105
       },
@@ -73,15 +73,15 @@
         "total": 75
       },
       "pypi": {
-        "failed": 1,
-        "pending": 2,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 31,
-        "pending": 48,
+        "failed": 32,
+        "pending": 47,
         "success": 9,
         "total": 89
       }
@@ -498,6 +498,15 @@
           "next_retry_at": "2026-03-25T09:58:44Z"
         },
         {
+          "id": "crates.io:basis_universal",
+          "name": "basis_universal",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-26T09:46:35Z"
+        },
+        {
           "id": "rubygems:bettercap",
           "name": "bettercap",
           "ecosystem": "rubygems",
@@ -514,6 +523,15 @@
           "category": "install_failed",
           "failure_count": 9,
           "next_retry_at": "2026-03-26T08:00:01Z"
+        },
+        {
+          "id": "rubygems:bup",
+          "name": "bup",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-26T09:46:35Z"
         },
         {
           "id": "rubygems:cassandra",
@@ -847,6 +865,15 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-19T15:57:32Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 125,
+          "next_retry_at": "1733-12-08T09:59:18Z"
         },
         {
           "id": "rubygems:lsof",
@@ -3111,15 +3138,6 @@
           "failure_count": 1
         },
         {
-          "id": "crates.io:basis_universal",
-          "name": "basis_universal",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-19T06:31:31Z"
-        },
-        {
           "id": "homebrew:bastet",
           "name": "bastet",
           "ecosystem": "homebrew",
@@ -3847,15 +3865,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:bup",
-          "name": "bup",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-19T06:31:31Z"
         },
         {
           "id": "homebrew:burp",
@@ -13221,15 +13230,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 124,
-          "next_retry_at": "1733-12-08T06:16:56Z"
         },
         {
           "id": "homebrew:libaacs",
