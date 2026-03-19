@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-19T21:39:55Z",
+  "updated_at": "2026-03-19T23:34:43Z",
   "entries": [
     {
       "name": "node",
@@ -12396,11 +12396,11 @@
       "name": "e2b",
       "source": "npm:e2b",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-03-19T20:51:27.142867755Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-03-26T23:34:43.622294132Z"
     },
     {
       "name": "e2fsprogs",
@@ -20626,11 +20626,11 @@
       "name": "httpx",
       "source": "rubygems:httpx",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-19T18:01:34.373605194Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-25T07:34:43.622294132Z"
     },
     {
       "name": "httpyac",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 130,
-      "next_retry_at": "1733-12-08T20:04:34.312434396Z"
+      "failure_count": 132,
+      "next_retry_at": "1733-12-08T23:47:26.767518324Z"
     },
     {
       "name": "libaacs",
