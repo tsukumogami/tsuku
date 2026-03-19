@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-19T11:46:24Z",
+  "updated_at": "2026-03-19T13:07:12Z",
   "entries": [
     {
       "name": "node",
@@ -6606,11 +6606,11 @@
       "name": "cassandra",
       "source": "rubygems:cassandra",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-03-19T09:57:45.939528894Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-03-26T13:07:12.638501451Z"
     },
     {
       "name": "cassandra-reaper",
@@ -6806,7 +6806,7 @@
       "name": "cdo",
       "source": "rubygems:cdo",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -10236,7 +10236,7 @@
       "name": "datasette",
       "source": "npm:datasette",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -20486,7 +20486,7 @@
       "name": "htmldoc",
       "source": "rubygems:htmldoc",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 125,
-      "next_retry_at": "1733-12-08T09:59:18.577584648Z"
+      "failure_count": 126,
+      "next_retry_at": "1733-12-08T13:19:55.783725643Z"
     },
     {
       "name": "libaacs",
@@ -38126,11 +38126,11 @@
       "name": "protoc-gen-js",
       "source": "npm:protoc-gen-js",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-19T11:15:53.4073845Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-24T21:07:12.638501451Z"
     },
     {
       "name": "protolint",
