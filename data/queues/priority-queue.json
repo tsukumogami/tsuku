@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-18T22:36:47Z",
+  "updated_at": "2026-03-19T02:07:22Z",
   "entries": [
     {
       "name": "node",
@@ -7036,11 +7036,11 @@
       "name": "chainsaw",
       "source": "npm:chainsaw",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-03-18T21:00:32.808923258Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-03-26T02:07:22.348207529Z"
     },
     {
       "name": "chamber",
@@ -21416,11 +21416,11 @@
       "name": "influxdb",
       "source": "rubygems:influxdb",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-18T21:13:06.849119967Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-21T18:07:22.348207529Z"
     },
     {
       "name": "influxdb-cli",
@@ -23966,7 +23966,7 @@
       "name": "kor",
       "source": "rubygems:kor",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 120,
-      "next_retry_at": "1733-12-07T20:53:39.653276559Z"
+      "failure_count": 122,
+      "next_retry_at": "1733-12-08T02:20:05.493431721Z"
     },
     {
       "name": "libaacs",
@@ -37216,7 +37216,7 @@
       "name": "pocketbase",
       "source": "npm:pocketbase",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
