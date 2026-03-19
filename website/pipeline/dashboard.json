@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-19T04:35:40Z",
+  "generated_at": "2026-03-19T04:36:58Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -68,13 +68,13 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
-        "pending": 1,
+        "failed": 21,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -462,15 +462,6 @@
       ],
       "failed": [
         {
-          "id": "rubygems:amp",
-          "name": "amp",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-03-19T04:20:14Z"
-        },
-        {
           "id": "rubygems:arturo",
           "name": "arturo",
           "ecosystem": "rubygems",
@@ -840,6 +831,15 @@
           "next_retry_at": "2026-03-22T00:14:04Z"
         },
         {
+          "id": "rubygems:kor",
+          "name": "kor",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-21T20:36:10Z"
+        },
+        {
           "id": "npm:lcm",
           "name": "lcm",
           "ecosystem": "npm",
@@ -865,15 +865,6 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-19T15:57:32Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 122,
-          "next_retry_at": "1733-12-08T02:20:05Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -928,6 +919,15 @@
           "category": "install_failed",
           "failure_count": 9,
           "next_retry_at": "2026-03-25T18:06:25Z"
+        },
+        {
+          "id": "npm:pocketbase",
+          "name": "pocketbase",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-24T12:36:10Z"
         },
         {
           "id": "npm:protoc-gen-js",
@@ -1710,6 +1710,15 @@
           "priority": 3,
           "category": "generation_failed",
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:amp",
+          "name": "amp",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-19T04:20:14Z"
         },
         {
           "id": "homebrew:amplitude/ampli/ampli",
@@ -12791,15 +12800,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:kor",
-          "name": "kor",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-19T02:06:40Z"
-        },
-        {
           "id": "homebrew:kotlin",
           "name": "kotlin",
           "ecosystem": "homebrew",
@@ -13239,6 +13239,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 122,
+          "next_retry_at": "1733-12-08T02:20:05Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -19571,15 +19580,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:pocketbase",
-          "name": "pocketbase",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-18T23:19:35Z"
         },
         {
           "id": "homebrew:poco",
