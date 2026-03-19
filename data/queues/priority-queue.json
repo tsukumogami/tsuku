@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-19T14:17:26Z",
+  "updated_at": "2026-03-19T15:59:43Z",
   "entries": [
     {
       "name": "node",
@@ -7356,7 +7356,7 @@
       "name": "chisel",
       "source": "rubygems:chisel",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -20486,11 +20486,11 @@
       "name": "htmldoc",
       "source": "rubygems:htmldoc",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-19T12:43:29.772151528Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-24T23:59:43.258823001Z"
     },
     {
       "name": "htmlhint",
@@ -25116,7 +25116,7 @@
       "name": "less",
       "source": "rubygems:less",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 126,
-      "next_retry_at": "1733-12-08T13:19:55.783725643Z"
+      "failure_count": 128,
+      "next_retry_at": "1733-12-08T16:12:26.404047193Z"
     },
     {
       "name": "libaacs",
@@ -28016,7 +28016,7 @@
       "name": "lsof",
       "source": "rubygems:lsof",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
@@ -50986,11 +50986,11 @@
       "name": "webdav",
       "source": "npm:webdav",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-19T10:06:07.836872867Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-22T07:59:43.258823001Z"
     },
     {
       "name": "webhook",
