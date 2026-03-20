@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-20T05:57:11Z",
+  "updated_at": "2026-03-20T07:50:59Z",
   "entries": [
     {
       "name": "node",
@@ -10876,7 +10876,7 @@
       "name": "dict",
       "source": "rubygems:dict",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 134,
-      "next_retry_at": "1733-12-09T04:32:35.254784316Z"
+      "failure_count": 136,
+      "next_retry_at": "1733-12-09T08:03:42.120771466Z"
     },
     {
       "name": "libaacs",
@@ -28546,11 +28546,11 @@
       "name": "mailcatcher",
       "source": "rubygems:mailcatcher",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-13T00:05:27.843288251Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-20T23:50:58.975547274Z"
     },
     {
       "name": "mailhog",
