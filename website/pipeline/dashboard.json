@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-20T04:19:19Z",
+  "generated_at": "2026-03-20T04:20:39Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 59,
-      "pending": 3874,
+      "failed": 60,
+      "pending": 3873,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 59,
-        "pending": 3851,
+        "failed": 60,
+        "pending": 3850,
         "success": 1326
       }
     },
@@ -73,8 +73,7 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -579,15 +578,6 @@
           "next_retry_at": "2026-03-26T21:39:55Z"
         },
         {
-          "id": "rubygems:cog",
-          "name": "cog",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-20T02:41:46Z"
-        },
-        {
           "id": "npm:countdown",
           "name": "countdown",
           "ecosystem": "npm",
@@ -876,6 +866,15 @@
           "next_retry_at": "2026-03-22T11:51:51Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 134,
+          "next_retry_at": "1733-12-09T04:32:35Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -883,6 +882,15 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-21T10:01:05Z"
+        },
+        {
+          "id": "rubygems:lsof",
+          "name": "lsof",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-21T12:19:52Z"
         },
         {
           "id": "npm:mailhog",
@@ -5150,6 +5158,15 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:cog",
+          "name": "cog",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-20T02:41:46Z"
         },
         {
           "id": "homebrew:coin3d",
@@ -13232,15 +13249,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 132,
-          "next_retry_at": "1733-12-08T23:47:26Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -14587,15 +14595,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:lsof",
-          "name": "lsof",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-19T14:36:47Z"
         },
         {
           "id": "homebrew:lspmux",
