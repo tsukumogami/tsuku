@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-20T09:45:09Z",
+  "updated_at": "2026-03-20T11:36:20Z",
   "entries": [
     {
       "name": "node",
@@ -11566,7 +11566,7 @@
       "name": "doggo",
       "source": "rubygems:doggo",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 136,
-      "next_retry_at": "1733-12-09T08:03:42.120771466Z"
+      "failure_count": 138,
+      "next_retry_at": "1733-12-09T11:49:03.513624164Z"
     },
     {
       "name": "libaacs",
@@ -29486,11 +29486,11 @@
       "name": "mdv",
       "source": "rubygems:mdv",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-12T20:05:27.843288251Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-20T19:36:20.368399972Z"
     },
     {
       "name": "mecab",
