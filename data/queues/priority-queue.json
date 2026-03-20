@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-20T02:01:05Z",
+  "updated_at": "2026-03-20T04:19:52Z",
   "entries": [
     {
       "name": "node",
@@ -8626,7 +8626,7 @@
       "name": "cog",
       "source": "rubygems:cog",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 132,
-      "next_retry_at": "1733-12-08T23:47:26.767518324Z"
+      "failure_count": 134,
+      "next_retry_at": "1733-12-09T04:32:35.254784316Z"
     },
     {
       "name": "libaacs",
@@ -28016,11 +28016,11 @@
       "name": "lsof",
       "source": "rubygems:lsof",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-19T14:36:47.599139085Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-21T12:19:52.109560124Z"
     },
     {
       "name": "lspmux",
