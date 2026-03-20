@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-20T14:06:23Z",
+  "generated_at": "2026-03-20T14:07:27Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 60,
-      "pending": 3873,
+      "failed": 62,
+      "pending": 3871,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 60,
-        "pending": 3850,
+        "failed": 62,
+        "pending": 3848,
         "success": 1326
       }
     },
@@ -74,15 +74,14 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 35,
-        "pending": 44,
+        "failed": 36,
+        "pending": 43,
         "success": 9,
         "total": 89
       }
@@ -670,15 +669,6 @@
           "next_retry_at": "2026-03-26T23:34:43Z"
         },
         {
-          "id": "npm:ent",
-          "name": "ent",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-20T13:09:28Z"
-        },
-        {
           "id": "rubygems:exiv2",
           "name": "exiv2",
           "ecosystem": "rubygems",
@@ -787,6 +777,15 @@
           "next_retry_at": "2026-03-25T07:34:43Z"
         },
         {
+          "id": "rubygems:hydra",
+          "name": "hydra",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-25T22:06:47Z"
+        },
+        {
           "id": "rubygems:hyperkit",
           "name": "hyperkit",
           "ecosystem": "rubygems",
@@ -866,6 +865,15 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-22T11:51:51Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 140,
+          "next_retry_at": "1733-12-09T14:19:30Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -965,6 +973,15 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-25T10:01:05Z"
+        },
+        {
+          "id": "npm:sigstore",
+          "name": "sigstore",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-25T22:06:47Z"
         },
         {
           "id": "pypi:tctl",
@@ -7423,6 +7440,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:ent",
+          "name": "ent",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-20T13:09:28Z"
+        },
+        {
           "id": "homebrew:env0/terratag/terratag",
           "name": "env0/terratag/terratag",
           "ecosystem": "homebrew",
@@ -11245,15 +11271,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:hydra",
-          "name": "hydra",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-20T12:43:48Z"
-        },
-        {
           "id": "homebrew:hyfetch",
           "name": "hyfetch",
           "ecosystem": "homebrew",
@@ -13249,15 +13266,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 138,
-          "next_retry_at": "1733-12-09T11:49:03Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -23289,15 +23297,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:sigstore",
-          "name": "sigstore",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-20T12:43:48Z"
         },
         {
           "id": "homebrew:sile",
