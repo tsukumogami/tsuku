@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-20T18:51:12Z",
+  "updated_at": "2026-03-20T20:35:55Z",
   "entries": [
     {
       "name": "node",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 142,
-      "next_retry_at": "1733-12-09T17:53:49.15587809Z"
+      "failure_count": 144,
+      "next_retry_at": "1733-12-09T20:48:38.793210027Z"
     },
     {
       "name": "libaacs",
@@ -29486,7 +29486,7 @@
       "name": "mdv",
       "source": "rubygems:mdv",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -29546,7 +29546,7 @@
       "name": "medusa",
       "source": "rubygems:medusa",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
@@ -29606,7 +29606,7 @@
       "name": "memcached",
       "source": "rubygems:memcached",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -30426,11 +30426,11 @@
       "name": "mktorrent",
       "source": "rubygems:mktorrent",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 1,
+      "next_retry_at": "2026-03-20T21:35:55.647985835Z"
     },
     {
       "name": "mkvtomp4",
