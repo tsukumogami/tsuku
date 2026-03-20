@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-20T11:35:53Z",
+  "generated_at": "2026-03-20T11:37:03Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 61,
-      "pending": 3872,
+      "failed": 62,
+      "pending": 3871,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 61,
-        "pending": 3849,
+        "failed": 62,
+        "pending": 3848,
         "success": 1326
       }
     },
@@ -73,8 +73,7 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -642,15 +641,6 @@
           "next_retry_at": "2026-03-26T21:39:55Z"
         },
         {
-          "id": "rubygems:doggo",
-          "name": "doggo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-20T10:12:17Z"
-        },
-        {
           "id": "rubygems:dug",
           "name": "dug",
           "ecosystem": "rubygems",
@@ -876,6 +866,15 @@
           "next_retry_at": "2026-03-22T11:51:51Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 138,
+          "next_retry_at": "1733-12-09T11:49:03Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -919,6 +918,15 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-23T06:37:50Z"
+        },
+        {
+          "id": "rubygems:mdv",
+          "name": "mdv",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-20T19:36:20Z"
         },
         {
           "id": "npm:mongoose",
@@ -6687,6 +6695,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:doggo",
+          "name": "doggo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-20T10:12:17Z"
         },
         {
           "id": "homebrew:dokku/repo/dokku",
@@ -13250,15 +13267,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 136,
-          "next_retry_at": "1733-12-09T08:03:42Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -15403,15 +15411,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:mdv",
-          "name": "mdv",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-12T20:05:27Z"
         },
         {
           "id": "homebrew:mecab",
