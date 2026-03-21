@@ -1,5 +1,7 @@
 # Binaries
 /tsuku
+/tsuku-test
+/test/functional/tsuku-test
 
 # Dev environment data directory (created by make build)
 .tsuku-dev/
