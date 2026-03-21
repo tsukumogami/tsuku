@@ -751,7 +751,8 @@ func TestSatisfies_LoadDirect_SkipsSatisfiesFallback(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected resolveFromChain to return error for non-existent recipe")
 	}
-	if !strings.Contains(err.Error(), "not found") {
+	errMsg := strings.ToLower(err.Error())
+	if !strings.Contains(errMsg, "not found") && !strings.Contains(errMsg, "404") {
 		t.Errorf("expected error about not found, got: %v", err)
 	}
 }

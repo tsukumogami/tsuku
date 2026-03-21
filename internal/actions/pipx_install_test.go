@@ -357,6 +357,7 @@ func TestParseWheelFilename(t *testing.T) {
 			}
 			if got == nil {
 				t.Fatalf("parseWheelFilename(%q) = nil, want %+v", tc.filename, tc.want)
+				return
 			}
 			if got.name != tc.want.name || got.version != tc.want.version ||
 				got.python != tc.want.python || got.abi != tc.want.abi ||

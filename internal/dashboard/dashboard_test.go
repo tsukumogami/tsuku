@@ -955,6 +955,7 @@ func TestLoadDisambiguationsFromDir(t *testing.T) {
 
 	if status == nil {
 		t.Fatal("status should not be nil")
+		return
 	}
 
 	if status.Total != 2 {
@@ -1306,6 +1307,7 @@ func TestLoadHealth_withControlFileAndRecords(t *testing.T) {
 	}
 	if health == nil {
 		t.Fatal("health should not be nil")
+		return
 	}
 
 	// Check circuit breaker state was loaded
@@ -1432,6 +1434,7 @@ func TestLoadHealth_missingControlFile(t *testing.T) {
 	// Health should still be returned (from metrics records)
 	if health == nil {
 		t.Fatal("health should not be nil when records exist")
+		return
 	}
 
 	// Ecosystems map should be empty (no control file)
@@ -1470,6 +1473,7 @@ func TestLoadHealth_controlFileOnly(t *testing.T) {
 
 	if health == nil {
 		t.Fatal("health should not be nil with control file")
+		return
 	}
 
 	// Should have ecosystem data from control file
@@ -1499,6 +1503,7 @@ func TestLoadHealth_runInfoFields(t *testing.T) {
 	ri := health.LastRun
 	if ri == nil {
 		t.Fatal("LastRun should not be nil")
+		return
 	}
 
 	// Verify RunInfo field mapping -- BatchID is derived from timestamp, not the raw batch_id

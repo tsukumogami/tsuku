@@ -90,6 +90,12 @@ func NewGitHubClient(cache *CacheManager) *GitHubClient {
 	}
 }
 
+// RawClient returns the unauthenticated HTTP client used for raw content
+// downloads. Used by manifest discovery to probe for manifest files.
+func (gc *GitHubClient) RawClient() *http.Client {
+	return gc.rawClient
+}
+
 // newGitHubClientWithHTTP creates a GitHubClient with caller-supplied HTTP
 // clients and cache. This is intended for testing.
 func newGitHubClientWithHTTP(apiClient, rawClient *http.Client, cache *CacheManager, hasToken bool) *GitHubClient {
@@ -109,7 +115,7 @@ func (gc *GitHubClient) ListRecipes(ctx context.Context, owner, repo string) (*S
 }
 
 // ForceListRecipes is like ListRecipes but bypasses the cache freshness check.
-// Used by DistributedProvider.Refresh() to force a re-fetch of the directory listing.
+// Used by GitHubBackingStore.ForceRefresh() to force a re-fetch of the directory listing.
 func (gc *GitHubClient) ForceListRecipes(ctx context.Context, owner, repo string) (*SourceMeta, error) {
 	return gc.listRecipes(ctx, owner, repo, true)
 }

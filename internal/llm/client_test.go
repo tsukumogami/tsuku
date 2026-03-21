@@ -554,6 +554,7 @@ func TestGenerateRecipe_Integration(t *testing.T) {
 
 	if pattern == nil {
 		t.Fatal("expected non-nil pattern")
+		return
 	}
 
 	if len(pattern.Mappings) == 0 {
@@ -570,6 +571,7 @@ func TestGenerateRecipe_Integration(t *testing.T) {
 
 	if usage == nil {
 		t.Fatal("expected non-nil usage")
+		return
 	}
 
 	if usage.InputTokens == 0 {

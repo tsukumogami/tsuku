@@ -380,6 +380,76 @@ directory can't have two `mytool` symlinks, so PATH conflicts remain unsolved.
 And the user experience degrades -- `tsuku update mytool` becomes ambiguous,
 requiring `tsuku update alice/tools/mytool` for every operation.
 
+### Decision 8: Provider unification approach
+
+**Context:** After implementing Decisions 1-7 (PR #2160), the codebase has four
+separate `RecipeProvider` implementations, two independent cache systems, and
+provider-specific logic scattered across the loader and CLI. The `RecipeProvider`
+interface works, but each implementation duplicates satisfies parsing, layout
+bucketing, and HTTP client setup. `GetFromSource()` has 50+ lines of per-source-type
+switch logic, and the loader uses 5 type assertions to concrete provider types. The
+original issue (#2073) called for a manifest format that "could unify how embedded,
+central, and local registries are parsed," but that unification wasn't delivered.
+
+**Chosen: Manifest-Driven Single Provider.**
+
+Replace all four concrete providers (`EmbeddedProvider`, `LocalProvider`,
+`CentralRegistryProvider`, `DistributedProvider`) with one `RegistryProvider` type
+parameterized by:
+
+1. **Manifest** -- declares layout (`flat` or `grouped`), optional `index_url` for
+   pre-built recipe indexes, and source identity.
+2. **BackingStore interface** -- three implementations:
+   - `MemoryStore`: in-memory map from `go:embed` (replaces EmbeddedProvider)
+   - `FSStore`: local filesystem reads (replaces LocalProvider)
+   - `HTTPStore`: HTTP fetching with built-in disk cache (replaces both
+     CentralRegistryProvider and DistributedProvider)
+
+The manifest lives inside the registry directory (e.g., `.tsuku-recipes/manifest.json`).
+tsuku probes for `.tsuku-recipes/` first, then `recipes/` as fallback. The manifest
+doesn't declare the directory name -- tsuku discovers it.
+
+```json
+{
+  "layout": "grouped",
+  "index_url": "https://tsuku.dev/recipes.json"
+}
+```
+
+Both fields are optional. No manifest means flat layout, no index.
+
+The central registry's manifest is baked into the binary at compile time (layout:
+grouped, index_url: tsuku.dev/recipes.json). The embedded recipes are another baked-in
+registry with a `MemoryStore`. Both process through the same `RegistryProvider` code
+path as any third-party registry.
+
+`HTTPStore` owns its disk cache because caching is transport-specific -- TTL, eviction,
+and conditional requests (ETag/If-Modified-Since) all depend on the HTTP backend. This
+replaces both `internal/registry/cache*.go` and `internal/distributed/cache.go`.
+
+The `update-registry` command uses a `CacheIntrospectable` optional interface instead
+of casting to `*CentralRegistryProvider`. This matches the existing optional-interface
+pattern (`SatisfiesProvider`, `RefreshableProvider`).
+
+This eliminates:
+- ~500 lines of duplicated code across providers and cache systems
+- All 5 type assertions in the loader
+- The 60-line `GetFromSource()` switch (becomes ~5 lines)
+- Two separate cache implementations
+
+*Alternative rejected: Layered Storage Abstraction.* Separates storage (byte
+fetching) from registry logic with cache as composable middleware. Creates a design
+tension: HTTP conditional requests don't fit a generic cache middleware. Either the
+middleware becomes transport-aware (defeating its purpose) or HTTPStore handles its
+own caching (duplicating the middleware). The extra layer adds complexity without
+solving a problem we actually have.
+
+*Alternative rejected: Progressive Extraction.* Keeps four provider types, extracts
+shared helpers (satisfies parsing, bucketing). Doesn't deliver a single code path --
+`GetFromSource()` switch stays, two cache systems persist, new registry types still
+need new provider code. Too conservative for the stated goal given no users and
+acceptable breaking changes.
+
 ## Decision Outcome
 
 The seven decisions above compose into a layered system:
@@ -648,6 +718,38 @@ with their own `CacheManager` instance and independent size limits.
 
 ## Implementation Approach
 
+### Phases 1-5: Distributed Recipes (Complete)
+
+Delivered by PR #2160. See the PLAN doc for details.
+
+### Phase 6: BackingStore interface + MemoryStore + FSStore
+
+Define the `BackingStore` interface. Port embedded and local providers to
+`MemoryStore` and `FSStore`. Low risk -- these are the simplest providers with no
+caching or HTTP.
+
+### Phase 7: Unified disk cache + HTTPStore
+
+Merge the two cache implementations (`internal/registry/cache*.go` and
+`internal/distributed/cache.go`) into one. Build `HTTPStore` with configurable TTL,
+size limits, and eviction. Port the central registry provider.
+
+### Phase 8: Port distributed provider + manifest discovery
+
+Port the distributed provider to `HTTPStore`. Add manifest fetching and directory
+probing logic (`.tsuku-recipes/` then `recipes/`).
+
+### Phase 9: Loader cleanup
+
+Remove type assertions from loader. Collapse `GetFromSource()`. Move
+provider-specific logic from `install_distributed.go` behind the interface. Add
+`CacheIntrospectable` optional interface for `update-registry`.
+
+### Original Phases (Reference)
+
+<details>
+<summary>Original implementation phases from the distributed recipes design</summary>
+
 ### Phase 1: RecipeProvider interface and Loader refactor
 
 Extract the interface. Wrap local, embedded, and central registry sources in
@@ -708,6 +810,8 @@ Deliverables:
 - `cmd/tsuku/recipes.go` -- list from all registered sources
 - `cmd/tsuku/update_registry.go` -- refresh distributed sources
 
+</details>
+
 ## Security Considerations
 
 **Trust model.** Distributed recipes can execute arbitrary shell commands via the
@@ -742,6 +846,16 @@ Implementer requirements:
   source (e.g., "Installing from owner/repo for the first time. Distributed
   recipes can execute arbitrary commands with your user permissions. Continue?
   [y/N]"). Accept `-y` flag to skip for scripted use.
+
+**Manifest index_url.** The `index_url` field in a third-party manifest is
+author-declared. tsuku fetches a URL from an untrusted source. Mitigations:
+- HTTPS-only (reject HTTP URLs)
+- The index provides search metadata and satisfies mappings only, not recipe
+  content. Recipe bytes always come from the registry directory itself.
+- Satisfies mappings from untrusted indexes could misdirect tool resolution but
+  can't inject code (the recipe still comes from the registry)
+- A hostname allowlist was considered but deferred. HTTPS-only plus the limited
+  scope of index data provides adequate protection for now.
 
 **Strict mode.** Teams and CI environments should set `strict_registries = true`
 to prevent auto-registration. Document this in the `tsuku registry` help text

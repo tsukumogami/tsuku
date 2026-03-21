@@ -40,6 +40,7 @@ func TestCargoBuilder_Probe(t *testing.T) {
 		}
 		if result == nil {
 			t.Fatal("Probe() returned nil, want non-nil")
+			return
 		}
 		if result.Source != "ripgrep" {
 			t.Errorf("Probe() Source = %q, want %q", result.Source, "ripgrep")
@@ -80,6 +81,7 @@ func TestCargoBuilder_Probe_NoRepository(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("Probe() returned nil")
+		return
 	}
 	if result.HasRepository {
 		t.Error("Probe() HasRepository = true, want false")
@@ -113,6 +115,7 @@ func TestPyPIBuilder_Probe(t *testing.T) {
 		}
 		if result == nil {
 			t.Fatal("Probe() returned nil, want non-nil")
+			return
 		}
 		if result.Source != "black" {
 			t.Errorf("Probe() Source = %q, want %q", result.Source, "black")
@@ -153,6 +156,7 @@ func TestPyPIBuilder_Probe_NoProjectURLs(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("Probe() returned nil")
+		return
 	}
 	if result.HasRepository {
 		t.Error("Probe() HasRepository = true, want false")
@@ -187,6 +191,7 @@ func TestNpmBuilder_Probe(t *testing.T) {
 		}
 		if result == nil {
 			t.Fatal("Probe() returned nil, want non-nil")
+			return
 		}
 		if result.Source != "prettier" {
 			t.Errorf("Probe() Source = %q, want %q", result.Source, "prettier")
@@ -234,6 +239,7 @@ func TestNpmBuilder_Probe_DownloadsAPIFails(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("Probe() returned nil")
+		return
 	}
 	if result.Downloads != 0 {
 		t.Errorf("Probe() Downloads = %d, want 0 (API failed)", result.Downloads)
@@ -264,6 +270,7 @@ func TestGemBuilder_Probe(t *testing.T) {
 		}
 		if result == nil {
 			t.Fatal("Probe() returned nil, want non-nil")
+			return
 		}
 		if result.Source != "rubocop" {
 			t.Errorf("Probe() Source = %q, want %q", result.Source, "rubocop")
@@ -302,6 +309,7 @@ func TestGoBuilder_Probe(t *testing.T) {
 		}
 		if result == nil {
 			t.Fatal("Probe() returned nil, want non-nil")
+			return
 		}
 		if result.Source != "github.com/spf13/cobra" {
 			t.Errorf("Probe() Source = %q, want %q", result.Source, "github.com/spf13/cobra")
@@ -340,6 +348,7 @@ func TestCPANBuilder_Probe(t *testing.T) {
 		}
 		if result == nil {
 			t.Fatal("Probe() returned nil, want non-nil")
+			return
 		}
 		if result.Source != "App-Ack" {
 			t.Errorf("Probe() Source = %q, want %q", result.Source, "App-Ack")
@@ -353,6 +362,7 @@ func TestCPANBuilder_Probe(t *testing.T) {
 		}
 		if result == nil {
 			t.Fatal("Probe() returned nil, want non-nil (:: should normalize to -)")
+			return
 		}
 		if result.Source != "App-Ack" {
 			t.Errorf("Probe() Source = %q, want %q", result.Source, "App-Ack")
@@ -391,6 +401,7 @@ func TestCaskBuilder_Probe(t *testing.T) {
 		}
 		if result == nil {
 			t.Fatal("Probe() returned nil, want non-nil")
+			return
 		}
 		if result.Source != "visual-studio-code" {
 			t.Errorf("Probe() Source = %q, want %q", result.Source, "visual-studio-code")
@@ -432,6 +443,7 @@ func TestHomebrewBuilder_Probe(t *testing.T) {
 		}
 		if result == nil {
 			t.Fatal("Probe() returned nil, want non-nil")
+			return
 		}
 		if result.Source != "jq" {
 			t.Errorf("Probe() Source = %q, want %q", result.Source, "jq")

@@ -364,6 +364,7 @@ func TestFlattenDependencies_PreservesSubtree(t *testing.T) {
 	}
 	if rustDep == nil {
 		t.Fatal("rust dep not found in results")
+		return
 	}
 	if len(rustDep.Plan.Dependencies) != 1 {
 		t.Fatalf("rust plan should preserve 1 dependency, got %d", len(rustDep.Plan.Dependencies))

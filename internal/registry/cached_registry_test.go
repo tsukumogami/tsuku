@@ -47,6 +47,7 @@ func TestCachedRegistry_FreshCacheHit(t *testing.T) {
 	// CacheInfo should indicate fresh cache
 	if info == nil {
 		t.Fatal("expected CacheInfo, got nil")
+		return
 	}
 	if info.IsStale {
 		t.Error("expected IsStale=false for fresh cache hit")
@@ -104,6 +105,7 @@ func TestCachedRegistry_ExpiredCacheRefresh(t *testing.T) {
 	// CacheInfo should indicate fresh content
 	if info == nil {
 		t.Fatal("expected CacheInfo, got nil")
+		return
 	}
 	if info.IsStale {
 		t.Error("expected IsStale=false after successful refresh")
@@ -179,6 +181,7 @@ func TestCachedRegistry_StaleFallbackWithinMaxStale(t *testing.T) {
 	// CacheInfo should indicate stale content
 	if info == nil {
 		t.Fatal("expected CacheInfo, got nil")
+		return
 	}
 	if !info.IsStale {
 		t.Error("expected IsStale=true for stale fallback")
@@ -360,6 +363,7 @@ func TestCachedRegistry_CacheMissNetworkSuccess(t *testing.T) {
 	// CacheInfo should indicate fresh content
 	if info == nil {
 		t.Fatal("expected CacheInfo, got nil")
+		return
 	}
 	if info.IsStale {
 		t.Error("expected IsStale=false for fresh fetch")
@@ -670,6 +674,7 @@ func TestCachedRegistry_RefreshNotCached(t *testing.T) {
 
 	if detail == nil {
 		t.Fatal("expected detail even on error")
+		return
 	}
 	if detail.Status != "error" {
 		t.Errorf("expected status 'error', got %q", detail.Status)

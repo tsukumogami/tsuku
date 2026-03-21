@@ -275,6 +275,7 @@ func TestLoadBaseline_ValidFile(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("expected baseline, got nil")
+		return
 	}
 	if result.Provider != "test" {
 		t.Errorf("provider = %q, want %q", result.Provider, "test")

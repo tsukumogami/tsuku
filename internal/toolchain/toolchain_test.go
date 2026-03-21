@@ -26,6 +26,7 @@ func TestGetInfo(t *testing.T) {
 			if tc.shouldExist {
 				if info == nil {
 					t.Fatalf("GetInfo(%q) returned nil, want non-nil", tc.ecosystem)
+					return
 				}
 				if info.Binary != tc.wantBinary {
 					t.Errorf("Binary = %q, want %q", info.Binary, tc.wantBinary)

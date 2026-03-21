@@ -117,6 +117,7 @@ func TestDeriveContainerSpec(t *testing.T) {
 			// Validate fields
 			if got == nil {
 				t.Fatalf("DeriveContainerSpec() = nil, want non-nil")
+				return
 			}
 
 			if got.LinuxFamily != tt.wantFamily {

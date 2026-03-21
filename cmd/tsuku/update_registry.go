@@ -35,12 +35,12 @@ Use --dry-run to see what would be refreshed without making network requests.`,
 			printInfo("Registry not configured.")
 			return
 		}
-		rp, ok := p.(*recipe.CentralRegistryProvider)
-		if !ok {
+		ra, ok := p.(recipe.RegistryAccessor)
+		if !ok || ra.Registry() == nil {
 			printInfo("Registry not configured.")
 			return
 		}
-		reg := rp.Registry()
+		reg := ra.Registry()
 
 		// Create CachedRegistry with configured TTL
 		ttl := config.GetRecipeCacheTTL()

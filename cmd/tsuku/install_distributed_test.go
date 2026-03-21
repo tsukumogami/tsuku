@@ -84,6 +84,7 @@ func TestParseDistributedName(t *testing.T) {
 			}
 			if result == nil {
 				t.Fatalf("expected non-nil for %q", tt.input)
+				return
 			}
 			if result.Source != tt.wantSource {
 				t.Errorf("Source = %q, want %q", result.Source, tt.wantSource)
@@ -390,6 +391,7 @@ func TestInstallYesFlag(t *testing.T) {
 	f := installCmd.Flags().Lookup("yes")
 	if f == nil {
 		t.Fatal("expected --yes flag on install command")
+		return
 	}
 	if f.Shorthand != "y" {
 		t.Errorf("--yes shorthand = %q, want %q", f.Shorthand, "y")

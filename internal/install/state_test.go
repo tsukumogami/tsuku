@@ -531,6 +531,7 @@ func TestManager_New(t *testing.T) {
 
 	if mgr == nil {
 		t.Fatal("New() returned nil")
+		return
 	}
 
 	if mgr.config != cfg {
@@ -934,6 +935,7 @@ func TestStateManager_GetLibraryState(t *testing.T) {
 
 	if libState == nil {
 		t.Fatal("GetLibraryState() returned nil for existing library")
+		return
 	}
 
 	if len(libState.UsedBy) != 1 {
@@ -2428,6 +2430,7 @@ func TestNewPlanFromExecutor(t *testing.T) {
 
 	if plan == nil {
 		t.Fatal("NewPlanFromExecutor returned nil")
+		return
 	}
 	if plan.FormatVersion != 1 {
 		t.Errorf("FormatVersion = %d, want 1", plan.FormatVersion)
@@ -2498,6 +2501,7 @@ func TestStateManager_GetCachedPlan_CacheHit(t *testing.T) {
 
 	if plan == nil {
 		t.Fatal("GetCachedPlan() returned nil, want plan")
+		return
 	}
 
 	if plan.Tool != "gh" {

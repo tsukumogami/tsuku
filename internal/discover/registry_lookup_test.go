@@ -39,6 +39,7 @@ func TestRegistryLookup_Hit(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("expected result, got nil")
+		return
 	}
 	if result.Builder != "github" {
 		t.Errorf("got builder %q, want %q", result.Builder, "github")

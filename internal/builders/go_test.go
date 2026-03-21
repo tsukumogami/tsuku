@@ -869,6 +869,7 @@ v0.40.0
 	}
 	if result == nil {
 		t.Fatal("Probe() returned nil for existing module")
+		return
 	}
 
 	if result.Source != "github.com/jesseduffield/lazygit" {
@@ -938,6 +939,7 @@ func TestGoBuilder_Probe_VersionListFetchFails(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("Probe() should return result even when version list fetch fails")
+		return
 	}
 
 	// Should have HasRepository but VersionCount should be 0
@@ -984,6 +986,7 @@ func TestGoBuilder_Probe_NoOrigin(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("Probe() returned nil for existing module")
+		return
 	}
 
 	if result.HasRepository {
@@ -1033,6 +1036,7 @@ func TestGoBuilder_Probe_UppercaseModule(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("Probe() returned nil for uppercase module")
+		return
 	}
 
 	if result.Source != "github.com/User/Repo" {
