@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-21T21:23:45Z",
+  "updated_at": "2026-03-21T21:54:07Z",
   "entries": [
     {
       "name": "node",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 154,
-      "next_retry_at": "1733-12-10T16:45:37.410897067Z"
+      "failure_count": 155,
+      "next_retry_at": "1733-12-10T22:06:50.948709421Z"
     },
     {
       "name": "libaacs",
@@ -29486,11 +29486,11 @@
       "name": "mdv",
       "source": "rubygems:mdv",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-21T14:33:13.662874756Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-23T05:54:07.803485229Z"
     },
     {
       "name": "mecab",
