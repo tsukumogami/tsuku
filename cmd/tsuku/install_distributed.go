@@ -32,8 +32,15 @@ type distributedInstallArgs struct {
 //   - owner/repo:recipe@version   -> source=owner/repo, recipe=recipe, version=version
 //
 // Returns nil if the name doesn't contain "/" (not a distributed name).
+// Also returns nil for path traversal patterns (e.g. ../etc/passwd) so they
+// fall through to the regular recipe lookup path and produce a not-found error.
 func parseDistributedName(name string) *distributedInstallArgs {
 	if !strings.Contains(name, "/") {
+		return nil
+	}
+
+	// Reject path traversal attempts before treating the name as owner/repo.
+	if strings.Contains(name, "..") {
 		return nil
 	}
 

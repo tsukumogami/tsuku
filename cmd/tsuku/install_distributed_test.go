@@ -71,6 +71,16 @@ func TestParseDistributedName(t *testing.T) {
 			wantRecipe: "toolbox",
 			wantVer:    "3.14.159",
 		},
+		{
+			name:    "path traversal",
+			input:   "../etc/passwd",
+			wantNil: true,
+		},
+		{
+			name:    "path traversal with extra segments",
+			input:   "../../etc/shadow",
+			wantNil: true,
+		},
 	}
 
 	for _, tt := range tests {
