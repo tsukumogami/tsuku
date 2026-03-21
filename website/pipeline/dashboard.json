@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-21T09:35:22Z",
+  "generated_at": "2026-03-21T09:36:32Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 63,
-      "pending": 3870,
+      "failed": 64,
+      "pending": 3869,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 63,
-        "pending": 3847,
+        "failed": 64,
+        "pending": 3846,
         "success": 1326
       }
     },
@@ -73,8 +73,7 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -795,13 +794,13 @@
           "next_retry_at": "2026-03-25T22:06:47Z"
         },
         {
-          "id": "rubygems:imgproxy",
-          "name": "imgproxy",
+          "id": "rubygems:hyperkit",
+          "name": "hyperkit",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-21T08:22:08Z"
+          "failure_count": 8,
+          "next_retry_at": "2026-03-26T17:35:53Z"
         },
         {
           "id": "rubygems:influxdb",
@@ -865,6 +864,15 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-22T11:51:51Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 150,
+          "next_retry_at": "1733-12-10T09:48:36Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -11278,15 +11286,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:hyperkit",
-          "name": "hyperkit",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-21T07:08:13Z"
-        },
-        {
           "id": "homebrew:hypre",
           "name": "hypre",
           "ecosystem": "homebrew",
@@ -11553,6 +11552,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:imgproxy",
+          "name": "imgproxy",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-21T08:22:08Z"
         },
         {
           "id": "homebrew:imlib2",
@@ -13275,15 +13283,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 148,
-          "next_retry_at": "1733-12-10T05:56:59Z"
         },
         {
           "id": "homebrew:libaacs",
