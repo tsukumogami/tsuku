@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-21T04:11:10Z",
+  "updated_at": "2026-03-21T05:44:16Z",
   "entries": [
     {
       "name": "node",
@@ -9326,7 +9326,7 @@
       "name": "cql",
       "source": "rubygems:cql",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 146,
-      "next_retry_at": "1733-12-10T02:07:49.625685904Z"
+      "failure_count": 148,
+      "next_retry_at": "1733-12-10T05:56:59.143334946Z"
     },
     {
       "name": "libaacs",
@@ -29596,11 +29596,11 @@
       "name": "meli",
       "source": "rubygems:meli",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-20T21:41:06.010653898Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-21T13:44:15.998110754Z"
     },
     {
       "name": "memcached",
