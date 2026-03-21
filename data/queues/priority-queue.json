@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-21T11:27:53Z",
+  "updated_at": "2026-03-21T12:48:23Z",
   "entries": [
     {
       "name": "node",
@@ -21756,11 +21756,11 @@
       "name": "ipfs",
       "source": "rubygems:ipfs",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-21T11:20:15.326933859Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-26T20:48:23.295236837Z"
     },
     {
       "name": "ipinfo-cli",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 150,
-      "next_retry_at": "1733-12-10T09:48:36.982880718Z"
+      "failure_count": 152,
+      "next_retry_at": "1733-12-10T13:01:06.440461029Z"
     },
     {
       "name": "libaacs",
@@ -28016,7 +28016,7 @@
       "name": "lsof",
       "source": "rubygems:lsof",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -50766,11 +50766,11 @@
       "name": "wartremover",
       "source": "npm:wartremover",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-21T10:06:25.291115332Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-26T20:48:23.295236837Z"
     },
     {
       "name": "wasm-bindgen",
