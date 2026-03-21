@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-21T16:32:21Z",
+  "generated_at": "2026-03-21T16:33:34Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 60,
-      "pending": 3873,
+      "failed": 62,
+      "pending": 3871,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 60,
-        "pending": 3850,
+        "failed": 62,
+        "pending": 3848,
         "success": 1326
       }
     },
@@ -68,14 +68,12 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
-        "pending": 1,
+        "failed": 21,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -724,6 +722,15 @@
           "next_retry_at": "2026-03-23T12:35:02Z"
         },
         {
+          "id": "npm:got",
+          "name": "got",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-28T16:32:54Z"
+        },
+        {
           "id": "rubygems:gsl",
           "name": "gsl",
           "ecosystem": "rubygems",
@@ -868,6 +875,15 @@
           "next_retry_at": "2026-03-22T11:51:51Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 154,
+          "next_retry_at": "1733-12-10T16:45:37Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -875,6 +891,15 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-24T06:31:35Z"
+        },
+        {
+          "id": "rubygems:lsof",
+          "name": "lsof",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-24T08:32:54Z"
         },
         {
           "id": "rubygems:mailcatcher",
@@ -902,15 +927,6 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-23T06:37:50Z"
-        },
-        {
-          "id": "rubygems:mdv",
-          "name": "mdv",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-21T14:33:13Z"
         },
         {
           "id": "npm:mongoose",
@@ -9922,15 +9938,6 @@
           "failure_count": 0
         },
         {
-          "id": "npm:got",
-          "name": "got",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-21T13:19:42Z"
-        },
-        {
           "id": "homebrew:gpa",
           "name": "gpa",
           "ecosystem": "homebrew",
@@ -13251,15 +13258,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 152,
-          "next_retry_at": "1733-12-10T13:01:06Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -14608,15 +14606,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:lsof",
-          "name": "lsof",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-21T12:19:52Z"
-        },
-        {
           "id": "homebrew:lspmux",
           "name": "lspmux",
           "ecosystem": "homebrew",
@@ -15413,6 +15402,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:mdv",
+          "name": "mdv",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-21T14:33:13Z"
         },
         {
           "id": "homebrew:mecab",
