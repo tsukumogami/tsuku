@@ -242,8 +242,7 @@ Test installation in a sandbox container:
 				// in installWithDependencies can find it during the install flow.
 				loader.CacheRecipe(dArgs.RecipeName, r)
 
-				// Use opaque "distributed" tag for telemetry (never send owner/repo)
-				if err := runInstallWithTelemetry(dArgs.RecipeName, resolveVersion, "distributed", true, "", telemetryClient); err != nil {
+				if err := runInstallWithTelemetry(dArgs.RecipeName, resolveVersion, versionConstraint, true, "", telemetryClient); err != nil {
 					handleInstallError(err)
 				}
 
