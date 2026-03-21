@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-21T21:18:05Z",
+  "generated_at": "2026-03-21T21:46:45Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 62,
-      "pending": 3871,
+      "failed": 58,
+      "pending": 3875,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 62,
-        "pending": 3848,
+        "failed": 58,
+        "pending": 3852,
         "success": 1326
       }
     },
@@ -68,19 +68,21 @@
         "total": 1
       },
       "npm": {
-        "failed": 21,
+        "failed": 20,
+        "pending": 1,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 35,
-        "pending": 44,
+        "failed": 33,
+        "pending": 46,
         "success": 9,
         "total": 89
       }
@@ -749,15 +751,6 @@
           "next_retry_at": "2026-03-23T19:50:10Z"
         },
         {
-          "id": "npm:hasura-cli",
-          "name": "hasura-cli",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-21T18:11:17Z"
-        },
-        {
           "id": "rubygems:hercules",
           "name": "hercules",
           "ecosystem": "rubygems",
@@ -812,15 +805,6 @@
           "next_retry_at": "2026-03-26T19:27:53Z"
         },
         {
-          "id": "rubygems:influxdb",
-          "name": "influxdb",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-21T18:07:22Z"
-        },
-        {
           "id": "rubygems:ipfs",
           "name": "ipfs",
           "ecosystem": "rubygems",
@@ -837,15 +821,6 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-22T00:14:04Z"
-        },
-        {
-          "id": "rubygems:kor",
-          "name": "kor",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-21T20:36:10Z"
         },
         {
           "id": "npm:lcm",
@@ -873,15 +848,6 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-22T11:51:51Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 154,
-          "next_retry_at": "1733-12-10T16:45:37Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -10764,6 +10730,15 @@
           "failure_count": 0
         },
         {
+          "id": "npm:hasura-cli",
+          "name": "hasura-cli",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-21T18:11:17Z"
+        },
+        {
           "id": "homebrew:hatch",
           "name": "hatch",
           "ecosystem": "homebrew",
@@ -11562,6 +11537,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:influxdb",
+          "name": "influxdb",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-21T18:07:22Z"
         },
         {
           "id": "homebrew:influxdb-cli",
@@ -12817,6 +12801,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:kor",
+          "name": "kor",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-21T20:36:10Z"
+        },
+        {
           "id": "homebrew:kotlin",
           "name": "kotlin",
           "ecosystem": "homebrew",
@@ -13256,6 +13249,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 154,
+          "next_retry_at": "1733-12-10T16:45:37Z"
         },
         {
           "id": "homebrew:libaacs",
