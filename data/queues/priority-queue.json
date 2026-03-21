@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-21T14:31:35Z",
+  "updated_at": "2026-03-21T16:32:54Z",
   "entries": [
     {
       "name": "node",
@@ -18186,11 +18186,11 @@
       "name": "got",
       "source": "npm:got",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-03-21T13:19:42.990648469Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-03-28T16:32:54.265672875Z"
     },
     {
       "name": "gotests",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 152,
-      "next_retry_at": "1733-12-10T13:01:06.440461029Z"
+      "failure_count": 154,
+      "next_retry_at": "1733-12-10T16:45:37.410897067Z"
     },
     {
       "name": "libaacs",
@@ -28016,11 +28016,11 @@
       "name": "lsof",
       "source": "rubygems:lsof",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-21T12:19:52.109560124Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-24T08:32:54.265672875Z"
     },
     {
       "name": "lspmux",
@@ -29486,7 +29486,7 @@
       "name": "mdv",
       "source": "rubygems:mdv",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
