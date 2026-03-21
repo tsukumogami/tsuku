@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-21T14:30:58Z",
+  "generated_at": "2026-03-21T14:32:14Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 62,
-      "pending": 3871,
+      "failed": 60,
+      "pending": 3873,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 62,
-        "pending": 3848,
+        "failed": 60,
+        "pending": 3850,
         "success": 1326
       }
     },
@@ -68,12 +68,14 @@
         "total": 1
       },
       "npm": {
-        "failed": 21,
+        "failed": 20,
+        "pending": 1,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -722,15 +724,6 @@
           "next_retry_at": "2026-03-23T12:35:02Z"
         },
         {
-          "id": "npm:got",
-          "name": "got",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-21T13:19:42Z"
-        },
-        {
           "id": "rubygems:gsl",
           "name": "gsl",
           "ecosystem": "rubygems",
@@ -875,13 +868,13 @@
           "next_retry_at": "2026-03-22T11:51:51Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
+          "id": "rubygems:libnotify",
+          "name": "libnotify",
+          "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 152,
-          "next_retry_at": "1733-12-10T13:01:06Z"
+          "failure_count": 7,
+          "next_retry_at": "2026-03-24T06:31:35Z"
         },
         {
           "id": "rubygems:mailcatcher",
@@ -918,15 +911,6 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-21T14:33:13Z"
-        },
-        {
-          "id": "rubygems:meli",
-          "name": "meli",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-21T13:44:15Z"
         },
         {
           "id": "npm:mongoose",
@@ -9938,6 +9922,15 @@
           "failure_count": 0
         },
         {
+          "id": "npm:got",
+          "name": "got",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-21T13:19:42Z"
+        },
+        {
           "id": "homebrew:gpa",
           "name": "gpa",
           "ecosystem": "homebrew",
@@ -13258,6 +13251,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 152,
+          "next_retry_at": "1733-12-10T13:01:06Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -13587,15 +13589,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:libnotify",
-          "name": "libnotify",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-21T10:01:05Z"
         },
         {
           "id": "homebrew:libolm",
@@ -15485,6 +15478,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:meli",
+          "name": "meli",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-21T13:44:15Z"
         },
         {
           "id": "rubygems:memcached",
