@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-21T01:54:43Z",
+  "generated_at": "2026-03-21T01:55:48Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 62,
-      "pending": 3871,
+      "failed": 63,
+      "pending": 3870,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 62,
-        "pending": 3848,
+        "failed": 63,
+        "pending": 3847,
         "success": 1326
       }
     },
@@ -73,8 +73,7 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -876,6 +875,15 @@
           "next_retry_at": "2026-03-22T11:51:51Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 146,
+          "next_retry_at": "1733-12-10T02:07:49Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -892,15 +900,6 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-21T12:19:52Z"
-        },
-        {
-          "id": "rubygems:mailcatcher",
-          "name": "mailcatcher",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-20T23:50:58Z"
         },
         {
           "id": "npm:mailhog",
@@ -928,6 +927,15 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-21T14:33:13Z"
+        },
+        {
+          "id": "rubygems:medusa",
+          "name": "medusa",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-21T09:55:06Z"
         },
         {
           "id": "npm:mongoose",
@@ -13259,15 +13267,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 144,
-          "next_retry_at": "1733-12-09T20:48:38Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -14889,6 +14888,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:mailcatcher",
+          "name": "mailcatcher",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-20T23:50:58Z"
+        },
+        {
           "id": "homebrew:mailsy",
           "name": "mailsy",
           "ecosystem": "homebrew",
@@ -15440,15 +15448,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:medusa",
-          "name": "medusa",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-20T19:46:59Z"
         },
         {
           "id": "homebrew:megacmd",
