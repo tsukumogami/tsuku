@@ -2,8 +2,8 @@
   "pr_status": "implementing",
   "design_doc": "docs/plans/PLAN-distributed-recipes.md",
   "branch": "impl/distributed-recipes",
-  "pr_number": null,
-  "integrity_hash": "sha256:878a9682c24878d40b97eb59366e56b8659690210b61d64e5e1663eecbd10ffe",
+  "pr_number": 2166,
+  "integrity_hash": "sha256:142d330cb0d54bb1da57e626d8fa5d2b4bbd39c7c56844ada6a1359ef2ecb49d",
   "issues": [
     {
       "number": 1,
@@ -352,10 +352,10 @@
     {
       "number": 13,
       "title": "test(distributed): end-to-end validation with released binary",
-      "status": "pending",
+      "status": "in_progress",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "task",
       "dependencies": [
         11,
         12,

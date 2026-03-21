@@ -1,6 +1,6 @@
 ---
 schema: plan/v1
-status: Active
+status: Done
 execution_mode: single-pr
 upstream: docs/designs/current/DESIGN-distributed-recipes.md
 milestone: "Distributed Recipes"
@@ -11,11 +11,11 @@ issue_count: 19
 
 ## Status
 
-Active
+Done
 
 ## Scope Summary
 
-Extract a RecipeProvider interface that all recipe sources implement, add source tracking to installed tool state, and build a distributed provider that fetches recipes from GitHub repositories via HTTP (Issues 1-10, 12: complete). Unify all four provider implementations behind a single RegistryProvider type configured by a manifest and BackingStore interface (Issues 14-18: complete, PR #2162 awaiting merge). Release v0.5.3 with distributed registry support, land koto's `.tsuku-recipes/` directory with CI integration, and validate end-to-end (Issues 11, 13, 19: remaining).
+All 19 issues complete. Distributed recipes shipped in v0.5.3 (registry unification, distributed provider, install flow, source tracking) and v0.5.4 (version constraint bug fix). koto's `.tsuku-recipes/` directory landed with CI integration (PRs #57, #61). E2E validation passed 12/12 scenarios.
 
 ## Decomposition Strategy
 
@@ -301,21 +301,21 @@ Telemetry:
 **Acceptance Criteria:**
 
 Distributed recipes:
-- [ ] `.tsuku-recipes/` directory exists at the root of the koto repository
-- [ ] At least one valid recipe TOML file is present for a koto tool
-- [ ] Recipe TOML files use the same schema as central registry recipes
-- [ ] Recipe files follow naming conventions: kebab-case filename matching the recipe name
-- [ ] Each recipe has a valid `[version]` section with an appropriate version provider
-- [ ] No manifest file or additional configuration required
+- [x] `.tsuku-recipes/` directory exists at the root of the koto repository
+- [x] At least one valid recipe TOML file is present for a koto tool
+- [x] Recipe TOML files use the same schema as central registry recipes
+- [x] Recipe files follow naming conventions: kebab-case filename matching the recipe name
+- [x] Each recipe has a valid `[version]` section with an appropriate version provider
+- [x] No manifest file or additional configuration required
 - [x] PR submitted to `tsukumogami/koto`
 
 CI integration (from Issue 20):
-- [ ] Koto CI installs tsuku v0.5.3 (or later) with distributed registry support
-- [ ] Koto CI runs `tsuku install tsukumogami/koto` successfully
-- [ ] Integration tests pass using the distributed-recipe-installed koto binary
-- [ ] No dependency on central registry for koto tool installation
+- [x] Koto CI installs tsuku v0.5.3 (or later) with distributed registry support
+- [x] Koto CI runs `tsuku install tsukumogami/koto` successfully
+- [x] Integration tests pass using the distributed-recipe-installed koto binary
+- [x] No dependency on central registry for koto tool installation
 
-**Current status:** koto PR #57 open. Blocked on tsuku v0.5.3 release (Issue 19) so CI can use the distributed install syntax.
+**Current status:** Complete. koto PRs #57 and #61 merged. CI green on main.
 
 **Dependencies:** Issue 6, Issue 19
 
@@ -350,14 +350,14 @@ CI integration (from Issue 20):
 
 **Acceptance Criteria:**
 
-- [ ] `tsuku install tsukumogami/koto` works end-to-end with a released binary
-- [ ] First install shows confirmation prompt, accepting auto-registers in `$TSUKU_HOME/config.toml`
-- [ ] Subsequent installs skip the prompt (source already registered)
-- [ ] `tsuku list`, `info`, `update`, `outdated`, `verify` all work correctly for the distributed tool
-- [ ] `tsuku registry list` includes `tsukumogami/koto`
-- [ ] `tsuku recipes` includes recipes from the distributed source
-- [ ] `tsuku remove <tool>` cleanly removes the distributed tool
-- [ ] `-y` flag skips confirmation; `strict_registries = true` blocks unregistered sources
+- [x] `tsuku install tsukumogami/koto` works end-to-end with a released binary
+- [x] First install shows confirmation prompt, accepting auto-registers in `$TSUKU_HOME/config.toml`
+- [x] Subsequent installs skip the prompt (source already registered)
+- [x] `tsuku list`, `info`, `update`, `outdated`, `verify` all work correctly for the distributed tool
+- [x] `tsuku registry list` includes `tsukumogami/koto`
+- [x] `tsuku recipes` includes recipes from the distributed source
+- [x] `tsuku remove <tool>` cleanly removes the distributed tool
+- [x] `-y` flag skips confirmation; `strict_registries = true` blocks unregistered sources
 
 **Dependencies:** Issue 11, Issue 12, Issue 19
 
@@ -536,13 +536,13 @@ Tests:
 
 **Acceptance Criteria:**
 
-- [ ] PR #2162 (registry unification) merged to main
-- [ ] All CI checks pass on main after merge
-- [ ] Tag `v0.5.3` created and pushed
-- [ ] GitHub Actions release pipeline completes successfully
-- [ ] Release artifacts (Linux amd64/arm64, macOS amd64/arm64) published
-- [ ] `tsuku registry` subcommands work in the released binary
-- [ ] `tsuku install owner/repo` syntax works in the released binary
+- [x] PR #2162 (registry unification) merged to main
+- [x] All CI checks pass on main after merge
+- [x] Tag `v0.5.3` created and pushed
+- [x] GitHub Actions release pipeline completes successfully
+- [x] Release artifacts (Linux amd64/arm64, macOS amd64/arm64) published
+- [x] `tsuku registry` subcommands work in the released binary
+- [x] `tsuku install owner/repo` syntax works in the released binary
 
 **Dependencies:** Issue 18
 
@@ -644,12 +644,10 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,I12,I14,I15,I16,I17,I18 done
-    class I19 ready
-    class I11,I13 blocked
+    class I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,I11,I12,I13,I14,I15,I16,I17,I18,I19 done
 ```
 
-**Legend**: Green = done, Blue = ready (PR #2162 awaiting merge), Yellow = blocked
+**Legend**: Green = done (all issues complete)
 
 ## Implementation Sequence
 
