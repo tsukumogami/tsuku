@@ -84,6 +84,7 @@ func TestNew(t *testing.T) {
 	resolver := New()
 	if resolver == nil {
 		t.Fatal("New() returned nil")
+		return
 	}
 	if resolver.httpClient == nil {
 		t.Error("New() did not initialize httpClient")
@@ -95,6 +96,7 @@ func TestNewWithOptions(t *testing.T) {
 		resolver := New(WithNpmRegistry("https://custom.npm.registry"))
 		if resolver == nil {
 			t.Fatal("New(WithNpmRegistry()) returned nil")
+			return
 		}
 		if resolver.httpClient == nil {
 			t.Error("New(WithNpmRegistry()) did not initialize httpClient")
@@ -108,6 +110,7 @@ func TestNewWithOptions(t *testing.T) {
 		resolver := New(WithCratesIORegistry("https://custom.crates.io"))
 		if resolver == nil {
 			t.Fatal("New(WithCratesIORegistry()) returned nil")
+			return
 		}
 		if resolver.httpClient == nil {
 			t.Error("New(WithCratesIORegistry()) did not initialize httpClient")
@@ -121,6 +124,7 @@ func TestNewWithOptions(t *testing.T) {
 		resolver := New(WithRubyGemsRegistry("https://custom.rubygems.org"))
 		if resolver == nil {
 			t.Fatal("New(WithRubyGemsRegistry()) returned nil")
+			return
 		}
 		if resolver.httpClient == nil {
 			t.Error("New(WithRubyGemsRegistry()) did not initialize httpClient")
@@ -134,6 +138,7 @@ func TestNewWithOptions(t *testing.T) {
 		resolver := New(WithPyPIRegistry("https://custom.pypi.org"))
 		if resolver == nil {
 			t.Fatal("New(WithPyPIRegistry()) returned nil")
+			return
 		}
 		if resolver.httpClient == nil {
 			t.Error("New(WithPyPIRegistry()) did not initialize httpClient")
@@ -150,6 +155,7 @@ func TestNewWithOptions(t *testing.T) {
 		)
 		if resolver == nil {
 			t.Fatal("New() with multiple options returned nil")
+			return
 		}
 		if resolver.npmRegistryURL != "https://npm.example.com" {
 			t.Errorf("Expected npm registry URL 'https://npm.example.com', got '%s'", resolver.npmRegistryURL)

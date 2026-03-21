@@ -451,6 +451,7 @@ func TestCPANBuilder_Probe_ReturnsQualityMetadata(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("Probe() returned nil result")
+		return
 	}
 
 	if result.Source != "App-Ack" {
@@ -496,6 +497,7 @@ func TestCPANBuilder_Probe_GracefulDegradation(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("Probe() returned nil result - should succeed with graceful degradation")
+		return
 	}
 
 	// Graceful degradation: Downloads should be 0, HasRepository false

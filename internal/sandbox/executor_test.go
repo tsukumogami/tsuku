@@ -25,6 +25,7 @@ func TestNewExecutor(t *testing.T) {
 
 	if exec == nil {
 		t.Fatal("NewExecutor returned nil")
+		return
 	}
 	if exec.detector != detector {
 		t.Error("Executor detector not set correctly")
@@ -213,6 +214,7 @@ func TestAugmentWithInfrastructurePackages_DebianFamily(t *testing.T) {
 
 	if result == nil {
 		t.Fatal("Expected non-nil result")
+		return
 	}
 	pkgs := result.Packages["apt"]
 	if len(pkgs) == 0 {
@@ -247,6 +249,7 @@ func TestAugmentWithInfrastructurePackages_RhelFamily(t *testing.T) {
 
 	if result == nil {
 		t.Fatal("Expected non-nil result")
+		return
 	}
 	pkgs := result.Packages["dnf"]
 	if len(pkgs) == 0 {
@@ -286,6 +289,7 @@ func TestAugmentWithInfrastructurePackages_ExistingSysReqs(t *testing.T) {
 
 	if result == nil {
 		t.Fatal("Expected non-nil result")
+		return
 	}
 	pkgs := result.Packages["apt"]
 	hasDocker := false

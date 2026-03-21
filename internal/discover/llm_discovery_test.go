@@ -133,6 +133,7 @@ func TestDiscoveryToolDefs(t *testing.T) {
 
 	if webSearch == nil {
 		t.Fatal("web_search tool not found")
+		return
 	}
 	if extractSource == nil {
 		t.Fatal("extract_source tool not found")
@@ -883,6 +884,7 @@ func TestSelectBestCandidate(t *testing.T) {
 
 			if result == nil {
 				t.Fatalf("expected %s, got nil", tc.wantSource)
+				return
 			}
 
 			if result.Source != tc.wantSource {
@@ -993,6 +995,7 @@ func TestMultipleCandidates_EndToEnd(t *testing.T) {
 	// The fork has highest confidence but should be skipped in favor of non-fork
 	if best == nil {
 		t.Fatal("expected a result")
+		return
 	}
 	if best.Source != "popular/repo" {
 		t.Errorf("expected popular/repo (best non-fork), got %s", best.Source)

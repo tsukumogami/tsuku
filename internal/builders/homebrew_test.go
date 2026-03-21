@@ -1459,6 +1459,7 @@ func TestHomebrewBuilder_DiscoverDependencyTree_WithExistingRecipes(t *testing.T
 
 	if dep1 == nil || dep2 == nil {
 		t.Fatal("Expected dep1 and dep2 as children")
+		return
 	}
 
 	if !dep1.HasRecipe {

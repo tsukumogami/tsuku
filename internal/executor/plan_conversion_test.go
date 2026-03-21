@@ -51,6 +51,7 @@ func TestToStoragePlan(t *testing.T) {
 		result := ToStoragePlan(plan)
 		if result == nil {
 			t.Fatal("ToStoragePlan returned nil for non-nil input")
+			return
 		}
 
 		// Verify top-level fields
@@ -137,6 +138,7 @@ func TestFromStoragePlan(t *testing.T) {
 		result := FromStoragePlan(plan)
 		if result == nil {
 			t.Fatal("FromStoragePlan returned nil for non-nil input")
+			return
 		}
 
 		// Verify top-level fields

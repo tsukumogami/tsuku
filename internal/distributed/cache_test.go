@@ -29,6 +29,7 @@ func TestCacheManager_SourceMeta_RoundTrip(t *testing.T) {
 	}
 	if got == nil {
 		t.Fatal("GetSourceMeta returned nil")
+		return
 	}
 	if got.Branch != "main" {
 		t.Errorf("branch = %q, want %q", got.Branch, "main")

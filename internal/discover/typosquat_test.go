@@ -159,6 +159,7 @@ func TestCheckTyposquat(t *testing.T) {
 
 			if got == nil {
 				t.Fatalf("CheckTyposquat(%q) = nil, want warning", tt.toolName)
+				return
 			}
 
 			if got.Requested != tt.toolName {

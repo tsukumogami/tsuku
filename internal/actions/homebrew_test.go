@@ -854,6 +854,7 @@ func TestGhcrHTTPClient(t *testing.T) {
 	client := ghcrHTTPClient()
 	if client == nil {
 		t.Fatal("ghcrHTTPClient() returned nil")
+		return
 	}
 	if client.Timeout == 0 {
 		t.Error("ghcrHTTPClient() returned client with zero timeout")

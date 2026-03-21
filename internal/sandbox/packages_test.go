@@ -521,6 +521,7 @@ func TestExtractSystemRequirements_AptRepoWithGPG(t *testing.T) {
 
 	if reqs == nil {
 		t.Fatal("ExtractSystemRequirements returned nil, want non-nil")
+		return
 	}
 
 	if len(reqs.Repositories) != 1 {
@@ -563,6 +564,7 @@ func TestExtractSystemRequirements_AptPPA(t *testing.T) {
 
 	if reqs == nil {
 		t.Fatal("ExtractSystemRequirements returned nil, want non-nil")
+		return
 	}
 
 	if len(reqs.Repositories) != 1 {
@@ -599,6 +601,7 @@ func TestExtractSystemRequirements_BrewTap(t *testing.T) {
 
 	if reqs == nil {
 		t.Fatal("ExtractSystemRequirements returned nil, want non-nil")
+		return
 	}
 
 	if len(reqs.Repositories) != 1 {
@@ -636,6 +639,7 @@ func TestExtractSystemRequirements_DnfRepo(t *testing.T) {
 
 	if reqs == nil {
 		t.Fatal("ExtractSystemRequirements returned nil, want non-nil")
+		return
 	}
 
 	if len(reqs.Repositories) != 1 {
@@ -683,6 +687,7 @@ func TestExtractSystemRequirements_MixedPackagesAndRepos(t *testing.T) {
 
 	if reqs == nil {
 		t.Fatal("ExtractSystemRequirements returned nil, want non-nil")
+		return
 	}
 
 	// Check packages
@@ -736,6 +741,7 @@ func TestExtractSystemRequirements_MultipleRepos(t *testing.T) {
 
 	if reqs == nil {
 		t.Fatal("ExtractSystemRequirements returned nil, want non-nil")
+		return
 	}
 
 	if len(reqs.Repositories) != 3 {

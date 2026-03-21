@@ -501,6 +501,7 @@ func TestParseCurated(t *testing.T) {
 	bat := entryByName(entries, "bat")
 	if bat == nil {
 		t.Fatal("missing entry for bat")
+		return
 	}
 	if bat.Source != "github:sharkdp/bat" {
 		t.Errorf("bat Source = %q, want %q", bat.Source, "github:sharkdp/bat")
@@ -581,6 +582,7 @@ func TestParseHomebrew(t *testing.T) {
 	gh := entryByName(entries, "gh")
 	if gh == nil {
 		t.Fatal("missing entry for gh")
+		return
 	}
 	if gh.Priority != 1 {
 		t.Errorf("gh Priority = %d, want 1", gh.Priority)
@@ -589,6 +591,7 @@ func TestParseHomebrew(t *testing.T) {
 	awscli := entryByName(entries, "awscli")
 	if awscli == nil {
 		t.Fatal("missing entry for awscli")
+		return
 	}
 	if awscli.Priority != 2 {
 		t.Errorf("awscli Priority = %d, want 2", awscli.Priority)
@@ -705,6 +708,7 @@ command = "age --version"
 	gh := entryByName(q.Entries, "gh")
 	if gh == nil {
 		t.Fatal("missing entry for gh")
+		return
 	}
 	if gh.Source != "homebrew:gh" {
 		t.Errorf("gh Source = %q, want %q (from recipe, not curated)", gh.Source, "homebrew:gh")
@@ -717,6 +721,7 @@ command = "age --version"
 	bat := entryByName(q.Entries, "bat")
 	if bat == nil {
 		t.Fatal("missing entry for bat")
+		return
 	}
 	if bat.Source != "github:sharkdp/bat" {
 		t.Errorf("bat Source = %q, want %q (from curated, not homebrew)", bat.Source, "github:sharkdp/bat")
@@ -732,6 +737,7 @@ command = "age --version"
 	node := entryByName(q.Entries, "node")
 	if node == nil {
 		t.Fatal("missing entry for node")
+		return
 	}
 	if node.Source != "homebrew:node" {
 		t.Errorf("node Source = %q, want %q", node.Source, "homebrew:node")
@@ -1029,6 +1035,7 @@ command = "gh --version"
 	gh := entryByName(q.Entries, "gh")
 	if gh == nil {
 		t.Fatal("missing entry for gh")
+		return
 	}
 	// Recipe entry has default priority 3
 	if gh.Priority != 3 {

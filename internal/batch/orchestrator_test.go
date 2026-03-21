@@ -1176,6 +1176,7 @@ func TestCalculateNextRetryAt(t *testing.T) {
 			}
 			if got == nil {
 				t.Fatal("expected non-nil next_retry_at")
+				return
 			}
 			expected := now.Add(tt.wantDelay)
 			if !got.Equal(expected) {

@@ -2,6 +2,7 @@ package recipe
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -177,74 +178,45 @@ func (l *Loader) GetWithSource(name string, opts LoaderOptions) (*Recipe, Recipe
 // that originally provided it.
 //
 // The source parameter uses user-facing source strings as stored in ToolState.Source:
-//   - "central": delegates to the central registry provider (SourceRegistry)
-//   - "local": delegates to the local provider (SourceLocal)
-//   - "owner/repo": delegates to a distributed provider for that repository
+//   - "central": matches SourceRegistry then SourceEmbedded (registry preferred)
+//   - "local": matches SourceLocal providers
+//   - "owner/repo": matches a distributed provider for that repository
 //
-// Returns an error if no provider matches the given source.
+// Not-found errors are skipped so fallback works (e.g., registry -> embedded
+// for "central"). Real errors (network, parse) are returned immediately.
 func (l *Loader) GetFromSource(ctx context.Context, name string, source string) ([]byte, error) {
-	switch source {
-	case SourceCentral:
-		// Try registry provider first, then embedded.
-		// Propagate real errors (network, parse); only fall through on not-found.
-		for _, p := range l.providers {
-			if p.Source() == SourceRegistry {
-				data, err := p.Get(ctx, name)
-				if err == nil && data != nil {
-					return data, nil
-				}
-				if err != nil && !isNotFoundError(err) && !os.IsNotExist(err) {
-					return nil, fmt.Errorf("central registry error: %w", err)
-				}
-			}
-		}
-		for _, p := range l.providers {
-			if p.Source() == SourceEmbedded {
-				data, err := p.Get(ctx, name)
-				if err == nil && data != nil {
-					return data, nil
-				}
-				if err != nil && !isNotFoundError(err) && !os.IsNotExist(err) {
-					return nil, fmt.Errorf("embedded registry error: %w", err)
-				}
-			}
-		}
-		return nil, fmt.Errorf("recipe %q not found in central registry", name)
-
-	case string(SourceLocal):
-		for _, p := range l.providers {
-			if p.Source() == SourceLocal {
-				data, err := p.Get(ctx, name)
-				if err != nil {
-					return nil, err
-				}
-				if data != nil {
-					return data, nil
-				}
-			}
-		}
-		return nil, fmt.Errorf("recipe %q not found in local recipes", name)
-
-	default:
-		// Check for "owner/repo" pattern (distributed provider)
-		if strings.Contains(source, "/") {
-			for _, p := range l.providers {
-				if string(p.Source()) == source {
-					data, err := p.Get(ctx, name)
-					if err != nil {
-						return nil, err
-					}
-					if data != nil {
-						return data, nil
-					}
-					return nil, fmt.Errorf("recipe %q not found in %s", name, source)
-				}
-			}
-			return nil, fmt.Errorf("no provider registered for source %q", source)
-		}
-
-		return nil, fmt.Errorf("unknown recipe source %q", source)
+	candidates := l.providersForSource(source)
+	if len(candidates) == 0 {
+		return nil, fmt.Errorf("no provider registered for source %q", source)
 	}
+
+	for _, p := range candidates {
+		data, err := p.Get(ctx, name)
+		if err == nil && data != nil {
+			return data, nil
+		}
+		if err != nil && !isNotFoundError(err) && !os.IsNotExist(err) {
+			return nil, fmt.Errorf("source %q error: %w", source, err)
+		}
+	}
+
+	if source == SourceCentral {
+		return nil, fmt.Errorf("recipe %q not found in central registry", name)
+	}
+	return nil, fmt.Errorf("recipe %q not found in %s", name, source)
+}
+
+// providersForSource returns providers matching the user-facing source string,
+// in the order they should be tried. For "central", registry providers come
+// before embedded providers (preferring fresh data over compiled-in fallback).
+func (l *Loader) providersForSource(source string) []RecipeProvider {
+	if source == SourceCentral {
+		var result []RecipeProvider
+		result = append(result, l.filterProviders(SourceRegistry)...)
+		result = append(result, l.filterProviders(SourceEmbedded)...)
+		return result
+	}
+	return l.filterProviders(RecipeSource(source))
 }
 
 // getEmbeddedOnly loads a recipe from embedded providers only.
@@ -350,26 +322,14 @@ func (l *Loader) filterProviders(source RecipeSource) []RecipeProvider {
 
 // warnIfShadows checks if a local recipe shadows recipes from lower-priority providers.
 func (l *Loader) warnIfShadows(ctx context.Context, name string) {
-	// Check all non-local providers for the same recipe name
 	for _, p := range l.providers {
 		if p.Source() == SourceLocal {
 			continue
 		}
-		if p.Source() == SourceEmbedded {
-			if ep, ok := p.(*EmbeddedProvider); ok && ep.Has(name) {
-				fmt.Printf("Warning: local recipe '%s' shadows embedded recipe\n", name)
-				return
-			}
-		}
-		if p.Source() == SourceRegistry {
-			// Check registry cache without network
-			if rp, ok := p.(*CentralRegistryProvider); ok {
-				data, _ := rp.Registry().GetCached(name)
-				if data != nil {
-					fmt.Printf("Warning: local recipe '%s' shadows registry recipe\n", name)
-					return
-				}
-			}
+		data, err := p.Get(ctx, name)
+		if err == nil && data != nil {
+			fmt.Printf("Warning: local recipe '%s' shadows %s recipe\n", name, p.Source())
+			return
 		}
 	}
 }
@@ -563,11 +523,19 @@ func (l *Loader) ListLocal() ([]RecipeInfo, error) {
 	return nil, nil
 }
 
+// DirAccessor is an optional interface for providers backed by a filesystem directory.
+type DirAccessor interface {
+	Dir() string
+}
+
 // RecipesDir returns the local recipes directory, or "" if no local provider.
 func (l *Loader) RecipesDir() string {
 	for _, p := range l.providers {
-		if lp, ok := p.(*LocalProvider); ok {
-			return lp.Dir()
+		if p.Source() != SourceLocal {
+			continue
+		}
+		if da, ok := p.(DirAccessor); ok {
+			return da.Dir()
 		}
 	}
 	return ""
@@ -576,7 +544,7 @@ func (l *Loader) RecipesDir() string {
 // SetRecipesDir sets the local recipes directory by finding or adding a LocalProvider.
 func (l *Loader) SetRecipesDir(dir string) {
 	for i, p := range l.providers {
-		if _, ok := p.(*LocalProvider); ok {
+		if p.Source() == SourceLocal {
 			l.providers[i] = NewLocalProvider(dir)
 			return
 		}
@@ -589,6 +557,11 @@ func (l *Loader) SetRecipesDir(dir string) {
 func isNotFoundError(err error) bool {
 	if err == nil {
 		return false
+	}
+	// Check for HTTPError with 404 status (from HTTPStore)
+	var httpErr *HTTPError
+	if errors.As(err, &httpErr) && httpErr.StatusCode == 404 {
+		return true
 	}
 	// Check for registry RegistryError with ErrTypeNotFound
 	msg := err.Error()

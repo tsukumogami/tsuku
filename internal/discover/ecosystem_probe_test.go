@@ -65,6 +65,7 @@ func TestEcosystemProbe_SingleResult(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("expected result, got nil")
+		return
 	}
 	if result.Builder != "pypi" {
 		t.Errorf("expected builder pypi, got %s", result.Builder)
@@ -88,6 +89,7 @@ func TestEcosystemProbe_MultipleResults_ClearWinner(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("expected result, got nil")
+		return
 	}
 	// crates.io has >10x downloads vs runner-up (npm with 500)
 	if result.Builder != "crates.io" {
@@ -173,6 +175,7 @@ func TestEcosystemProbe_SoftErrors(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("expected result despite partial failure")
+		return
 	}
 	if result.Builder != "pypi" {
 		t.Errorf("expected pypi, got %s", result.Builder)
@@ -225,6 +228,7 @@ func TestEcosystemProbe_MetadataPassthrough(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("expected result, got nil")
+		return
 	}
 	if result.Metadata.Downloads != 50000 {
 		t.Errorf("expected downloads 50000, got %d", result.Metadata.Downloads)
@@ -298,6 +302,7 @@ func TestChain_RegistryMissFallsToEcosystemProbe(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("expected result from ecosystem probe")
+		return
 	}
 	if result.Builder != "crates.io" {
 		t.Errorf("expected builder crates.io, got %s", result.Builder)
@@ -392,6 +397,7 @@ func TestQualityFiltering_PrettierSquatter(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("expected result, got nil")
+		return
 	}
 
 	// npm should win because crates.io squatter is filtered out
@@ -430,6 +436,7 @@ func TestQualityFiltering_HttpieSquatter(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("expected result, got nil")
+		return
 	}
 
 	// PyPI should win (crates.io squatter filtered, pypi passes version threshold)
@@ -472,6 +479,7 @@ func TestQualityFiltering_PriorityRankingAfterFilter(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("expected result, got nil")
+		return
 	}
 
 	// crates.io has >10x downloads (50M) vs runner-up npm (1M)
@@ -658,6 +666,7 @@ func TestResolveWithDetails_IncludesAllProbes(t *testing.T) {
 	}
 	if rr == nil {
 		t.Fatal("expected result, got nil")
+		return
 	}
 
 	// Selected should be npm (the only match).
@@ -805,6 +814,7 @@ func TestEcosystemProbe_WithForceDeterministic(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("expected result from force-deterministic mode")
+		return
 	}
 	if result.Metadata.SelectionReason != SelectionPriorityFallback {
 		t.Errorf("expected SelectionReason %q, got %q", SelectionPriorityFallback, result.Metadata.SelectionReason)

@@ -384,6 +384,7 @@ func TestDisambiguate(t *testing.T) {
 
 			if result == nil {
 				t.Fatal("expected non-nil result")
+				return
 			}
 			if result.Builder != tt.expectBuilder {
 				t.Errorf("result.Builder = %q, want %q", result.Builder, tt.expectBuilder)

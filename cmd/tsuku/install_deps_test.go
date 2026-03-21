@@ -76,6 +76,7 @@ func TestGetOrGeneratePlanWith_CacheHit(t *testing.T) {
 
 	if result == nil {
 		t.Fatal("getOrGeneratePlanWith() returned nil, want plan")
+		return
 	}
 
 	if result.Tool != "gh" {
@@ -120,6 +121,7 @@ func TestGetOrGeneratePlanWith_CacheMiss(t *testing.T) {
 
 	if result == nil {
 		t.Fatal("getOrGeneratePlanWith() returned nil, want plan")
+		return
 	}
 
 	if result.Tool != "gh" {

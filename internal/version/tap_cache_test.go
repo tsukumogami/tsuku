@@ -49,6 +49,7 @@ func TestTapCache_GetSet(t *testing.T) {
 	entry = cache.Get(tap, formula)
 	if entry == nil {
 		t.Fatal("expected cache hit, got nil")
+		return
 	}
 
 	if entry.Version != "1.7.0" {

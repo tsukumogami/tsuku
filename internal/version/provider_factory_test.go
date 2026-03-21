@@ -10,6 +10,7 @@ func TestNewProviderFactory(t *testing.T) {
 	factory := NewProviderFactory()
 	if factory == nil {
 		t.Fatal("NewProviderFactory() returned nil")
+		return
 	}
 	if len(factory.strategies) == 0 {
 		t.Error("NewProviderFactory() should register default strategies")

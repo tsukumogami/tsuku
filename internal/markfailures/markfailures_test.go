@@ -89,6 +89,7 @@ func TestLoadFailureMap_MultipleFiles(t *testing.T) {
 	ff := fm["ffmpeg"]
 	if ff == nil {
 		t.Fatal("expected ffmpeg in failure map")
+		return
 	}
 	if ff.TotalFailures != 2 {
 		t.Errorf("ffmpeg.TotalFailures = %d, want 2", ff.TotalFailures)
@@ -122,6 +123,7 @@ func TestLoadFailureMap_DeduplicatesBlockedBy(t *testing.T) {
 	vim := fm["vim"]
 	if vim == nil {
 		t.Fatal("expected vim in failure map")
+		return
 	}
 	if len(vim.BlockedBy) != 1 {
 		t.Errorf("vim.BlockedBy = %v, want [python@3.14]", vim.BlockedBy)

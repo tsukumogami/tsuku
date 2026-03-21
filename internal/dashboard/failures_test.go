@@ -653,6 +653,7 @@ func TestLoadFailureDetailRecords_mixedFormats(t *testing.T) {
 
 	if legacy == nil {
 		t.Fatal("expected legacy format record for python@3.14")
+		return
 	}
 	// Bracketed tag should be extracted
 	if legacy.Subcategory != "api_error" {
@@ -664,6 +665,7 @@ func TestLoadFailureDetailRecords_mixedFormats(t *testing.T) {
 
 	if perRecipe == nil {
 		t.Fatal("expected per-recipe format record for procs")
+		return
 	}
 	if perRecipe.ExitCode != 6 {
 		t.Errorf("perRecipe ExitCode: got %d, want 6", perRecipe.ExitCode)

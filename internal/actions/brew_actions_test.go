@@ -21,6 +21,7 @@ func TestBrewInstallAction_ImplicitConstraint(t *testing.T) {
 
 	if constraint == nil {
 		t.Fatal("ImplicitConstraint() returned nil")
+		return
 	}
 	if constraint.OS != "darwin" {
 		t.Errorf("OS = %q, want %q", constraint.OS, "darwin")
@@ -172,6 +173,7 @@ func TestBrewCaskAction_ImplicitConstraint(t *testing.T) {
 
 	if constraint == nil {
 		t.Fatal("ImplicitConstraint() returned nil")
+		return
 	}
 	if constraint.OS != "darwin" {
 		t.Errorf("OS = %q, want %q", constraint.OS, "darwin")

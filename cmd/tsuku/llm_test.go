@@ -71,6 +71,7 @@ func TestLLMDownloadFlags(t *testing.T) {
 		f := llmDownloadCmd.Flags().Lookup("yes")
 		if f == nil {
 			t.Fatal("expected --yes flag on download command")
+			return
 		}
 		if f.DefValue != "false" {
 			t.Errorf("--yes default = %q, want %q", f.DefValue, "false")

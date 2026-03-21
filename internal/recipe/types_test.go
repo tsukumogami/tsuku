@@ -2200,6 +2200,7 @@ func TestConstraint_Clone_NilReceiver(t *testing.T) {
 
 	if result == nil {
 		t.Fatal("Clone() on nil receiver returned nil, want non-nil")
+		return
 	}
 
 	// Should return empty constraint
@@ -2409,6 +2410,7 @@ func TestMergeWhenClause_NilImplicit_NilWhen(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("MergeWhenClause(nil, nil) returned nil")
+		return
 	}
 	// Should be empty constraint
 	if result.OS != "" || result.Arch != "" || result.LinuxFamily != "" {

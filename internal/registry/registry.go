@@ -31,10 +31,10 @@ type Registry struct {
 	isLocal  bool // true if BaseURL is a local filesystem path
 }
 
-// newRegistryHTTPClient creates a secure HTTP client for registry operations with:
+// NewRegistryHTTPClient creates a secure HTTP client for registry operations with:
 // - DisableCompression: prevents decompression bomb attacks
 // - Proper timeouts
-func newRegistryHTTPClient() *http.Client {
+func NewRegistryHTTPClient() *http.Client {
 	return &http.Client{
 		Timeout: config.GetAPITimeout(),
 		Transport: &http.Transport{
@@ -60,7 +60,7 @@ func New(cacheDir string) *Registry {
 	return &Registry{
 		BaseURL:  baseURL,
 		CacheDir: cacheDir,
-		client:   newRegistryHTTPClient(),
+		client:   NewRegistryHTTPClient(),
 		isLocal:  isLocalPath(baseURL),
 	}
 }

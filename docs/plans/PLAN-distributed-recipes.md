@@ -1,21 +1,21 @@
 ---
 schema: plan/v1
-status: Done
+status: Active
 execution_mode: single-pr
 upstream: docs/designs/current/DESIGN-distributed-recipes.md
 milestone: "Distributed Recipes"
-issue_count: 13
+issue_count: 19
 ---
 
 # PLAN: Distributed Recipes
 
 ## Status
 
-Done
+Active
 
 ## Scope Summary
 
-Extract a RecipeProvider interface that all recipe sources implement, add source tracking to installed tool state, and build a distributed provider that fetches recipes from GitHub repositories via HTTP. This enables third-party repositories to host their own tsuku recipes without centralizing everything in the main registry.
+Extract a RecipeProvider interface that all recipe sources implement, add source tracking to installed tool state, and build a distributed provider that fetches recipes from GitHub repositories via HTTP (Issues 1-10, 12: complete). Unify all four provider implementations behind a single RegistryProvider type configured by a manifest and BackingStore interface (Issues 14-18: complete, PR #2162 awaiting merge). Release v0.5.3 with distributed registry support, land koto's `.tsuku-recipes/` directory with CI integration, and validate end-to-end (Issues 11, 13, 19: remaining).
 
 ## Decomposition Strategy
 
@@ -290,25 +290,34 @@ Telemetry:
 
 ---
 
-### Issue 11: feat(koto): create .tsuku-recipes/ directory in koto repo
+### Issue 11: feat(koto): create .tsuku-recipes/ directory and CI integration in koto repo
 
 **Complexity:** simple
 
-**Note:** Separate PR in `tsukumogami/koto` repository, not part of the main implementation PR.
+**Note:** Separate PR in `tsukumogami/koto` repository (PR #57). Must land after tsuku v0.5.3 is released so koto CI can use the distributed recipe install syntax.
 
-**Goal:** Add a `.tsuku-recipes/` directory to the koto repo with recipe TOML files for koto's tools, validating the distributed recipe format with a real repository.
+**Goal:** Add a `.tsuku-recipes/` directory to the koto repo with recipe TOML files for koto's tools, and update koto's CI to install koto via `tsuku install tsukumogami/koto` using the released v0.5.3 binary.
 
 **Acceptance Criteria:**
 
-- [x] `.tsuku-recipes/` directory exists at the root of the koto repository
-- [x] At least one valid recipe TOML file is present for a koto tool
-- [x] Recipe TOML files use the same schema as central registry recipes
-- [x] Recipe files follow naming conventions: kebab-case filename matching the recipe name
-- [x] Each recipe has a valid `[version]` section with an appropriate version provider
-- [x] No manifest file or additional configuration required
+Distributed recipes:
+- [ ] `.tsuku-recipes/` directory exists at the root of the koto repository
+- [ ] At least one valid recipe TOML file is present for a koto tool
+- [ ] Recipe TOML files use the same schema as central registry recipes
+- [ ] Recipe files follow naming conventions: kebab-case filename matching the recipe name
+- [ ] Each recipe has a valid `[version]` section with an appropriate version provider
+- [ ] No manifest file or additional configuration required
 - [x] PR submitted to `tsukumogami/koto`
 
-**Dependencies:** Issue 6
+CI integration (from Issue 20):
+- [ ] Koto CI installs tsuku v0.5.3 (or later) with distributed registry support
+- [ ] Koto CI runs `tsuku install tsukumogami/koto` successfully
+- [ ] Integration tests pass using the distributed-recipe-installed koto binary
+- [ ] No dependency on central registry for koto tool installation
+
+**Current status:** koto PR #57 open. Blocked on tsuku v0.5.3 release (Issue 19) so CI can use the distributed install syntax.
+
+**Dependencies:** Issue 6, Issue 19
 
 ---
 
@@ -341,16 +350,203 @@ Telemetry:
 
 **Acceptance Criteria:**
 
-- [x] `tsuku install tsukumogami/koto` works end-to-end with a released binary
-- [x] First install shows confirmation prompt, accepting auto-registers in `$TSUKU_HOME/config.toml`
-- [x] Subsequent installs skip the prompt (source already registered)
-- [x] `tsuku list`, `info`, `update`, `outdated`, `verify` all work correctly for the distributed tool
-- [x] `tsuku registry list` includes `tsukumogami/koto`
-- [x] `tsuku recipes` includes recipes from the distributed source
-- [x] `tsuku remove <tool>` cleanly removes the distributed tool
-- [x] `-y` flag skips confirmation; `strict_registries = true` blocks unregistered sources
+- [ ] `tsuku install tsukumogami/koto` works end-to-end with a released binary
+- [ ] First install shows confirmation prompt, accepting auto-registers in `$TSUKU_HOME/config.toml`
+- [ ] Subsequent installs skip the prompt (source already registered)
+- [ ] `tsuku list`, `info`, `update`, `outdated`, `verify` all work correctly for the distributed tool
+- [ ] `tsuku registry list` includes `tsukumogami/koto`
+- [ ] `tsuku recipes` includes recipes from the distributed source
+- [ ] `tsuku remove <tool>` cleanly removes the distributed tool
+- [ ] `-y` flag skips confirmation; `strict_registries = true` blocks unregistered sources
 
-**Dependencies:** Issue 11, Issue 12
+**Dependencies:** Issue 11, Issue 12, Issue 19
+
+---
+
+### Issue 14: refactor(recipe): define BackingStore interface and port simple providers
+
+**Complexity:** critical
+
+**Goal:** Define the `BackingStore` interface and implement `MemoryStore` and `FSStore`. Create the `RegistryProvider` struct. Port `EmbeddedProvider` and `LocalProvider` to `RegistryProvider` instances using these stores.
+
+**Acceptance Criteria:**
+
+BackingStore interface:
+- [x] `BackingStore` interface defined with `Get(ctx, path string) ([]byte, error)` and `List(ctx) ([]string, error)`
+- [x]Interface lives in `internal/recipe/` (alongside existing provider code)
+
+MemoryStore:
+- [x]`MemoryStore` implements `BackingStore` backed by a `map[string][]byte`
+- [x]Constructor accepts the existing `go:embed` data from `internal/recipe/embedded.go`
+- [x]`Get` returns bytes for the given path, `ErrNotFound` if absent
+- [x]`List` returns all available recipe names (without `.toml` extension)
+
+FSStore:
+- [x]`FSStore` implements `BackingStore` backed by a filesystem directory path
+- [x]`Get` reads `{dir}/{path}` from disk
+- [x]`List` scans the directory for `.toml` files and returns recipe names
+- [x]Handles missing directory gracefully (returns empty list, not error)
+
+RegistryProvider:
+- [x]`RegistryProvider` struct with `name`, `source RecipeSource`, `manifest Manifest`, and `store BackingStore` fields
+- [x]Implements `RecipeProvider` interface (`Get`, `List`, `Source`)
+- [x]`Get(ctx, name)` computes path from manifest layout: flat -> `name.toml`, grouped -> `firstLetter(name)/name.toml`
+- [x]Implements `SatisfiesProvider`: reads from manifest index if available, falls back to parsing all recipes
+- [x]Single `SatisfiesEntries` implementation replaces the three duplicated versions
+
+Provider porting:
+- [x]`EmbeddedProvider` replaced by `RegistryProvider` with `MemoryStore` and baked-in manifest (layout: flat)
+- [x]`LocalProvider` replaced by `RegistryProvider` with `FSStore` and default manifest (layout: flat)
+- [x]All call sites constructing `EmbeddedProvider` or `LocalProvider` updated
+- [x]`provider_embedded.go` and `provider_local.go` can be deleted or reduced to factory functions
+- [x]`go test ./...` passes with no behavior changes
+- [x]`go vet ./...` and `golangci-lint run` pass
+
+**Dependencies:** None (builds on top of completed Issue 1 infrastructure)
+
+---
+
+### Issue 15: refactor(cache): unify disk cache and implement HTTPStore
+
+**Complexity:** critical
+
+**Goal:** Merge the two cache implementations (`internal/registry/cache*.go` and `internal/distributed/cache.go`) into a single parameterized cache, and build `HTTPStore` using it.
+
+**Acceptance Criteria:**
+
+Unified cache:
+- [x]Single disk cache implementation replacing both `registry.CacheManager` and `distributed.CacheManager`
+- [x]Parameterized by: cache directory path, TTL, max size, eviction strategy
+- [x]Supports both LRU eviction (central registry pattern) and oldest-bucket eviction (distributed pattern) via configuration
+- [x]Metadata sidecar format covers both existing schemas: TTL, content hash, ETag, Last-Modified
+- [x]Stale-if-error fallback with configurable max stale duration
+- [x]High-water/low-water eviction thresholds (from existing central cache)
+- [x]`CacheIntrospectable` optional interface for `update-registry` to inspect cache stats (replaces type-assertion to `*CentralRegistryProvider`)
+
+HTTPStore:
+- [x]`HTTPStore` implements `BackingStore` with built-in disk cache
+- [x]Constructor accepts: base URL pattern, cache directory, TTL, size limit, HTTP client(s)
+- [x]`Get` checks cache freshness, fetches via HTTP on miss/expiry, updates cache
+- [x]`List` returns recipe names from cached directory listing
+- [x]Handles conditional requests (ETag/If-Modified-Since) internally
+- [x]Rate limit errors produce clear messages with reset time
+
+Tests:
+- [x]Unit tests for unified cache: TTL expiry, eviction, stale-if-error, metadata round-trip
+- [x]Unit tests for HTTPStore: cache hit, cache miss, conditional request, rate limit
+- [x]`go test ./...` passes
+- [x]Existing central registry cache tests adapted to unified cache
+
+**Dependencies:** Issue 14
+
+---
+
+### Issue 16: refactor(registry): port central registry to RegistryProvider
+
+**Complexity:** testable
+
+**Goal:** Replace `CentralRegistryProvider` with a `RegistryProvider` instance using `HTTPStore` and a baked-in manifest (layout: grouped, index_url: tsuku.dev/recipes.json).
+
+**Acceptance Criteria:**
+
+- [x]Central registry becomes a `RegistryProvider` with baked-in manifest: `{layout: "grouped", index_url: "https://tsuku.dev/recipes.json"}`
+- [x]`HTTPStore` configured with: 24h TTL, 50MB cache limit, LRU eviction, cache dir `$TSUKU_HOME/registry/`
+- [x]`SatisfiesEntries` reads from the index URL (existing manifest-based path) through the generic `RegistryProvider` implementation
+- [x]`RefreshableProvider` implemented on `RegistryProvider` (delegates to `HTTPStore` cache refresh)
+- [x]`update-registry` command uses `CacheIntrospectable` interface assertion instead of `*CentralRegistryProvider` cast
+- [x]`provider_registry.go` can be deleted or reduced to a factory function
+- [x]Cache directory layout unchanged (`$TSUKU_HOME/registry/{letter}/{name}.toml`) for backward compatibility
+- [x]`go test ./...` passes with no behavior changes
+- [x]`go vet ./...` and `golangci-lint run` pass
+
+**Dependencies:** Issue 15
+
+---
+
+### Issue 17: refactor(distributed): port distributed provider and add manifest discovery
+
+**Complexity:** testable
+
+**Goal:** Replace `DistributedProvider` with a `RegistryProvider` instance using `HTTPStore`, and add manifest fetching with directory probing.
+
+**Acceptance Criteria:**
+
+Manifest discovery:
+- [x]When registering a new distributed source, tsuku probes for `.tsuku-recipes/manifest.json` via Contents API
+- [x]Falls back to `recipes/manifest.json` if `.tsuku-recipes/` not found
+- [x]Falls back to no manifest (flat layout, no index) if neither exists
+- [x]Manifest schema: `{"layout": "flat|grouped", "index_url": "..."}`
+- [x]Both fields optional, defaults to flat layout
+
+Provider porting:
+- [x]Distributed registries become `RegistryProvider` instances with discovered manifest and `HTTPStore`
+- [x]`HTTPStore` configured with: 1h TTL, 20MB cache limit, cache dir `$TSUKU_HOME/cache/distributed/{owner}/{repo}/`
+- [x]GitHub Contents API client logic moves into or wraps `HTTPStore`
+- [x]`internal/distributed/provider.go` can be deleted or reduced to a factory function
+- [x]Dynamic provider registration (`addDistributedProvider`) creates `RegistryProvider` instances
+
+Tests:
+- [x]Unit tests for manifest discovery (found, not found, fallback)
+- [x]Unit tests for directory probing order (`.tsuku-recipes/` first, then `recipes/`)
+- [x]Existing distributed provider tests adapted
+- [x]`go test ./...` passes
+
+**Dependencies:** Issue 15
+
+---
+
+### Issue 18: refactor(loader): remove type assertions and collapse GetFromSource
+
+**Complexity:** testable
+
+**Goal:** Clean up the Loader now that all providers are `RegistryProvider` instances. Remove concrete type assertions, collapse `GetFromSource`, and simplify `install_distributed.go`.
+
+**Acceptance Criteria:**
+
+Loader cleanup:
+- [x]All 5 type assertions to concrete provider types removed from `loader.go`
+- [x]`warnIfShadows` uses `BackingStore` interface methods instead of casting to `*EmbeddedProvider` or `*CentralRegistryProvider`
+- [x]`RecipesDir()` and `SetRecipesDir()` use interface methods or `RegistryProvider` directly instead of `*LocalProvider` cast
+- [x]`GetFromSource()` collapsed from ~60 lines to ~5: find provider by source, call Get
+- [x]No per-source-type switch logic remains
+
+install_distributed.go simplification:
+- [x]`addDistributedProvider()` creates a `RegistryProvider` (not `DistributedProvider`)
+- [x]Provider-specific logic moved behind the `RegistryProvider` / `BackingStore` interface
+- [x]Net reduction in `install_distributed.go` line count
+
+Source tracking:
+- [x]`SourceCentral` / `SourceRegistry` / `SourceEmbedded` distinction simplified where possible
+- [x]Source matching in `GetFromSource` is uniform across all provider types
+
+Tests:
+- [x]`go test ./...` passes with no behavior changes
+- [x]`go vet ./...` and `golangci-lint run` pass
+- [x]No new type assertions introduced
+
+**Dependencies:** Issue 14, Issue 16, Issue 17
+
+---
+
+### Issue 19: chore(release): tag and publish v0.5.3 with distributed registry support
+
+**Complexity:** simple
+
+**Goal:** Create a tagged release of tsuku that includes distributed registry support, so that downstream repos (koto) can use released binaries in their integration tests.
+
+**Acceptance Criteria:**
+
+- [ ] PR #2162 (registry unification) merged to main
+- [ ] All CI checks pass on main after merge
+- [ ] Tag `v0.5.3` created and pushed
+- [ ] GitHub Actions release pipeline completes successfully
+- [ ] Release artifacts (Linux amd64/arm64, macOS amd64/arm64) published
+- [ ] `tsuku registry` subcommands work in the released binary
+- [ ] `tsuku install owner/repo` syntax works in the released binary
+
+**Dependencies:** Issue 18
+
+---
 
 ## Dependency Graph
 
@@ -381,10 +577,31 @@ graph TD
         I10["10: Update-registry"]
     end
 
-    subgraph Phase6["Phase 6: Cross-repo Validation"]
+    subgraph Phase6["Phase 6: Cross-repo + Validation"]
         I11["11: Koto .tsuku-recipes/"]
         I12["12: Migrate koto recipes"]
         I13["13: E2E validation"]
+    end
+
+    subgraph Phase7["Phase 7: BackingStore + Simple Stores"]
+        I14["14: BackingStore + MemoryStore + FSStore"]
+    end
+
+    subgraph Phase8["Phase 8: Unified Cache + HTTP"]
+        I15["15: Unified cache + HTTPStore"]
+    end
+
+    subgraph Phase9["Phase 9: Port Providers"]
+        I16["16: Port central registry"]
+        I17["17: Port distributed + manifest"]
+    end
+
+    subgraph Phase10["Phase 10: Loader Cleanup"]
+        I18["18: Remove type assertions"]
+    end
+
+    subgraph Phase11["Phase 11: Release + Integration"]
+        I19["19: Release v0.5.3"]
     end
 
     I1 --> I2
@@ -403,10 +620,19 @@ graph TD
     I6 --> I9
     I6 --> I10
     I6 --> I11
+    I19 --> I11
     I7 --> I12
     I11 --> I12
     I11 --> I13
     I12 --> I13
+    I19 --> I13
+    I14 --> I15
+    I15 --> I16
+    I15 --> I17
+    I14 --> I18
+    I16 --> I18
+    I17 --> I18
+    I18 --> I19
 
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
@@ -418,27 +644,34 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,I11,I12,I13 done
+    class I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,I12,I14,I15,I16,I17,I18 done
+    class I19 ready
+    class I11,I13 blocked
 ```
 
-**Legend**: Green = done, Blue = ready, Yellow = blocked
+**Legend**: Green = done, Blue = ready (PR #2162 awaiting merge), Yellow = blocked
 
 ## Implementation Sequence
 
-**Critical path:** Issue 1 -> Issue 5 -> Issue 6 -> Issue 7 -> Issue 12 -> Issue 13 (6 issues)
+### Issues 1-10: Core Implementation (Complete)
+
+All core implementation work is merged to main.
+
+### Issue 12: Koto Recipe Migration (Complete)
+
+Koto recipe removed from central registry on main (commit `ec5ac4fe`).
+
+### Issues 14-18: Registry Unification (Complete)
+
+All implemented in PR #2162 (branch `docs/registry-unification`), awaiting CI and merge.
+
+### Remaining Critical Path
+
+Merge PR #2162 -> Tag v0.5.3 (Issue 19) -> Update and merge koto PR #57 with CI integration (Issue 11) -> E2E validation (Issue 13)
 
 **Recommended order:**
 
-1. **Issue 1** -- RecipeProvider interface refactor (everything depends on this)
-2. **Issues 2, 3** in parallel -- source tracking + registry config
-3. **Issues 4, 5** in parallel -- registry CLI + GitHub HTTP client
-4. **Issue 6** -- DistributedProvider (depends on 1 + 5)
-5. **Issues 7, 8, 9, 10** in parallel -- install flow, command updates, display changes, update-registry
-6. **Issue 11** -- koto `.tsuku-recipes/` directory (separate PR in koto repo)
-7. **Issue 12** -- koto recipe migration (separate PR, after install flow works)
-8. **Issue 13** -- end-to-end validation (after tagged release)
-
-**Parallelization opportunities:**
-- After Issue 1: Issues 2 and 3 can proceed concurrently
-- After Issue 3: Issues 4 and 5 can proceed concurrently
-- After Issue 6: Issues 7, 8, 9, 10, and 11 can all proceed concurrently (5 parallel issues)
+1. **Merge PR #2162** -- registry unification lands on main
+2. **Issue 19** -- tag and release v0.5.3
+3. **Issue 11** -- update koto PR #57 to include CI integration using v0.5.3, then merge
+4. **Issue 13** -- E2E validation with released binary against real koto repo

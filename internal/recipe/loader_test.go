@@ -57,6 +57,7 @@ func TestNewLoader(t *testing.T) {
 
 	if loader == nil {
 		t.Fatal("NewLoader() returned nil")
+		return
 	}
 	if len(loader.providers) == 0 {
 		t.Error("loader.providers should not be empty")
@@ -257,9 +258,9 @@ func TestLoader_ProviderBySource(t *testing.T) {
 	if p == nil {
 		t.Fatal("ProviderBySource(SourceRegistry) returned nil")
 	}
-	rp, ok := p.(*CentralRegistryProvider)
+	rp, ok := p.(*RegistryProvider)
 	if !ok {
-		t.Fatal("Expected CentralRegistryProvider type")
+		t.Fatal("Expected RegistryProvider type")
 	}
 	if rp.Registry() != reg {
 		t.Error("Registry() did not return the expected registry")
@@ -995,6 +996,7 @@ command = "echo ok"
 	analysis := recipe.Steps[0].Analysis()
 	if analysis == nil {
 		t.Fatal("Expected step analysis to be non-nil")
+		return
 	}
 
 	// Should have debian constraint from apt_install
@@ -1101,6 +1103,7 @@ command = "echo ok"
 	analysis := recipe.Steps[0].Analysis()
 	if analysis == nil {
 		t.Fatal("Expected step analysis to be non-nil")
+		return
 	}
 
 	if !analysis.FamilyVarying {
@@ -1494,8 +1497,8 @@ func TestLoader_GetFromSource_UnknownSource(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for unknown source")
 	}
-	if !strings.Contains(err.Error(), "unknown recipe source") {
-		t.Errorf("expected 'unknown recipe source' in error, got: %v", err)
+	if !strings.Contains(err.Error(), "no provider registered") {
+		t.Errorf("expected 'no provider registered' in error, got: %v", err)
 	}
 }
 

@@ -379,6 +379,7 @@ func TestGemBuilder_Probe_QualityMetadata(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("Probe() returned nil for existing gem")
+		return
 	}
 
 	if result.Source != "rails" {
@@ -469,6 +470,7 @@ func TestGemBuilder_Probe_VersionsFetchFails(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("Probe() should return result even when versions fetch fails")
+		return
 	}
 
 	// Should have downloads and HasRepository, but VersionCount should be 0
@@ -774,6 +776,7 @@ func TestGemBuilder_Probe_NoRepository(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("Probe() returned nil for existing gem")
+		return
 	}
 
 	if result.HasRepository {
