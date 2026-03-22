@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-22T02:06:26Z",
+  "generated_at": "2026-03-22T02:07:29Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 61,
-      "pending": 3872,
+      "failed": 62,
+      "pending": 3871,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 61,
-        "pending": 3849,
+        "failed": 62,
+        "pending": 3848,
         "success": 1326
       }
     },
@@ -68,20 +68,20 @@
         "total": 1
       },
       "npm": {
-        "failed": 21,
+        "failed": 20,
+        "pending": 1,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 35,
-        "pending": 44,
+        "failed": 36,
+        "pending": 43,
         "success": 9,
         "total": 89
       }
@@ -831,13 +831,13 @@
           "next_retry_at": "2026-03-26T20:48:23Z"
         },
         {
-          "id": "npm:kew",
-          "name": "kew",
-          "ecosystem": "npm",
+          "id": "rubygems:kor",
+          "name": "kor",
+          "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 8,
-          "next_retry_at": "2026-03-22T00:14:04Z"
+          "next_retry_at": "2026-03-27T10:07:05Z"
         },
         {
           "id": "npm:lcm",
@@ -865,6 +865,15 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-22T11:51:51Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 157,
+          "next_retry_at": "1733-12-11T02:19:48Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -12613,6 +12622,15 @@
           "failure_count": 0
         },
         {
+          "id": "npm:kew",
+          "name": "kew",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-22T00:14:04Z"
+        },
+        {
           "id": "homebrew:keychain",
           "name": "keychain",
           "ecosystem": "homebrew",
@@ -12807,15 +12825,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:kor",
-          "name": "kor",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-21T20:36:10Z"
         },
         {
           "id": "homebrew:kotlin",
@@ -13257,15 +13266,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 155,
-          "next_retry_at": "1733-12-10T22:06:50Z"
         },
         {
           "id": "homebrew:libaacs",
