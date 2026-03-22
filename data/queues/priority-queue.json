@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-22T18:40:14Z",
+  "updated_at": "2026-03-22T20:31:30Z",
   "entries": [
     {
       "name": "node",
@@ -12116,11 +12116,11 @@
       "name": "dug",
       "source": "rubygems:dug",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-03-22T16:59:34.242586381Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-03-29T20:31:30.297328096Z"
     },
     {
       "name": "dumbpipe",
@@ -13386,7 +13386,7 @@
       "name": "exiv2",
       "source": "rubygems:exiv2",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 165,
-      "next_retry_at": "1733-12-11T16:46:51.222957783Z"
+      "failure_count": 167,
+      "next_retry_at": "1733-12-11T20:44:13.442552288Z"
     },
     {
       "name": "libaacs",
