@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-22T11:28:02Z",
+  "generated_at": "2026-03-22T11:28:56Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 65,
-      "pending": 3868,
+      "failed": 66,
+      "pending": 3867,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 65,
-        "pending": 3845,
+        "failed": 66,
+        "pending": 3844,
         "success": 1326
       }
     },
@@ -68,20 +68,20 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
-        "pending": 1,
+        "failed": 21,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 39,
-        "pending": 40,
+        "failed": 40,
+        "pending": 39,
         "success": 9,
         "total": 89
       }
@@ -876,15 +876,6 @@
           "next_retry_at": "2026-03-22T11:51:51Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 161,
-          "next_retry_at": "1733-12-11T09:48:38Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -966,6 +957,15 @@
           "next_retry_at": "2026-03-22T11:35:55Z"
         },
         {
+          "id": "rubygems:mktorrent",
+          "name": "mktorrent",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-22T13:28:30Z"
+        },
+        {
           "id": "npm:mongoose",
           "name": "mongoose",
           "ecosystem": "npm",
@@ -1045,6 +1045,15 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-26T20:48:23Z"
+        },
+        {
+          "id": "npm:webdav",
+          "name": "webdav",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-27T19:28:30Z"
         }
       ],
       "pending": [
@@ -13286,6 +13295,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 161,
+          "next_retry_at": "1733-12-11T09:48:38Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -15871,15 +15889,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:mktorrent",
-          "name": "mktorrent",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-20T21:35:55Z"
         },
         {
           "id": "homebrew:mkvtomp4",
@@ -27207,15 +27216,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:webdav",
-          "name": "webdav",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-22T07:59:43Z"
         },
         {
           "id": "rubygems:webhook",
