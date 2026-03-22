@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-21T23:28:38Z",
+  "updated_at": "2026-03-22T02:07:05Z",
   "entries": [
     {
       "name": "node",
@@ -23566,7 +23566,7 @@
       "name": "kew",
       "source": "npm:kew",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -23966,11 +23966,11 @@
       "name": "kor",
       "source": "rubygems:kor",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-21T20:36:10.422311162Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-27T10:07:05.084765711Z"
     },
     {
       "name": "kosli-cli",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 155,
-      "next_retry_at": "1733-12-10T22:06:50.948709421Z"
+      "failure_count": 157,
+      "next_retry_at": "1733-12-11T02:19:48.229989903Z"
     },
     {
       "name": "libaacs",
