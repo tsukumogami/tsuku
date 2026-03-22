@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-22T12:50:08Z",
+  "generated_at": "2026-03-22T12:51:03Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 66,
-      "pending": 3867,
+      "failed": 65,
+      "pending": 3868,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 66,
-        "pending": 3844,
+        "failed": 65,
+        "pending": 3845,
         "success": 1326
       }
     },
@@ -73,15 +73,14 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 40,
-        "pending": 39,
+        "failed": 38,
+        "pending": 41,
         "success": 9,
         "total": 89
       }
@@ -867,13 +866,13 @@
           "next_retry_at": "2026-03-27T13:59:03Z"
         },
         {
-          "id": "rubygems:less",
-          "name": "less",
-          "ecosystem": "rubygems",
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-22T11:51:51Z"
+          "failure_count": 163,
+          "next_retry_at": "1733-12-11T13:03:26Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -892,15 +891,6 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-24T08:32:54Z"
-        },
-        {
-          "id": "rubygems:mailcatcher",
-          "name": "mailcatcher",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-22T12:11:10Z"
         },
         {
           "id": "npm:mailhog",
@@ -948,15 +938,6 @@
           "next_retry_at": "2026-03-22T23:43:32Z"
         },
         {
-          "id": "rubygems:memcached",
-          "name": "memcached",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-22T11:35:55Z"
-        },
-        {
           "id": "rubygems:mktorrent",
           "name": "mktorrent",
           "ecosystem": "rubygems",
@@ -973,6 +954,15 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-23T15:57:32Z"
+        },
+        {
+          "id": "rubygems:multimarkdown",
+          "name": "multimarkdown",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-22T13:50:42Z"
         },
         {
           "id": "crates.io:numpy",
@@ -13260,6 +13250,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:less",
+          "name": "less",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-22T11:51:51Z"
+        },
+        {
           "id": "homebrew:lesspipe",
           "name": "lesspipe",
           "ecosystem": "homebrew",
@@ -13293,15 +13292,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 161,
-          "next_retry_at": "1733-12-11T09:48:38Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -14925,6 +14915,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:mailcatcher",
+          "name": "mailcatcher",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-22T12:11:10Z"
+        },
+        {
           "id": "homebrew:mailsy",
           "name": "mailsy",
           "ecosystem": "homebrew",
@@ -15504,6 +15503,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:memcached",
+          "name": "memcached",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-22T11:35:55Z"
         },
         {
           "id": "homebrew:mender-artifact",
@@ -16343,14 +16351,6 @@
           "name": "muffet",
           "ecosystem": "homebrew",
           "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "rubygems:multimarkdown",
-          "name": "multimarkdown",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
           "failure_count": 0
         },
         {
