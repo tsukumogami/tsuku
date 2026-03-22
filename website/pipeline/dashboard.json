@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-22T16:33:30Z",
+  "generated_at": "2026-03-22T16:34:34Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 63,
-      "pending": 3870,
+      "failed": 65,
+      "pending": 3868,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 63,
-        "pending": 3847,
+        "failed": 65,
+        "pending": 3845,
         "success": 1326
       }
     },
@@ -73,15 +73,14 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 37,
-        "pending": 42,
+        "failed": 38,
+        "pending": 41,
         "success": 9,
         "total": 89
       }
@@ -876,6 +875,15 @@
           "next_retry_at": "2026-03-27T22:32:12Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 165,
+          "next_retry_at": "1733-12-11T16:46:51Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -892,6 +900,15 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-24T08:32:54Z"
+        },
+        {
+          "id": "rubygems:mailcatcher",
+          "name": "mailcatcher",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-25T08:34:08Z"
         },
         {
           "id": "npm:mailhog",
@@ -13268,15 +13285,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 163,
-          "next_retry_at": "1733-12-11T13:03:26Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -14896,15 +14904,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:mailcatcher",
-          "name": "mailcatcher",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-22T12:11:10Z"
         },
         {
           "id": "homebrew:mailsy",
