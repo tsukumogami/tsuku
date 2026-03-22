@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-22T05:59:03Z",
+  "updated_at": "2026-03-22T07:43:33Z",
   "entries": [
     {
       "name": "node",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 159,
@@ -29596,11 +29596,11 @@
       "name": "meli",
       "source": "rubygems:meli",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-21T13:44:15.998110754Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-22T23:43:32.97710582Z"
     },
     {
       "name": "memcached",
