@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-22T04:33:12Z",
+  "generated_at": "2026-03-22T04:35:04Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -68,13 +68,13 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
-        "pending": 1,
+        "failed": 21,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -831,6 +831,15 @@
           "next_retry_at": "2026-03-26T20:48:23Z"
         },
         {
+          "id": "npm:kew",
+          "name": "kew",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-29T04:33:51Z"
+        },
+        {
           "id": "rubygems:kor",
           "name": "kor",
           "ecosystem": "rubygems",
@@ -849,15 +858,6 @@
           "next_retry_at": "2026-03-22T21:13:06Z"
         },
         {
-          "id": "rubygems:lemon",
-          "name": "lemon",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-22T03:46:24Z"
-        },
-        {
           "id": "rubygems:less",
           "name": "less",
           "ecosystem": "rubygems",
@@ -865,15 +865,6 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-22T11:51:51Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 157,
-          "next_retry_at": "1733-12-11T02:19:48Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -928,6 +919,15 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-23T05:54:07Z"
+        },
+        {
+          "id": "rubygems:medusa",
+          "name": "medusa",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-22T20:33:51Z"
         },
         {
           "id": "npm:mongoose",
@@ -12622,15 +12622,6 @@
           "failure_count": 0
         },
         {
-          "id": "npm:kew",
-          "name": "kew",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-22T00:14:04Z"
-        },
-        {
           "id": "homebrew:keychain",
           "name": "keychain",
           "ecosystem": "homebrew",
@@ -13212,6 +13203,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:lemon",
+          "name": "lemon",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-22T03:46:24Z"
+        },
+        {
           "id": "homebrew:leoafarias/fvm/fvm",
           "name": "leoafarias/fvm/fvm",
           "ecosystem": "homebrew",
@@ -13266,6 +13266,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 157,
+          "next_retry_at": "1733-12-11T02:19:48Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -15440,15 +15449,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:medusa",
-          "name": "medusa",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-21T09:55:06Z"
         },
         {
           "id": "homebrew:megacmd",
