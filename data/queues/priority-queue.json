@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-22T04:33:51Z",
+  "updated_at": "2026-03-22T05:59:03Z",
   "entries": [
     {
       "name": "node",
@@ -25056,11 +25056,11 @@
       "name": "lemon",
       "source": "rubygems:lemon",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-22T03:46:24.88054804Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-27T13:59:03.649396571Z"
     },
     {
       "name": "lensfun",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 157,
-      "next_retry_at": "1733-12-11T02:19:48.229989903Z"
+      "failure_count": 159,
+      "next_retry_at": "1733-12-11T06:11:46.794620763Z"
     },
     {
       "name": "libaacs",
