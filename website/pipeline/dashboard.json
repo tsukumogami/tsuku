@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-22T20:30:50Z",
+  "generated_at": "2026-03-22T20:31:57Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 64,
-      "pending": 3869,
+      "failed": 65,
+      "pending": 3868,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 64,
-        "pending": 3846,
+        "failed": 65,
+        "pending": 3845,
         "success": 1326
       }
     },
@@ -73,8 +73,7 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -651,6 +650,15 @@
           "next_retry_at": "2026-03-27T13:02:12Z"
         },
         {
+          "id": "rubygems:dug",
+          "name": "dug",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-29T20:31:30Z"
+        },
+        {
           "id": "npm:e2b",
           "name": "e2b",
           "ecosystem": "npm",
@@ -667,15 +675,6 @@
           "category": "install_failed",
           "failure_count": 9,
           "next_retry_at": "2026-03-27T15:46:59Z"
-        },
-        {
-          "id": "rubygems:exiv2",
-          "name": "exiv2",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-22T18:56:46Z"
         },
         {
           "id": "npm:fastmcp",
@@ -865,6 +864,15 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-27T22:32:12Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 167,
+          "next_retry_at": "1733-12-11T20:44:13Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -6982,15 +6990,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:dug",
-          "name": "dug",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-22T16:59:34Z"
-        },
-        {
           "id": "homebrew:dumbpipe",
           "name": "dumbpipe",
           "ecosystem": "homebrew",
@@ -7661,6 +7660,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:exiv2",
+          "name": "exiv2",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-22T18:56:46Z"
         },
         {
           "id": "homebrew:exoscale/tap/exoscale-cli",
@@ -13284,15 +13292,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 165,
-          "next_retry_at": "1733-12-11T16:46:51Z"
         },
         {
           "id": "homebrew:libaacs",
