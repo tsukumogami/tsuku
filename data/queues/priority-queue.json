@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-22T09:35:55Z",
+  "updated_at": "2026-03-22T11:28:30Z",
   "entries": [
     {
       "name": "node",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 161,
@@ -30426,11 +30426,11 @@
       "name": "mktorrent",
       "source": "rubygems:mktorrent",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-03-20T21:35:55.647985835Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-03-22T13:28:30.91696712Z"
     },
     {
       "name": "mkvtomp4",
@@ -50986,11 +50986,11 @@
       "name": "webdav",
       "source": "npm:webdav",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-22T07:59:43.258823001Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-27T19:28:30.91696712Z"
     },
     {
       "name": "webhook",
