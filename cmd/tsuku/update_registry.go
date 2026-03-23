@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/index"
+	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/registry"
 )
@@ -59,13 +62,16 @@ Use --dry-run to see what would be refreshed without making network requests.`,
 
 		if registryRecipeName != "" {
 			runSingleRecipeRefresh(ctx, cachedReg, registryRecipeName)
-			return
+		} else {
+			runRegistryRefreshAll(ctx, cachedReg)
+
+			// Refresh distributed sources
+			refreshDistributedSources(ctx)
 		}
 
-		runRegistryRefreshAll(ctx, cachedReg)
-
-		// Refresh distributed sources
-		refreshDistributedSources(ctx)
+		// Rebuild the binary index after a successful registry refresh so that
+		// 'tsuku install <command>' can resolve commands to recipes.
+		rebuildBinaryIndex(ctx, reg)
 	},
 }
 
@@ -288,6 +294,40 @@ func refreshDistributedSources(ctx context.Context) {
 		printInfo(fmt.Sprintf("Refreshed %d distributed source(s) (%d error(s)).", refreshed, errors))
 	} else {
 		printInfo(fmt.Sprintf("Refreshed %d distributed source(s).", refreshed))
+	}
+}
+
+// rebuildBinaryIndex opens the binary index and rebuilds it from the cached
+// registry and current installed state. If the cache directory does not exist
+// yet (first-run scenario), the rebuild is skipped silently. Any other failure
+// is printed to stderr and causes the command to exit non-zero.
+func rebuildBinaryIndex(ctx context.Context, reg *registry.Registry) {
+	cfg, err := config.DefaultConfig()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to load config for index rebuild: %v\n", err)
+		exitWithCode(ExitGeneral)
+	}
+
+	// Ensure the cache directory exists before opening the index.
+	if err := os.MkdirAll(cfg.CacheDir, 0755); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create cache directory for index rebuild: %v\n", err)
+		exitWithCode(ExitGeneral)
+	}
+
+	dbPath := filepath.Join(cfg.CacheDir, "binary-index.db")
+	idx, err := index.Open(dbPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to open binary index: %v\n", err)
+		exitWithCode(ExitGeneral)
+	}
+	defer func() { _ = idx.Close() }()
+
+	stateMgr := install.NewStateManager(cfg)
+	stateReader := &stateReaderAdapter{mgr: stateMgr}
+
+	if err := idx.Rebuild(ctx, reg, stateReader); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to rebuild binary index: %v\n", err)
+		exitWithCode(ExitGeneral)
 	}
 }
 

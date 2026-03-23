@@ -22,7 +22,7 @@ func TestOpen_CreatesFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Open() error = %v, want nil", err)
 	}
-	defer idx.Close()
+	defer func() { _ = idx.Close() }()
 
 	if _, err := os.Stat(dbPath); err != nil {
 		t.Errorf("Open() did not create the DB file: %v", err)
@@ -39,13 +39,13 @@ func TestOpen_Idempotent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("first Open() error = %v, want nil", err)
 	}
-	idx1.Close()
+	_ = idx1.Close()
 
 	idx2, err := Open(dbPath)
 	if err != nil {
 		t.Fatalf("second Open() error = %v, want nil", err)
 	}
-	idx2.Close()
+	_ = idx2.Close()
 }
 
 // TestInitSchema_Idempotent verifies that calling initSchema on a database
@@ -58,7 +58,7 @@ func TestInitSchema_Idempotent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("sql.Open() error = %v", err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	// First call.
 	if err := initSchema(db); err != nil {
@@ -93,7 +93,7 @@ func TestOpen_MissingParent(t *testing.T) {
 
 	idx, err := Open(dbPath)
 	if err == nil {
-		idx.Close()
+		_ = idx.Close()
 		t.Fatal("Open() with missing parent dir: got nil error, want non-nil")
 	}
 	if !strings.Contains(err.Error(), "parent directory does not exist") {

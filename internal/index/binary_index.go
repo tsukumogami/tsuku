@@ -130,18 +130,18 @@ func Open(dbPath string) (BinaryIndex, error) {
 
 	// Enable WAL mode for concurrent reads during writes.
 	if _, err := db.Exec("PRAGMA journal_mode = WAL"); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, fmt.Errorf("index: enable WAL mode: %w", err)
 	}
 
 	// Set a 5-second busy timeout to handle transient write locks.
 	if _, err := db.Exec("PRAGMA busy_timeout = 5000"); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, fmt.Errorf("index: set busy timeout: %w", err)
 	}
 
 	if err := initSchema(db); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, err
 	}
 
@@ -156,11 +156,6 @@ func (idx *sqliteBinaryIndex) Close() error {
 // Lookup is implemented in Issue 3.
 func (idx *sqliteBinaryIndex) Lookup(_ context.Context, _ string) ([]BinaryMatch, error) {
 	return nil, errNotImplemented
-}
-
-// Rebuild is implemented in Issue 2.
-func (idx *sqliteBinaryIndex) Rebuild(_ context.Context, _ Registry, _ StateReader) error {
-	return errNotImplemented
 }
 
 // SetInstalled is implemented in Issue 4.
