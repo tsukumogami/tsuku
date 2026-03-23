@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-23T13:08:10Z",
+  "generated_at": "2026-03-23T13:09:10Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 65,
-      "pending": 3868,
+      "failed": 64,
+      "pending": 3869,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 65,
-        "pending": 3845,
+        "failed": 64,
+        "pending": 3846,
         "success": 1326
       }
     },
@@ -73,7 +73,8 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -704,13 +705,13 @@
           "next_retry_at": "2026-03-30T05:07:11Z"
         },
         {
-          "id": "rubygems:glassfish",
-          "name": "glassfish",
+          "id": "rubygems:gitingest",
+          "name": "gitingest",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-23T12:35:02Z"
+          "failure_count": 9,
+          "next_retry_at": "2026-03-30T13:08:40Z"
         },
         {
           "id": "npm:got",
@@ -864,15 +865,6 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-27T22:32:12Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 173,
-          "next_retry_at": "1733-12-12T10:19:41Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -9503,15 +9495,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:gitingest",
-          "name": "gitingest",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-23T10:06:07Z"
-        },
-        {
           "id": "homebrew:gitlab-ci-local",
           "name": "gitlab-ci-local",
           "ecosystem": "homebrew",
@@ -9594,6 +9577,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:glassfish",
+          "name": "glassfish",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-23T12:35:02Z"
         },
         {
           "id": "homebrew:glaze",
@@ -13292,6 +13284,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 173,
+          "next_retry_at": "1733-12-12T10:19:41Z"
         },
         {
           "id": "homebrew:libaacs",
