@@ -47,7 +47,10 @@ func (s *recipeStep) UnmarshalTOML(data interface{}) error {
 }
 
 // extractBinariesFromMinimal extracts binary destination paths from a
-// recipeMinimal, mirroring the logic in internal/recipe.(*Recipe).ExtractBinaries.
+// recipeMinimal. The logic mirrors internal/recipe.(*Recipe).ExtractBinaries:
+// metadata.binaries takes precedence; otherwise two independent blocks are
+// checked per step — Block 1 for outputs/binaries and Block 2 for executables.
+// A step may contribute entries from both blocks.
 // It returns paths like "bin/jq" that callers can use for both binary_path and
 // to derive the command name (filepath.Base).
 func extractBinariesFromMinimal(r *recipeMinimal) []string {
@@ -93,37 +96,41 @@ func extractBinariesFromMinimal(r *recipeMinimal) []string {
 			}
 		}
 
-		// "outputs" (preferred) or "binaries" (deprecated) param.
+		// Block 1: "outputs" (preferred) or "binaries" (deprecated) param.
 		outputsRaw, hasOutputs := step.Params["outputs"]
 		if !hasOutputs {
 			outputsRaw = step.Params["binaries"]
 		}
-		if outputsRaw == nil {
-			// Try "executables" (gem_install, cargo_install, configure_make, etc.).
-			outputsRaw = step.Params["executables"]
-		}
-		if outputsRaw == nil {
-			continue
-		}
+		if outputsRaw != nil {
+			installMode, _ := step.Params["install_mode"].(string)
+			isDirectoryMode := (installMode == "directory" || installMode == "directory_wrapped")
 
-		installMode, _ := step.Params["install_mode"].(string)
-		isDirectoryMode := (installMode == "directory" || installMode == "directory_wrapped")
-
-		outputsList, ok := outputsRaw.([]interface{})
-		if !ok {
-			continue
-		}
-		for _, b := range outputsList {
-			switch v := b.(type) {
-			case string:
-				if isDirectoryMode {
-					add(v)
-				} else {
-					add(filepath.Join("bin", filepath.Base(v)))
+			if outputsList, ok := outputsRaw.([]interface{}); ok {
+				for _, b := range outputsList {
+					switch v := b.(type) {
+					case string:
+						if isDirectoryMode {
+							add(v)
+						} else {
+							add(filepath.Join("bin", filepath.Base(v)))
+						}
+					case map[string]interface{}:
+						if dest, ok := v["dest"].(string); ok {
+							add(dest)
+						}
+					}
 				}
-			case map[string]interface{}:
-				if dest, ok := v["dest"].(string); ok {
-					add(dest)
+			}
+		}
+
+		// Block 2: "executables" param (gem_install, cargo_install, configure_make, etc.).
+		// Checked independently — a recipe may have both outputs/binaries AND executables.
+		if executablesRaw, ok := step.Params["executables"]; ok {
+			if executablesList, ok := executablesRaw.([]interface{}); ok {
+				for _, e := range executablesList {
+					if exeStr, ok := e.(string); ok {
+						add(filepath.Join("bin", filepath.Base(exeStr)))
+					}
 				}
 			}
 		}
@@ -182,14 +189,9 @@ func (idx *sqliteBinaryIndex) Rebuild(ctx context.Context, reg Registry, state S
 
 		binPaths := extractBinariesFromMinimal(&r)
 		if len(binPaths) == 0 {
-			// No binary information — record a placeholder so the recipe is
-			// still findable by name. Use the recipe name as the command.
-			command := name
-			installed := boolToInt(isInstalled(tools, name))
-			if _, err := tx.ExecContext(ctx, insertSQL, command, name, "", "registry", installed); err != nil {
-				return fmt.Errorf("index rebuild: insert placeholder for %q: %w", name, err)
-			}
-			insertedRecipes[name] = true
+			// No binary declarations — skip entirely. Recipes without declared
+			// binaries are invisible to the index; inserting a placeholder row
+			// with empty binary_path would cause false-positive Lookup matches.
 			continue
 		}
 

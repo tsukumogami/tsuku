@@ -27,6 +27,10 @@ func (a *stateReaderAdapter) AllTools() (map[string]index.ToolInfo, error) {
 			Source:        ts.Source,
 			Versions:      make(map[string]index.VersionInfo, len(ts.Versions)),
 		}
+		// ts.Binaries (top-level ToolState field) is not used here because it is
+		// deprecated. state.migrateToMultiVersion() ensures that Versions[v].Binaries
+		// is always populated on load, so we read binary paths from the per-version
+		// entries below.
 		for ver, vs := range ts.Versions {
 			info.Versions[ver] = index.VersionInfo{
 				Binaries: vs.Binaries,
