@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-23T07:12:29Z",
+  "generated_at": "2026-03-23T07:13:39Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -68,13 +68,13 @@
         "total": 1
       },
       "npm": {
-        "failed": 21,
+        "failed": 20,
+        "pending": 1,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -876,6 +876,15 @@
           "next_retry_at": "2026-03-27T22:32:12Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 171,
+          "next_retry_at": "1733-12-12T07:25:53Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -912,24 +921,6 @@
           "next_retry_at": "2026-03-30T05:07:11Z"
         },
         {
-          "id": "npm:markdown-toc",
-          "name": "markdown-toc",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-23T06:37:50Z"
-        },
-        {
-          "id": "rubygems:mdv",
-          "name": "mdv",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-23T05:54:07Z"
-        },
-        {
           "id": "rubygems:medusa",
           "name": "medusa",
           "ecosystem": "rubygems",
@@ -937,6 +928,15 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-24T10:07:55Z"
+        },
+        {
+          "id": "rubygems:meli",
+          "name": "meli",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-24T15:13:10Z"
         },
         {
           "id": "npm:mongoose",
@@ -13268,15 +13268,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 169,
-          "next_retry_at": "1733-12-12T02:20:38Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -15087,6 +15078,15 @@
           "failure_count": 0
         },
         {
+          "id": "npm:markdown-toc",
+          "name": "markdown-toc",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-23T06:37:50Z"
+        },
+        {
           "id": "homebrew:markdownlint-cli",
           "name": "markdownlint-cli",
           "ecosystem": "homebrew",
@@ -15423,6 +15423,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:mdv",
+          "name": "mdv",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-23T05:54:07Z"
+        },
+        {
           "id": "homebrew:mecab",
           "name": "mecab",
           "ecosystem": "homebrew",
@@ -15477,15 +15486,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:meli",
-          "name": "meli",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-22T23:43:32Z"
         },
         {
           "id": "rubygems:memcached",
