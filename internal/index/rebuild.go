@@ -77,6 +77,9 @@ func extractBinariesFromMinimal(r *recipeMinimal) []string {
 	seen := make(map[string]bool)
 
 	add := func(destPath string) {
+		if destPath == "" {
+			return
+		}
 		name := filepath.Base(destPath)
 		if !seen[name] {
 			binaries = append(binaries, destPath)
@@ -196,7 +199,10 @@ func (idx *sqliteBinaryIndex) Rebuild(ctx context.Context, reg Registry, state S
 			continue
 		}
 
-		installed := boolToInt(tools[name].ActiveVersion != "")
+		installed := 0
+		if tools[name].ActiveVersion != "" {
+			installed = 1
+		}
 		for _, binPath := range binPaths {
 			command := filepath.Base(binPath)
 			command = strings.TrimSuffix(command, ".exe")
@@ -255,12 +261,4 @@ func (idx *sqliteBinaryIndex) Rebuild(ctx context.Context, reg Registry, state S
 	}
 
 	return nil
-}
-
-// boolToInt converts a bool to the SQLite integer representation (0 or 1).
-func boolToInt(b bool) int {
-	if b {
-		return 1
-	}
-	return 0
 }

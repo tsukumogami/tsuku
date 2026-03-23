@@ -69,11 +69,9 @@ Use --dry-run to see what would be refreshed without making network requests.`,
 			refreshDistributedSources(ctx)
 		}
 
-		// Rebuild the binary index after a successful registry refresh so that
-		// 'tsuku install <command>' can resolve commands to recipes.
-		// exitWithCode calls os.Exit immediately, so rebuildBinaryIndex is only
-		// reached when both runRegistryRefreshAll and refreshDistributedSources
-		// complete without calling exitWithCode (i.e., on success).
+		// Regenerate the binary index from the current cached registry and
+		// installed state so that 'tsuku install <command>' can resolve
+		// commands to recipes.
 		rebuildBinaryIndex(ctx, reg)
 	},
 }
