@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-23T19:53:32Z",
+  "updated_at": "2026-03-23T21:40:32Z",
   "entries": [
     {
       "name": "node",
@@ -19496,11 +19496,11 @@
       "name": "haproxy",
       "source": "rubygems:haproxy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-03-23T19:50:10.838369369Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-03-30T21:40:32.905374917Z"
     },
     {
       "name": "harbor-cli",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 177,
-      "next_retry_at": "1733-12-12T18:14:57.963436825Z"
+      "failure_count": 179,
+      "next_retry_at": "1733-12-12T21:53:16.050599109Z"
     },
     {
       "name": "libaacs",
