@@ -197,6 +197,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		// But for dependency check, we just return WITHOUT marking as visited
 		// This allows shared dependencies to be recognized as already installed
 		if !isExplicit && reqVersion == "" {
+			setInstalledInIndex(toolName, true)
 			return nil
 		}
 		// If it's an explicit install/update, we proceed
