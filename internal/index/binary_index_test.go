@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -94,5 +95,8 @@ func TestOpen_MissingParent(t *testing.T) {
 	if err == nil {
 		idx.Close()
 		t.Fatal("Open() with missing parent dir: got nil error, want non-nil")
+	}
+	if !strings.Contains(err.Error(), "parent directory does not exist") {
+		t.Errorf("Open() error = %q, want message containing \"parent directory does not exist\"", err)
 	}
 }

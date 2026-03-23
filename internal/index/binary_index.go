@@ -19,8 +19,9 @@ import (
 var ErrIndexNotBuilt = errors.New("binary index not built; run 'tsuku update-registry'")
 
 // ErrIndexCorrupt is returned when the database is unreadable or structurally
-// broken. Callers should rebuild with 'tsuku update-registry --rebuild-index'.
-var ErrIndexCorrupt = errors.New("binary index corrupt; rebuild with 'tsuku update-registry --rebuild-index'")
+// broken. Delete $TSUKU_HOME/cache/binary-index.db and run 'tsuku update-registry'
+// to recreate it.
+var ErrIndexCorrupt = errors.New("binary index corrupt; delete $TSUKU_HOME/cache/binary-index.db and run 'tsuku update-registry'")
 
 // StaleIndexWarning is returned (wrapped) by Lookup when the registry directory
 // has been updated since the index was last built. Results are still returned;
@@ -96,6 +97,9 @@ type BinaryIndex interface {
 	Close() error
 }
 
+// errNotImplemented is returned by stub methods that are implemented in later issues.
+var errNotImplemented = errors.New("not implemented")
+
 // sqliteBinaryIndex is the SQLite-backed implementation of BinaryIndex.
 type sqliteBinaryIndex struct {
 	db *sql.DB
@@ -151,15 +155,15 @@ func (idx *sqliteBinaryIndex) Close() error {
 
 // Lookup is implemented in Issue 3.
 func (idx *sqliteBinaryIndex) Lookup(_ context.Context, _ string) ([]BinaryMatch, error) {
-	return nil, errors.New("index: Lookup not yet implemented")
+	return nil, errNotImplemented
 }
 
 // Rebuild is implemented in Issue 2.
 func (idx *sqliteBinaryIndex) Rebuild(_ context.Context, _ Registry, _ StateReader) error {
-	return errors.New("index: Rebuild not yet implemented")
+	return errNotImplemented
 }
 
 // SetInstalled is implemented in Issue 4.
 func (idx *sqliteBinaryIndex) SetInstalled(_ context.Context, _ string, _ bool) error {
-	return errors.New("index: SetInstalled not yet implemented")
+	return errNotImplemented
 }
