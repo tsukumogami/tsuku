@@ -97,9 +97,6 @@ type BinaryIndex interface {
 	Close() error
 }
 
-// errNotImplemented is returned by stub methods that are implemented in later issues.
-var errNotImplemented = errors.New("not implemented")
-
 // sqliteBinaryIndex is the SQLite-backed implementation of BinaryIndex.
 type sqliteBinaryIndex struct {
 	db          *sql.DB
@@ -156,9 +153,4 @@ func Open(dbPath, registryDir string) (BinaryIndex, error) {
 // Close closes the underlying database connection.
 func (idx *sqliteBinaryIndex) Close() error {
 	return idx.db.Close()
-}
-
-// SetInstalled is implemented in Issue 4.
-func (idx *sqliteBinaryIndex) SetInstalled(_ context.Context, _ string, _ bool) error {
-	return errNotImplemented
 }

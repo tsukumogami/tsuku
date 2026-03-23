@@ -464,6 +464,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 			fmt.Fprintf(os.Stderr, "Failed to install to permanent location: %v\n", err)
 			return err
 		}
+		setInstalledInIndex(toolName, true)
 
 		// Update state with explicit flag, parent, and dependencies
 		err = mgr.GetState().UpdateTool(toolName, func(ts *install.ToolState) {

@@ -132,6 +132,7 @@ func init() {
 	rootCmd.AddCommand(doctorCmd)
 	rootCmd.AddCommand(llmCmd)
 	rootCmd.AddCommand(registryCmd)
+	rootCmd.AddCommand(whichCmd)
 }
 
 func main() {
