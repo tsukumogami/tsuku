@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/tsukumogami/tsuku/internal/install"
 	_ "modernc.org/sqlite" // register the SQLite driver
 )
 
@@ -49,6 +48,20 @@ type BinaryMatch struct {
 	Source     string // "registry" or "installed" (for custom/local recipes)
 }
 
+// VersionInfo holds the subset of per-version data that Rebuild needs.
+type VersionInfo struct {
+	Binaries []string // Binary names provided by this version.
+}
+
+// ToolInfo holds the subset of installed-tool state that Rebuild needs.
+// The real *install.StateManager satisfies StateReader by returning values of
+// this type at the cmd/ layer; internal/index never imports internal/install.
+type ToolInfo struct {
+	ActiveVersion string
+	Source        string // "registry" or "installed" (for custom/local recipes)
+	Versions      map[string]VersionInfo
+}
+
 // Registry provides access to cached recipe data during Rebuild.
 // Satisfied by *registry.Registry without requiring an import of internal/registry.
 type Registry interface {
@@ -59,7 +72,7 @@ type Registry interface {
 // StateReader provides read access to installed tool state during Rebuild.
 // Satisfied by *install.StateManager without requiring direct coupling.
 type StateReader interface {
-	AllTools() (map[string]install.ToolState, error)
+	AllTools() (map[string]ToolInfo, error)
 }
 
 // BinaryIndex provides command-to-recipe lookup.
