@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-23T18:01:36Z",
+  "generated_at": "2026-03-23T18:02:42Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 64,
-      "pending": 3869,
+      "failed": 67,
+      "pending": 3866,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 64,
-        "pending": 3846,
+        "failed": 67,
+        "pending": 3843,
         "success": 1326
       }
     },
@@ -68,21 +68,19 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
-        "pending": 1,
+        "failed": 21,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 39,
-        "pending": 40,
+        "failed": 40,
+        "pending": 39,
         "success": 9,
         "total": 89
       }
@@ -877,6 +875,15 @@
           "next_retry_at": "2026-03-27T22:32:12Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 177,
+          "next_retry_at": "1733-12-12T18:14:57Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -956,6 +963,24 @@
           "category": "install_failed",
           "failure_count": 4,
           "next_retry_at": "2026-03-23T18:06:58Z"
+        },
+        {
+          "id": "rubygems:mktorrent",
+          "name": "mktorrent",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-23T22:02:14Z"
+        },
+        {
+          "id": "npm:mongoose",
+          "name": "mongoose",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-30T18:02:14Z"
         },
         {
           "id": "crates.io:numpy",
@@ -13278,15 +13303,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 175,
-          "next_retry_at": "1733-12-12T15:11:37Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -15874,15 +15890,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:mktorrent",
-          "name": "mktorrent",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-22T13:28:30Z"
-        },
-        {
           "id": "homebrew:mkvtomp4",
           "name": "mkvtomp4",
           "ecosystem": "homebrew",
@@ -16091,15 +16098,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:mongoose",
-          "name": "mongoose",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-23T15:57:32Z"
         },
         {
           "id": "homebrew:mongosh",
