@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-23T16:04:53Z",
+  "updated_at": "2026-03-23T18:02:14Z",
   "entries": [
     {
       "name": "node",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 175,
-      "next_retry_at": "1733-12-12T15:11:37.471251042Z"
+      "failure_count": 177,
+      "next_retry_at": "1733-12-12T18:14:57.963436825Z"
     },
     {
       "name": "libaacs",
@@ -30426,11 +30426,11 @@
       "name": "mktorrent",
       "source": "rubygems:mktorrent",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-22T13:28:30.91696712Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-23T22:02:14.818212633Z"
     },
     {
       "name": "mkvtomp4",
@@ -30826,11 +30826,11 @@
       "name": "mongoose",
       "source": "npm:mongoose",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-03-23T15:57:32.051190669Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-03-30T18:02:14.818212633Z"
     },
     {
       "name": "mongosh",
