@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-23T07:13:10Z",
+  "updated_at": "2026-03-23T08:58:55Z",
   "entries": [
     {
       "name": "node",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 171,
@@ -28896,11 +28896,11 @@
       "name": "markdown-toc",
       "source": "npm:markdown-toc",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-03-23T06:37:50.691329551Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-03-30T08:58:55.097414675Z"
     },
     {
       "name": "markdownlint-cli",
@@ -29486,11 +29486,11 @@
       "name": "mdv",
       "source": "rubygems:mdv",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-23T05:54:07.803485229Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-26T00:58:55.097414675Z"
     },
     {
       "name": "mecab",
