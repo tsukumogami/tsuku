@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
 )
 
 // Lookup returns all recipes that provide command, ranked by preference:
@@ -25,11 +24,6 @@ func (idx *sqliteBinaryIndex) Lookup(ctx context.Context, command string) ([]Bin
 	}
 	if err != nil {
 		return nil, fmt.Errorf("index lookup: read built_at: %w", err)
-	}
-
-	builtAt, err := time.Parse(time.RFC3339, builtAtRaw)
-	if err != nil {
-		return nil, fmt.Errorf("index lookup: parse built_at %q: %w", builtAtRaw, err)
 	}
 
 	// Query matching rows ordered by preference: installed DESC, recipe ASC.
@@ -61,13 +55,12 @@ func (idx *sqliteBinaryIndex) Lookup(ctx context.Context, command string) ([]Bin
 
 	// Non-blocking staleness check. If stale, return results with the warning.
 	if idx.registryDir != "" {
-		stale, staleErr := CheckStaleness(idx.db, idx.registryDir)
+		stale, indexBuiltAt, registryAt, staleErr := checkStalenessDetails(idx.db, idx.registryDir)
 		if staleErr == nil && stale {
-			registryMtime, _ := registryDirMtime(idx.registryDir)
-			return matches, StaleIndexWarning{
-				BuiltAt:    builtAt,
-				RegistryAt: registryMtime,
-			}
+			return matches, fmt.Errorf("%w", StaleIndexWarning{
+				BuiltAt:    indexBuiltAt,
+				RegistryAt: registryAt,
+			})
 		}
 	}
 
