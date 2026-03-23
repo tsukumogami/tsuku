@@ -62,8 +62,7 @@ graph LR
 
     class I1677 ready
     class I1680 needsDesign
-    class I1678,I1679,I1681 blocked
-    class I2168 needsDesign
+    class I1678,I1679,I1681,I2168 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
