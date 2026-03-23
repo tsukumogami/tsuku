@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-23T08:58:11Z",
+  "generated_at": "2026-03-23T08:59:26Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 63,
-      "pending": 3870,
+      "failed": 64,
+      "pending": 3869,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 63,
-        "pending": 3847,
+        "failed": 64,
+        "pending": 3846,
         "success": 1326
       }
     },
@@ -68,20 +68,20 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
-        "pending": 1,
+        "failed": 21,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 37,
-        "pending": 42,
+        "failed": 38,
+        "pending": 41,
         "success": 9,
         "total": 89
       }
@@ -876,15 +876,6 @@
           "next_retry_at": "2026-03-27T22:32:12Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 171,
-          "next_retry_at": "1733-12-12T07:25:53Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -919,6 +910,24 @@
           "category": "install_failed",
           "failure_count": 9,
           "next_retry_at": "2026-03-30T05:07:11Z"
+        },
+        {
+          "id": "npm:markdown-toc",
+          "name": "markdown-toc",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-30T08:58:55Z"
+        },
+        {
+          "id": "rubygems:mdv",
+          "name": "mdv",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-26T00:58:55Z"
         },
         {
           "id": "rubygems:medusa",
@@ -13268,6 +13277,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 171,
+          "next_retry_at": "1733-12-12T07:25:53Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -15078,15 +15096,6 @@
           "failure_count": 0
         },
         {
-          "id": "npm:markdown-toc",
-          "name": "markdown-toc",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-23T06:37:50Z"
-        },
-        {
           "id": "homebrew:markdownlint-cli",
           "name": "markdownlint-cli",
           "ecosystem": "homebrew",
@@ -15421,15 +15430,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:mdv",
-          "name": "mdv",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-23T05:54:07Z"
         },
         {
           "id": "homebrew:mecab",
