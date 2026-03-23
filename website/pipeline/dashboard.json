@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-23T19:52:50Z",
+  "generated_at": "2026-03-23T19:54:01Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 67,
-      "pending": 3866,
+      "failed": 65,
+      "pending": 3868,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 67,
-        "pending": 3843,
+        "failed": 65,
+        "pending": 3845,
         "success": 1326
       }
     },
@@ -73,14 +73,15 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 40,
-        "pending": 39,
+        "failed": 39,
+        "pending": 40,
         "success": 9,
         "total": 89
       }
@@ -740,15 +741,6 @@
           "next_retry_at": "2026-03-30T16:04:53Z"
         },
         {
-          "id": "rubygems:haproxy",
-          "name": "haproxy",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-23T19:50:10Z"
-        },
-        {
           "id": "npm:hasura-cli",
           "name": "hasura-cli",
           "ecosystem": "npm",
@@ -875,15 +867,6 @@
           "next_retry_at": "2026-03-27T22:32:12Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 177,
-          "next_retry_at": "1733-12-12T18:14:57Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -956,15 +939,6 @@
           "next_retry_at": "2026-03-24T15:13:10Z"
         },
         {
-          "id": "rubygems:memcached",
-          "name": "memcached",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-23T18:06:58Z"
-        },
-        {
           "id": "rubygems:mktorrent",
           "name": "mktorrent",
           "ecosystem": "rubygems",
@@ -981,6 +955,15 @@
           "category": "install_failed",
           "failure_count": 9,
           "next_retry_at": "2026-03-30T18:02:14Z"
+        },
+        {
+          "id": "rubygems:multimarkdown",
+          "name": "multimarkdown",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-23T21:53:32Z"
         },
         {
           "id": "crates.io:numpy",
@@ -10662,6 +10645,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:haproxy",
+          "name": "haproxy",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-23T19:50:10Z"
+        },
+        {
           "id": "homebrew:harbor-cli",
           "name": "harbor-cli",
           "ecosystem": "homebrew",
@@ -13303,6 +13295,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 177,
+          "next_retry_at": "1733-12-12T18:14:57Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -15505,6 +15506,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:memcached",
+          "name": "memcached",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-23T18:06:58Z"
+        },
+        {
           "id": "homebrew:mender-artifact",
           "name": "mender-artifact",
           "ecosystem": "homebrew",
@@ -16343,15 +16353,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:multimarkdown",
-          "name": "multimarkdown",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-22T13:50:42Z"
         },
         {
           "id": "homebrew:mupdf",
