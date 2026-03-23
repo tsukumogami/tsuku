@@ -351,6 +351,32 @@ func TestRebuild_Transactional(t *testing.T) {
 	}
 }
 
+// TestRebuild_MalformedRecipeSkipped verifies that a malformed TOML recipe is
+// skipped with a warning rather than causing Rebuild to fail. Valid recipes
+// processed before or after the malformed one must still appear in the index.
+func TestRebuild_MalformedRecipeSkipped(t *testing.T) {
+	idx := openTestIndex(t)
+	ctx := context.Background()
+
+	reg := &stubRegistry{
+		recipes: map[string][]byte{
+			"jq":     minimalRecipeTOML("bin/jq"),
+			"broken": []byte(`this is not valid toml ===`),
+			"bat":    minimalRecipeTOML("bin/bat"),
+		},
+	}
+	state := &stubState{tools: map[string]ToolInfo{}}
+
+	if err := idx.Rebuild(ctx, reg, state); err != nil {
+		t.Fatalf("Rebuild() error = %v, want nil (malformed recipe should be skipped)", err)
+	}
+
+	got := countRows(t, idx)
+	if got != 2 {
+		t.Errorf("row count = %d, want 2 (only valid recipes inserted)", got)
+	}
+}
+
 // TestRebuild_MultipleBinariesPerRecipe verifies that recipes with multiple
 // binaries produce one row per binary.
 func TestRebuild_MultipleBinariesPerRecipe(t *testing.T) {

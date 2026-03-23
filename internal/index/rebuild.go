@@ -3,6 +3,7 @@ package index
 import (
 	"context"
 	"fmt"
+	"log"
 	"path/filepath"
 	"strings"
 	"time"
@@ -21,9 +22,8 @@ type recipeMinimal struct {
 
 // recipeStep mirrors the flat step encoding used in recipe TOML files.
 type recipeStep struct {
-	Action  string                 `toml:"action"`
-	Params  map[string]interface{} `toml:"-"`
-	rawData map[string]interface{}
+	Action string                 `toml:"action"`
+	Params map[string]interface{} `toml:"-"`
 }
 
 // UnmarshalTOML implements the toml.Unmarshaler interface so that step params
@@ -33,7 +33,6 @@ func (s *recipeStep) UnmarshalTOML(data interface{}) error {
 	if !ok {
 		return fmt.Errorf("expected map for step, got %T", data)
 	}
-	s.rawData = m
 	if action, ok := m["action"].(string); ok {
 		s.Action = action
 	}
@@ -59,6 +58,7 @@ func extractBinariesFromMinimal(r *recipeMinimal) []string {
 		return r.Metadata.Binaries
 	}
 
+	// keep in sync with internal/recipe.(*Recipe).ExtractBinaries action list
 	installActions := map[string]bool{
 		"install_binaries": true,
 		"download_archive": true,
@@ -184,6 +184,7 @@ func (idx *sqliteBinaryIndex) Rebuild(ctx context.Context, reg Registry, state S
 		var r recipeMinimal
 		if err := toml.Unmarshal(data, &r); err != nil {
 			// Skip malformed recipes rather than aborting the whole rebuild.
+			log.Printf("warning: binary index: skipping recipe %q: failed to parse TOML: %v", name, err)
 			continue
 		}
 
@@ -195,7 +196,7 @@ func (idx *sqliteBinaryIndex) Rebuild(ctx context.Context, reg Registry, state S
 			continue
 		}
 
-		installed := boolToInt(isInstalled(tools, name))
+		installed := boolToInt(tools[name].ActiveVersion != "")
 		for _, binPath := range binPaths {
 			command := filepath.Base(binPath)
 			command = strings.TrimSuffix(command, ".exe")
@@ -254,14 +255,6 @@ func (idx *sqliteBinaryIndex) Rebuild(ctx context.Context, reg Registry, state S
 	}
 
 	return nil
-}
-
-// isInstalled returns true when the named tool has a non-empty ActiveVersion.
-func isInstalled(tools map[string]ToolInfo, name string) bool {
-	if info, ok := tools[name]; ok {
-		return info.ActiveVersion != ""
-	}
-	return false
 }
 
 // boolToInt converts a bool to the SQLite integer representation (0 or 1).
