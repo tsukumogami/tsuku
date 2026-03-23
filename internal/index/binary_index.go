@@ -70,7 +70,9 @@ type Registry interface {
 }
 
 // StateReader provides read access to installed tool state during Rebuild.
-// Satisfied by *install.StateManager without requiring direct coupling.
+// *install.StateManager does NOT directly satisfy this interface because its
+// AllTools() returns map[string]install.ToolState, not map[string]ToolInfo.
+// Callers must adapt *install.StateManager to ToolInfo at the cmd/ wiring layer.
 type StateReader interface {
 	AllTools() (map[string]ToolInfo, error)
 }
