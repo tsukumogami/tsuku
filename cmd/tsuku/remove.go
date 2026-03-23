@@ -156,6 +156,7 @@ func cleanupOrphans(mgr *install.Manager, toolName string) {
 		printInfof("Warning: failed to auto-remove %s: %v\n", toolName, err)
 		return
 	}
+	setInstalledInIndex(toolName, false)
 
 	// Remove from state
 	if err := mgr.GetState().RemoveTool(toolName); err != nil {
