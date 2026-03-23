@@ -60,7 +60,8 @@ graph LR
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1677,I1680 needsDesign
+    class I1677 ready
+    class I1680 needsDesign
     class I1678,I1679,I1681 blocked
     class I2168 needsDesign
 ```
