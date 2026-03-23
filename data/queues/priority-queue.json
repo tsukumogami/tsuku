@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-23T08:58:55Z",
+  "updated_at": "2026-03-23T10:06:58Z",
   "entries": [
     {
       "name": "node",
@@ -16906,7 +16906,7 @@
       "name": "gitingest",
       "source": "rubygems:gitingest",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 171,
-      "next_retry_at": "1733-12-12T07:25:53.748196688Z"
+      "failure_count": 173,
+      "next_retry_at": "1733-12-12T10:19:41.364452766Z"
     },
     {
       "name": "libaacs",
@@ -29606,11 +29606,11 @@
       "name": "memcached",
       "source": "rubygems:memcached",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-22T22:40:14.312894476Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-23T18:06:58.219228574Z"
     },
     {
       "name": "memtester",
