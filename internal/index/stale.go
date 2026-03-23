@@ -1,6 +1,7 @@
 package index
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -15,8 +16,8 @@ import (
 //
 // A missing built_at key (index never built) is treated as a read failure and
 // returns (false, ErrIndexNotBuilt).
-func CheckStaleness(db *sql.DB, registryDir string) (bool, error) {
-	stale, _, _, err := checkStalenessDetails(db, registryDir)
+func CheckStaleness(ctx context.Context, db *sql.DB, registryDir string) (bool, error) {
+	stale, _, _, err := checkStalenessDetails(ctx, db, registryDir)
 	return stale, err
 }
 
@@ -24,9 +25,9 @@ func CheckStaleness(db *sql.DB, registryDir string) (bool, error) {
 // It returns the stale flag, the parsed built_at time, the registry directory
 // mtime, and any error. Both time values are zero on error. Lookup uses this
 // directly to avoid a second stat call when populating StaleIndexWarning.
-func checkStalenessDetails(db *sql.DB, registryDir string) (stale bool, builtAt time.Time, registryAt time.Time, err error) {
+func checkStalenessDetails(ctx context.Context, db *sql.DB, registryDir string) (stale bool, builtAt time.Time, registryAt time.Time, err error) {
 	var builtAtRaw string
-	err = db.QueryRow(`SELECT value FROM meta WHERE key = 'built_at'`).Scan(&builtAtRaw)
+	err = db.QueryRowContext(ctx, `SELECT value FROM meta WHERE key = 'built_at'`).Scan(&builtAtRaw)
 	if errors.Is(err, sql.ErrNoRows) {
 		return false, time.Time{}, time.Time{}, ErrIndexNotBuilt
 	}

@@ -215,7 +215,7 @@ func TestCheckStaleness_Stale(t *testing.T) {
 		t.Fatalf("chtimes: %v", err)
 	}
 
-	stale, err := CheckStaleness(si.db, registryDir)
+	stale, err := CheckStaleness(ctx, si.db, registryDir)
 	if err != nil {
 		t.Fatalf("CheckStaleness() error = %v", err)
 	}
@@ -244,7 +244,7 @@ func TestCheckStaleness_Current(t *testing.T) {
 
 	si := idx.(*sqliteBinaryIndex)
 
-	stale, err := CheckStaleness(si.db, registryDir)
+	stale, err := CheckStaleness(context.Background(), si.db, registryDir)
 	if err != nil {
 		t.Fatalf("CheckStaleness() error = %v, want nil", err)
 	}

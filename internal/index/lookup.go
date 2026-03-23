@@ -11,8 +11,8 @@ import (
 // installed recipes first, then lexicographic by recipe name. Returns an empty
 // slice and nil error when the command is not found. Returns ErrIndexNotBuilt
 // when the index has never been populated (no built_at key in the meta table).
-// When the index is stale, results are returned alongside a StaleIndexWarning
-// in the error return.
+// When the index is stale, Lookup returns results and a StaleIndexWarning error.
+// Use errors.As to inspect the warning: var w index.StaleIndexWarning; errors.As(err, &w)
 func (idx *sqliteBinaryIndex) Lookup(ctx context.Context, command string) ([]BinaryMatch, error) {
 	// Check whether the index has ever been built by reading built_at from meta.
 	var builtAtRaw string
@@ -55,12 +55,12 @@ func (idx *sqliteBinaryIndex) Lookup(ctx context.Context, command string) ([]Bin
 
 	// Non-blocking staleness check. If stale, return results with the warning.
 	if idx.registryDir != "" {
-		stale, indexBuiltAt, registryAt, staleErr := checkStalenessDetails(idx.db, idx.registryDir)
+		stale, indexBuiltAt, registryAt, staleErr := checkStalenessDetails(ctx, idx.db, idx.registryDir)
 		if staleErr == nil && stale {
-			return matches, fmt.Errorf("%w", StaleIndexWarning{
+			return matches, StaleIndexWarning{
 				BuiltAt:    indexBuiltAt,
 				RegistryAt: registryAt,
-			})
+			}
 		}
 	}
 
