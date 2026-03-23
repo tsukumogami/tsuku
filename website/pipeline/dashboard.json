@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-23T23:36:24Z",
+  "generated_at": "2026-03-23T23:37:25Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 67,
-      "pending": 3866,
+      "failed": 65,
+      "pending": 3868,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 67,
-        "pending": 3843,
+        "failed": 65,
+        "pending": 3845,
         "success": 1326
       }
     },
@@ -73,14 +73,15 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 40,
-        "pending": 39,
+        "failed": 39,
+        "pending": 40,
         "success": 9,
         "total": 89
       }
@@ -875,15 +876,6 @@
           "next_retry_at": "2026-03-27T22:32:12Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 179,
-          "next_retry_at": "1733-12-12T21:53:16Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -956,13 +948,13 @@
           "next_retry_at": "2026-03-24T15:13:10Z"
         },
         {
-          "id": "rubygems:mktorrent",
-          "name": "mktorrent",
+          "id": "rubygems:memcached",
+          "name": "memcached",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-23T22:02:14Z"
+          "failure_count": 5,
+          "next_retry_at": "2026-03-24T15:37:02Z"
         },
         {
           "id": "npm:mongoose",
@@ -972,15 +964,6 @@
           "category": "install_failed",
           "failure_count": 9,
           "next_retry_at": "2026-03-30T18:02:14Z"
-        },
-        {
-          "id": "rubygems:multimarkdown",
-          "name": "multimarkdown",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-23T21:53:32Z"
         },
         {
           "id": "crates.io:numpy",
@@ -13303,6 +13286,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 179,
+          "next_retry_at": "1733-12-12T21:53:16Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -15505,15 +15497,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:memcached",
-          "name": "memcached",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-23T18:06:58Z"
-        },
-        {
           "id": "homebrew:mender-artifact",
           "name": "mender-artifact",
           "ecosystem": "homebrew",
@@ -15897,6 +15880,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:mktorrent",
+          "name": "mktorrent",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-23T22:02:14Z"
         },
         {
           "id": "homebrew:mkvtomp4",
@@ -16352,6 +16344,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:multimarkdown",
+          "name": "multimarkdown",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-23T21:53:32Z"
         },
         {
           "id": "homebrew:mupdf",
