@@ -1,9 +1,7 @@
 package main
 
 import (
-	"errors"
 	"log/slog"
-	"os"
 	"path/filepath"
 
 	"github.com/tsukumogami/tsuku/internal/config"
@@ -20,11 +18,6 @@ func setInstalledInIndex(recipe string, installed bool) {
 		return
 	}
 
-	// If the cache directory doesn't exist the index was never built — nothing to do.
-	if _, err := os.Stat(cfg.CacheDir); os.IsNotExist(err) {
-		return
-	}
-
 	dbPath := filepath.Join(cfg.CacheDir, "binary-index.db")
 	idx, err := index.Open(dbPath, cfg.RegistryDir)
 	if err != nil {
@@ -34,8 +27,6 @@ func setInstalledInIndex(recipe string, installed bool) {
 	defer func() { _ = idx.Close() }()
 
 	if err := idx.SetInstalled(globalCtx, recipe, installed); err != nil {
-		if !errors.Is(err, index.ErrIndexNotBuilt) {
-			slog.Warn("binary index: failed to set installed flag", "recipe", recipe, "installed", installed, "err", err)
-		}
+		slog.Warn("binary index: failed to set installed flag", "recipe", recipe, "installed", installed, "err", err)
 	}
 }

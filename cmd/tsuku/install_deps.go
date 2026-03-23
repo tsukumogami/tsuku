@@ -429,6 +429,9 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		if err != nil {
 			printInfof("Warning: failed to update state: %v\n", err)
 		}
+		// Ensure the index reflects this tool as installed (idempotent).
+		// This handles the case where the index DB was deleted and rebuilt.
+		setInstalledInIndex(toolName, true)
 		return nil
 	}
 

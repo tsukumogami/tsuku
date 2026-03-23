@@ -34,12 +34,6 @@ Examples:
 
 		dbPath := filepath.Join(cfg.CacheDir, "binary-index.db")
 
-		// If the cache directory doesn't exist, the index hasn't been built.
-		if _, err := os.Stat(cfg.CacheDir); os.IsNotExist(err) {
-			fmt.Println("Binary index not built. Run 'tsuku update-registry' first.")
-			exitWithCode(ExitGeneral)
-		}
-
 		idx, err := index.Open(dbPath, cfg.RegistryDir)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to open binary index: %v\n", err)
