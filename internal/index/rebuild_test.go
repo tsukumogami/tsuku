@@ -72,12 +72,13 @@ command = "test --version"
 `, binaryPath))
 }
 
-// openTestIndex opens a fresh index in a temp dir.
+// openTestIndex opens a fresh index in a temp dir with no registry dir
+// (staleness detection disabled).
 func openTestIndex(t *testing.T) BinaryIndex {
 	t.Helper()
 	dir := t.TempDir()
 	dbPath := filepath.Join(dir, "binary-index.db")
-	idx, err := Open(dbPath)
+	idx, err := Open(dbPath, "")
 	if err != nil {
 		t.Fatalf("Open() error = %v", err)
 	}

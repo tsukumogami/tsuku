@@ -3,7 +3,7 @@ package index
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"path/filepath"
 	"strings"
 	"time"
@@ -187,7 +187,8 @@ func (idx *sqliteBinaryIndex) Rebuild(ctx context.Context, reg Registry, state S
 		var r recipeMinimal
 		if err := toml.Unmarshal(data, &r); err != nil {
 			// Skip malformed recipes rather than aborting the whole rebuild.
-			log.Printf("warning: binary index: skipping recipe %q: failed to parse TOML: %v", name, err)
+			slog.Warn("binary index: skipping recipe: failed to parse TOML",
+				"recipe", name, "error", err)
 			continue
 		}
 

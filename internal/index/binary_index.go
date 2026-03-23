@@ -102,10 +102,15 @@ var errNotImplemented = errors.New("not implemented")
 
 // sqliteBinaryIndex is the SQLite-backed implementation of BinaryIndex.
 type sqliteBinaryIndex struct {
-	db *sql.DB
+	db          *sql.DB
+	registryDir string // path used for staleness detection; empty disables the check
 }
 
 // Open opens or creates the binary index database at dbPath.
+//
+// registryDir is the path to the registry directory used for staleness
+// detection in Lookup. Pass an empty string to disable the staleness check
+// (useful in tests that do not need it).
 //
 // If the file does not exist it is created empty (the index is not rebuilt).
 // The parent directory of dbPath must already exist; Open returns an error
@@ -113,7 +118,7 @@ type sqliteBinaryIndex struct {
 //
 // Open enables WAL journal mode and sets a busy timeout of 5 seconds, then
 // calls initSchema to create tables if they are absent.
-func Open(dbPath string) (BinaryIndex, error) {
+func Open(dbPath, registryDir string) (BinaryIndex, error) {
 	// Verify the parent directory exists before attempting to open the DB.
 	parent := filepath.Dir(dbPath)
 	if _, err := os.Stat(parent); err != nil {
@@ -145,17 +150,12 @@ func Open(dbPath string) (BinaryIndex, error) {
 		return nil, err
 	}
 
-	return &sqliteBinaryIndex{db: db}, nil
+	return &sqliteBinaryIndex{db: db, registryDir: registryDir}, nil
 }
 
 // Close closes the underlying database connection.
 func (idx *sqliteBinaryIndex) Close() error {
 	return idx.db.Close()
-}
-
-// Lookup is implemented in Issue 3.
-func (idx *sqliteBinaryIndex) Lookup(_ context.Context, _ string) ([]BinaryMatch, error) {
-	return nil, errNotImplemented
 }
 
 // SetInstalled is implemented in Issue 4.

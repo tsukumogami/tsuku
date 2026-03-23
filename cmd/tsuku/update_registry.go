@@ -316,7 +316,7 @@ func rebuildBinaryIndex(ctx context.Context, reg index.Registry) {
 	}
 
 	dbPath := filepath.Join(cfg.CacheDir, "binary-index.db")
-	idx, err := index.Open(dbPath)
+	idx, err := index.Open(dbPath, cfg.RegistryDir)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to open binary index: %v\n", err)
 		exitWithCode(ExitGeneral)

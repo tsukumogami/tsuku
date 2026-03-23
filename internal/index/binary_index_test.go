@@ -18,7 +18,7 @@ func TestOpen_CreatesFile(t *testing.T) {
 		t.Fatal("pre-condition: DB file should not exist before Open")
 	}
 
-	idx, err := Open(dbPath)
+	idx, err := Open(dbPath, "")
 	if err != nil {
 		t.Fatalf("Open() error = %v, want nil", err)
 	}
@@ -35,13 +35,13 @@ func TestOpen_Idempotent(t *testing.T) {
 	dir := t.TempDir()
 	dbPath := filepath.Join(dir, "binary-index.db")
 
-	idx1, err := Open(dbPath)
+	idx1, err := Open(dbPath, "")
 	if err != nil {
 		t.Fatalf("first Open() error = %v, want nil", err)
 	}
 	_ = idx1.Close()
 
-	idx2, err := Open(dbPath)
+	idx2, err := Open(dbPath, "")
 	if err != nil {
 		t.Fatalf("second Open() error = %v, want nil", err)
 	}
@@ -76,7 +76,7 @@ func TestClose(t *testing.T) {
 	dir := t.TempDir()
 	dbPath := filepath.Join(dir, "binary-index.db")
 
-	idx, err := Open(dbPath)
+	idx, err := Open(dbPath, "")
 	if err != nil {
 		t.Fatalf("Open() error = %v, want nil", err)
 	}
@@ -91,7 +91,7 @@ func TestClose(t *testing.T) {
 func TestOpen_MissingParent(t *testing.T) {
 	dbPath := filepath.Join(t.TempDir(), "nonexistent-subdir", "binary-index.db")
 
-	idx, err := Open(dbPath)
+	idx, err := Open(dbPath, "")
 	if err == nil {
 		_ = idx.Close()
 		t.Fatal("Open() with missing parent dir: got nil error, want non-nil")
