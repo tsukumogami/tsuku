@@ -32,7 +32,7 @@ type StaleIndexWarning struct {
 }
 
 // Error implements the error interface.
-func (s *StaleIndexWarning) Error() string {
+func (s StaleIndexWarning) Error() string {
 	return fmt.Sprintf(
 		"binary index may be stale (built %s, registry updated %s); run 'tsuku update-registry'",
 		s.BuiltAt.Format(time.RFC3339),
@@ -111,8 +111,8 @@ type sqliteBinaryIndex struct {
 // The parent directory of dbPath must already exist; Open returns an error
 // rather than silently creating missing parent directories.
 //
-// Open calls initSchema to create tables if they are absent, then enables
-// WAL journal mode and sets a busy timeout of 5 seconds.
+// Open enables WAL journal mode and sets a busy timeout of 5 seconds, then
+// calls initSchema to create tables if they are absent.
 func Open(dbPath string) (BinaryIndex, error) {
 	// Verify the parent directory exists before attempting to open the DB.
 	parent := filepath.Dir(dbPath)
