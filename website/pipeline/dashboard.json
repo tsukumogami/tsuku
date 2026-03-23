@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-23T21:39:54Z",
+  "generated_at": "2026-03-23T21:40:58Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 65,
-      "pending": 3868,
+      "failed": 67,
+      "pending": 3866,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 65,
-        "pending": 3845,
+        "failed": 67,
+        "pending": 3843,
         "success": 1326
       }
     },
@@ -73,15 +73,14 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 39,
-        "pending": 40,
+        "failed": 40,
+        "pending": 39,
         "success": 9,
         "total": 89
       }
@@ -741,6 +740,15 @@
           "next_retry_at": "2026-03-30T16:04:53Z"
         },
         {
+          "id": "rubygems:haproxy",
+          "name": "haproxy",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-30T21:40:32Z"
+        },
+        {
           "id": "npm:hasura-cli",
           "name": "hasura-cli",
           "ecosystem": "npm",
@@ -865,6 +873,15 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-27T22:32:12Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 179,
+          "next_retry_at": "1733-12-12T21:53:16Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -10645,15 +10662,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:haproxy",
-          "name": "haproxy",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-23T19:50:10Z"
-        },
-        {
           "id": "homebrew:harbor-cli",
           "name": "harbor-cli",
           "ecosystem": "homebrew",
@@ -13293,15 +13301,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 177,
-          "next_retry_at": "1733-12-12T18:14:57Z"
         },
         {
           "id": "homebrew:libaacs",
