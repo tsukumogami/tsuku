@@ -299,9 +299,9 @@ func refreshDistributedSources(ctx context.Context) {
 }
 
 // rebuildBinaryIndex opens the binary index and rebuilds it from the cached
-// registry and current installed state. If the cache directory does not exist
-// yet (first-run scenario), the rebuild is skipped silently. Any other failure
-// is printed to stderr and causes the command to exit non-zero.
+// registry and current installed state. The cache directory is created if it
+// does not already exist. Any failure is printed to stderr and causes the
+// command to exit non-zero.
 func rebuildBinaryIndex(ctx context.Context, reg index.Registry) {
 	cfg, err := config.DefaultConfig()
 	if err != nil {
