@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-24T10:56:49Z",
+  "generated_at": "2026-03-24T10:57:59Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 66,
-      "pending": 3867,
+      "failed": 64,
+      "pending": 3869,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 66,
-        "pending": 3844,
+        "failed": 64,
+        "pending": 3846,
         "success": 1326
       }
     },
@@ -73,14 +73,15 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 39,
-        "pending": 40,
+        "failed": 38,
+        "pending": 41,
         "success": 9,
         "total": 89
       }
@@ -875,15 +876,6 @@
           "next_retry_at": "2026-03-27T22:32:12Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 185,
-          "next_retry_at": "1733-12-13T09:10:09Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -891,6 +883,15 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-29T16:57:25Z"
+        },
+        {
+          "id": "rubygems:lsof",
+          "name": "lsof",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-29T18:57:32Z"
         },
         {
           "id": "rubygems:mailcatcher",
@@ -929,15 +930,6 @@
           "next_retry_at": "2026-03-26T00:58:55Z"
         },
         {
-          "id": "rubygems:medusa",
-          "name": "medusa",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-24T10:07:55Z"
-        },
-        {
           "id": "rubygems:meli",
           "name": "meli",
           "ecosystem": "rubygems",
@@ -954,15 +946,6 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-24T15:37:02Z"
-        },
-        {
-          "id": "rubygems:mktorrent",
-          "name": "mktorrent",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-24T09:59:41Z"
         },
         {
           "id": "npm:mongoose",
@@ -13294,6 +13277,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 185,
+          "next_retry_at": "1733-12-13T09:10:09Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -14642,15 +14634,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:lsof",
-          "name": "lsof",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-24T08:32:54Z"
-        },
-        {
           "id": "homebrew:lspmux",
           "name": "lspmux",
           "ecosystem": "homebrew",
@@ -15477,6 +15460,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:medusa",
+          "name": "medusa",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-24T10:07:55Z"
+        },
+        {
           "id": "homebrew:megacmd",
           "name": "megacmd",
           "ecosystem": "homebrew",
@@ -15888,6 +15880,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:mktorrent",
+          "name": "mktorrent",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-24T09:59:41Z"
         },
         {
           "id": "homebrew:mkvtomp4",
