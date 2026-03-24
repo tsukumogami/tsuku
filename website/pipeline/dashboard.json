@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-24T22:33:57Z",
+  "generated_at": "2026-03-24T22:35:05Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 67,
-      "pending": 3866,
+      "failed": 68,
+      "pending": 3865,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 67,
-        "pending": 3843,
+        "failed": 68,
+        "pending": 3842,
         "success": 1326
       }
     },
@@ -68,20 +68,20 @@
         "total": 1
       },
       "npm": {
-        "failed": 21,
+        "failed": 20,
+        "pending": 1,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 41,
-        "pending": 38,
+        "failed": 42,
+        "pending": 37,
         "success": 9,
         "total": 89
       }
@@ -876,6 +876,15 @@
           "next_retry_at": "2026-03-27T22:32:12Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 193,
+          "next_retry_at": "1733-12-13T22:47:22Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -984,6 +993,15 @@
           "next_retry_at": "2026-03-25T04:45:20Z"
         },
         {
+          "id": "rubygems:neo4j",
+          "name": "neo4j",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-03-25T00:34:39Z"
+        },
+        {
           "id": "crates.io:numpy",
           "name": "numpy",
           "ecosystem": "crates.io",
@@ -1000,15 +1018,6 @@
           "category": "install_failed",
           "failure_count": 9,
           "next_retry_at": "2026-03-31T15:02:36Z"
-        },
-        {
-          "id": "npm:protoc-gen-js",
-          "name": "protoc-gen-js",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-24T21:07:12Z"
         },
         {
           "id": "npm:q",
@@ -13304,15 +13313,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 191,
-          "next_retry_at": "1733-12-13T19:18:48Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -16719,15 +16719,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:neo4j",
-          "name": "neo4j",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-24T07:05:49Z"
-        },
-        {
           "id": "homebrew:neocmakelsp",
           "name": "neocmakelsp",
           "ecosystem": "homebrew",
@@ -20071,6 +20062,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:protoc-gen-js",
+          "name": "protoc-gen-js",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-24T21:07:12Z"
         },
         {
           "id": "homebrew:protonpass/tap/pass-cli",
