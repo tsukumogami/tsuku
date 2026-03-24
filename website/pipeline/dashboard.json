@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-24T18:00:50Z",
+  "generated_at": "2026-03-24T18:02:01Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -73,14 +73,15 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 38,
-        "pending": 41,
+        "failed": 39,
+        "pending": 40,
         "success": 9,
         "total": 89
       }
@@ -875,15 +876,6 @@
           "next_retry_at": "2026-03-27T22:32:12Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 189,
-          "next_retry_at": "1733-12-13T16:28:07Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -945,6 +937,15 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-27T05:13:36Z"
+        },
+        {
+          "id": "rubygems:meli",
+          "name": "meli",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-27T10:01:29Z"
         },
         {
           "id": "rubygems:mktorrent",
@@ -13285,6 +13286,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 189,
+          "next_retry_at": "1733-12-13T16:28:07Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -15485,15 +15495,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:meli",
-          "name": "meli",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-24T15:13:10Z"
         },
         {
           "id": "rubygems:memcached",
