@@ -400,3 +400,31 @@ value in shared environments.
 - **Test churn**: replace `TestRebuild_Transactional` with two targeted tests:
   one verifying partial-failure non-fatality, one verifying atomicity of the
   insert phase (all-or-nothing on DB write errors)
+
+## Implementation Issues
+
+### PR: [#2169](https://github.com/tsukumogami/tsuku/pull/2169)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1: feat(registry): add ListAll to Registry interface and implementation](https://github.com/tsukumogami/tsuku/pull/2169) | None | testable |
+| _Extends `index.Registry` with `ListAll`, `FetchRecipe`, and `CacheRecipe`; implements `ListAll` on `*registry.Registry` using the cached manifest with fallback to `ListCached`._ | | |
+| [#2: feat(index): update Rebuild() for full registry coverage](https://github.com/tsukumogami/tsuku/pull/2169) | [#1](https://github.com/tsukumogami/tsuku/pull/2169) | critical |
+| _Updates `Rebuild()` to call `ListAll()`, fetch uncached recipes with a 10-worker semaphore, validate recipe names against path traversal, cap response bodies at 1 MiB, and cache fetched TOMLs._ | | |
+
+```mermaid
+graph LR
+    I1["#1: feat(registry): add ListAll\nto Registry interface and implementation"]
+    I2["#2: feat(index): update Rebuild()\nfor full registry coverage"]
+
+    I1 --> I2
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+
+    class I1 done
+    class I2 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
