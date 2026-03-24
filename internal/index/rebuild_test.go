@@ -621,9 +621,9 @@ func TestRebuild_CacheRecipeAfterFetch(t *testing.T) {
 	}
 }
 
-// TestRebuild_DBWriteError verifies that a DB write error during the insert
-// phase rolls back all inserts atomically (0 rows after the error).
-func TestRebuild_DBWriteError(t *testing.T) {
+// TestRebuild_DBUnavailable verifies that Rebuild returns an error when the
+// underlying database is unavailable (e.g., closed connection).
+func TestRebuild_DBUnavailable(t *testing.T) {
 	idx := openTestIndex(t)
 	ctx := context.Background()
 
@@ -644,6 +644,48 @@ func TestRebuild_DBWriteError(t *testing.T) {
 	err := idx.Rebuild(ctx, reg, state)
 	if err == nil {
 		t.Fatal("Rebuild() returned nil, want error (DB is closed)")
+	}
+}
+
+// TestRebuild_DBWriteError verifies that a DB write error during the insert
+// phase rolls back all inserts atomically. It installs a SQLite trigger that
+// calls RAISE(ABORT) after the first successful INSERT, which aborts the
+// entire transaction (including the preceding DELETE). After the error, the
+// binaries table must contain 0 rows — no partial commit.
+func TestRebuild_DBWriteError(t *testing.T) {
+	idx := openTestIndex(t)
+	ctx := context.Background()
+	si := idx.(*sqliteBinaryIndex)
+
+	// Install a trigger that aborts after the first INSERT into binaries.
+	// RAISE(ABORT) rolls back the enclosing transaction, undoing both the
+	// DELETE and any partial INSERTs that preceded the failure.
+	_, err := si.db.ExecContext(ctx, `
+		CREATE TRIGGER fail_after_first AFTER INSERT ON binaries
+		WHEN (SELECT COUNT(*) FROM binaries) >= 1
+		BEGIN SELECT RAISE(ABORT, 'injected test failure'); END
+	`)
+	if err != nil {
+		t.Fatalf("create trigger: %v", err)
+	}
+
+	reg := &stubRegistry{
+		recipes: map[string][]byte{
+			"jq": minimalRecipeTOML("bin/jq"),
+			"rg": minimalRecipeTOML("bin/rg"),
+		},
+	}
+	state := &stubState{tools: map[string]ToolInfo{}}
+
+	err = idx.Rebuild(ctx, reg, state)
+	if err == nil {
+		t.Fatal("Rebuild() returned nil, want error (trigger should abort the transaction)")
+	}
+
+	// The transaction must have rolled back atomically: 0 rows committed.
+	got := countRows(t, idx)
+	if got != 0 {
+		t.Errorf("row count = %d, want 0 (all inserts must roll back on error)", got)
 	}
 }
 
