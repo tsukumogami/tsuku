@@ -1,6 +1,6 @@
 ---
 schema: plan/v1
-status: Draft
+status: Done
 execution_mode: single-pr
 upstream: docs/designs/DESIGN-binary-index-full-registry.md
 milestone: "Binary Index — Full Registry Coverage"
@@ -11,7 +11,7 @@ issue_count: 2
 
 ## Status
 
-Draft
+Done
 
 ## Scope Summary
 
