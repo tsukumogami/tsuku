@@ -20,8 +20,8 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| ~~[#1677: docs: design binary index](https://github.com/tsukumogami/tsuku/issues/1677)~~ | None | testable |
-| _Design the SQLite-backed index that maps command names to recipes. Defines the `BinaryIndex` interface, conflict resolution policy, and ~50ms lookup requirement. Foundation for all command-to-recipe lookups._ | | |
+| ~~[#1677: docs: design binary index](https://github.com/tsukumogami/tsuku/issues/1677)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Design the SQLite-backed index that maps command names to recipes. Defines the `BinaryIndex` interface, conflict resolution policy, and ~50ms lookup requirement. Foundation for all command-to-recipe lookups._~~ | | |
 | [#1678: docs: design command-not-found handler](https://github.com/tsukumogami/tsuku/issues/1678) | [#1677](https://github.com/tsukumogami/tsuku/issues/1677) | testable |
 | _Shell hooks for bash, zsh, and fish that intercept unknown commands. Specifies `tsuku suggest` output format, hook installation mechanism, and security analysis for shell injection prevention._ | | |
 | [#1679: docs: design auto-install flow](https://github.com/tsukumogami/tsuku/issues/1679) | [#1677](https://github.com/tsukumogami/tsuku/issues/1677) | testable |
