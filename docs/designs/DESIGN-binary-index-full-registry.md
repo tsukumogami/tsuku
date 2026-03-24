@@ -1,5 +1,5 @@
 ---
-status: Implemented
+status: Current
 problem: |
   The binary index only covers locally-cached recipes. On a clean machine,
   tsuku which jq returns "not found" immediately after tsuku update-registry
@@ -26,7 +26,7 @@ upstream: docs/designs/DESIGN-binary-index.md
 
 ## Status
 
-Implemented
+Current
 
 ## Upstream Design Reference
 
