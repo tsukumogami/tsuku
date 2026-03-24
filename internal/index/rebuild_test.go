@@ -12,10 +12,22 @@ import (
 // --- stub implementations for Registry and StateReader ---
 
 // stubRegistry implements Registry for tests.
+//
+// Cache and fetch paths are independent:
+//   - recipes/getErr control GetCached (local cache)
+//   - fetchRecipes/fetchErr control FetchRecipe (remote fetch)
+//
+// This matches the real Registry contract where GetCached and FetchRecipe
+// are separate operations with separate failure modes. Tests for Issue 2's
+// bounded-fetch path must use fetchRecipes and fetchErr, not recipes/getErr.
 type stubRegistry struct {
+	// cache path
 	recipes map[string][]byte
 	listErr error
 	getErr  map[string]error
+	// fetch path (independent from cache)
+	fetchRecipes map[string][]byte
+	fetchErr     map[string]error
 }
 
 func (s *stubRegistry) ListCached() ([]string, error) {
@@ -46,8 +58,20 @@ func (s *stubRegistry) ListAll(_ context.Context) ([]string, error) {
 	return s.ListCached()
 }
 
+// FetchRecipe simulates a remote fetch. It uses the fetchRecipes and fetchErr
+// maps, which are independent from the local cache (recipes/getErr).
 func (s *stubRegistry) FetchRecipe(_ context.Context, name string) ([]byte, error) {
-	return s.GetCached(name)
+	if s.fetchErr != nil {
+		if err, ok := s.fetchErr[name]; ok {
+			return nil, err
+		}
+	}
+	if s.fetchRecipes != nil {
+		if data, ok := s.fetchRecipes[name]; ok {
+			return data, nil
+		}
+	}
+	return nil, fmt.Errorf("fetch: recipe %q not found in stub", name)
 }
 
 func (s *stubRegistry) CacheRecipe(_ string, _ []byte) error {
