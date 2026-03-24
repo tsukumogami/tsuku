@@ -656,6 +656,8 @@ tsuku update-registry --recipe fzf
 tsuku update-registry --all
 ```
 
+On a clean machine, the first `tsuku update-registry` fetches all recipe TOMLs to build the binary index — this takes roughly 15-20 seconds. Subsequent runs are fast because the recipes are cached locally.
+
 #### Registry Compatibility
 
 tsuku validates the registry's schema version on every fetch and cache read. If the registry format is newer than your CLI supports, tsuku exits with an error and suggests upgrading. When a registry includes a deprecation notice for an upcoming format change, tsuku prints a one-time warning to stderr with the timeline, the minimum CLI version required, and an upgrade URL. The `--quiet` flag suppresses these warnings.
