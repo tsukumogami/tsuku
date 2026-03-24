@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-23T23:37:02Z",
+  "updated_at": "2026-03-24T01:59:41Z",
   "entries": [
     {
       "name": "node",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 179,
-      "next_retry_at": "1733-12-12T21:53:16.050599109Z"
+      "failure_count": 181,
+      "next_retry_at": "1733-12-13T02:12:24.396955723Z"
     },
     {
       "name": "libaacs",
@@ -30426,11 +30426,11 @@
       "name": "mktorrent",
       "source": "rubygems:mktorrent",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-23T22:02:14.818212633Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-03-24T09:59:41.251731531Z"
     },
     {
       "name": "mkvtomp4",
