@@ -25,7 +25,7 @@
       "report_file": "wip/design_command-not-found_decision_2_report.md",
       "assumptions": [
         "Hook snippet goes into user's personal rc file, not a system file like /etc/bash.bashrc",
-        "tsuku suggest exits 127 whether or not it finds a match, so the wrapper always falls through to the original handler",
+        "tsuku suggest exits 0/1/4 (not 127); wrapper always falls through to original handler regardless of exit code",
         "Shell function introspection available in minimum supported versions: bash 3.2+, zsh 5.0+, fish 3.0+",
         "command -v builtin (not tsuku itself) checks for tsuku presence — prevents infinite recursion",
         "Both tsuku's suggestion and the original handler's suggestion are shown when both apply"
@@ -39,11 +39,18 @@
       "chosen": "Simple text, one line per match, with --json flag",
       "report_file": "wip/design_command-not-found_decision_3_report.md",
       "assumptions": [
-        "Exit code 0 on match / 1 on no-match / 2 on index not built; shell hook always returns 127 to the shell regardless",
+        "Exit code 0 on match / 1 on no-match / 4 on index not built (ExitIndexNotBuilt); shell hook always returns 127 to the shell regardless",
         "tsuku suggest writes to stdout; stale-index warnings go to stderr",
         "Silence on no-match — shell's own error fires via the 127 return",
         "Block 3 (tsuku run) calls BinaryIndex.Lookup() directly; does not parse tsuku suggest output"
       ]
+    },
+    {
+      "id": 4,
+      "question": "Testing strategy: How do we verify the shell hook files work correctly in bash, zsh, and fish? What test infrastructure covers detect-and-wrap, the recursion guard, and rc file modification?",
+      "status": "complete",
+      "complexity": "critical",
+      "chosen": "Go unit tests for Go components + subshell integration tests for hook files (make test-hooks)"
     }
   ],
   "cross_validation": "complete",

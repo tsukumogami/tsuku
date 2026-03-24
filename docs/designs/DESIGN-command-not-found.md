@@ -251,6 +251,70 @@ Prompting belongs to Block 3 (`tsuku run`).
 
 ---
 
+### Decision 4: Testing Strategy
+
+The shell hook code (detect-and-wrap, recursion guard, fallthrough) runs in real shell processes,
+not inside Go. Standard `go test ./...` cannot exercise this logic. The testing strategy must
+cover both the Go components and the shell-native behavior, and must be automatable in CI —
+hooks that can't be verified won't be merged.
+
+**Key assumptions:**
+- GitHub Actions Ubuntu runners have bash pre-installed; zsh and fish are available via `apt-get`
+- The existing CI uses `go test ./...` with no shell integration tests today
+- The riskiest behavior is detect-and-wrap in each shell and the recursion guard
+- rc file modification (Go code) can be tested with temp home directories without a real shell
+- A corrupted or wrong hook file is worse than no hook file — false confidence is worse than no test
+
+#### Chosen: Go unit tests for Go components + subshell integration tests for hook files
+
+Two complementary test layers with a clear boundary between them:
+
+**Layer 1 — Go unit tests** (`go test ./...`):
+- `cmd/tsuku/cmd_suggest_test.go`: output formatting for single match, multi-match, no match, index-not-built; `--json` flag; exit code correctness
+- `internal/hook/install_test.go`: rc file detection, atomic marker insertion, idempotency guard, uninstall marker removal — all using `t.TempDir()` for home directory isolation
+- `internal/hook/status_test.go`: marker detection with and without the source line present
+
+**Layer 2 — Shell integration tests** (`make test-hooks`):
+A separate CI job installs bash, zsh, and fish via `apt-get`, then runs shell test scripts that
+exercise the hook files directly. Each test script:
+1. Sources `$TSUKU_HOME/share/hooks/tsuku.<shell>` in a subprocess
+2. Asserts the expected handler is defined
+3. Calls the handler with a known unknown command
+4. Verifies `tsuku suggest` was invoked (via a mock binary on PATH) and the original handler was called
+
+Critical scenarios covered per shell:
+- No pre-existing handler: tsuku's handler is installed, exits 127
+- Pre-existing handler present: detect-and-wrap preserves original; both called in order
+- tsuku binary missing from PATH: guard short-circuits, original handler called alone (no recursion)
+- Double-source: sourcing the hook file twice does not install nested wrappers
+
+Shell test scripts live in `internal/hooks/testdata/` and are invoked by `make test-hooks`.
+CI runs `test-hooks` in a separate job from `go test` so failures are isolated.
+
+#### Alternatives Considered
+
+**bats (Bash Automated Testing System) for shell tests:** bats provides a TAP-based test
+framework for bash with `@test` syntax. Rejected because it only covers bash; zsh and fish would
+still need separate frameworks. The subshell approach works uniformly across all three shells
+using the same test harness, and bats is an additional dependency that doesn't cover the full
+problem.
+
+**Docker-containerized per-shell testing:** Each shell gets an isolated container image. Provides
+clean environments and catches distribution-specific behavior (e.g., Ubuntu vs Alpine fish versions).
+Rejected for initial implementation because it adds Docker as a CI dependency and slows the test
+cycle significantly. Shell installation via `apt-get` in the existing Ubuntu runner achieves the
+same coverage for the shells tsuku targets. Container-based tests can be added later if
+distribution divergence becomes a real problem.
+
+**Manual QA only for hook behavior:** Document test scenarios; automate only the Go components.
+Rejected because the detect-and-wrap logic and recursion guard are exactly the things most likely
+to break subtly. A hook that silently fails (or silently clobbers an existing handler) is worse
+than a hook that visibly errors. Manual QA does not catch regressions.
+
+**Go subshell via exec.Command in `_test.go` files:** Write Go tests that call `exec.Command("bash", "-c", "source hook; ...")`. Attractive because it stays in `go test`, but mixing shell invocations into Go tests makes them fragile — they depend on `bash` being in `PATH`, the test's working directory, and shell quoting behavior inside Go string literals. Separating shell tests into dedicated shell scripts with `make test-hooks` keeps the concerns clean and makes failures easier to debug.
+
+---
+
 ### Cross-Validation: D2 and D3 Assumption Alignment
 
 Decision 2's original assumption stated "tsuku suggest exits 127 whether or not it finds a match,
@@ -531,6 +595,19 @@ Update `website/install.sh` to call `tsuku hook install` as the final setup step
 Deliverables:
 - `website/install.sh` — detect shell, call `tsuku hook install`, handle `--no-hooks`
 - Updated install output messages
+
+### Phase 5: Shell Integration Tests
+
+Add `make test-hooks` and a CI job that installs bash, zsh, and fish then runs the shell test
+scripts. This phase gates the PR — hook files must not be merged without passing shell tests.
+
+Deliverables:
+- `internal/hooks/testdata/test_bash.sh` — bash hook tests: no prior handler, detect-and-wrap, recursion guard, double-source idempotency
+- `internal/hooks/testdata/test_zsh.sh` — same scenarios for zsh
+- `internal/hooks/testdata/test_fish.fish` — same scenarios for fish
+- `internal/hooks/testdata/mock_tsuku.sh` — minimal mock binary that records invocations for test assertions
+- `Makefile` — `test-hooks` target: install shells if needed, source each hook file in a subprocess, run test scripts
+- `.github/workflows/test-hooks.yml` — CI job: `apt-get install zsh fish`, `make test-hooks`
 
 ## Security Considerations
 
