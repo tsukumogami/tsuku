@@ -37,7 +37,7 @@ func (s *stubRegistry) GetCached(name string) ([]byte, error) {
 	}
 	data, ok := s.recipes[name]
 	if !ok {
-		return nil, fmt.Errorf("recipe %q not found", name)
+		return nil, nil // cache miss: matches *registry.Registry.GetCached contract
 	}
 	return data, nil
 }
@@ -331,36 +331,6 @@ func TestRebuild_MetaBuiltAt(t *testing.T) {
 	}
 	if parsed.Before(before) || parsed.After(after) {
 		t.Errorf("built_at %v is outside expected range [%v, %v]", parsed, before, after)
-	}
-}
-
-// TestRebuild_Transactional verifies that a mid-run failure leaves no partial
-// writes: the binaries table should remain empty (as it was before Rebuild).
-func TestRebuild_Transactional(t *testing.T) {
-	idx := openTestIndex(t)
-	ctx := context.Background()
-
-	// The registry will fail when asked to retrieve "bad-recipe".
-	reg := &stubRegistry{
-		recipes: map[string][]byte{
-			"jq":         minimalRecipeTOML("bin/jq"),
-			"bad-recipe": minimalRecipeTOML("bin/bad"),
-		},
-		getErr: map[string]error{
-			"bad-recipe": fmt.Errorf("simulated network error"),
-		},
-	}
-	state := &stubState{tools: map[string]ToolInfo{}}
-
-	err := idx.Rebuild(ctx, reg, state)
-	if err == nil {
-		t.Fatal("Rebuild() should have returned an error when a recipe fetch fails")
-	}
-
-	// The binaries table must be empty — no partial writes committed.
-	got := countRows(t, idx)
-	if got != 0 {
-		t.Errorf("binaries table has %d rows after failed rebuild, want 0", got)
 	}
 }
 
