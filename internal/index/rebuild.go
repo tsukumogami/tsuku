@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -142,21 +143,83 @@ func extractBinariesFromMinimal(r *recipeMinimal) []string {
 	return binaries
 }
 
+// isValidRecipeName returns true if the recipe name is safe to pass to URL or
+// path construction functions. Names containing '/', "..", or a null byte are
+// rejected to prevent path traversal in local-registry deployments.
+func isValidRecipeName(name string) bool {
+	if strings.Contains(name, "/") {
+		return false
+	}
+	if strings.Contains(name, "..") {
+		return false
+	}
+	if strings.ContainsRune(name, '\x00') {
+		return false
+	}
+	return true
+}
+
 // Rebuild regenerates the index from the recipe registry and installed state.
 //
-// It runs entirely inside a single transaction: a mid-run error causes a full
-// rollback, leaving the previous index intact. A second call produces identical
-// rows (DELETE + re-insert is idempotent).
+// It enumerates all known recipes via reg.ListAll (which reads the cached
+// manifest when available), fetches uncached recipe TOMLs on demand using a
+// bounded worker pool of 10 concurrent fetches, and inserts all rows in a
+// single transaction. A fetch error on one recipe is logged as a warning and
+// that recipe is skipped; other recipes continue normally. A DB write error
+// during the insert phase rolls back all inserts atomically.
 func (idx *sqliteBinaryIndex) Rebuild(ctx context.Context, reg Registry, state StateReader) error {
 	tools, err := state.AllTools()
 	if err != nil {
 		return fmt.Errorf("index rebuild: read installed state: %w", err)
 	}
 
-	names, err := reg.ListCached()
+	names, err := reg.ListAll(ctx)
 	if err != nil {
-		return fmt.Errorf("index rebuild: list cached recipes: %w", err)
+		return fmt.Errorf("index rebuild: list recipes: %w", err)
 	}
+
+	// Fetch/cache content for each recipe with bounded concurrency (10 workers).
+	type result struct {
+		name string
+		data []byte
+	}
+
+	sem := make(chan struct{}, 10)
+	var mu sync.Mutex
+	results := make([]result, 0, len(names))
+
+	var wg sync.WaitGroup
+	for _, name := range names {
+		// Validate name before passing to any URL or path construction.
+		if !isValidRecipeName(name) {
+			slog.Warn("index rebuild: invalid recipe name", "name", name)
+			continue
+		}
+
+		wg.Add(1)
+		go func(n string) {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			data, err := reg.GetCached(n)
+			if err != nil || len(data) == 0 {
+				data, err = reg.FetchRecipe(ctx, n)
+				if err != nil {
+					slog.Warn("index rebuild: fetch recipe", "recipe", n, "err", err)
+					return
+				}
+				// Cache the fetched TOML so subsequent runs are cache hits.
+				if cacheErr := reg.CacheRecipe(n, data); cacheErr != nil {
+					slog.Warn("index rebuild: cache recipe", "recipe", n, "err", cacheErr)
+				}
+			}
+			mu.Lock()
+			results = append(results, result{n, data})
+			mu.Unlock()
+		}(name)
+	}
+	wg.Wait()
 
 	tx, err := idx.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -177,12 +240,10 @@ func (idx *sqliteBinaryIndex) Rebuild(ctx context.Context, reg Registry, state S
 
 	insertedRecipes := make(map[string]bool)
 
-	// Process all registry recipes.
-	for _, name := range names {
-		data, err := reg.GetCached(name)
-		if err != nil {
-			return fmt.Errorf("index rebuild: get cached recipe %q: %w", name, err)
-		}
+	// Process all fetched recipes.
+	for _, res := range results {
+		name := res.name
+		data := res.data
 
 		var r recipeMinimal
 		if err := toml.Unmarshal(data, &r); err != nil {

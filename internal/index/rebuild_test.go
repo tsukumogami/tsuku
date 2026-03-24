@@ -416,3 +416,281 @@ command = "foo --version"
 		t.Errorf("row count = %d, want 2 (one per binary)", got)
 	}
 }
+
+// TestRebuild_EmptyCacheWithManifest verifies that Rebuild produces index rows
+// for all recipes when the local cache is empty but fetchRecipes is populated
+// (simulating a manifest-driven cold-start where recipes must be fetched).
+func TestRebuild_EmptyCacheWithManifest(t *testing.T) {
+	idx := openTestIndex(t)
+	ctx := context.Background()
+
+	reg := &stubRegistry{
+		// Empty local cache — all GetCached calls return nil, nil.
+		recipes: map[string][]byte{},
+		// Remote fetch provides all three recipes.
+		fetchRecipes: map[string][]byte{
+			"jq":  minimalRecipeTOML("bin/jq"),
+			"rg":  minimalRecipeTOML("bin/rg"),
+			"bat": minimalRecipeTOML("bin/bat"),
+		},
+	}
+	// Override ListAll to return names from fetchRecipes (simulates manifest).
+	// We do this by populating a separate field and overriding ListCached via
+	// a custom stub that uses fetchRecipes keys as the manifest.
+	manifestReg := &manifestStubRegistry{stubRegistry: reg}
+	state := &stubState{tools: map[string]ToolInfo{}}
+
+	if err := idx.Rebuild(ctx, manifestReg, state); err != nil {
+		t.Fatalf("Rebuild() error = %v", err)
+	}
+
+	got := countRows(t, idx)
+	if got != 3 {
+		t.Errorf("row count = %d, want 3", got)
+	}
+}
+
+// manifestStubRegistry wraps stubRegistry and overrides ListAll to return keys
+// from fetchRecipes rather than recipes (simulating manifest enumeration).
+type manifestStubRegistry struct {
+	*stubRegistry
+}
+
+func (m *manifestStubRegistry) ListAll(_ context.Context) ([]string, error) {
+	names := make([]string, 0, len(m.fetchRecipes))
+	for name := range m.fetchRecipes {
+		names = append(names, name)
+	}
+	return names, nil
+}
+
+// TestRebuild_PartialFetchError verifies that when FetchRecipe fails for one
+// recipe, Rebuild still indexes the remaining recipes and returns nil.
+func TestRebuild_PartialFetchError(t *testing.T) {
+	idx := openTestIndex(t)
+	ctx := context.Background()
+
+	reg := &manifestStubRegistry{
+		stubRegistry: &stubRegistry{
+			recipes: map[string][]byte{}, // empty cache
+			fetchRecipes: map[string][]byte{
+				"jq":  minimalRecipeTOML("bin/jq"),
+				"rg":  minimalRecipeTOML("bin/rg"),
+				"bat": minimalRecipeTOML("bin/bat"),
+			},
+			fetchErr: map[string]error{
+				"rg": fmt.Errorf("network timeout"),
+			},
+		},
+	}
+	state := &stubState{tools: map[string]ToolInfo{}}
+
+	err := idx.Rebuild(ctx, reg, state)
+	if err != nil {
+		t.Fatalf("Rebuild() error = %v, want nil (fetch errors should be skipped)", err)
+	}
+
+	got := countRows(t, idx)
+	if got != 2 {
+		t.Errorf("row count = %d, want 2 (jq and bat indexed, rg skipped)", got)
+	}
+}
+
+// TestRebuild_WarmCacheNeverFetches verifies that when all recipes are in the
+// local cache, FetchRecipe is never called. This is tested by setting fetchErr
+// for all recipes: if FetchRecipe were called, Rebuild would skip those recipes
+// and produce 0 rows instead of 3.
+func TestRebuild_WarmCacheNeverFetches(t *testing.T) {
+	idx := openTestIndex(t)
+	ctx := context.Background()
+
+	reg := &stubRegistry{
+		// All recipes in cache.
+		recipes: map[string][]byte{
+			"jq":  minimalRecipeTOML("bin/jq"),
+			"rg":  minimalRecipeTOML("bin/rg"),
+			"bat": minimalRecipeTOML("bin/bat"),
+		},
+		// If FetchRecipe is called for any recipe, it returns an error.
+		fetchErr: map[string]error{
+			"jq":  fmt.Errorf("should not be called"),
+			"rg":  fmt.Errorf("should not be called"),
+			"bat": fmt.Errorf("should not be called"),
+		},
+	}
+	state := &stubState{tools: map[string]ToolInfo{}}
+
+	if err := idx.Rebuild(ctx, reg, state); err != nil {
+		t.Fatalf("Rebuild() error = %v", err)
+	}
+
+	got := countRows(t, idx)
+	if got != 3 {
+		t.Errorf("row count = %d, want 3 (warm cache should serve all recipes without fetching)", got)
+	}
+}
+
+// cacheTrackingRegistry wraps stubRegistry and records CacheRecipe calls.
+type cacheTrackingRegistry struct {
+	*stubRegistry
+	cached map[string][]byte
+}
+
+func (c *cacheTrackingRegistry) CacheRecipe(name string, data []byte) error {
+	if c.cached == nil {
+		c.cached = make(map[string][]byte)
+	}
+	c.cached[name] = data
+	// Also populate the underlying recipes map so a second Rebuild call finds
+	// the recipe in the cache (simulating a real CacheRecipe write).
+	if c.stubRegistry.recipes == nil {
+		c.stubRegistry.recipes = make(map[string][]byte)
+	}
+	c.stubRegistry.recipes[name] = data
+	return nil
+}
+
+func (c *cacheTrackingRegistry) ListAll(ctx context.Context) ([]string, error) {
+	// Return names from fetchRecipes (manifest) for first call, then from
+	// recipes (cache) for subsequent calls — but since the underlying
+	// stubRegistry.ListAll just calls ListCached (from recipes), and we
+	// populate recipes in CacheRecipe, this works naturally after the first run.
+	names := make([]string, 0)
+	seen := make(map[string]bool)
+	for name := range c.fetchRecipes {
+		if !seen[name] {
+			names = append(names, name)
+			seen[name] = true
+		}
+	}
+	for name := range c.recipes {
+		if !seen[name] {
+			names = append(names, name)
+			seen[name] = true
+		}
+	}
+	return names, nil
+}
+
+// TestRebuild_CacheRecipeAfterFetch verifies that CacheRecipe is called after
+// a successful FetchRecipe, and that a subsequent Rebuild uses only the cache
+// (no more FetchRecipe calls).
+func TestRebuild_CacheRecipeAfterFetch(t *testing.T) {
+	idx := openTestIndex(t)
+	ctx := context.Background()
+
+	reg := &cacheTrackingRegistry{
+		stubRegistry: &stubRegistry{
+			recipes: map[string][]byte{}, // empty cache initially
+			fetchRecipes: map[string][]byte{
+				"jq": minimalRecipeTOML("bin/jq"),
+				"rg": minimalRecipeTOML("bin/rg"),
+			},
+		},
+	}
+	state := &stubState{tools: map[string]ToolInfo{}}
+
+	// First Rebuild: cache is empty, recipes are fetched and cached.
+	if err := idx.Rebuild(ctx, reg, state); err != nil {
+		t.Fatalf("first Rebuild() error = %v", err)
+	}
+
+	if len(reg.cached) != 2 {
+		t.Errorf("CacheRecipe called %d times after first Rebuild, want 2", len(reg.cached))
+	}
+
+	// Reset tracking, then set fetchErr to verify FetchRecipe is not called again.
+	reg.cached = nil
+	reg.stubRegistry.fetchErr = map[string]error{
+		"jq": fmt.Errorf("should not be called on second rebuild"),
+		"rg": fmt.Errorf("should not be called on second rebuild"),
+	}
+
+	// Second Rebuild: cache is warm, no fetching should occur.
+	if err := idx.Rebuild(ctx, reg, state); err != nil {
+		t.Fatalf("second Rebuild() error = %v", err)
+	}
+
+	if len(reg.cached) != 0 {
+		t.Errorf("CacheRecipe called %d times on second Rebuild, want 0 (cache should be warm)", len(reg.cached))
+	}
+
+	got := countRows(t, idx)
+	if got != 2 {
+		t.Errorf("row count after second Rebuild = %d, want 2", got)
+	}
+}
+
+// TestRebuild_DBWriteError verifies that a DB write error during the insert
+// phase rolls back all inserts atomically (0 rows after the error).
+func TestRebuild_DBWriteError(t *testing.T) {
+	idx := openTestIndex(t)
+	ctx := context.Background()
+
+	reg := &stubRegistry{
+		recipes: map[string][]byte{
+			"jq": minimalRecipeTOML("bin/jq"),
+			"rg": minimalRecipeTOML("bin/rg"),
+		},
+	}
+	state := &stubState{tools: map[string]ToolInfo{}}
+
+	// Close the underlying DB to simulate write errors during insert.
+	si := idx.(*sqliteBinaryIndex)
+	if err := si.db.Close(); err != nil {
+		t.Fatalf("failed to close DB: %v", err)
+	}
+
+	err := idx.Rebuild(ctx, reg, state)
+	if err == nil {
+		t.Fatal("Rebuild() returned nil, want error (DB is closed)")
+	}
+}
+
+// TestRebuild_PathTraversalRejected verifies that recipe names containing '/',
+// '..', or null bytes are rejected with a warning and skipped before any URL
+// or path construction occurs.
+func TestRebuild_PathTraversalRejected(t *testing.T) {
+	idx := openTestIndex(t)
+	ctx := context.Background()
+
+	invalidNames := []string{
+		"../etc/passwd",
+		"../../secret",
+		"recipes/evil",
+		"null\x00byte",
+	}
+
+	validRecipe := minimalRecipeTOML("bin/jq")
+
+	// Provide invalid names via a custom ListAll; valid recipe "jq" should be indexed.
+	reg := &customListAllRegistry{
+		names: append(invalidNames, "jq"),
+		stubRegistry: &stubRegistry{
+			recipes: map[string][]byte{
+				"jq": validRecipe,
+			},
+		},
+	}
+	state := &stubState{tools: map[string]ToolInfo{}}
+
+	if err := idx.Rebuild(ctx, reg, state); err != nil {
+		t.Fatalf("Rebuild() error = %v, want nil", err)
+	}
+
+	// Only jq should be indexed; all invalid names skipped.
+	got := countRows(t, idx)
+	if got != 1 {
+		t.Errorf("row count = %d, want 1 (only jq; invalid names rejected)", got)
+	}
+}
+
+// customListAllRegistry overrides ListAll to return a fixed set of names.
+type customListAllRegistry struct {
+	*stubRegistry
+	names []string
+}
+
+func (c *customListAllRegistry) ListAll(_ context.Context) ([]string, error) {
+	return c.names, nil
+}

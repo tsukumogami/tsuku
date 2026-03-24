@@ -184,7 +184,7 @@ func (r *Registry) fetchRemoteRecipe(ctx context.Context, name string) ([]byte, 
 		}
 	}
 
-	data, err := io.ReadAll(resp.Body)
+	data, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
 		return nil, &RegistryError{
 			Type:    ErrTypeParsing,
