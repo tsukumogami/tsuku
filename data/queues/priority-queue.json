@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-24T06:05:49Z",
+  "updated_at": "2026-03-24T07:17:33Z",
   "entries": [
     {
       "name": "node",
@@ -20056,11 +20056,11 @@
       "name": "hercules",
       "source": "rubygems:hercules",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-03-24T04:40:56.508052367Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-03-31T07:17:33.527749653Z"
     },
     {
       "name": "heremaps/olp-cli/olp",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 183,
@@ -26066,7 +26066,7 @@
       "name": "libnotify",
       "source": "rubygems:libnotify",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
@@ -31996,7 +31996,7 @@
       "name": "neo4j",
       "source": "rubygems:neo4j",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
