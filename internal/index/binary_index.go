@@ -68,6 +68,22 @@ type ToolInfo struct {
 type Registry interface {
 	ListCached() ([]string, error)
 	GetCached(name string) ([]byte, error)
+
+	// ListAll returns all known recipe names. When a manifest is cached it
+	// reads names directly from the manifest, providing full coverage even on
+	// a clean machine. It falls back to ListCached when no manifest is
+	// available or when the manifest cannot be parsed.
+	//
+	// Note: ListCached is retained on *registry.Registry as the fallback path
+	// used by this method and must not be removed.
+	ListAll(ctx context.Context) ([]string, error)
+
+	// FetchRecipe fetches a recipe from the registry (remote or local) and
+	// returns its raw TOML bytes.
+	FetchRecipe(ctx context.Context, name string) ([]byte, error)
+
+	// CacheRecipe saves raw recipe TOML bytes to the local cache.
+	CacheRecipe(name string, data []byte) error
 }
 
 // StateReader provides read access to installed tool state during Rebuild.

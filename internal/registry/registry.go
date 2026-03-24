@@ -386,6 +386,23 @@ func (r *Registry) IsCached(name string) bool {
 	return err == nil
 }
 
+// ListAll returns all known recipe names. When a cached manifest is present,
+// names are taken directly from the manifest so that the full registry is
+// visible on a clean machine (before any individual recipes have been cached).
+// If GetCachedManifest returns nil or an error, ListAll falls back to
+// ListCached, which enumerates the locally cached TOML files.
+func (r *Registry) ListAll(ctx context.Context) ([]string, error) {
+	manifest, err := r.GetCachedManifest()
+	if err == nil && manifest != nil {
+		names := make([]string, 0, len(manifest.Recipes))
+		for _, recipe := range manifest.Recipes {
+			names = append(names, recipe.Name)
+		}
+		return names, nil
+	}
+	return r.ListCached()
+}
+
 // ListCached returns all cached recipe names
 func (r *Registry) ListCached() ([]string, error) {
 	if r.CacheDir == "" {

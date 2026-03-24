@@ -42,6 +42,18 @@ func (s *stubRegistry) GetCached(name string) ([]byte, error) {
 	return data, nil
 }
 
+func (s *stubRegistry) ListAll(_ context.Context) ([]string, error) {
+	return s.ListCached()
+}
+
+func (s *stubRegistry) FetchRecipe(_ context.Context, name string) ([]byte, error) {
+	return s.GetCached(name)
+}
+
+func (s *stubRegistry) CacheRecipe(_ string, _ []byte) error {
+	return nil
+}
+
 // stubState implements StateReader for tests.
 type stubState struct {
 	tools   map[string]ToolInfo
