@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-24T07:16:53Z",
+  "generated_at": "2026-03-24T07:18:05Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 68,
-      "pending": 3865,
+      "failed": 66,
+      "pending": 3867,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 68,
-        "pending": 3842,
+        "failed": 66,
+        "pending": 3844,
         "success": 1326
       }
     },
@@ -73,14 +73,15 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 41,
-        "pending": 38,
+        "failed": 40,
+        "pending": 39,
         "success": 9,
         "total": 89
       }
@@ -758,6 +759,15 @@
           "next_retry_at": "2026-03-28T23:28:38Z"
         },
         {
+          "id": "rubygems:hercules",
+          "name": "hercules",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-31T07:17:33Z"
+        },
+        {
           "id": "rubygems:htmldoc",
           "name": "htmldoc",
           "ecosystem": "rubygems",
@@ -866,24 +876,6 @@
           "next_retry_at": "2026-03-27T22:32:12Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 183,
-          "next_retry_at": "1733-12-13T06:18:33Z"
-        },
-        {
-          "id": "rubygems:libnotify",
-          "name": "libnotify",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-24T06:31:35Z"
-        },
-        {
           "id": "rubygems:lsof",
           "name": "lsof",
           "ecosystem": "rubygems",
@@ -981,15 +973,6 @@
           "category": "install_failed",
           "failure_count": 3,
           "next_retry_at": "2026-03-24T08:25:21Z"
-        },
-        {
-          "id": "rubygems:neo4j",
-          "name": "neo4j",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-03-24T07:05:49Z"
         },
         {
           "id": "crates.io:numpy",
@@ -10937,15 +10920,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:hercules",
-          "name": "hercules",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-24T04:40:56Z"
-        },
-        {
           "id": "homebrew:heremaps/olp-cli/olp",
           "name": "heremaps/olp-cli/olp",
           "ecosystem": "homebrew",
@@ -13321,6 +13295,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 183,
+          "next_retry_at": "1733-12-13T06:18:33Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -13650,6 +13633,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:libnotify",
+          "name": "libnotify",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-24T06:31:35Z"
         },
         {
           "id": "homebrew:libolm",
@@ -16725,6 +16717,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:neo4j",
+          "name": "neo4j",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-03-24T07:05:49Z"
         },
         {
           "id": "homebrew:neocmakelsp",
