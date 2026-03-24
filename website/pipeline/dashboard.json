@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-24T20:44:39Z",
+  "generated_at": "2026-03-24T20:45:47Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -73,14 +73,15 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 40,
-        "pending": 39,
+        "failed": 41,
+        "pending": 38,
         "success": 9,
         "total": 89
       }
@@ -875,15 +876,6 @@
           "next_retry_at": "2026-03-27T22:32:12Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 191,
-          "next_retry_at": "1733-12-13T19:18:48Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -981,6 +973,15 @@
           "category": "install_failed",
           "failure_count": 9,
           "next_retry_at": "2026-03-30T18:02:14Z"
+        },
+        {
+          "id": "rubygems:multimarkdown",
+          "name": "multimarkdown",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-25T04:45:20Z"
         },
         {
           "id": "crates.io:numpy",
@@ -13303,6 +13304,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 191,
+          "next_retry_at": "1733-12-13T19:18:48Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -16343,15 +16353,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:multimarkdown",
-          "name": "multimarkdown",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-24T08:25:21Z"
         },
         {
           "id": "homebrew:mupdf",
