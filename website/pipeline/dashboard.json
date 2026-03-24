@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-24T16:12:52Z",
+  "generated_at": "2026-03-24T16:15:56Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -73,15 +73,14 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 39,
-        "pending": 40,
+        "failed": 38,
+        "pending": 41,
         "success": 9,
         "total": 89
       }
@@ -597,6 +596,15 @@
           "next_retry_at": "2026-03-26T08:00:01Z"
         },
         {
+          "id": "rubygems:cowsay",
+          "name": "cowsay",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-03-31T16:15:24Z"
+        },
+        {
           "id": "rubygems:cql",
           "name": "cql",
           "ecosystem": "rubygems",
@@ -867,6 +875,15 @@
           "next_retry_at": "2026-03-27T22:32:12Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 189,
+          "next_retry_at": "1733-12-13T16:28:07Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -928,24 +945,6 @@
           "category": "install_failed",
           "failure_count": 7,
           "next_retry_at": "2026-03-27T05:13:36Z"
-        },
-        {
-          "id": "rubygems:meli",
-          "name": "meli",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-24T15:13:10Z"
-        },
-        {
-          "id": "rubygems:memcached",
-          "name": "memcached",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-24T15:37:02Z"
         },
         {
           "id": "rubygems:mktorrent",
@@ -5484,15 +5483,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:cowsay",
-          "name": "cowsay",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-03-24T15:00:49Z"
         },
         {
           "id": "homebrew:cp2k",
@@ -13295,15 +13285,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 187,
-          "next_retry_at": "1733-12-13T13:26:19Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -15504,6 +15485,24 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:meli",
+          "name": "meli",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-24T15:13:10Z"
+        },
+        {
+          "id": "rubygems:memcached",
+          "name": "memcached",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-24T15:37:02Z"
         },
         {
           "id": "homebrew:mender-artifact",
