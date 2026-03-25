@@ -1,0 +1,31 @@
+{
+  "topic": "auto-install",
+  "decisions": [
+    {
+      "id": 1,
+      "question": "CLI entry point and exec handoff: how does the user invoke auto-install (tsuku run vs alternatives), how does tsuku hand off to the command preserving exit code, and what surface is exposed so #2168 can call the install core as a library function?",
+      "status": "complete",
+      "complexity": "standard",
+      "chosen": "tsuku run cobra subcommand with core logic in internal/autoinstall/",
+      "report_file": "wip/design_auto-install_decision_1_report.md"
+    },
+    {
+      "id": 2,
+      "question": "Mode resolution order and non-interactive fallback: what is the priority chain for resolving suggest/confirm/auto mode (flag vs env var vs config vs default), how is TTY detection performed, and what does confirm mode do when stdin is not a TTY (error-out vs silent fallback to suggest vs silent fallback to auto)?",
+      "status": "complete",
+      "complexity": "critical",
+      "chosen": "Flag > TSUKU_AUTO_INSTALL_MODE env var > auto_install_mode config > default confirm; error-out on non-TTY confirm",
+      "report_file": "wip/design_auto-install_decision_2_report.md"
+    },
+    {
+      "id": 3,
+      "question": "Auto-install core API and shared interface boundary: where does the install-then-exec logic live as a library function callable by both tsuku run (#1679) and tsuku exec (#2168), and where does the ProjectVersionResolver interface live so both consumers share the same type without duplication?",
+      "status": "complete",
+      "complexity": "standard",
+      "chosen": "Extract to internal/autoinstall/",
+      "report_file": "wip/design_auto-install_decision_3_report.md"
+    }
+  ],
+  "cross_validation": "passed",
+  "round": 0
+}
