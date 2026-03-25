@@ -2,7 +2,6 @@ package hook_test
 
 import (
 	"context"
-	"encoding/json"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -11,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tsukumogami/tsuku/internal/containerimages"
 	"github.com/tsukumogami/tsuku/internal/hook"
 )
 
@@ -31,27 +31,6 @@ func repoRoot(t *testing.T) string {
 	}
 }
 
-// debianImage reads the debian image reference from container-images.json at the repo root.
-func debianImage(t *testing.T) string {
-	t.Helper()
-	root := repoRoot(t)
-	data, err := os.ReadFile(filepath.Join(root, "container-images.json"))
-	if err != nil {
-		t.Fatalf("read container-images.json: %v", err)
-	}
-	var m map[string]struct {
-		Image string `json:"image"`
-	}
-	if err := json.Unmarshal(data, &m); err != nil {
-		t.Fatalf("parse container-images.json: %v", err)
-	}
-	img, ok := m["debian"]
-	if !ok || img.Image == "" {
-		t.Fatal("container-images.json missing debian image")
-	}
-	return img.Image
-}
-
 // skipIfNoDocker skips the test if docker is not available.
 func skipIfNoDocker(t *testing.T) {
 	t.Helper()
@@ -60,13 +39,13 @@ func skipIfNoDocker(t *testing.T) {
 	}
 }
 
-// runBashInContainer runs the given bash script inside a debian container with
-// the repo mounted read-only at /repo and TSUKU_HOME set to /tmp/tsuku-test.
-// Returns combined stdout+stderr output.
-func runBashInContainer(t *testing.T, script string) (string, error) {
+// runInContainer runs the given script inside a debian container with the repo
+// mounted read-only at /repo and TSUKU_HOME set to /tmp/tsuku-test.
+// The script is run with bash -c. Returns combined stdout+stderr output.
+func runInContainer(t *testing.T, script string) (string, error) {
 	t.Helper()
 	root := repoRoot(t)
-	image := debianImage(t)
+	image := containerimages.DefaultImage()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
@@ -96,7 +75,7 @@ export PATH="/tmp/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/b
 source /tmp/tsuku-test/share/hooks/tsuku.bash
 jq 2>&1 || true`
 
-	out, _ := runBashInContainer(t, script)
+	out, _ := runInContainer(t, script)
 	if !strings.Contains(out, "Command 'jq' not found.") {
 		t.Errorf("expected output to contain \"Command 'jq' not found.\"; got:\n%s", out)
 	}
@@ -117,7 +96,7 @@ command_not_found_handle() { echo "original-handler-called"; }
 source /tmp/tsuku-test/share/hooks/tsuku.bash
 jq 2>&1 || true`
 
-	out, _ := runBashInContainer(t, script)
+	out, _ := runInContainer(t, script)
 	if !strings.Contains(out, "Command 'jq' not found.") {
 		t.Errorf("expected output to contain \"Command 'jq' not found.\"; got:\n%s", out)
 	}
@@ -140,7 +119,7 @@ source /tmp/tsuku-test/share/hooks/tsuku.bash
 export PATH="/usr/bin:/bin"
 jq 2>&1 || true`
 
-	out, _ := runBashInContainer(t, script)
+	out, _ := runInContainer(t, script)
 	if strings.Contains(out, "Command 'jq' not found.") {
 		t.Errorf("recursion guard should prevent tsuku suggest call; got:\n%s", out)
 	}
@@ -161,7 +140,7 @@ source /tmp/tsuku-test/share/hooks/tsuku.bash
 source /tmp/tsuku-test/share/hooks/tsuku.bash
 jq 2>&1 || true`
 
-	out, _ := runBashInContainer(t, script)
+	out, _ := runInContainer(t, script)
 	count := strings.Count(out, "Command 'jq' not found.")
 	if count != 1 {
 		t.Errorf("expected \"Command 'jq' not found.\" exactly once; got %d times in:\n%s", count, out)
@@ -173,12 +152,6 @@ jq 2>&1 || true`
 func TestHookZsh(t *testing.T) {
 	skipIfNoDocker(t)
 
-	root := repoRoot(t)
-	image := debianImage(t)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-	defer cancel()
-
 	script := `apt-get update -q && apt-get install -y -q zsh && ` +
 		`mkdir -p /tmp/bin /tmp/tsuku-test/share/hooks && ` +
 		`cp /repo/internal/hooks/testdata/mock_tsuku /tmp/bin/tsuku && ` +
@@ -189,15 +162,9 @@ func TestHookZsh(t *testing.T) {
 		`source /tmp/tsuku-test/share/hooks/tsuku.zsh; ` +
 		`jq' 2>&1 || true`
 
-	cmd := exec.CommandContext(ctx, "docker", "run", "--rm",
-		"-v", root+":/repo:ro",
-		"-e", "TSUKU_HOME=/tmp/tsuku-test",
-		image,
-		"bash", "-c", script,
-	)
-	out, _ := cmd.CombinedOutput()
-	if !strings.Contains(string(out), "Command 'jq' not found.") {
-		t.Errorf("expected output to contain \"Command 'jq' not found.\"; got:\n%s", string(out))
+	out, _ := runInContainer(t, script)
+	if !strings.Contains(out, "Command 'jq' not found.") {
+		t.Errorf("expected output to contain \"Command 'jq' not found.\"; got:\n%s", out)
 	}
 }
 
@@ -205,12 +172,6 @@ func TestHookZsh(t *testing.T) {
 // handler that calls tsuku suggest (scenario-26).
 func TestHookFish(t *testing.T) {
 	skipIfNoDocker(t)
-
-	root := repoRoot(t)
-	image := debianImage(t)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-	defer cancel()
 
 	script := `apt-get update -q && apt-get install -y -q fish && ` +
 		`mkdir -p /tmp/bin /tmp/tsuku-test/share/hooks && ` +
@@ -221,15 +182,9 @@ func TestHookFish(t *testing.T) {
 		`source /tmp/tsuku-test/share/hooks/tsuku.fish; ` +
 		`jq' 2>&1 || true`
 
-	cmd := exec.CommandContext(ctx, "docker", "run", "--rm",
-		"-v", root+":/repo:ro",
-		"-e", "TSUKU_HOME=/tmp/tsuku-test",
-		image,
-		"bash", "-c", script,
-	)
-	out, _ := cmd.CombinedOutput()
-	if !strings.Contains(string(out), "Command 'jq' not found.") {
-		t.Errorf("expected output to contain \"Command 'jq' not found.\"; got:\n%s", string(out))
+	out, _ := runInContainer(t, script)
+	if !strings.Contains(out, "Command 'jq' not found.") {
+		t.Errorf("expected output to contain \"Command 'jq' not found.\"; got:\n%s", out)
 	}
 }
 
