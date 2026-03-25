@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 upstream: docs/designs/DESIGN-shell-integration-building-blocks.md
 spawned_from:
   issue: 1679
@@ -33,7 +33,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 ## Upstream Design Reference
 
