@@ -74,6 +74,8 @@ func runSuggest(ctx context.Context, stdout, stderr io.Writer, cfg *config.Confi
 		if errors.Is(err, index.ErrIndexNotBuilt) {
 			if jsonOutput {
 				printSuggestJSON(stdout, command, nil)
+			} else {
+				fmt.Fprintf(stderr, "Binary index not built. Run 'tsuku update-registry' to build it.\n")
 			}
 			return ExitIndexNotBuilt
 		}

@@ -202,6 +202,9 @@ func TestRunSuggest_IndexNotBuilt(t *testing.T) {
 	if code != ExitIndexNotBuilt {
 		t.Errorf("exit code = %d, want %d (ExitIndexNotBuilt)", code, ExitIndexNotBuilt)
 	}
+	if !strings.Contains(stderr.String(), "tsuku update-registry") {
+		t.Errorf("expected stderr to mention 'tsuku update-registry', got %q", stderr.String())
+	}
 }
 
 func TestRunSuggest_JSONSingleMatch(t *testing.T) {
