@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   When users type an unknown command, the shell prints "command not found" and
   stops. Tsuku has a binary index that can reverse-map command names to installable
@@ -34,7 +34,7 @@ spawned_from:
 
 ## Status
 
-Accepted
+Planned
 
 ## Upstream Design Reference
 
