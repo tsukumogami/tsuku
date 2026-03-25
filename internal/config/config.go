@@ -330,6 +330,7 @@ type Config struct {
 	CargoRegistryCacheDir string // $TSUKU_HOME/cache/cargo-registry
 	KeyCacheDir           string // $TSUKU_HOME/cache/keys (PGP public keys)
 	TapCacheDir           string // $TSUKU_HOME/cache/taps (Homebrew tap metadata)
+	ShareDir              string // $TSUKU_HOME/share (shared data files, e.g. shell hook files)
 	ConfigFile            string // $TSUKU_HOME/config.toml
 }
 
@@ -363,6 +364,7 @@ func DefaultConfig() (*Config, error) {
 		CargoRegistryCacheDir: filepath.Join(tsukuHome, "cache", "cargo-registry"),
 		KeyCacheDir:           filepath.Join(tsukuHome, "cache", "keys"),
 		TapCacheDir:           filepath.Join(tsukuHome, "cache", "taps"),
+		ShareDir:              filepath.Join(tsukuHome, "share"),
 		ConfigFile:            filepath.Join(tsukuHome, "config.toml"),
 	}, nil
 }
@@ -383,6 +385,12 @@ func (c *Config) EnsureDirectories() error {
 		c.CargoRegistryCacheDir,
 		c.KeyCacheDir,
 		c.TapCacheDir,
+	}
+
+	// ShareDir is optional for backward compatibility with code that constructs
+	// Config directly without setting it.
+	if c.ShareDir != "" {
+		dirs = append(dirs, c.ShareDir, filepath.Join(c.ShareDir, "hooks"))
 	}
 
 	for _, dir := range dirs {

@@ -1,0 +1,177 @@
+package main
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/spf13/cobra"
+	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/hook"
+)
+
+var hookShellFlag string
+
+var hookCmd = &cobra.Command{
+	Use:   "hook",
+	Short: "Manage shell command-not-found hooks",
+	Long: `Manage shell command-not-found hooks for bash, zsh, and fish.
+
+When installed, the hook intercepts unknown commands and suggests tsuku
+recipes that provide the missing tool. Hook files are written to
+$TSUKU_HOME/share/hooks/ and sourced from the shell's rc file.
+
+Use 'tsuku hook install' to register the hook for your current shell.
+Use 'tsuku hook uninstall' to remove it.
+Use 'tsuku hook status' to check current registration state.`,
+}
+
+var hookInstallCmd = &cobra.Command{
+	Use:   "install",
+	Short: "Install the command-not-found hook for a shell",
+	Long: `Install the command-not-found hook for a shell.
+
+For bash and zsh, appends a two-line source block to the shell's rc file
+(~/.bashrc or ~/.zshrc). The hook file itself is written to
+$TSUKU_HOME/share/hooks/. Running install twice is safe — the block is
+only appended once.
+
+For fish, writes the hook file to ~/.config/fish/conf.d/tsuku.fish.
+
+Without --shell, the shell is detected from the $SHELL environment variable.
+
+Examples:
+  tsuku hook install
+  tsuku hook install --shell=bash
+  tsuku hook install --shell=fish`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		shell, err := resolveShell(hookShellFlag)
+		if err != nil {
+			return err
+		}
+
+		cfg, err := config.DefaultConfig()
+		if err != nil {
+			return fmt.Errorf("load config: %w", err)
+		}
+
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return fmt.Errorf("get home directory: %w", err)
+		}
+
+		shareHooksDir := filepath.Join(cfg.ShareDir, "hooks")
+		if err := os.MkdirAll(shareHooksDir, 0755); err != nil {
+			return fmt.Errorf("create hooks directory: %w", err)
+		}
+
+		if err := hook.Install(shell, homeDir, shareHooksDir); err != nil {
+			return fmt.Errorf("install hook: %w", err)
+		}
+
+		fmt.Fprintf(os.Stdout, "Registered command-not-found hook for %s.\n", shell)
+		return nil
+	},
+}
+
+var hookUninstallCmd = &cobra.Command{
+	Use:   "uninstall",
+	Short: "Remove the command-not-found hook for a shell",
+	Long: `Remove the command-not-found hook for a shell.
+
+For bash and zsh, removes the two-line marker block from ~/.bashrc or
+~/.zshrc. For fish, deletes ~/.config/fish/conf.d/tsuku.fish.
+
+Running uninstall when the hook is not installed is safe — it does nothing.
+
+Without --shell, the shell is detected from the $SHELL environment variable.
+
+Examples:
+  tsuku hook uninstall
+  tsuku hook uninstall --shell=zsh`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		shell, err := resolveShell(hookShellFlag)
+		if err != nil {
+			return err
+		}
+
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return fmt.Errorf("get home directory: %w", err)
+		}
+
+		if err := hook.Uninstall(shell, homeDir); err != nil {
+			return fmt.Errorf("uninstall hook: %w", err)
+		}
+
+		fmt.Fprintf(os.Stdout, "Removed command-not-found hook for %s.\n", shell)
+		return nil
+	},
+}
+
+var hookStatusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "Report command-not-found hook installation status",
+	Long: `Report command-not-found hook installation status.
+
+Checks each supported shell and reports whether the hook is installed.
+Without --shell, reports status for all supported shells.
+
+Examples:
+  tsuku hook status
+  tsuku hook status --shell=bash`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return fmt.Errorf("get home directory: %w", err)
+		}
+
+		shells := []string{"bash", "zsh", "fish"}
+		if hookShellFlag != "" {
+			shells = []string{hookShellFlag}
+		}
+
+		for _, shell := range shells {
+			installed, err := hook.Status(shell, homeDir)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%s: error checking status: %v\n", shell, err)
+				continue
+			}
+			state := "not installed"
+			if installed {
+				state = "installed"
+			}
+			fmt.Fprintf(os.Stdout, "%s: %s\n", shell, state)
+		}
+		return nil
+	},
+}
+
+// resolveShell returns the shell name from the flag or from $SHELL.
+// Returns an error if neither is set or if the value is unsupported.
+func resolveShell(flagValue string) (string, error) {
+	if flagValue != "" {
+		return flagValue, nil
+	}
+
+	shellEnv := os.Getenv("SHELL")
+	if shellEnv == "" {
+		return "", fmt.Errorf("--shell flag not set and $SHELL is not set; specify a shell with --shell=<shell>")
+	}
+
+	// Extract base name: /bin/bash -> bash
+	base := filepath.Base(shellEnv)
+	switch base {
+	case "bash", "zsh", "fish":
+		return base, nil
+	default:
+		return "", fmt.Errorf("unsupported shell %q; supported shells are bash, zsh, fish", base)
+	}
+}
+
+func init() {
+	hookCmd.PersistentFlags().StringVar(&hookShellFlag, "shell", "", "Shell to target (bash, zsh, or fish); defaults to $SHELL")
+	hookCmd.AddCommand(hookInstallCmd)
+	hookCmd.AddCommand(hookUninstallCmd)
+	hookCmd.AddCommand(hookStatusCmd)
+}

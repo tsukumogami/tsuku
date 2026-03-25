@@ -134,6 +134,7 @@ func init() {
 	rootCmd.AddCommand(registryCmd)
 	rootCmd.AddCommand(whichCmd)
 	rootCmd.AddCommand(suggestCmd)
+	rootCmd.AddCommand(hookCmd)
 }
 
 func main() {
