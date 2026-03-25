@@ -1,9 +1,0 @@
-{
-  "issue": 4,
-  "reviewers": [
-    {"focus": "pragmatic", "blocking_count": 1, "advisory_count": 2, "blocking_resolved": true, "resolution": "Wrapped 'tsuku hook install' in if/else so a failure prints a warning instead of aborting the installer under set -e", "detail_file": "wip/research/implement-doc_review_pragmatic_issue4.md"},
-    {"focus": "architect", "blocking_count": 0, "advisory_count": 1, "detail_file": "wip/research/implement-doc_review_architect_issue4.md"},
-    {"focus": "maintainer", "blocking_count": 1, "advisory_count": 2, "blocking_resolved": true, "resolution": "Added comment above SHELL_NAME re-derivation in hooks block explaining it may be unset when --no-modify-path is passed", "detail_file": "wip/research/implement-doc_review_maintainer_issue4.md"}
-  ],
-  "all_blocking_resolved": true
-}

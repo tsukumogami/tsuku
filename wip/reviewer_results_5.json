@@ -1,9 +1,0 @@
-{
-  "issue": 5,
-  "reviewers": [
-    {"focus": "pragmatic", "blocking_count": 2, "advisory_count": 2, "blocking_resolved": true, "resolution": "Replaced debianImage() with containerimages.DefaultImage(); unified runInContainer helper so all 6 Docker tests use it (previously zsh/fish inlined their own docker call)", "detail_file": "wip/research/implement-doc_review_pragmatic_issue5.md"},
-    {"focus": "architect", "blocking_count": 2, "advisory_count": 1, "blocking_resolved": true, "resolution": "Already addressed by pragmatic fix (containerimages); moved Docker tests to internal/hooks/integration_test.go and TestHookBash_UninstallRestores to install_test.go", "detail_file": "wip/research/implement-doc_review_architect_issue5.md"},
-    {"focus": "maintainer", "blocking_count": 2, "advisory_count": 4, "blocking_resolved": true, "resolution": "Addressed by moving tests to correct package (resolving cross-package path dependency); runInContainer now calls t.Fatalf on non-zero docker exit instead of discarding error; added comment explaining set -e omission in RecursionGuard test", "detail_file": "wip/research/implement-doc_review_maintainer_issue5.md"}
-  ],
-  "all_blocking_resolved": true
-}

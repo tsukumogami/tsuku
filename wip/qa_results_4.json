@@ -1,8 +1,0 @@
-{
-  "issue": 4,
-  "all_passed": true,
-  "passed": 4,
-  "failed": 0,
-  "summary": "All four scenarios pass: --no-hooks sets INSTALL_HOOKS=false and prints the skip message, unset $SHELL triggers the warning branch and leaves DETECTED_SHELL empty, the default path calls 'tsuku hook install' and prints the success message, and the if/else wrapper around the hook call means a non-zero exit is caught and warned rather than propagated through set -e.",
-  "detail_file": "wip/research/implement-doc_validation_issue4.md"
-}
