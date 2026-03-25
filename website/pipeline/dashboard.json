@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-25T23:37:47Z",
+  "generated_at": "2026-03-25T23:38:46Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 67,
-      "pending": 3866,
+      "failed": 66,
+      "pending": 3867,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 67,
-        "pending": 3843,
+        "failed": 66,
+        "pending": 3844,
         "success": 1326
       }
     },
@@ -39,8 +39,8 @@
       },
       "crates.io": {
         "excluded": 5,
-        "failed": 2,
-        "pending": 75,
+        "failed": 3,
+        "pending": 74,
         "success": 23,
         "total": 105
       },
@@ -74,14 +74,15 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 42,
-        "pending": 37,
+        "failed": 41,
+        "pending": 38,
         "success": 9,
         "total": 89
       }
@@ -480,6 +481,24 @@
           "next_retry_at": "2026-04-01T13:10:33Z"
         },
         {
+          "id": "crates.io:ascii",
+          "name": "ascii",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-01T23:38:20Z"
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 91,
+          "next_retry_at": "1733-12-14T23:51:03Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -768,15 +787,6 @@
           "next_retry_at": "2026-04-01T10:51:59Z"
         },
         {
-          "id": "rubygems:hydra",
-          "name": "hydra",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-25T22:06:47Z"
-        },
-        {
           "id": "rubygems:hyperkit",
           "name": "hyperkit",
           "ecosystem": "rubygems",
@@ -856,15 +866,6 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-27T22:32:12Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 205,
-          "next_retry_at": "1733-12-14T21:56:32Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -966,15 +967,6 @@
           "next_retry_at": "2026-03-30T18:02:14Z"
         },
         {
-          "id": "rubygems:multimarkdown",
-          "name": "multimarkdown",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-25T23:19:57Z"
-        },
-        {
           "id": "rubygems:neo4j",
           "name": "neo4j",
           "ecosystem": "rubygems",
@@ -982,6 +974,15 @@
           "category": "install_failed",
           "failure_count": 4,
           "next_retry_at": "2026-03-26T00:16:50Z"
+        },
+        {
+          "id": "rubygems:nkf",
+          "name": "nkf",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-26T03:38:20Z"
         },
         {
           "id": "crates.io:numpy",
@@ -1018,15 +1019,6 @@
           "category": "install_failed",
           "failure_count": 9,
           "next_retry_at": "2026-04-01T15:03:56Z"
-        },
-        {
-          "id": "npm:sigstore",
-          "name": "sigstore",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-25T22:06:47Z"
         },
         {
           "id": "pypi:tctl",
@@ -2356,15 +2348,6 @@
           "failure_count": 0
         },
         {
-          "id": "crates.io:ascii",
-          "name": "ascii",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-03-25T19:20:15Z"
-        },
-        {
           "id": "homebrew:asciidoc",
           "name": "asciidoc",
           "ecosystem": "homebrew",
@@ -2974,15 +2957,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 89,
-          "next_retry_at": "1733-12-14T20:07:41Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -11325,6 +11299,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:hydra",
+          "name": "hydra",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-25T22:06:47Z"
+        },
+        {
           "id": "homebrew:hyfetch",
           "name": "hyfetch",
           "ecosystem": "homebrew",
@@ -13320,6 +13303,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 205,
+          "next_retry_at": "1733-12-14T21:56:32Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -16364,6 +16356,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:multimarkdown",
+          "name": "multimarkdown",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-25T23:19:57Z"
+        },
+        {
           "id": "homebrew:mupdf",
           "name": "mupdf",
           "ecosystem": "homebrew",
@@ -17006,15 +17007,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:nkf",
-          "name": "nkf",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-25T20:04:49Z"
         },
         {
           "id": "homebrew:nload",
@@ -23309,6 +23301,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:sigstore",
+          "name": "sigstore",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-25T22:06:47Z"
         },
         {
           "id": "homebrew:sile",
