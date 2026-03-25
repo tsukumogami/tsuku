@@ -1,4 +1,4 @@
-package hook_test
+package hooks_test
 
 import (
 	"context"
@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/containerimages"
-	"github.com/tsukumogami/tsuku/internal/hook"
 )
 
 // repoRoot walks up from the test file location until go.mod is found.
@@ -41,8 +40,9 @@ func skipIfNoDocker(t *testing.T) {
 
 // runInContainer runs the given script inside a debian container with the repo
 // mounted read-only at /repo and TSUKU_HOME set to /tmp/tsuku-test.
-// The script is run with bash -c. Returns combined stdout+stderr output.
-func runInContainer(t *testing.T, script string) (string, error) {
+// The script is run with bash -c. Calls t.Fatalf if the container exits non-zero
+// (infrastructure failure: image not found, mount error, etc.).
+func runInContainer(t *testing.T, script string) string {
 	t.Helper()
 	root := repoRoot(t)
 	image := containerimages.DefaultImage()
@@ -57,7 +57,10 @@ func runInContainer(t *testing.T, script string) (string, error) {
 		"bash", "-c", script,
 	)
 	out, err := cmd.CombinedOutput()
-	return string(out), err
+	if err != nil {
+		t.Fatalf("container run failed: %v\n%s", err, out)
+	}
+	return string(out)
 }
 
 // TestHookBash_NoPreExistingHandler verifies that tsuku.bash installs a
@@ -75,7 +78,7 @@ export PATH="/tmp/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/b
 source /tmp/tsuku-test/share/hooks/tsuku.bash
 jq 2>&1 || true`
 
-	out, _ := runInContainer(t, script)
+	out := runInContainer(t, script)
 	if !strings.Contains(out, "Command 'jq' not found.") {
 		t.Errorf("expected output to contain \"Command 'jq' not found.\"; got:\n%s", out)
 	}
@@ -96,7 +99,7 @@ command_not_found_handle() { echo "original-handler-called"; }
 source /tmp/tsuku-test/share/hooks/tsuku.bash
 jq 2>&1 || true`
 
-	out, _ := runInContainer(t, script)
+	out := runInContainer(t, script)
 	if !strings.Contains(out, "Command 'jq' not found.") {
 		t.Errorf("expected output to contain \"Command 'jq' not found.\"; got:\n%s", out)
 	}
@@ -107,6 +110,8 @@ jq 2>&1 || true`
 
 // TestHookBash_RecursionGuard verifies that tsuku.bash's inner command -v tsuku
 // guard prevents any call to tsuku suggest when tsuku is not in PATH (scenario-23).
+// set -e is intentionally omitted: jq exits 127 and we rely on || true for the
+// script to exit 0; set -e would abort before || true fires in some bash versions.
 func TestHookBash_RecursionGuard(t *testing.T) {
 	skipIfNoDocker(t)
 
@@ -119,7 +124,7 @@ source /tmp/tsuku-test/share/hooks/tsuku.bash
 export PATH="/usr/bin:/bin"
 jq 2>&1 || true`
 
-	out, _ := runInContainer(t, script)
+	out := runInContainer(t, script)
 	if strings.Contains(out, "Command 'jq' not found.") {
 		t.Errorf("recursion guard should prevent tsuku suggest call; got:\n%s", out)
 	}
@@ -140,7 +145,7 @@ source /tmp/tsuku-test/share/hooks/tsuku.bash
 source /tmp/tsuku-test/share/hooks/tsuku.bash
 jq 2>&1 || true`
 
-	out, _ := runInContainer(t, script)
+	out := runInContainer(t, script)
 	count := strings.Count(out, "Command 'jq' not found.")
 	if count != 1 {
 		t.Errorf("expected \"Command 'jq' not found.\" exactly once; got %d times in:\n%s", count, out)
@@ -162,7 +167,7 @@ func TestHookZsh(t *testing.T) {
 		`source /tmp/tsuku-test/share/hooks/tsuku.zsh; ` +
 		`jq' 2>&1 || true`
 
-	out, _ := runInContainer(t, script)
+	out := runInContainer(t, script)
 	if !strings.Contains(out, "Command 'jq' not found.") {
 		t.Errorf("expected output to contain \"Command 'jq' not found.\"; got:\n%s", out)
 	}
@@ -182,46 +187,8 @@ func TestHookFish(t *testing.T) {
 		`source /tmp/tsuku-test/share/hooks/tsuku.fish; ` +
 		`jq' 2>&1 || true`
 
-	out, _ := runInContainer(t, script)
+	out := runInContainer(t, script)
 	if !strings.Contains(out, "Command 'jq' not found.") {
 		t.Errorf("expected output to contain \"Command 'jq' not found.\"; got:\n%s", out)
-	}
-}
-
-// TestHookBash_UninstallRestores verifies that after install and uninstall, the
-// rc file is byte-for-byte identical to the original (scenario-29).
-// This test runs at the Go level without Docker since it exercises the hook package directly.
-func TestHookBash_UninstallRestores(t *testing.T) {
-	homeDir := t.TempDir()
-	shareHooksDir := t.TempDir()
-
-	rcFile := filepath.Join(homeDir, ".bashrc")
-	original := "# existing content\n"
-	if err := os.WriteFile(rcFile, []byte(original), 0644); err != nil {
-		t.Fatalf("write initial .bashrc: %v", err)
-	}
-
-	if err := hook.Install("bash", homeDir, shareHooksDir); err != nil {
-		t.Fatalf("Install returned error: %v", err)
-	}
-
-	data, err := os.ReadFile(rcFile)
-	if err != nil {
-		t.Fatalf("read .bashrc after install: %v", err)
-	}
-	if !strings.Contains(string(data), "# tsuku hook") {
-		t.Fatalf("marker not present after install; content:\n%s", string(data))
-	}
-
-	if err := hook.Uninstall("bash", homeDir); err != nil {
-		t.Fatalf("Uninstall returned error: %v", err)
-	}
-
-	after, err := os.ReadFile(rcFile)
-	if err != nil {
-		t.Fatalf("read .bashrc after uninstall: %v", err)
-	}
-	if string(after) != original {
-		t.Errorf(".bashrc not restored to original after uninstall\nwant: %q\ngot:  %q", original, string(after))
 	}
 }

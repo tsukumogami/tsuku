@@ -373,3 +373,40 @@ func TestInstallHookFilePermissions(t *testing.T) {
 		}
 	}
 }
+
+// TestHookBash_UninstallRestores verifies that after install and uninstall, the
+// rc file is byte-for-byte identical to the original (scenario-29).
+func TestHookBash_UninstallRestores(t *testing.T) {
+	homeDir := t.TempDir()
+	shareHooksDir := makeShareHooksDir(t)
+
+	rcFile := filepath.Join(homeDir, ".bashrc")
+	original := "# existing content\n"
+	if err := os.WriteFile(rcFile, []byte(original), 0644); err != nil {
+		t.Fatalf("write initial .bashrc: %v", err)
+	}
+
+	if err := hook.Install("bash", homeDir, shareHooksDir); err != nil {
+		t.Fatalf("Install returned error: %v", err)
+	}
+
+	data, err := os.ReadFile(rcFile)
+	if err != nil {
+		t.Fatalf("read .bashrc after install: %v", err)
+	}
+	if !strings.Contains(string(data), "# tsuku hook") {
+		t.Fatalf("marker not present after install; content:\n%s", string(data))
+	}
+
+	if err := hook.Uninstall("bash", homeDir); err != nil {
+		t.Fatalf("Uninstall returned error: %v", err)
+	}
+
+	after, err := os.ReadFile(rcFile)
+	if err != nil {
+		t.Fatalf("read .bashrc after uninstall: %v", err)
+	}
+	if string(after) != original {
+		t.Errorf(".bashrc not restored to original after uninstall\nwant: %q\ngot:  %q", original, string(after))
+	}
+}
