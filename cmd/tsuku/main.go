@@ -133,6 +133,7 @@ func init() {
 	rootCmd.AddCommand(llmCmd)
 	rootCmd.AddCommand(registryCmd)
 	rootCmd.AddCommand(whichCmd)
+	rootCmd.AddCommand(suggestCmd)
 }
 
 func main() {

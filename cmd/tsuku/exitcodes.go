@@ -40,6 +40,10 @@ const (
 	// the user must specify one with --from.
 	ExitAmbiguous = 10
 
+	// ExitIndexNotBuilt indicates the binary index has not been built yet.
+	// Run 'tsuku update-registry' to build it.
+	ExitIndexNotBuilt = 11
+
 	// ExitCancelled indicates the operation was canceled by the user (Ctrl+C)
 	ExitCancelled = 130
 )
