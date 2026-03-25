@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-25T21:43:49Z",
+  "updated_at": "2026-03-25T23:38:20Z",
   "entries": [
     {
       "name": "node",
@@ -2886,11 +2886,11 @@
       "name": "ascii",
       "source": "crates.io:ascii",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-03-25T19:20:15.326933859Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-01T23:38:20.821063102Z"
     },
     {
       "name": "asciidoc",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 89,
-      "next_retry_at": "1733-12-14T20:07:41.327871195Z"
+      "failure_count": 91,
+      "next_retry_at": "1733-12-14T23:51:03.966287294Z"
     },
     {
       "name": "azqr",
@@ -20786,7 +20786,7 @@
       "name": "hydra",
       "source": "rubygems:hydra",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 205,
@@ -31296,7 +31296,7 @@
       "name": "multimarkdown",
       "source": "rubygems:multimarkdown",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
@@ -32586,11 +32586,11 @@
       "name": "nkf",
       "source": "rubygems:nkf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-03-25T20:04:49.346399875Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-03-26T03:38:20.821063102Z"
     },
     {
       "name": "nload",
@@ -43656,7 +43656,7 @@
       "name": "sigstore",
       "source": "npm:sigstore",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
