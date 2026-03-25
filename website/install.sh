@@ -208,6 +208,7 @@ fi
 if [ "$INSTALL_HOOKS" = true ]; then
     DETECTED_SHELL=""
     if [ -n "${SHELL:-}" ]; then
+        # Re-derive SHELL_NAME here: it may be unset if --no-modify-path was passed.
         SHELL_NAME=$(basename "$SHELL")
         case "$SHELL_NAME" in
             bash|zsh|fish)
@@ -222,8 +223,12 @@ if [ "$INSTALL_HOOKS" = true ]; then
     fi
 
     if [ -n "$DETECTED_SHELL" ]; then
-        "$BIN_DIR/tsuku" hook install --shell="$DETECTED_SHELL"
-        echo "Registered command-not-found hook for ${DETECTED_SHELL}."
+        # Hook registration is best-effort: a failure here doesn't invalidate the install.
+        if "$BIN_DIR/tsuku" hook install --shell="$DETECTED_SHELL"; then
+            echo "Registered command-not-found hook for ${DETECTED_SHELL}."
+        else
+            echo "WARNING: Hook registration failed. Run 'tsuku hook install' manually to register the command-not-found hook." >&2
+        fi
     fi
 else
     echo "Skipped hook registration (--no-hooks)"
