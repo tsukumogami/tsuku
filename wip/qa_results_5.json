@@ -1,0 +1,8 @@
+{
+  "issue": 5,
+  "all_passed": true,
+  "passed": 7,
+  "failed": 0,
+  "summary": "All container shell integration tests compile, pass static analysis, and execute correctly against live Docker containers for bash/zsh/fish scenarios.",
+  "detail_file": "wip/research/implement-doc_validation_issue5.md"
+}
