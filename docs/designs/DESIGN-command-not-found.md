@@ -265,7 +265,7 @@ hooks that can't be verified won't be merged.
 - rc file modification (Go code) can be tested with temp home directories without a real shell
 - A corrupted or wrong hook file is worse than no hook file — false confidence is worse than no test
 
-#### Chosen: Go unit tests for Go components + subshell integration tests for hook files
+#### Chosen: Go unit tests for Go components + container-based shell integration tests via internal/sandbox
 
 Two complementary test layers with a clear boundary between them:
 
@@ -274,44 +274,50 @@ Two complementary test layers with a clear boundary between them:
 - `internal/hook/install_test.go`: rc file detection, atomic marker insertion, idempotency guard, uninstall marker removal — all using `t.TempDir()` for home directory isolation
 - `internal/hook/status_test.go`: marker detection with and without the source line present
 
-**Layer 2 — Shell integration tests** (`make test-hooks`):
-A separate CI job installs bash, zsh, and fish via `apt-get`, then runs shell test scripts that
-exercise the hook files directly. Each test script:
-1. Sources `$TSUKU_HOME/share/hooks/tsuku.<shell>` in a subprocess
-2. Asserts the expected handler is defined
-3. Calls the handler with a known unknown command
-4. Verifies `tsuku suggest` was invoked (via a mock binary on PATH) and the original handler was called
+**Layer 2 — Container shell integration tests** (`go test ./internal/hook/...` with Docker):
+The project already uses `internal/sandbox` and `internal/containerimages` for Docker-based
+multi-family recipe testing. Hook integration tests follow the same pattern: Go test files in
+`internal/hook/` use `sandbox.Run()` to execute shell test scripts inside containers, one per
+shell. The test scripts live in `internal/hooks/testdata/` and are mounted into the container.
+
+The `debian` family from `container-images.json` covers bash, zsh (via apt), and fish (via apt).
+For the detect-and-wrap scenario with a pre-existing handler, the test scripts define their own
+`command_not_found_handle` before sourcing the tsuku hook — this is more controlled than relying
+on the distro's installed packages and makes the test self-contained.
 
 Critical scenarios covered per shell:
-- No pre-existing handler: tsuku's handler is installed, exits 127
-- Pre-existing handler present: detect-and-wrap preserves original; both called in order
-- tsuku binary missing from PATH: guard short-circuits, original handler called alone (no recursion)
+- No pre-existing handler: tsuku's handler is defined after sourcing the hook file, exits 127
+- Pre-existing handler defined in test: detect-and-wrap copies it; both handlers called in order; original not clobbered
+- tsuku binary absent from PATH: guard short-circuits, original handler called alone, no infinite recursion
 - Double-source: sourcing the hook file twice does not install nested wrappers
+- Uninstall: after removing the source line from rc file, next shell start has no tsuku handler
 
-Shell test scripts live in `internal/hooks/testdata/` and are invoked by `make test-hooks`.
-CI runs `test-hooks` in a separate job from `go test` so failures are isolated.
+Both local developers and CI use the same container infrastructure, so a test that passes locally
+passes in CI by construction. The hook container tests are gated by the `//go:build integration`
+tag, matching the convention used by `internal/sandbox` tests.
 
 #### Alternatives Considered
 
-**bats (Bash Automated Testing System) for shell tests:** bats provides a TAP-based test
-framework for bash with `@test` syntax. Rejected because it only covers bash; zsh and fish would
-still need separate frameworks. The subshell approach works uniformly across all three shells
-using the same test harness, and bats is an additional dependency that doesn't cover the full
-problem.
+**Native subshell tests without Docker:** Run shell scripts directly on the host after installing
+zsh and fish via `apt-get` in CI. Does not work for local development without requiring
+developers to install zsh and fish. More importantly, doesn't use the project's established
+testing pattern — the existing container infrastructure exists precisely to avoid host-environment
+dependencies.
 
-**Docker-containerized per-shell testing:** Each shell gets an isolated container image. Provides
-clean environments and catches distribution-specific behavior (e.g., Ubuntu vs Alpine fish versions).
-Rejected for initial implementation because it adds Docker as a CI dependency and slows the test
-cycle significantly. Shell installation via `apt-get` in the existing Ubuntu runner achieves the
-same coverage for the shells tsuku targets. Container-based tests can be added later if
-distribution divergence becomes a real problem.
+**Separate `make test-hooks` with standalone shell scripts:** Shell scripts invoked from the
+Makefile, independent of Go and `internal/sandbox`. Rejected because it splits the test
+infrastructure in two and loses the container lifecycle management that `internal/sandbox`
+already provides. Reusing the existing infrastructure is less to maintain.
+
+**bats (Bash Automated Testing System) for shell tests:** TAP-based framework for bash with
+`@test` syntax. Rejected because it only covers bash; zsh and fish need different frameworks.
+The existing container + shell script approach works uniformly across all three shells with no
+additional framework dependency.
 
 **Manual QA only for hook behavior:** Document test scenarios; automate only the Go components.
 Rejected because the detect-and-wrap logic and recursion guard are exactly the things most likely
 to break subtly. A hook that silently fails (or silently clobbers an existing handler) is worse
 than a hook that visibly errors. Manual QA does not catch regressions.
-
-**Go subshell via exec.Command in `_test.go` files:** Write Go tests that call `exec.Command("bash", "-c", "source hook; ...")`. Attractive because it stays in `go test`, but mixing shell invocations into Go tests makes them fragile — they depend on `bash` being in `PATH`, the test's working directory, and shell quoting behavior inside Go string literals. Separating shell tests into dedicated shell scripts with `make test-hooks` keeps the concerns clean and makes failures easier to debug.
 
 ---
 
@@ -598,16 +604,16 @@ Deliverables:
 
 ### Phase 5: Shell Integration Tests
 
-Add `make test-hooks` and a CI job that installs bash, zsh, and fish then runs the shell test
-scripts. This phase gates the PR — hook files must not be merged without passing shell tests.
+Add container-based integration tests using the existing `internal/sandbox` infrastructure.
+This phase gates the PR — hook files must not be merged without passing shell tests in containers.
 
 Deliverables:
-- `internal/hooks/testdata/test_bash.sh` — bash hook tests: no prior handler, detect-and-wrap, recursion guard, double-source idempotency
+- `internal/hooks/testdata/test_bash.sh` — bash hook scenarios: no prior handler, detect-and-wrap, recursion guard, double-source
 - `internal/hooks/testdata/test_zsh.sh` — same scenarios for zsh
 - `internal/hooks/testdata/test_fish.fish` — same scenarios for fish
-- `internal/hooks/testdata/mock_tsuku.sh` — minimal mock binary that records invocations for test assertions
-- `Makefile` — `test-hooks` target: install shells if needed, source each hook file in a subprocess, run test scripts
-- `.github/workflows/test-hooks.yml` — CI job: `apt-get install zsh fish`, `make test-hooks`
+- `internal/hooks/testdata/mock_tsuku` — minimal mock binary that records invocations for assertions
+- `internal/hook/integration_test.go` — Go test file (`//go:build integration`) using `sandbox.Run()` to execute test scripts in the `debian` container; installs zsh and fish as build commands
+- `.github/workflows/container-tests.yml` — add `hook-integration-tests` job alongside the existing `sandbox-tests` and `validate-tests` jobs
 
 ## Security Considerations
 
