@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-25T18:04:49Z",
+  "updated_at": "2026-03-25T19:54:58Z",
   "entries": [
     {
       "name": "node",
@@ -636,7 +636,7 @@
       "name": "numpy",
       "source": "crates.io:numpy",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 9,
@@ -2886,7 +2886,7 @@
       "name": "ascii",
       "source": "crates.io:ascii",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 9,
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 87,
-      "next_retry_at": "1733-12-14T16:29:33.976909021Z"
+      "failure_count": 89,
+      "next_retry_at": "1733-12-14T20:07:41.327871195Z"
     },
     {
       "name": "azqr",
@@ -4836,7 +4836,7 @@
       "name": "bettercap",
       "source": "rubygems:bettercap",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 9,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 203,
@@ -32876,11 +32876,11 @@
       "name": "notifiers",
       "source": "rubygems:notifiers",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 1,
+      "next_retry_at": "2026-03-25T20:54:58.182647003Z"
     },
     {
       "name": "notion-mcp-server",
