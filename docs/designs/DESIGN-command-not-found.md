@@ -203,7 +203,7 @@ does it return? Should it support machine-readable output?
 - The 50ms budget is dominated by process startup; output formatting adds negligible time
 - `tsuku suggest` is never called in a non-interactive pipeline except by scripters explicitly invoking it
 - Block 3 (`tsuku run`) calls `BinaryIndex.Lookup()` directly and does not parse `tsuku suggest` output
-- Exit code 2 (`ExitUsage`) is already reserved for argument errors; "index not built" must use a different code
+- Exit codes 1–10 and 130 are already reserved; "index not built" uses 11 (`ExitIndexNotBuilt`, new constant)
 
 #### Chosen: Simple text, one line per match, with `--json` flag
 
@@ -227,10 +227,10 @@ Exit codes:
 |-----------|-----------|
 | One or more matches found | 0 |
 | No match | 1 |
-| Index not built | 4 (`ExitIndexNotBuilt`, new constant) |
+| Index not built | 11 (`ExitIndexNotBuilt`, new constant) |
 | Other error | 1 |
 
-Exit 4 is a new constant in `cmd/tsuku/exitcodes.go`. Exit 0/1 mirrors `grep` and `which` conventions.
+Exit 11 is a new constant in `cmd/tsuku/exitcodes.go`. Exit codes 1–10 and 130 are already reserved; 11 is the next available value. Exit 0/1 mirrors `grep` and `which` conventions.
 The `--json` flag adds machine-readable output consistent with `tsuku search --json` and `tsuku info --json`.
 
 #### Alternatives Considered
@@ -275,12 +275,16 @@ Two complementary test layers with a clear boundary between them:
 - `internal/hook/status_test.go`: marker detection with and without the source line present
 
 **Layer 2 — Container shell integration tests** (`go test ./internal/hook/...` with Docker):
-The project already uses `internal/sandbox` and `internal/containerimages` for Docker-based
-multi-family recipe testing. Hook integration tests follow the same pattern: Go test files in
-`internal/hook/` use `sandbox.Run()` to execute shell test scripts inside containers, one per
-shell. The test scripts live in `internal/hooks/testdata/` and are mounted into the container.
+The project already uses `internal/containerimages` for pinned Docker images. Hook integration
+tests use the same image map: the `debian` image from `container-images.json` provides bash
+pre-installed and zsh/fish available via apt. The Go test files in `internal/hook/` launch
+containers with `os/exec` (invoking `docker run` directly), mount the `testdata/` directory, and
+run per-shell test scripts inside the container. This avoids misusing `internal/sandbox`, whose
+`(*Executor).Sandbox()` API is designed for recipe install plans, not arbitrary shell scripts.
 
-The `debian` family from `container-images.json` covers bash, zsh (via apt), and fish (via apt).
+Tests skip at runtime if Docker is unavailable (`t.Skipf("docker not available: %v", err)`) —
+the same convention used by existing sandbox tests. No `//go:build` tag is needed.
+
 For the detect-and-wrap scenario with a pre-existing handler, the test scripts define their own
 `command_not_found_handle` before sourcing the tsuku hook — this is more controlled than relying
 on the distro's installed packages and makes the test self-contained.
@@ -293,8 +297,8 @@ Critical scenarios covered per shell:
 - Uninstall: after removing the source line from rc file, next shell start has no tsuku handler
 
 Both local developers and CI use the same container infrastructure, so a test that passes locally
-passes in CI by construction. The hook container tests are gated by the `//go:build integration`
-tag, matching the convention used by `internal/sandbox` tests.
+passes in CI by construction. The hook container tests skip at runtime when Docker is unavailable
+(`t.Skipf`), matching the convention used by existing sandbox tests. No build tag is needed.
 
 #### Alternatives Considered
 
@@ -305,9 +309,9 @@ testing pattern — the existing container infrastructure exists precisely to av
 dependencies.
 
 **Separate `make test-hooks` with standalone shell scripts:** Shell scripts invoked from the
-Makefile, independent of Go and `internal/sandbox`. Rejected because it splits the test
-infrastructure in two and loses the container lifecycle management that `internal/sandbox`
-already provides. Reusing the existing infrastructure is less to maintain.
+Makefile, independent of Go. Rejected because it splits the test infrastructure in two and loses
+the container image management that `internal/containerimages` already provides. Reusing the
+pinned image map is less to maintain and avoids drift.
 
 **bats (Bash Automated Testing System) for shell tests:** TAP-based framework for bash with
 `@test` syntax. Rejected because it only covers bash; zsh and fish need different frameworks.
@@ -325,7 +329,7 @@ than a hook that visibly errors. Manual QA does not catch regressions.
 
 Decision 2's original assumption stated "tsuku suggest exits 127 whether or not it finds a match,
 so the wrapper always falls through to the original handler." Decision 3 chose distinct exit codes
-(0=match, 1=not found, 4=index not built).
+(0=match, 1=not found, 11=index not built).
 
 These are consistent when correctly interpreted: the wrapper always falls through to the original
 handler regardless of tsuku suggest's exit code. The exit code signals whether output was printed,
@@ -377,8 +381,8 @@ or the other.
   command is typed. The cost is a `command -v` builtin check (microseconds) plus conditional
   function copy — imperceptible in practice.
 - **Fish conf.d persistence**: the fish hook file is not automatically removed if the tsuku binary
-  is manually deleted. `tsuku uninstall` handles this; manual binary deletion is an unsupported
-  path.
+  is manually deleted without first running `tsuku hook uninstall`. Manual binary deletion is an
+  unsupported path; the fish hook's guard silently no-ops if the binary is missing.
 - **eval in bash**: copying an existing bash handler requires eval. This is the accepted pattern
   for bash function copying and is bounded to a function body, not user input.
 
@@ -408,7 +412,7 @@ $TSUKU_HOME/share/hooks/tsuku.fish
   └── each defines the detect-and-wrap handler that calls "tsuku suggest $1"
 
 tsuku suggest <command>
-  └── calls lookupBinaryCommand() → BinaryIndex.Lookup() → formats output → exit 0/1/4
+  └── calls lookupBinaryCommand() → BinaryIndex.Lookup() → formats output → exit 0/1/11
 
 tsuku hook uninstall [--shell=<shell>]
   ├── bash/zsh: removes "# tsuku hook" line + source line from rc file
@@ -566,8 +570,8 @@ command_not_found_handle "jq"
 Deliverables:
 - `cmd/tsuku/lookup.go` — shared `lookupBinaryCommand(cfg, command string) ([]index.BinaryMatch, error)` helper
 - `cmd/tsuku/cmd_suggest.go` — suggest subcommand: calls helper, formats output, handles `--json` flag
-- `cmd/tsuku/cmd_suggest_test.go` — unit tests: single match, multi-match, no match, index-not-built (exit 4)
-- `cmd/tsuku/exitcodes.go` — add `ExitIndexNotBuilt = 4`
+- `cmd/tsuku/cmd_suggest_test.go` — unit tests: single match, multi-match, no match, index-not-built (exit 11)
+- `cmd/tsuku/exitcodes.go` — add `ExitIndexNotBuilt = 11` (exits 1–10 and 130 are already reserved)
 
 ### Phase 2: Hook Files
 
@@ -584,10 +588,12 @@ Deliverables:
 ### Phase 3: `tsuku hook` Subcommands
 
 Implement `hook install`, `hook uninstall`, and `hook status`. The `$TSUKU_HOME/share/hooks/`
-path is derived at the `cmd/tsuku/` layer via `config.DefaultConfig()` and passed into
-`internal/hook/` as a parameter — `internal/hook/` must not import `internal/config` directly.
+directory does not currently exist in the `Config` struct — this phase adds it. The path is
+derived at the `cmd/tsuku/` layer via `config.DefaultConfig()` and passed into `internal/hook/`
+as a parameter — `internal/hook/` must not import `internal/config` directly.
 
 Deliverables:
+- `internal/config/config.go` — add `ShareDir string` field; add `$TSUKU_HOME/share/` to `EnsureDirectories()`
 - `cmd/tsuku/cmd_hook.go` — hook subcommand router; derives config and passes paths to internal/hook
 - `internal/hook/install.go` — rc file detection, atomic marker insertion, fish conf.d management
 - `internal/hook/uninstall.go` — marker removal, idempotent
@@ -596,11 +602,14 @@ Deliverables:
 
 ### Phase 4: Install Script Integration
 
-Update `website/install.sh` to call `tsuku hook install` as the final setup step.
+Update `website/install.sh` to call `tsuku hook install` as the final setup step. The install
+script currently handles PATH setup via `$TSUKU_HOME/env` and supports `--no-modify-path`; this
+phase adds shell hook registration on the same pattern. The `--no-hooks` flag is new and must be
+added to the installer's flag handling.
 
 Deliverables:
-- `website/install.sh` — detect shell, call `tsuku hook install`, handle `--no-hooks`
-- Updated install output messages
+- `website/install.sh` — detect shell via `$SHELL`, call `tsuku hook install`, add `--no-hooks` flag to skip hook registration
+- Updated install output messages noting which shell was configured
 
 ### Phase 5: Shell Integration Tests
 
@@ -612,7 +621,7 @@ Deliverables:
 - `internal/hooks/testdata/test_zsh.sh` — same scenarios for zsh
 - `internal/hooks/testdata/test_fish.fish` — same scenarios for fish
 - `internal/hooks/testdata/mock_tsuku` — minimal mock binary that records invocations for assertions
-- `internal/hook/integration_test.go` — Go test file (`//go:build integration`) using `sandbox.Run()` to execute test scripts in the `debian` container; installs zsh and fish as build commands
+- `internal/hook/integration_test.go` — Go test file using `os/exec` to invoke `docker run` with the pinned `debian` image from `container-images.json`; installs zsh and fish via apt as part of container setup; skips at runtime if Docker is unavailable
 - `.github/workflows/container-tests.yml` — add `hook-integration-tests` job alongside the existing `sandbox-tests` and `validate-tests` jobs
 
 ## Security Considerations
@@ -702,8 +711,9 @@ to the current user's home directory.
 - **Startup overhead**: the `command -v tsuku` guard uses a shell builtin (not a process exec).
   If tsuku is in PATH, the guard passes in microseconds. The full cost is well within the 50ms
   budget and only manifests when an unknown command is typed.
-- **Fish conf.d persistence**: `tsuku uninstall` (full removal) runs `tsuku hook uninstall` as
-  part of cleanup, catching the fish file. The fish hook's `command -q tsuku` guard silently
-  no-ops if the binary is missing.
+- **Fish conf.d persistence**: the fish hook's `command -q tsuku` guard silently no-ops if the
+  binary is missing, so a lingering conf.d file causes no errors. Users removing tsuku should run
+  `tsuku hook uninstall` before removing the binary; this is out of scope for a future full-removal
+  command.
 - **eval in bash**: the eval is applied to a function body captured by `declare -f`, which is
   the shell's own serialization. The input is never user-supplied text.
