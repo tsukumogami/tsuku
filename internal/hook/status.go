@@ -1,6 +1,7 @@
 package hook
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,7 +17,7 @@ func Status(shell, homeDir string) (bool, error) {
 	case "fish":
 		return statusFish(homeDir)
 	default:
-		return false, nil
+		return false, fmt.Errorf("unsupported shell: %q", shell)
 	}
 }
 
