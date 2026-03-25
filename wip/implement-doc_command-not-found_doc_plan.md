@@ -19,7 +19,7 @@ Total entries: 5
 **Section**: Installation
 **Prerequisite issues**: #4
 **Update type**: modify
-**Status**: pending
+**Status**: updated
 **Details**: Document the `--no-hooks` flag for the install script alongside the existing `--no-modify-path` flag. Explain that the installer registers the command-not-found hook for the detected shell by default, and that `--no-hooks` skips this step along with the manual registration command users can run later (`tsuku hook install`).
 
 ---

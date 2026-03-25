@@ -24,6 +24,29 @@ tsuku is a package manager that makes it easy to install and manage development 
 curl -fsSL https://get.tsuku.dev/now | bash
 ```
 
+The installer downloads the latest release binary, verifies its checksum, and configures your shell. It also registers the command-not-found hook for your shell automatically so you get install hints when you type an unknown command.
+
+### Installer flags
+
+| Flag | Description |
+|------|-------------|
+| `--no-modify-path` | Skip adding tsuku to PATH in shell config files |
+| `--no-hooks` | Skip registering the command-not-found hook |
+| `--no-telemetry` | Opt out of anonymous usage statistics |
+
+Pass flags by piping through `bash`:
+
+```bash
+# Don't modify PATH or register the hook
+curl -fsSL https://get.tsuku.dev/now | bash -s -- --no-modify-path --no-hooks
+```
+
+**Hook registration details:** By default, the installer detects your shell from `$SHELL` and runs `tsuku hook install --shell=<shell>` for bash, zsh, or fish. If `$SHELL` is unset or points to an unsupported shell, the installer warns and skips hook registration without failing. Pass `--no-hooks` to skip this step intentionally — you can register the hook later with:
+
+```bash
+tsuku hook install
+```
+
 ## Usage
 
 ### Install a tool
