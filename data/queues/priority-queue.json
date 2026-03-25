@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-25T07:19:57Z",
+  "updated_at": "2026-03-25T08:54:37Z",
   "entries": [
     {
       "name": "node",
@@ -20626,7 +20626,7 @@
       "name": "httpx",
       "source": "rubygems:httpx",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 197,
@@ -28546,7 +28546,7 @@
       "name": "mailcatcher",
       "source": "rubygems:mailcatcher",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
@@ -30426,11 +30426,11 @@
       "name": "mktorrent",
       "source": "rubygems:mktorrent",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-25T07:02:36.055461489Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-03-26T16:54:37.696692287Z"
     },
     {
       "name": "mkvtomp4",
