@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-25T06:06:04Z",
+  "generated_at": "2026-03-25T06:07:10Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 68,
-      "pending": 3865,
+      "failed": 67,
+      "pending": 3866,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 68,
-        "pending": 3842,
+        "failed": 67,
+        "pending": 3843,
         "success": 1326
       }
     },
@@ -73,7 +73,8 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -875,15 +876,6 @@
           "next_retry_at": "2026-03-27T22:32:12Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 195,
-          "next_retry_at": "1733-12-14T04:44:18Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -983,13 +975,13 @@
           "next_retry_at": "2026-03-30T18:02:14Z"
         },
         {
-          "id": "rubygems:multimarkdown",
-          "name": "multimarkdown",
+          "id": "rubygems:neo4j",
+          "name": "neo4j",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-25T04:45:20Z"
+          "failure_count": 3,
+          "next_retry_at": "2026-03-25T10:06:43Z"
         },
         {
           "id": "crates.io:numpy",
@@ -13312,6 +13304,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 195,
+          "next_retry_at": "1733-12-14T04:44:18Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -16354,6 +16355,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:multimarkdown",
+          "name": "multimarkdown",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-25T04:45:20Z"
+        },
+        {
           "id": "homebrew:mupdf",
           "name": "mupdf",
           "ecosystem": "homebrew",
@@ -16716,15 +16726,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:neo4j",
-          "name": "neo4j",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-03-25T00:34:39Z"
         },
         {
           "id": "homebrew:neocmakelsp",
