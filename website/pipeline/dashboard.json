@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-25T07:19:13Z",
+  "generated_at": "2026-03-25T07:20:23Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 67,
-      "pending": 3866,
+      "failed": 68,
+      "pending": 3865,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 67,
-        "pending": 3843,
+        "failed": 68,
+        "pending": 3842,
         "success": 1326
       }
     },
@@ -73,8 +73,7 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -876,6 +875,15 @@
           "next_retry_at": "2026-03-27T22:32:12Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 197,
+          "next_retry_at": "1733-12-14T07:32:40Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -957,15 +965,6 @@
           "next_retry_at": "2026-03-26T03:06:05Z"
         },
         {
-          "id": "rubygems:mktorrent",
-          "name": "mktorrent",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-25T07:02:36Z"
-        },
-        {
           "id": "npm:mongoose",
           "name": "mongoose",
           "ecosystem": "npm",
@@ -973,6 +972,15 @@
           "category": "install_failed",
           "failure_count": 9,
           "next_retry_at": "2026-03-30T18:02:14Z"
+        },
+        {
+          "id": "rubygems:multimarkdown",
+          "name": "multimarkdown",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-25T23:19:57Z"
         },
         {
           "id": "rubygems:neo4j",
@@ -13304,15 +13312,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 195,
-          "next_retry_at": "1733-12-14T04:44:18Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -15900,6 +15899,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:mktorrent",
+          "name": "mktorrent",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-03-25T07:02:36Z"
+        },
+        {
           "id": "homebrew:mkvtomp4",
           "name": "mkvtomp4",
           "ecosystem": "homebrew",
@@ -16353,15 +16361,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:multimarkdown",
-          "name": "multimarkdown",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-25T04:45:20Z"
         },
         {
           "id": "homebrew:mupdf",
