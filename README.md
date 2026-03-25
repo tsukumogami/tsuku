@@ -742,6 +742,32 @@ tsuku install ruff --sandbox --json | jq '.passed'
 
 For technical details, see [DESIGN-install-sandbox.md](docs/DESIGN-install-sandbox.md).
 
+### Command suggestions
+
+`tsuku suggest` looks up which recipe provides a given command and prints an install hint. It reads the local binary index — no network access needed.
+
+```bash
+# Single match
+$ tsuku suggest jq
+Command 'jq' not found. Install with: tsuku install jq
+
+# Multiple matches show a list with installed status
+$ tsuku suggest aws
+Command 'aws' not found. Provided by:
+  aws-cli   tsuku install aws-cli
+  awscurl   tsuku install awscurl
+
+# Machine-readable output
+$ tsuku suggest jq --json
+{"command":"jq","matches":[{"recipe":"jq","binary_path":"bin/jq","installed":false}]}
+```
+
+The binary index must be built before `suggest` works. Run `tsuku update-registry` once after installation (or any time you want to pick up new recipes).
+
+Exit codes: `0` on match, `1` on no match, `11` if the index hasn't been built yet.
+
+The shell hook invokes `tsuku suggest` automatically when you type a command that isn't found, so you get install hints without running `suggest` directly.
+
 ## Operations
 
 tsuku includes a batch operations control plane for managing automated recipe imports:
