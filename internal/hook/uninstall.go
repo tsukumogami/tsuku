@@ -43,13 +43,13 @@ func uninstallRCFile(shell, homeDir string) error {
 		return nil // Marker not present; nothing to do.
 	}
 
-	updated := removeMarkerBlock(content, shell)
+	updated := removeMarkerBlock(content)
 	return atomicWrite(rcFile, []byte(updated), 0644)
 }
 
 // removeMarkerBlock removes the two-line marker block from content.
 // It handles both Unix (\n) and Windows (\r\n) line endings.
-func removeMarkerBlock(content, shell string) string {
+func removeMarkerBlock(content string) string {
 	lines := strings.Split(content, "\n")
 	var result []string
 	skipNext := false
@@ -68,7 +68,6 @@ func removeMarkerBlock(content, shell string) string {
 		}
 		result = append(result, line)
 	}
-	_ = shell // shell parameter reserved for future shell-specific logic
 	return strings.Join(result, "\n")
 }
 
