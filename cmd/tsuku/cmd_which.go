@@ -35,7 +35,7 @@ Examples:
 		if err != nil {
 			if errors.Is(err, index.ErrIndexNotBuilt) {
 				fmt.Println("Binary index not built. Run 'tsuku update-registry' first.")
-				exitWithCode(ExitGeneral)
+				exitWithCode(ExitIndexNotBuilt)
 			}
 			// StaleIndexWarning: results are still valid; print the warning but continue.
 			var stale index.StaleIndexWarning
