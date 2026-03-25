@@ -768,6 +768,61 @@ Exit codes: `0` on match, `1` on no match, `11` if the index hasn't been built y
 
 The shell hook invokes `tsuku suggest` automatically when you type a command that isn't found, so you get install hints without running `suggest` directly.
 
+### Command-not-found hook
+
+The command-not-found hook integrates tsuku suggestions directly into your shell. When you type a command that isn't found, your shell calls `tsuku suggest` automatically and prints an install hint.
+
+**Install the hook:**
+
+```bash
+# Auto-detect shell from $SHELL
+tsuku hook install
+
+# Or specify the shell explicitly
+tsuku hook install --shell=bash
+tsuku hook install --shell=zsh
+tsuku hook install --shell=fish
+```
+
+The three supported shells and the files modified:
+
+| Shell | File modified |
+|-------|--------------|
+| bash  | `~/.bashrc` |
+| zsh   | `~/.zshrc` |
+| fish  | `~/.config/fish/conf.d/tsuku.fish` |
+
+For bash and zsh, tsuku appends a marker block to the rc file:
+
+```bash
+# tsuku hook
+. "$TSUKU_HOME/share/hooks/tsuku.bash"
+```
+
+The hook script itself lives in `$TSUKU_HOME/share/hooks/` and is updated automatically when tsuku upgrades, so you don't need to re-run `hook install` after upgrading.
+
+`hook install` is idempotent — running it again when the hook is already installed makes no changes.
+
+**Check hook status:**
+
+```bash
+tsuku hook status
+```
+
+Reports installed or not installed for each shell detected on the system.
+
+**Remove the hook:**
+
+```bash
+# Auto-detect shell
+tsuku hook uninstall
+
+# Or specify explicitly
+tsuku hook uninstall --shell=bash
+```
+
+Removes the marker block from the rc file (or deletes `~/.config/fish/conf.d/tsuku.fish` for fish). Also idempotent.
+
 ## Operations
 
 tsuku includes a batch operations control plane for managing automated recipe imports:

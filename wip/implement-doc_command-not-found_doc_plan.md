@@ -28,7 +28,7 @@ Total entries: 5
 **Section**: Usage
 **Prerequisite issues**: #2, #3
 **Update type**: modify
-**Status**: pending
+**Status**: updated
 **Details**: Add a "Command-not-found hook" subsection documenting `tsuku hook install`, `tsuku hook uninstall`, and `tsuku hook status`. Cover the `--shell=<shell>` flag, the three supported shells (bash, zsh, fish), and which rc files are modified. Mention that hook files live in `$TSUKU_HOME/share/hooks/` and are updated automatically when tsuku upgrades.
 
 ---
