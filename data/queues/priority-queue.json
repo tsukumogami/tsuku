@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-25T13:10:34Z",
+  "updated_at": "2026-03-25T15:03:56Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 86,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 199,
-      "next_retry_at": "1733-12-14T11:04:42.390447862Z"
+      "failure_count": 201,
+      "next_retry_at": "1733-12-14T15:16:39.767445773Z"
     },
     {
       "name": "libaacs",
@@ -28546,11 +28546,11 @@
       "name": "mailcatcher",
       "source": "rubygems:mailcatcher",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-03-25T08:34:08.077733591Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-03-30T23:03:56.622221581Z"
     },
     {
       "name": "mailhog",
@@ -39116,11 +39116,11 @@
       "name": "q",
       "source": "npm:q",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-03-25T10:01:05.582820246Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-04-01T15:03:56.622221581Z"
     },
     {
       "name": "qalculate-gtk",
