@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-25T06:06:43Z",
+  "updated_at": "2026-03-25T07:19:57Z",
   "entries": [
     {
       "name": "node",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 195,
-      "next_retry_at": "1733-12-14T04:44:18.994151241Z"
+      "failure_count": 197,
+      "next_retry_at": "1733-12-14T07:32:40.291331088Z"
     },
     {
       "name": "libaacs",
@@ -30426,7 +30426,7 @@
       "name": "mktorrent",
       "source": "rubygems:mktorrent",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
@@ -31296,11 +31296,11 @@
       "name": "multimarkdown",
       "source": "rubygems:multimarkdown",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-25T04:45:20.209395291Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-03-25T23:19:57.146106896Z"
     },
     {
       "name": "multitail",
