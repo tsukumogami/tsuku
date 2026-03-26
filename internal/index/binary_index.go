@@ -18,11 +18,6 @@ import (
 // been populated. Callers should run 'tsuku update-registry' to build the index.
 var ErrIndexNotBuilt = errors.New("binary index not built; run 'tsuku update-registry'")
 
-// ErrIndexCorrupt is returned when the database is unreadable or structurally
-// broken. Delete $TSUKU_HOME/cache/binary-index.db and run 'tsuku update-registry'
-// to recreate it.
-var ErrIndexCorrupt = errors.New("binary index corrupt; delete $TSUKU_HOME/cache/binary-index.db and run 'tsuku update-registry'")
-
 // StaleIndexWarning is returned (wrapped) by Lookup when the registry directory
 // has been updated since the index was last built. Results are still returned;
 // this warning is advisory only.

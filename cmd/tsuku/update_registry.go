@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 	"sort"
 	"time"
 
@@ -315,7 +314,7 @@ func rebuildBinaryIndex(ctx context.Context, reg index.Registry) {
 		exitWithCode(ExitGeneral)
 	}
 
-	dbPath := filepath.Join(cfg.CacheDir, "binary-index.db")
+	dbPath := cfg.BinaryIndexPath()
 	idx, err := index.Open(dbPath, cfg.RegistryDir)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to open binary index: %v\n", err)

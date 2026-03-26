@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/index"
@@ -20,7 +19,7 @@ import (
 // callers should print the warning but continue using the results.
 // Returns (nil, error) for other failures (corrupt index, I/O errors, etc.).
 func lookupBinaryCommand(ctx context.Context, cfg *config.Config, command string) ([]index.BinaryMatch, error) {
-	dbPath := filepath.Join(cfg.CacheDir, "binary-index.db")
+	dbPath := cfg.BinaryIndexPath()
 
 	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
 		return nil, index.ErrIndexNotBuilt

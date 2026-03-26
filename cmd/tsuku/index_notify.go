@@ -2,7 +2,6 @@ package main
 
 import (
 	"log/slog"
-	"path/filepath"
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/index"
@@ -18,7 +17,7 @@ func setInstalledInIndex(recipe string, installed bool) {
 		return
 	}
 
-	dbPath := filepath.Join(cfg.CacheDir, "binary-index.db")
+	dbPath := cfg.BinaryIndexPath()
 	idx, err := index.Open(dbPath, cfg.RegistryDir)
 	if err != nil {
 		slog.Warn("binary index: failed to open", "err", err)

@@ -427,6 +427,12 @@ func (c *Config) AppDir(name, version string) string {
 	return filepath.Join(c.AppsDir, fmt.Sprintf("%s-%s.app", name, version))
 }
 
+// BinaryIndexPath returns the path to the binary index database
+// ($TSUKU_HOME/cache/binary-index.db).
+func (c *Config) BinaryIndexPath() string {
+	return filepath.Join(c.CacheDir, "binary-index.db")
+}
+
 // EnvFile returns the path to the env file ($TSUKU_HOME/env).
 // This file is sourced by shell configurations to add tsuku directories to PATH.
 func (c *Config) EnvFile() string {

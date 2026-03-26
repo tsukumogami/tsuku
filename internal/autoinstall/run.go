@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/index"
@@ -114,8 +115,11 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 
 	// Security gate 3 (auto mode only): verification gate.
 	// If the recipe has no checksum or signature verification, fall back to confirm.
-	if effectiveMode == ModeAuto && r.RecipeHasVerification != nil {
-		if !r.RecipeHasVerification(match.Recipe) {
+	// A nil RecipeHasVerification function is treated as "unverified" — the gate
+	// fires rather than being silently skipped.
+	if effectiveMode == ModeAuto {
+		hasVerification := r.RecipeHasVerification != nil && r.RecipeHasVerification(match.Recipe)
+		if !hasVerification {
 			effectiveMode = ModeConfirm
 		}
 	}
@@ -195,8 +199,17 @@ func configPermissionsOK(path string) bool {
 	if err != nil {
 		return false // can't stat, be cautious
 	}
+	// Check permissions: no group/other access.
 	mode := info.Mode().Perm()
-	return mode&0077 == 0
+	if mode&0077 != 0 {
+		return false
+	}
+	// Check ownership: must be owned by the current user.
+	stat, ok := info.Sys().(*syscall.Stat_t)
+	if !ok {
+		return false // can't determine ownership, be cautious
+	}
+	return stat.Uid == uint32(os.Getuid())
 }
 
 // writeAuditLog appends one NDJSON line to $TSUKU_HOME/audit.log.

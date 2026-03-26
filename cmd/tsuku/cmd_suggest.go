@@ -7,11 +7,17 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/index"
 )
+
+// suggestTimeout is the maximum time for a suggest lookup. Shell hooks call
+// tsuku suggest on every unknown command, so this must stay well under the
+// user-perceptible threshold.
+const suggestTimeout = 50 * time.Millisecond
 
 // suggestJSONOutput is the machine-readable output for tsuku suggest --json.
 type suggestJSONOutput struct {
@@ -59,7 +65,10 @@ Examples:
 			exitWithCode(ExitGeneral)
 		}
 
-		code := runSuggest(globalCtx, os.Stdout, os.Stderr, cfg, command, suggestJSONFlag)
+		ctx, cancel := context.WithTimeout(globalCtx, suggestTimeout)
+		defer cancel()
+
+		code := runSuggest(ctx, os.Stdout, os.Stderr, cfg, command, suggestJSONFlag)
 		if code != ExitSuccess {
 			exitWithCode(code)
 		}

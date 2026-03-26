@@ -173,6 +173,76 @@ func TestHookZsh(t *testing.T) {
 	}
 }
 
+// TestHookZsh_DetectAndWrap verifies that tsuku.zsh wraps a pre-existing
+// command_not_found_handler without discarding it (scenario-26z).
+func TestHookZsh_DetectAndWrap(t *testing.T) {
+	skipIfNoDocker(t)
+
+	script := `apt-get update -q && apt-get install -y -q zsh && ` +
+		`mkdir -p /tmp/bin /tmp/tsuku-test/share/hooks && ` +
+		`cp /repo/internal/hooks/testdata/mock_tsuku /tmp/bin/tsuku && ` +
+		`chmod +x /tmp/bin/tsuku && ` +
+		`cp /repo/internal/hooks/tsuku.zsh /tmp/tsuku-test/share/hooks/ && ` +
+		`export PATH="/tmp/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" && ` +
+		`zsh -c 'export PATH="/tmp/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"; ` +
+		`command_not_found_handler() { echo "original-handler-called"; }; ` +
+		`source /tmp/tsuku-test/share/hooks/tsuku.zsh; ` +
+		`jq' 2>&1 || true`
+
+	out := runInContainer(t, script)
+	if !strings.Contains(out, "Command 'jq' not found.") {
+		t.Errorf("expected output to contain \"Command 'jq' not found.\"; got:\n%s", out)
+	}
+	if !strings.Contains(out, "original-handler-called") {
+		t.Errorf("expected output to contain \"original-handler-called\"; got:\n%s", out)
+	}
+}
+
+// TestHookZsh_RecursionGuard verifies that tsuku.zsh's inner command -v tsuku
+// guard prevents any call to tsuku suggest when tsuku is not in PATH (scenario-27z).
+func TestHookZsh_RecursionGuard(t *testing.T) {
+	skipIfNoDocker(t)
+
+	script := `apt-get update -q && apt-get install -y -q zsh && ` +
+		`mkdir -p /tmp/bin /tmp/tsuku-test/share/hooks && ` +
+		`cp /repo/internal/hooks/testdata/mock_tsuku /tmp/bin/tsuku && ` +
+		`chmod +x /tmp/bin/tsuku && ` +
+		`cp /repo/internal/hooks/tsuku.zsh /tmp/tsuku-test/share/hooks/ && ` +
+		`export PATH="/tmp/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" && ` +
+		`zsh -c 'export PATH="/tmp/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"; ` +
+		`source /tmp/tsuku-test/share/hooks/tsuku.zsh; ` +
+		`export PATH="/usr/bin:/bin"; ` +
+		`jq' 2>&1 || true`
+
+	out := runInContainer(t, script)
+	if strings.Contains(out, "Command 'jq' not found.") {
+		t.Errorf("recursion guard should prevent tsuku suggest call; got:\n%s", out)
+	}
+}
+
+// TestHookZsh_DoubleSource verifies that sourcing tsuku.zsh twice results in
+// the suggest output appearing exactly once per invocation (scenario-28z).
+func TestHookZsh_DoubleSource(t *testing.T) {
+	skipIfNoDocker(t)
+
+	script := `apt-get update -q && apt-get install -y -q zsh && ` +
+		`mkdir -p /tmp/bin /tmp/tsuku-test/share/hooks && ` +
+		`cp /repo/internal/hooks/testdata/mock_tsuku /tmp/bin/tsuku && ` +
+		`chmod +x /tmp/bin/tsuku && ` +
+		`cp /repo/internal/hooks/tsuku.zsh /tmp/tsuku-test/share/hooks/ && ` +
+		`export PATH="/tmp/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" && ` +
+		`zsh -c 'export PATH="/tmp/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"; ` +
+		`source /tmp/tsuku-test/share/hooks/tsuku.zsh; ` +
+		`source /tmp/tsuku-test/share/hooks/tsuku.zsh; ` +
+		`jq' 2>&1 || true`
+
+	out := runInContainer(t, script)
+	count := strings.Count(out, "Command 'jq' not found.")
+	if count != 1 {
+		t.Errorf("expected \"Command 'jq' not found.\" exactly once; got %d times in:\n%s", count, out)
+	}
+}
+
 // TestHookFish verifies that tsuku.fish installs a fish_command_not_found
 // handler that calls tsuku suggest (scenario-26).
 func TestHookFish(t *testing.T) {
@@ -190,5 +260,72 @@ func TestHookFish(t *testing.T) {
 	out := runInContainer(t, script)
 	if !strings.Contains(out, "Command 'jq' not found.") {
 		t.Errorf("expected output to contain \"Command 'jq' not found.\"; got:\n%s", out)
+	}
+}
+
+// TestHookFish_DetectAndWrap verifies that tsuku.fish wraps a pre-existing
+// fish_command_not_found handler without discarding it (scenario-26f).
+func TestHookFish_DetectAndWrap(t *testing.T) {
+	skipIfNoDocker(t)
+
+	script := `apt-get update -q && apt-get install -y -q fish && ` +
+		`mkdir -p /tmp/bin /tmp/tsuku-test/share/hooks && ` +
+		`cp /repo/internal/hooks/testdata/mock_tsuku /tmp/bin/tsuku && ` +
+		`chmod +x /tmp/bin/tsuku && ` +
+		`cp /repo/internal/hooks/tsuku.fish /tmp/tsuku-test/share/hooks/ && ` +
+		`fish -c 'set -x PATH /tmp/bin /usr/local/sbin /usr/local/bin /usr/sbin /usr/bin /sbin /bin; ` +
+		`function fish_command_not_found; echo "original-handler-called"; end; ` +
+		`source /tmp/tsuku-test/share/hooks/tsuku.fish; ` +
+		`jq' 2>&1 || true`
+
+	out := runInContainer(t, script)
+	if !strings.Contains(out, "Command 'jq' not found.") {
+		t.Errorf("expected output to contain \"Command 'jq' not found.\"; got:\n%s", out)
+	}
+	if !strings.Contains(out, "original-handler-called") {
+		t.Errorf("expected output to contain \"original-handler-called\"; got:\n%s", out)
+	}
+}
+
+// TestHookFish_RecursionGuard verifies that tsuku.fish's inner command -q tsuku
+// guard prevents any call to tsuku suggest when tsuku is not in PATH (scenario-27f).
+func TestHookFish_RecursionGuard(t *testing.T) {
+	skipIfNoDocker(t)
+
+	script := `apt-get update -q && apt-get install -y -q fish && ` +
+		`mkdir -p /tmp/bin /tmp/tsuku-test/share/hooks && ` +
+		`cp /repo/internal/hooks/testdata/mock_tsuku /tmp/bin/tsuku && ` +
+		`chmod +x /tmp/bin/tsuku && ` +
+		`cp /repo/internal/hooks/tsuku.fish /tmp/tsuku-test/share/hooks/ && ` +
+		`fish -c 'set -x PATH /tmp/bin /usr/local/sbin /usr/local/bin /usr/sbin /usr/bin /sbin /bin; ` +
+		`source /tmp/tsuku-test/share/hooks/tsuku.fish; ` +
+		`set -x PATH /usr/bin /bin; ` +
+		`jq' 2>&1 || true`
+
+	out := runInContainer(t, script)
+	if strings.Contains(out, "Command 'jq' not found.") {
+		t.Errorf("recursion guard should prevent tsuku suggest call; got:\n%s", out)
+	}
+}
+
+// TestHookFish_DoubleSource verifies that sourcing tsuku.fish twice results in
+// the suggest output appearing exactly once per invocation (scenario-28f).
+func TestHookFish_DoubleSource(t *testing.T) {
+	skipIfNoDocker(t)
+
+	script := `apt-get update -q && apt-get install -y -q fish && ` +
+		`mkdir -p /tmp/bin /tmp/tsuku-test/share/hooks && ` +
+		`cp /repo/internal/hooks/testdata/mock_tsuku /tmp/bin/tsuku && ` +
+		`chmod +x /tmp/bin/tsuku && ` +
+		`cp /repo/internal/hooks/tsuku.fish /tmp/tsuku-test/share/hooks/ && ` +
+		`fish -c 'set -x PATH /tmp/bin /usr/local/sbin /usr/local/bin /usr/sbin /usr/bin /sbin /bin; ` +
+		`source /tmp/tsuku-test/share/hooks/tsuku.fish; ` +
+		`source /tmp/tsuku-test/share/hooks/tsuku.fish; ` +
+		`jq' 2>&1 || true`
+
+	out := runInContainer(t, script)
+	count := strings.Count(out, "Command 'jq' not found.")
+	if count != 1 {
+		t.Errorf("expected \"Command 'jq' not found.\" exactly once; got %d times in:\n%s", count, out)
 	}
 }

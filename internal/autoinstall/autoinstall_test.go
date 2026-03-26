@@ -3,11 +3,13 @@ package autoinstall
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/index"
@@ -399,5 +401,103 @@ func TestRun_AlreadyInstalled_ExecImmediately(t *testing.T) {
 	expectedBinary := filepath.Join(r.cfg.CurrentDir, "jq")
 	if execRec.binary != expectedBinary {
 		t.Errorf("exec binary = %q, want %q", execRec.binary, expectedBinary)
+	}
+}
+
+func TestRun_ProjectVersionResolverFlowsThrough(t *testing.T) {
+	r, _, _ := newTestRunner(t)
+	installer := &mockInstaller{}
+	execRec := &execRecorder{}
+
+	r.Lookup = func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
+		return []index.BinaryMatch{{Recipe: "jq", Command: "jq"}}, nil
+	}
+	r.Installer = installer
+	r.Exec = execRec.exec
+	r.ConsentReader = strings.NewReader("y\n")
+
+	resolver := &mockProjectVersionResolver{
+		versions: map[string]string{"jq": "1.7.1"},
+	}
+
+	err := r.Run(context.Background(), "jq", nil, ModeConfirm, resolver)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if installer.ver != "1.7.1" {
+		t.Errorf("installer got version %q, want %q", installer.ver, "1.7.1")
+	}
+}
+
+func TestRun_ModeAuto_AuditLogNDJSON(t *testing.T) {
+	r, _, _ := newTestRunner(t)
+	installer := &mockInstaller{}
+	execRec := &execRecorder{}
+
+	r.Lookup = func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
+		return []index.BinaryMatch{{Recipe: "jq", Command: "jq"}}, nil
+	}
+	r.Installer = installer
+	r.Exec = execRec.exec
+	r.RecipeHasVerification = func(_ string) bool { return true }
+
+	_ = os.WriteFile(filepath.Join(r.cfg.HomeDir, "config.toml"), []byte(""), 0600)
+
+	err := r.Run(context.Background(), "jq", nil, ModeAuto, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	data, readErr := os.ReadFile(filepath.Join(r.cfg.HomeDir, "audit.log"))
+	if readErr != nil {
+		t.Fatalf("audit log not written: %v", readErr)
+	}
+
+	var entry struct {
+		Timestamp string `json:"ts"`
+		Action    string `json:"action"`
+		Recipe    string `json:"recipe"`
+		Version   string `json:"version"`
+		Mode      string `json:"mode"`
+	}
+	if err := json.Unmarshal(bytes.TrimSpace(data), &entry); err != nil {
+		t.Fatalf("audit log is not valid NDJSON: %v\nraw: %s", err, data)
+	}
+	if entry.Action != "auto-install" {
+		t.Errorf("action = %q, want %q", entry.Action, "auto-install")
+	}
+	if entry.Recipe != "jq" {
+		t.Errorf("recipe = %q, want %q", entry.Recipe, "jq")
+	}
+	if entry.Mode != "auto" {
+		t.Errorf("mode = %q, want %q", entry.Mode, "auto")
+	}
+	if _, parseErr := time.Parse(time.RFC3339, entry.Timestamp); parseErr != nil {
+		t.Errorf("timestamp %q is not RFC-3339: %v", entry.Timestamp, parseErr)
+	}
+}
+
+func TestRun_NilRecipeHasVerification_FallsBackToConfirm(t *testing.T) {
+	r, _, _ := newTestRunner(t)
+	installer := &mockInstaller{}
+	execRec := &execRecorder{}
+
+	r.Lookup = func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
+		return []index.BinaryMatch{{Recipe: "jq", Command: "jq"}}, nil
+	}
+	r.Installer = installer
+	r.Exec = execRec.exec
+	r.RecipeHasVerification = nil // not wired
+	r.ConsentReader = strings.NewReader("y\n")
+
+	_ = os.WriteFile(filepath.Join(r.cfg.HomeDir, "config.toml"), []byte(""), 0600)
+
+	err := r.Run(context.Background(), "jq", nil, ModeAuto, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// Should have fallen back to confirm (prompted for consent).
+	if !installer.called {
+		t.Error("installer should have been called after consent")
 	}
 }

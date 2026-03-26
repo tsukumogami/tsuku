@@ -74,9 +74,9 @@ tsuku hook status
 Example output:
 
 ```
-bash    installed  (~/.bashrc)
-zsh     installed  (~/.zshrc)
-fish    not installed
+bash: installed
+zsh: installed
+fish: not installed
 ```
 
 ## Supported Shells
@@ -114,14 +114,14 @@ Then confirm with `tsuku hook status`. You can also test by typing a command you
 
 `tsuku hook uninstall` removes the marker block from your rc file without touching anything else. The file is left with the same content it had before tsuku touched it.
 
-If you uninstall tsuku entirely, run `tsuku hook uninstall` first to clean up the rc files. If you've already removed tsuku, locate the block manually — it's bounded by lines like:
+If you uninstall tsuku entirely, run `tsuku hook uninstall` first to clean up the rc files. If you've already removed tsuku, locate and remove the two-line block manually:
 
 ```
-# --- tsuku hook begin ---
-# --- tsuku hook end ---
+# tsuku hook
+. "$TSUKU_HOME/share/hooks/tsuku.bash"
 ```
 
-Delete those lines and everything between them.
+The comment line and the source line immediately after it are the only lines tsuku adds. Delete both.
 
 ## Troubleshooting
 
