@@ -76,27 +76,27 @@ priority chain including the env-var escalation restriction.
 
 ---
 
-### Issue 3: feat(autoinstall): implement Runner.Run — lookup, mode dispatch, install, exec
+### Issue 3: feat(autoinstall): implement Runner.Run — lookup, mode dispatch, install, exec [DONE]
 
 **Goal**: Implement the full body of `Runner.Run` in `internal/autoinstall/`, including
 binary index lookup, mode dispatch for all three consent modes, all four security gates,
 syscall.Exec process replacement, and NDJSON audit logging.
 
 **Acceptance Criteria**:
-- [ ] `Runner.Run` calls `lookupBinaryCommand(command)` against the local binary index; if the index is not built, returns an error equivalent to `ExitIndexNotBuilt` (exit code 11) with a diagnostic message
-- [ ] If the command is already installed, `Runner.Run` calls `syscall.Exec` immediately — no prompt, no install
-- [ ] Security gate 1 (root guard): if `os.Geteuid() == 0`, `Runner.Run` returns an error wrapping `ExitForbidden` (14) before any install or exec
-- [ ] Security gate 2 (config permission check): before honouring `auto_install_mode` from config, the implementation checks that `$TSUKU_HOME/config.toml` is mode 0600 and owned by the current user; if either check fails, a warning is logged to stderr and the effective mode treats `auto_install_mode` as unset (falling back to `confirm`)
-- [ ] `ModeSuggest`: prints `Install with: tsuku install <recipe>` to stdout and returns an error that causes exit code 1; no install is attempted
-- [ ] `ModeConfirm`: uses an injectable consent reader; on 'y' proceeds to install; on 'n' returns an error wrapping `ExitUserDeclined` (13); prompt text includes the recipe name and resolved version
-- [ ] Security gate 3 (verification gate, auto mode only): if the matched recipe has neither `checksum_url` nor `signature_url`, `Runner.Run` falls back to `ModeConfirm` for this install rather than proceeding silently
-- [ ] Security gate 4 (conflict gate, auto mode only): if the binary index returns more than one recipe for the command, `Runner.Run` falls back to `ModeConfirm` for this install
-- [ ] `ModeAuto` (after passing gates 3 and 4): installs silently, then appends one NDJSON line to `$TSUKU_HOME/audit.log`; the file is created on first write with mode 0600; the line has fields `ts` (RFC-3339), `action` (`"auto-install"`), `recipe`, `version`, `mode` (`"auto"`)
-- [ ] After any successful install, `syscall.Exec` replaces the tsuku process with the installed binary; all cleanup (temp files, deferred work) completes before `syscall.Exec` is called
-- [ ] The consent reader is injectable (via a field or constructor parameter) so unit tests can supply a reader without spawning a TTY
-- [ ] Unit tests cover: `ModeSuggest`, `ModeConfirm` with 'y', `ModeConfirm` with 'n', `ModeAuto` happy path, root guard (gate 1), config permission failure (gate 2), verification gate fallback (gate 3), conflict gate fallback (gate 4), install failure, index-not-built
-- [ ] Must deliver: a fully implemented `Runner.Run` with the stable signature `Run(ctx context.Context, command string, args []string, mode Mode, resolver ProjectVersionResolver) error` (required by Issue 4)
-- [ ] `go test ./internal/autoinstall/...` passes
+- [x] `Runner.Run` calls `lookupBinaryCommand(command)` against the local binary index; if the index is not built, returns an error equivalent to `ExitIndexNotBuilt` (exit code 11) with a diagnostic message
+- [x] If the command is already installed, `Runner.Run` calls `syscall.Exec` immediately — no prompt, no install
+- [x] Security gate 1 (root guard): if `os.Geteuid() == 0`, `Runner.Run` returns an error wrapping `ExitForbidden` (14) before any install or exec
+- [x] Security gate 2 (config permission check): before honouring `auto_install_mode` from config, the implementation checks that `$TSUKU_HOME/config.toml` is mode 0600 and owned by the current user; if either check fails, a warning is logged to stderr and the effective mode treats `auto_install_mode` as unset (falling back to `confirm`)
+- [x] `ModeSuggest`: prints `Install with: tsuku install <recipe>` to stdout and returns an error that causes exit code 1; no install is attempted
+- [x] `ModeConfirm`: uses an injectable consent reader; on 'y' proceeds to install; on 'n' returns an error wrapping `ExitUserDeclined` (13); prompt text includes the recipe name and resolved version
+- [x] Security gate 3 (verification gate, auto mode only): if the matched recipe has neither `checksum_url` nor `signature_url`, `Runner.Run` falls back to `ModeConfirm` for this install rather than proceeding silently
+- [x] Security gate 4 (conflict gate, auto mode only): if the binary index returns more than one recipe for the command, `Runner.Run` falls back to `ModeConfirm` for this install
+- [x] `ModeAuto` (after passing gates 3 and 4): installs silently, then appends one NDJSON line to `$TSUKU_HOME/audit.log`; the file is created on first write with mode 0600; the line has fields `ts` (RFC-3339), `action` (`"auto-install"`), `recipe`, `version`, `mode` (`"auto"`)
+- [x] After any successful install, `syscall.Exec` replaces the tsuku process with the installed binary; all cleanup (temp files, deferred work) completes before `syscall.Exec` is called
+- [x] The consent reader is injectable (via a field or constructor parameter) so unit tests can supply a reader without spawning a TTY
+- [x] Unit tests cover: `ModeSuggest`, `ModeConfirm` with 'y', `ModeConfirm` with 'n', `ModeAuto` happy path, root guard (gate 1), config permission failure (gate 2), verification gate fallback (gate 3), conflict gate fallback (gate 4), install failure, index-not-built
+- [x] Must deliver: a fully implemented `Runner.Run` with the stable signature `Run(ctx context.Context, command string, args []string, mode Mode, resolver ProjectVersionResolver) error` (required by Issue 4)
+- [x] `go test ./internal/autoinstall/...` passes
 
 **Dependencies**: Blocked by Issue 1, Issue 2
 
@@ -148,9 +148,8 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1,I2 done
-    class I3 ready
-    class I4 blocked
+    class I1,I2,I3 done
+    class I4 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan

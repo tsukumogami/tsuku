@@ -8,6 +8,7 @@ import (
 	"io"
 
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/index"
 )
 
 // Mode controls the consent behavior for auto-install.
@@ -63,6 +64,20 @@ type ProjectVersionResolver interface {
 	ProjectVersionFor(ctx context.Context, command string) (version string, ok bool, err error)
 }
 
+// Installer performs the actual tool installation. cmd/tsuku wires this
+// to the full install pipeline (recipe loading, version resolution, etc.).
+type Installer interface {
+	Install(ctx context.Context, recipe, version string) error
+}
+
+// LookupFunc looks up a command in the binary index.
+// This is typically bound to cmd/tsuku/lookup.go's lookupBinaryCommand.
+type LookupFunc func(ctx context.Context, command string) ([]index.BinaryMatch, error)
+
+// ExecFunc replaces the current process with the given command.
+// On Unix this is syscall.Exec; tests inject a no-op or recorder.
+type ExecFunc func(binary string, args []string, env []string) error
+
 // Runner executes the install-then-exec flow.
 type Runner struct {
 	cfg    *config.Config
@@ -72,6 +87,20 @@ type Runner struct {
 	// ConsentReader is the source for interactive consent input.
 	// Inject a bytes.Buffer or strings.Reader in tests.
 	ConsentReader io.Reader
+
+	// Lookup resolves a command name to binary index matches.
+	Lookup LookupFunc
+
+	// Installer performs the recipe installation.
+	Installer Installer
+
+	// Exec replaces the process with the installed binary.
+	Exec ExecFunc
+
+	// RecipeHasVerification checks whether a recipe has checksum_url or
+	// signature_url. Used by the verification security gate (auto mode).
+	// Returns true if the recipe has at least one verification method.
+	RecipeHasVerification func(recipe string) bool
 }
 
 // NewRunner creates a Runner with the given config and I/O writers.
