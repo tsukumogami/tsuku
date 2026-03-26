@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-26T05:10:06Z",
+  "updated_at": "2026-03-26T07:10:46Z",
   "entries": [
     {
       "name": "node",
@@ -1906,7 +1906,7 @@
       "name": "amp",
       "source": "rubygems:amp",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 10,
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 92,
@@ -7036,11 +7036,11 @@
       "name": "chainsaw",
       "source": "npm:chainsaw",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-03-26T02:07:22.348207529Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-02T07:10:46.089753885Z"
     },
     {
       "name": "chamber",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 207,
-      "next_retry_at": "1733-12-15T02:23:48.237470712Z"
+      "failure_count": 209,
+      "next_retry_at": "1733-12-15T07:23:29.234978077Z"
     },
     {
       "name": "libaacs",
@@ -29606,11 +29606,11 @@
       "name": "memcached",
       "source": "rubygems:memcached",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-26T03:06:05.520799191Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-03-28T23:10:46.089753885Z"
     },
     {
       "name": "memtester",
