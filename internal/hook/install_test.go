@@ -37,7 +37,7 @@ func TestInstallBashMarkerInsertion(t *testing.T) {
 	if !strings.Contains(content, "# tsuku hook") {
 		t.Errorf(".bashrc missing marker comment; got:\n%s", content)
 	}
-	if !strings.Contains(content, `. "$TSUKU_HOME/share/hooks/tsuku.bash"`) {
+	if !strings.Contains(content, `. "${TSUKU_HOME:-$HOME/.tsuku}/share/hooks/tsuku.bash"`) {
 		t.Errorf(".bashrc missing source line; got:\n%s", content)
 	}
 }
@@ -62,7 +62,7 @@ func TestInstallZshMarkerInsertion(t *testing.T) {
 	if !strings.Contains(content, "# tsuku hook") {
 		t.Errorf(".zshrc missing marker comment; got:\n%s", content)
 	}
-	if !strings.Contains(content, `. "$TSUKU_HOME/share/hooks/tsuku.zsh"`) {
+	if !strings.Contains(content, `. "${TSUKU_HOME:-$HOME/.tsuku}/share/hooks/tsuku.zsh"`) {
 		t.Errorf(".zshrc missing source line; got:\n%s", content)
 	}
 }

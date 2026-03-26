@@ -118,7 +118,7 @@ If you uninstall tsuku entirely, run `tsuku hook uninstall` first to clean up th
 
 ```
 # tsuku hook
-. "$TSUKU_HOME/share/hooks/tsuku.bash"
+. "${TSUKU_HOME:-$HOME/.tsuku}/share/hooks/tsuku.bash"
 ```
 
 The comment line and the source line immediately after it are the only lines tsuku adds. Delete both.

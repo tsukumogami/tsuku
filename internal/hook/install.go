@@ -30,10 +30,10 @@ func rcFileForShell(shell, homeDir string) (string, error) {
 }
 
 // markerBlock returns the two-line block to insert into bash/zsh rc files.
-// The TSUKU_HOME variable reference is used in the source path so the line
-// works even if the user changes $TSUKU_HOME later.
+// Uses ${TSUKU_HOME:-$HOME/.tsuku} so the line works whether or not
+// TSUKU_HOME is exported. Matches the fallback pattern in $TSUKU_HOME/env.
 func markerBlock(shell string) string {
-	return markerComment + "\n" + `. "$TSUKU_HOME/share/hooks/tsuku.` + shell + `"`
+	return markerComment + "\n" + `. "${TSUKU_HOME:-$HOME/.tsuku}/share/hooks/tsuku.` + shell + `"`
 }
 
 // Install writes the hook files to shareHooksDir and registers the hook for
