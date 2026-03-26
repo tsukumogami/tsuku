@@ -51,26 +51,26 @@ from day one.
 
 ---
 
-### Issue 2: feat(userconfig): add auto_install_mode key, resolveMode, and new exit codes
+### Issue 2: feat(userconfig): add auto_install_mode key, resolveMode, and new exit codes [DONE]
 
 **Goal**: Add `AutoInstallMode` to `userconfig.Config`, register its config key, define
 three new exit codes in `exitcodes.go`, and implement `resolveMode` with the four-step
 priority chain including the env-var escalation restriction.
 
 **Acceptance Criteria**:
-- [ ] `internal/userconfig/userconfig.go`: `Config` struct gains `AutoInstallMode string` with TOML tag `auto_install_mode,omitempty`
-- [ ] `AvailableKeys()` or equivalent key registry includes `auto_install_mode` with a description so `tsuku config set auto_install_mode auto` is discoverable
-- [ ] `cmd/tsuku/exitcodes.go`: defines `ExitNotInteractive = 12`, `ExitUserDeclined = 13`, and `ExitForbidden = 14`
-- [ ] `cmd/tsuku/cmd_run.go`: implements `resolveMode(flagMode string, cfg *userconfig.Config) (autoinstall.Mode, error)` with priority order: `--mode` flag > `TSUKU_AUTO_INSTALL_MODE` env var > `cfg.AutoInstallMode` > `ModeConfirm`
-- [ ] Escalation restriction enforced: `TSUKU_AUTO_INSTALL_MODE=auto` is only honoured when `cfg.AutoInstallMode == "auto"`; env var alone cannot escalate to `auto` (it can downgrade from `auto` to `confirm` or `suggest`)
-- [ ] Invalid mode strings (flag, env var, or config) return a descriptive error from `resolveMode`
-- [ ] Unit tests cover all four priority steps: flag wins over env, env wins over config, config wins over default, default is `ModeConfirm`
-- [ ] Unit tests cover the escalation restriction: `TSUKU_AUTO_INSTALL_MODE=auto` without matching config value resolves to `ModeConfirm`, not `ModeAuto`
-- [ ] Unit tests cover env-var downgrade: `cfg.AutoInstallMode=auto` + `TSUKU_AUTO_INSTALL_MODE=confirm` resolves to `ModeConfirm`
-- [ ] `go test ./...` passes
-- [ ] Must deliver: `ExitNotInteractive = 12`, `ExitUserDeclined = 13`, `ExitForbidden = 14` constants in `exitcodes.go` (required by Issue 3)
-- [ ] Must deliver: `resolveMode` implemented and covered by unit tests (required by Issue 3)
-- [ ] Must deliver: `resolveMode` and the new exit codes present and importable (required by Issue 4)
+- [x] `internal/userconfig/userconfig.go`: `Config` struct gains `AutoInstallMode string` with TOML tag `auto_install_mode,omitempty`
+- [x] `AvailableKeys()` or equivalent key registry includes `auto_install_mode` with a description so `tsuku config set auto_install_mode auto` is discoverable
+- [x] `cmd/tsuku/exitcodes.go`: defines `ExitNotInteractive = 12`, `ExitUserDeclined = 13`, and `ExitForbidden = 14`
+- [x] `cmd/tsuku/cmd_run.go`: implements `resolveMode(flagMode string, cfg *userconfig.Config) (autoinstall.Mode, error)` with priority order: `--mode` flag > `TSUKU_AUTO_INSTALL_MODE` env var > `cfg.AutoInstallMode` > `ModeConfirm`
+- [x] Escalation restriction enforced: `TSUKU_AUTO_INSTALL_MODE=auto` is only honoured when `cfg.AutoInstallMode == "auto"`; env var alone cannot escalate to `auto` (it can downgrade from `auto` to `confirm` or `suggest`)
+- [x] Invalid mode strings (flag, env var, or config) return a descriptive error from `resolveMode`
+- [x] Unit tests cover all four priority steps: flag wins over env, env wins over config, config wins over default, default is `ModeConfirm`
+- [x] Unit tests cover the escalation restriction: `TSUKU_AUTO_INSTALL_MODE=auto` without matching config value resolves to `ModeConfirm`, not `ModeAuto`
+- [x] Unit tests cover env-var downgrade: `cfg.AutoInstallMode=auto` + `TSUKU_AUTO_INSTALL_MODE=confirm` resolves to `ModeConfirm`
+- [x] `go test ./...` passes
+- [x] Must deliver: `ExitNotInteractive = 12`, `ExitUserDeclined = 13`, `ExitForbidden = 14` constants in `exitcodes.go` (required by Issue 3)
+- [x] Must deliver: `resolveMode` implemented and covered by unit tests (required by Issue 3)
+- [x] Must deliver: `resolveMode` and the new exit codes present and importable (required by Issue 4)
 
 **Dependencies**: Blocked by Issue 1
 
@@ -148,9 +148,9 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1 done
-    class I2 ready
-    class I3,I4 blocked
+    class I1,I2 done
+    class I3 ready
+    class I4 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan

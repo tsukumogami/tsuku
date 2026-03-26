@@ -41,6 +41,10 @@ type Config struct {
 	// environment variables first and falls through to this map.
 	Secrets map[string]string `toml:"secrets,omitempty"`
 
+	// AutoInstallMode is the default consent mode for `tsuku run`.
+	// Valid values: "suggest", "confirm", "auto". Empty means confirm (default).
+	AutoInstallMode string `toml:"auto_install_mode,omitempty"`
+
 	// StrictRegistries restricts recipe resolution to explicitly registered
 	// sources only. When true, tsuku won't auto-register new distributed
 	// registries during install.
@@ -106,6 +110,9 @@ const (
 
 // validLLMBackends lists the valid values for llm.backend (excluding empty string which clears).
 var validLLMBackends = []string{"cpu"}
+
+// validAutoInstallModes lists the valid values for auto_install_mode (excluding empty string which clears).
+var validAutoInstallModes = []string{"suggest", "confirm", "auto"}
 
 // DefaultConfig returns a Config with default values.
 func DefaultConfig() *Config {
@@ -342,6 +349,8 @@ func (c *Config) Get(key string) (string, bool) {
 		return strconv.Itoa(c.LLMHourlyRateLimit()), true
 	case "llm.backend":
 		return c.LLMBackend(), true
+	case "auto_install_mode":
+		return c.AutoInstallMode, true
 	default:
 		return "", false
 	}
@@ -440,6 +449,18 @@ func (c *Config) Set(key, value string) error {
 			}
 		}
 		return fmt.Errorf("invalid value for llm.backend: must be one of: %s", strings.Join(validLLMBackends, ", "))
+	case "auto_install_mode":
+		if value == "" {
+			c.AutoInstallMode = ""
+			return nil
+		}
+		for _, v := range validAutoInstallModes {
+			if value == v {
+				c.AutoInstallMode = value
+				return nil
+			}
+		}
+		return fmt.Errorf("invalid value for auto_install_mode: must be one of: %s", strings.Join(validAutoInstallModes, ", "))
 	default:
 		return fmt.Errorf("unknown config key: %s", key)
 	}
@@ -457,5 +478,6 @@ func AvailableKeys() map[string]string {
 		"llm.daily_budget":      "Daily LLM cost limit in USD (default: 5.0, 0 to disable)",
 		"llm.hourly_rate_limit": "Max LLM generations per hour (default: 10, 0 to disable)",
 		"llm.backend":           "Override GPU backend for local LLM (cpu to force CPU, empty to auto-detect)",
+		"auto_install_mode":     "Default install consent mode for tsuku run (suggest/confirm/auto)",
 	}
 }
