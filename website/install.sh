@@ -225,7 +225,7 @@ if [ "$INSTALL_HOOKS" = true ]; then
     if [ -n "$DETECTED_SHELL" ]; then
         # Hook registration is best-effort: a failure here doesn't invalidate the install.
         if "$BIN_DIR/tsuku" hook install --shell="$DETECTED_SHELL"; then
-            echo "Registered command-not-found hook for ${DETECTED_SHELL}."
+            :  # tsuku hook install prints its own success message
         else
             echo "WARNING: Hook registration failed. Run 'tsuku hook install' manually to register the command-not-found hook." >&2
         fi
