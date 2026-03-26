@@ -30,22 +30,22 @@ each layer has a clear, stable interface before the next begins.
 
 ## Issue Outlines
 
-### Issue 1: feat(autoinstall): add internal/autoinstall package skeleton
+### Issue 1: feat(autoinstall): add internal/autoinstall package skeleton [DONE]
 
 **Goal**: Create the `internal/autoinstall/` package skeleton with exported types,
 interfaces, and a stub `Runner.Run` so downstream issues have a stable import target
 from day one.
 
 **Acceptance Criteria**:
-- [ ] `internal/autoinstall/autoinstall.go` exists and compiles: contains `Mode` type, `ModeConfirm`/`ModeSuggest`/`ModeAuto` constants, `ProjectVersionResolver` interface, `Runner` struct, and `NewRunner` constructor
-- [ ] `internal/autoinstall/run.go` exists and compiles: `Runner.Run(ctx context.Context, command string, args []string, mode Mode, resolver ProjectVersionResolver) error` returns a sentinel `ErrNotImplemented` error
-- [ ] `internal/autoinstall/autoinstall_test.go` exists with test infrastructure: a mock `ProjectVersionResolver` implementation and injectable `io.Writer` helpers used in at least one passing test
-- [ ] `go build ./...` passes with no errors
-- [ ] `go test ./internal/autoinstall/...` passes
-- [ ] Must deliver: `Mode` type with `ModeConfirm`, `ModeSuggest`, `ModeAuto` constants exported from `internal/autoinstall/` (required by Issue 2)
-- [ ] Must deliver: `Runner` struct exported from `internal/autoinstall/` with `NewRunner` constructor so `resolveMode` in `cmd_run.go` can return the correct type (required by Issue 2)
-- [ ] Must deliver: `Runner.Run` stub with the full final signature so `cmd_run.go` can call it without future signature changes (required by Issue 3)
-- [ ] Must deliver: `autoinstall.NewRunner` and `Runner.Run` with stable signatures so `cmd_run.go` wiring in the `tsuku run` command compiles (required by Issue 4)
+- [x] `internal/autoinstall/autoinstall.go` exists and compiles: contains `Mode` type, `ModeConfirm`/`ModeSuggest`/`ModeAuto` constants, `ProjectVersionResolver` interface, `Runner` struct, and `NewRunner` constructor
+- [x] `internal/autoinstall/run.go` exists and compiles: `Runner.Run(ctx context.Context, command string, args []string, mode Mode, resolver ProjectVersionResolver) error` returns a sentinel `ErrNotImplemented` error
+- [x] `internal/autoinstall/autoinstall_test.go` exists with test infrastructure: a mock `ProjectVersionResolver` implementation and injectable `io.Writer` helpers used in at least one passing test
+- [x] `go build ./...` passes with no errors
+- [x] `go test ./internal/autoinstall/...` passes
+- [x] Must deliver: `Mode` type with `ModeConfirm`, `ModeSuggest`, `ModeAuto` constants exported from `internal/autoinstall/` (required by Issue 2)
+- [x] Must deliver: `Runner` struct exported from `internal/autoinstall/` with `NewRunner` constructor so `resolveMode` in `cmd_run.go` can return the correct type (required by Issue 2)
+- [x] Must deliver: `Runner.Run` stub with the full final signature so `cmd_run.go` can call it without future signature changes (required by Issue 3)
+- [x] Must deliver: `autoinstall.NewRunner` and `Runner.Run` with stable signatures so `cmd_run.go` wiring in the `tsuku run` command compiles (required by Issue 4)
 
 **Dependencies**: None
 
@@ -148,8 +148,9 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1 ready
-    class I2,I3,I4 blocked
+    class I1 done
+    class I2 ready
+    class I3,I4 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan
