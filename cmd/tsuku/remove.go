@@ -81,9 +81,19 @@ Examples:
 		if targetVersion != "" {
 			// Remove specific version
 			removeErr = mgr.RemoveVersion(toolName, targetVersion)
+			if removeErr == nil {
+				// If no active version remains, mark as not installed in the index.
+				toolState, stateErr := mgr.GetState().GetToolState(toolName)
+				if stateErr == nil && (toolState == nil || toolState.ActiveVersion == "") {
+					setInstalledInIndex(toolName, false)
+				}
+			}
 		} else {
 			// Remove all versions
 			removeErr = mgr.RemoveAllVersions(toolName)
+			if removeErr == nil {
+				setInstalledInIndex(toolName, false)
+			}
 		}
 
 		if removeErr != nil {
@@ -146,6 +156,7 @@ func cleanupOrphans(mgr *install.Manager, toolName string) {
 		printInfof("Warning: failed to auto-remove %s: %v\n", toolName, err)
 		return
 	}
+	setInstalledInIndex(toolName, false)
 
 	// Remove from state
 	if err := mgr.GetState().RemoveTool(toolName); err != nil {

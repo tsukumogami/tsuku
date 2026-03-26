@@ -3,9 +3,9 @@ status: Planned
 problem: |
   Tsuku requires explicit CLI invocation for every tool installation. Users must know which tools they need and manually install them. The vision is automatic command interception and on-demand provisioning, but the foundational building blocks are missing.
 decision: |
-  Build five independent building blocks organized into two parallel tracks. Track A (command interception): binary index, command-not-found handler, auto-install. Track B (project environments): project configuration file, shell environment activation. Each block provides standalone value while enabling the next. Shell hooks are optional; all features work via explicit CLI.
+  Build six independent building blocks organized into two parallel tracks. Track A (command interception): binary index, command-not-found handler, auto-install. Track B (project environments): project configuration file, shell environment activation, project-aware exec wrapper. Each block provides standalone value while enabling the next. Shell hooks are optional; all features work via explicit CLI. Block 6 (project-aware exec wrapper) bridges the two tracks at command invocation time, enabling project-declared tools to auto-install without shell hooks.
 rationale: |
-  This approach delivers incremental value (each block is useful alone), maintains minimal shell coupling (hooks are optional), and leverages existing recipe metadata. The parallel track structure maximizes development velocity since Track B has no dependency on Track A. Trade-offs include requiring complete recipe binary metadata and deferring LLM integration to a future design.
+  This approach delivers incremental value (each block is useful alone), maintains minimal shell coupling (hooks are optional), and leverages existing recipe metadata. The parallel track structure maximizes development velocity since Track B has no dependency on Track A. Block 6 is the convergence point: it reads tsuku.toml at command execution time and ensures the right version is installed, which neither track can do alone. Trade-offs include requiring complete recipe binary metadata and deferring LLM integration to a future design.
 ---
 
 # DESIGN: Shell Integration Building Blocks
@@ -20,16 +20,18 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1677: docs: design binary index](https://github.com/tsukumogami/tsuku/issues/1677) | None | testable |
-| _Design the SQLite-backed index that maps command names to recipes. Defines the `BinaryIndex` interface, conflict resolution policy, and ~50ms lookup requirement. Foundation for all command-to-recipe lookups._ | | |
-| [#1678: docs: design command-not-found handler](https://github.com/tsukumogami/tsuku/issues/1678) | [#1677](https://github.com/tsukumogami/tsuku/issues/1677) | testable |
-| _Shell hooks for bash, zsh, and fish that intercept unknown commands. Specifies `tsuku suggest` output format, hook installation mechanism, and security analysis for shell injection prevention._ | | |
-| [#1679: docs: design auto-install flow](https://github.com/tsukumogami/tsuku/issues/1679) | [#1677](https://github.com/tsukumogami/tsuku/issues/1677) | testable |
-| _The `tsuku run` command that installs tools on first use. Defines suggest/confirm/auto modes, TTY detection for interactive prompts, and security considerations for auto-install consent._ | | |
+| ~~[#1677: docs: design binary index](https://github.com/tsukumogami/tsuku/issues/1677)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Design the SQLite-backed index that maps command names to recipes. Defines the `BinaryIndex` interface, conflict resolution policy, and ~50ms lookup requirement. Foundation for all command-to-recipe lookups._~~ | | |
+| ~~[#1678: docs: design command-not-found handler](https://github.com/tsukumogami/tsuku/issues/1678)~~ | ~~[#1677](https://github.com/tsukumogami/tsuku/issues/1677)~~ | ~~testable~~ |
+| ~~_Shell hooks for bash, zsh, and fish that intercept unknown commands. Specifies `tsuku suggest` output format, hook installation mechanism, and security analysis for shell injection prevention._~~ | | |
+| ~~[#1679: docs: design auto-install flow](https://github.com/tsukumogami/tsuku/issues/1679)~~ | ~~[#1677](https://github.com/tsukumogami/tsuku/issues/1677)~~ | ~~testable~~ |
+| ~~_The `tsuku run` command that installs tools on first use. Defines suggest/confirm/auto modes, TTY detection for interactive prompts, and security considerations for auto-install consent._~~ | | |
 | [#1680: docs: design project configuration](https://github.com/tsukumogami/tsuku/issues/1680) | None | testable |
 | _Per-directory `.tsuku.toml` format specifying tool requirements. Defines the TOML schema, version constraint syntax, directory traversal behavior, and `LoadProjectConfig` interface._ | | |
 | [#1681: docs: design shell environment activation](https://github.com/tsukumogami/tsuku/issues/1681) | [#1680](https://github.com/tsukumogami/tsuku/issues/1680) | testable |
 | _Dynamic PATH modification based on current directory. Specifies activation via prompt hooks or `tsuku shell`, state tracking for active projects, and deactivation behavior._ | | |
+| [#2168: docs: design project-aware exec wrapper](https://github.com/tsukumogami/tsuku/issues/2168) | [#1679](https://github.com/tsukumogami/tsuku/issues/1679), [#1680](https://github.com/tsukumogami/tsuku/issues/1680) | testable |
+| _The `tsuku exec` command and optional shim system that bridge Track A and Track B at command invocation time. Enables project-declared tools to auto-install on first use without shell hooks, covering scripts and CI contexts. Optional shim generation provides transparent invocation without requiring `tsuku exec` prefix._ | | |
 
 ### Dependency Graph
 
@@ -44,19 +46,25 @@ graph LR
     subgraph TrackB["Track B: Project Environments"]
         I1680["#1680: Project Config"]
         I1681["#1681: Shell Env Activation"]
+        I2168["#2168: Project-Aware Exec"]
     end
 
     I1677 --> I1678
     I1677 --> I1679
     I1680 --> I1681
+    I1679 --> I2168
+    I1680 --> I2168
 
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1677,I1680 needsDesign
-    class I1678,I1679,I1681 blocked
+    class I1677 done
+    class I1680 needsDesign
+    class I1678 done
+    class I1679 done
+    class I1681,I2168 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
@@ -180,7 +188,7 @@ The vision requires multiple capabilities that don't exist today. We must identi
 
 Based on the research, five building blocks are required. Each has independent value but also enables subsequent blocks.
 
-#### Chosen: Five-Block Architecture
+#### Chosen: Six-Block Architecture
 
 **Block 1: Binary Index**
 A reverse lookup from command name to recipe(s) that provide it. This is the foundation for everything else.
@@ -224,13 +232,31 @@ Dynamic PATH modification based on current directory.
 - Independent value: Per-project tool versions without manual switching
 - Depends on: Block 4 (Project Configuration)
 
+**Block 6: Project-Aware Exec Wrapper**
+The convergence point between Track A and Track B. Intercepts command execution,
+reads project config for version constraints, installs if needed, then runs the
+command.
+
+- Commands: `tsuku exec <command> [args]` (explicit), `tsuku shim install` (optional shims)
+- Behavior: Reads tsuku.toml upward from current directory; if command declared, uses the project-specified version; if not declared, falls back to binary index (Track A) for discovery
+- Shims: Thin wrappers placed in `$TSUKU_HOME/bin/` that call `tsuku exec`, enabling transparent invocation without `tsuku exec` prefix
+- Works in: Interactive shells, scripts, and CI -- without requiring shell hooks
+- Independent value: `tsuku exec koto [args]` works in CI scripts today without any shell setup
+- Depends on: Block 3 (Auto-Install), Block 4 (Project Configuration)
+
 #### Alternatives Considered
 
 **Three-Block Architecture** (merge Blocks 2+3, merge Blocks 4+5):
 Combine command-not-found handler with auto-install, and combine project config with shell activation.
 Rejected because it reduces incremental value - users would need the full feature before getting any benefit.
 
-**Six-Block Architecture** (split Binary Index into static and dynamic):
+**Five-Block Architecture** (omit Block 6, rely on Block 3 accepting optional ProjectConfig):
+The original design left convergence to Block 3's detailed design via an optional parameter.
+Rejected because Track A (auto-install) and Track B (project config) trigger at different execution points
+and never converge at command invocation time in non-interactive contexts. Enhancing Block 3 alone requires
+developers to explicitly use `tsuku run`, which breaks the "no command changes" goal in scripts and CI.
+
+**Seven-Block Architecture** (split Binary Index into static and dynamic):
 Separate pre-built index (from registry) from runtime discovery (from installed tools).
 Rejected because the complexity isn't justified - a single index rebuilt on registry updates is sufficient.
 
@@ -246,17 +272,30 @@ Layer 0 (Foundation):    Block 1: Binary Index
 Layer 1 (Interception):  Block 2: Command-Not-Found  ←──┐
                               │                          │
 Layer 2 (Automation):    Block 3: Auto-Install ──────────┘
-
+                              │
+                              │ (converges via Block 6)
+                              ▼
 Layer 0 (Foundation):    Block 4: Project Configuration
                               │
 Layer 1 (Activation):    Block 5: Shell Environment
+                              │
+Layer 2 (Convergence):   Block 6: Project-Aware Exec  ←── (depends on Block 3 + Block 4)
 ```
 
 Two independent tracks can proceed in parallel:
 - **Track A**: Binary Index → Command-Not-Found → Auto-Install
-- **Track B**: Project Configuration → Shell Environment
+- **Track B**: Project Configuration → Shell Environment → Project-Aware Exec
 
-Track A and Track B converge when auto-install respects project configuration (installing project-specified versions). Block 3's detailed design should accept an optional `ProjectConfig` parameter to enable this integration.
+Track A and Track B converge at Block 6. Block 6 reads project configuration at
+command execution time (not shell setup time), installs the declared version if
+needed using Block 3's install flow, and falls back to Block 1's binary index for
+commands not declared in the project config.
+
+**Track B independence from Track A:** Track B (Blocks 4, 5, and 6) has no dependency
+on Track A's binary index (Block 1). Block 6 uses the binary index as a fallback for
+unknown commands, but the primary project-declared tool path goes directly from
+Block 4 (project config) through Block 3 (install flow) without Block 1. This means
+issues #1680, #1681, and #2168 can be implemented in parallel with or before #1677.
 
 #### Alternatives Considered
 
@@ -314,15 +353,17 @@ Rejected because it adds infrastructure dependency. Local generation from regist
 
 ## Decision Outcome
 
-**Chosen option: Five-Block Architecture with Parallel Tracks**
+**Chosen option: Six-Block Architecture with Parallel Tracks**
 
 ### Summary
 
-The shell integration vision will be built from five independent building blocks, organized into two parallel implementation tracks. Track A (command interception) starts with a binary index that maps command names to recipes, then adds a command-not-found shell handler, and finally enables auto-install. Track B (project environments) starts with a project configuration file format, then adds shell environment activation based on the current directory. Each block provides standalone value while enabling the next.
+The shell integration vision will be built from six independent building blocks, organized into two parallel implementation tracks. Track A (command interception) starts with a binary index that maps command names to recipes, then adds a command-not-found shell handler, and finally enables auto-install. Track B (project environments) starts with a project configuration file format, then adds shell environment activation based on the current directory, and concludes with a project-aware exec wrapper that bridges both tracks. Each block provides standalone value while enabling the next.
 
 The binary index is the foundation of Track A. It's built locally by scanning all recipes in the registry during `tsuku update-registry`, extracting binary names via the existing `ExtractBinaries()` method, and storing the command-to-recipe mapping in a SQLite database. Lookups must complete in under 50ms. When multiple recipes provide the same command, the detailed design will define conflict resolution (likely: prefer installed, then prompt). The index enables `tsuku which <command>` immediately, without requiring any shell integration.
 
-Shell hooks are optional throughout. Every feature works via explicit CLI invocation: `tsuku run <cmd>` for auto-install, `tsuku shell` for environment activation. Users who want automatic interception can install shell hooks (`command_not_found_handle` for bash, `command_not_found_handler` for zsh, `fish_command_not_found` for fish), but this is a convenience layer. The architecture accommodates future LLM discovery by defining a clear fallback path: when the binary index returns no results, an LLM integration point can suggest recipe creation.
+Shell hooks are optional throughout. Every feature works via explicit CLI invocation: `tsuku run <cmd>` for auto-install, `tsuku shell` for environment activation, `tsuku exec <cmd>` for project-aware invocation. Users who want automatic interception can install shell hooks (`command_not_found_handle` for bash, `command_not_found_handler` for zsh, `fish_command_not_found` for fish), or install project shims (`tsuku shim install`) for transparent command dispatch. The architecture accommodates future LLM discovery by defining a clear fallback path: when the binary index returns no results, an LLM integration point can suggest recipe creation.
+
+Block 6 (project-aware exec wrapper) is the convergence point that Track A and Track B were missing. It reads `tsuku.toml` at command execution time -- not at shell setup time -- so it works identically in interactive shells, scripts, and CI pipelines. For projects using koto and shirabe skills, a CI script needs only `tsuku exec koto run <skill>` or a one-time `tsuku shim install` to get the full "install on first use" experience declared in `tsuku.toml`.
 
 ### Rationale
 
@@ -463,6 +504,28 @@ type EnvActivator interface {
 }
 ```
 
+**Block 6: Project-Aware Exec Wrapper**
+
+```go
+// ProjectExec handles command execution with project-config awareness.
+type ProjectExec interface {
+    // Exec installs the command if needed (respecting project config version
+    // constraints) then executes it with the given arguments.
+    // If the command is not declared in project config, falls back to
+    // BinaryIndex lookup for discovery (Track A fallback).
+    Exec(ctx context.Context, command string, args []string) error
+}
+
+// ShimManager handles optional shim generation for transparent invocation.
+type ShimManager interface {
+    // Install creates shims in $TSUKU_HOME/bin/ for all project-declared tools.
+    Install(projectDir string) error
+
+    // Uninstall removes shims for the given project.
+    Uninstall(projectDir string) error
+}
+```
+
 ### Data Flow
 
 **Flow 1: Command Not Found → Suggestion**
@@ -493,6 +556,21 @@ type EnvActivator interface {
 4. For each tool in config, EnvActivator ensures version is installed
 5. EnvActivator returns PATH modification pointing to project tool versions
 6. Shell's PATH is updated
+```
+
+**Flow 4: Project-Aware Exec (scripts and CI, no shell hooks)**
+
+```
+1. Developer runs `tsuku exec koto [args]` in a project with tsuku.toml
+   OR developer runs `koto [args]` with shims installed
+2. ProjectExec calls LoadProjectConfig(".")
+3. Config declares koto >= 0.3 → use version constraint
+4. ProjectExec calls AutoInstaller.Install("koto", ">=0.3") if not installed
+5. ProjectExec execs $TSUKU_HOME/tools/koto-{resolved-version}/bin/koto [args]
+
+Fallback (command not in tsuku.toml):
+3b. ProjectExec calls BinaryIndex.Lookup(command) to find recipe
+4b. Proceeds through normal Track A auto-install flow
 ```
 
 ## Implementation Approach
@@ -569,6 +647,23 @@ Each block requires its own detailed design. This section outlines what each des
 **New CLI commands**: `tsuku shell` (print activation commands), `tsuku deactivate`
 
 **Integration with shellenv**: May extend or replace existing `shellenv` command
+
+### Block 6: Project-Aware Exec Wrapper
+
+**Scope**: Bridge Track A and Track B at command invocation time, enabling
+project-declared tools to auto-install on first use without shell hooks.
+
+**Key decisions for detailed design**:
+- `tsuku exec` command semantics (project config lookup, version constraint application)
+- Fallback to binary index for commands not in tsuku.toml
+- Shim architecture (generation, placement in `$TSUKU_HOME/bin/`, update trigger)
+- Performance budget for cached (already-installed) tool lookup (<50ms)
+- Security model for shim-based auto-install (consent, trust boundary for untrusted repos)
+- CI usage pattern documentation (with and without shims)
+
+**New CLI commands**: `tsuku exec <command> [args]`, `tsuku shim install`, `tsuku shim uninstall`
+
+**New files**: `internal/exec/project_exec.go`, `internal/shim/shim_manager.go`
 
 ## Security Considerations
 

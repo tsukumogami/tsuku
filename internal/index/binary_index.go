@@ -1,0 +1,167 @@
+// Package index provides command-to-recipe reverse lookup via a SQLite-backed
+// binary index stored at $TSUKU_HOME/cache/binary-index.db.
+package index
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
+	_ "modernc.org/sqlite" // register the SQLite driver
+)
+
+// ErrIndexNotBuilt is returned by Lookup when the index exists but has never
+// been populated. Callers should run 'tsuku update-registry' to build the index.
+var ErrIndexNotBuilt = errors.New("binary index not built; run 'tsuku update-registry'")
+
+// StaleIndexWarning is returned (wrapped) by Lookup when the registry directory
+// has been updated since the index was last built. Results are still returned;
+// this warning is advisory only.
+type StaleIndexWarning struct {
+	BuiltAt    time.Time
+	RegistryAt time.Time
+}
+
+// Error implements the error interface.
+func (s StaleIndexWarning) Error() string {
+	return fmt.Sprintf(
+		"binary index may be stale (built %s, registry updated %s); run 'tsuku update-registry'",
+		s.BuiltAt.Format(time.RFC3339),
+		s.RegistryAt.Format(time.RFC3339),
+	)
+}
+
+// BinaryMatch is a single result from BinaryIndex.Lookup.
+type BinaryMatch struct {
+	Recipe     string // Recipe name (e.g., "jq")
+	Command    string // Command name as typed (e.g., "jq")
+	BinaryPath string // Path within tool dir (e.g., "bin/jq")
+	Installed  bool   // True if any version of Recipe is currently installed
+	Source     string // "registry" or "installed" (for custom/local recipes)
+}
+
+// VersionInfo holds the subset of per-version data that Rebuild needs.
+type VersionInfo struct {
+	Binaries []string // Binary names provided by this version.
+}
+
+// ToolInfo holds the subset of installed-tool state that Rebuild needs.
+// The real *install.StateManager satisfies StateReader by returning values of
+// this type at the cmd/ layer; internal/index never imports internal/install.
+type ToolInfo struct {
+	ActiveVersion string
+	Source        string // "registry" or "installed" (for custom/local recipes)
+	Versions      map[string]VersionInfo
+}
+
+// Registry provides access to cached recipe data during Rebuild.
+// Satisfied by *registry.Registry without requiring an import of internal/registry.
+type Registry interface {
+	ListCached() ([]string, error)
+	GetCached(name string) ([]byte, error)
+
+	// ListAll returns all known recipe names. When a manifest is cached it
+	// reads names directly from the manifest, providing full coverage even on
+	// a clean machine. It falls back to ListCached when no manifest is
+	// available or when the manifest cannot be parsed.
+	//
+	// Note: ListCached is retained on *registry.Registry as the fallback path
+	// used by this method and must not be removed.
+	ListAll(ctx context.Context) ([]string, error)
+
+	// FetchRecipe fetches a recipe from the registry (remote or local) and
+	// returns its raw TOML bytes.
+	FetchRecipe(ctx context.Context, name string) ([]byte, error)
+
+	// CacheRecipe saves raw recipe TOML bytes to the local cache.
+	CacheRecipe(name string, data []byte) error
+}
+
+// StateReader provides read access to installed tool state during Rebuild.
+// *install.StateManager does NOT directly satisfy this interface because its
+// AllTools() returns map[string]install.ToolState, not map[string]ToolInfo.
+// Callers must adapt *install.StateManager to ToolInfo at the cmd/ wiring layer.
+type StateReader interface {
+	AllTools() (map[string]ToolInfo, error)
+}
+
+// BinaryIndex provides command-to-recipe lookup.
+type BinaryIndex interface {
+	// Lookup returns recipes that provide the given command, ranked by preference
+	// (installed recipes first, then lexicographic by recipe name). Returns an
+	// empty slice and nil error when the command is not found. Returns
+	// ErrIndexNotBuilt when the index has never been populated.
+	Lookup(ctx context.Context, command string) ([]BinaryMatch, error)
+
+	// Rebuild regenerates the index from the recipe registry and installed state.
+	Rebuild(ctx context.Context, registry Registry, state StateReader) error
+
+	// SetInstalled updates the installed flag for a single recipe without a full
+	// rebuild. Called by install.Manager on install and remove.
+	SetInstalled(ctx context.Context, recipe string, installed bool) error
+
+	// Close releases the database connection.
+	Close() error
+}
+
+// sqliteBinaryIndex is the SQLite-backed implementation of BinaryIndex.
+type sqliteBinaryIndex struct {
+	db          *sql.DB
+	registryDir string // path used for staleness detection; empty disables the check
+}
+
+// Open opens or creates the binary index database at dbPath.
+//
+// registryDir is the path to the registry directory used for staleness
+// detection in Lookup. Pass an empty string to disable the staleness check
+// (useful in tests that do not need it).
+//
+// If the file does not exist it is created empty (the index is not rebuilt).
+// The parent directory of dbPath must already exist; Open returns an error
+// rather than silently creating missing parent directories.
+//
+// Open enables WAL journal mode and sets a busy timeout of 5 seconds, then
+// calls initSchema to create tables if they are absent.
+func Open(dbPath, registryDir string) (BinaryIndex, error) {
+	// Verify the parent directory exists before attempting to open the DB.
+	parent := filepath.Dir(dbPath)
+	if _, err := os.Stat(parent); err != nil {
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf("index: parent directory does not exist: %s", parent)
+		}
+		return nil, fmt.Errorf("index: cannot access parent directory %s: %w", parent, err)
+	}
+
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		return nil, fmt.Errorf("index: open database %s: %w", dbPath, err)
+	}
+
+	// Enable WAL mode for concurrent reads during writes.
+	if _, err := db.Exec("PRAGMA journal_mode = WAL"); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("index: enable WAL mode: %w", err)
+	}
+
+	// Set a 5-second busy timeout to handle transient write locks.
+	if _, err := db.Exec("PRAGMA busy_timeout = 5000"); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("index: set busy timeout: %w", err)
+	}
+
+	if err := initSchema(db); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+
+	return &sqliteBinaryIndex{db: db, registryDir: registryDir}, nil
+}
+
+// Close closes the underlying database connection.
+func (idx *sqliteBinaryIndex) Close() error {
+	return idx.db.Close()
+}

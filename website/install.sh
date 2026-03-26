@@ -4,13 +4,22 @@ set -euo pipefail
 # tsuku installer
 # Downloads and installs the latest tsuku release
 
+# Usage: install.sh [--no-modify-path] [--no-hooks] [--no-telemetry]
+#   --no-modify-path  Skip adding tsuku to PATH in shell config files
+#   --no-hooks        Skip registering the command-not-found hook
+#   --no-telemetry    Opt out of anonymous usage statistics
+
 # Parse arguments
 MODIFY_PATH=true
+INSTALL_HOOKS=true
 NO_TELEMETRY=false
 for arg in "$@"; do
     case "$arg" in
         --no-modify-path)
             MODIFY_PATH=false
+            ;;
+        --no-hooks)
+            INSTALL_HOOKS=false
             ;;
         --no-telemetry)
             NO_TELEMETRY=true
@@ -192,6 +201,38 @@ else
     echo ""
     echo "To use tsuku, add this to your shell config:"
     echo "  . \"$ENV_FILE\""
+    echo ""
+fi
+
+# Register command-not-found hook
+if [ "$INSTALL_HOOKS" = true ]; then
+    DETECTED_SHELL=""
+    if [ -n "${SHELL:-}" ]; then
+        # Re-derive SHELL_NAME here: it may be unset if --no-modify-path was passed.
+        SHELL_NAME=$(basename "$SHELL")
+        case "$SHELL_NAME" in
+            bash|zsh|fish)
+                DETECTED_SHELL="$SHELL_NAME"
+                ;;
+            *)
+                echo "WARNING: Unrecognized shell '$SHELL_NAME'; skipping hook registration. Run 'tsuku hook install' manually to register the hook."
+                ;;
+        esac
+    else
+        echo "WARNING: \$SHELL is not set; skipping hook registration. Run 'tsuku hook install' manually to register the hook."
+    fi
+
+    if [ -n "$DETECTED_SHELL" ]; then
+        # Hook registration is best-effort: a failure here doesn't invalidate the install.
+        if "$BIN_DIR/tsuku" hook install --shell="$DETECTED_SHELL"; then
+            echo "Registered command-not-found hook for ${DETECTED_SHELL}."
+        else
+            echo "WARNING: Hook registration failed. Run 'tsuku hook install' manually to register the command-not-found hook." >&2
+        fi
+    fi
+else
+    echo "Skipped hook registration (--no-hooks)"
+    echo "Run 'tsuku hook install' manually to register the command-not-found hook."
     echo ""
 fi
 

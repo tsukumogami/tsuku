@@ -24,6 +24,29 @@ tsuku is a package manager that makes it easy to install and manage development 
 curl -fsSL https://get.tsuku.dev/now | bash
 ```
 
+The installer downloads the latest release binary, verifies its checksum, and configures your shell. It also registers the command-not-found hook for your shell automatically so you get install hints when you type an unknown command.
+
+### Installer flags
+
+| Flag | Description |
+|------|-------------|
+| `--no-modify-path` | Skip adding tsuku to PATH in shell config files |
+| `--no-hooks` | Skip registering the command-not-found hook |
+| `--no-telemetry` | Opt out of anonymous usage statistics |
+
+Pass flags by piping through `bash`:
+
+```bash
+# Don't modify PATH or register the hook
+curl -fsSL https://get.tsuku.dev/now | bash -s -- --no-modify-path --no-hooks
+```
+
+**Hook registration details:** By default, the installer detects your shell from `$SHELL` and runs `tsuku hook install --shell=<shell>` for bash, zsh, or fish. If `$SHELL` is unset or points to an unsupported shell, the installer warns and skips hook registration without failing. Pass `--no-hooks` to skip this step intentionally — you can register the hook later with:
+
+```bash
+tsuku hook install
+```
+
 ## Usage
 
 ### Install a tool
@@ -656,6 +679,8 @@ tsuku update-registry --recipe fzf
 tsuku update-registry --all
 ```
 
+On a clean machine, the first `tsuku update-registry` fetches all recipe TOMLs to build the binary index — this takes roughly 15-20 seconds. Subsequent runs are fast because the recipes are cached locally.
+
 #### Registry Compatibility
 
 tsuku validates the registry's schema version on every fetch and cache read. If the registry format is newer than your CLI supports, tsuku exits with an error and suggests upgrading. When a registry includes a deprecation notice for an upcoming format change, tsuku prints a one-time warning to stderr with the timeline, the minimum CLI version required, and an upgrade URL. The `--quiet` flag suppresses these warnings.
@@ -739,6 +764,87 @@ tsuku install ruff --sandbox --json | jq '.passed'
 ```
 
 For technical details, see [DESIGN-install-sandbox.md](docs/DESIGN-install-sandbox.md).
+
+### Command suggestions
+
+`tsuku suggest` looks up which recipe provides a given command and prints an install hint. It reads the local binary index — no network access needed.
+
+```bash
+# Single match
+$ tsuku suggest jq
+Command 'jq' not found. Install with: tsuku install jq
+
+# Multiple matches show a list with installed status
+$ tsuku suggest aws
+Command 'aws' not found. Provided by:
+  aws-cli   tsuku install aws-cli
+  awscurl   tsuku install awscurl
+
+# Machine-readable output
+$ tsuku suggest jq --json
+{"command":"jq","matches":[{"recipe":"jq","binary_path":"bin/jq","installed":false}]}
+```
+
+The binary index must be built before `suggest` works. Run `tsuku update-registry` once after installation (or any time you want to pick up new recipes).
+
+Exit codes: `0` on match, `1` on no match, `11` if the index hasn't been built yet.
+
+The shell hook invokes `tsuku suggest` automatically when you type a command that isn't found, so you get install hints without running `suggest` directly.
+
+### Command-not-found hook
+
+The command-not-found hook integrates tsuku suggestions directly into your shell. When you type a command that isn't found, your shell calls `tsuku suggest` automatically and prints an install hint.
+
+**Install the hook:**
+
+```bash
+# Auto-detect shell from $SHELL
+tsuku hook install
+
+# Or specify the shell explicitly
+tsuku hook install --shell=bash
+tsuku hook install --shell=zsh
+tsuku hook install --shell=fish
+```
+
+The three supported shells and the files modified:
+
+| Shell | File modified |
+|-------|--------------|
+| bash  | `~/.bashrc` |
+| zsh   | `~/.zshrc` |
+| fish  | `~/.config/fish/conf.d/tsuku.fish` |
+
+For bash and zsh, tsuku appends a marker block to the rc file:
+
+```bash
+# tsuku hook
+. "$TSUKU_HOME/share/hooks/tsuku.bash"
+```
+
+The hook script itself lives in `$TSUKU_HOME/share/hooks/` and is updated automatically when tsuku upgrades, so you don't need to re-run `hook install` after upgrading.
+
+`hook install` is idempotent — running it again when the hook is already installed makes no changes.
+
+**Check hook status:**
+
+```bash
+tsuku hook status
+```
+
+Reports installed or not installed for each shell detected on the system.
+
+**Remove the hook:**
+
+```bash
+# Auto-detect shell
+tsuku hook uninstall
+
+# Or specify explicitly
+tsuku hook uninstall --shell=bash
+```
+
+Removes the marker block from the rc file (or deletes `~/.config/fish/conf.d/tsuku.fish` for fish). Also idempotent.
 
 ## Operations
 

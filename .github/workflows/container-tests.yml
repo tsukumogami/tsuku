@@ -60,3 +60,24 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: go test -v -timeout 10m ./internal/validate/...
+
+  hook-integration-tests:
+    name: Hook Shell Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Verify Docker is available
+        run: docker version
+
+      - name: Run hook integration tests
+        run: go test -v -timeout 10m ./internal/hook/...

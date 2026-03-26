@@ -568,6 +568,98 @@ func TestFetchDiscoveryEntry_LocalRegistry(t *testing.T) {
 	}
 }
 
+// TestListAll_ManifestPresent verifies that ListAll returns names from the
+// cached manifest when one is available, even if no TOML files are cached.
+func TestListAll_ManifestPresent(t *testing.T) {
+	cacheDir := t.TempDir()
+	reg := New(cacheDir)
+
+	// Write a manifest with three recipe entries.
+	manifestData := []byte(`{
+		"schema_version": 1,
+		"generated_at": "2026-01-01T00:00:00Z",
+		"recipes": [
+			{"name": "alpha", "description": ""},
+			{"name": "beta",  "description": ""},
+			{"name": "gamma", "description": ""}
+		]
+	}`)
+	if err := reg.CacheManifest(manifestData); err != nil {
+		t.Fatalf("CacheManifest failed: %v", err)
+	}
+
+	ctx := context.Background()
+	names, err := reg.ListAll(ctx)
+	if err != nil {
+		t.Fatalf("ListAll() error = %v", err)
+	}
+	if len(names) != 3 {
+		t.Errorf("ListAll() returned %d names, want 3: %v", len(names), names)
+	}
+	want := map[string]bool{"alpha": true, "beta": true, "gamma": true}
+	for _, n := range names {
+		if !want[n] {
+			t.Errorf("ListAll() returned unexpected name %q", n)
+		}
+	}
+}
+
+// TestListAll_FallbackNoCached verifies that ListAll falls back to ListCached
+// when no manifest is present, returning the names of locally cached TOML files.
+func TestListAll_FallbackNoCached(t *testing.T) {
+	cacheDir := t.TempDir()
+	reg := New(cacheDir)
+
+	// Cache two recipe TOML files but no manifest.
+	if err := reg.CacheRecipe("tool-x", []byte("[metadata]\nname=\"tool-x\"\n")); err != nil {
+		t.Fatalf("CacheRecipe failed: %v", err)
+	}
+	if err := reg.CacheRecipe("tool-y", []byte("[metadata]\nname=\"tool-y\"\n")); err != nil {
+		t.Fatalf("CacheRecipe failed: %v", err)
+	}
+
+	ctx := context.Background()
+	names, err := reg.ListAll(ctx)
+	if err != nil {
+		t.Fatalf("ListAll() error = %v", err)
+	}
+	if len(names) != 2 {
+		t.Errorf("ListAll() returned %d names, want 2: %v", len(names), names)
+	}
+	got := map[string]bool{}
+	for _, n := range names {
+		got[n] = true
+	}
+	if !got["tool-x"] || !got["tool-y"] {
+		t.Errorf("ListAll() = %v, want [tool-x, tool-y]", names)
+	}
+}
+
+// TestListAll_FallbackMalformedManifest verifies that ListAll falls back to
+// ListCached when the cached manifest is malformed JSON.
+func TestListAll_FallbackMalformedManifest(t *testing.T) {
+	cacheDir := t.TempDir()
+	reg := New(cacheDir)
+
+	// Write a malformed manifest.
+	if err := reg.CacheManifest([]byte(`not valid json {{{`)); err != nil {
+		t.Fatalf("CacheManifest failed: %v", err)
+	}
+	// Cache one recipe TOML.
+	if err := reg.CacheRecipe("solo", []byte("[metadata]\nname=\"solo\"\n")); err != nil {
+		t.Fatalf("CacheRecipe failed: %v", err)
+	}
+
+	ctx := context.Background()
+	names, err := reg.ListAll(ctx)
+	if err != nil {
+		t.Fatalf("ListAll() error = %v, want nil (fallback should succeed)", err)
+	}
+	if len(names) != 1 || names[0] != "solo" {
+		t.Errorf("ListAll() = %v, want [solo]", names)
+	}
+}
+
 func TestFetchRecipe_EmptyLocalRegistry(t *testing.T) {
 	// Create an empty local registry (no recipes directory)
 	localRegistry := t.TempDir()
