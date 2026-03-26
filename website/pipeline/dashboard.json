@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-26T21:35:35Z",
+  "generated_at": "2026-03-26T21:36:43Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 64,
-      "pending": 3869,
+      "failed": 63,
+      "pending": 3870,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 64,
-        "pending": 3846,
+        "failed": 63,
+        "pending": 3847,
         "success": 1326
       }
     },
@@ -68,13 +68,13 @@
         "total": 1
       },
       "npm": {
-        "failed": 21,
+        "failed": 19,
+        "pending": 2,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -489,15 +489,6 @@
           "next_retry_at": "2026-04-01T23:38:20Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 97,
-          "next_retry_at": "1733-12-15T20:13:32Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -559,6 +550,15 @@
           "category": "install_failed",
           "failure_count": 10,
           "next_retry_at": "2026-04-02T07:10:46Z"
+        },
+        {
+          "id": "rubygems:chisel",
+          "name": "chisel",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-02T21:36:14Z"
         },
         {
           "id": "rubygems:chroma",
@@ -795,15 +795,6 @@
           "next_retry_at": "2026-03-27T07:28:38Z"
         },
         {
-          "id": "rubygems:ipfs",
-          "name": "ipfs",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-26T20:48:23Z"
-        },
-        {
           "id": "npm:kew",
           "name": "kew",
           "ecosystem": "npm",
@@ -847,6 +838,15 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-27T22:32:12Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 215,
+          "next_retry_at": "1733-12-15T21:48:57Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -1018,15 +1018,6 @@
           "category": "install_failed",
           "failure_count": 10,
           "next_retry_at": "2026-04-02T15:14:01Z"
-        },
-        {
-          "id": "npm:wartremover",
-          "name": "wartremover",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-26T20:48:23Z"
         },
         {
           "id": "npm:webdav",
@@ -2940,6 +2931,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 97,
+          "next_retry_at": "1733-12-15T20:13:32Z"
+        },
+        {
           "id": "homebrew:azure-cli",
           "name": "azure-cli",
           "ecosystem": "homebrew",
@@ -4544,15 +4544,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:chisel",
-          "name": "chisel",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-03-26T17:59:34Z"
         },
         {
           "id": "homebrew:chisel-tunnel",
@@ -11785,6 +11776,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:ipfs",
+          "name": "ipfs",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-26T20:48:23Z"
+        },
+        {
           "id": "homebrew:ipopt",
           "name": "ipopt",
           "ecosystem": "homebrew",
@@ -13302,15 +13302,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 213,
-          "next_retry_at": "1733-12-15T17:18:33Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -27098,6 +27089,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:wartremover",
+          "name": "wartremover",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-26T20:48:23Z"
         },
         {
           "id": "crates.io:wasm-bindgen",
