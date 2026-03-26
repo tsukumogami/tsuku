@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 upstream: docs/designs/DESIGN-shell-integration-building-blocks.md
 spawned_from:
   issue: 1679
@@ -33,7 +33,7 @@ rationale: |
 
 ## Status
 
-Planned
+Current
 
 ## Upstream Design Reference
 
