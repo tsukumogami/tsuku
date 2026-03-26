@@ -102,23 +102,23 @@ syscall.Exec process replacement, and NDJSON audit logging.
 
 ---
 
-### Issue 4: feat(cmd): add tsuku run command with TTY gating and integration tests
+### Issue 4: feat(cmd): add tsuku run command with TTY gating and integration tests [DONE]
 
 **Goal**: Register `tsuku run` as a cobra subcommand, wire TTY gating for confirm mode,
 and validate the end-to-end flow with integration tests.
 
 **Acceptance Criteria**:
-- [ ] `cmd/tsuku/cmd_run.go` defines a cobra command that registers `tsuku run <command> [args...]` as a subcommand in `cmd/tsuku/main.go`
-- [ ] `--mode=<suggest|confirm|auto>` flag is bound to the `tsuku run` command and passed to `resolveMode`
-- [ ] `--` separator is documented in `--help` output with an example: `tsuku run jq -- --arg foo bar`
-- [ ] After `resolveMode` returns, if mode is `ModeConfirm` and `!term.IsTerminal(int(os.Stdin.Fd()))`, the command prints `tsuku: confirm mode requires a TTY; set TSUKU_AUTO_INSTALL_MODE=auto or use --mode=auto for non-interactive use` to stderr and exits with `ExitNotInteractive` (12); `Runner.Run` is not called
-- [ ] When mode is not `ModeConfirm`, or when stdin is a TTY, the command delegates to `autoinstall.Runner.Run` with a `nil` `ProjectVersionResolver` (meaning latest version)
-- [ ] `auto_install_mode` is registered in the tsuku config key registry with description `"Default install consent mode for tsuku run (suggest/confirm/auto)"`
-- [ ] `tsuku run --help` documents all three modes (`suggest`, `confirm`, `auto`), the `TSUKU_AUTO_INSTALL_MODE` environment variable, and the `auto_install_mode` config key
-- [ ] Integration test (subprocess): invokes `tsuku run` in `suggest` mode against a tool present in the binary index; asserts exit code 1 and stdout contains `tsuku install`
-- [ ] Integration test (subprocess): invokes `tsuku run` in `confirm` mode with stdin redirected to a non-TTY (e.g., `/dev/null`); asserts exit code `ExitNotInteractive` (12)
-- [ ] `go test ./...` passes
-- [ ] `go vet ./...` passes
+- [x] `cmd/tsuku/cmd_run.go` defines a cobra command that registers `tsuku run <command> [args...]` as a subcommand in `cmd/tsuku/main.go`
+- [x] `--mode=<suggest|confirm|auto>` flag is bound to the `tsuku run` command and passed to `resolveMode`
+- [x] `--` separator is documented in `--help` output with an example: `tsuku run jq -- --arg foo bar`
+- [x] After `resolveMode` returns, if mode is `ModeConfirm` and `!term.IsTerminal(int(os.Stdin.Fd()))`, the command prints `tsuku: confirm mode requires a TTY; set TSUKU_AUTO_INSTALL_MODE=auto or use --mode=auto for non-interactive use` to stderr and exits with `ExitNotInteractive` (12); `Runner.Run` is not called
+- [x] When mode is not `ModeConfirm`, or when stdin is a TTY, the command delegates to `autoinstall.Runner.Run` with a `nil` `ProjectVersionResolver` (meaning latest version)
+- [x] `auto_install_mode` is registered in the tsuku config key registry with description `"Default install consent mode for tsuku run (suggest/confirm/auto)"`
+- [x] `tsuku run --help` documents all three modes (`suggest`, `confirm`, `auto`), the `TSUKU_AUTO_INSTALL_MODE` environment variable, and the `auto_install_mode` config key
+- [x] Integration test (subprocess): invokes `tsuku run` in `suggest` mode against a tool present in the binary index; asserts exit code 1 and stdout contains `tsuku install`
+- [x] Integration test (subprocess): invokes `tsuku run` in `confirm` mode with stdin redirected to a non-TTY (e.g., `/dev/null`); asserts exit code `ExitNotInteractive` (12)
+- [x] `go test ./...` passes
+- [x] `go vet ./...` passes
 
 **Dependencies**: Blocked by Issue 1, Issue 2, Issue 3
 
@@ -148,8 +148,7 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I1,I2,I3 done
-    class I4 ready
+    class I1,I2,I3,I4 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan

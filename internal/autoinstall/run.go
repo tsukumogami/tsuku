@@ -138,7 +138,7 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 			prompt += "@" + version
 		}
 		prompt += "? [y/N] "
-		fmt.Fprint(r.stdout, prompt)
+		_, _ = fmt.Fprint(r.stdout, prompt)
 
 		reader := r.ConsentReader
 		if reader == nil {

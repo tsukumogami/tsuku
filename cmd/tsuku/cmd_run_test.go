@@ -1,11 +1,14 @@
 package main
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/autoinstall"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
+
+// --- resolveMode tests ---
 
 func TestResolveMode_FlagWins(t *testing.T) {
 	cfg := &userconfig.Config{AutoInstallMode: "auto"}
@@ -60,7 +63,6 @@ func TestResolveMode_DefaultIsConfirm(t *testing.T) {
 }
 
 func TestResolveMode_EscalationRestriction_EnvAutoWithoutConfigAuto(t *testing.T) {
-	// Env var says auto, but config does not corroborate. Must fall back to confirm.
 	cfg := &userconfig.Config{AutoInstallMode: "confirm"}
 	t.Setenv("TSUKU_AUTO_INSTALL_MODE", "auto")
 
@@ -74,7 +76,6 @@ func TestResolveMode_EscalationRestriction_EnvAutoWithoutConfigAuto(t *testing.T
 }
 
 func TestResolveMode_EscalationRestriction_EnvAutoWithEmptyConfig(t *testing.T) {
-	// Env var says auto, config is empty (default). Must fall back to confirm.
 	cfg := &userconfig.Config{}
 	t.Setenv("TSUKU_AUTO_INSTALL_MODE", "auto")
 
@@ -88,7 +89,6 @@ func TestResolveMode_EscalationRestriction_EnvAutoWithEmptyConfig(t *testing.T) 
 }
 
 func TestResolveMode_EscalationAllowed_EnvAutoWithConfigAuto(t *testing.T) {
-	// Both env and config say auto. Escalation is allowed.
 	cfg := &userconfig.Config{AutoInstallMode: "auto"}
 	t.Setenv("TSUKU_AUTO_INSTALL_MODE", "auto")
 
@@ -102,7 +102,6 @@ func TestResolveMode_EscalationAllowed_EnvAutoWithConfigAuto(t *testing.T) {
 }
 
 func TestResolveMode_EnvDowngrade_ConfigAutoEnvConfirm(t *testing.T) {
-	// Config says auto, env says confirm. Downgrade is allowed.
 	cfg := &userconfig.Config{AutoInstallMode: "auto"}
 	t.Setenv("TSUKU_AUTO_INSTALL_MODE", "confirm")
 
@@ -140,5 +139,41 @@ func TestResolveMode_InvalidConfig(t *testing.T) {
 	_, err := resolveMode("", cfg)
 	if err == nil {
 		t.Fatal("expected error for invalid config value")
+	}
+}
+
+// --- Command registration tests ---
+
+func TestRunCmd_Registered(t *testing.T) {
+	// Verify the run command is registered and has expected flags.
+	cmd, _, err := rootCmd.Find([]string{"run"})
+	if err != nil {
+		t.Fatalf("run command not found: %v", err)
+	}
+	if cmd.Use != "run <command> [args...]" {
+		t.Errorf("unexpected Use: %q", cmd.Use)
+	}
+	modeFlag := cmd.Flags().Lookup("mode")
+	if modeFlag == nil {
+		t.Fatal("--mode flag not registered")
+	}
+}
+
+func TestRunCmd_HelpDocumentsAllModes(t *testing.T) {
+	help := runCmd.Long
+
+	for _, mode := range []string{"suggest", "confirm", "auto"} {
+		if !strings.Contains(help, mode) {
+			t.Errorf("help output should mention %q mode", mode)
+		}
+	}
+	if !strings.Contains(help, "TSUKU_AUTO_INSTALL_MODE") {
+		t.Error("help output should mention TSUKU_AUTO_INSTALL_MODE env var")
+	}
+	if !strings.Contains(help, "auto_install_mode") {
+		t.Error("help output should mention auto_install_mode config key")
+	}
+	if !strings.Contains(help, "--") {
+		t.Error("help output should document -- separator")
 	}
 }

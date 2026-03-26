@@ -1,11 +1,19 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
+	"syscall"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
+
 	"github.com/tsukumogami/tsuku/internal/autoinstall"
+	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/index"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
 
@@ -31,7 +39,7 @@ Consent modes:
 Mode resolution order:
   1. --mode flag
   2. TSUKU_AUTO_INSTALL_MODE environment variable
-  3. auto_install_mode config key
+  3. auto_install_mode config key ($TSUKU_HOME/config.toml)
   4. Default: confirm
 
 Exit codes:
@@ -45,10 +53,79 @@ Exit codes:
 	DisableFlagParsing:    false,
 	DisableFlagsInUseLine: true,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Stub: will be wired in Issue 4.
-		fmt.Fprintln(os.Stderr, "tsuku run: not yet implemented")
-		exitWithCode(ExitGeneral)
+		command := args[0]
+		commandArgs := args[1:]
+
+		cfg, err := config.DefaultConfig()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to load config: %v\n", err)
+			exitWithCode(ExitGeneral)
+		}
+
+		userCfg, err := userconfig.Load()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to load user config: %v\n", err)
+			exitWithCode(ExitGeneral)
+		}
+
+		mode, err := resolveMode(runModeFlag, userCfg)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "tsuku run: %v\n", err)
+			exitWithCode(ExitUsage)
+		}
+
+		// TTY gate: confirm mode requires an interactive terminal.
+		if mode == autoinstall.ModeConfirm && !term.IsTerminal(int(os.Stdin.Fd())) {
+			fmt.Fprintln(os.Stderr, "tsuku: confirm mode requires a TTY; set TSUKU_AUTO_INSTALL_MODE=auto or use --mode=auto for non-interactive use")
+			exitWithCode(ExitNotInteractive)
+		}
+
+		runner := autoinstall.NewRunner(cfg, os.Stdout, os.Stderr)
+		runner.Lookup = func(ctx context.Context, cmd string) ([]index.BinaryMatch, error) {
+			return lookupBinaryCommand(ctx, cfg, cmd)
+		}
+		runner.Installer = &runInstaller{}
+		runner.Exec = func(binary string, execArgs []string, env []string) error {
+			return syscall.Exec(binary, execArgs, env)
+		}
+		runner.RecipeHasVerification = func(recipeName string) bool {
+			r, loadErr := loader.Get(recipeName, recipe.LoaderOptions{})
+			if loadErr != nil {
+				return false
+			}
+			return r.HasChecksumVerification()
+		}
+
+		runErr := runner.Run(globalCtx, command, commandArgs, mode, nil)
+		if runErr == nil {
+			return
+		}
+
+		switch {
+		case errors.Is(runErr, autoinstall.ErrIndexNotBuilt):
+			exitWithCode(ExitIndexNotBuilt)
+		case errors.Is(runErr, autoinstall.ErrForbidden):
+			fmt.Fprintf(os.Stderr, "tsuku run: %v\n", runErr)
+			exitWithCode(ExitForbidden)
+		case errors.Is(runErr, autoinstall.ErrUserDeclined):
+			exitWithCode(ExitUserDeclined)
+		case errors.Is(runErr, autoinstall.ErrSuggestOnly):
+			exitWithCode(ExitGeneral)
+		case errors.Is(runErr, autoinstall.ErrNoMatch):
+			exitWithCode(ExitGeneral)
+		default:
+			fmt.Fprintf(os.Stderr, "tsuku run: %v\n", runErr)
+			exitWithCode(ExitGeneral)
+		}
 	},
+}
+
+// runInstaller wraps the existing install pipeline for use by autoinstall.Runner.
+type runInstaller struct{}
+
+func (i *runInstaller) Install(ctx context.Context, recipeName, version string) error {
+	_ = ctx // install pipeline uses globalCtx internally
+	return runInstallWithTelemetry(recipeName, version, version, true, "", nil)
 }
 
 // resolveMode applies the four-step priority chain to determine the active

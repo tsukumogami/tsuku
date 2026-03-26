@@ -66,7 +66,9 @@ func newTestRunner(t *testing.T) (*Runner, *bytes.Buffer, *bytes.Buffer) {
 		CurrentDir: filepath.Join(tmpDir, "tools", "current"),
 	}
 	// Create the current dir so binary path construction works.
-	os.MkdirAll(cfg.CurrentDir, 0755)
+	if err := os.MkdirAll(cfg.CurrentDir, 0755); err != nil {
+		t.Fatalf("failed to create current dir: %v", err)
+	}
 
 	stdout := &bytes.Buffer{}
 	stderr := &bytes.Buffer{}
@@ -76,11 +78,12 @@ func newTestRunner(t *testing.T) (*Runner, *bytes.Buffer, *bytes.Buffer) {
 
 func TestNewRunner(t *testing.T) {
 	r, _, _ := newTestRunner(t)
-	if r == nil {
-		t.Fatal("NewRunner returned nil")
-	}
+	// NewRunner always returns a non-nil runner; verify fields are set.
 	if r.cfg == nil {
 		t.Fatal("Runner.cfg is nil")
+	}
+	if r.stdout == nil {
+		t.Fatal("Runner.stdout is nil")
 	}
 }
 
@@ -223,7 +226,7 @@ func TestRun_ModeAuto_HappyPath(t *testing.T) {
 
 	// Create a config file with 0600 so the permission check passes.
 	configPath := filepath.Join(r.cfg.HomeDir, "config.toml")
-	os.WriteFile(configPath, []byte(""), 0600)
+	_ = os.WriteFile(configPath, []byte(""), 0600)
 
 	err := r.Run(context.Background(), "jq", nil, ModeAuto, nil)
 	if err != nil {
@@ -278,7 +281,7 @@ func TestRun_ConfigPermissionFallback(t *testing.T) {
 
 	// Create config with permissive permissions (0644).
 	configPath := filepath.Join(r.cfg.HomeDir, "config.toml")
-	os.WriteFile(configPath, []byte(""), 0644)
+	_ = os.WriteFile(configPath, []byte(""), 0644)
 
 	err := r.Run(context.Background(), "jq", nil, ModeAuto, nil)
 	if err != nil {
@@ -304,7 +307,7 @@ func TestRun_VerificationGateFallback(t *testing.T) {
 
 	// Config with correct permissions so gate 2 doesn't trigger.
 	configPath := filepath.Join(r.cfg.HomeDir, "config.toml")
-	os.WriteFile(configPath, []byte(""), 0600)
+	_ = os.WriteFile(configPath, []byte(""), 0600)
 
 	err := r.Run(context.Background(), "jq", nil, ModeAuto, nil)
 	if err != nil {
@@ -333,7 +336,7 @@ func TestRun_ConflictGateFallback(t *testing.T) {
 	r.ConsentReader = strings.NewReader("y\n")
 
 	configPath := filepath.Join(r.cfg.HomeDir, "config.toml")
-	os.WriteFile(configPath, []byte(""), 0600)
+	_ = os.WriteFile(configPath, []byte(""), 0600)
 
 	err := r.Run(context.Background(), "jq", nil, ModeAuto, nil)
 	if err != nil {
