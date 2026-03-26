@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-26T23:36:45Z",
+  "generated_at": "2026-03-26T23:38:01Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 63,
-      "pending": 3870,
+      "failed": 61,
+      "pending": 3872,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 63,
-        "pending": 3847,
+        "failed": 61,
+        "pending": 3849,
         "success": 1326
       }
     },
@@ -68,13 +68,14 @@
         "total": 1
       },
       "npm": {
-        "failed": 19,
-        "pending": 2,
+        "failed": 18,
+        "pending": 3,
         "success": 54,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -489,6 +490,15 @@
           "next_retry_at": "2026-04-01T23:38:20Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 99,
+          "next_retry_at": "1733-12-15T23:50:14Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -561,15 +571,6 @@
           "next_retry_at": "2026-04-02T21:36:14Z"
         },
         {
-          "id": "rubygems:chroma",
-          "name": "chroma",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-03-26T21:39:55Z"
-        },
-        {
           "id": "rubygems:cog",
           "name": "cog",
           "ecosystem": "rubygems",
@@ -624,15 +625,6 @@
           "next_retry_at": "2026-03-27T09:45:09Z"
         },
         {
-          "id": "npm:dmd",
-          "name": "dmd",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-03-26T21:39:55Z"
-        },
-        {
           "id": "rubygems:doggo",
           "name": "doggo",
           "ecosystem": "rubygems",
@@ -649,15 +641,6 @@
           "category": "install_failed",
           "failure_count": 9,
           "next_retry_at": "2026-03-29T20:31:30Z"
-        },
-        {
-          "id": "npm:e2b",
-          "name": "e2b",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-03-26T23:34:43Z"
         },
         {
           "id": "npm:ent",
@@ -786,6 +769,15 @@
           "next_retry_at": "2026-04-02T02:11:05Z"
         },
         {
+          "id": "rubygems:hyperkit",
+          "name": "hyperkit",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-04-02T23:37:31Z"
+        },
+        {
           "id": "rubygems:influxdb",
           "name": "influxdb",
           "ecosystem": "rubygems",
@@ -838,15 +830,6 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-27T22:32:12Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 215,
-          "next_retry_at": "1733-12-15T21:48:57Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -2931,15 +2914,6 @@
           "failure_count": 1
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 97,
-          "next_retry_at": "1733-12-15T20:13:32Z"
-        },
-        {
           "id": "homebrew:azure-cli",
           "name": "azure-cli",
           "ecosystem": "homebrew",
@@ -4579,6 +4553,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:chroma",
+          "name": "chroma",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-26T21:39:55Z"
         },
         {
           "id": "homebrew:chromaprint",
@@ -6562,6 +6545,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:dmd",
+          "name": "dmd",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-26T21:39:55Z"
+        },
+        {
           "id": "homebrew:dmg2img",
           "name": "dmg2img",
           "ecosystem": "homebrew",
@@ -7134,6 +7126,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:e2b",
+          "name": "e2b",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-26T23:34:43Z"
         },
         {
           "id": "homebrew:eask-cli",
@@ -11287,15 +11288,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:hyperkit",
-          "name": "hyperkit",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-26T17:35:53Z"
-        },
-        {
           "id": "homebrew:hypre",
           "name": "hypre",
           "ecosystem": "homebrew",
@@ -13302,6 +13294,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 215,
+          "next_retry_at": "1733-12-15T21:48:57Z"
         },
         {
           "id": "homebrew:libaacs",
