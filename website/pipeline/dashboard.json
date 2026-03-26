@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-26T15:13:31Z",
+  "generated_at": "2026-03-26T15:14:29Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -490,6 +490,15 @@
           "next_retry_at": "2026-04-01T23:38:20Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 96,
+          "next_retry_at": "1733-12-15T15:26:45Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -526,13 +535,13 @@
           "next_retry_at": "2026-04-02T12:01:28Z"
         },
         {
-          "id": "rubygems:cdo",
-          "name": "cdo",
+          "id": "rubygems:cassandra",
+          "name": "cassandra",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-03-26T14:17:26Z"
+          "failure_count": 10,
+          "next_retry_at": "2026-04-02T15:14:01Z"
         },
         {
           "id": "npm:chainsaw",
@@ -596,15 +605,6 @@
           "category": "install_failed",
           "failure_count": 9,
           "next_retry_at": "2026-03-28T07:38:25Z"
-        },
-        {
-          "id": "npm:datasette",
-          "name": "datasette",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-03-26T14:17:26Z"
         },
         {
           "id": "rubygems:dict",
@@ -859,15 +859,6 @@
           "next_retry_at": "2026-03-27T22:32:12Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 212,
-          "next_retry_at": "1733-12-15T13:28:42Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -1028,6 +1019,15 @@
           "category": "install_failed",
           "failure_count": 10,
           "next_retry_at": "2026-04-02T12:01:28Z"
+        },
+        {
+          "id": "pypi:vllm",
+          "name": "vllm",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-02T15:14:01Z"
         },
         {
           "id": "npm:wartremover",
@@ -2950,15 +2950,6 @@
           "failure_count": 1
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 94,
-          "next_retry_at": "1733-12-15T12:14:11Z"
-        },
-        {
           "id": "homebrew:azure-cli",
           "name": "azure-cli",
           "ecosystem": "homebrew",
@@ -4227,15 +4218,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:cassandra",
-          "name": "cassandra",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-03-26T13:07:12Z"
-        },
-        {
           "id": "homebrew:cassandra-reaper",
           "name": "cassandra-reaper",
           "ecosystem": "homebrew",
@@ -4325,6 +4307,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:cdo",
+          "name": "cdo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-26T14:17:26Z"
         },
         {
           "id": "homebrew:ceres-solver",
@@ -6098,6 +6089,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:datasette",
+          "name": "datasette",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-26T14:17:26Z"
         },
         {
           "id": "homebrew:datawire/blackbird/telepresence",
@@ -13303,6 +13303,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 212,
+          "next_retry_at": "1733-12-15T13:28:42Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -26838,15 +26847,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "pypi:vllm",
-          "name": "vllm",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-03-26T11:46:24Z"
         },
         {
           "id": "homebrew:vmware-tanzu/carvel/vendir",
