@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-26T12:01:52Z",
+  "generated_at": "2026-03-26T13:15:25Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -37828,13 +37828,68 @@
     }
   ],
   "failures": {
-    "generation_failed": 597,
-    "install_failed": 1481,
+    "generation_failed": 598,
+    "install_failed": 1486,
     "missing_dep": 68,
     "network_error": 7,
     "recipe_not_found": 74
   },
   "failure_details": [
+    {
+      "id": "npm-2026-03-26T13-13-31Z-azion",
+      "package": "azion",
+      "ecosystem": "npm",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\nChecking runtime dependencies for nodejs...\n  Resolving runtime dependency 'gcc-libs'...\nExecuting plan: gcc-libs@15.2.0\n   Work directory: /tmp/action-validator-2196776796\n   Total steps: 5 (including 0 from dependencies)\n\nStep 1/5: download_file\n   Using cached: gcc.tar.gz\n   ✓ Restored from cache\n\nStep 2/5: extract\n   Extracting: gcc.tar.gz\n   Format: tar.gz\n   Strip dirs: 2\n\nStep 3/5: homebrew_relocate\n   Relocating placehold",
+      "batch_id": "2026-03-26T13-13-31Z",
+      "timestamp": "2026-03-26T13:13:31.641759779Z"
+    },
+    {
+      "id": "rubygems-2026-03-26T13-12-49Z-multimarkdown",
+      "package": "multimarkdown",
+      "ecosystem": "rubygems",
+      "category": "install_failed",
+      "message": "Error: recipe validation failed for 'multimarkdown'\n  - metadata.homepage: homepage must start with https:// (got: http://github.com/tillsc/multi_markdown)",
+      "batch_id": "2026-03-26T13-13-31Z",
+      "timestamp": "2026-03-26T13:12:49.256547425Z"
+    },
+    {
+      "id": "pypi-2026-03-26T13-12-42Z-lib3mf",
+      "package": "lib3mf",
+      "ecosystem": "pypi",
+      "category": "install_failed",
+      "subcategory": "rate_limited",
+      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\nGenerating plan for python-standalone@20260325\n   ⚠ Low GitHub API rate limit: 9 requests remaining (resets at 2026-03-26T13:39:53Z)\nExecuting plan: python-standalone@20260325\n   Work directory: /tmp/action-validator-967691003\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: cpython-3.10.20+20260325-x86_64-unknown-linux-gnu-install_only.tar.gz\n   ✓ Restored from c",
+      "batch_id": "2026-03-26T13-13-31Z",
+      "timestamp": "2026-03-26T13:12:42.972938616Z"
+    },
+    {
+      "id": "crates.io-2026-03-26T13-12-31Z-bindgen",
+      "package": "bindgen",
+      "ecosystem": "crates.io",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\nGenerating plan for rust@1.94.1\nExecuting plan: rust@1.94.1\n   Work directory: /tmp/action-validator-515623743\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: rust-1.94.1-x86_64-unknown-linux-gnu.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: rust-1.94.1-x86_64-unknown-linux-gnu.tar.gz\n   Format: tar.gz\n   Strip dirs: 1\n\nStep 3/4: run_command\n   Running: ./install.sh --pr",
+      "batch_id": "2026-03-26T13-13-31Z",
+      "timestamp": "2026-03-26T13:12:31.186613268Z"
+    },
+    {
+      "id": "homebrew-2026-03-26T13-11-02Z-task",
+      "package": "task",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1",
+      "batch_id": "2026-03-26T13-13-31Z",
+      "timestamp": "2026-03-26T13:11:02.069165998Z"
+    },
+    {
+      "id": "github-2026-03-26T13-10-57Z-bat",
+      "package": "bat",
+      "ecosystem": "github",
+      "category": "generation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'bat' resolved to github (sharkdp/bat), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "2026-03-26T13-13-31Z",
+      "timestamp": "2026-03-26T13:10:57.710089804Z"
+    },
     {
       "id": "pypi-2026-03-26T11-58-26Z-tctl",
       "package": "tctl",
@@ -39580,69 +39635,15 @@
       "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\nChecking runtime dependencies for nodejs...\n  Resolving runtime dependency 'gcc-libs'...\nExecuting plan: gcc-libs@15.2.0\n   Work directory: /tmp/action-validator-4202619457\n   Total steps: 5 (including 0 from dependencies)\n\nStep 1/5: download_file\n   Using cached: gcc.tar.gz\n   ✓ Restored from cache\n\nStep 2/5: extract\n   Extracting: gcc.tar.gz\n   Format: tar.gz\n   Strip dirs: 2\n\nStep 3/5: homebrew_relocate\n   Relocating placehold",
       "batch_id": "2026-03-23T23-34-15Z",
       "timestamp": "2026-03-23T23:34:04.008090529Z"
-    },
-    {
-      "id": "rubygems-2026-03-23T23-33-28Z-memcached",
-      "package": "memcached",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Error: recipe validation failed for 'memcached'\n  - metadata.homepage: homepage must start with https:// (got: http://evan.github.com/evan/memcached/)",
-      "batch_id": "2026-03-23T23-34-15Z",
-      "timestamp": "2026-03-23T23:33:28.897788882Z"
-    },
-    {
-      "id": "crates.io-2026-03-23T23-33-22Z-bindgen",
-      "package": "bindgen",
-      "ecosystem": "crates.io",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\nGenerating plan for rust@1.94.0\nExecuting plan: rust@1.94.0\n   Work directory: /tmp/action-validator-3472216786\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: rust-1.94.0-x86_64-unknown-linux-gnu.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: rust-1.94.0-x86_64-unknown-linux-gnu.tar.gz\n   Format: tar.gz\n   Strip dirs: 1\n\nStep 3/4: run_command\n   Running: ./install.sh --p",
-      "batch_id": "2026-03-23T23-34-15Z",
-      "timestamp": "2026-03-23T23:33:22.414262476Z"
-    },
-    {
-      "id": "homebrew-2026-03-23T23-32-01Z-task",
-      "package": "task",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1",
-      "batch_id": "2026-03-23T23-34-15Z",
-      "timestamp": "2026-03-23T23:32:01.631439456Z"
-    },
-    {
-      "id": "github-2026-03-23T23-31-58Z-bat",
-      "package": "bat",
-      "ecosystem": "github",
-      "category": "generation_failed",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'bat' resolved to github (sharkdp/bat), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
-      "batch_id": "2026-03-23T23-34-15Z",
-      "timestamp": "2026-03-23T23:31:58.357526777Z"
-    },
-    {
-      "id": "npm-2026-03-23T21-38-04Z-azion",
-      "package": "azion",
-      "ecosystem": "npm",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\nChecking runtime dependencies for nodejs...\n  Resolving runtime dependency 'gcc-libs'...\nExecuting plan: gcc-libs@15.2.0\n   Work directory: /tmp/action-validator-1478552902\n   Total steps: 5 (including 0 from dependencies)\n\nStep 1/5: download_file\n   Using cached: gcc.tar.gz\n   ✓ Restored from cache\n\nStep 2/5: extract\n   Extracting: gcc.tar.gz\n   Format: tar.gz\n   Strip dirs: 2\n\nStep 3/5: homebrew_relocate\n   Relocating placehold",
-      "batch_id": "2026-03-23T21-38-04Z",
-      "timestamp": "2026-03-23T21:38:04.389437729Z"
-    },
-    {
-      "id": "pypi-2026-03-23T21-37-23Z-lib3mf",
-      "package": "lib3mf",
-      "ecosystem": "pypi",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\nGenerating plan for python-standalone@20260320\nExecuting plan: python-standalone@20260320\n   Work directory: /tmp/action-validator-1752373240\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: cpython-3.10.20+20260320-x86_64-unknown-linux-gnu-install_only.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: cpython-3.10.20+20260320-x86_64-unknown-linux-gn",
-      "batch_id": "2026-03-23T21-38-04Z",
-      "timestamp": "2026-03-23T21:37:23.979495368Z"
     }
   ],
   "health": {
     "ecosystems": {
       "crates.io": {
         "breaker_state": "open",
-        "failures": 278,
-        "last_failure": "2026-03-26T12:00:28Z",
-        "opens_at": "2026-03-26T13:00:28Z"
+        "failures": 279,
+        "last_failure": "2026-03-26T13:15:02Z",
+        "opens_at": "2026-03-26T14:15:02Z"
       },
       "default": {
         "breaker_state": "closed",
@@ -39650,37 +39651,37 @@
       },
       "github": {
         "breaker_state": "open",
-        "failures": 281,
-        "last_failure": "2026-03-26T12:00:28Z",
-        "opens_at": "2026-03-26T13:00:28Z"
+        "failures": 282,
+        "last_failure": "2026-03-26T13:15:02Z",
+        "opens_at": "2026-03-26T14:15:02Z"
       },
       "homebrew": {
         "breaker_state": "open",
-        "failures": 242,
-        "last_failure": "2026-03-26T12:00:28Z",
-        "opens_at": "2026-03-26T13:00:28Z"
+        "failures": 243,
+        "last_failure": "2026-03-26T13:15:02Z",
+        "opens_at": "2026-03-26T14:15:02Z"
       },
       "npm": {
         "breaker_state": "open",
-        "failures": 271,
-        "last_failure": "2026-03-26T12:00:28Z",
-        "opens_at": "2026-03-26T13:00:28Z"
+        "failures": 272,
+        "last_failure": "2026-03-26T13:15:02Z",
+        "opens_at": "2026-03-26T14:15:02Z"
       },
       "pypi": {
         "breaker_state": "open",
-        "failures": 259,
-        "last_failure": "2026-03-26T12:00:28Z",
-        "opens_at": "2026-03-26T13:00:28Z"
+        "failures": 260,
+        "last_failure": "2026-03-26T13:15:02Z",
+        "opens_at": "2026-03-26T14:15:02Z"
       },
       "rubygems": {
         "breaker_state": "open",
-        "failures": 177,
-        "last_failure": "2026-03-26T12:00:28Z",
-        "opens_at": "2026-03-26T13:00:28Z"
+        "failures": 178,
+        "last_failure": "2026-03-26T13:15:02Z",
+        "opens_at": "2026-03-26T14:15:02Z"
       }
     },
     "last_run": {
-      "batch_id": "2026-03-26T12-00-34Z",
+      "batch_id": "2026-03-26T13-15-10Z",
       "ecosystems": {
         "crates.io": 1,
         "github": 1,
@@ -39689,7 +39690,7 @@
         "pypi": 1,
         "rubygems": 1
       },
-      "timestamp": "2026-03-26T12:00:34Z",
+      "timestamp": "2026-03-26T13:15:10Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39705,7 +39706,7 @@
       "total": 1,
       "recipes_merged": 1
     },
-    "runs_since_last_success": 265
+    "runs_since_last_success": 266
   },
   "runs": [
     {
