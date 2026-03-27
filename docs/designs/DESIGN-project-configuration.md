@@ -11,20 +11,21 @@ problem: |
   Downstream building blocks (shell environment activation, project-aware exec
   wrapper) need a stable ProjectConfig interface to consume.
 decision: |
-  Add a tsuku.toml file format using a [tools] section where each tool maps to
+  Add a .tsuku.toml file format using a [tools] section where each tool maps to
   either a version string (node = "20.16.0") or an inline table for extensibility
   (python = { version = "3.12" }). Discovery walks up from the working directory
-  to find the nearest tsuku.toml, stopping at $HOME. tsuku init creates the file;
+  to find the nearest .tsuku.toml, stopping at $HOME. tsuku init creates the file;
   tsuku install (no args) batch-installs all declared tools with interactive
   confirmation and lenient error handling. No .tool-versions compatibility.
 rationale: |
-  Non-dotfile name and single-name policy align with tsuku conventions and
-  eliminate ambiguity. Parent traversal without merging gives monorepos natural
-  inheritance while keeping behavior predictable. Mixed-map schema delivers
-  one-line simplicity for the common case with an extension path for per-tool
-  options. TOML-only avoids the permanent maintenance burden of a .tool-versions
-  name-mapping table for marginal migration convenience. Interactive confirmation
-  for batch install mitigates the delegated-authority risk from untrusted repos.
+  Dotfile name follows the established industry convention for per-project tool
+  configuration (.envrc, .nvmrc, .tool-versions, .editorconfig). Single-name
+  policy eliminates ambiguity. Parent traversal without merging gives monorepos
+  natural inheritance while keeping behavior predictable. Mixed-map schema
+  delivers one-line simplicity with an extension path for per-tool options.
+  TOML-only avoids the permanent maintenance burden of a .tool-versions
+  name-mapping table. Interactive confirmation mitigates delegated-authority
+  risk from untrusted repos.
 ---
 
 # DESIGN: Project Configuration
@@ -63,7 +64,7 @@ The design must specify:
 **Out of scope:**
 - Shell environment activation (Block 5, #1681)
 - Project-aware exec wrapper (Block 6, #2168)
-- `.tool-versions` runtime compatibility (explicitly deferred)
+- `.tool-versions` runtime compatibility (intended for future, deferred to keep this design focused)
 - Environment variable declarations or scripts in the config file
 - Lock files for pinning resolved versions
 
@@ -90,36 +91,36 @@ Performance is not a differentiator. TOML parsing takes ~0.1ms for small files, 
 Key assumptions:
 - Most projects will have a single config file at the repository root
 - The dominant monorepo use case is "shared tools at repo root, individual projects inherit"
-- Contributors encountering tsuku for the first time benefit more from a visible file than from a clean project root
+- Per-project tool config files are a different category from tsuku's internal files (`$TSUKU_HOME/config.toml`, `state.json`); industry convention for this category is dotfiles
 
-#### Chosen: `tsuku.toml` with Parent Traversal (First-Match, No Merge)
+#### Chosen: `.tsuku.toml` with Parent Traversal (First-Match, No Merge)
 
-Use `tsuku.toml` as the single accepted file name. When loading project configuration, walk up from the working directory checking each directory for `tsuku.toml`. Stop at the first match. Do not merge multiple configs. Stop traversal at `$HOME` by default; allow `TSUKU_CEILING_PATHS` environment variable (colon-separated list of directories) to customize the ceiling.
+Use `.tsuku.toml` as the single accepted file name. When loading project configuration, walk up from the working directory checking each directory for `.tsuku.toml`. Stop at the first match. Do not merge multiple configs. Stop traversal at `$HOME` by default; allow `TSUKU_CEILING_PATHS` environment variable (colon-separated list of directories) to customize the ceiling.
 
 The discovery algorithm:
 
 1. Start at the current working directory.
-2. Check if `tsuku.toml` exists in this directory.
+2. Check if `.tsuku.toml` exists in this directory.
 3. If found, parse and return it. Done.
 4. If not found, move to the parent directory.
 5. If the parent is `$HOME` or matches a `TSUKU_CEILING_PATHS` entry, stop. Return no config.
 6. Repeat from step 2.
 
-Non-dotfile aligns with tsuku conventions -- every existing tsuku file uses a visible name. A dotfile would be the sole exception. Using `tsuku.toml` makes the file immediately visible in `ls` output and file browsers.
+Dotfile follows industry convention for per-project tool configuration. The ecosystem overwhelmingly uses dotfiles for this purpose: `.envrc` (direnv), `.nvmrc` (nvm), `.ruby-version` (rbenv), `.python-version` (pyenv), `.tool-versions` (asdf), `.editorconfig`. While tsuku's internal files (`$TSUKU_HOME/config.toml`, `state.json`) are non-dotfiles, those serve a different purpose -- they're user-level config in a dedicated directory, not per-project markers in a repository root.
 
 Single name eliminates ambiguity. Supporting both `.tsuku.toml` and `tsuku.toml` means every project team must decide which to use, every doc must mention both, and tsuku must define precedence rules for when both exist.
 
-First-match (no merge) keeps behavior predictable. When a `tsuku.toml` exists in the current directory, it completely defines the tools for that directory. No need to reason about which parent directories might contribute additional tools or override versions. A developer can read one file and know exactly what tools apply.
+First-match (no merge) keeps behavior predictable. When a `.tsuku.toml` exists in the current directory, it completely defines the tools for that directory. No need to reason about which parent directories might contribute additional tools or override versions. A developer can read one file and know exactly what tools apply.
 
-Future extensibility is preserved. If demand for per-directory layering emerges, an `extends` field can be added to `tsuku.toml` without breaking backward compatibility.
+Future extensibility is preserved. If demand for per-directory layering emerges, an `extends` field can be added to `.tsuku.toml` without breaking backward compatibility.
 
 #### Alternatives Considered
 
-**`.tsuku.toml` (dotfile only)**: Keeps the project root clean and matches asdf/direnv conventions. Rejected because it breaks tsuku's non-dotfile convention and reduces discoverability. The "clean root" benefit is marginal -- one visible file among many (Makefile, Dockerfile, README.md, etc.) is not meaningful clutter.
+**`tsuku.toml` (non-dotfile)**: More visible in `ls` output and file browsers. Matches mise's recent default change. Rejected because per-project tool config files are conventionally dotfiles across the ecosystem (`.envrc`, `.nvmrc`, `.tool-versions`, `.editorconfig`). The non-dotfile tsuku files (`config.toml`, `state.json`) live in `$TSUKU_HOME` and serve a different purpose. mise's move to `mise.toml` is the outlier, not the trend.
 
-**Both `.tsuku.toml` and `tsuku.toml`**: Maximum flexibility, matches mise. Rejected because two names create ambiguity ("which should I use?"), double the test and documentation surface, and require precedence rules. The flexibility doesn't justify the complexity for a new tool without an existing user base to migrate.
+**Both `.tsuku.toml` and `tsuku.toml`**: Maximum flexibility. Rejected because two names create ambiguity ("which should I use?"), double the test and documentation surface, and require precedence rules. The flexibility doesn't justify the complexity for a new tool without an existing user base to migrate.
 
-**`tsuku.toml` with no traversal**: Simplest possible approach, matches devbox. Rejected because it forces tool declaration duplication in monorepos. Traversal adds minimal complexity (well-understood algorithm, negligible performance cost) for significant monorepo usability.
+**`.tsuku.toml` with no traversal**: Simplest possible approach, matches devbox. Rejected because it forces tool declaration duplication in monorepos. Traversal adds minimal complexity (well-understood algorithm, negligible performance cost) for significant monorepo usability.
 
 **Parent traversal with merging**: Most powerful monorepo support, matches mise. Rejected because merging makes it hard to answer "what tools does this directory get?" without mentally combining multiple files. Debugging version conflicts across merged configs is painful. The power-to-complexity ratio doesn't justify it at launch.
 
@@ -140,18 +141,20 @@ The `[tools]` section maps recipe names to either a version string (shorthand) o
 
 ```toml
 [tools]
-node = "20.16.0"                          # exact version
-go = "1.22"                               # prefix (resolves to latest 1.22.x)
-ripgrep = "latest"                        # latest stable version
-jq = ""                                   # empty = latest
+node = "20.16.0"                          # version string passed to provider
+go = "1.22"                               # provider resolves to latest matching version
+ripgrep = "latest"                        # resolves to latest stable
+jq = ""                                   # same as "latest"
 python = { version = "3.12" }             # inline table (extensible)
 ```
 
-Version constraint formats supported:
-- **Exact**: `"20.16.0"` -- passed directly to `ResolveVersion`
-- **Prefix**: `"1.22"` -- handled by existing provider fuzzy matching
-- **Latest**: `"latest"` or `""` -- triggers `ResolveLatest`
+Version strings are passed to the tool's version provider for resolution. The provider determines how to interpret the string -- whether `"1.22"` matches exactly or resolves to the latest `1.22.x` depends on the provider's behavior and the tool's release versioning scheme.
+
+Special values:
+- `"latest"` or `""` -- triggers `ResolveLatest` to fetch the newest stable version
 - **No semver ranges** in v1 -- not implemented by providers, not used by comparable tools
+
+All other strings are passed through to `ResolveVersion`, which delegates to the tool's configured version provider.
 
 The common case (pin to a version) is `tool = "version"` -- one line, no braces. The inline table form provides extensibility: when per-tool options are needed (registry source overrides, post-install commands), they slot into the table without migration. Users who only need version pinning never see the table syntax.
 
@@ -159,7 +162,7 @@ A custom `UnmarshalTOML` method (~20 lines) on `ToolRequirement` accepts either 
 
 #### Alternatives Considered
 
-**Flat String Map** (`map[string]string`): Simplest possible schema. Rejected because it can't be extended with per-tool metadata without a breaking schema change. When per-tool options are needed, every existing `tsuku.toml` would need migration.
+**Flat String Map** (`map[string]string`): Simplest possible schema. Rejected because it can't be extended with per-tool metadata without a breaking schema change. When per-tool options are needed, every existing `.tsuku.toml` would need migration.
 
 **All Inline Tables** (`tool = { version = "..." }`): Uniform structure, no custom unmarshaling. Rejected because the common case becomes verbose -- `{ version = "20.16.0" }` vs `"20.16.0"` -- violating the simplicity driver.
 
@@ -176,21 +179,23 @@ Key assumptions:
 - Migration from asdf/mise to tsuku will be a deliberate team decision
 - Demand for automated migration tooling is currently speculative
 
-#### Chosen: No `.tool-versions` Support (Native TOML Only)
+#### Chosen: `.tool-versions` Deferred (Native TOML Only for Now)
 
-Tsuku reads only `tsuku.toml` for project configuration. No name-mapping table, no version-syntax translation, no fallback file discovery. If demand emerges, a `tsuku migrate .tool-versions` command can be added later as a one-time import tool.
+Tsuku reads only `.tsuku.toml` for project configuration in this initial design. `.tool-versions` support is intended for the future but out of scope here -- the priority is getting the core `ProjectConfig` interface right first.
 
-Simplicity wins. A runtime compatibility layer adds a second parser, a translation layer, and a permanent maintenance commitment to a mapping table. The benefit is narrowly scoped: it only helps teams that already have a `.tool-versions` file AND want to use tsuku AND don't want to spend a few minutes creating a `tsuku.toml`.
+To ensure future `.tool-versions` support remains feasible, this design constrains itself in two ways:
 
-The naming gap is structural, not incidental. Tsuku is a curated registry with its own naming scheme. asdf is a plugin system where anyone can create a plugin with any name. Bridging these two models requires either maintaining a large mapping table (high burden) or accepting partial coverage (confusing UX).
+1. **Version strings are opaque to the schema.** The `Version` field is a plain string passed through to the version provider. This means `.tool-versions` version values (`latest`, `latest:prefix`, exact versions) can flow through `ProjectConfig` without schema changes. Only `ref:` and `path:` specifiers would need special handling or rejection.
 
-Reversibility favors the simpler choice. Starting with TOML-only and adding a migration command later is straightforward. Starting with runtime `.tool-versions` support and removing it later is a breaking change.
+2. **`LoadProjectConfig` is the single entry point.** Future `.tool-versions` support adds a fallback parser behind `LoadProjectConfig` -- the interface downstream consumers (#1681, #2168) depend on doesn't change. The fallback would check for `.tool-versions` only when no `.tsuku.toml` is found, with a name-mapping table translating asdf plugin names to tsuku recipe names.
+
+The name-mapping table is the main cost of future support. Tsuku uses its own recipe names (kebab-case, curated) while asdf uses plugin names that don't correspond 1:1. A mapping table covering common tools (50-100 entries) would need ongoing maintenance. This cost is real but bounded, and deferring it lets us measure demand before committing.
 
 #### Alternatives Considered
 
-**Full runtime `.tool-versions` support**: Read `.tool-versions` as a fallback with a name-mapping table. Rejected because the mapping table is a permanent maintenance burden, partial coverage creates confusing errors, and the two-format code path complicates `ProjectConfig`.
+**Full runtime `.tool-versions` support now**: Read `.tool-versions` as a fallback with a name-mapping table in this initial design. Deferred (not rejected) because the mapping table adds complexity before we've validated the core `ProjectConfig` interface. Adding it later behind `LoadProjectConfig` is straightforward.
 
-**One-time `tsuku migrate` command**: Best-effort import from `.tool-versions` to `tsuku.toml`. Not rejected -- this is a reasonable future addition. Deferred because demand is speculative and it can be added without changing the `ProjectConfig` design.
+**One-time `tsuku migrate` command only**: Best-effort import from `.tool-versions` to `.tsuku.toml` without runtime fallback. This may be a useful companion feature but doesn't replace runtime support for teams that want to use both tsuku and mise/asdf concurrently during migration.
 
 ### Decision 4: CLI Integration (`tsuku init` and `tsuku install` No Args)
 
@@ -206,7 +211,7 @@ Key assumptions:
 #### Chosen: Minimal Non-Interactive Init + Lenient Batch Install
 
 **`tsuku init`** creates a minimal config file non-interactively:
-- Writes `tsuku.toml` with an empty `[tools]` section and a brief comment explaining the format
+- Writes `.tsuku.toml` with an empty `[tools]` section and a brief comment explaining the format
 - Errors if the file already exists; `--force` overwrites
 - Does not prompt, does not add tools, does not run install
 
@@ -234,37 +239,37 @@ Flag compatibility:
 
 ## Decision Outcome
 
-**Chosen: `tsuku.toml` with mixed-map schema, parent traversal, native TOML only, lenient batch install**
+**Chosen: `.tsuku.toml` (dotfile) with mixed-map schema, parent traversal, native TOML only, lenient batch install**
 
 ### Summary
 
-Projects declare their tool requirements in a `tsuku.toml` file checked into version control. The file uses a `[tools]` section where each tool maps to either a version string (`node = "20.16.0"`) or an inline table for extensibility (`python = { version = "3.12" }`). Version constraints support exact versions, prefix matching (e.g., "1.22" resolves to the latest 1.22.x), and "latest". No semver ranges, no `.tool-versions` compatibility.
+Projects declare their tool requirements in a `.tsuku.toml` file checked into version control. The file uses a `[tools]` section where each tool maps to either a version string (`node = "20.16.0"`) or an inline table for extensibility (`python = { version = "3.12" }`). Version constraints support exact versions, prefix matching (e.g., "1.22" resolves to the latest 1.22.x), and "latest". No semver ranges, no `.tool-versions` compatibility.
 
-Tsuku discovers project config by walking up from the current working directory until it finds a `tsuku.toml`, stopping at `$HOME` or any directory listed in `TSUKU_CEILING_PATHS`. First match wins -- no merging across directories. This gives monorepos a natural inheritance model (tools at the root apply to all subdirectories) while keeping behavior predictable: one file governs each directory's tools.
+Tsuku discovers project config by walking up from the current working directory until it finds a `.tsuku.toml`, stopping at `$HOME` or any directory listed in `TSUKU_CEILING_PATHS`. First match wins -- no merging across directories. This gives monorepos a natural inheritance model (tools at the root apply to all subdirectories) while keeping behavior predictable: one file governs each directory's tools.
 
-`tsuku init` creates a minimal `tsuku.toml` with an empty `[tools]` section. `tsuku install` with no arguments reads the discovered config and installs all declared tools, collecting errors instead of stopping on first failure. A summary reports what installed, what was already current, and what failed. Exit code 15 (`ExitPartialFailure`) distinguishes partial success from full success (0) or total failure (6), giving CI scripts actionable signal.
+`tsuku init` creates a minimal `.tsuku.toml` with an empty `[tools]` section. `tsuku install` with no arguments reads the discovered config and installs all declared tools, collecting errors instead of stopping on first failure. A summary reports what installed, what was already current, and what failed. Exit code 15 (`ExitPartialFailure`) distinguishes partial success from full success (0) or total failure (6), giving CI scripts actionable signal.
 
-The `ProjectConfig` Go interface is minimal: a struct with a `Tools` map from recipe name to `ToolRequirement`, where `ToolRequirement` has a `Version` string field. A custom `UnmarshalTOML` method handles the string-or-table duality in ~20 lines. `LoadProjectConfig(startDir string)` returns the parsed config from the nearest `tsuku.toml` or nil if none found. This interface is consumed directly by #1681 and #2168 without additional abstraction.
+The `ProjectConfig` Go interface is minimal: a struct with a `Tools` map from recipe name to `ToolRequirement`, where `ToolRequirement` has a `Version` string field. A custom `UnmarshalTOML` method handles the string-or-table duality in ~20 lines. `LoadProjectConfig(startDir string)` returns the parsed config from the nearest `.tsuku.toml` or nil if none found. This interface is consumed directly by #1681 and #2168 without additional abstraction.
 
 ### Rationale
 
 The four decisions reinforce each other toward a consistent design philosophy: start simple, stay predictable, extend later.
 
-The non-dotfile name (`tsuku.toml`) and single-name policy eliminate ambiguity that would ripple through init, install, and documentation. Parent traversal without merging gives monorepos a free inheritance model without the debugging pain of config composition. The mixed-map schema delivers one-line simplicity for the common case while preserving an extension path for per-tool options. TOML-only means one parser, one format, one code path through `ProjectConfig` -- downstream consumers (#1681, #2168) get a stable interface that won't sprout format-specific branches.
+The dotfile name (`.tsuku.toml`) follows industry convention for per-project config while the single-name policy eliminates ambiguity. Parent traversal without merging gives monorepos a free inheritance model without the debugging pain of config composition. The mixed-map schema delivers one-line simplicity for the common case while preserving an extension path for per-tool options. TOML-only means one parser, one format, one code path through `ProjectConfig` -- downstream consumers (#1681, #2168) get a stable interface that won't sprout format-specific branches.
 
 Lenient batch install is the right default because project configs typically declare 5-15 tools, and a single transient failure shouldn't block the rest. The new `ExitPartialFailure` exit code gives CI exactly the signal it needs without overloading existing error codes.
 
 ### Trade-offs Accepted
 
-- Projects that need different tool sets in monorepo subdirectories must duplicate the parent's declarations in a subdirectory `tsuku.toml` or wait for `extends` support.
-- Teams migrating from asdf/mise must manually create `tsuku.toml`. Documentation should include a "migrating from asdf" section with common name mappings.
+- Projects that need different tool sets in monorepo subdirectories must duplicate the parent's declarations in a subdirectory `.tsuku.toml` or wait for `extends` support.
+- Teams migrating from asdf/mise must manually create `.tsuku.toml`. Documentation should include a "migrating from asdf" section with common name mappings.
 - No semver ranges means projects that need "any 1.x" must use prefix matching ("1"), which resolves to the latest 1.x rather than constraining to a range. If providers add range support later, the `Version` field can accommodate it without schema changes.
 
 ## Solution Architecture
 
 ### Overview
 
-Project configuration adds a new `internal/project` package that handles file discovery, TOML parsing, and the `ProjectConfig` interface. Two new CLI commands (`init`, `install` no-args) integrate this package into the existing command tree. The package is designed as a read-only data loader -- it finds and parses `tsuku.toml` but does not install tools or modify state. Installation logic stays in the existing `install` package.
+Project configuration adds a new `internal/project` package that handles file discovery, TOML parsing, and the `ProjectConfig` interface. Two new CLI commands (`init`, `install` no-args) integrate this package into the existing command tree. The package is designed as a read-only data loader -- it finds and parses `.tsuku.toml` but does not install tools or modify state. Installation logic stays in the existing `install` package.
 
 ### Components
 
@@ -296,7 +301,7 @@ Project configuration adds a new `internal/project` package that handles file di
           │            └──────────────────────┘
           ▼
 ┌──────────────────────┐
-│  tsuku.toml          │
+│  .tsuku.toml          │
 │  (project root)      │
 └──────────────────────┘
 ```
@@ -307,7 +312,7 @@ Project configuration adds a new `internal/project` package that handles file di
 package project
 
 // ConfigFileName is the project configuration file name.
-const ConfigFileName = "tsuku.toml"
+const ConfigFileName = ".tsuku.toml"
 
 // MaxTools is the upper bound on tools in a single config file.
 // Prevents resource exhaustion from maliciously large configs.
@@ -335,11 +340,11 @@ func (t *ToolRequirement) UnmarshalTOML(decode func(interface{}) error) error
 // ConfigResult holds a parsed config and the path where it was found.
 type ConfigResult struct {
     Config *ProjectConfig
-    Path   string // absolute path to the tsuku.toml file
+    Path   string // absolute path to the .tsuku.toml file
     Dir    string // directory containing the config file
 }
 
-// LoadProjectConfig finds the nearest tsuku.toml by walking up from
+// LoadProjectConfig finds the nearest .tsuku.toml by walking up from
 // startDir. Returns nil if no config file is found. Returns an error
 // only if a config file exists but can't be parsed or exceeds MaxTools.
 //
@@ -351,7 +356,7 @@ type ConfigResult struct {
 func LoadProjectConfig(startDir string) (*ConfigResult, error)
 
 // FindProjectDir returns the directory containing the nearest
-// tsuku.toml, or "" if none found. Implemented as a thin wrapper
+// .tsuku.toml, or "" if none found. Implemented as a thin wrapper
 // around LoadProjectConfig that discards the parsed config.
 func FindProjectDir(startDir string) string
 ```
@@ -368,13 +373,13 @@ const ExitPartialFailure = 15  // some tools failed, others succeeded
 
 ```
 1. User runs `tsuku init` in project directory
-2. Check if tsuku.toml exists in current directory
-3. If exists and no --force: error "tsuku.toml already exists"
-4. Write tsuku.toml with template:
+2. Check if .tsuku.toml exists in current directory
+3. If exists and no --force: error ".tsuku.toml already exists"
+4. Write .tsuku.toml with template:
    # Project tools managed by tsuku.
    # See: https://tsuku.dev/docs/project-config
    [tools]
-5. Print: "Created tsuku.toml"
+5. Print: "Created .tsuku.toml"
 ```
 
 **Flow 2: `tsuku install` (no args)**
@@ -386,7 +391,7 @@ const ExitPartialFailure = 15  // some tools failed, others succeeded
    create one.", exit ExitUsage (2)
 4. If config.Tools is empty: print "No tools declared in <path>", exit 0
 5. Print the config file path and tool list:
-   Using: /path/to/tsuku.toml
+   Using: /path/to/.tsuku.toml
    Tools: node@20.16.0, go@1.22, ripgrep@latest, jq, python@3.12
 6. If "latest" or empty versions found, warn:
    Warning: 2 tools use unpinned versions (ripgrep, jq). Pin for reproducibility.
@@ -448,17 +453,17 @@ Update user-facing docs.
 
 Deliverables:
 - Update CLI help text for `tsuku init` and `tsuku install`
-- Add `tsuku.toml` reference to relevant documentation
+- Add `.tsuku.toml` reference to relevant documentation
 
 ## Security Considerations
 
 ### Untrusted Repository Config
 
-The primary security concern is that `tsuku.toml` is an external artifact when it lives inside a cloned repository. Running `tsuku install` in a cloned repo parses that file and triggers tool downloads. Before this design, users explicitly chose which tools to install. With project config, the repo author effectively chooses.
+The primary security concern is that `.tsuku.toml` is an external artifact when it lives inside a cloned repository. Running `tsuku install` in a cloned repo parses that file and triggers tool downloads. Before this design, users explicitly chose which tools to install. With project config, the repo author effectively chooses.
 
 **Risks:**
 - A malicious or compromised repo could declare unwanted tools, expanding the user's attack surface
-- A `tsuku.toml` could pin to a known-vulnerable version of a tool
+- A `.tsuku.toml` could pin to a known-vulnerable version of a tool
 - Recipe name confusion: names that sound benign but install unexpected software (limited by tsuku's curated registry)
 
 **Mitigations:**
@@ -470,7 +475,7 @@ The primary security concern is that `tsuku.toml` is an external artifact when i
 
 ### Parent Traversal Trust Boundary
 
-The traversal walks up from the working directory to `$HOME`. In shared hosting or multi-user environments, a `tsuku.toml` placed in a shared parent directory could influence installs for users working in subdirectories.
+The traversal walks up from the working directory to `$HOME`. In shared hosting or multi-user environments, a `.tsuku.toml` placed in a shared parent directory could influence installs for users working in subdirectories.
 
 **Mitigations:**
 - `$HOME` is an unconditional ceiling -- traversal never crosses it, regardless of `TSUKU_CEILING_PATHS`
@@ -483,7 +488,7 @@ The traversal walks up from the working directory to `$HOME`. In shared hosting 
 Using `"latest"` or `""` as a version constraint means the resolved version depends on when `tsuku install` runs. Two developers installing at different times may get different tool versions, undermining the reproducibility goal. If the registry is compromised, "latest" resolution pulls the compromised version immediately.
 
 **Mitigations:**
-- Emit a warning when `tsuku.toml` uses "latest" or empty version strings, encouraging exact or prefix version pinning for reproducibility
+- Emit a warning when `.tsuku.toml` uses "latest" or empty version strings, encouraging exact or prefix version pinning for reproducibility
 - A future lock file mechanism (out of scope for this design) can record resolved versions for deterministic installs. The schema accommodates this without breaking changes
 
 ### Mitigations Summary
@@ -507,14 +512,14 @@ Using `"latest"` or `""` as a version constraint means the resolved version depe
 
 ### Negative
 
-- **No monorepo layering**: Subdirectories can't inherit-and-extend a parent `tsuku.toml`. They must either rely on the parent's config entirely or duplicate+extend it in their own file.
+- **No monorepo layering**: Subdirectories can't inherit-and-extend a parent `.tsuku.toml`. They must either rely on the parent's config entirely or duplicate+extend it in their own file.
 - **Manual migration from asdf/mise**: No automated tooling for converting `.tool-versions` files. Early adopters migrating existing projects pay a one-time manual cost.
 - **New exit code**: `ExitPartialFailure` (15) is a new convention that CI scripts must learn. Existing scripts that check only for 0/non-0 will treat partial failure as full failure.
 - **Error aggregation refactor**: The install command's error handling changes from fail-fast to collect-and-report. This touches the existing `handleInstallError` code path.
 
 ### Mitigations
 
-- **No monorepo layering**: Document the pattern of subdirectory-level `tsuku.toml` files. Track demand for `extends` and add it if the pattern proves painful.
+- **No monorepo layering**: Document the pattern of subdirectory-level `.tsuku.toml` files. Track demand for `extends` and add it if the pattern proves painful.
 - **Manual migration**: Include a "migrating from asdf" documentation section with common tool name mappings. Track demand for a `tsuku migrate` command.
 - **New exit code**: Document the exit code table in CLI help. The 0/non-0 interpretation remains correct (partial failure is still non-zero).
 - **Error aggregation**: The refactor is localized to the install command's Run function. Existing single-tool installs continue using the current fail-fast path.
