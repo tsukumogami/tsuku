@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-03-27T10:50:14Z",
+  "generated_at": "2026-03-27T10:51:08Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 64,
-      "pending": 3869,
+      "failed": 63,
+      "pending": 3870,
       "success": 1339
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 64,
-        "pending": 3846,
+        "failed": 63,
+        "pending": 3847,
         "success": 1326
       }
     },
@@ -74,15 +74,14 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 39,
-        "pending": 40,
+        "failed": 37,
+        "pending": 42,
         "success": 9,
         "total": 89
       }
@@ -490,15 +489,6 @@
           "next_retry_at": "2026-04-01T23:38:20Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 101,
-          "next_retry_at": "1733-12-16T09:08:44Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -623,15 +613,6 @@
           "category": "install_failed",
           "failure_count": 10,
           "next_retry_at": "2026-04-02T17:05:50Z"
-        },
-        {
-          "id": "rubygems:dict",
-          "name": "dict",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-03-27T09:45:09Z"
         },
         {
           "id": "npm:dmd",
@@ -814,6 +795,15 @@
           "next_retry_at": "2026-04-03T05:11:56Z"
         },
         {
+          "id": "rubygems:influxdb",
+          "name": "influxdb",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-04-03T10:50:49Z"
+        },
+        {
           "id": "rubygems:ipfs",
           "name": "ipfs",
           "ecosystem": "rubygems",
@@ -830,15 +820,6 @@
           "category": "install_failed",
           "failure_count": 9,
           "next_retry_at": "2026-03-29T04:33:51Z"
-        },
-        {
-          "id": "rubygems:kor",
-          "name": "kor",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-27T10:07:05Z"
         },
         {
           "id": "npm:lcm",
@@ -866,6 +847,15 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-27T22:32:12Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 221,
+          "next_retry_at": "1733-12-16T11:03:32Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -920,15 +910,6 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-31T13:10:06Z"
-        },
-        {
-          "id": "rubygems:meli",
-          "name": "meli",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-27T10:01:29Z"
         },
         {
           "id": "rubygems:memcached",
@@ -1028,6 +1009,15 @@
           "category": "install_failed",
           "failure_count": 10,
           "next_retry_at": "2026-04-02T15:14:01Z"
+        },
+        {
+          "id": "npm:wartremover",
+          "name": "wartremover",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-04-03T10:50:49Z"
         },
         {
           "id": "npm:webdav",
@@ -2939,6 +2929,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 101,
+          "next_retry_at": "1733-12-16T09:08:44Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -6414,6 +6413,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:dict",
+          "name": "dict",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-27T09:45:09Z"
         },
         {
           "id": "crates.io:diesel",
@@ -11584,15 +11592,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:influxdb",
-          "name": "influxdb",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-27T07:28:38Z"
-        },
-        {
           "id": "homebrew:influxdb-cli",
           "name": "influxdb-cli",
           "ecosystem": "homebrew",
@@ -12846,6 +12845,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:kor",
+          "name": "kor",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-03-27T10:07:05Z"
+        },
+        {
           "id": "homebrew:kotlin",
           "name": "kotlin",
           "ecosystem": "homebrew",
@@ -13285,15 +13293,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 219,
-          "next_retry_at": "1733-12-16T07:23:03Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -15505,6 +15504,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:meli",
+          "name": "meli",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-27T10:01:29Z"
         },
         {
           "id": "homebrew:mender-artifact",
@@ -27090,15 +27098,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:wartremover",
-          "name": "wartremover",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-26T20:48:23Z"
         },
         {
           "id": "crates.io:wasm-bindgen",
