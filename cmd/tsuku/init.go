@@ -27,6 +27,8 @@ This file declares which tools and versions a project requires,
 enabling reproducible development environments across machines.
 
 Use --force to overwrite an existing configuration file.`,
+	Example: `  tsuku init
+  tsuku init --force`,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dir, err := os.Getwd()
