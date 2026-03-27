@@ -1,0 +1,1 @@
+{"issue": 2, "reviewers": [{"focus": "inline", "blocking_count": 0, "summary": "Clean Cobra command following established patterns. Uses project.ConfigFileName, proper error handling, testable runInit extraction."}], "overall_blocking_count": 0}

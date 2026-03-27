@@ -3,13 +3,13 @@
   "design_doc": "docs/plans/PLAN-project-configuration.md",
   "branch": "docs/project-configuration",
   "pr_number": 2175,
-  "integrity_hash": "sha256:5cfe590b8a7c02c41fcba32024a3147eb7be3e46f8d4ed65134c9d5c9a155be3",
+  "integrity_hash": "sha256:1daf807bc10ad7790af8bd4635fc37febf4fd82e46976eaa041d7cfcb87aca54",
   "issues": [
     {
       "number": 1,
       "title": "feat(project): add project configuration package",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [],
@@ -39,6 +39,34 @@
           "9": "config_test.go"
         }
       },
+      "reviewer_results": {
+        "issue": 1,
+        "reviewers": [
+          {
+            "focus": "pragmatic",
+            "blocking_count": 0,
+            "summary": "No blocking findings. Advisory: isCeiling is single-caller, FindProjectDir swallows errors, zero callers for FindProjectDir and ExitPartialFailure (deliberate foundation-laying per phased plan)."
+          },
+          {
+            "focus": "architecture",
+            "blocking_count": 0,
+            "summary": "Architecturally sound. Package placement appropriate alongside internal/config and internal/userconfig. Clean dependency direction. TOML parsing follows established patterns. Advisory: EnvCeilingPaths in project vs config package is acceptable."
+          },
+          {
+            "focus": "maintainability",
+            "blocking_count": 0,
+            "summary": "No blocking findings. Code is clear, well-documented, and follows codebase conventions."
+          }
+        ],
+        "overall_blocking_count": 0
+      },
+      "qa_results": {
+        "issue": 1,
+        "scenarios_tested": 0,
+        "scenarios_passed": 0,
+        "scenarios_skipped": 0,
+        "skip_reason": "Issue 1 is a library package with no functional test scenarios. All scenarios are assigned to issues 2-4."
+      },
       "testable_scenarios": [],
       "complexity": "testable",
       "acceptance_criteria": [
@@ -56,16 +84,28 @@
     {
       "number": 2,
       "title": "feat(cli): add tsuku init command",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "a632e048"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "cmd/tsuku/init.go",
+          "cmd/tsuku/init_test.go",
+          "cmd/tsuku/main.go"
+        ],
+        "tests_added": 3,
+        "key_decisions": "Extracted runInit(dir,force) for testability; errors.Is for modern Go; alphabetical command registration",
+        "requirements_map": {}
+      },
       "testable_scenarios": [
         "scenario-1",
         "scenario-2",
