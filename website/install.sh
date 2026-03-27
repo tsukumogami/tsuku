@@ -204,6 +204,14 @@ else
     echo ""
 fi
 
+# Build binary index so tsuku suggest and tsuku run can look up commands.
+# Best-effort: a failure here doesn't invalidate the install.
+if "$BIN_DIR/tsuku" update-registry -q 2>/dev/null; then
+    :
+else
+    echo "WARNING: Registry update failed. Run 'tsuku update-registry' manually to build the binary index." >&2
+fi
+
 # Register command-not-found hook
 if [ "$INSTALL_HOOKS" = true ]; then
     DETECTED_SHELL=""
