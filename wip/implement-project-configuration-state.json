@@ -3,19 +3,42 @@
   "design_doc": "docs/plans/PLAN-project-configuration.md",
   "branch": "docs/project-configuration",
   "pr_number": 2175,
-  "integrity_hash": "sha256:046d22df15fa36475f9d93123d81596f5493fb2029b2471499770587c1b93f41",
+  "integrity_hash": "sha256:5cfe590b8a7c02c41fcba32024a3147eb7be3e46f8d4ed65134c9d5c9a155be3",
   "issues": [
     {
       "number": 1,
       "title": "feat(project): add project configuration package",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "d04fc358",
+        "1d6af070"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "cmd/tsuku/exitcodes.go",
+          "internal/project/config.go",
+          "internal/project/config_test.go"
+        ],
+        "tests_added": 15,
+        "key_decisions": "UnmarshalTOML uses v1 data any signature; ceiling check before file check; FindProjectDir silently discards parse errors; MaxTools test uses combinatorial naming",
+        "requirements_map": {
+          "1": "config.go:ConfigFileName,MaxTools,ProjectConfig,ToolRequirement,ConfigResult",
+          "2": "config.go:UnmarshalTOML",
+          "3": "config.go:LoadProjectConfig",
+          "4": "config.go:LoadProjectConfig:EvalSymlinks",
+          "5": "config.go:loadCeilings",
+          "6": "config.go:LoadProjectConfig:MaxTools",
+          "7": "config.go:FindProjectDir",
+          "8": "exitcodes.go:ExitPartialFailure",
+          "9": "config_test.go"
+        }
+      },
       "testable_scenarios": [],
       "complexity": "testable",
       "acceptance_criteria": [
