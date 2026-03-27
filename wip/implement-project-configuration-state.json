@@ -3,7 +3,7 @@
   "design_doc": "docs/plans/PLAN-project-configuration.md",
   "branch": "docs/project-configuration",
   "pr_number": 2175,
-  "integrity_hash": "sha256:59499c2a6c3a646c8f0bb4ce6be367194cca8d8a42b1c752912dad291cb7d352",
+  "integrity_hash": "sha256:c083379fabe13b628f38ee863328e1503ef36e425700b0853f4862df55452141",
   "issues": [
     {
       "number": 1,
@@ -144,8 +144,8 @@
     {
       "number": 3,
       "title": "feat(cli): add tsuku install no-args mode",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -165,6 +165,23 @@
         "tests_added": 11,
         "key_decisions": "Early dispatch in Run; Changed() for incompatible flags; no already-current distinction; unit-testable building blocks",
         "requirements_map": {}
+      },
+      "reviewer_results": {
+        "issue": 3,
+        "reviewers": [
+          {
+            "focus": "inline",
+            "blocking_count": 0,
+            "summary": "Clean implementation. Sorted tool iteration, error aggregation, incompatible flag detection via Changed(), proper exit codes. Simplification: no already-current distinction (acceptable per key decisions)."
+          }
+        ],
+        "overall_blocking_count": 0
+      },
+      "qa_results": {
+        "issue": 3,
+        "scenarios_tested": 0,
+        "scenarios_passed": 0,
+        "note": "Functional test scenarios for tsuku install no-args require working directory step definition and real tool installs. Unit tests cover building blocks (sorting, unpinned detection, flag validation, result classification)."
       },
       "testable_scenarios": [
         "scenario-6",
@@ -199,14 +216,25 @@
     {
       "number": 4,
       "title": "docs: add project configuration documentation",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "0d5e3b63"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "cmd/tsuku/install.go",
+          "cmd/tsuku/init.go"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Updated help text in existing Cobra commands; exit code table in install Long help",
+        "requirements_map": {}
+      },
       "testable_scenarios": [
         "scenario-16",
         "scenario-17"
