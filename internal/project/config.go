@@ -41,12 +41,12 @@ type ToolRequirement struct {
 //
 //	node = "20.16.0"          -> ToolRequirement{Version: "20.16.0"}
 //	python = {version="3.12"} -> ToolRequirement{Version: "3.12"}
-func (t *ToolRequirement) UnmarshalTOML(data interface{}) error {
+func (t *ToolRequirement) UnmarshalTOML(data any) error {
 	switch v := data.(type) {
 	case string:
 		t.Version = v
 		return nil
-	case map[string]interface{}:
+	case map[string]any:
 		if ver, ok := v["version"]; ok {
 			if s, ok := ver.(string); ok {
 				t.Version = s
@@ -135,7 +135,7 @@ func buildCeilings() map[string]struct{} {
 
 	// Additional ceilings from environment.
 	if env := os.Getenv(EnvCeilingPaths); env != "" {
-		for _, p := range strings.Split(env, ":") {
+		for p := range strings.SplitSeq(env, ":") {
 			p = strings.TrimSpace(p)
 			if p != "" {
 				ceilings[filepath.Clean(p)] = struct{}{}
