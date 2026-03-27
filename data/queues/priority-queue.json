@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-27T02:12:37Z",
+  "updated_at": "2026-03-27T05:11:56Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 99,
-      "next_retry_at": "1733-12-15T23:50:14.920952066Z"
+      "failure_count": 100,
+      "next_retry_at": "1733-12-16T05:24:39.175320274Z"
     },
     {
       "name": "azqr",
@@ -21326,11 +21326,11 @@
       "name": "imgproxy",
       "source": "rubygems:imgproxy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-03-26T19:27:53.515778737Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-04-03T05:11:56.030096082Z"
     },
     {
       "name": "imlib2",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 217,
