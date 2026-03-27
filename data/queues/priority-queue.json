@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-27T07:10:20Z",
+  "updated_at": "2026-03-27T08:56:01Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 100,
-      "next_retry_at": "1733-12-16T05:24:39.175320274Z"
+      "failure_count": 101,
+      "next_retry_at": "1733-12-16T09:08:44.948429228Z"
     },
     {
       "name": "azqr",
@@ -8626,11 +8626,11 @@
       "name": "cog",
       "source": "rubygems:cog",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-03-27T05:57:11.287601225Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-03T08:56:01.803205036Z"
     },
     {
       "name": "coin3d",
@@ -21416,7 +21416,7 @@
       "name": "influxdb",
       "source": "rubygems:influxdb",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 219,
