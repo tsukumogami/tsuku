@@ -297,10 +297,62 @@ func refreshDistributedSources(ctx context.Context) {
 	}
 }
 
+// embeddedCompositeRegistry wraps a central Registry and an EmbeddedRegistry
+// so that Rebuild indexes recipes from both sources without changing the
+// BinaryIndex.Rebuild signature. Embedded recipes are served from memory via
+// GetCached (no network fetch, no disk cache write). When a recipe exists in
+// both the embedded set and the central registry, the embedded version wins.
+type embeddedCompositeRegistry struct {
+	central  index.Registry
+	embedded *recipe.EmbeddedRegistry
+}
+
+func (c *embeddedCompositeRegistry) ListCached() ([]string, error) {
+	return c.central.ListCached()
+}
+
+func (c *embeddedCompositeRegistry) GetCached(name string) ([]byte, error) {
+	if data, ok := c.embedded.Get(name); ok {
+		return data, nil
+	}
+	return c.central.GetCached(name)
+}
+
+func (c *embeddedCompositeRegistry) ListAll(ctx context.Context) ([]string, error) {
+	names, err := c.central.ListAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+	nameSet := make(map[string]bool, len(names))
+	for _, n := range names {
+		nameSet[n] = true
+	}
+	for _, n := range c.embedded.List() {
+		if !nameSet[n] {
+			names = append(names, n)
+		}
+	}
+	return names, nil
+}
+
+func (c *embeddedCompositeRegistry) FetchRecipe(ctx context.Context, name string) ([]byte, error) {
+	if data, ok := c.embedded.Get(name); ok {
+		return data, nil
+	}
+	return c.central.FetchRecipe(ctx, name)
+}
+
+func (c *embeddedCompositeRegistry) CacheRecipe(name string, data []byte) error {
+	if c.embedded.Has(name) {
+		return nil // embedded recipes live in memory; skip disk cache
+	}
+	return c.central.CacheRecipe(name, data)
+}
+
 // rebuildBinaryIndex opens the binary index and rebuilds it from the cached
-// registry and current installed state. The cache directory is created if it
-// does not already exist. Any failure is printed to stderr and causes the
-// command to exit non-zero.
+// registry, embedded recipes, and current installed state. The cache directory
+// is created if it does not already exist. Any failure is printed to stderr
+// and causes the command to exit non-zero.
 func rebuildBinaryIndex(ctx context.Context, reg index.Registry) {
 	cfg, err := config.DefaultConfig()
 	if err != nil {
@@ -325,7 +377,19 @@ func rebuildBinaryIndex(ctx context.Context, reg index.Registry) {
 	stateMgr := install.NewStateManager(cfg)
 	stateReader := &stateReaderAdapter{mgr: stateMgr}
 
-	if err := idx.Rebuild(ctx, reg, stateReader); err != nil {
+	// Wrap the registry with embedded recipes so they are indexed alongside
+	// central registry recipes. Without this, commands provided by embedded
+	// recipes (openssl, cmake, patchelf, etc.) would be invisible to
+	// tsuku suggest, tsuku which, and tsuku run.
+	er, embErr := recipe.NewEmbeddedRegistry()
+	var compositeReg index.Registry = reg
+	if embErr != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to load embedded recipes for index: %v\n", embErr)
+	} else {
+		compositeReg = &embeddedCompositeRegistry{central: reg, embedded: er}
+	}
+
+	if err := idx.Rebuild(ctx, compositeReg, stateReader); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to rebuild binary index: %v\n", err)
 		exitWithCode(ExitGeneral)
 	}
