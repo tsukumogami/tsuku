@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-27T07:09:39Z",
+  "generated_at": "2026-03-27T07:10:39Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -74,15 +74,14 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 40,
-        "pending": 39,
+        "failed": 39,
+        "pending": 40,
         "success": 9,
         "total": 89
       }
@@ -490,15 +489,6 @@
           "next_retry_at": "2026-04-01T23:38:20Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 100,
-          "next_retry_at": "1733-12-16T05:24:39Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -580,15 +570,6 @@
           "next_retry_at": "2026-04-03T02:12:37Z"
         },
         {
-          "id": "rubygems:cog",
-          "name": "cog",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-03-27T05:57:11Z"
-        },
-        {
           "id": "npm:countdown",
           "name": "countdown",
           "ecosystem": "npm",
@@ -659,6 +640,15 @@
           "category": "install_failed",
           "failure_count": 9,
           "next_retry_at": "2026-03-29T20:31:30Z"
+        },
+        {
+          "id": "npm:e2b",
+          "name": "e2b",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-03T07:10:20Z"
         },
         {
           "id": "npm:ent",
@@ -814,6 +804,15 @@
           "next_retry_at": "2026-03-27T07:28:38Z"
         },
         {
+          "id": "rubygems:ipfs",
+          "name": "ipfs",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-04-03T07:10:20Z"
+        },
+        {
           "id": "npm:kew",
           "name": "kew",
           "ecosystem": "npm",
@@ -857,6 +856,15 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-27T22:32:12Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 219,
+          "next_retry_at": "1733-12-16T07:23:03Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -911,15 +919,6 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-03-31T13:10:06Z"
-        },
-        {
-          "id": "rubygems:medusa",
-          "name": "medusa",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-27T05:13:36Z"
         },
         {
           "id": "rubygems:meli",
@@ -2939,6 +2938,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 100,
+          "next_retry_at": "1733-12-16T05:24:39Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -5198,6 +5206,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:cog",
+          "name": "cog",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-27T05:57:11Z"
+        },
+        {
           "id": "homebrew:coin3d",
           "name": "coin3d",
           "ecosystem": "homebrew",
@@ -7135,15 +7152,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:e2b",
-          "name": "e2b",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-03-26T23:34:43Z"
         },
         {
           "id": "homebrew:eask-cli",
@@ -11768,15 +11776,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:ipfs",
-          "name": "ipfs",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-26T20:48:23Z"
-        },
-        {
           "id": "homebrew:ipopt",
           "name": "ipopt",
           "ecosystem": "homebrew",
@@ -13294,15 +13293,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 217,
-          "next_retry_at": "1733-12-16T02:25:20Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -15477,6 +15467,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:medusa",
+          "name": "medusa",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-03-27T05:13:36Z"
         },
         {
           "id": "homebrew:megacmd",
