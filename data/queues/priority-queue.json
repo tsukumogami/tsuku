@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-27T14:23:56Z",
+  "updated_at": "2026-03-27T16:00:47Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 102,
-      "next_retry_at": "1733-12-16T13:20:17.437343227Z"
+      "failure_count": 104,
+      "next_retry_at": "1733-12-16T16:13:30.055075901Z"
     },
     {
       "name": "azqr",
@@ -12966,7 +12966,7 @@
       "name": "ent",
       "source": "npm:ent",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 9,
@@ -23966,11 +23966,11 @@
       "name": "kor",
       "source": "rubygems:kor",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-03-27T10:07:05.084765711Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-04-03T16:00:46.909851709Z"
     },
     {
       "name": "kosli-cli",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 223,
