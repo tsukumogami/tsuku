@@ -1,1 +1,0 @@
-{"issue": 3, "scenarios_tested": 0, "scenarios_passed": 0, "note": "Functional test scenarios for tsuku install no-args require working directory step definition and real tool installs. Unit tests cover building blocks (sorting, unpinned detection, flag validation, result classification)."}

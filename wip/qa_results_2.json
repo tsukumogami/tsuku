@@ -1,1 +1,0 @@
-{"issue": 2, "scenarios_tested": 0, "scenarios_passed": 0, "note": "Functional test scenarios for tsuku init require working directory step definition. Unit tests cover the same behavior."}
