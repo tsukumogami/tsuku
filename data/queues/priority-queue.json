@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-03-26T23:37:31Z",
+  "updated_at": "2026-03-27T02:12:37Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 99,
@@ -7436,11 +7436,11 @@
       "name": "chroma",
       "source": "rubygems:chroma",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-03-26T21:39:55.042451279Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-03T02:12:37.114928022Z"
     },
     {
       "name": "chromaprint",
@@ -11186,11 +11186,11 @@
       "name": "dmd",
       "source": "npm:dmd",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-03-26T21:39:55.042451279Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-03T02:12:37.114928022Z"
     },
     {
       "name": "dmg2img",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 215,
-      "next_retry_at": "1733-12-15T21:48:57.499296134Z"
+      "failure_count": 217,
+      "next_retry_at": "1733-12-16T02:25:20.260152214Z"
     },
     {
       "name": "libaacs",
