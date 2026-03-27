@@ -1,0 +1,35 @@
+{
+  "topic": "project-configuration",
+  "decisions": [
+    {
+      "id": 1,
+      "question": "How should the project configuration file be named and discovered?",
+      "status": "complete",
+      "complexity": "standard",
+      "report_file": "wip/design_project-configuration_decision_1_report.md"
+    },
+    {
+      "id": 2,
+      "question": "What TOML schema and version constraint syntax should the project configuration use?",
+      "status": "complete",
+      "complexity": "standard",
+      "report_file": "wip/design_project-configuration_decision_2_report.md"
+    },
+    {
+      "id": 3,
+      "question": "Should tsuku support reading .tool-versions as an alternative or fallback?",
+      "status": "complete",
+      "complexity": "standard",
+      "report_file": "wip/design_project-configuration_decision_3_report.md"
+    },
+    {
+      "id": 4,
+      "question": "How should tsuku init and tsuku install (no args) work with project configuration?",
+      "status": "complete",
+      "complexity": "standard",
+      "report_file": "wip/design_project-configuration_decision_4_report.md"
+    }
+  ],
+  "cross_validation": "passed",
+  "round": 0
+}
