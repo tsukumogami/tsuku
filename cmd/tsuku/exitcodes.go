@@ -55,6 +55,10 @@ const (
 	// (e.g., running as root).
 	ExitForbidden = 14
 
+	// ExitPartialFailure indicates some tools failed while others succeeded
+	// during a batch install from project configuration.
+	ExitPartialFailure = 15
+
 	// ExitCancelled indicates the operation was canceled by the user (Ctrl+C)
 	ExitCancelled = 130
 )
