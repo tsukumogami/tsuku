@@ -3,7 +3,7 @@
   "design_doc": "docs/plans/PLAN-project-configuration.md",
   "branch": "docs/project-configuration",
   "pr_number": 2175,
-  "integrity_hash": "sha256:1daf807bc10ad7790af8bd4635fc37febf4fd82e46976eaa041d7cfcb87aca54",
+  "integrity_hash": "sha256:9bd2fa8ca879ba307f972b07ce371ec03407361751fe01d1e9b8ad770421973f",
   "issues": [
     {
       "number": 1,
@@ -84,8 +84,8 @@
     {
       "number": 2,
       "title": "feat(cli): add tsuku init command",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -105,6 +105,23 @@
         "tests_added": 3,
         "key_decisions": "Extracted runInit(dir,force) for testability; errors.Is for modern Go; alphabetical command registration",
         "requirements_map": {}
+      },
+      "reviewer_results": {
+        "issue": 2,
+        "reviewers": [
+          {
+            "focus": "inline",
+            "blocking_count": 0,
+            "summary": "Clean Cobra command following established patterns. Uses project.ConfigFileName, proper error handling, testable runInit extraction."
+          }
+        ],
+        "overall_blocking_count": 0
+      },
+      "qa_results": {
+        "issue": 2,
+        "scenarios_tested": 0,
+        "scenarios_passed": 0,
+        "note": "Functional test scenarios for tsuku init require working directory step definition. Unit tests cover the same behavior."
       },
       "testable_scenarios": [
         "scenario-1",
@@ -127,10 +144,10 @@
     {
       "number": 3,
       "title": "feat(cli): add tsuku install no-args mode",
-      "status": "pending",
+      "status": "in_progress",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1
       ],

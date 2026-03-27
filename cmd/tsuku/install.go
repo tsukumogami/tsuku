@@ -65,6 +65,12 @@ Test installation in a sandbox container:
   tsuku eval rg | tsuku install --plan - --sandbox`,
 	Args: cobra.ArbitraryArgs, // Allow zero args when --plan or --recipe is used
 	Run: func(cmd *cobra.Command, args []string) {
+		// Project install: no tool args means batch-install from .tsuku.toml
+		if len(args) == 0 && installPlanPath == "" && installRecipePath == "" && installFrom == "" && !installSandbox {
+			runProjectInstall(cmd)
+			return
+		}
+
 		// Sandbox installation mode
 		if installSandbox {
 			// Validate: cannot specify multiple tools with --sandbox
@@ -173,7 +179,8 @@ Test installation in a sandbox container:
 			return
 		}
 
-		// Normal installation: require at least one tool
+		// Normal installation: require at least one tool.
+		// (No-args project install is handled at the top of Run.)
 		if len(args) == 0 {
 			printError(fmt.Errorf("requires at least 1 arg(s), only received 0"))
 			exitWithCode(ExitUsage)
