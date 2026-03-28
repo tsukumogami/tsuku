@@ -1,0 +1,176 @@
+{
+  "pr_status": "implementing",
+  "design_doc": "docs/plans/PLAN-shell-env-activation.md",
+  "branch": "docs/project-configuration",
+  "pr_number": 2175,
+  "integrity_hash": "sha256:cd482b300c9cd88ce4b771bf931a06150ac6925b93a560c6fd66ca1a106ce819",
+  "issues": [
+    {
+      "number": 1,
+      "title": "feat(shellenv): add activation skeleton with hook-env command",
+      "status": "scrutinized",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "code",
+      "dependencies": [],
+      "commits": [
+        "67d4728c"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/shellenv/activate.go",
+          "internal/shellenv/activate_test.go",
+          "cmd/tsuku/hook_env.go",
+          "cmd/tsuku/main.go"
+        ],
+        "tests_added": 10,
+        "key_decisions": "Used cfg.ToolBinDir; empty versions skipped; sorted tool names; prevPath precedence over PATH env",
+        "requirements_map": {}
+      },
+      "testable_scenarios": [
+        "scenario-1",
+        "scenario-2",
+        "scenario-3",
+        "scenario-4",
+        "scenario-5"
+      ],
+      "complexity": "testable (skeleton)",
+      "acceptance_criteria": [
+        "New `internal/shellenv/activate.go` with `ActivationResult` type, `ComputeActivation(cwd, prevPath, curDir)`, and `FormatExports(result, shell)` functions matching the design signatures",
+        "`ComputeActivation` reads `.tsuku.toml` via `project.LoadProjectConfig`, resolves tool bin directories via `config.ToolDir`, and builds a prepended PATH",
+        "`ComputeActivation` returns `nil` when `cwd == curDir` (early-exit, no directory change)",
+        "`ComputeActivation` populates `Skipped` for tools whose declared version is not installed (directory does not exist)",
+        "`FormatExports` produces valid bash export statements (`export PATH=\"...\"`, `export _TSUKU_DIR=\"...\"`, `export _TSUKU_PREV_PATH=\"...\"`)",
+        "New hidden `tsuku hook-env` command (`cmd/tsuku/hook_env.go`) that accepts a shell argument (e.g., `tsuku hook-env bash`)",
+        "`hook-env` reads `_TSUKU_DIR` and `_TSUKU_PREV_PATH` from the environment, passes them to `ComputeActivation`, and prints `FormatExports` output to stdout",
+        "`hook-env` produces no output and exits 0 when the directory has not changed (early-exit path)",
+        "Unit tests in `internal/shellenv/activate_test.go` covering: activation (project found), no-op (same directory), no config (no `.tsuku.toml`), and skipped tools",
+        "E2e flow works: running `tsuku hook-env bash` in a directory with `.tsuku.toml` outputs export statements that prepend project tool bin paths to PATH"
+      ]
+    },
+    {
+      "number": 2,
+      "title": "feat(cli): add tsuku shell command",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-6",
+        "scenario-7",
+        "scenario-8",
+        "scenario-9",
+        "scenario-10"
+      ],
+      "complexity": "testable",
+      "acceptance_criteria": [
+        "New `cmd/tsuku/shell.go` with a visible Cobra command registered on the root command",
+        "`tsuku shell` calls `ComputeActivation(cwd, \"\", \"\")` (always runs, no early-exit)",
+        "Reads `_TSUKU_PREV_PATH` from environment if set (handles re-running in same shell)",
+        "Outputs shell export statements to stdout via `FormatExports`",
+        "Defaults to bash output; accepts `--shell` flag for bash/zsh/fish",
+        "Auto-detects shell from `$SHELL` when `--shell` not provided",
+        "Prints error to stderr when no `.tsuku.toml` found",
+        "Unit tests covering: activation output, no-config error, repeated invocation",
+        "`eval $(tsuku shell)` in a directory with `.tsuku.toml` correctly sets PATH, `_TSUKU_DIR`, and `_TSUKU_PREV_PATH`"
+      ]
+    },
+    {
+      "number": 3,
+      "title": "feat(shellenv): add deactivation and project-to-project switching",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [
+        1
+      ],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-11",
+        "scenario-12",
+        "scenario-13",
+        "scenario-14",
+        "scenario-18"
+      ],
+      "complexity": "testable",
+      "acceptance_criteria": [
+        "`ComputeActivation` returns a deactivation result when no `.tsuku.toml` found and `_TSUKU_PREV_PATH` is set",
+        "Deactivation result: `Active=false`, `PATH` set to `_TSUKU_PREV_PATH` value",
+        "`FormatExports` for deactivation produces: `export PATH=\"$original\"` and `unset _TSUKU_DIR _TSUKU_PREV_PATH`",
+        "Fish deactivation uses `set -e` instead of `unset`",
+        "Project-to-project switching: uses `_TSUKU_PREV_PATH` (not current PATH) as base when switching projects",
+        "`_TSUKU_PREV_PATH` preserved (not overwritten) during project-to-project transitions",
+        "Returns `nil` (no-op) when leaving a non-project directory with no prior activation",
+        "Unit tests covering: deactivation, project-to-project switch, no-op when no prior activation, PATH restoration correctness",
+        "`hook-env` correctly emits deactivation output when moving from project to non-project directory"
+      ]
+    },
+    {
+      "number": 4,
+      "title": "feat(hooks): add activation shell hooks and hook install --activate",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [
+        "scenario-15",
+        "scenario-16",
+        "scenario-17"
+      ],
+      "complexity": "testable",
+      "acceptance_criteria": [
+        "New `internal/hooks/tsuku-activate.bash`: `_tsuku_hook` function on `PROMPT_COMMAND`, calls `eval \"$(tsuku hook-env bash)\"`",
+        "New `internal/hooks/tsuku-activate.zsh`: `_tsuku_hook` on `precmd_functions`, calls `eval \"$(tsuku hook-env zsh)\"`",
+        "New `internal/hooks/tsuku-activate.fish`: `_tsuku_hook` on `fish_prompt` event, calls `tsuku hook-env fish | source`",
+        "`internal/hooks/embed.go` updated with `//go:embed` for new files",
+        "Hook files written to `$TSUKU_HOME/share/hooks/` by `WriteHookFiles`",
+        "`tsuku hook install` accepts `--activate` flag",
+        "`--activate` writes a separate marker block in rc file (distinct from command-not-found marker)",
+        "Idempotent: running twice does not duplicate the marker block",
+        "`tsuku hook uninstall` removes activation marker blocks",
+        "Unit tests for: hook file content, marker block insertion, idempotency, uninstall cleanup"
+      ]
+    },
+    {
+      "number": 5,
+      "title": "docs: add shell environment activation documentation",
+      "status": "pending",
+      "ci_status": "pending",
+      "ci_fix_attempts": 0,
+      "issue_type": "",
+      "dependencies": [],
+      "commits": [],
+      "agent_type": "",
+      "summary": null,
+      "testable_scenarios": [],
+      "complexity": "simple",
+      "acceptance_criteria": [
+        "`tsuku shell` has short and long help text explaining one-shot activation",
+        "`tsuku shell --help` documents `--shell` flag with supported values and auto-detection",
+        "`tsuku hook-env` has help text explaining it's an internal command (hidden from top-level help)",
+        "`tsuku hook install --help` documents `--activate` flag",
+        "Help text uses `$TSUKU_HOME` (not `~/.tsuku`) per conventions"
+      ]
+    }
+  ],
+  "skipped_issues": null,
+  "test_plan_file": "wip/implement-shell-env-activation_test_plan.md",
+  "source_doc_type": "plan",
+  "execution_mode": "single-pr",
+  "deliverable_type": "mixed"
+}
