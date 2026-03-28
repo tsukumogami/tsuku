@@ -3,13 +3,13 @@
   "design_doc": "docs/plans/PLAN-shell-env-activation.md",
   "branch": "docs/project-configuration",
   "pr_number": 2175,
-  "integrity_hash": "sha256:cd482b300c9cd88ce4b771bf931a06150ac6925b93a560c6fd66ca1a106ce819",
+  "integrity_hash": "sha256:feea138d9b7035ae1283288145f72ca0c51e0e1a277e9f2345904b20eb0e8454",
   "issues": [
     {
       "number": 1,
       "title": "feat(shellenv): add activation skeleton with hook-env command",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [],
@@ -28,6 +28,23 @@
         "tests_added": 10,
         "key_decisions": "Used cfg.ToolBinDir; empty versions skipped; sorted tool names; prevPath precedence over PATH env",
         "requirements_map": {}
+      },
+      "reviewer_results": {
+        "issue": 1,
+        "reviewers": [
+          {
+            "focus": "inline",
+            "blocking_count": 0,
+            "summary": "Clean skeleton. Sorted tools, prevPath precedence, skipped uninstalled. Fish %q quoting may need refinement in Issue 4."
+          }
+        ],
+        "overall_blocking_count": 0
+      },
+      "qa_results": {
+        "issue": 1,
+        "scenarios_tested": 0,
+        "scenarios_passed": 0,
+        "note": "Skeleton issue. Functional scenarios depend on shell integration infrastructure not yet built."
       },
       "testable_scenarios": [
         "scenario-1",
@@ -53,16 +70,28 @@
     {
       "number": 2,
       "title": "feat(cli): add tsuku shell command",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "97a6a705"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "cmd/tsuku/shell.go",
+          "cmd/tsuku/shell_test.go",
+          "cmd/tsuku/main.go"
+        ],
+        "tests_added": 7,
+        "key_decisions": "Extracted runShell for testability; empty curDir forces fresh activation; no-config returns empty string",
+        "requirements_map": {}
+      },
       "testable_scenarios": [
         "scenario-6",
         "scenario-7",
