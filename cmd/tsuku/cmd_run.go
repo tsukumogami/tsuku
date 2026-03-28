@@ -32,16 +32,25 @@ execution via process replacement. The tool's exit code propagates directly.
 Use -- to separate tsuku flags from the target command's flags:
   tsuku run jq -- --arg foo bar
 
-Consent modes:
+Project configuration:
+  When a .tsuku.toml file exists in the current directory (or a parent),
+  tsuku run checks it for the tool being executed. If the tool is declared,
+  the project-pinned version is installed and used automatically -- no
+  confirmation prompt needed. The project config is treated as consent.
+
+  Tools not declared in .tsuku.toml fall through to the normal consent mode.
+
+Consent modes (for tools not in .tsuku.toml):
   suggest   Print install instructions and exit (no install)
   confirm   Prompt before installing (default, requires TTY)
   auto      Install silently with audit logging (requires opt-in)
 
 Mode resolution order:
-  1. --mode flag
-  2. TSUKU_AUTO_INSTALL_MODE environment variable
-  3. auto_install_mode config key ($TSUKU_HOME/config.toml)
-  4. Default: confirm
+  1. .tsuku.toml declares the tool -> auto (project config is consent)
+  2. --mode flag
+  3. TSUKU_AUTO_INSTALL_MODE environment variable
+  4. auto_install_mode config key ($TSUKU_HOME/config.toml)
+  5. Default: confirm
 
 Exit codes:
   0   Command executed successfully
