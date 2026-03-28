@@ -129,21 +129,33 @@ Wire a `ProjectVersionResolver` into `tsuku run` using `LoadProjectConfig` + bin
 
 For the command-not-found path: change the hook behavior so that when `.tsuku.toml` declares the tool, the hook calls `tsuku run <command> [args]` instead of `tsuku suggest <command>`. Since `tsuku run` now has the resolver and auto-mode override, this installs the pinned version silently and execs the command.
 
-The flow for a project-declared tool:
+The flow for a project-declared tool (not installed):
 1. User types `rg .foo data.json`
 2. Shell's command-not-found hook fires
-3. Hook calls `tsuku run rg .foo data.json` (instead of `tsuku suggest rg`)
+3. Hook calls `tsuku run rg .foo data.json`
 4. `tsuku run` loads `.tsuku.toml`, constructs resolver
 5. Resolver maps `rg` -> `ripgrep` (via index) -> `14.1.0` (via config)
 6. Runner.Run gets version from resolver, overrides mode to `auto`
 7. Installs ripgrep 14.1.0 silently, execs `rg .foo data.json`
 
+The flow for a project-declared tool (already installed, different version):
+1. User types `rg .foo data.json`
+2. `rg` resolves to the globally active version (e.g., 14.0.0) via `tools/current/`
+3. OR: user explicitly runs `tsuku run rg .foo data.json`
+4. Resolver maps `rg` -> `ripgrep` -> `14.1.0` (project pin)
+5. Runner.Run checks: is the project-pinned version installed?
+6. If 14.1.0 is installed: exec from `$TSUKU_HOME/tools/ripgrep-14.1.0/bin/rg`
+7. If 14.1.0 is not installed: install it (auto mode), then exec from its bin dir
+8. In both cases, the global `tools/current/` symlink is NOT used -- the project-specific version path is used directly
+
+**Critical: project version pins take precedence over the installed-tool fast path.** When a resolver is present and returns a pinned version, `Runner.Run` must consult the resolver BEFORE checking whether any version is already installed. The resolver's version determines which binary to exec, not the global symlink.
+
 The flow for a tool NOT in `.tsuku.toml`:
 1. User types `jq .foo data.json`
 2. Hook fires, calls `tsuku run jq .foo data.json`
 3. Resolver returns `!ok` (jq not in project config)
-4. Runner.Run falls back to normal mode (suggest/confirm/auto per user setting)
-5. Behavior identical to today
+4. Runner.Run uses the existing fast path: if any version installed, exec from `tools/current/`; if not, fall back to normal consent mode
+5. Behavior identical to pre-Block-6 `tsuku run`
 
 #### Alternatives Considered
 
@@ -305,6 +317,8 @@ func IsShim(path string) bool
 ### Changes to Existing Code
 
 **`cmd/tsuku/cmd_run.go`**: Load project config, construct resolver, pass to `Runner.Run` where `nil` was.
+
+**`internal/autoinstall/run.go`**: The resolver lookup must happen BEFORE the installed-tool fast path. When the resolver returns a pinned version, `Runner.Run` must exec from the version-specific bin directory (`$TSUKU_HOME/tools/{recipe}-{version}/bin/{command}`) rather than the global `tools/current/{command}` symlink. The fast path (exec from `tools/current/`) only fires when the resolver returns `!ok` or is nil.
 
 **`autoinstall.Runner.Run`**: When the resolver returns a version (tool is project-declared), override the consent mode to `auto`. This is a small change in the existing Runner -- check if the version came from the resolver and if so, skip the consent prompt.
 

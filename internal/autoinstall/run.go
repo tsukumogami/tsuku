@@ -79,17 +79,9 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 		return ErrNoMatch
 	}
 
-	// If the top match is already installed, exec immediately.
-	if matches[0].Installed {
-		binaryPath := filepath.Join(r.cfg.CurrentDir, command)
-		return r.execBinary(binaryPath, args)
-	}
-
-	// Pick the best match. If there's only one, use it. If multiple, the
-	// conflict gate may apply in auto mode.
-	match := matches[0]
-
-	// Resolve version from project config if available.
+	// Resolve version from project config if available. This must happen
+	// BEFORE the installed-tool fast path so that project version pins take
+	// precedence over the globally active version.
 	version := ""
 	projectDeclared := false
 	if resolver != nil {
@@ -102,6 +94,30 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 			projectDeclared = true
 		}
 	}
+
+	// Project-declared tool: exec from the version-specific bin directory,
+	// not from tools/current/. Install the pinned version if needed.
+	if projectDeclared {
+		match := matches[0]
+		binDir := r.cfg.ToolBinDir(match.Recipe, version)
+		binaryPath := filepath.Join(binDir, command)
+
+		// If the pinned version is already installed, exec directly.
+		if _, err := os.Stat(binaryPath); err == nil {
+			return r.execBinary(binaryPath, args)
+		}
+
+		// Pinned version not installed -- fall through to install flow
+		// with auto mode (project config is consent).
+	} else if matches[0].Installed {
+		// No project pin -- use the globally active version.
+		binaryPath := filepath.Join(r.cfg.CurrentDir, command)
+		return r.execBinary(binaryPath, args)
+	}
+
+	// Pick the best match. If there's only one, use it. If multiple, the
+	// conflict gate may apply in auto mode.
+	match := matches[0]
 
 	// Project override: when the tool is declared in .tsuku.toml, escalate
 	// the mode to auto so the TTY gate and interactive prompt are bypassed.
