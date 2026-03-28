@@ -145,3 +145,51 @@ func TestActivateFishContent(t *testing.T) {
 		t.Error("fish activation hook missing fish_prompt event registration")
 	}
 }
+
+// TestBashHookCallsTsukuRun verifies the bash command-not-found hook calls
+// tsuku run (for project-aware auto-install) instead of tsuku suggest.
+func TestBashHookCallsTsukuRun(t *testing.T) {
+	data, err := hooks.HookFiles.ReadFile("tsuku.bash")
+	if err != nil {
+		t.Fatalf("read tsuku.bash: %v", err)
+	}
+	content := string(data)
+	if !strings.Contains(content, `if tsuku run "$1" -- "${@:2}"; then`) {
+		t.Error("bash hook should call tsuku run with command and args")
+	}
+	if strings.Contains(content, `tsuku suggest`) {
+		t.Error("bash hook should not call tsuku suggest (replaced by tsuku run)")
+	}
+}
+
+// TestZshHookCallsTsukuRun verifies the zsh command-not-found hook calls
+// tsuku run instead of tsuku suggest.
+func TestZshHookCallsTsukuRun(t *testing.T) {
+	data, err := hooks.HookFiles.ReadFile("tsuku.zsh")
+	if err != nil {
+		t.Fatalf("read tsuku.zsh: %v", err)
+	}
+	content := string(data)
+	if !strings.Contains(content, `if tsuku run "$1" -- "${@:2}"; then`) {
+		t.Error("zsh hook should call tsuku run with command and args")
+	}
+	if strings.Contains(content, `tsuku suggest`) {
+		t.Error("zsh hook should not call tsuku suggest (replaced by tsuku run)")
+	}
+}
+
+// TestFishHookCallsTsukuRun verifies the fish command-not-found hook calls
+// tsuku run instead of tsuku suggest.
+func TestFishHookCallsTsukuRun(t *testing.T) {
+	data, err := hooks.HookFiles.ReadFile("tsuku.fish")
+	if err != nil {
+		t.Fatalf("read tsuku.fish: %v", err)
+	}
+	content := string(data)
+	if !strings.Contains(content, "tsuku run $argv[1] -- $argv[2..]") {
+		t.Error("fish hook should call tsuku run with command and args")
+	}
+	if strings.Contains(content, "tsuku suggest") {
+		t.Error("fish hook should not call tsuku suggest (replaced by tsuku run)")
+	}
+}

@@ -1,6 +1,7 @@
 // Package hooks provides shell hook files for bash, zsh, and fish that
-// intercept command-not-found events and call tsuku suggest, as well as
-// activation hooks that call tsuku hook-env on each prompt.
+// intercept command-not-found events and call tsuku run (which handles both
+// project-aware auto-install and suggest fallback), as well as activation
+// hooks that call tsuku hook-env on each prompt.
 package hooks
 
 import (

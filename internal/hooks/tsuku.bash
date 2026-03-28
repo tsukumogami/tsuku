@@ -10,15 +10,19 @@ if command -v tsuku > /dev/null 2>&1; then
         eval "$(declare -f command_not_found_handle | sed 's/^command_not_found_handle/__tsuku_original_command_not_found_handle/')"
         command_not_found_handle() {
             if command -v tsuku > /dev/null 2>&1; then
-                tsuku suggest "$1"
+                if tsuku run "$1" -- "${@:2}"; then
+                    return 0
+                fi
             fi
             __tsuku_original_command_not_found_handle "$@"
-            return 127
+            return $?
         }
     else
         command_not_found_handle() {
             if command -v tsuku > /dev/null 2>&1; then
-                tsuku suggest "$1"
+                if tsuku run "$1" -- "${@:2}"; then
+                    return 0
+                fi
             fi
             return 127
         }
