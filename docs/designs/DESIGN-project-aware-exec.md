@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 spawned_from:
   issue: 2168
   repo: tsukumogami/tsuku
@@ -31,7 +31,36 @@ rationale: |
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+Implementation tracked in [PLAN: Project-Aware Exec](../plans/PLAN-project-aware-exec.md).
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    I1["Issue 1: Resolver + tsuku run + mode override"]
+    I2["Issue 2: Hook upgrade"]
+    I3["Issue 3: Shim manager + commands"]
+    I4["Issue 4: Documentation"]
+
+    I1 --> I2
+    I1 --> I3
+    I2 --> I4
+    I3 --> I4
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+
+    class I1 ready
+    class I2,I3 blocked
+    class I4 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked
 
 ## Upstream Design Reference
 
