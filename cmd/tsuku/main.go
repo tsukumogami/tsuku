@@ -136,6 +136,7 @@ func init() {
 	rootCmd.AddCommand(suggestCmd)
 	rootCmd.AddCommand(hookCmd)
 	rootCmd.AddCommand(hookEnvCmd)
+	rootCmd.AddCommand(shellCmd)
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(runCmd)
 }
