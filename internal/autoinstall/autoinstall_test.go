@@ -404,6 +404,94 @@ func TestRun_AlreadyInstalled_ExecImmediately(t *testing.T) {
 	}
 }
 
+func TestRun_InstalledTool_ProjectPinOverridesGlobalVersion(t *testing.T) {
+	r, _, _ := newTestRunner(t)
+	installer := &mockInstaller{}
+	execRec := &execRecorder{}
+
+	// Set ToolsDir so ToolBinDir resolves to an absolute path in the temp dir.
+	r.cfg.ToolsDir = filepath.Join(r.cfg.HomeDir, "tools")
+
+	// Tool is installed (some version), so it would normally fast-path
+	// to tools/current/jq. But the resolver pins a specific version.
+	r.Lookup = func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
+		return []index.BinaryMatch{{Recipe: "jq", Command: "jq", Installed: true}}, nil
+	}
+	r.Installer = installer
+	r.Exec = execRec.exec
+
+	// Create the pinned version's bin directory so the stat check passes.
+	pinnedBinDir := r.cfg.ToolBinDir("jq", "1.6")
+	if err := os.MkdirAll(pinnedBinDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	// Create a dummy binary so the exec path resolves.
+	if err := os.WriteFile(filepath.Join(pinnedBinDir, "jq"), []byte("#!/bin/sh\n"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	resolver := &mockProjectVersionResolver{
+		versions: map[string]string{"jq": "1.6"},
+	}
+
+	err := r.Run(context.Background(), "jq", []string{"."}, ModeConfirm, resolver)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !execRec.called {
+		t.Fatal("exec should have been called")
+	}
+
+	// Should exec from the pinned version's bin, NOT from tools/current/.
+	expectedBinary := filepath.Join(pinnedBinDir, "jq")
+	if execRec.binary != expectedBinary {
+		t.Errorf("exec binary = %q, want %q (should use pinned version, not tools/current/)", execRec.binary, expectedBinary)
+	}
+
+	// Should NOT have called the installer (pinned version already exists).
+	if installer.called {
+		t.Error("installer should not be called when pinned version is already installed")
+	}
+}
+
+func TestRun_InstalledTool_ProjectPinInstallsIfMissing(t *testing.T) {
+	r, _, _ := newTestRunner(t)
+	installer := &mockInstaller{}
+	execRec := &execRecorder{}
+
+	// Set ToolsDir so ToolBinDir resolves to an absolute path in the temp dir.
+	r.cfg.ToolsDir = filepath.Join(r.cfg.HomeDir, "tools")
+
+	// Tool is installed (some version), but the pinned version is NOT installed.
+	r.Lookup = func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
+		return []index.BinaryMatch{{Recipe: "jq", Command: "jq", Installed: true}}, nil
+	}
+	r.Installer = installer
+	r.Exec = execRec.exec
+	r.RecipeHasVerification = func(_ string) bool { return true }
+
+	// Ensure config.toml exists with safe permissions for auto mode.
+	_ = os.WriteFile(filepath.Join(r.cfg.HomeDir, "config.toml"), []byte(""), 0600)
+
+	// Resolver pins version 1.6. Its bin dir does NOT exist in the temp dir.
+	resolver := &mockProjectVersionResolver{
+		versions: map[string]string{"jq": "1.6"},
+	}
+
+	err := r.Run(context.Background(), "jq", []string{"."}, ModeConfirm, resolver)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Should have called the installer with the pinned version.
+	if !installer.called {
+		t.Fatal("installer should be called to install the pinned version")
+	}
+	if installer.ver != "1.6" {
+		t.Errorf("installer version = %q, want %q", installer.ver, "1.6")
+	}
+}
+
 func TestRun_ProjectVersionResolverFlowsThrough(t *testing.T) {
 	r, _, _ := newTestRunner(t)
 	installer := &mockInstaller{}
