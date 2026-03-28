@@ -3,7 +3,7 @@
   "design_doc": "docs/plans/PLAN-project-aware-exec.md",
   "branch": "docs/project-configuration",
   "pr_number": 2175,
-  "integrity_hash": "sha256:32ef467639bb3676e6e50cdfdab9d77f847e1387881da70d0cbb62dd13a7e321",
+  "integrity_hash": "sha256:8684a989ed279a3529c1e33588a18f939bca08f5dffea866a67e654deb839aac",
   "issues": [
     {
       "number": 1,
@@ -120,8 +120,8 @@
     {
       "number": 3,
       "title": "feat(shim): add shim manager and tsuku shim commands",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -144,6 +144,22 @@
         "key_decisions": "Metadata file for recipe tracking; atomic pre-flight check; content-based IsShim; BinDir from HomeDir",
         "requirements_map": {}
       },
+      "reviewer_results": {
+        "issue": 3,
+        "reviewers": [
+          {
+            "focus": "inline",
+            "blocking_count": 0,
+            "summary": "Clean shim manager. Metadata file, atomic pre-flight, content-based IsShim, overwrite protection."
+          }
+        ],
+        "overall_blocking_count": 0
+      },
+      "qa_results": {
+        "issue": 3,
+        "scenarios_tested": 0,
+        "scenarios_passed": 0
+      },
       "testable_scenarios": [],
       "complexity": "testable",
       "acceptance_criteria": [
@@ -162,14 +178,24 @@
     {
       "number": 4,
       "title": "docs: add project-aware exec documentation",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "939850d7"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "cmd/tsuku/cmd_run.go"
+        ],
+        "tests_added": 0,
+        "key_decisions": "Added project config section to help; updated mode resolution order",
+        "requirements_map": {}
+      },
       "testable_scenarios": [],
       "complexity": "simple",
       "acceptance_criteria": [
