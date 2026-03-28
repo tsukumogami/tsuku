@@ -26,8 +26,8 @@ Planned
 | ~~_Shell hooks for bash, zsh, and fish that intercept unknown commands. Specifies `tsuku suggest` output format, hook installation mechanism, and security analysis for shell injection prevention._~~ | | |
 | ~~[#1679: docs: design auto-install flow](https://github.com/tsukumogami/tsuku/issues/1679)~~ | ~~[#1677](https://github.com/tsukumogami/tsuku/issues/1677)~~ | ~~testable~~ |
 | ~~_The `tsuku run` command that installs tools on first use. Defines suggest/confirm/auto modes, TTY detection for interactive prompts, and security considerations for auto-install consent._~~ | | |
-| [#1680: docs: design project configuration](https://github.com/tsukumogami/tsuku/issues/1680) | None | testable |
-| _Per-directory `.tsuku.toml` format specifying tool requirements. Defines the TOML schema, version constraint syntax, directory traversal behavior, and `LoadProjectConfig` interface._ | | |
+| ~~[#1680: docs: design project configuration](https://github.com/tsukumogami/tsuku/issues/1680)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Per-directory `.tsuku.toml` format specifying tool requirements. Defines the TOML schema, version constraint syntax, directory traversal behavior, and `LoadProjectConfig` interface._~~ | | |
 | [#1681: docs: design shell environment activation](https://github.com/tsukumogami/tsuku/issues/1681) | [#1680](https://github.com/tsukumogami/tsuku/issues/1680) | testable |
 | _Dynamic PATH modification based on current directory. Specifies activation via prompt hooks or `tsuku shell`, state tracking for active projects, and deactivation behavior._ | | |
 | [#2168: docs: design project-aware exec wrapper](https://github.com/tsukumogami/tsuku/issues/2168) | [#1679](https://github.com/tsukumogami/tsuku/issues/1679), [#1680](https://github.com/tsukumogami/tsuku/issues/1680) | testable |
@@ -61,10 +61,11 @@ graph LR
     classDef needsDesign fill:#e1bee7
 
     class I1677 done
-    class I1680 needsDesign
+    class I1680 done
     class I1678 done
     class I1679 done
-    class I1681,I2168 blocked
+    class I1681 needsDesign
+    class I2168 needsDesign
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
