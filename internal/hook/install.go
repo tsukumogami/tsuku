@@ -11,8 +11,13 @@ import (
 	"github.com/tsukumogami/tsuku/internal/hooks"
 )
 
-// markerComment is the first line of the two-line marker block inserted into rc files.
+// markerComment is the first line of the two-line marker block inserted into rc files
+// for the command-not-found hook.
 const markerComment = "# tsuku hook"
+
+// activateMarkerComment is the first line of the two-line marker block inserted
+// into rc files for the activation hook.
+const activateMarkerComment = "# tsuku activate"
 
 // rcFileForShell returns the rc file path for the given shell name.
 // The home directory is provided as a parameter to allow test isolation.
@@ -34,6 +39,75 @@ func rcFileForShell(shell, homeDir string) (string, error) {
 // TSUKU_HOME is exported. Matches the fallback pattern in $TSUKU_HOME/env.
 func markerBlock(shell string) string {
 	return markerComment + "\n" + `. "${TSUKU_HOME:-$HOME/.tsuku}/share/hooks/tsuku.` + shell + `"`
+}
+
+// activateMarkerBlock returns the two-line block for the activation hook.
+func activateMarkerBlock(shell string) string {
+	return activateMarkerComment + "\n" + `. "${TSUKU_HOME:-$HOME/.tsuku}/share/hooks/tsuku-activate.` + shell + `"`
+}
+
+// InstallActivate writes the hook files to shareHooksDir and registers the
+// activation hook for the given shell. This is separate from the
+// command-not-found hook and uses a distinct marker block.
+func InstallActivate(shell, homeDir, shareHooksDir string) error {
+	// Write all hook files to the share/hooks directory.
+	if err := hooks.WriteHookFiles(shareHooksDir); err != nil {
+		return fmt.Errorf("write hook files: %w", err)
+	}
+
+	switch shell {
+	case "bash", "zsh":
+		return installActivateRCFile(shell, homeDir)
+	case "fish":
+		return installActivateFish(homeDir, shareHooksDir)
+	default:
+		return fmt.Errorf("unsupported shell: %q", shell)
+	}
+}
+
+// installActivateRCFile appends the activate marker block to ~/.bashrc or
+// ~/.zshrc if it is not already present. The write is atomic.
+func installActivateRCFile(shell, homeDir string) error {
+	rcFile, err := rcFileForShell(shell, homeDir)
+	if err != nil {
+		return err
+	}
+
+	existing, err := os.ReadFile(rcFile)
+	if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("read %s: %w", rcFile, err)
+	}
+
+	// Idempotency: skip if the activate marker is already present.
+	if strings.Contains(string(existing), activateMarkerComment) {
+		return nil
+	}
+
+	content := string(existing)
+	if len(content) > 0 && !strings.HasSuffix(content, "\n") {
+		content += "\n"
+	}
+	content += activateMarkerBlock(shell) + "\n"
+
+	return atomicWrite(rcFile, []byte(content), 0644)
+}
+
+// installActivateFish writes the activation hook file to
+// ~/.config/fish/conf.d/tsuku-activate.fish.
+func installActivateFish(homeDir, shareHooksDir string) error {
+	fishConfd := filepath.Join(homeDir, ".config", "fish", "conf.d")
+	if err := os.MkdirAll(fishConfd, 0755); err != nil {
+		return fmt.Errorf("create fish conf.d directory: %w", err)
+	}
+
+	hookFile := filepath.Join(shareHooksDir, "tsuku-activate.fish")
+	data, err := os.ReadFile(hookFile)
+	if err != nil {
+		return fmt.Errorf("read fish activation hook file: %w", err)
+	}
+
+	dest := filepath.Join(fishConfd, "tsuku-activate.fish")
+	return atomicWrite(dest, data, 0644)
 }
 
 // Install writes the hook files to shareHooksDir and registers the hook for

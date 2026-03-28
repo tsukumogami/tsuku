@@ -11,6 +11,8 @@ import (
 )
 
 var hookShellFlag string
+var hookInstallActivateFlag bool
+var hookUninstallActivateFlag bool
 
 var hookCmd = &cobra.Command{
 	Use:   "hook",
@@ -28,22 +30,28 @@ Use 'tsuku hook status' to check current registration state.`,
 
 var hookInstallCmd = &cobra.Command{
 	Use:   "install",
-	Short: "Install the command-not-found hook for a shell",
-	Long: `Install the command-not-found hook for a shell.
+	Short: "Install shell hooks",
+	Long: `Install shell hooks for command-not-found suggestions or environment activation.
+
+By default, installs the command-not-found hook. With --activate, installs
+the activation hook that calls 'tsuku hook-env' on each prompt to manage
+per-project tool versions automatically.
 
 For bash and zsh, appends a two-line source block to the shell's rc file
 (~/.bashrc or ~/.zshrc). The hook file itself is written to
-$TSUKU_HOME/share/hooks/. Running install twice is safe — the block is
-only appended once.
+$TSUKU_HOME/share/hooks/. Running install twice is safe -- the block is
+only appended once. The command-not-found and activation hooks use separate
+marker blocks and can be installed independently.
 
-For fish, writes the hook file to ~/.config/fish/conf.d/tsuku.fish.
+For fish, writes the hook file to ~/.config/fish/conf.d/.
 
 Without --shell, the shell is detected from the $SHELL environment variable.
 
 Examples:
   tsuku hook install
   tsuku hook install --shell=bash
-  tsuku hook install --shell=fish`,
+  tsuku hook install --activate
+  tsuku hook install --activate --shell=zsh`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		shell, err := resolveShell(hookShellFlag)
 		if err != nil {
@@ -65,30 +73,41 @@ Examples:
 			return fmt.Errorf("create hooks directory: %w", err)
 		}
 
-		if err := hook.Install(shell, homeDir, shareHooksDir); err != nil {
-			return fmt.Errorf("install hook: %w", err)
+		if hookInstallActivateFlag {
+			if err := hook.InstallActivate(shell, homeDir, shareHooksDir); err != nil {
+				return fmt.Errorf("install activation hook: %w", err)
+			}
+			fmt.Fprintf(os.Stdout, "Registered activation hook for %s.\n", shell)
+		} else {
+			if err := hook.Install(shell, homeDir, shareHooksDir); err != nil {
+				return fmt.Errorf("install hook: %w", err)
+			}
+			fmt.Fprintf(os.Stdout, "Registered command-not-found hook for %s.\n", shell)
 		}
 
-		fmt.Fprintf(os.Stdout, "Registered command-not-found hook for %s.\n", shell)
 		return nil
 	},
 }
 
 var hookUninstallCmd = &cobra.Command{
 	Use:   "uninstall",
-	Short: "Remove the command-not-found hook for a shell",
-	Long: `Remove the command-not-found hook for a shell.
+	Short: "Remove shell hooks",
+	Long: `Remove shell hooks for command-not-found suggestions or environment activation.
 
-For bash and zsh, removes the two-line marker block from ~/.bashrc or
-~/.zshrc. For fish, deletes ~/.config/fish/conf.d/tsuku.fish.
+By default, removes the command-not-found hook. With --activate, removes
+the activation hook instead.
 
-Running uninstall when the hook is not installed is safe — it does nothing.
+For bash and zsh, removes the marker block from ~/.bashrc or ~/.zshrc.
+For fish, deletes the corresponding file from ~/.config/fish/conf.d/.
+
+Running uninstall when the hook is not installed is safe -- it does nothing.
 
 Without --shell, the shell is detected from the $SHELL environment variable.
 
 Examples:
   tsuku hook uninstall
-  tsuku hook uninstall --shell=zsh`,
+  tsuku hook uninstall --shell=zsh
+  tsuku hook uninstall --activate`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		shell, err := resolveShell(hookShellFlag)
 		if err != nil {
@@ -100,11 +119,18 @@ Examples:
 			return fmt.Errorf("get home directory: %w", err)
 		}
 
-		if err := hook.Uninstall(shell, homeDir); err != nil {
-			return fmt.Errorf("uninstall hook: %w", err)
+		if hookUninstallActivateFlag {
+			if err := hook.UninstallActivate(shell, homeDir); err != nil {
+				return fmt.Errorf("uninstall activation hook: %w", err)
+			}
+			fmt.Fprintf(os.Stdout, "Removed activation hook for %s.\n", shell)
+		} else {
+			if err := hook.Uninstall(shell, homeDir); err != nil {
+				return fmt.Errorf("uninstall hook: %w", err)
+			}
+			fmt.Fprintf(os.Stdout, "Removed command-not-found hook for %s.\n", shell)
 		}
 
-		fmt.Fprintf(os.Stdout, "Removed command-not-found hook for %s.\n", shell)
 		return nil
 	},
 }
@@ -141,7 +167,18 @@ Examples:
 			if installed {
 				state = "installed"
 			}
-			fmt.Fprintf(os.Stdout, "%s: %s\n", shell, state)
+			fmt.Fprintf(os.Stdout, "%s: command-not-found %s\n", shell, state)
+
+			activateInstalled, err := hook.ActivateStatus(shell, homeDir)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%s: error checking activation status: %v\n", shell, err)
+				continue
+			}
+			activateState := "not installed"
+			if activateInstalled {
+				activateState = "installed"
+			}
+			fmt.Fprintf(os.Stdout, "%s: activate %s\n", shell, activateState)
 		}
 		return nil
 	},
@@ -171,6 +208,8 @@ func resolveShell(flagValue string) (string, error) {
 
 func init() {
 	hookCmd.PersistentFlags().StringVar(&hookShellFlag, "shell", "", "Shell to target (bash, zsh, or fish); defaults to $SHELL")
+	hookInstallCmd.Flags().BoolVar(&hookInstallActivateFlag, "activate", false, "Install the activation hook instead of command-not-found")
+	hookUninstallCmd.Flags().BoolVar(&hookUninstallActivateFlag, "activate", false, "Remove the activation hook instead of command-not-found")
 	hookCmd.AddCommand(hookInstallCmd)
 	hookCmd.AddCommand(hookUninstallCmd)
 	hookCmd.AddCommand(hookStatusCmd)

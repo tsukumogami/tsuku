@@ -13,6 +13,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/autoinstall"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/index"
+	"github.com/tsukumogami/tsuku/internal/project"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
@@ -31,16 +32,25 @@ execution via process replacement. The tool's exit code propagates directly.
 Use -- to separate tsuku flags from the target command's flags:
   tsuku run jq -- --arg foo bar
 
-Consent modes:
+Project configuration:
+  When a .tsuku.toml file exists in the current directory (or a parent),
+  tsuku run checks it for the tool being executed. If the tool is declared,
+  the project-pinned version is installed and used automatically -- no
+  confirmation prompt needed. The project config is treated as consent.
+
+  Tools not declared in .tsuku.toml fall through to the normal consent mode.
+
+Consent modes (for tools not in .tsuku.toml):
   suggest   Print install instructions and exit (no install)
   confirm   Prompt before installing (default, requires TTY)
   auto      Install silently with audit logging (requires opt-in)
 
 Mode resolution order:
-  1. --mode flag
-  2. TSUKU_AUTO_INSTALL_MODE environment variable
-  3. auto_install_mode config key ($TSUKU_HOME/config.toml)
-  4. Default: confirm
+  1. .tsuku.toml declares the tool -> auto (project config is consent)
+  2. --mode flag
+  3. TSUKU_AUTO_INSTALL_MODE environment variable
+  4. auto_install_mode config key ($TSUKU_HOME/config.toml)
+  5. Default: confirm
 
 Exit codes:
   0   Command executed successfully
@@ -74,16 +84,27 @@ Exit codes:
 			exitWithCode(ExitUsage)
 		}
 
+		// Load project config from working directory. Errors are ignored;
+		// a nil result means no .tsuku.toml was found.
+		cwd, _ := os.Getwd()
+		projectCfg, _ := project.LoadProjectConfig(cwd)
+
+		indexLookup := func(ctx context.Context, cmd string) ([]index.BinaryMatch, error) {
+			return lookupBinaryCommand(ctx, cfg, cmd)
+		}
+		resolver := project.NewResolver(projectCfg, indexLookup)
+
 		// TTY gate: confirm mode requires an interactive terminal.
-		if mode == autoinstall.ModeConfirm && !term.IsTerminal(int(os.Stdin.Fd())) {
+		// Project-declared tools bypass this gate because the mode override
+		// in Runner.Run will escalate to auto before any prompt is shown.
+		hasProjectTools := projectCfg != nil && len(projectCfg.Config.Tools) > 0
+		if mode == autoinstall.ModeConfirm && !hasProjectTools && !term.IsTerminal(int(os.Stdin.Fd())) {
 			fmt.Fprintln(os.Stderr, "tsuku: confirm mode requires a TTY; set TSUKU_AUTO_INSTALL_MODE=auto or use --mode=auto for non-interactive use")
 			exitWithCode(ExitNotInteractive)
 		}
 
 		runner := autoinstall.NewRunner(cfg, os.Stdout, os.Stderr)
-		runner.Lookup = func(ctx context.Context, cmd string) ([]index.BinaryMatch, error) {
-			return lookupBinaryCommand(ctx, cfg, cmd)
-		}
+		runner.Lookup = indexLookup
 		runner.Installer = &runInstaller{}
 		runner.Exec = func(binary string, execArgs []string, env []string) error {
 			return syscall.Exec(binary, execArgs, env)
@@ -96,7 +117,7 @@ Exit codes:
 			return r.HasChecksumVerification()
 		}
 
-		runErr := runner.Run(globalCtx, command, commandArgs, mode, nil)
+		runErr := runner.Run(globalCtx, command, commandArgs, mode, resolver)
 		if runErr == nil {
 			return
 		}

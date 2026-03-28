@@ -3,13 +3,15 @@ package hooks_test
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/hooks"
 )
 
-// TestWriteHookFiles verifies that WriteHookFiles writes all three hook files
-// to the target directory with 0644 permissions (scenario-9).
+// TestWriteHookFiles verifies that WriteHookFiles writes all hook files
+// (command-not-found and activation) to the target directory with 0644
+// permissions (scenario-9).
 func TestWriteHookFiles(t *testing.T) {
 	dir := t.TempDir()
 
@@ -17,7 +19,10 @@ func TestWriteHookFiles(t *testing.T) {
 		t.Fatalf("WriteHookFiles returned error: %v", err)
 	}
 
-	expected := []string{"tsuku.bash", "tsuku.zsh", "tsuku.fish"}
+	expected := []string{
+		"tsuku.bash", "tsuku.zsh", "tsuku.fish",
+		"tsuku-activate.bash", "tsuku-activate.zsh", "tsuku-activate.fish",
+	}
 	for _, name := range expected {
 		path := filepath.Join(dir, name)
 		info, err := os.Stat(path)
@@ -53,7 +58,10 @@ func TestWriteHookFilesIdempotent(t *testing.T) {
 		t.Fatalf("second WriteHookFiles returned error: %v", err)
 	}
 
-	expected := []string{"tsuku.bash", "tsuku.zsh", "tsuku.fish"}
+	expected := []string{
+		"tsuku.bash", "tsuku.zsh", "tsuku.fish",
+		"tsuku-activate.bash", "tsuku-activate.zsh", "tsuku-activate.fish",
+	}
 	for _, name := range expected {
 		path := filepath.Join(dir, name)
 		if _, err := os.Stat(path); err != nil {
@@ -62,10 +70,13 @@ func TestWriteHookFilesIdempotent(t *testing.T) {
 	}
 }
 
-// TestHookFilesEmbedded verifies that all three hook files are accessible
-// via the embedded FS.
+// TestHookFilesEmbedded verifies that all hook files are accessible via the
+// embedded FS.
 func TestHookFilesEmbedded(t *testing.T) {
-	expected := []string{"tsuku.bash", "tsuku.zsh", "tsuku.fish"}
+	expected := []string{
+		"tsuku.bash", "tsuku.zsh", "tsuku.fish",
+		"tsuku-activate.bash", "tsuku-activate.zsh", "tsuku-activate.fish",
+	}
 	for _, name := range expected {
 		data, err := hooks.HookFiles.ReadFile(name)
 		if err != nil {
@@ -75,5 +86,110 @@ func TestHookFilesEmbedded(t *testing.T) {
 		if len(data) == 0 {
 			t.Errorf("expected embedded file %s to be non-empty", name)
 		}
+	}
+}
+
+// TestActivateBashContent verifies the bash activation hook calls hook-env
+// and registers on PROMPT_COMMAND.
+func TestActivateBashContent(t *testing.T) {
+	data, err := hooks.HookFiles.ReadFile("tsuku-activate.bash")
+	if err != nil {
+		t.Fatalf("read tsuku-activate.bash: %v", err)
+	}
+	content := string(data)
+	if !strings.Contains(content, "_tsuku_hook()") {
+		t.Error("bash activation hook missing _tsuku_hook function definition")
+	}
+	if !strings.Contains(content, `tsuku hook-env bash`) {
+		t.Error("bash activation hook missing 'tsuku hook-env bash' call")
+	}
+	if !strings.Contains(content, "PROMPT_COMMAND") {
+		t.Error("bash activation hook missing PROMPT_COMMAND registration")
+	}
+}
+
+// TestActivateZshContent verifies the zsh activation hook calls hook-env
+// and registers on precmd_functions.
+func TestActivateZshContent(t *testing.T) {
+	data, err := hooks.HookFiles.ReadFile("tsuku-activate.zsh")
+	if err != nil {
+		t.Fatalf("read tsuku-activate.zsh: %v", err)
+	}
+	content := string(data)
+	if !strings.Contains(content, "_tsuku_hook()") {
+		t.Error("zsh activation hook missing _tsuku_hook function definition")
+	}
+	if !strings.Contains(content, `tsuku hook-env zsh`) {
+		t.Error("zsh activation hook missing 'tsuku hook-env zsh' call")
+	}
+	if !strings.Contains(content, "precmd_functions") {
+		t.Error("zsh activation hook missing precmd_functions registration")
+	}
+}
+
+// TestActivateFishContent verifies the fish activation hook calls hook-env
+// and registers on fish_prompt.
+func TestActivateFishContent(t *testing.T) {
+	data, err := hooks.HookFiles.ReadFile("tsuku-activate.fish")
+	if err != nil {
+		t.Fatalf("read tsuku-activate.fish: %v", err)
+	}
+	content := string(data)
+	if !strings.Contains(content, "_tsuku_hook") {
+		t.Error("fish activation hook missing _tsuku_hook function")
+	}
+	if !strings.Contains(content, "tsuku hook-env fish") {
+		t.Error("fish activation hook missing 'tsuku hook-env fish' call")
+	}
+	if !strings.Contains(content, "fish_prompt") {
+		t.Error("fish activation hook missing fish_prompt event registration")
+	}
+}
+
+// TestBashHookCallsTsukuRun verifies the bash command-not-found hook calls
+// tsuku run (for project-aware auto-install) instead of tsuku suggest.
+func TestBashHookCallsTsukuRun(t *testing.T) {
+	data, err := hooks.HookFiles.ReadFile("tsuku.bash")
+	if err != nil {
+		t.Fatalf("read tsuku.bash: %v", err)
+	}
+	content := string(data)
+	if !strings.Contains(content, `if tsuku run "$1" -- "${@:2}"; then`) {
+		t.Error("bash hook should call tsuku run with command and args")
+	}
+	if strings.Contains(content, `tsuku suggest`) {
+		t.Error("bash hook should not call tsuku suggest (replaced by tsuku run)")
+	}
+}
+
+// TestZshHookCallsTsukuRun verifies the zsh command-not-found hook calls
+// tsuku run instead of tsuku suggest.
+func TestZshHookCallsTsukuRun(t *testing.T) {
+	data, err := hooks.HookFiles.ReadFile("tsuku.zsh")
+	if err != nil {
+		t.Fatalf("read tsuku.zsh: %v", err)
+	}
+	content := string(data)
+	if !strings.Contains(content, `if tsuku run "$1" -- "${@:2}"; then`) {
+		t.Error("zsh hook should call tsuku run with command and args")
+	}
+	if strings.Contains(content, `tsuku suggest`) {
+		t.Error("zsh hook should not call tsuku suggest (replaced by tsuku run)")
+	}
+}
+
+// TestFishHookCallsTsukuRun verifies the fish command-not-found hook calls
+// tsuku run instead of tsuku suggest.
+func TestFishHookCallsTsukuRun(t *testing.T) {
+	data, err := hooks.HookFiles.ReadFile("tsuku.fish")
+	if err != nil {
+		t.Fatalf("read tsuku.fish: %v", err)
+	}
+	content := string(data)
+	if !strings.Contains(content, "tsuku run $argv[1] -- $argv[2..]") {
+		t.Error("fish hook should call tsuku run with command and args")
+	}
+	if strings.Contains(content, "tsuku suggest") {
+		t.Error("fish hook should not call tsuku suggest (replaced by tsuku run)")
 	}
 }

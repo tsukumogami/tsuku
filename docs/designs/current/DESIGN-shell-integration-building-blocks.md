@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   Tsuku requires explicit CLI invocation for every tool installation. Users must know which tools they need and manually install them. The vision is automatic command interception and on-demand provisioning, but the foundational building blocks are missing.
 decision: |
@@ -12,62 +12,7 @@ rationale: |
 
 ## Status
 
-Planned
-
-## Implementation Issues
-
-### Milestone: [shell-integration-building-blocks](https://github.com/tsukumogami/tsuku/milestone/82)
-
-| Issue | Dependencies | Tier |
-|-------|--------------|------|
-| ~~[#1677: docs: design binary index](https://github.com/tsukumogami/tsuku/issues/1677)~~ | ~~None~~ | ~~testable~~ |
-| ~~_Design the SQLite-backed index that maps command names to recipes. Defines the `BinaryIndex` interface, conflict resolution policy, and ~50ms lookup requirement. Foundation for all command-to-recipe lookups._~~ | | |
-| ~~[#1678: docs: design command-not-found handler](https://github.com/tsukumogami/tsuku/issues/1678)~~ | ~~[#1677](https://github.com/tsukumogami/tsuku/issues/1677)~~ | ~~testable~~ |
-| ~~_Shell hooks for bash, zsh, and fish that intercept unknown commands. Specifies `tsuku suggest` output format, hook installation mechanism, and security analysis for shell injection prevention._~~ | | |
-| ~~[#1679: docs: design auto-install flow](https://github.com/tsukumogami/tsuku/issues/1679)~~ | ~~[#1677](https://github.com/tsukumogami/tsuku/issues/1677)~~ | ~~testable~~ |
-| ~~_The `tsuku run` command that installs tools on first use. Defines suggest/confirm/auto modes, TTY detection for interactive prompts, and security considerations for auto-install consent._~~ | | |
-| [#1680: docs: design project configuration](https://github.com/tsukumogami/tsuku/issues/1680) | None | testable |
-| _Per-directory `.tsuku.toml` format specifying tool requirements. Defines the TOML schema, version constraint syntax, directory traversal behavior, and `LoadProjectConfig` interface._ | | |
-| [#1681: docs: design shell environment activation](https://github.com/tsukumogami/tsuku/issues/1681) | [#1680](https://github.com/tsukumogami/tsuku/issues/1680) | testable |
-| _Dynamic PATH modification based on current directory. Specifies activation via prompt hooks or `tsuku shell`, state tracking for active projects, and deactivation behavior._ | | |
-| [#2168: docs: design project-aware exec wrapper](https://github.com/tsukumogami/tsuku/issues/2168) | [#1679](https://github.com/tsukumogami/tsuku/issues/1679), [#1680](https://github.com/tsukumogami/tsuku/issues/1680) | testable |
-| _The `tsuku exec` command and optional shim system that bridge Track A and Track B at command invocation time. Enables project-declared tools to auto-install on first use without shell hooks, covering scripts and CI contexts. Optional shim generation provides transparent invocation without requiring `tsuku exec` prefix._ | | |
-
-### Dependency Graph
-
-```mermaid
-graph LR
-    subgraph TrackA["Track A: Command Interception"]
-        I1677["#1677: Binary Index"]
-        I1678["#1678: Command-Not-Found"]
-        I1679["#1679: Auto-Install"]
-    end
-
-    subgraph TrackB["Track B: Project Environments"]
-        I1680["#1680: Project Config"]
-        I1681["#1681: Shell Env Activation"]
-        I2168["#2168: Project-Aware Exec"]
-    end
-
-    I1677 --> I1678
-    I1677 --> I1679
-    I1680 --> I1681
-    I1679 --> I2168
-    I1680 --> I2168
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1677 done
-    class I1680 needsDesign
-    class I1678 done
-    class I1679 done
-    class I1681,I2168 blocked
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
+Current
 
 ## Context and Problem Statement
 

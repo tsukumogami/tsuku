@@ -1,8 +1,14 @@
 #!/bin/sh
 # mock_tsuku: minimal tsuku stub for shell hook integration tests.
-# Handles: suggest <command>
+# Handles: suggest <command>, run <command> -- [args...]
 if [ "$1" = "suggest" ] && [ -n "${2:-}" ]; then
     echo "Command '$2' not found. Install with: tsuku install $2"
     exit 0
+fi
+if [ "$1" = "run" ] && [ -n "${2:-}" ]; then
+    # Simulate tsuku run falling back to suggest behavior when tool is not
+    # found in project config. Prints the suggestion and exits non-zero.
+    echo "Command '$2' not found. Install with: tsuku install $2"
+    exit 1
 fi
 exit 1

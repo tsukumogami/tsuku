@@ -374,6 +374,275 @@ func TestInstallHookFilePermissions(t *testing.T) {
 	}
 }
 
+// --- Activation hook tests ---
+
+// TestInstallActivateBashMarker verifies that InstallActivate writes the
+// activate marker block into ~/.bashrc.
+func TestInstallActivateBashMarker(t *testing.T) {
+	homeDir := t.TempDir()
+	shareHooksDir := makeShareHooksDir(t)
+
+	if err := hook.InstallActivate("bash", homeDir, shareHooksDir); err != nil {
+		t.Fatalf("InstallActivate returned error: %v", err)
+	}
+
+	rcFile := filepath.Join(homeDir, ".bashrc")
+	data, err := os.ReadFile(rcFile)
+	if err != nil {
+		t.Fatalf("could not read .bashrc: %v", err)
+	}
+
+	content := string(data)
+	if !strings.Contains(content, "# tsuku activate") {
+		t.Errorf(".bashrc missing activate marker; got:\n%s", content)
+	}
+	if !strings.Contains(content, `tsuku-activate.bash`) {
+		t.Errorf(".bashrc missing activate source line; got:\n%s", content)
+	}
+}
+
+// TestInstallActivateZshMarker verifies that InstallActivate writes the
+// activate marker block into ~/.zshrc.
+func TestInstallActivateZshMarker(t *testing.T) {
+	homeDir := t.TempDir()
+	shareHooksDir := makeShareHooksDir(t)
+
+	if err := hook.InstallActivate("zsh", homeDir, shareHooksDir); err != nil {
+		t.Fatalf("InstallActivate returned error: %v", err)
+	}
+
+	rcFile := filepath.Join(homeDir, ".zshrc")
+	data, err := os.ReadFile(rcFile)
+	if err != nil {
+		t.Fatalf("could not read .zshrc: %v", err)
+	}
+
+	content := string(data)
+	if !strings.Contains(content, "# tsuku activate") {
+		t.Errorf(".zshrc missing activate marker; got:\n%s", content)
+	}
+	if !strings.Contains(content, `tsuku-activate.zsh`) {
+		t.Errorf(".zshrc missing activate source line; got:\n%s", content)
+	}
+}
+
+// TestInstallActivateIdempotency verifies that running InstallActivate twice
+// does not duplicate the activate marker block.
+func TestInstallActivateIdempotency(t *testing.T) {
+	for _, shell := range []string{"bash", "zsh"} {
+		t.Run(shell, func(t *testing.T) {
+			homeDir := t.TempDir()
+			shareHooksDir := makeShareHooksDir(t)
+
+			for i := 0; i < 2; i++ {
+				if err := hook.InstallActivate(shell, homeDir, shareHooksDir); err != nil {
+					t.Fatalf("InstallActivate call %d returned error: %v", i+1, err)
+				}
+			}
+
+			rcFile := filepath.Join(homeDir, ".bashrc")
+			if shell == "zsh" {
+				rcFile = filepath.Join(homeDir, ".zshrc")
+			}
+			data, err := os.ReadFile(rcFile)
+			if err != nil {
+				t.Fatalf("could not read rc file: %v", err)
+			}
+
+			count := strings.Count(string(data), "# tsuku activate")
+			if count != 1 {
+				t.Errorf("expected exactly 1 activate marker, got %d; content:\n%s", count, string(data))
+			}
+		})
+	}
+}
+
+// TestActivateAndHookMarkersIndependent verifies that installing both the
+// command-not-found hook and activation hook produces two distinct marker
+// blocks in the same rc file.
+func TestActivateAndHookMarkersIndependent(t *testing.T) {
+	homeDir := t.TempDir()
+	shareHooksDir := makeShareHooksDir(t)
+
+	if err := hook.Install("bash", homeDir, shareHooksDir); err != nil {
+		t.Fatalf("Install returned error: %v", err)
+	}
+	if err := hook.InstallActivate("bash", homeDir, shareHooksDir); err != nil {
+		t.Fatalf("InstallActivate returned error: %v", err)
+	}
+
+	rcFile := filepath.Join(homeDir, ".bashrc")
+	data, err := os.ReadFile(rcFile)
+	if err != nil {
+		t.Fatalf("could not read .bashrc: %v", err)
+	}
+
+	content := string(data)
+	if !strings.Contains(content, "# tsuku hook") {
+		t.Error(".bashrc missing command-not-found marker")
+	}
+	if !strings.Contains(content, "# tsuku activate") {
+		t.Error(".bashrc missing activate marker")
+	}
+}
+
+// TestUninstallActivateRemovesBlock verifies that UninstallActivate removes
+// only the activate marker block, leaving the command-not-found block intact.
+func TestUninstallActivateRemovesBlock(t *testing.T) {
+	homeDir := t.TempDir()
+	shareHooksDir := makeShareHooksDir(t)
+
+	// Install both hooks.
+	if err := hook.Install("bash", homeDir, shareHooksDir); err != nil {
+		t.Fatalf("Install returned error: %v", err)
+	}
+	if err := hook.InstallActivate("bash", homeDir, shareHooksDir); err != nil {
+		t.Fatalf("InstallActivate returned error: %v", err)
+	}
+
+	// Uninstall only the activate hook.
+	if err := hook.UninstallActivate("bash", homeDir); err != nil {
+		t.Fatalf("UninstallActivate returned error: %v", err)
+	}
+
+	rcFile := filepath.Join(homeDir, ".bashrc")
+	data, err := os.ReadFile(rcFile)
+	if err != nil {
+		t.Fatalf("could not read .bashrc: %v", err)
+	}
+
+	content := string(data)
+	if strings.Contains(content, "# tsuku activate") {
+		t.Error("activate marker still present after UninstallActivate")
+	}
+	if !strings.Contains(content, "# tsuku hook") {
+		t.Error("command-not-found marker was removed by UninstallActivate")
+	}
+}
+
+// TestUninstallActivateIdempotent verifies that running UninstallActivate
+// twice does not error.
+func TestUninstallActivateIdempotent(t *testing.T) {
+	homeDir := t.TempDir()
+	shareHooksDir := makeShareHooksDir(t)
+
+	if err := hook.InstallActivate("bash", homeDir, shareHooksDir); err != nil {
+		t.Fatalf("InstallActivate returned error: %v", err)
+	}
+
+	for i := 0; i < 2; i++ {
+		if err := hook.UninstallActivate("bash", homeDir); err != nil {
+			t.Fatalf("UninstallActivate call %d returned error: %v", i+1, err)
+		}
+	}
+}
+
+// TestActivateStatusDetection verifies ActivateStatus returns correct state.
+func TestActivateStatusDetection(t *testing.T) {
+	homeDir := t.TempDir()
+	shareHooksDir := makeShareHooksDir(t)
+
+	// Before install.
+	installed, err := hook.ActivateStatus("bash", homeDir)
+	if err != nil {
+		t.Fatalf("ActivateStatus before install: %v", err)
+	}
+	if installed {
+		t.Error("ActivateStatus expected false before install")
+	}
+
+	// After install.
+	if err := hook.InstallActivate("bash", homeDir, shareHooksDir); err != nil {
+		t.Fatalf("InstallActivate: %v", err)
+	}
+	installed, err = hook.ActivateStatus("bash", homeDir)
+	if err != nil {
+		t.Fatalf("ActivateStatus after install: %v", err)
+	}
+	if !installed {
+		t.Error("ActivateStatus expected true after install")
+	}
+
+	// After uninstall.
+	if err := hook.UninstallActivate("bash", homeDir); err != nil {
+		t.Fatalf("UninstallActivate: %v", err)
+	}
+	installed, err = hook.ActivateStatus("bash", homeDir)
+	if err != nil {
+		t.Fatalf("ActivateStatus after uninstall: %v", err)
+	}
+	if installed {
+		t.Error("ActivateStatus expected false after uninstall")
+	}
+}
+
+// TestInstallActivateFish verifies that InstallActivate for fish writes
+// tsuku-activate.fish to conf.d.
+func TestInstallActivateFish(t *testing.T) {
+	homeDir := t.TempDir()
+	shareHooksDir := makeShareHooksDir(t)
+
+	if err := hook.InstallActivate("fish", homeDir, shareHooksDir); err != nil {
+		t.Fatalf("InstallActivate(fish) returned error: %v", err)
+	}
+
+	dest := filepath.Join(homeDir, ".config", "fish", "conf.d", "tsuku-activate.fish")
+	info, err := os.Stat(dest)
+	if err != nil {
+		t.Fatalf("expected tsuku-activate.fish to exist: %v", err)
+	}
+	if info.Mode().Perm() != 0644 {
+		t.Errorf("expected permissions 0644, got %04o", info.Mode().Perm())
+	}
+}
+
+// TestUninstallActivateFish verifies that UninstallActivate for fish removes
+// the conf.d file.
+func TestUninstallActivateFish(t *testing.T) {
+	homeDir := t.TempDir()
+	shareHooksDir := makeShareHooksDir(t)
+
+	if err := hook.InstallActivate("fish", homeDir, shareHooksDir); err != nil {
+		t.Fatalf("InstallActivate(fish): %v", err)
+	}
+	if err := hook.UninstallActivate("fish", homeDir); err != nil {
+		t.Fatalf("UninstallActivate(fish): %v", err)
+	}
+
+	dest := filepath.Join(homeDir, ".config", "fish", "conf.d", "tsuku-activate.fish")
+	if _, err := os.Stat(dest); !os.IsNotExist(err) {
+		t.Errorf("expected tsuku-activate.fish to be removed")
+	}
+}
+
+// TestActivateBashUninstallRestores verifies that after InstallActivate and
+// UninstallActivate, the rc file is byte-for-byte identical to the original.
+func TestActivateBashUninstallRestores(t *testing.T) {
+	homeDir := t.TempDir()
+	shareHooksDir := makeShareHooksDir(t)
+
+	rcFile := filepath.Join(homeDir, ".bashrc")
+	original := "# existing content\n"
+	if err := os.WriteFile(rcFile, []byte(original), 0644); err != nil {
+		t.Fatalf("write initial .bashrc: %v", err)
+	}
+
+	if err := hook.InstallActivate("bash", homeDir, shareHooksDir); err != nil {
+		t.Fatalf("InstallActivate: %v", err)
+	}
+	if err := hook.UninstallActivate("bash", homeDir); err != nil {
+		t.Fatalf("UninstallActivate: %v", err)
+	}
+
+	after, err := os.ReadFile(rcFile)
+	if err != nil {
+		t.Fatalf("read .bashrc after uninstall: %v", err)
+	}
+	if string(after) != original {
+		t.Errorf(".bashrc not restored\nwant: %q\ngot:  %q", original, string(after))
+	}
+}
+
 // TestHookBash_UninstallRestores verifies that after install and uninstall, the
 // rc file is byte-for-byte identical to the original (scenario-29).
 func TestHookBash_UninstallRestores(t *testing.T) {
