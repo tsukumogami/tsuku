@@ -34,39 +34,6 @@ rationale: |
 
 Current
 
-## Implementation Issues
-
-Implementation tracked in [PLAN: Shell Environment Activation](../plans/PLAN-shell-env-activation.md).
-
-### Dependency Graph
-
-```mermaid
-graph TD
-    I1["Issue 1: Activation skeleton"]
-    I2["Issue 2: tsuku shell command"]
-    I3["Issue 3: Deactivation + switching"]
-    I4["Issue 4: Shell hooks + hook install"]
-    I5["Issue 5: Documentation"]
-
-    I1 --> I2
-    I1 --> I3
-    I1 --> I4
-    I3 --> I4
-    I2 --> I5
-    I4 --> I5
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-
-    class I1 ready
-    class I2,I3 blocked
-    class I4 blocked
-    class I5 blocked
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked
-
 ## Upstream Design Reference
 
 Parent: [DESIGN: Shell Integration Building Blocks](DESIGN-shell-integration-building-blocks.md)

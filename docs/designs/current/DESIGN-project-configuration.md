@@ -34,35 +34,6 @@ rationale: |
 
 Current
 
-## Implementation Issues
-
-Implementation tracked in [PLAN: Project Configuration](../plans/PLAN-project-configuration.md).
-
-### Dependency Graph
-
-```mermaid
-graph LR
-    I1["Issue 1: Project config package"]
-    I2["Issue 2: tsuku init command"]
-    I3["Issue 3: tsuku install no-args"]
-    I4["Issue 4: Documentation"]
-
-    I1 --> I2
-    I1 --> I3
-    I2 --> I4
-    I3 --> I4
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-
-    class I1 ready
-    class I2,I3 blocked
-    class I4 blocked
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked
-
 ## Upstream Design Reference
 
 Parent: [DESIGN: Shell Integration Building Blocks](DESIGN-shell-integration-building-blocks.md)
