@@ -1,1 +1,0 @@
-{"issue":3,"reviewers":[{"focus":"inline","blocking_count":0,"summary":"Clean deactivation. Empty Dir/PrevPath on deactivate, fish set -e, project-to-project preserves original PATH."}],"overall_blocking_count":0}

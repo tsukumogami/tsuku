@@ -1,1 +1,0 @@
-{"issue": 1, "reviewers": [{"focus": "inline", "blocking_count": 0, "summary": "Clean skeleton. Sorted tools, prevPath precedence, skipped uninstalled. Fish %q quoting may need refinement in Issue 4."}], "overall_blocking_count": 0}

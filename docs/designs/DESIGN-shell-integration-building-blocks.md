@@ -28,8 +28,8 @@ Planned
 | ~~_The `tsuku run` command that installs tools on first use. Defines suggest/confirm/auto modes, TTY detection for interactive prompts, and security considerations for auto-install consent._~~ | | |
 | ~~[#1680: docs: design project configuration](https://github.com/tsukumogami/tsuku/issues/1680)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Per-directory `.tsuku.toml` format specifying tool requirements. Defines the TOML schema, version constraint syntax, directory traversal behavior, and `LoadProjectConfig` interface._~~ | | |
-| [#1681: docs: design shell environment activation](https://github.com/tsukumogami/tsuku/issues/1681) | [#1680](https://github.com/tsukumogami/tsuku/issues/1680) | testable |
-| _Dynamic PATH modification based on current directory. Specifies activation via prompt hooks or `tsuku shell`, state tracking for active projects, and deactivation behavior._ | | |
+| ~~[#1681: docs: design shell environment activation](https://github.com/tsukumogami/tsuku/issues/1681)~~ | ~~[#1680](https://github.com/tsukumogami/tsuku/issues/1680)~~ | ~~testable~~ |
+| ~~_Dynamic PATH modification based on current directory. Specifies activation via prompt hooks or `tsuku shell`, state tracking for active projects, and deactivation behavior._~~ | | |
 | [#2168: docs: design project-aware exec wrapper](https://github.com/tsukumogami/tsuku/issues/2168) | [#1679](https://github.com/tsukumogami/tsuku/issues/1679), [#1680](https://github.com/tsukumogami/tsuku/issues/1680) | testable |
 | _The `tsuku exec` command and optional shim system that bridge Track A and Track B at command invocation time. Enables project-declared tools to auto-install on first use without shell hooks, covering scripts and CI contexts. Optional shim generation provides transparent invocation without requiring `tsuku exec` prefix._ | | |
 
@@ -64,7 +64,7 @@ graph LR
     class I1680 done
     class I1678 done
     class I1679 done
-    class I1681 needsDesign
+    class I1681 done
     class I2168 needsDesign
 ```
 
