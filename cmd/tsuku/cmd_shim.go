@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/project"
 	"github.com/tsukumogami/tsuku/internal/shim"
 )
 
@@ -25,20 +26,23 @@ Use 'tsuku shim list' to see all installed shims.`,
 }
 
 var shimInstallCmd = &cobra.Command{
-	Use:   "install <tool>",
+	Use:   "install [tool]",
 	Short: "Create shims for a tool's binaries",
 	Long: `Create shim scripts in $TSUKU_HOME/bin/ for every binary provided by
 the given recipe.
+
+With no arguments, reads .tsuku.toml from the current directory (or a
+parent) and creates shims for all declared tools.
 
 Each shim is a static shell script that calls 'tsuku run', deferring
 version resolution and installation to runtime. This means shims never
 need to be regenerated when tool versions change.
 
 Refuses to overwrite existing non-shim files in $TSUKU_HOME/bin/.`,
-	Args: cobra.ExactArgs(1),
+	Example: `  tsuku shim install           # shim all tools from .tsuku.toml
+  tsuku shim install ripgrep   # shim a single tool`,
+	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		recipeName := args[0]
-
 		cfg, err := config.DefaultConfig()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to load config: %v\n", err)
@@ -46,14 +50,46 @@ Refuses to overwrite existing non-shim files in $TSUKU_HOME/bin/.`,
 		}
 
 		mgr := shim.NewManager(cfg, loader)
-		paths, err := mgr.Install(recipeName)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "tsuku shim install: %v\n", err)
-			exitWithCode(ExitGeneral)
+
+		// Collect recipe names to shim.
+		var recipes []string
+		if len(args) == 1 {
+			recipes = []string{args[0]}
+		} else {
+			// No args: read .tsuku.toml and shim all declared tools.
+			cwd, wdErr := os.Getwd()
+			if wdErr != nil {
+				fmt.Fprintf(os.Stderr, "tsuku shim install: %v\n", wdErr)
+				exitWithCode(ExitGeneral)
+			}
+			result, loadErr := project.LoadProjectConfig(cwd)
+			if loadErr != nil {
+				fmt.Fprintf(os.Stderr, "tsuku shim install: %v\n", loadErr)
+				exitWithCode(ExitGeneral)
+			}
+			if result == nil {
+				fmt.Fprintf(os.Stderr, "No %s found. Specify a tool name or run 'tsuku init' to create a project config.\n", project.ConfigFileName)
+				exitWithCode(ExitUsage)
+			}
+			if len(result.Config.Tools) == 0 {
+				fmt.Printf("No tools declared in %s\n", result.Path)
+				return
+			}
+			for name := range result.Config.Tools {
+				recipes = append(recipes, name)
+			}
+			fmt.Printf("Using: %s\n", result.Path)
 		}
 
-		for _, p := range paths {
-			fmt.Println(p)
+		for _, recipeName := range recipes {
+			paths, installErr := mgr.Install(recipeName)
+			if installErr != nil {
+				fmt.Fprintf(os.Stderr, "tsuku shim install %s: %v\n", recipeName, installErr)
+				continue
+			}
+			for _, p := range paths {
+				fmt.Println(p)
+			}
 		}
 	},
 }
