@@ -3,7 +3,7 @@
   "design_doc": "docs/plans/PLAN-shell-env-activation.md",
   "branch": "docs/project-configuration",
   "pr_number": 2175,
-  "integrity_hash": "sha256:feea138d9b7035ae1283288145f72ca0c51e0e1a277e9f2345904b20eb0e8454",
+  "integrity_hash": "sha256:224bcb5e56653540c21dfc7856d089c016da9bdcd1e339f3da444233eb3155c4",
   "issues": [
     {
       "number": 1,
@@ -70,8 +70,8 @@
     {
       "number": 2,
       "title": "feat(cli): add tsuku shell command",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -91,6 +91,23 @@
         "tests_added": 7,
         "key_decisions": "Extracted runShell for testability; empty curDir forces fresh activation; no-config returns empty string",
         "requirements_map": {}
+      },
+      "reviewer_results": {
+        "issue": 2,
+        "reviewers": [
+          {
+            "focus": "inline",
+            "blocking_count": 0,
+            "summary": "Clean command. Testable runShell extraction, correct shell detection with flag \u003e env \u003e default, empty curDir forces activation."
+          }
+        ],
+        "overall_blocking_count": 0
+      },
+      "qa_results": {
+        "issue": 2,
+        "scenarios_tested": 0,
+        "scenarios_passed": 0,
+        "note": "Unit tests cover the logic. Functional tests need shell integration."
       },
       "testable_scenarios": [
         "scenario-6",
@@ -115,16 +132,27 @@
     {
       "number": 3,
       "title": "feat(shellenv): add deactivation and project-to-project switching",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "06bd1b17"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/shellenv/activate.go",
+          "internal/shellenv/activate_test.go"
+        ],
+        "tests_added": 5,
+        "key_decisions": "Deactivation has empty Dir/PrevPath; no hook-env changes needed; project-to-project already worked",
+        "requirements_map": {}
+      },
       "testable_scenarios": [
         "scenario-11",
         "scenario-12",
