@@ -3,7 +3,7 @@
   "design_doc": "docs/plans/PLAN-project-aware-exec.md",
   "branch": "docs/project-configuration",
   "pr_number": 2175,
-  "integrity_hash": "sha256:a56a365e0a8af60c955f4511ef1d95061bac8d8113710b400161d1853011f9a9",
+  "integrity_hash": "sha256:32ef467639bb3676e6e50cdfdab9d77f847e1387881da70d0cbb62dd13a7e321",
   "issues": [
     {
       "number": 1,
@@ -64,8 +64,8 @@
     {
       "number": 2,
       "title": "feat(hooks): upgrade command-not-found to call tsuku run for project tools",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -88,6 +88,22 @@
         "key_decisions": "if tsuku run pattern for set -e safety; original handler chaining preserved; propagate exit codes",
         "requirements_map": {}
       },
+      "reviewer_results": {
+        "issue": 2,
+        "reviewers": [
+          {
+            "focus": "inline",
+            "blocking_count": 0,
+            "summary": "Clean hook upgrade. if-then pattern for set -e safety, chaining preserved, exit codes propagated."
+          }
+        ],
+        "overall_blocking_count": 0
+      },
+      "qa_results": {
+        "issue": 2,
+        "scenarios_tested": 0,
+        "scenarios_passed": 0
+      },
       "testable_scenarios": [],
       "complexity": "testable",
       "acceptance_criteria": [
@@ -104,16 +120,30 @@
     {
       "number": 3,
       "title": "feat(shim): add shim manager and tsuku shim commands",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "36bb2958",
+        "4ff2b130"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/shim/manager.go",
+          "internal/shim/manager_test.go",
+          "cmd/tsuku/cmd_shim.go",
+          "cmd/tsuku/main.go"
+        ],
+        "tests_added": 12,
+        "key_decisions": "Metadata file for recipe tracking; atomic pre-flight check; content-based IsShim; BinDir from HomeDir",
+        "requirements_map": {}
+      },
       "testable_scenarios": [],
       "complexity": "testable",
       "acceptance_criteria": [
