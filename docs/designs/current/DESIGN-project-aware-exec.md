@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 spawned_from:
   issue: 2168
   repo: tsukumogami/tsuku
@@ -31,7 +31,7 @@ rationale: |
 
 ## Status
 
-Planned
+Current
 
 ## Implementation Issues
 
