@@ -5,27 +5,26 @@ spawned_from:
   repo: tsukumogami/tsuku
   parent_design: docs/designs/DESIGN-shell-integration-building-blocks.md
 problem: |
-  Track A (auto-install via tsuku run) and Track B (project config via .tsuku.toml)
-  don't converge at command invocation time in non-interactive contexts. CI pipelines,
-  shell scripts, and users without prompt hooks can't get project-declared tool
-  versions installed on first use. The autoinstall.Runner already accepts a
-  ProjectVersionResolver interface but no implementation exists.
+  When a user types a command that isn't installed, tsuku can suggest or
+  auto-install it via the command-not-found hook and tsuku run. But neither
+  path checks .tsuku.toml for project-pinned versions. A developer types rg
+  in a project that pins ripgrep = "14.1.0" and gets latest installed (or just
+  a suggestion), not 14.1.0. The project config exists but is invisible to the
+  auto-install flow. In CI and scripts without hooks, there's no path at all.
 decision: |
-  Augment tsuku run with project awareness by implementing ProjectVersionResolver
-  using LoadProjectConfig and the binary index to map command names to recipe names.
-  When .tsuku.toml declares the tool, the project-pinned version is used; otherwise,
-  the existing fallback-to-latest behavior kicks in. Optional shims (tsuku shim
-  install <tool>) create static shell scripts in $TSUKU_HOME/bin/ that call tsuku
-  run, enabling transparent invocation without the tsuku run prefix.
+  Wire a ProjectVersionResolver into the auto-install flow so it checks
+  .tsuku.toml before falling back to latest. When a command-not-found fires
+  and .tsuku.toml declares the tool, treat the project config as consent and
+  install the pinned version automatically -- no confirmation needed. tsuku run
+  gains the same project awareness. Optional shims provide the same behavior
+  in CI and scripts without shell hooks.
 rationale: |
-  tsuku run was built as Block 3 specifically as the auto-install execution path.
-  It has no established user base to protect from behavioral changes. Adding a
-  separate tsuku exec command would create unnecessary cognitive overhead when tsuku
-  run can gain project awareness naturally by passing a real ProjectVersionResolver
-  instead of nil. Composes existing infrastructure: binary index maps commands to
-  recipes, LoadProjectConfig reads .tsuku.toml, Runner.Run already accepts the
-  resolver interface. Static shims avoid regeneration complexity since version
-  resolution happens at runtime.
+  The project config is explicit user intent -- the team deliberately declared
+  which tools and versions they need. That declaration is sufficient consent for
+  auto-install, eliminating the confirmation prompt that would break the
+  seamless experience. The resolver is ~30-50 lines connecting existing
+  infrastructure (binary index, LoadProjectConfig, Runner.Run). Shims are
+  static shell scripts that call tsuku run, deferring all logic to runtime.
 ---
 
 # DESIGN: Project-Aware Exec Wrapper
@@ -41,97 +40,97 @@ Block 6 -- convergence point between Track A (auto-install) and Track B (project
 
 ## Context and Problem Statement
 
-Track A (Blocks 1-3) handles command discovery and auto-install: when a user types an unknown command, the binary index identifies the recipe, and `tsuku run` installs it. Track B (Blocks 4-5) handles project environments: `.tsuku.toml` declares tool requirements, and shell activation puts the right versions on PATH.
+The vision from the parent design is: a developer types `rg .foo data.json` in a project directory. They don't have `rg` installed. The project's `.tsuku.toml` declares `ripgrep = "14.1.0"`. Tsuku intercepts the failed command, sees the project pin, installs ripgrep 14.1.0 silently, and runs the command. No `tsuku run` prefix, no confirmation prompt.
 
-These tracks converge in interactive shells with hooks. But they don't converge in three important contexts:
+Today the pieces exist but aren't connected:
 
-1. **CI pipelines**: No shell hooks. A CI script needs project-declared tool versions installed on first use.
-2. **Shell scripts**: A Makefile calls `go build` without tsuku shell activation.
-3. **Users without hooks**: Developers who don't want prompt hooks still want project-pinned versions.
+- The **command-not-found hook** (Block 2) catches `rg` and calls `tsuku suggest rg` -- but it only suggests, it doesn't auto-install with the project version
+- The **binary index** (Block 1) maps `rg` -> recipe `ripgrep` -- but the auto-install flow doesn't check project config
+- **`tsuku run`** (Block 3) installs and execs -- but passes `nil` for the `ProjectVersionResolver`, ignoring `.tsuku.toml`
+- **`.tsuku.toml`** (Block 4) declares `ripgrep = "14.1.0"` -- but nothing reads it at command invocation time
 
-The auto-install flow (`autoinstall.Runner.Run`) already accepts a `ProjectVersionResolver` interface, designed for exactly this integration. `tsuku run` currently passes `nil` for the resolver. Block 6 provides the real implementation and wires it in.
+The auto-install flow (`autoinstall.Runner.Run`) already accepts a `ProjectVersionResolver` interface designed for this integration. The command-not-found hook already calls `tsuku suggest`, which could call `tsuku run` instead when a project config declares the tool. Block 6 connects these pieces.
+
+### The Consent Model
+
+The key insight: `.tsuku.toml` IS the consent. When a team checks in a project config declaring their tools, they're saying "these tools should be available in this project." That's sufficient authorization to install them without prompting. The confirmation prompt that `tsuku run` uses for ad-hoc installs is unnecessary when the project config explicitly declares the tool.
+
+This means:
+- **Command in `.tsuku.toml`**: install the pinned version silently, then exec
+- **Command NOT in `.tsuku.toml`**: fall back to normal behavior (suggest or confirm, depending on mode)
 
 ### Scope
 
 **In scope:**
 - `ProjectVersionResolver` implementation using `LoadProjectConfig` + binary index
-- Wiring the resolver into `tsuku run` (replacing the nil)
-- Fallback chain: project config -> binary index -> error
-- Optional shim generation: `tsuku shim install/uninstall/list`
+- Wiring the resolver into `tsuku run` and the command-not-found path
+- Auto-install without confirmation when `.tsuku.toml` declares the tool
+- Optional shim generation for CI/scripts without hooks
 - CI usage patterns
-- Security model for shim-based auto-install
 
 **Out of scope:**
-- Changes to the auto-install flow itself (Block 3, already implemented)
-- Changes to the binary index (Block 1, already implemented)
+- Changes to the binary index (Block 1)
 - LLM recipe discovery
 
 ## Decision Drivers
 
-- **Works without shell hooks**: `tsuku run` with resolver must function in CI, scripts, and non-interactive shells
-- **Performance**: Cached tool lookup (already installed) must complete in under 50ms
-- **Composability**: Leverage existing `ProjectVersionResolver`, `LoadProjectConfig`, and binary index
-- **No unnecessary commands**: Don't add a new CLI entry point when an existing one can be augmented
-- **Security**: Shim-based auto-install in untrusted repos must have a clear consent model
+- **Seamless experience**: Users type commands, they work. No tsuku prefix, no prompts for project-declared tools.
+- **Project config is consent**: `.tsuku.toml` is deliberate -- no additional confirmation needed for declared tools
+- **Works everywhere**: Interactive shells (via hooks), scripts (via shims), CI (via shims or `tsuku run`)
+- **Performance**: Cached tool lookup must complete in under 50ms
+- **Composability**: Leverage existing `ProjectVersionResolver`, `LoadProjectConfig`, binary index, and consent model
+- **Fallback safety**: Tools NOT in `.tsuku.toml` still go through the normal consent flow
 
 ## Considered Options
 
-### Decision 1: How to Add Project Awareness
+### Decision 1: How to Wire Project Awareness into the Auto-Install Flow
 
-The `autoinstall.Runner.Run` method already accepts a `ProjectVersionResolver` interface but `tsuku run` passes nil. The question is how to implement the resolver and where to wire it in.
+The `autoinstall.Runner.Run` method accepts a `ProjectVersionResolver` interface. Today `tsuku run` passes `nil`. The command-not-found hook calls `tsuku suggest` (print-only). Block 6 needs to connect `.tsuku.toml` to both paths.
 
-A complication: `.tsuku.toml` declares tools by recipe name (`ripgrep = "14.1.0"`), but users type command names (`rg`). The resolver must bridge this gap using the binary index.
+A complication: `.tsuku.toml` declares tools by recipe name (`ripgrep = "14.1.0"`), but users type command names (`rg`). The binary index bridges this gap.
 
 Key assumptions:
-- The binary index is available when `tsuku run` executes (users have run `tsuku update-registry`)
-- `.tsuku.toml` tool keys are always recipe names
-- `tsuku run` was built recently as Block 3 and has no established user base to protect from behavioral changes
+- `.tsuku.toml` declaring a tool is sufficient consent for auto-install
+- The binary index maps command -> recipe reliably
+- `tsuku run` has no established user base (Block 3 was recently built)
 
-#### Chosen: Augment `tsuku run` with Index-Backed Resolver
+#### Chosen: Resolver + Auto Mode Override for Project-Declared Tools
 
-Wire a `ProjectVersionResolver` into `tsuku run` by implementing it using `LoadProjectConfig` + binary index `LookupFunc`. The flow:
+Wire a `ProjectVersionResolver` into `tsuku run` using `LoadProjectConfig` + binary index `LookupFunc`. When the resolver finds a project-pinned version, `Runner.Run` uses it. The critical addition: when the resolver returns a version (tool is in `.tsuku.toml`), the consent mode is overridden to `auto` regardless of the user's configured mode. The project config is the consent.
 
-1. `tsuku run <command> [args]` loads `.tsuku.toml` via `LoadProjectConfig(cwd)`
-2. The resolver receives a command name (e.g., `rg`)
-3. Resolver queries the binary index to find the recipe name (`ripgrep`)
-4. Resolver checks `.tsuku.toml` for a version pin on that recipe
-5. If found, returns the pinned version; if not, returns `!ok` (falls through to latest via binary index)
-6. `Runner.Run` handles install-if-needed and process replacement as usual
+For the command-not-found path: change the hook behavior so that when `.tsuku.toml` declares the tool, the hook calls `tsuku run <command> [args]` instead of `tsuku suggest <command>`. Since `tsuku run` now has the resolver and auto-mode override, this installs the pinned version silently and execs the command.
 
-Implementation:
-- `internal/project/resolver.go`: `ProjectVersionResolver` implementation
-- Constructor: `NewResolver(config *ConfigResult, lookup autoinstall.LookupFunc) autoinstall.ProjectVersionResolver`
-- Modified `cmd/tsuku/cmd_run.go`: constructs resolver and passes it to `Runner.Run` instead of nil
+The flow for a project-declared tool:
+1. User types `rg .foo data.json`
+2. Shell's command-not-found hook fires
+3. Hook calls `tsuku run rg .foo data.json` (instead of `tsuku suggest rg`)
+4. `tsuku run` loads `.tsuku.toml`, constructs resolver
+5. Resolver maps `rg` -> `ripgrep` (via index) -> `14.1.0` (via config)
+6. Runner.Run gets version from resolver, overrides mode to `auto`
+7. Installs ripgrep 14.1.0 silently, execs `rg .foo data.json`
 
-The consent mode logic stays exactly as it is. The resolver adds project-version awareness transparently -- if `.tsuku.toml` pins a version, that version is used. If not (or if no config exists), the existing behavior is unchanged.
+The flow for a tool NOT in `.tsuku.toml`:
+1. User types `jq .foo data.json`
+2. Hook fires, calls `tsuku run jq .foo data.json`
+3. Resolver returns `!ok` (jq not in project config)
+4. Runner.Run falls back to normal mode (suggest/confirm/auto per user setting)
+5. Behavior identical to today
 
 #### Alternatives Considered
 
-**New `tsuku exec` command**: Add a separate command with different defaults (auto mode vs confirm). Rejected because `tsuku run` was built as Block 3 specifically for auto-install execution and has no established user base. A separate command creates unnecessary cognitive overhead ("when do I use exec vs run?") without protecting anyone from behavioral changes. The consent mode is configurable via `--mode`, env var, and config -- there's no need for a command-level split.
+**New `tsuku exec` command**: Separate command for project-aware execution. Rejected because `tsuku run` was built as Block 3 specifically for auto-install and has no established user base. A separate command adds cognitive overhead without protecting anyone.
 
-**Name-only resolver (skip binary index)**: Only match when command name equals recipe name. Handles `go`, `node` but misses `rg` (from ripgrep), `fd` (from fd-find). Rejected because incomplete coverage undermines trust in the feature.
+**Always auto-install on command-not-found**: Skip the resolver check and auto-install any missing command. Rejected because installing arbitrary tools without consent is dangerous. The `.tsuku.toml` check provides a trust boundary.
 
-**Cached reverse map from recipes**: Build a parallel command-to-recipe cache. Rejected because it duplicates what the binary index already provides.
+**Project awareness without hook changes**: Only wire the resolver into `tsuku run`, don't change command-not-found behavior. Rejected because it doesn't deliver the seamless experience -- users would still need the `tsuku run` prefix.
 
 ### Decision 2: Shim Architecture
 
-Shims provide transparent invocation: `go build` instead of `tsuku run go build`. They're thin wrappers in `$TSUKU_HOME/bin/` that delegate to `tsuku run`, which handles project-config lookup + auto-install.
-
-PATH precedence with shims:
-1. Project-specific tool bins (from shell activation) -- highest
-2. `$TSUKU_HOME/bin/` (tsuku binary + shims)
-3. `$TSUKU_HOME/tools/current/` (global symlinks)
-4. System PATH
-
-When shell activation is active, real binaries win over shims. When activation isn't available (CI/scripts), shims fire.
-
-Key assumptions:
-- Shell script shim startup (~5-10ms) is acceptable on top of run's <50ms target
-- Users will shim a manageable number of tools (tens, not thousands)
+Shims provide the seamless experience in contexts without shell hooks: CI pipelines, Makefiles, shell scripts. A shim for `go` in `$TSUKU_HOME/bin/` means `go build` triggers the same project-aware flow.
 
 #### Chosen: Explicit Per-Tool Shell Script Shims
 
-Users create shims for specific tools via `tsuku shim install <tool>`. Each shim is a static shell script:
+Users create shims via `tsuku shim install <tool>`. Each shim is a static script:
 
 ```sh
 #!/bin/sh
@@ -139,81 +138,106 @@ exec tsuku run "$(basename "$0")" -- "$@"
 ```
 
 Commands:
-- `tsuku shim install <tool>` -- creates shims for all binaries the recipe provides. Refuses to overwrite existing files (including the tsuku binary). Prints which shims were created.
-- `tsuku shim uninstall <tool>` -- removes shims for the tool's binaries. Only removes files that are tsuku shims (checks content).
-- `tsuku shim list` -- lists installed shims with their target tools.
+- `tsuku shim install <tool>` -- creates shims for all binaries the recipe provides
+- `tsuku shim uninstall <tool>` -- removes shims (content-based identification)
+- `tsuku shim list` -- lists installed shims
 
-Shim content is static. Version resolution happens at runtime in `tsuku run` via the resolver. No regeneration needed when `.tsuku.toml` changes, tools are installed, or projects switch.
+Shims are static -- version resolution happens at runtime in `tsuku run`. No regeneration needed.
 
-Security: shim creation is an explicit user action. When a shimmed command runs in an untrusted repo, `tsuku run` applies the full consent model from `Runner.Run` (mode resolution chain, TTY gate, verification gate).
+PATH precedence:
+1. Project-specific tool bins (shell activation) -- real binaries win
+2. `$TSUKU_HOME/bin/` (shims) -- fire when activation isn't available
+3. `$TSUKU_HOME/tools/current/` (global symlinks)
+4. System PATH
+
+When shell activation is active, real binaries take precedence and shims never fire. When activation isn't available (CI), shims fire and `tsuku run` handles everything.
 
 #### Alternatives Considered
 
-**Auto-shim all installed tools (asdf pattern)**: Every install creates shims. Rejected because it conflicts with `tools/current/` (both provide the same commands with `bin/` winning) and intercepts commands the user didn't ask to shim.
+**Auto-shim all installed tools**: Rejected -- conflicts with `tools/current/` and intercepts commands the user didn't ask to shim.
 
-**Project-scoped auto-shims**: Create/remove shims based on `.tsuku.toml` during activation. Rejected because it adds lifecycle tracking complexity, has race conditions between projects, and doesn't help CI.
+**Project-scoped auto-shims**: Rejected -- lifecycle tracking complexity, race conditions between projects, doesn't help CI.
 
-**Compiled multi-call binary**: Single Go binary with argv[0]-based dispatch. Saves ~10ms. Rejected for now -- can be adopted later without changing user-facing commands.
+**Compiled multi-call binary**: Rejected for now -- saves ~10ms but adds build complexity. Can optimize later.
 
 ## Decision Outcome
 
-**Chosen: Augmented `tsuku run` with index-backed resolver + explicit per-tool shims**
+**Chosen: Project-config-as-consent auto-install via resolver + command-not-found hook upgrade + explicit shims**
 
 ### Summary
 
-`tsuku run` gains project awareness by wiring a real `ProjectVersionResolver` implementation where it currently passes `nil`. The resolver uses `LoadProjectConfig` to read `.tsuku.toml` and the binary index to map command names to recipe names. When `tsuku run rg .foo data.json` executes, the resolver maps `rg` -> `ripgrep` via the index, finds `ripgrep = "14.1.0"` in `.tsuku.toml`, and returns that version. `Runner.Run` installs if needed and execs the binary. When no `.tsuku.toml` exists or the tool isn't declared, the existing behavior is unchanged -- the binary index provides discovery and the latest version is used.
+When a developer types `rg .foo data.json` in a project with `.tsuku.toml` declaring `ripgrep = "14.1.0"`, the command just works. The command-not-found hook calls `tsuku run`, which uses the new `ProjectVersionResolver` to find the project pin, overrides the consent mode to `auto` (project config IS consent), installs ripgrep 14.1.0 silently, and execs the command.
 
-Optional shims (`tsuku shim install <tool>`) create static shell scripts in `$TSUKU_HOME/bin/` that call `tsuku run`. This enables transparent invocation: `go build` instead of `tsuku run go build`. Shims are static -- no regeneration on config changes -- because version resolution happens at runtime. Shell activation (Block 5) takes precedence over shims when active.
+The resolver is a thin struct (~30-50 lines) connecting `LoadProjectConfig` and the binary index's `LookupFunc`. It maps command -> recipe (via index) -> version (via project config). When the tool isn't in `.tsuku.toml`, the resolver returns `!ok` and the normal consent flow applies.
 
-The resolver is ~30-50 lines of Go connecting `LoadProjectConfig`, the binary index `LookupFunc`, and the `ProjectVersionResolver` interface that `Runner.Run` already accepts. The change to `cmd_run.go` is minimal: construct the resolver and pass it where `nil` was.
+The command-not-found hook changes from calling `tsuku suggest` to calling `tsuku run` -- but only when `.tsuku.toml` declares the tool. For undeclared tools, the hook behavior depends on the user's configured auto-install mode (suggest/confirm/auto).
+
+Optional shims (`tsuku shim install <tool>`) provide the same experience in CI and scripts. A shim is `exec tsuku run "$(basename "$0")" -- "$@"` -- static, no regeneration.
+
+Three contexts, one experience:
+- **Interactive shell with hooks**: command-not-found -> `tsuku run` -> resolver -> auto-install
+- **Interactive shell without hooks**: `tsuku run go build` -> resolver -> auto-install
+- **CI/scripts with shims**: `go build` -> shim -> `tsuku run` -> resolver -> auto-install
 
 ### Rationale
 
-`tsuku run` was built as Block 3 to be the auto-install execution entry point. It has no established user base, no scripts depending on its current nil-resolver behavior. Adding project awareness is the natural evolution of the command, not a behavioral regression. A separate `tsuku exec` would fragment the CLI surface for no benefit.
+The project config is the consent mechanism. When a team checks `.tsuku.toml` into their repo declaring `ripgrep = "14.1.0"`, they're authorizing that tool at that version. Prompting the developer for confirmation on top of that is friction without value -- the decision was already made.
 
-The design composes four existing components: binary index (command-to-recipe), `LoadProjectConfig` (`.tsuku.toml` discovery), `Runner.Run` (install + exec), and `ProjectVersionResolver` (the integration point designed for this). Static shims keep the system trivially simple -- version resolution is always deferred to runtime.
+The hook upgrade (suggest -> run) is what delivers the seamless experience. Without it, users would need the `tsuku run` prefix, which defeats the purpose of shell integration.
+
+Shims extend the same experience to hook-free contexts. Static shims keep the system simple -- all intelligence lives in `tsuku run` at runtime.
 
 ### Trade-offs Accepted
 
-- The resolver depends on the binary index being built. Cold-start scenarios need clear error messages.
-- Shell script shims add ~5-10ms overhead per invocation. The multi-call binary can optimize this later.
-- Shims in `$TSUKU_HOME/bin/` share the directory with the tsuku binary. Content-based identification prevents confusion.
+- **Auto-install in cloned repos**: Cloning a repo with `.tsuku.toml` and typing a declared command auto-installs it. This is intentional -- the project config is consent. Users concerned about untrusted repos can set `auto_install_mode = suggest` which the resolver won't override (only project-declared tools get the override).
+- **Binary index dependency**: The resolver needs the index built. Clear error message on cold start.
+- **Command-not-found hook change**: Existing hook users get upgraded behavior. This is additive (run instead of suggest for project tools) not breaking.
 
 ## Solution Architecture
 
 ### Overview
 
-Block 6 adds a `ProjectVersionResolver` implementation in `internal/project`, wires it into the existing `tsuku run` command, and adds a shim manager in `internal/shim`.
+Block 6 adds a `ProjectVersionResolver` implementation, modifies `tsuku run` to use it, upgrades the command-not-found hooks to call `tsuku run` for project-declared tools, and adds a shim manager.
 
 ### Components
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         CLI Layer                               │
-│  ┌─────────────────┐     ┌──────────────────────┐              │
-│  │ tsuku run       │     │ tsuku shim            │              │
-│  │  cmd_run.go     │     │  cmd_shim.go          │              │
-│  │  (modified)     │     │  (new)                │              │
-│  └────────┬────────┘     └──────────┬─────────────┘             │
-└───────────┼──────────────────────────┼──────────────────────────┘
-            │                          │
-            ▼                          ▼
-┌───────────────────────┐    ┌────────────────────┐
-│ internal/project      │    │ internal/shim       │
-│ resolver.go (new)     │    │ manager.go (new)    │
-│  NewResolver()        │    │  Install/Uninstall  │
-│  ProjectVersionFor()  │    │  List/IsShim        │
-└───────────┬───────────┘    └────────────────────┘
+┌────────────────────────────────────────────────────────────────┐
+│                       User Shell                               │
+│                                                                │
+│  User types: rg .foo data.json                                 │
+│       │                                                        │
+│       ▼                                                        │
+│  command_not_found_handle                                      │
+│       │                                                        │
+│       ├─ .tsuku.toml declares rg's recipe? ──yes──┐            │
+│       │                                           ▼            │
+│       │                                   tsuku run rg ...     │
+│       │                                   (auto-install)       │
+│       │                                                        │
+│       └─ no ──────────────────────────────┐                    │
+│                                           ▼                    │
+│                                   tsuku suggest rg             │
+│                                   (existing behavior)          │
+└────────────────────────────────────────────────────────────────┘
             │
             ▼
-┌───────────────────────────────────────────────────────┐
-│               Existing Infrastructure                  │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐│
-│  │ LoadProject  │  │ BinaryIndex  │  │ autoinstall   ││
-│  │ Config       │  │ .Lookup      │  │ .Runner.Run   ││
-│  │ (Block 4)    │  │ (Block 1)    │  │ (Block 3)     ││
-│  └──────────────┘  └──────────────┘  └──────────────┘│
-└───────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────┐
+│  tsuku run (cmd_run.go, modified)                              │
+│    │                                                           │
+│    ├─ LoadProjectConfig(cwd) -> ConfigResult                   │
+│    ├─ NewResolver(config, index.Lookup) -> resolver            │
+│    ├─ Runner.Run(ctx, cmd, args, mode, resolver)               │
+│    │    │                                                      │
+│    │    ├─ resolver.ProjectVersionFor("rg")                    │
+│    │    │    ├─ index.Lookup("rg") -> recipe "ripgrep"         │
+│    │    │    └─ config.Tools["ripgrep"] -> "14.1.0"            │
+│    │    │                                                      │
+│    │    ├─ version found in project config -> mode = auto      │
+│    │    ├─ install ripgrep@14.1.0 if needed                    │
+│    │    └─ syscall.Exec rg .foo data.json                      │
+│    │                                                           │
+└────────────────────────────────────────────────────────────────┘
 ```
 
 ### Key Interfaces
@@ -221,94 +245,87 @@ Block 6 adds a `ProjectVersionResolver` implementation in `internal/project`, wi
 ```go
 // internal/project/resolver.go
 
-// Resolver implements autoinstall.ProjectVersionResolver by combining
-// project config (recipe name -> version) with the binary index
-// (command name -> recipe name).
 type Resolver struct {
     config *ConfigResult
     lookup autoinstall.LookupFunc
 }
 
-// NewResolver creates a ProjectVersionResolver. If config is nil (no
-// .tsuku.toml found), all lookups return !ok (falls through to default).
 func NewResolver(config *ConfigResult, lookup autoinstall.LookupFunc) autoinstall.ProjectVersionResolver
 
 // ProjectVersionFor maps command -> recipe (via index) -> version (via config).
+// Returns (version, true, nil) when the tool is project-declared.
+// Returns ("", false, nil) when not in project config (falls through).
 func (r *Resolver) ProjectVersionFor(ctx context.Context, command string) (string, bool, error)
 ```
 
 ```go
 // internal/shim/manager.go
 
-// Manager handles shim creation and removal in $TSUKU_HOME/bin/.
 type Manager struct {
     binDir string
     cfg    *config.Config
 }
 
 func NewManager(cfg *config.Config) *Manager
-
-// Install creates shims for all binaries provided by the named recipe.
 func (m *Manager) Install(recipeName string) ([]string, error)
-
-// Uninstall removes shims for the named recipe's binaries.
 func (m *Manager) Uninstall(recipeName string) error
-
-// List returns all installed shims.
 func (m *Manager) List() ([]ShimEntry, error)
-
-// IsShim checks if a file is a tsuku shim by reading its content.
 func IsShim(path string) bool
-
-type ShimEntry struct {
-    Command string
-    Recipe  string
-    Path    string
-}
 ```
+
+### Changes to Existing Code
+
+**`cmd/tsuku/cmd_run.go`**: Load project config, construct resolver, pass to `Runner.Run` where `nil` was.
+
+**`autoinstall.Runner.Run`**: When the resolver returns a version (tool is project-declared), override the consent mode to `auto`. This is a small change in the existing Runner -- check if the version came from the resolver and if so, skip the consent prompt.
+
+**Command-not-found hook scripts** (`internal/hooks/tsuku.{bash,zsh,fish}`): Add a check before calling `tsuku suggest`. If `.tsuku.toml` exists and declares the tool (via a quick `tsuku run --check <command>` or by having the hook call `tsuku run` directly and letting the Runner handle the suggest/run distinction), call `tsuku run <command> [args]` instead.
 
 ### Data Flow
 
-**Flow 1: `tsuku run rg .foo data.json` (with .tsuku.toml)**
+**Flow 1: Interactive shell, project-declared tool**
 
 ```
-1. cmd_run.go loads config, binary index, and project config
-2. NewResolver(projectConfig, index.Lookup) creates the resolver
-3. Runner.Run(ctx, "rg", args, mode, resolver)
-4. Runner calls resolver.ProjectVersionFor(ctx, "rg")
-5. Resolver calls index.Lookup("rg") -> [{Recipe: "ripgrep", ...}]
-6. Resolver checks config.Tools["ripgrep"] -> Version: "14.1.0"
-7. Returns ("14.1.0", true, nil)
-8. Runner installs ripgrep@14.1.0 if needed
-9. Runner execs $TSUKU_HOME/tools/ripgrep-14.1.0/bin/rg with args
+1. User types: rg .foo data.json
+2. Shell can't find rg -> command_not_found_handle fires
+3. Hook calls: tsuku run rg .foo data.json
+4. tsuku run loads .tsuku.toml: ripgrep = "14.1.0"
+5. Resolver: rg -> ripgrep (index) -> 14.1.0 (config)
+6. Runner: version from resolver -> mode = auto (project is consent)
+7. Install ripgrep@14.1.0 if needed (no prompt)
+8. exec rg .foo data.json
 ```
 
-**Flow 2: `tsuku run python3` (not in .tsuku.toml)**
+**Flow 2: Interactive shell, tool NOT in project config**
 
 ```
-1-4. Same as above
-5. Resolver calls index.Lookup("python3") -> [{Recipe: "python", ...}]
-6. Resolver checks config.Tools["python"] -> not found
-7. Returns ("", false, nil)
-8. Runner falls back to binary index discovery (existing Track A flow)
-9. Runner installs python@latest (with consent model)
+1. User types: jq .foo data.json
+2. command_not_found_handle fires
+3. Hook calls: tsuku run jq .foo data.json
+4. tsuku run loads .tsuku.toml: jq not declared
+5. Resolver returns (!ok)
+6. Runner: normal consent mode (confirm by default)
+7. Prompts: "jq is provided by recipe 'jq'. Install? [Y/n]"
 ```
 
-**Flow 3: `tsuku run go build` (no .tsuku.toml at all)**
+**Flow 3: CI with shims**
 
 ```
-1. cmd_run.go loads project config -> nil
-2. NewResolver(nil, index.Lookup) -> resolver where all lookups return !ok
-3. Runner.Run proceeds with nil-equivalent resolver
-4. Behavior identical to current tsuku run (no project awareness)
+1. CI runs: go build (shim at $TSUKU_HOME/bin/go)
+2. Shim: exec tsuku run go -- build
+3. Same as Flow 1 from step 4
 ```
 
-**Flow 4: Shim invocation (`go build` with shim installed)**
+**Flow 4: No .tsuku.toml at all**
 
 ```
-1. Shell resolves `go` to $TSUKU_HOME/bin/go (shim)
-2. Shim runs: exec tsuku run "go" -- "build"
-3. Same as Flow 1 from there
+1. User types: rg .foo data.json
+2. command_not_found_handle fires
+3. Hook calls: tsuku run rg .foo data.json
+4. tsuku run: LoadProjectConfig -> nil
+5. Resolver: NewResolver(nil, ...) -> all lookups return !ok
+6. Runner: normal consent mode
+7. Same behavior as today
 ```
 
 ## Implementation Approach
@@ -319,31 +336,33 @@ Build the `ProjectVersionResolver` implementation.
 
 Deliverables:
 - `internal/project/resolver.go`: `NewResolver`, `ProjectVersionFor`
-- `internal/project/resolver_test.go`: Tests for command-to-recipe mapping, version pin found/not found, nil config, index error
+- `internal/project/resolver_test.go`: Tests
 
-### Phase 2: Wire Resolver into `tsuku run`
+### Phase 2: Wire Resolver into `tsuku run` + Auto Mode Override
 
-Modify `cmd_run.go` to construct the resolver and pass it to `Runner.Run`.
+Modify `cmd_run.go` to construct resolver. Modify `Runner.Run` to override mode to `auto` when resolver returns a version.
 
 Deliverables:
-- Modified `cmd/tsuku/cmd_run.go`: load project config, construct resolver, pass to Runner.Run
-- Tests verifying resolver is wired in
+- Modified `cmd/tsuku/cmd_run.go`
+- Modified `internal/autoinstall/run.go` (mode override logic)
+- Tests
 
-### Phase 3: Shim Manager (`internal/shim`)
+### Phase 3: Upgrade Command-Not-Found Hooks
+
+Change hooks to call `tsuku run` instead of `tsuku suggest` when `.tsuku.toml` declares the tool.
+
+Deliverables:
+- Modified `internal/hooks/tsuku.bash`, `tsuku.zsh`, `tsuku.fish`
+- Tests for hook behavior
+
+### Phase 4: Shim Manager (`internal/shim`)
 
 Build shim creation, removal, and listing.
 
 Deliverables:
-- `internal/shim/manager.go`: `Manager`, `Install`, `Uninstall`, `List`, `IsShim`
-- `internal/shim/manager_test.go`: Tests
-
-### Phase 4: `tsuku shim` Commands
-
-Wire the shim manager into CLI.
-
-Deliverables:
-- `cmd/tsuku/cmd_shim.go`: Cobra commands for install/uninstall/list
-- Register in main.go
+- `internal/shim/manager.go`
+- `internal/shim/manager_test.go`
+- `cmd/tsuku/cmd_shim.go`
 
 ### Phase 5: Documentation
 
@@ -351,58 +370,49 @@ Update CLI help and CI usage examples.
 
 ## Security Considerations
 
-### Auto-Install via Shims in Untrusted Repos
+### Project Config as Consent
 
-When a shimmed command runs in a cloned repo with `.tsuku.toml`, `tsuku run` reads the repo's config and may trigger installation. The consent model from `Runner.Run` provides layered protection:
+The core security decision: `.tsuku.toml` declaring a tool authorizes its installation without prompting. This is safe because:
 
-1. **Mode resolution chain**: `--mode` flag -> `TSUKU_AUTO_INSTALL_MODE` env -> `auto_install_mode` config -> `confirm` (default)
-2. **TTY gate**: In `confirm` mode without a TTY, installation is blocked
-3. **Verification gate**: In `auto` mode, recipes must have checksums
-4. **Binary index gate**: Only recipes in the curated index can be resolved
+1. **Deliberate action**: Someone (the project maintainer) explicitly added the tool to `.tsuku.toml` and committed it
+2. **Curated recipes only**: The binary index limits resolution to the curated registry
+3. **Checksum verification**: All installs go through the existing verification pipeline
+4. **Version-pinned**: Project configs typically pin specific versions, not "latest"
 
-**Mitigations:**
-- Default consent mode remains `confirm` -- project awareness doesn't change the consent model
-- Shim creation is an explicit user action
-- The binary index limits resolution to curated recipes
-- Checksum verification applies to all installs
+**Risk**: Cloning an untrusted repo and typing a declared command auto-installs it. This is the intended behavior -- but users who want protection can:
+- Not install shell hooks (command-not-found won't fire)
+- Set `auto_install_mode = suggest` globally (overrides the project-consent mechanism)
+- Use `TSUKU_CEILING_PATHS` to prevent config discovery in untrusted directories
 
-### Shim File Safety
+### Shim Safety
 
-- Refuses to overwrite existing non-shim files (content-based check)
-- Never overwrites the `tsuku` binary
-- Content-based identification for uninstall
-
-### PATH Precedence
-
-Shell activation prepends project paths before `$TSUKU_HOME/bin/`. With activation: real binaries win. Without: shims fire with full consent model.
+Same consent model as hooks. Shims call `tsuku run`, which uses the resolver and mode override. Creating shims is an explicit user action (`tsuku shim install`).
 
 ### Mitigations Summary
 
 | Risk | Severity | Mitigation | Residual Risk |
 |------|----------|------------|---------------|
-| Untrusted repo triggers install via shim | Medium | Consent model (mode chain, TTY gate, verification) | User with auto mode gets auto-install in any repo |
-| Shim overwrites system binary | Low | Content-based check, tsuku binary protection | None |
-| Malicious .tsuku.toml declares fake recipe | Low | Binary index limits to curated recipes, checksums | Registry compromise |
-| Shim startup overhead | Low | ~5-10ms acceptable; multi-call binary can optimize | Noticeable on fast commands |
+| Untrusted repo auto-installs via hook | Medium | Curated registry, checksums, hooks are opt-in, global mode override | User with hooks in untrusted repo gets auto-install |
+| Untrusted repo auto-installs via shim | Medium | Same as above plus shims are explicit user action | Same |
+| Malicious .tsuku.toml declares many tools | Low | MaxTools cap (256), curated registry | Registry compromise |
 
 ## Consequences
 
 ### Positive
 
-- **CI works without hooks**: `tsuku run go build` in CI gets the project-pinned Go version
-- **Complete Track A + B convergence**: The shell integration vision is realized
-- **No new CLI commands for exec**: `tsuku run` gains project awareness naturally
-- **Minimal new code**: Resolver is ~30-50 lines connecting existing components
-- **Static shims**: No regeneration, no staleness
+- **Seamless experience**: `rg .foo data.json` just works in a project that declares ripgrep
+- **Complete vision**: The shell integration building blocks are fully connected
+- **Minimal new code**: Resolver ~30-50 lines, hook change ~10 lines per shell, mode override ~5 lines in Runner
+- **Three contexts, one experience**: Hooks, tsuku run, and shims all produce the same behavior
 
 ### Negative
 
-- **Binary index dependency**: `tsuku run` with resolver needs the index built
-- **Shim overhead**: ~5-10ms per invocation on top of run's <50ms
-- **Dual-purpose `$TSUKU_HOME/bin/`**: Holds tsuku binary and optional shims
+- **Auto-install in untrusted repos**: Deliberate trade-off. Project config is consent.
+- **Binary index dependency**: Resolver needs the index built
+- **Hook behavior change**: command-not-found goes from suggest to run for project tools
 
 ### Mitigations
 
-- **Index dependency**: Clear error message. Consider auto-building on first run if no index exists.
-- **Shim overhead**: Multi-call binary optimization path documented.
-- **Dual-purpose bin/**: Content-based shim identification.
+- **Untrusted repos**: Document the escape hatches (global mode override, no hooks, ceiling paths)
+- **Index dependency**: Clear error message directing to `tsuku update-registry`
+- **Hook change**: Additive -- undeclared tools still get suggest/confirm behavior
