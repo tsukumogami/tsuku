@@ -276,3 +276,136 @@ func TestFormatExports_Nil(t *testing.T) {
 		t.Errorf("expected empty output for nil result, got %q", output)
 	}
 }
+
+func TestComputeActivation_Deactivation(t *testing.T) {
+	// Directory without .tsuku.toml, but prevPath is set (was in a project).
+	dir := t.TempDir()
+	cfg := &config.Config{
+		HomeDir:  t.TempDir(),
+		ToolsDir: filepath.Join(t.TempDir(), "tools"),
+	}
+
+	t.Setenv("HOME", dir)
+
+	result, err := ComputeActivation(dir, "/original/bin:/usr/bin", "/some/project", cfg)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected deactivation result, got nil")
+	}
+	if result.Active {
+		t.Error("expected Active=false for deactivation")
+	}
+	if result.PATH != "/original/bin:/usr/bin" {
+		t.Errorf("PATH = %q, want %q", result.PATH, "/original/bin:/usr/bin")
+	}
+	if result.Dir != "" {
+		t.Errorf("Dir = %q, want empty", result.Dir)
+	}
+	if result.PrevPath != "" {
+		t.Errorf("PrevPath = %q, want empty (should be unset)", result.PrevPath)
+	}
+}
+
+func TestComputeActivation_NoOpWithoutPriorActivation(t *testing.T) {
+	// Directory without .tsuku.toml and no prevPath -- should be nil (no-op).
+	dir := t.TempDir()
+	cfg := &config.Config{
+		HomeDir:  t.TempDir(),
+		ToolsDir: filepath.Join(t.TempDir(), "tools"),
+	}
+
+	t.Setenv("HOME", dir)
+
+	result, err := ComputeActivation(dir, "", "", cfg)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result != nil {
+		t.Errorf("expected nil for no config and no prior activation, got %+v", result)
+	}
+}
+
+func TestComputeActivation_ProjectToProjectSwitch(t *testing.T) {
+	// Switching from project A to project B should preserve the original
+	// prevPath (the PATH from before any activation).
+	toml := `
+[tools]
+node = "20.16.0"
+`
+	projectB, cfg := setupProject(t, toml, map[string]string{
+		"node": "20.16.0",
+	})
+
+	t.Setenv("PATH", "/project-a-modified:/usr/bin")
+	t.Setenv("HOME", filepath.Dir(projectB))
+
+	// prevPath represents the original PATH before project A was activated.
+	originalPath := "/original/bin:/usr/bin"
+	result, err := ComputeActivation(projectB, originalPath, "/some/project-a", cfg)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected activation result, got nil")
+	}
+	if !result.Active {
+		t.Error("expected Active=true for project switch")
+	}
+	// PrevPath should be the original PATH, not project A's modified PATH.
+	if result.PrevPath != originalPath {
+		t.Errorf("PrevPath = %q, want %q (original, not project A's PATH)", result.PrevPath, originalPath)
+	}
+	// PATH should be built on the original PATH base, not the current $PATH.
+	if !strings.HasSuffix(result.PATH, ":"+originalPath) {
+		t.Errorf("PATH should end with original PATH, got %q", result.PATH)
+	}
+	// Dir should be project B.
+	if result.Dir != projectB {
+		t.Errorf("Dir = %q, want %q", result.Dir, projectB)
+	}
+}
+
+func TestFormatExports_DeactivationBash(t *testing.T) {
+	result := &ActivationResult{
+		PATH:   "/original/bin:/usr/bin",
+		Active: false,
+	}
+
+	output := FormatExports(result, "bash")
+
+	if !strings.Contains(output, `export PATH="/original/bin:/usr/bin"`) {
+		t.Errorf("missing PATH export in:\n%s", output)
+	}
+	if !strings.Contains(output, "unset _TSUKU_DIR _TSUKU_PREV_PATH") {
+		t.Errorf("missing unset in:\n%s", output)
+	}
+	// Should NOT contain _TSUKU_DIR export.
+	if strings.Contains(output, "export _TSUKU_DIR") {
+		t.Errorf("deactivation should not export _TSUKU_DIR:\n%s", output)
+	}
+}
+
+func TestFormatExports_DeactivationFish(t *testing.T) {
+	result := &ActivationResult{
+		PATH:   "/original/bin:/usr/bin",
+		Active: false,
+	}
+
+	output := FormatExports(result, "fish")
+
+	if !strings.Contains(output, `set -gx PATH "/original/bin:/usr/bin"`) {
+		t.Errorf("missing PATH set in:\n%s", output)
+	}
+	if !strings.Contains(output, "set -e _TSUKU_DIR") {
+		t.Errorf("missing set -e _TSUKU_DIR in:\n%s", output)
+	}
+	if !strings.Contains(output, "set -e _TSUKU_PREV_PATH") {
+		t.Errorf("missing set -e _TSUKU_PREV_PATH in:\n%s", output)
+	}
+	// Should not contain set -gx for tracking vars.
+	if strings.Contains(output, "set -gx _TSUKU_DIR") {
+		t.Errorf("deactivation should not set -gx _TSUKU_DIR:\n%s", output)
+	}
+}

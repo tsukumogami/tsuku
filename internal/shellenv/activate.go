@@ -32,7 +32,10 @@ type ActivationResult struct {
 //
 // Returns nil (no-op) when:
 //   - cwd equals curDir (directory has not changed)
-//   - no .tsuku.toml is found in cwd or its parents
+//   - no .tsuku.toml is found and no prior activation exists
+//
+// Returns a deactivation result (Active=false) when no .tsuku.toml is found
+// but prevPath is set, indicating the user left a project directory.
 //
 // prevPath is the original PATH saved before any prior activation
 // (_TSUKU_PREV_PATH). curDir is the last activated directory (_TSUKU_DIR).
@@ -47,7 +50,14 @@ func ComputeActivation(cwd, prevPath, curDir string, cfg *config.Config) (*Activ
 		return nil, fmt.Errorf("loading project config: %w", err)
 	}
 	if result == nil {
-		// No .tsuku.toml found -- nothing to activate.
+		if prevPath != "" {
+			// Was active, now leaving project directory -- deactivate.
+			return &ActivationResult{
+				PATH:   prevPath,
+				Active: false,
+			}, nil
+		}
+		// No prior activation and no project config -- no-op.
 		return nil, nil
 	}
 
@@ -116,6 +126,20 @@ func FormatExports(result *ActivationResult, shell string) string {
 	}
 
 	var b strings.Builder
+
+	if !result.Active {
+		// Deactivation: restore PATH and unset tracking variables.
+		switch shell {
+		case "fish":
+			fmt.Fprintf(&b, "set -gx PATH %q\n", result.PATH)
+			fmt.Fprintf(&b, "set -e _TSUKU_DIR\n")
+			fmt.Fprintf(&b, "set -e _TSUKU_PREV_PATH\n")
+		default: // bash, zsh
+			fmt.Fprintf(&b, "export PATH=%q\n", result.PATH)
+			fmt.Fprintf(&b, "unset _TSUKU_DIR _TSUKU_PREV_PATH\n")
+		}
+		return b.String()
+	}
 
 	switch shell {
 	case "fish":
