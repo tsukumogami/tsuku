@@ -1,5 +1,6 @@
 // Package hooks provides shell hook files for bash, zsh, and fish that
-// intercept command-not-found events and call tsuku suggest.
+// intercept command-not-found events and call tsuku suggest, as well as
+// activation hooks that call tsuku hook-env on each prompt.
 package hooks
 
 import (
@@ -10,7 +11,7 @@ import (
 	"path/filepath"
 )
 
-//go:embed tsuku.bash tsuku.zsh tsuku.fish
+//go:embed tsuku.bash tsuku.zsh tsuku.fish tsuku-activate.bash tsuku-activate.zsh tsuku-activate.fish
 var HookFiles embed.FS
 
 // WriteHookFiles writes all three hook files from the embedded FS to the
