@@ -3,13 +3,13 @@
   "design_doc": "docs/plans/PLAN-project-aware-exec.md",
   "branch": "docs/project-configuration",
   "pr_number": 2175,
-  "integrity_hash": "sha256:5dfa1faf195e12bd0feb98525de1c8fbfc336ba57979bad488763a983607be38",
+  "integrity_hash": "sha256:a56a365e0a8af60c955f4511ef1d95061bac8d8113710b400161d1853011f9a9",
   "issues": [
     {
       "number": 1,
       "title": "feat(project): add resolver and wire into tsuku run with auto mode override",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [],
@@ -30,6 +30,23 @@
         "key_decisions": "TTY gate bypass checks project config existence; security gates still apply after auto override",
         "requirements_map": {}
       },
+      "reviewer_results": {
+        "issue": 1,
+        "reviewers": [
+          {
+            "focus": "inline",
+            "blocking_count": 0,
+            "summary": "Clean resolver. Nil-safe, index-backed command-to-recipe mapping, mode override before TTY gate, security gates preserved."
+          }
+        ],
+        "overall_blocking_count": 0
+      },
+      "qa_results": {
+        "issue": 1,
+        "scenarios_tested": 0,
+        "scenarios_passed": 0,
+        "note": "Skeleton. Unit tests cover resolver and mode override logic."
+      },
       "testable_scenarios": [],
       "complexity": "testable (skeleton)",
       "acceptance_criteria": [
@@ -47,16 +64,30 @@
     {
       "number": 2,
       "title": "feat(hooks): upgrade command-not-found to call tsuku run for project tools",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [
         1
       ],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "5fb4f6ba"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/hooks/tsuku.bash",
+          "internal/hooks/tsuku.zsh",
+          "internal/hooks/tsuku.fish",
+          "internal/hooks/embed.go",
+          "internal/hooks/hooks_test.go"
+        ],
+        "tests_added": 3,
+        "key_decisions": "if tsuku run pattern for set -e safety; original handler chaining preserved; propagate exit codes",
+        "requirements_map": {}
+      },
       "testable_scenarios": [],
       "complexity": "testable",
       "acceptance_criteria": [
