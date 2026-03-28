@@ -13,6 +13,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/autoinstall"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/index"
+	"github.com/tsukumogami/tsuku/internal/project"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
@@ -74,16 +75,27 @@ Exit codes:
 			exitWithCode(ExitUsage)
 		}
 
+		// Load project config from working directory. Errors are ignored;
+		// a nil result means no .tsuku.toml was found.
+		cwd, _ := os.Getwd()
+		projectCfg, _ := project.LoadProjectConfig(cwd)
+
+		indexLookup := func(ctx context.Context, cmd string) ([]index.BinaryMatch, error) {
+			return lookupBinaryCommand(ctx, cfg, cmd)
+		}
+		resolver := project.NewResolver(projectCfg, indexLookup)
+
 		// TTY gate: confirm mode requires an interactive terminal.
-		if mode == autoinstall.ModeConfirm && !term.IsTerminal(int(os.Stdin.Fd())) {
+		// Project-declared tools bypass this gate because the mode override
+		// in Runner.Run will escalate to auto before any prompt is shown.
+		hasProjectTools := projectCfg != nil && len(projectCfg.Config.Tools) > 0
+		if mode == autoinstall.ModeConfirm && !hasProjectTools && !term.IsTerminal(int(os.Stdin.Fd())) {
 			fmt.Fprintln(os.Stderr, "tsuku: confirm mode requires a TTY; set TSUKU_AUTO_INSTALL_MODE=auto or use --mode=auto for non-interactive use")
 			exitWithCode(ExitNotInteractive)
 		}
 
 		runner := autoinstall.NewRunner(cfg, os.Stdout, os.Stderr)
-		runner.Lookup = func(ctx context.Context, cmd string) ([]index.BinaryMatch, error) {
-			return lookupBinaryCommand(ctx, cfg, cmd)
-		}
+		runner.Lookup = indexLookup
 		runner.Installer = &runInstaller{}
 		runner.Exec = func(binary string, execArgs []string, env []string) error {
 			return syscall.Exec(binary, execArgs, env)
@@ -96,7 +108,7 @@ Exit codes:
 			return r.HasChecksumVerification()
 		}
 
-		runErr := runner.Run(globalCtx, command, commandArgs, mode, nil)
+		runErr := runner.Run(globalCtx, command, commandArgs, mode, resolver)
 		if runErr == nil {
 			return
 		}

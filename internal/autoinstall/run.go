@@ -91,6 +91,7 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 
 	// Resolve version from project config if available.
 	version := ""
+	projectDeclared := false
 	if resolver != nil {
 		v, ok, resolveErr := resolver.ProjectVersionFor(ctx, command)
 		if resolveErr != nil {
@@ -98,13 +99,20 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 		}
 		if ok {
 			version = v
+			projectDeclared = true
 		}
+	}
+
+	// Project override: when the tool is declared in .tsuku.toml, escalate
+	// the mode to auto so the TTY gate and interactive prompt are bypassed.
+	effectiveMode := mode
+	if projectDeclared {
+		effectiveMode = ModeAuto
 	}
 
 	// Security gate 2: config permission check.
 	// If the config file has permissive permissions, fall back to confirm
 	// to prevent a tampered config from enabling auto mode.
-	effectiveMode := mode
 	if effectiveMode == ModeAuto {
 		configPath := filepath.Join(r.cfg.HomeDir, "config.toml")
 		if !configPermissionsOK(configPath) {

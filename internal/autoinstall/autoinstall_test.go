@@ -501,3 +501,75 @@ func TestRun_NilRecipeHasVerification_FallsBackToConfirm(t *testing.T) {
 		t.Error("installer should have been called after consent")
 	}
 }
+
+// --- Project mode override tests ---
+
+func TestRun_ProjectResolverOk_OverridesToAuto(t *testing.T) {
+	r, _, _ := newTestRunner(t)
+	installer := &mockInstaller{}
+	execRec := &execRecorder{}
+
+	r.Lookup = func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
+		return []index.BinaryMatch{{Recipe: "jq", Command: "jq"}}, nil
+	}
+	r.Installer = installer
+	r.Exec = execRec.exec
+	r.RecipeHasVerification = func(_ string) bool { return true }
+
+	// Good config permissions so security gate 2 passes.
+	_ = os.WriteFile(filepath.Join(r.cfg.HomeDir, "config.toml"), []byte(""), 0600)
+
+	resolver := &mockProjectVersionResolver{
+		versions: map[string]string{"jq": "1.7.1"},
+	}
+
+	// Start with confirm mode -- the project override should escalate to auto.
+	// No ConsentReader is set, so if it falls through to confirm it will fail.
+	err := r.Run(context.Background(), "jq", nil, ModeConfirm, resolver)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !installer.called {
+		t.Error("installer should have been called")
+	}
+	if installer.ver != "1.7.1" {
+		t.Errorf("installer version = %q, want %q", installer.ver, "1.7.1")
+	}
+}
+
+func TestRun_ProjectResolverNotOk_ModeUnchanged(t *testing.T) {
+	r, stdout, _ := newTestRunner(t)
+
+	r.Lookup = func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
+		return []index.BinaryMatch{{Recipe: "jq", Command: "jq"}}, nil
+	}
+
+	// Resolver returns ok=false -- mode should stay as suggest.
+	resolver := &mockProjectVersionResolver{
+		versions: map[string]string{}, // no entries
+	}
+
+	err := r.Run(context.Background(), "jq", nil, ModeSuggest, resolver)
+	if !errors.Is(err, ErrSuggestOnly) {
+		t.Fatalf("expected ErrSuggestOnly, got %v", err)
+	}
+	if !strings.Contains(stdout.String(), "tsuku install jq") {
+		t.Errorf("stdout should contain install instruction, got %q", stdout.String())
+	}
+}
+
+func TestRun_NilResolver_ModeUnchanged(t *testing.T) {
+	r, stdout, _ := newTestRunner(t)
+
+	r.Lookup = func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
+		return []index.BinaryMatch{{Recipe: "jq", Command: "jq"}}, nil
+	}
+
+	err := r.Run(context.Background(), "jq", nil, ModeSuggest, nil)
+	if !errors.Is(err, ErrSuggestOnly) {
+		t.Fatalf("expected ErrSuggestOnly, got %v", err)
+	}
+	if !strings.Contains(stdout.String(), "tsuku install jq") {
+		t.Errorf("stdout should contain install instruction, got %q", stdout.String())
+	}
+}
