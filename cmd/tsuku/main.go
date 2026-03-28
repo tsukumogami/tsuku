@@ -139,6 +139,7 @@ func init() {
 	rootCmd.AddCommand(shellCmd)
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(runCmd)
+	rootCmd.AddCommand(shimCmd)
 }
 
 func main() {
