@@ -1,0 +1,1 @@
+{"issue":1,"reviewers":[{"focus":"inline","blocking_count":0,"summary":"Clean resolver. Nil-safe, index-backed command-to-recipe mapping, mode override before TTY gate, security gates preserved."}],"overall_blocking_count":0}
