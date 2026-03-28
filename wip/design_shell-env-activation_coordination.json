@@ -1,0 +1,10 @@
+{
+  "topic": "shell-env-activation",
+  "decisions": [
+    {"id": 1, "question": "Activation mechanism", "status": "complete", "complexity": "standard", "report_file": "wip/design_shell-env-activation_decision_1_report.md"},
+    {"id": 2, "question": "PATH modification and state tracking", "status": "complete", "complexity": "standard", "report_file": "wip/design_shell-env-activation_decision_2_report.md"},
+    {"id": 3, "question": "Integration with existing infrastructure", "status": "complete", "complexity": "standard", "report_file": "wip/design_shell-env-activation_decision_3_report.md"}
+  ],
+  "cross_validation": "passed",
+  "round": 0
+}
