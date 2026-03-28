@@ -3,7 +3,7 @@
   "design_doc": "docs/plans/PLAN-shell-env-activation.md",
   "branch": "docs/project-configuration",
   "pr_number": 2175,
-  "integrity_hash": "sha256:224bcb5e56653540c21dfc7856d089c016da9bdcd1e339f3da444233eb3155c4",
+  "integrity_hash": "sha256:59b402b78662a429fb860a4b7dfca5203fb00974e6cacd89db5a1e87737bec35",
   "issues": [
     {
       "number": 1,
@@ -132,8 +132,8 @@
     {
       "number": 3,
       "title": "feat(shellenv): add deactivation and project-to-project switching",
-      "status": "scrutinized",
-      "ci_status": "pending",
+      "status": "completed",
+      "ci_status": "passed",
       "ci_fix_attempts": 0,
       "issue_type": "code",
       "dependencies": [
@@ -152,6 +152,23 @@
         "tests_added": 5,
         "key_decisions": "Deactivation has empty Dir/PrevPath; no hook-env changes needed; project-to-project already worked",
         "requirements_map": {}
+      },
+      "reviewer_results": {
+        "issue": 3,
+        "reviewers": [
+          {
+            "focus": "inline",
+            "blocking_count": 0,
+            "summary": "Clean deactivation. Empty Dir/PrevPath on deactivate, fish set -e, project-to-project preserves original PATH."
+          }
+        ],
+        "overall_blocking_count": 0
+      },
+      "qa_results": {
+        "issue": 3,
+        "scenarios_tested": 0,
+        "scenarios_passed": 0,
+        "note": "Unit tests cover deactivation logic."
       },
       "testable_scenarios": [
         "scenario-11",
@@ -176,14 +193,31 @@
     {
       "number": 4,
       "title": "feat(hooks): add activation shell hooks and hook install --activate",
-      "status": "pending",
+      "status": "scrutinized",
       "ci_status": "pending",
       "ci_fix_attempts": 0,
-      "issue_type": "",
+      "issue_type": "code",
       "dependencies": [],
-      "commits": [],
-      "agent_type": "",
-      "summary": null,
+      "commits": [
+        "e308b40b"
+      ],
+      "agent_type": "coder",
+      "summary": {
+        "narrative": "",
+        "files_changed": [
+          "internal/hooks/tsuku-activate.bash",
+          "internal/hooks/tsuku-activate.zsh",
+          "internal/hooks/tsuku-activate.fish",
+          "internal/hooks/embed.go",
+          "internal/hook/install.go",
+          "internal/hook/uninstall.go",
+          "internal/hook/status.go",
+          "cmd/tsuku/cmd_hook.go"
+        ],
+        "tests_added": 14,
+        "key_decisions": "Separate flag vars per command; refactored removeMarkerBlock; fish uses separate conf.d file; status shows both hook types",
+        "requirements_map": {}
+      },
       "testable_scenarios": [
         "scenario-15",
         "scenario-16",
