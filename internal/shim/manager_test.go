@@ -3,6 +3,7 @@ package shim
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/config"
@@ -28,13 +29,14 @@ func testLoader(t *testing.T, recipeName string, binaries []string) *recipe.Load
 // buildTestRecipe creates a minimal TOML recipe that ExtractBinaries will
 // parse. Uses install_binaries with outputs.
 func buildTestRecipe(name string, binaries []string) string {
-	var outputs string
-	for i, b := range binaries {
+	var b strings.Builder
+	for i, bin := range binaries {
 		if i > 0 {
-			outputs += ", "
+			b.WriteString(", ")
 		}
-		outputs += `"` + b + `"`
+		b.WriteString(`"` + bin + `"`)
 	}
+	outputs := b.String()
 
 	return `[metadata]
 name = "` + name + `"
@@ -289,8 +291,8 @@ func TestExtractBinaryNames(t *testing.T) {
 		Steps: []recipe.Step{
 			{
 				Action: "install_binaries",
-				Params: map[string]interface{}{
-					"outputs": []interface{}{"rg", "rga"},
+				Params: map[string]any{
+					"outputs": []any{"rg", "rga"},
 				},
 			},
 		},
