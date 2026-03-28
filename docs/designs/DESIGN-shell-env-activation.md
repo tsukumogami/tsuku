@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 spawned_from:
   issue: 1681
   repo: tsukumogami/tsuku
@@ -32,7 +32,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 ## Upstream Design Reference
 
