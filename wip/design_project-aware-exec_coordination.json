@@ -1,0 +1,19 @@
+{
+  "topic": "project-aware-exec",
+  "decisions": [
+    {
+      "id": 1,
+      "question": "How should tsuku exec work? Covers command semantics, ProjectVersionResolver implementation using LoadProjectConfig, fallback to binary index, relationship to existing tsuku run, and the exec flow for CI/scripts.",
+      "status": "pending",
+      "complexity": "standard"
+    },
+    {
+      "id": 2,
+      "question": "How should optional shim generation work? Covers shim architecture (where they live, what they contain), tsuku shim install/uninstall commands, update triggers, and the security model for shim-based auto-install in untrusted repos.",
+      "status": "pending",
+      "complexity": "standard"
+    }
+  ],
+  "cross_validation": "pending",
+  "round": 0
+}
