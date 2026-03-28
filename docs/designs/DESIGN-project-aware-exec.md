@@ -11,20 +11,21 @@ problem: |
   versions installed on first use. The autoinstall.Runner already accepts a
   ProjectVersionResolver interface but no implementation exists.
 decision: |
-  Add tsuku exec as the project-aware execution command. It implements
-  ProjectVersionResolver using LoadProjectConfig and the binary index to map
-  command names to recipe names, then delegates to Runner.Run for install-if-needed
-  and process replacement. Default consent mode is auto (vs confirm for tsuku run).
-  Optional shims (tsuku shim install <tool>) create static shell scripts in
-  $TSUKU_HOME/bin/ that call tsuku exec, enabling transparent invocation without
-  the tsuku exec prefix.
+  Augment tsuku run with project awareness by implementing ProjectVersionResolver
+  using LoadProjectConfig and the binary index to map command names to recipe names.
+  When .tsuku.toml declares the tool, the project-pinned version is used; otherwise,
+  the existing fallback-to-latest behavior kicks in. Optional shims (tsuku shim
+  install <tool>) create static shell scripts in $TSUKU_HOME/bin/ that call tsuku
+  run, enabling transparent invocation without the tsuku run prefix.
 rationale: |
-  Composes existing infrastructure without modification: the binary index maps
-  commands to recipes, LoadProjectConfig reads .tsuku.toml, Runner.Run handles
-  install + exec. The only new code is a thin resolver (~30-50 lines) and the CLI
-  wiring. Separate command from tsuku run avoids behavioral regressions and serves
-  different audiences (CI vs interactive). Static shims avoid regeneration complexity
-  since version resolution happens at runtime via tsuku exec.
+  tsuku run was built as Block 3 specifically as the auto-install execution path.
+  It has no established user base to protect from behavioral changes. Adding a
+  separate tsuku exec command would create unnecessary cognitive overhead when tsuku
+  run can gain project awareness naturally by passing a real ProjectVersionResolver
+  instead of nil. Composes existing infrastructure: binary index maps commands to
+  recipes, LoadProjectConfig reads .tsuku.toml, Runner.Run already accepts the
+  resolver interface. Static shims avoid regeneration complexity since version
+  resolution happens at runtime.
 ---
 
 # DESIGN: Project-Aware Exec Wrapper
@@ -48,74 +49,73 @@ These tracks converge in interactive shells with hooks. But they don't converge 
 2. **Shell scripts**: A Makefile calls `go build` without tsuku shell activation.
 3. **Users without hooks**: Developers who don't want prompt hooks still want project-pinned versions.
 
-The auto-install flow (`autoinstall.Runner.Run`) already accepts a `ProjectVersionResolver` interface, designed for exactly this integration. `tsuku run` passes `nil` for the resolver. Block 6 provides the real implementation.
+The auto-install flow (`autoinstall.Runner.Run`) already accepts a `ProjectVersionResolver` interface, designed for exactly this integration. `tsuku run` currently passes `nil` for the resolver. Block 6 provides the real implementation and wires it in.
 
 ### Scope
 
 **In scope:**
-- `tsuku exec <command> [args]` command semantics
 - `ProjectVersionResolver` implementation using `LoadProjectConfig` + binary index
+- Wiring the resolver into `tsuku run` (replacing the nil)
 - Fallback chain: project config -> binary index -> error
 - Optional shim generation: `tsuku shim install/uninstall/list`
 - CI usage patterns
 - Security model for shim-based auto-install
 
 **Out of scope:**
-- Changes to `tsuku run` or the auto-install flow
-- Changes to the binary index
+- Changes to the auto-install flow itself (Block 3, already implemented)
+- Changes to the binary index (Block 1, already implemented)
 - LLM recipe discovery
 
 ## Decision Drivers
 
-- **Works without shell hooks**: `tsuku exec` must function in CI, scripts, and non-interactive shells
+- **Works without shell hooks**: `tsuku run` with resolver must function in CI, scripts, and non-interactive shells
 - **Performance**: Cached tool lookup (already installed) must complete in under 50ms
 - **Composability**: Leverage existing `ProjectVersionResolver`, `LoadProjectConfig`, and binary index
-- **Compatibility**: Must coexist with `tsuku run` (Track A) and `tsuku shell` (Track B)
+- **No unnecessary commands**: Don't add a new CLI entry point when an existing one can be augmented
 - **Security**: Shim-based auto-install in untrusted repos must have a clear consent model
 
 ## Considered Options
 
-### Decision 1: `tsuku exec` Command Semantics
+### Decision 1: How to Add Project Awareness
 
-The `autoinstall.Runner.Run` method already accepts a `ProjectVersionResolver` interface but `tsuku run` passes nil. The question is how to implement the resolver and whether to add a new command or extend `tsuku run`.
+The `autoinstall.Runner.Run` method already accepts a `ProjectVersionResolver` interface but `tsuku run` passes nil. The question is how to implement the resolver and where to wire it in.
 
-A complication: `.tsuku.toml` declares tools by recipe name (`ripgrep = "14.1.0"`), but users type command names (`rg`). The resolver must bridge this gap.
+A complication: `.tsuku.toml` declares tools by recipe name (`ripgrep = "14.1.0"`), but users type command names (`rg`). The resolver must bridge this gap using the binary index.
 
 Key assumptions:
-- The binary index is available when `tsuku exec` runs (users have run `tsuku update-registry`)
+- The binary index is available when `tsuku run` executes (users have run `tsuku update-registry`)
 - `.tsuku.toml` tool keys are always recipe names
-- `tsuku exec` and `tsuku run` serve different audiences (CI/deterministic vs interactive/ad-hoc)
+- `tsuku run` was built recently as Block 3 and has no established user base to protect from behavioral changes
 
-#### Chosen: Separate `tsuku exec` with Index-Backed Resolver
+#### Chosen: Augment `tsuku run` with Index-Backed Resolver
 
-A new `tsuku exec` command constructs a `ProjectVersionResolver` backed by both `project.LoadProjectConfig` and the binary index's `LookupFunc`. The flow:
+Wire a `ProjectVersionResolver` into `tsuku run` by implementing it using `LoadProjectConfig` + binary index `LookupFunc`. The flow:
 
-1. `tsuku exec <command> [args]` loads `.tsuku.toml` via `LoadProjectConfig(cwd)`
+1. `tsuku run <command> [args]` loads `.tsuku.toml` via `LoadProjectConfig(cwd)`
 2. The resolver receives a command name (e.g., `rg`)
 3. Resolver queries the binary index to find the recipe name (`ripgrep`)
 4. Resolver checks `.tsuku.toml` for a version pin on that recipe
-5. If found, returns the pinned version; if not, returns `!ok` (falls through to latest)
-6. `Runner.Run` handles install-if-needed and process replacement
+5. If found, returns the pinned version; if not, returns `!ok` (falls through to latest via binary index)
+6. `Runner.Run` handles install-if-needed and process replacement as usual
 
 Implementation:
-- `cmd/tsuku/cmd_exec.go`: Cobra command, wires resolver into `Runner.Run`
 - `internal/project/resolver.go`: `ProjectVersionResolver` implementation
 - Constructor: `NewResolver(config *ConfigResult, lookup autoinstall.LookupFunc) autoinstall.ProjectVersionResolver`
-- Default consent mode: `auto` (vs `confirm` for `tsuku run`) since `tsuku exec` targets CI/script use
+- Modified `cmd/tsuku/cmd_run.go`: constructs resolver and passes it to `Runner.Run` instead of nil
 
-`tsuku run` stays unchanged -- nil resolver, `confirm` default. The two commands serve different audiences.
+The consent mode logic stays exactly as it is. The resolver adds project-version awareness transparently -- if `.tsuku.toml` pins a version, that version is used. If not (or if no config exists), the existing behavior is unchanged.
 
 #### Alternatives Considered
 
-**Enhance `tsuku run` with project awareness**: Auto-detect `.tsuku.toml` in `tsuku run`. Rejected because it changes the semantics of an existing command, risks surprising users who expect latest-version behavior, and complicates the confirm/auto mode logic. Clean separation is safer.
+**New `tsuku exec` command**: Add a separate command with different defaults (auto mode vs confirm). Rejected because `tsuku run` was built as Block 3 specifically for auto-install execution and has no established user base. A separate command creates unnecessary cognitive overhead ("when do I use exec vs run?") without protecting anyone from behavioral changes. The consent mode is configurable via `--mode`, env var, and config -- there's no need for a command-level split.
 
-**Separate `tsuku exec` with name-only resolver**: Skip the binary index, only match when command name equals recipe name. Handles `go`, `node` but misses `rg` (from ripgrep), `fd` (from fd-find). Rejected because incomplete coverage undermines trust in the feature.
+**Name-only resolver (skip binary index)**: Only match when command name equals recipe name. Handles `go`, `node` but misses `rg` (from ripgrep), `fd` (from fd-find). Rejected because incomplete coverage undermines trust in the feature.
 
-**Cached reverse map from recipes**: Build a parallel command-to-recipe cache by scanning recipe TOML files. Rejected because it duplicates what the binary index already provides.
+**Cached reverse map from recipes**: Build a parallel command-to-recipe cache. Rejected because it duplicates what the binary index already provides.
 
 ### Decision 2: Shim Architecture
 
-Shims provide transparent invocation: `go build` instead of `tsuku exec go build`. They're thin wrappers in `$TSUKU_HOME/bin/` that delegate to `tsuku exec`.
+Shims provide transparent invocation: `go build` instead of `tsuku run go build`. They're thin wrappers in `$TSUKU_HOME/bin/` that delegate to `tsuku run`, which handles project-config lookup + auto-install.
 
 PATH precedence with shims:
 1. Project-specific tool bins (from shell activation) -- highest
@@ -126,7 +126,7 @@ PATH precedence with shims:
 When shell activation is active, real binaries win over shims. When activation isn't available (CI/scripts), shims fire.
 
 Key assumptions:
-- Shell script shim startup (~5-10ms) is acceptable on top of exec's <50ms target
+- Shell script shim startup (~5-10ms) is acceptable on top of run's <50ms target
 - Users will shim a manageable number of tools (tens, not thousands)
 
 #### Chosen: Explicit Per-Tool Shell Script Shims
@@ -135,7 +135,7 @@ Users create shims for specific tools via `tsuku shim install <tool>`. Each shim
 
 ```sh
 #!/bin/sh
-exec tsuku exec "$(basename "$0")" -- "$@"
+exec tsuku run "$(basename "$0")" -- "$@"
 ```
 
 Commands:
@@ -143,9 +143,9 @@ Commands:
 - `tsuku shim uninstall <tool>` -- removes shims for the tool's binaries. Only removes files that are tsuku shims (checks content).
 - `tsuku shim list` -- lists installed shims with their target tools.
 
-Shim content is static. Version resolution happens at runtime in `tsuku exec`. No regeneration needed when `.tsuku.toml` changes, tools are installed, or projects switch.
+Shim content is static. Version resolution happens at runtime in `tsuku run` via the resolver. No regeneration needed when `.tsuku.toml` changes, tools are installed, or projects switch.
 
-Security: shim creation is an explicit user action. When a shimmed command runs in an untrusted repo, `tsuku exec` applies the full consent model from `Runner.Run` (mode resolution, TTY gate, verification gate). In non-interactive contexts without explicit `auto` mode opt-in, installation is blocked.
+Security: shim creation is an explicit user action. When a shimmed command runs in an untrusted repo, `tsuku run` applies the full consent model from `Runner.Run` (mode resolution chain, TTY gate, verification gate).
 
 #### Alternatives Considered
 
@@ -153,40 +153,37 @@ Security: shim creation is an explicit user action. When a shimmed command runs 
 
 **Project-scoped auto-shims**: Create/remove shims based on `.tsuku.toml` during activation. Rejected because it adds lifecycle tracking complexity, has race conditions between projects, and doesn't help CI.
 
-**Compiled multi-call binary**: Single Go binary with argv[0]-based dispatch. Saves ~10ms per invocation. Rejected for now because the 50ms target applies to exec itself, not shim overhead. Can be adopted later without changing user-facing commands.
+**Compiled multi-call binary**: Single Go binary with argv[0]-based dispatch. Saves ~10ms. Rejected for now -- can be adopted later without changing user-facing commands.
 
 ## Decision Outcome
 
-**Chosen: Separate `tsuku exec` with index-backed resolver + explicit per-tool shims**
+**Chosen: Augmented `tsuku run` with index-backed resolver + explicit per-tool shims**
 
 ### Summary
 
-`tsuku exec <command> [args]` reads `.tsuku.toml` from the current directory, uses the binary index to map the command name to a recipe name, checks the project config for a version pin, and delegates to `Runner.Run` for install-if-needed and process replacement via `syscall.Exec`. When the command isn't declared in `.tsuku.toml`, it falls back to the binary index for discovery (same as `tsuku run` but with `auto` consent mode).
+`tsuku run` gains project awareness by wiring a real `ProjectVersionResolver` implementation where it currently passes `nil`. The resolver uses `LoadProjectConfig` to read `.tsuku.toml` and the binary index to map command names to recipe names. When `tsuku run rg .foo data.json` executes, the resolver maps `rg` -> `ripgrep` via the index, finds `ripgrep = "14.1.0"` in `.tsuku.toml`, and returns that version. `Runner.Run` installs if needed and execs the binary. When no `.tsuku.toml` exists or the tool isn't declared, the existing behavior is unchanged -- the binary index provides discovery and the latest version is used.
 
-The resolver implementation is a thin struct (~30-50 lines) that connects `LoadProjectConfig` and the binary index's `LookupFunc` -- both already exist. It implements the `ProjectVersionResolver` interface that `Runner.Run` already accepts. The only genuinely new logic is the command-to-recipe-to-version lookup chain.
+Optional shims (`tsuku shim install <tool>`) create static shell scripts in `$TSUKU_HOME/bin/` that call `tsuku run`. This enables transparent invocation: `go build` instead of `tsuku run go build`. Shims are static -- no regeneration on config changes -- because version resolution happens at runtime. Shell activation (Block 5) takes precedence over shims when active.
 
-Optional shims (`tsuku shim install <tool>`) create static shell scripts in `$TSUKU_HOME/bin/` that call `tsuku exec`. Shims enable transparent invocation (`go build` instead of `tsuku exec go build`) in CI and scripts. They're static -- no regeneration on config changes -- because version resolution happens at runtime in `tsuku exec`. Shell activation (Block 5) takes precedence over shims when active, since project bin paths come before `$TSUKU_HOME/bin/` on PATH.
+The resolver is ~30-50 lines of Go connecting `LoadProjectConfig`, the binary index `LookupFunc`, and the `ProjectVersionResolver` interface that `Runner.Run` already accepts. The change to `cmd_run.go` is minimal: construct the resolver and pass it where `nil` was.
 
 ### Rationale
 
-The design composes four existing, tested components without modifying any of them: the binary index (command-to-recipe mapping), `LoadProjectConfig` (`.tsuku.toml` discovery), `Runner.Run` (install + exec), and the `ProjectVersionResolver` interface (the integration point designed for this purpose). The new code is a resolver struct, a CLI command, and a shim manager -- all thin wiring.
+`tsuku run` was built as Block 3 to be the auto-install execution entry point. It has no established user base, no scripts depending on its current nil-resolver behavior. Adding project awareness is the natural evolution of the command, not a behavioral regression. A separate `tsuku exec` would fragment the CLI surface for no benefit.
 
-Keeping `tsuku exec` separate from `tsuku run` avoids behavioral regressions in an established command. The default `auto` mode for exec (vs `confirm` for run) reflects their different audiences: exec is for deterministic, scripted use where prompts block execution; run is for interactive exploration where consent is appropriate.
-
-Static shims eliminate regeneration complexity. The shim is always `exec tsuku exec "$(basename "$0")" -- "$@"` regardless of which project it's in. Version resolution is deferred to runtime, keeping the shim system trivially simple.
+The design composes four existing components: binary index (command-to-recipe), `LoadProjectConfig` (`.tsuku.toml` discovery), `Runner.Run` (install + exec), and `ProjectVersionResolver` (the integration point designed for this). Static shims keep the system trivially simple -- version resolution is always deferred to runtime.
 
 ### Trade-offs Accepted
 
-- Users must know when to use `tsuku exec` vs `tsuku run`. Documentation must clarify the distinction.
-- The resolver depends on the binary index being built. Cold-start scenarios (no `update-registry`) get a clear error message.
-- Shell script shims add ~5-10ms overhead per invocation. Acceptable for CI; the compiled multi-call binary can optimize this later.
-- Shims in `$TSUKU_HOME/bin/` share the directory with the tsuku binary. Content-based identification prevents accidental removal.
+- The resolver depends on the binary index being built. Cold-start scenarios need clear error messages.
+- Shell script shims add ~5-10ms overhead per invocation. The multi-call binary can optimize this later.
+- Shims in `$TSUKU_HOME/bin/` share the directory with the tsuku binary. Content-based identification prevents confusion.
 
 ## Solution Architecture
 
 ### Overview
 
-Block 6 adds a `ProjectVersionResolver` implementation in `internal/project`, a `tsuku exec` command in `cmd/tsuku`, and a shim manager in `internal/shim`. All delegate to existing infrastructure.
+Block 6 adds a `ProjectVersionResolver` implementation in `internal/project`, wires it into the existing `tsuku run` command, and adds a shim manager in `internal/shim`.
 
 ### Components
 
@@ -194,15 +191,16 @@ Block 6 adds a `ProjectVersionResolver` implementation in `internal/project`, a 
 ┌─────────────────────────────────────────────────────────────────┐
 │                         CLI Layer                               │
 │  ┌─────────────────┐     ┌──────────────────────┐              │
-│  │ tsuku exec      │     │ tsuku shim            │              │
-│  │  cmd_exec.go    │     │  cmd_shim.go          │              │
+│  │ tsuku run       │     │ tsuku shim            │              │
+│  │  cmd_run.go     │     │  cmd_shim.go          │              │
+│  │  (modified)     │     │  (new)                │              │
 │  └────────┬────────┘     └──────────┬─────────────┘             │
 └───────────┼──────────────────────────┼──────────────────────────┘
             │                          │
             ▼                          ▼
 ┌───────────────────────┐    ┌────────────────────┐
 │ internal/project      │    │ internal/shim       │
-│ resolver.go           │    │ manager.go          │
+│ resolver.go (new)     │    │ manager.go (new)    │
 │  NewResolver()        │    │  Install/Uninstall  │
 │  ProjectVersionFor()  │    │  List/IsShim        │
 └───────────┬───────────┘    └────────────────────┘
@@ -232,7 +230,7 @@ type Resolver struct {
 }
 
 // NewResolver creates a ProjectVersionResolver. If config is nil (no
-// .tsuku.toml found), all lookups return !ok.
+// .tsuku.toml found), all lookups return !ok (falls through to default).
 func NewResolver(config *ConfigResult, lookup autoinstall.LookupFunc) autoinstall.ProjectVersionResolver
 
 // ProjectVersionFor maps command -> recipe (via index) -> version (via config).
@@ -244,176 +242,167 @@ func (r *Resolver) ProjectVersionFor(ctx context.Context, command string) (strin
 
 // Manager handles shim creation and removal in $TSUKU_HOME/bin/.
 type Manager struct {
-    binDir string  // $TSUKU_HOME/bin/
+    binDir string
     cfg    *config.Config
 }
 
 func NewManager(cfg *config.Config) *Manager
 
 // Install creates shims for all binaries provided by the named recipe.
-// Returns the list of created shim paths. Refuses to overwrite non-shim files.
 func (m *Manager) Install(recipeName string) ([]string, error)
 
 // Uninstall removes shims for the named recipe's binaries.
-// Only removes files identified as tsuku shims by content.
 func (m *Manager) Uninstall(recipeName string) error
 
-// List returns all installed shims with their target recipe names.
+// List returns all installed shims.
 func (m *Manager) List() ([]ShimEntry, error)
 
-// IsShim checks if a file at the given path is a tsuku shim by reading its content.
+// IsShim checks if a file is a tsuku shim by reading its content.
 func IsShim(path string) bool
 
 type ShimEntry struct {
-    Command string // binary name (e.g., "rg")
-    Recipe  string // recipe name (e.g., "ripgrep")
-    Path    string // full path to shim
+    Command string
+    Recipe  string
+    Path    string
 }
 ```
 
 ### Data Flow
 
-**Flow 1: `tsuku exec rg .foo data.json`**
+**Flow 1: `tsuku run rg .foo data.json` (with .tsuku.toml)**
 
 ```
-1. cmd_exec.go loads config and binary index
-2. LoadProjectConfig(cwd) finds .tsuku.toml with ripgrep = "14.1.0"
-3. NewResolver(configResult, index.Lookup) creates the resolver
-4. Runner.Run(ctx, "rg", args, ModeAuto, resolver) starts
-5. Runner calls resolver.ProjectVersionFor(ctx, "rg")
-6. Resolver calls index.Lookup("rg") -> [{Recipe: "ripgrep", ...}]
-7. Resolver checks config.Tools["ripgrep"] -> Version: "14.1.0"
-8. Returns ("14.1.0", true, nil)
-9. Runner installs ripgrep@14.1.0 if needed
-10. Runner execs $TSUKU_HOME/tools/ripgrep-14.1.0/bin/rg with args
+1. cmd_run.go loads config, binary index, and project config
+2. NewResolver(projectConfig, index.Lookup) creates the resolver
+3. Runner.Run(ctx, "rg", args, mode, resolver)
+4. Runner calls resolver.ProjectVersionFor(ctx, "rg")
+5. Resolver calls index.Lookup("rg") -> [{Recipe: "ripgrep", ...}]
+6. Resolver checks config.Tools["ripgrep"] -> Version: "14.1.0"
+7. Returns ("14.1.0", true, nil)
+8. Runner installs ripgrep@14.1.0 if needed
+9. Runner execs $TSUKU_HOME/tools/ripgrep-14.1.0/bin/rg with args
 ```
 
-**Flow 2: `tsuku exec python3` (not in .tsuku.toml)**
+**Flow 2: `tsuku run python3` (not in .tsuku.toml)**
 
 ```
 1-4. Same as above
 5. Resolver calls index.Lookup("python3") -> [{Recipe: "python", ...}]
 6. Resolver checks config.Tools["python"] -> not found
 7. Returns ("", false, nil)
-8. Runner falls back to binary index discovery (standard Track A flow)
-9. Runner installs python@latest if needed (with consent model)
-10. Runner execs the binary
+8. Runner falls back to binary index discovery (existing Track A flow)
+9. Runner installs python@latest (with consent model)
 ```
 
-**Flow 3: Shim invocation (`go build` with shim installed)**
+**Flow 3: `tsuku run go build` (no .tsuku.toml at all)**
+
+```
+1. cmd_run.go loads project config -> nil
+2. NewResolver(nil, index.Lookup) -> resolver where all lookups return !ok
+3. Runner.Run proceeds with nil-equivalent resolver
+4. Behavior identical to current tsuku run (no project awareness)
+```
+
+**Flow 4: Shim invocation (`go build` with shim installed)**
 
 ```
 1. Shell resolves `go` to $TSUKU_HOME/bin/go (shim)
-2. Shim runs: exec tsuku exec "go" -- "build"
-3. tsuku exec flow (same as Flow 1) starts
-4. LoadProjectConfig finds go = "1.22" in .tsuku.toml
-5. Resolver returns "1.22"
-6. Runner ensures go-1.22.x is installed, execs go build
+2. Shim runs: exec tsuku run "go" -- "build"
+3. Same as Flow 1 from there
 ```
 
 ## Implementation Approach
 
 ### Phase 1: Resolver (`internal/project/resolver.go`)
 
-Build the `ProjectVersionResolver` implementation. Pure logic, no CLI.
+Build the `ProjectVersionResolver` implementation.
 
 Deliverables:
 - `internal/project/resolver.go`: `NewResolver`, `ProjectVersionFor`
-- `internal/project/resolver_test.go`: Tests for command-to-recipe mapping, version pin found, version pin not found, no config (nil), index error handling
+- `internal/project/resolver_test.go`: Tests for command-to-recipe mapping, version pin found/not found, nil config, index error
 
-### Phase 2: `tsuku exec` Command
+### Phase 2: Wire Resolver into `tsuku run`
 
-Wire the resolver into `Runner.Run` via a new CLI command.
+Modify `cmd_run.go` to construct the resolver and pass it to `Runner.Run`.
 
 Deliverables:
-- `cmd/tsuku/cmd_exec.go`: Cobra command, mode resolution, resolver wiring
-- Register in main.go
-- Tests for exec command
+- Modified `cmd/tsuku/cmd_run.go`: load project config, construct resolver, pass to Runner.Run
+- Tests verifying resolver is wired in
 
 ### Phase 3: Shim Manager (`internal/shim`)
 
-Build the shim creation, removal, and listing logic.
+Build shim creation, removal, and listing.
 
 Deliverables:
 - `internal/shim/manager.go`: `Manager`, `Install`, `Uninstall`, `List`, `IsShim`
-- `internal/shim/manager_test.go`: Tests for create, overwrite protection, content-based identification, uninstall, list
+- `internal/shim/manager_test.go`: Tests
 
 ### Phase 4: `tsuku shim` Commands
 
-Wire the shim manager into CLI commands.
+Wire the shim manager into CLI.
 
 Deliverables:
 - `cmd/tsuku/cmd_shim.go`: Cobra commands for install/uninstall/list
 - Register in main.go
-- Tests
 
 ### Phase 5: Documentation
 
-Update CLI help text and add CI usage examples.
+Update CLI help and CI usage examples.
 
 ## Security Considerations
 
 ### Auto-Install via Shims in Untrusted Repos
 
-When a shimmed command runs in a cloned repo with `.tsuku.toml`, `tsuku exec` reads the repo's config and may trigger installation. The consent model from `Runner.Run` provides layered protection:
+When a shimmed command runs in a cloned repo with `.tsuku.toml`, `tsuku run` reads the repo's config and may trigger installation. The consent model from `Runner.Run` provides layered protection:
 
 1. **Mode resolution chain**: `--mode` flag -> `TSUKU_AUTO_INSTALL_MODE` env -> `auto_install_mode` config -> `confirm` (default)
-2. **TTY gate**: In `confirm` mode without a TTY (common in CI), installation is blocked
-3. **Verification gate**: In `auto` mode, recipes must have checksums for automatic install
+2. **TTY gate**: In `confirm` mode without a TTY, installation is blocked
+3. **Verification gate**: In `auto` mode, recipes must have checksums
 4. **Binary index gate**: Only recipes in the curated index can be resolved
 
-A malicious `.tsuku.toml` can declare any recipe name, but installation only proceeds if the recipe exists in the curated registry and passes verification.
-
 **Mitigations:**
-- Default consent mode for `tsuku exec` is `auto`, but this is blocked in non-interactive contexts without explicit opt-in via config or env var
-- Shim creation is an explicit user action -- not triggered by cloning a repo
-- The binary index limits resolution to curated recipes only
-- Checksum verification applies to all installs regardless of trigger
+- Default consent mode remains `confirm` -- project awareness doesn't change the consent model
+- Shim creation is an explicit user action
+- The binary index limits resolution to curated recipes
+- Checksum verification applies to all installs
 
 ### Shim File Safety
 
-Shims live in `$TSUKU_HOME/bin/` alongside the tsuku binary. The shim manager:
-- Refuses to overwrite existing files that aren't tsuku shims (content-based check)
-- Never overwrites the `tsuku` binary itself
-- Uses content-based identification for uninstall (only removes files it created)
+- Refuses to overwrite existing non-shim files (content-based check)
+- Never overwrites the `tsuku` binary
+- Content-based identification for uninstall
 
 ### PATH Precedence
 
-Shell activation (Block 5) prepends project-specific paths before `$TSUKU_HOME/bin/`. This means:
-- With activation: real binaries used directly, shims never fire
-- Without activation: shims fire and call `tsuku exec` with full consent model
-
-This layering is safe: the more trusted path (real installed binaries) always takes precedence over the less trusted path (shim -> exec -> install).
+Shell activation prepends project paths before `$TSUKU_HOME/bin/`. With activation: real binaries win. Without: shims fire with full consent model.
 
 ### Mitigations Summary
 
 | Risk | Severity | Mitigation | Residual Risk |
 |------|----------|------------|---------------|
-| Untrusted repo triggers install via shim | Medium | Consent model (mode chain, TTY gate, verification) | User with auto mode in config gets auto-install in any repo |
-| Shim overwrites system binary | Low | Content-based check, explicit refusal for tsuku binary | None |
-| Malicious .tsuku.toml declares fake recipe | Low | Binary index limits to curated recipes, checksum verification | Registry compromise would allow it |
-| Shim startup overhead | Low | ~5-10ms acceptable; multi-call binary can optimize later | Noticeable on very fast commands |
+| Untrusted repo triggers install via shim | Medium | Consent model (mode chain, TTY gate, verification) | User with auto mode gets auto-install in any repo |
+| Shim overwrites system binary | Low | Content-based check, tsuku binary protection | None |
+| Malicious .tsuku.toml declares fake recipe | Low | Binary index limits to curated recipes, checksums | Registry compromise |
+| Shim startup overhead | Low | ~5-10ms acceptable; multi-call binary can optimize | Noticeable on fast commands |
 
 ## Consequences
 
 ### Positive
 
-- **CI works without hooks**: `tsuku exec go build` in CI gets the project-pinned Go version with zero shell setup
-- **Complete Track A + B convergence**: The vision from the parent design is fully realized
+- **CI works without hooks**: `tsuku run go build` in CI gets the project-pinned Go version
+- **Complete Track A + B convergence**: The shell integration vision is realized
+- **No new CLI commands for exec**: `tsuku run` gains project awareness naturally
 - **Minimal new code**: Resolver is ~30-50 lines connecting existing components
-- **Static shims**: No regeneration, no staleness, no lifecycle management
-- **Future-proof**: Multi-call binary can replace shell shims later without changing commands
+- **Static shims**: No regeneration, no staleness
 
 ### Negative
 
-- **Two exec commands**: Users must learn when to use `tsuku exec` vs `tsuku run`
-- **Binary index dependency**: `tsuku exec` needs the index built (`tsuku update-registry`)
-- **Shim overhead**: ~5-10ms per invocation on top of exec's <50ms
-- **Dual-purpose `$TSUKU_HOME/bin/`**: Directory now holds the tsuku binary and optional shims
+- **Binary index dependency**: `tsuku run` with resolver needs the index built
+- **Shim overhead**: ~5-10ms per invocation on top of run's <50ms
+- **Dual-purpose `$TSUKU_HOME/bin/`**: Holds tsuku binary and optional shims
 
 ### Mitigations
 
-- **Two commands**: Document clearly. `tsuku exec` = project-aware, deterministic. `tsuku run` = ad-hoc, interactive.
-- **Index dependency**: Clear error message directing to `tsuku update-registry`. Consider auto-building on first `tsuku exec` if no index exists.
-- **Shim overhead**: Acceptable for CI. Multi-call binary optimization path documented.
-- **Dual-purpose bin/**: Content-based shim identification prevents confusion.
+- **Index dependency**: Clear error message. Consider auto-building on first run if no index exists.
+- **Shim overhead**: Multi-call binary optimization path documented.
+- **Dual-purpose bin/**: Content-based shim identification.
