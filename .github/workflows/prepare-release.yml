@@ -16,6 +16,11 @@ on:
         type: string
         default: main
         description: "Branch to release from"
+      dry-run:
+        required: false
+        type: boolean
+        default: false
+        description: "Skip push and tag creation (validate only)"
 
 jobs:
   release:
@@ -24,5 +29,6 @@ jobs:
       version: ${{ inputs.version }}
       tag: ${{ inputs.tag }}
       ref: ${{ inputs.ref }}
+      dry-run: ${{ inputs.dry-run }}
     secrets:
       token: ${{ secrets.RELEASE_PAT }}
