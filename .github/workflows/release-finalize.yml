@@ -1,3 +1,16 @@
+# Finalize Release -- step 3 of the release pipeline.
+#
+# Triggered automatically when release.yml (step 2) completes successfully.
+# Delegates to shirabe's reusable finalize workflow, which:
+#   1. Verifies at least 16 binary assets are present
+#   2. Promotes the draft release to published
+#   3. Runs .release/post-release.sh (generates unified checksums.txt)
+#
+# Expected assets (16 binaries):
+#   4 Go (goreleaser)  +  4 Rust glibc  +  2 Rust musl  +  6 LLM
+#
+# Requires: RELEASE_PAT secret with release edit permission.
+
 name: Finalize Release
 
 on:

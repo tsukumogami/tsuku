@@ -1,3 +1,18 @@
+# Release -- step 2 of the release pipeline (the main build).
+#
+# Triggered by a tag push from release-prepare.yml (step 1). Builds all
+# binaries and uploads them to the draft release created by /shirabe:release:
+#   - Go binary via goreleaser (4 platform binaries + partial checksums)
+#   - Rust tsuku-dltest (4 glibc + 2 musl = 6 binaries)
+#   - Rust tsuku-llm (6 binaries across GPU backends)
+#   - Integration tests on native platforms
+#
+# When this workflow completes, release-finalize.yml (step 3) fires
+# automatically to verify assets and publish the release.
+#
+# Version injection: Cargo.toml files are stamped by .release/set-version.sh
+# during step 1. Go version is injected via goreleaser ldflags from the tag.
+
 name: Release
 
 on:
