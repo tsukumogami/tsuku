@@ -22,11 +22,12 @@ Feature: Error handling
     When I run "tsuku create sometool --from invalidsource"
     Then the exit code is 2
 
-  Scenario: Install with no arguments
-    # See #2121
+  Scenario: Install with no arguments and no project config
+    # tsuku install (no args) reads .tsuku.toml for project tools (#2175).
+    # Without a config file, it errors with a helpful message.
     When I run "tsuku install"
     Then the exit code is not 0
-    And the error output contains "requires at least 1 arg"
+    And the error output contains "no .tsuku.toml found"
 
   Scenario: Nonexistent plan file
     When I run "tsuku install --plan /nonexistent/path.json"
