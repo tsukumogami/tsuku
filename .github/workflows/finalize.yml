@@ -1,0 +1,25 @@
+name: Finalize Release
+
+on:
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
+
+jobs:
+  extract-tag:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - id: tag
+        run: echo "tag=${{ github.event.workflow_run.head_branch }}" >> "$GITHUB_OUTPUT"
+
+  finalize:
+    needs: extract-tag
+    uses: tsukumogami/shirabe/.github/workflows/finalize-release.yml@v0.2.0
+    with:
+      tag: ${{ needs.extract-tag.outputs.tag }}
+      expected-assets: 16
+    secrets:
+      token: ${{ secrets.RELEASE_PAT }}
