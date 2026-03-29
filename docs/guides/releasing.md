@@ -98,10 +98,13 @@ Calls shirabe's reusable release workflow, which:
 
 ### release.yml (step 2)
 
-Triggered by the tag push. Builds everything:
+Triggered by the tag push. Builds everything and uploads to the draft
+release. If a draft already exists (created by `/release` in step 1),
+assets are uploaded to it. Otherwise, a new draft is created from the
+tag annotation.
 
-- **Go binary** -- goreleaser creates the draft release and uploads 4
-  platform binaries with partial checksums
+- **Go binary** -- goreleaser builds 4 platform binaries (publish
+  disabled; a separate step uploads assets to the draft)
 - **tsuku-dltest** -- Rust binary built on native runners (4 glibc + 2 musl)
 - **tsuku-llm** -- Rust binary with GPU backends (2 macOS + 4 Linux)
 - **Integration tests** -- validates binaries on each platform

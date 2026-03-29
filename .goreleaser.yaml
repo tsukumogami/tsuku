@@ -37,12 +37,7 @@ changelog:
   disable: true
 
 release:
-  github:
-    owner: tsukumogami
-    name: tsuku
-  draft: true
-  make_latest: true
-  prerelease: auto
+  disable: true
 
 snapshot:
   version_template: "{{ incpatch .Version }}-next"
