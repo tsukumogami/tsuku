@@ -48,29 +48,44 @@ jobs:
             exit 1
           fi
 
-      - name: Run GoReleaser
+      - name: Run GoReleaser (build only)
         uses: goreleaser/goreleaser-action@ec59f474b9834571250b370d4735c50f8e2d1e29  # v7.0.0
         with:
           distribution: goreleaser
           version: "~> v2"
-          args: release --clean
+          args: release --clean --skip=publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update release with notes from tag
+      - name: Upload assets to draft release or create one
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${GITHUB_REF_NAME}"
-          # Fetch tag annotations (not included in checkout)
-          git fetch origin "refs/tags/${TAG}:refs/tags/${TAG}" --force
-          # Extract full tag annotation message
-          git tag -l --format='%(contents)' "${TAG}" > /tmp/release-notes.md
-          echo "Release notes extracted:"
-          cat /tmp/release-notes.md
-          # Update the release body with our curated notes
-          gh release edit "$TAG" --notes-file /tmp/release-notes.md
-          echo "Updated release $TAG with release notes"
+          ASSETS=(
+            dist/tsuku-linux-amd64
+            dist/tsuku-linux-arm64
+            dist/tsuku-darwin-amd64
+            dist/tsuku-darwin-arm64
+            dist/checksums.txt
+          )
+
+          # Check if a draft release already exists (created by /release skill)
+          DRAFT=$(gh release view "$TAG" --json isDraft --jq '.isDraft' 2>/dev/null || echo "not_found")
+
+          if [ "$DRAFT" = "true" ]; then
+            echo "Draft release found for $TAG, uploading assets..."
+            gh release upload "$TAG" "${ASSETS[@]}" --clobber
+          else
+            echo "No draft release found, creating one..."
+            git fetch origin "refs/tags/${TAG}:refs/tags/${TAG}" --force
+            git tag -l --format='%(contents)' "${TAG}" > /tmp/release-notes.md
+            gh release create "$TAG" \
+              --draft \
+              --title "$TAG" \
+              --notes-file /tmp/release-notes.md \
+              "${ASSETS[@]}"
+          fi
 
   # Build Rust binary (tsuku-dltest) on native runners
   build-rust:
