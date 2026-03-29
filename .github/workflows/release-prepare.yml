@@ -1,0 +1,48 @@
+# Prepare Release -- step 1 of the release pipeline.
+#
+# Delegates to shirabe's reusable release workflow, which:
+#   1. Stamps version into Cargo.toml files via .release/set-version.sh
+#   2. Commits the version change
+#   3. Creates an annotated tag (pulling notes from the draft release)
+#   4. Bumps to the next dev version and commits
+#   5. Pushes the branch and tag
+#
+# The tag push triggers release.yml (step 2), which builds all artifacts.
+#
+# Trigger: manual dispatch (workflow_dispatch) or /shirabe:release skill.
+# Requires: RELEASE_PAT secret with push permission.
+
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        type: string
+        description: "Release version without v prefix (e.g., 0.6.2)"
+      tag:
+        required: true
+        type: string
+        description: "Git tag (e.g., v0.6.2)"
+      ref:
+        required: true
+        type: string
+        default: main
+        description: "Branch to release from"
+      dry-run:
+        required: false
+        type: boolean
+        default: false
+        description: "Skip push and tag creation (validate only)"
+
+jobs:
+  release:
+    uses: tsukumogami/shirabe/.github/workflows/release.yml@v0.2.0
+    with:
+      version: ${{ inputs.version }}
+      tag: ${{ inputs.tag }}
+      ref: ${{ inputs.ref }}
+      dry-run: ${{ inputs.dry-run }}
+    secrets:
+      token: ${{ secrets.RELEASE_PAT }}

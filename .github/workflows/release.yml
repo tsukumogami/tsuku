@@ -1,3 +1,18 @@
+# Release -- step 2 of the release pipeline (the main build).
+#
+# Triggered by a tag push from release-prepare.yml (step 1). Builds all
+# binaries and uploads them to the draft release created by /shirabe:release:
+#   - Go binary via goreleaser (4 platform binaries + partial checksums)
+#   - Rust tsuku-dltest (4 glibc + 2 musl = 6 binaries)
+#   - Rust tsuku-llm (6 binaries across GPU backends)
+#   - Integration tests on native platforms
+#
+# When this workflow completes, release-finalize.yml (step 3) fires
+# automatically to verify assets and publish the release.
+#
+# Version injection: Cargo.toml files are stamped by .release/set-version.sh
+# during step 1. Go version is injected via goreleaser ldflags from the tag.
+
 name: Release
 
 on:
@@ -96,16 +111,6 @@ jobs:
         with:
           toolchain: "1.75"
 
-      - name: Inject version
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s/^version = .*/version = \"$VERSION\"/" cmd/tsuku-dltest/Cargo.toml
-          else
-            sed -i "s/^version = .*/version = \"$VERSION\"/" cmd/tsuku-dltest/Cargo.toml
-          fi
-          echo "Building version: $VERSION"
-
       - name: Build release binary
         working-directory: cmd/tsuku-dltest
         run: cargo build --release
@@ -144,12 +149,6 @@ jobs:
           sparse-checkout: |
             cmd/tsuku-dltest
             container-images.json
-
-      - name: Inject version
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          sed -i "s/^version = .*/version = \"$VERSION\"/" cmd/tsuku-dltest/Cargo.toml
-          echo "Building version: $VERSION"
 
       - name: Build in Alpine container
         run: |
@@ -294,16 +293,6 @@ jobs:
           fi
           echo "VULKAN_SDK=/usr" >> $GITHUB_ENV
 
-      - name: Inject version
-        run: |
-          VERSION="${{ steps.artifact.outputs.version }}"
-          if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s/^version = .*/version = \"$VERSION\"/" tsuku-llm/Cargo.toml
-          else
-            sed -i "s/^version = .*/version = \"$VERSION\"/" tsuku-llm/Cargo.toml
-          fi
-          echo "Building version: $VERSION"
-
       - name: Build release binary
         working-directory: tsuku-llm
         env:
@@ -435,86 +424,3 @@ jobs:
             echo "WARNING: tsuku-llm version string not found in output"
           fi
           echo "tsuku-llm validation passed"
-
-  finalize-release:
-    name: Finalize Release
-    needs: [integration-test, build-rust-musl, build-llm]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Verify all artifacts present
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TAG="${GITHUB_REF_NAME}"
-          VERSION="${TAG#v}"
-
-          # All binaries use {tool}-{os}-{arch}[-{backend}] naming (no version in filenames)
-          EXPECTED_ARTIFACTS=(
-            # Go binaries (from goreleaser)
-            tsuku-linux-amd64
-            tsuku-linux-arm64
-            tsuku-darwin-amd64
-            tsuku-darwin-arm64
-            # Rust binaries - glibc (from build-rust)
-            tsuku-dltest-linux-amd64
-            tsuku-dltest-linux-arm64
-            tsuku-dltest-darwin-amd64
-            tsuku-dltest-darwin-arm64
-            # Rust binaries - musl (from build-rust-musl)
-            tsuku-dltest-linux-amd64-musl
-            tsuku-dltest-linux-arm64-musl
-            # LLM addon binaries (from build-llm)
-            tsuku-llm-darwin-arm64
-            tsuku-llm-darwin-amd64
-            tsuku-llm-linux-amd64-cuda
-            tsuku-llm-linux-amd64-vulkan
-            tsuku-llm-linux-arm64-cuda
-            tsuku-llm-linux-arm64-vulkan
-          )
-
-          echo "Verifying all ${#EXPECTED_ARTIFACTS[@]} artifacts are present..."
-          ASSETS=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets -q '.assets[].name')
-
-          for artifact in "${EXPECTED_ARTIFACTS[@]}"; do
-            if ! echo "$ASSETS" | grep -q "^${artifact}$"; then
-              echo "ERROR: Missing artifact: $artifact"
-              exit 1
-            fi
-            echo "Found: $artifact"
-          done
-          echo "All artifacts verified"
-
-      - name: Download artifacts and generate checksums
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TAG="${GITHUB_REF_NAME}"
-          mkdir -p ./artifacts
-          cd ./artifacts
-
-          # Download all binary artifacts (exclude existing checksums.txt from goreleaser)
-          gh release download "$TAG" \
-            --repo "$GITHUB_REPOSITORY" \
-            --pattern "tsuku-*" \
-            --skip-existing
-
-          # Generate unified checksums for all binaries
-          sha256sum tsuku-* > checksums.txt
-          echo "Generated checksums.txt:"
-          cat checksums.txt
-
-      - name: Upload checksums
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TAG="${GITHUB_REF_NAME}"
-          gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" ./artifacts/checksums.txt --clobber
-          echo "Uploaded checksums.txt"
-
-      - name: Publish release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TAG="${GITHUB_REF_NAME}"
-          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false
-          echo "Published release $TAG"
