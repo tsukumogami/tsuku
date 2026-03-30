@@ -52,7 +52,7 @@ The plumbing. Time-cached update checks with a configurable interval (default 24
 **Status:** Not started
 **Upstream:** [PRD-auto-update](../prds/PRD-auto-update.md) (R3, R9, R10, R11a)
 
-The core behavior. When cached check results show a newer version within pin boundaries, tsuku downloads and installs it during the next tsuku command. If installation fails, the previous version is automatically preserved and a failure notice is written. `tsuku rollback <tool>` switches to the immediately preceding version (one level deep). `tsuku notices` displays failure details. This ships together with auto-apply because auto-apply without rollback is unsafe as the default.
+The core behavior. When cached check results show a newer version within pin boundaries, tsuku downloads and installs it during the next tsuku command. If installation fails, the previous version is automatically preserved and a basic failure notice is written to `$TSUKU_HOME/notices/`. `tsuku rollback <tool>` switches to the immediately preceding version (one level deep); rollback is temporary and doesn't change the `Requested` field (D7). `tsuku notices` displays failure details (R11a). This feature implements basic notice writing only -- every failure writes a notice. Consecutive-failure suppression (the "fewer than 3 = transient" logic from R11) ships in Feature 7. This ships together with auto-apply because auto-apply without rollback is unsafe as the default.
 
 ### Feature 4: Self-update
 **Needs:** `needs-design` -- binary replacement mechanism (rename-in-place vs. alternatives) and version check integration need design
@@ -71,18 +71,19 @@ Independent from tool auto-update. `tsuku self-update` downloads the latest tsuk
 Cross-cutting. Stderr notifications after command output for available or applied updates. Suppression layers: non-TTY, `CI=true`, `--quiet`, `TSUKU_NO_UPDATE_CHECK=1`. `TSUKU_AUTO_UPDATE=1` overrides CI detection for explicit opt-in. The notification format and suppression logic are shared across tool updates and self-update.
 
 ### Feature 6: Update polish
+**Needs:** `needs-design` -- out-of-channel notification throttling (weekly per tool, persistence, injectable clock for testing) needs design decisions
 **Dependencies:** Feature 1, Feature 3, Feature 5
 **Status:** Not started
 **Upstream:** [PRD-auto-update](../prds/PRD-auto-update.md) (R13, R14, R15b)
 
-Refinements that build on the core system. Pin-aware `tsuku outdated` with dual columns ("within pin" and "overall"). Out-of-channel notifications when a newer version exists outside the pin boundary (configurable, at most weekly per tool). `tsuku update --all` for batch updates within pin boundaries.
+Refinements that build on the core system. Pin-aware `tsuku outdated` with dual columns ("within pin" and "overall"). Out-of-channel notifications when a newer version exists outside the pin boundary (configurable via `updates.notify_out_of_channel`, at most weekly per tool -- requires per-tool throttle state and injectable clock). `tsuku update --all` for batch updates within pin boundaries.
 
 ### Feature 7: Resilience
 **Dependencies:** Feature 3 (extends auto-apply with failure handling)
 **Status:** Not started
 **Upstream:** [PRD-auto-update](../prds/PRD-auto-update.md) (R11, R18, R20)
 
-Hardening for real-world conditions. Deferred failure reporting with consecutive-failure suppression (fewer than 3 consecutive = transient, suppressed). Old version retention with configurable period (default 7 days) and garbage collection. Graceful offline degradation using cached results when network is unavailable.
+Hardening for real-world conditions. Adds consecutive-failure suppression on top of Feature 3's basic notice writing -- failures with fewer than 3 consecutive occurrences for the same tool are treated as transient and suppressed (R11, building on R11a from Feature 3). Old version retention with configurable period (default 7 days) and garbage collection. Graceful offline degradation using cached results when network is unavailable. `tsuku doctor` detects orphaned staging directories and stale notices.
 
 ### Feature 8: Project-level integration
 **Needs:** `needs-design` -- interaction between `.tsuku.toml` version constraints and global auto-update policy needs design
@@ -98,6 +99,13 @@ Hardening for real-world conditions. Deferred failure reporting with consecutive
 **Upstream:** [PRD-auto-update](../prds/PRD-auto-update.md) (R22)
 
 Extend the existing telemetry system (`NewUpdateEvent`) with success/failure/rollback outcomes for auto-updates. Respects the existing opt-out mechanism. Low priority but valuable for understanding update reliability at scale.
+
+## Cross-cutting constraints
+
+These PRD requirements apply across multiple features. Every feature's design must account for them:
+
+- **R19: Zero added latency.** Background update checks must not add measurable latency to any command or tool execution. The check goroutine/process has a 10-second absolute timeout. Affects Features 2, 3, 4, 5.
+- **R21: Atomic operations.** All file writes (state.json, cache, notices) use temp-file-then-rename. Auto-update never leaves the system in a partially updated state. Affects Features 2, 3, 7, 8.
 
 ## Sequencing rationale
 
@@ -120,7 +128,7 @@ The split between Phase 1 (Features 1-5) and Phase 2 (Features 6-9) reflects a n
 | 3. Auto-apply with rollback | Not started | Needs design |
 | 4. Self-update | Not started | Needs design |
 | 5. Notification system | Not started | Needs design |
-| 6. Update polish | Not started | -- |
+| 6. Update polish | Not started | Needs design |
 | 7. Resilience | Not started | -- |
 | 8. Project-level integration | Not started | Needs design |
 | 9. Update telemetry | Not started | -- |
