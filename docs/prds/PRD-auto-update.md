@@ -63,11 +63,11 @@ These problems compound. Users who try to stay current have incomplete informati
 
 **R2: Channel-aware update resolution.** `tsuku update <tool>` must respect the `Requested` field. A tool installed with `tsuku install node@18` updates only within 18.x.y, not to the absolute latest. This replaces the current behavior where `update` ignores constraints.
 
-**R3: Automatic update application.** When update checks find a newer version within the tool's pin boundary, tsuku automatically installs it. The lifecycle: a background goroutine checks for updates and writes results to a cache file. On the same or next invocation, tsuku reads the cache, downloads and installs the update (in the foreground, after the primary command completes), and notifies the user. The download/install phase doesn't run concurrently with state-mutating commands (install, update, remove) to avoid state.json write conflicts.
+**R3: Automatic update application.** When update checks find a newer version within the tool's pin boundary, tsuku automatically installs it. The lifecycle: a shim invocation or tsuku command detects the cache is stale, spawns a background process to check for updates, and proceeds immediately. The background process writes results to a cache file. On a subsequent tsuku command (e.g., `tsuku install`, `tsuku list`, or any explicit tsuku invocation), tsuku reads the cache, downloads and installs pending updates, and notifies the user. The download/install phase runs during tsuku commands only (not during shim invocations) to avoid adding latency to tool execution.
 
-**R4: Time-cached update checks.** Update checks are cached with a configurable interval (default 24 hours, range 1h-30d). Checks don't repeat within the interval. A force flag (`--check-updates`) bypasses the cache.
+**R4: Time-cached update checks.** Update checks are cached with a configurable interval (default 24 hours, range 1h-30d). Checks don't repeat within the interval. A force flag (`--check-updates`) bypasses the cache. Staleness is determined by a single stat on the cache file's mtime — no JSON parsing on the hot path.
 
-**R5: Non-blocking checks.** Update checks run as a background goroutine within the tsuku process. They never add latency to the primary command. If the check doesn't complete before the command finishes, results are cached for the next invocation.
+**R5: Non-blocking checks.** Update checks are triggered by three entry points: (1) shim invocations (when a user runs an installed tool), (2) shell hook (`tsuku hook-env` on prompt), and (3) direct tsuku commands. In all cases, the check is non-blocking: the shim stats the cache file, and if stale, spawns a detached background process to perform the actual check, then immediately execs the real binary. The background process writes results to the cache file and exits. No user-visible latency is added to tool execution.
 
 **R6: All-provider support.** Update checks use the ProviderFactory to resolve versions from all supported sources (GitHub, PyPI, npm, crates.io, RubyGems, Homebrew, Go proxy, etc.). This replaces the current GitHub-only implementation in `outdated`.
 
@@ -120,10 +120,11 @@ These problems compound. Users who try to stay current have incomplete informati
 - [ ] Pin level is derived from the `Requested` field, no new syntax required
 
 ### Automatic updates
-- [ ] After the check interval elapses, the next tsuku command triggers a background update check
-- [ ] Updates within pin boundaries are automatically downloaded and installed
-- [ ] The update check goroutine runs in the background and doesn't block the primary command's execution path
-- [ ] The download/install phase runs after the primary command completes (not concurrently with state-mutating commands)
+- [ ] After the check interval elapses, the next shim invocation or tsuku command spawns a background update check
+- [ ] Running an installed tool (via shim) triggers the staleness check — no dependency on running `tsuku` directly
+- [ ] The staleness check in the shim is a single stat on the cache file (no JSON parsing, no network I/O)
+- [ ] The background check process is detached and doesn't block tool execution
+- [ ] Updates within pin boundaries are downloaded and installed during the next tsuku command invocation (not during shim/tool execution)
 - [ ] An auto-applied update is reported via stderr notification
 - [ ] Tools with exact pins (3-component version) are never auto-updated
 - [ ] When `updates.auto_apply = false`, available updates are reported but not installed
