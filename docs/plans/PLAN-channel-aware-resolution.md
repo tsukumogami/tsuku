@@ -21,6 +21,47 @@ Establish version channel pinning so `tsuku update` respects install-time constr
 
 **Horizontal.** The design describes a linear dependency chain with well-defined interfaces between layers: pin model (pure functions) -> resolution helper (composes pin model with cache) -> command integration (wires helper into existing commands). Each layer is independently testable and reviewable. Walking skeleton doesn't apply since there's no end-to-end flow to slice through -- the layers build bottom-up.
 
+## Issue Outlines
+
+### Issue 1: feat(install): add pin level model
+- **Complexity**: testable
+- **Goal**: Add PinLevel type and derivation functions that compute pin level from the Requested field
+- **Acceptance Criteria**:
+  - [ ] PinLevel type with PinLatest, PinMajor, PinMinor, PinExact, PinChannel values
+  - [ ] PinLevelFromRequested derives pin level from component count
+  - [ ] VersionMatchesPin uses dot-boundary matching
+  - [ ] ValidateRequested rejects path traversal and unexpected characters
+  - [ ] Unit tests cover all pin levels and edge cases
+- **Dependencies**: None
+
+### Issue 2: feat(version): add cache-backed pin-aware resolution helper
+- **Complexity**: testable
+- **Goal**: Add ResolveWithinBoundary helper and modify CachedVersionLister.ResolveLatest to derive from cached ListVersions
+- **Acceptance Criteria**:
+  - [ ] ResolveWithinBoundary routes through cached list for VersionLister providers
+  - [ ] Falls back to ResolveVersion for VersionResolver-only providers
+  - [ ] CachedVersionLister.ResolveLatest derives from cached version list
+  - [ ] Unit tests with mock providers covering all paths
+- **Dependencies**: Issue 1
+
+### Issue 3: fix(update): respect Requested field version constraint
+- **Complexity**: testable
+- **Goal**: Wire ResolveWithinBoundary into the update command so it resolves within the pin boundary
+- **Acceptance Criteria**:
+  - [ ] update.go reads Requested from state.Installed[tool].Versions[active].Requested
+  - [ ] Passes Requested as version constraint to runInstallWithTelemetry
+  - [ ] tsuku update node after install node@18 stays within 18.x.y
+- **Dependencies**: Issue 2
+
+### Issue 4: fix(outdated): use ProviderFactory for all version providers
+- **Complexity**: testable
+- **Goal**: Replace hard-coded GitHub resolution with ProviderFactory + ResolveWithinBoundary
+- **Acceptance Criteria**:
+  - [ ] outdated uses ProviderFactory.ProviderFromRecipe for all tools
+  - [ ] PinExact tools excluded from outdated output
+  - [ ] All provider types covered, not just GitHub
+- **Dependencies**: Issue 2
+
 ## Implementation Issues
 
 ### Milestone: [Channel-aware version resolution](https://github.com/tsukumogami/tsuku/milestone/110)
