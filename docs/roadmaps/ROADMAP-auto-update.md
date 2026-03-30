@@ -119,16 +119,76 @@ The order is driven by three constraints:
 
 The split between Phase 1 (Features 1-5) and Phase 2 (Features 6-9) reflects a natural delivery boundary: Phase 1 delivers a complete, safe auto-update experience. Phase 2 adds polish, resilience, and integration. Phase 2 features are independently shippable and can be parallelized.
 
-## Progress
+## Implementation Issues
 
-| Feature | Status | Artifact |
-|---------|--------|----------|
-| 1. Channel-aware version resolution | Not started | Needs design |
-| 2. Background update check infrastructure | Not started | Needs design |
-| 3. Auto-apply with rollback | Not started | Needs design |
-| 4. Self-update | Not started | Needs design |
-| 5. Notification system | Not started | Needs design |
-| 6. Update polish | Not started | Needs design |
-| 7. Resilience | Not started | -- |
-| 8. Project-level integration | Not started | Needs design |
-| 9. Update telemetry | Not started | -- |
+### Milestone: [Auto-update](https://github.com/tsukumogami/tsuku/milestone/109)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#2181: channel-aware version resolution](https://github.com/tsukumogami/tsuku/issues/2181) | None | testable |
+| _Fix `tsuku update` to respect the Requested field and `tsuku outdated` to use ProviderFactory. Establish pin-level semantics and cache ResolveLatest results. Everything else depends on this being correct._ | | |
+| [#2182: self-update mechanism](https://github.com/tsukumogami/tsuku/issues/2182) | None | testable |
+| _Independent track: rename-in-place binary replacement for `tsuku self-update`. Kept separate from the managed tool system to avoid bootstrap risk. Integrates with check infrastructure when available._ | | |
+| [#2183: background update check infrastructure](https://github.com/tsukumogami/tsuku/issues/2183) | [#2181](https://github.com/tsukumogami/tsuku/issues/2181) | testable |
+| _With version resolution in place, add the time-cached check system: layered triggers (shell hook > shim > command), detached background process, cache file, and config.toml `[updates]` section._ | | |
+| [#2184: auto-apply with rollback](https://github.com/tsukumogami/tsuku/issues/2184) | [#2181](https://github.com/tsukumogami/tsuku/issues/2181), [#2183](https://github.com/tsukumogami/tsuku/issues/2183) | testable |
+| _The core behavior. Reads check results, downloads and installs updates within pin boundaries, auto-rolls back on failure, and writes basic notices. Adds `tsuku rollback` and `tsuku notices` commands._ | | |
+| [#2185: notification system](https://github.com/tsukumogami/tsuku/issues/2185) | [#2183](https://github.com/tsukumogami/tsuku/issues/2183), [#2184](https://github.com/tsukumogami/tsuku/issues/2184) | testable |
+| _Cross-cutting stderr notification UX with layered suppression (non-TTY, CI, quiet, env var). Shared between tool updates and self-update. Completes the Phase 1 user experience._ | | |
+| [#2186: update polish](https://github.com/tsukumogami/tsuku/issues/2186) | [#2181](https://github.com/tsukumogami/tsuku/issues/2181), [#2184](https://github.com/tsukumogami/tsuku/issues/2184), [#2185](https://github.com/tsukumogami/tsuku/issues/2185) | testable |
+| _Phase 2 refinements: pin-aware dual-column `tsuku outdated`, out-of-channel notifications with weekly per-tool throttle, and `tsuku update --all` for batch updates._ | | |
+| [#2187: resilience](https://github.com/tsukumogami/tsuku/issues/2187) | [#2184](https://github.com/tsukumogami/tsuku/issues/2184) | testable |
+| _Hardens auto-apply for real-world conditions. Adds consecutive-failure suppression (< 3 = transient), old version GC with configurable retention, graceful offline degradation, and `tsuku doctor` integration._ | | |
+| [#2188: project-level integration](https://github.com/tsukumogami/tsuku/issues/2188) | [#2181](https://github.com/tsukumogami/tsuku/issues/2181), [#2184](https://github.com/tsukumogami/tsuku/issues/2184) | testable |
+| _Defines how `.tsuku.toml` version constraints interact with auto-update: exact versions disable it, prefix versions allow it within the pin. Project config takes precedence over global policy._ | | |
+| [#2189: update outcome telemetry](https://github.com/tsukumogami/tsuku/issues/2189) | [#2184](https://github.com/tsukumogami/tsuku/issues/2184) | simple |
+| _Extends existing `NewUpdateEvent` telemetry with success/failure/rollback outcomes. Low priority but valuable for understanding update reliability at scale._ | | |
+
+### Dependency graph
+
+```mermaid
+graph TD
+    subgraph Phase1["Phase 1: Foundation + MVP"]
+        I2181["#2181: Channel-aware version..."]
+        I2182["#2182: Self-update mechanism"]
+        I2183["#2183: Background update checks"]
+        I2184["#2184: Auto-apply with rollback"]
+        I2185["#2185: Notification system"]
+    end
+
+    subgraph Phase2["Phase 2: Polish + Resilience"]
+        I2186["#2186: Update polish"]
+        I2187["#2187: Resilience"]
+        I2188["#2188: Project-level integration"]
+        I2189["#2189: Update telemetry"]
+    end
+
+    I2181 --> I2183
+    I2181 --> I2184
+    I2183 --> I2184
+    I2183 --> I2185
+    I2184 --> I2185
+    I2181 --> I2186
+    I2184 --> I2186
+    I2185 --> I2186
+    I2184 --> I2187
+    I2181 --> I2188
+    I2184 --> I2188
+    I2184 --> I2189
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+    classDef needsPrd fill:#b3e5fc
+    classDef needsSpike fill:#ffcdd2
+    classDef needsDecision fill:#d1c4e9
+    classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
+    classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
+
+    class I2181,I2182 needsDesign
+    class I2183,I2184,I2185,I2186,I2187,I2188 needsDesign
+    class I2189 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan
