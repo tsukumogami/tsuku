@@ -45,7 +45,9 @@ These problems compound. Users who try to stay current have incomplete informati
 
 **US2: Daily developer, major version awareness.** As a developer pinned to Node 20, I want to know when Node 22 is available so that I can decide whether to adopt it on my own schedule.
 
-**US3: Daily developer, rollback.** As a developer whose auto-updated kubectl is broken, I want to revert to the previous version in one command so that I can keep working while the upstream bug is fixed.
+**US3: Daily developer, failed auto-update.** As a developer, I want a failed auto-update to automatically roll back to the previous working version and notify me on next use so that my workflow is never broken by an update, and I can see what went wrong.
+
+**US3a: Daily developer, runtime breakage.** As a developer whose auto-updated kubectl passes installation but crashes at runtime, I want to revert to the previous version in one command so that I can keep working while the upstream bug is fixed.
 
 **US4: CI pipeline, deterministic builds.** As a CI configuration, I want auto-update to be suppressed in non-interactive environments so that my builds don't change behavior without an explicit config change.
 
@@ -78,6 +80,8 @@ These problems compound. Users who try to stay current have incomplete informati
 **R10: Automatic rollback on failure.** If an auto-update fails at any point (download, extraction, verification, symlink creation), the previous version remains active. No user intervention is needed. The failure is reported via the notification system.
 
 **R11: Deferred failure reporting.** Failed auto-updates write a notice to `$TSUKU_HOME/notices/`. The notice is displayed on the next tsuku command invocation (stderr, once). Failures with fewer than 3 consecutive occurrences for the same tool are considered transient and suppressed. At 3+ consecutive failures, or on immediately actionable errors (checksum mismatch, disk full, recipe incompatibility), a notice is produced.
+
+**R11a: Failure log.** `tsuku notices` (or `tsuku update-log`) displays all pending and recent update failure details, including the tool name, attempted version, error message, and timestamp. Users can review what went wrong after seeing a deferred failure notification.
 
 **R12: Update notifications.** When updates are available (or have been applied), a stderr notification appears after the primary command's output. Notifications are suppressed when stdout is not a TTY, when `CI=true` is set, when `--quiet` is passed, or when `TSUKU_NO_UPDATE_CHECK=1` is set.
 
@@ -138,8 +142,9 @@ These problems compound. Users who try to stay current have incomplete informati
 - [ ] Further rollback beyond one step requires `tsuku install tool@version`
 
 ### Failure handling
-- [ ] A failed auto-update preserves the previous working version
-- [ ] Failed updates produce a deferred notice displayed on next invocation
+- [ ] A failed auto-update automatically rolls back to the previous working version with no user intervention
+- [ ] The deferred notice for a failed auto-update says the rollback happened, names the tool and versions, and points to `tsuku notices` for details
+- [ ] `tsuku notices` displays full failure details (tool, attempted version, error, timestamp) for all recent failures
 - [ ] Transient network failures (1-2 consecutive) don't produce notices
 - [ ] Persistent failures (3+) or actionable errors produce one notice
 - [ ] `tsuku doctor` detects orphaned staging directories and stale notices
@@ -224,7 +229,7 @@ Prerequisite fixes and core auto-update in one delivery:
 - Version channel pinning semantics (R1)
 - Time-cached background update checks (R4, R5)
 - Auto-apply updates within pin boundaries (R3)
-- Rollback command and auto-rollback on failure (R9, R10)
+- Rollback command and auto-rollback on failure (R9, R10, R11a)
 - Basic notification UX with CI suppression (R12, R16)
 - Update configuration in config.toml (R4 configurability)
 - Self-update binary mechanism and checks (R7, R8)
