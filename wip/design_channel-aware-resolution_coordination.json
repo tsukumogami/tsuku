@@ -1,0 +1,10 @@
+{
+  "topic": "channel-aware-resolution",
+  "decisions": [
+    {"id": 1, "question": "How should pin levels be represented and derived from the Requested field?", "status": "pending", "complexity": "standard"},
+    {"id": 2, "question": "How should version resolution enforce pin boundaries during update and outdated?", "status": "pending", "complexity": "standard"},
+    {"id": 3, "question": "How should ResolveLatest results be cached?", "status": "pending", "complexity": "standard"}
+  ],
+  "cross_validation": "pending",
+  "round": 0
+}
