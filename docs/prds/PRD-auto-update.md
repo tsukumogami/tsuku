@@ -63,11 +63,17 @@ These problems compound. Users who try to stay current have incomplete informati
 
 **R2: Channel-aware update resolution.** `tsuku update <tool>` must respect the `Requested` field. A tool installed with `tsuku install node@18` updates only within 18.x.y, not to the absolute latest. This replaces the current behavior where `update` ignores constraints.
 
-**R3: Automatic update application.** When update checks find a newer version within the tool's pin boundary, tsuku automatically installs it. The lifecycle: a shim invocation or tsuku command detects the cache is stale, spawns a background process to check for updates, and proceeds immediately. The background process writes results to a cache file. On a subsequent tsuku command (e.g., `tsuku install`, `tsuku list`, or any explicit tsuku invocation), tsuku reads the cache, downloads and installs pending updates, and notifies the user. The download/install phase runs during tsuku commands only (not during shim invocations) to avoid adding latency to tool execution.
+**R3: Automatic update application.** When update checks find a newer version within the tool's pin boundary, tsuku automatically installs it. The lifecycle: a trigger (shell hook, shim, or tsuku command) detects the cache is stale and spawns a background process to check. The background process writes results to a cache file. On a subsequent tsuku command, tsuku reads the cache, downloads and installs pending updates, and notifies the user. The download/install phase runs during tsuku commands only (not during shell hooks or shim invocations) to avoid adding latency to tool execution or prompt rendering.
 
 **R4: Time-cached update checks.** Update checks are cached with a configurable interval (default 24 hours, range 1h-30d). Checks don't repeat within the interval. A force flag (`--check-updates`) bypasses the cache. Staleness is determined by a single stat on the cache file's mtime — no JSON parsing on the hot path.
 
-**R5: Non-blocking checks.** Update checks are triggered by three entry points: (1) shim invocations (when a user runs an installed tool), (2) shell hook (`tsuku hook-env` on prompt), and (3) direct tsuku commands. In all cases, the check is non-blocking: the shim stats the cache file, and if stale, spawns a detached background process to perform the actual check, then immediately execs the real binary. The background process writes results to the cache file and exits. No user-visible latency is added to tool execution.
+**R5: Non-blocking checks with layered triggers.** Update checks are triggered by three entry points in priority order:
+
+1. **Shell activation hook** (primary, most frequent): For users with shell integration enabled (`tsuku hook install --activate`), the `hook-env` prompt command stats the update cache file on each prompt. If stale, it spawns a detached background process to check. This runs on every prompt and is the most reliable trigger. The stat check must add <5ms to prompt latency.
+2. **Shim invocations** (secondary): For tools installed via recipe shims (`tsuku run` delegation), the shim path can trigger a staleness check before exec'ing the real binary. Not all tools use shims — most are plain symlinks.
+3. **Direct tsuku commands** (fallback, least frequent): Any tsuku command (`install`, `list`, `outdated`, etc.) checks staleness and spawns a background check if needed. This is the only trigger for users without shell integration or shims.
+
+In all cases, the check is non-blocking: the entry point stats the cache file, spawns a detached background process if stale, and proceeds immediately. The background process writes results to the cache file and exits. Shell integration should be strongly recommended during `tsuku` installation to ensure timely update checks.
 
 **R6: All-provider support.** Update checks use the ProviderFactory to resolve versions from all supported sources (GitHub, PyPI, npm, crates.io, RubyGems, Homebrew, Go proxy, etc.). This replaces the current GitHub-only implementation in `outdated`.
 
@@ -120,14 +126,17 @@ These problems compound. Users who try to stay current have incomplete informati
 - [ ] Pin level is derived from the `Requested` field, no new syntax required
 
 ### Automatic updates
-- [ ] After the check interval elapses, the next shim invocation or tsuku command spawns a background update check
-- [ ] Running an installed tool (via shim) triggers the staleness check — no dependency on running `tsuku` directly
-- [ ] The staleness check in the shim is a single stat on the cache file (no JSON parsing, no network I/O)
-- [ ] The background check process is detached and doesn't block tool execution
-- [ ] Updates within pin boundaries are downloaded and installed during the next tsuku command invocation (not during shim/tool execution)
+- [ ] After the check interval elapses, the next trigger (shell hook, shim, or tsuku command) spawns a background update check
+- [ ] The shell activation hook (`hook-env`) triggers staleness checks on every prompt when shell integration is enabled
+- [ ] Shim invocations (`tsuku run` delegation) trigger staleness checks for shim-based tools
+- [ ] Direct tsuku commands trigger staleness checks as a fallback for users without shell integration
+- [ ] The staleness check is a single stat on the cache file (no JSON parsing, no network I/O on the hot path)
+- [ ] The background check process is detached and doesn't block the calling process
+- [ ] Updates within pin boundaries are downloaded and installed during the next tsuku command (not during shell hooks or tool execution)
 - [ ] An auto-applied update is reported via stderr notification
 - [ ] Tools with exact pins (3-component version) are never auto-updated
 - [ ] When `updates.auto_apply = false`, available updates are reported but not installed
+- [ ] The installer recommends enabling shell integration for timely update checks
 
 ### Self-update
 - [ ] `tsuku self-update` downloads, verifies, and replaces the tsuku binary
