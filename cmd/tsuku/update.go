@@ -78,8 +78,20 @@ Examples:
 			return
 		}
 
+		// Read the Requested field to respect install-time version constraint.
+		// This ensures "tsuku update node" after "tsuku install node@18" stays
+		// within 18.x.y instead of jumping to the absolute latest.
+		var reqVersion string
+		if state != nil {
+			if ts, ok := state.Installed[toolName]; ok {
+				if vs, ok := ts.Versions[ts.ActiveVersion]; ok {
+					reqVersion = vs.Requested
+				}
+			}
+		}
+
 		printInfof("Updating %s...\n", toolName)
-		if err := runInstallWithTelemetry(toolName, "", "", true, "", telemetryClient); err != nil {
+		if err := runInstallWithTelemetry(toolName, reqVersion, "", true, "", telemetryClient); err != nil {
 			exitWithCode(ExitInstallFailed)
 		}
 

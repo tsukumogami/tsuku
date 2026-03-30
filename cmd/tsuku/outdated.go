@@ -55,58 +55,54 @@ var outdatedCmd = &cobra.Command{
 			printInfo("Checking for updates...")
 		}
 		res := version.New()
+		factory := version.NewProviderFactory()
 		ctx := context.Background()
 
 		type updateInfo struct {
 			Name    string `json:"name"`
 			Current string `json:"current"`
 			Latest  string `json:"latest"`
-			Repo    string `json:"-"`
 		}
 		var updates []updateInfo
 
 		for _, tool := range tools {
+			// Skip exact-pinned tools (they can't update by definition)
+			var requested string
+			if ts, ok := state.Installed[tool.Name]; ok {
+				if vs, vok := ts.Versions[ts.ActiveVersion]; vok {
+					requested = vs.Requested
+				}
+			}
+			if install.PinLevelFromRequested(requested) == install.PinExact {
+				continue
+			}
+
 			// Load recipe using source-directed loading
 			r, err := loadRecipeForTool(ctx, tool.Name, state, cfg)
 			if err != nil {
 				continue
 			}
 
-			// Find repo
-			var repo string
-			for _, step := range r.Steps {
-				if step.Action == "github_archive" || step.Action == "github_file" {
-					if r, ok := step.Params["repo"].(string); ok {
-						repo = r
-						break
-					}
-				}
-			}
-
-			if repo == "" {
+			// Create provider via ProviderFactory (covers all provider types)
+			provider, err := factory.ProviderFromRecipe(res, r)
+			if err != nil {
 				continue
 			}
 
-			// Check latest version
+			// Check latest version within pin boundary
 			if !jsonOutput {
 				printInfof("Checking %s...\n", tool.Name)
 			}
-			latest, err := res.ResolveGitHub(ctx, repo)
+			latest, err := version.ResolveWithinBoundary(ctx, provider, requested)
 			if err != nil {
-				printError(err)
 				continue
 			}
 
 			if latest.Version != tool.Version {
-				// Simple string comparison for now.
-				// Ideally should use semver, but this is a good start.
-				// We assume if strings differ, and we just fetched latest, it's likely an update.
-				// But to be safe, we only show if they are different.
 				updates = append(updates, updateInfo{
 					Name:    tool.Name,
 					Current: tool.Version,
 					Latest:  latest.Version,
-					Repo:    repo,
 				})
 			}
 		}
