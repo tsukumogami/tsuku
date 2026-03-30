@@ -30,7 +30,7 @@ Sequencing matters here. The version resolution model (how pins work) must be so
 
 ## Features
 
-### Feature 1: Channel-aware version resolution
+### Feature 1: Channel-aware version resolution ([#2181](https://github.com/tsukumogami/tsuku/issues/2181))
 **Needs:** `needs-design` -- the pinning model, Requested field semantics, and version comparison logic need architectural decisions
 **Dependencies:** None
 **Status:** Not started
@@ -38,7 +38,7 @@ Sequencing matters here. The version resolution model (how pins work) must be so
 
 The foundation. Fix `tsuku update` to respect the `Requested` field so that `install node@18` followed by `update node` stays within 18.x.y. Fix `tsuku outdated` to use ProviderFactory for all version providers (not just GitHub). Cache `ResolveLatest` results. Define pin-level semantics: empty string = latest, "20" = major, "1.29" = minor, "1.29.3" = exact. Everything else depends on this being right.
 
-### Feature 2: Background update check infrastructure
+### Feature 2: Background update check infrastructure ([#2183](https://github.com/tsukumogami/tsuku/issues/2183))
 **Needs:** `needs-design` -- layered trigger model (shell hook vs. shim vs. command), cache file format, and background process lifecycle need design
 **Dependencies:** Feature 1
 **Status:** Not started
@@ -46,7 +46,7 @@ The foundation. Fix `tsuku update` to respect the `Requested` field so that `ins
 
 The plumbing. Time-cached update checks with a configurable interval (default 24h). Three trigger entry points: shell activation hook (primary, runs on every prompt), shim invocations (secondary), and tsuku commands (fallback). Staleness detection via a single stat on the cache file. Background process spawns detached and writes results to `$TSUKU_HOME/cache/update-check.json`. Update configuration in `config.toml` `[updates]` section.
 
-### Feature 3: Auto-apply with rollback
+### Feature 3: Auto-apply with rollback ([#2184](https://github.com/tsukumogami/tsuku/issues/2184))
 **Needs:** `needs-design` -- the apply lifecycle (when to apply, state locking, rollback mechanism) needs design alongside the check infrastructure
 **Dependencies:** Feature 1, Feature 2
 **Status:** Not started
@@ -54,7 +54,7 @@ The plumbing. Time-cached update checks with a configurable interval (default 24
 
 The core behavior. When cached check results show a newer version within pin boundaries, tsuku downloads and installs it during the next tsuku command. If installation fails, the previous version is automatically preserved and a basic failure notice is written to `$TSUKU_HOME/notices/`. `tsuku rollback <tool>` switches to the immediately preceding version (one level deep); rollback is temporary and doesn't change the `Requested` field (D7). `tsuku notices` displays failure details (R11a). This feature implements basic notice writing only -- every failure writes a notice. Consecutive-failure suppression (the "fewer than 3 = transient" logic from R11) ships in Feature 7. This ships together with auto-apply because auto-apply without rollback is unsafe as the default.
 
-### Feature 4: Self-update
+### Feature 4: Self-update ([#2182](https://github.com/tsukumogami/tsuku/issues/2182))
 **Needs:** `needs-design` -- binary replacement mechanism (rename-in-place vs. alternatives) and version check integration need design
 **Dependencies:** None (uses Feature 2's check infrastructure when available, but can ship independently)
 **Status:** Not started
@@ -62,7 +62,7 @@ The core behavior. When cached check results show a newer version within pin bou
 
 Independent from tool auto-update. `tsuku self-update` downloads the latest tsuku binary, verifies its checksum, renames the old binary to `tsuku.old`, and renames the new one into place. Self-update always tracks latest (no pinning for tsuku itself). When Feature 2's check infrastructure exists, tsuku's own version is included in the periodic check. Can ship before or after the tool auto-update features.
 
-### Feature 5: Notification system
+### Feature 5: Notification system ([#2185](https://github.com/tsukumogami/tsuku/issues/2185))
 **Needs:** `needs-design` -- notification timing, suppression layers, and configuration surface need design
 **Dependencies:** Feature 2 (needs check results to display), Feature 3 (needs apply results to report)
 **Status:** Not started
@@ -70,7 +70,7 @@ Independent from tool auto-update. `tsuku self-update` downloads the latest tsuk
 
 Cross-cutting. Stderr notifications after command output for available or applied updates. Suppression layers: non-TTY, `CI=true`, `--quiet`, `TSUKU_NO_UPDATE_CHECK=1`. `TSUKU_AUTO_UPDATE=1` overrides CI detection for explicit opt-in. The notification format and suppression logic are shared across tool updates and self-update.
 
-### Feature 6: Update polish
+### Feature 6: Update polish ([#2186](https://github.com/tsukumogami/tsuku/issues/2186))
 **Needs:** `needs-design` -- out-of-channel notification throttling (weekly per tool, persistence, injectable clock for testing) needs design decisions
 **Dependencies:** Feature 1, Feature 3, Feature 5
 **Status:** Not started
@@ -78,14 +78,14 @@ Cross-cutting. Stderr notifications after command output for available or applie
 
 Refinements that build on the core system. Pin-aware `tsuku outdated` with dual columns ("within pin" and "overall"). Out-of-channel notifications when a newer version exists outside the pin boundary (configurable via `updates.notify_out_of_channel`, at most weekly per tool -- requires per-tool throttle state and injectable clock). `tsuku update --all` for batch updates within pin boundaries.
 
-### Feature 7: Resilience
+### Feature 7: Resilience ([#2187](https://github.com/tsukumogami/tsuku/issues/2187))
 **Dependencies:** Feature 3 (extends auto-apply with failure handling)
 **Status:** Not started
 **Upstream:** [PRD-auto-update](../prds/PRD-auto-update.md) (R11, R18, R20)
 
 Hardening for real-world conditions. Adds consecutive-failure suppression on top of Feature 3's basic notice writing -- failures with fewer than 3 consecutive occurrences for the same tool are treated as transient and suppressed (R11, building on R11a from Feature 3). Old version retention with configurable period (default 7 days) and garbage collection. Graceful offline degradation using cached results when network is unavailable. `tsuku doctor` detects orphaned staging directories and stale notices.
 
-### Feature 8: Project-level integration
+### Feature 8: Project-level integration ([#2188](https://github.com/tsukumogami/tsuku/issues/2188))
 **Needs:** `needs-design` -- interaction between `.tsuku.toml` version constraints and global auto-update policy needs design
 **Dependencies:** Feature 1, Feature 3
 **Status:** Not started
@@ -93,7 +93,7 @@ Hardening for real-world conditions. Adds consecutive-failure suppression on top
 
 `.tsuku.toml` version constraints take precedence over global auto-update policy. Exact versions in project config (e.g., `node = "20.16.0"`) disable auto-update for that tool in that project context. Prefix versions (e.g., `node = "20"`) allow auto-update within the pin. The project config's `ToolRequirement` struct may need extension.
 
-### Feature 9: Update telemetry
+### Feature 9: Update telemetry ([#2189](https://github.com/tsukumogami/tsuku/issues/2189))
 **Dependencies:** Feature 3 (needs update events to track)
 **Status:** Not started
 **Upstream:** [PRD-auto-update](../prds/PRD-auto-update.md) (R22)
