@@ -61,7 +61,7 @@ These problems compound. Users who try to stay current have incomplete informati
 
 **R2: Channel-aware update resolution.** `tsuku update <tool>` must respect the `Requested` field. A tool installed with `tsuku install node@18` updates only within 18.x.y, not to the absolute latest. This replaces the current behavior where `update` ignores constraints.
 
-**R3: Automatic update application.** When update checks find a newer version within the tool's pin boundary, tsuku automatically installs it. The update happens during a tsuku command invocation as a non-blocking background operation. The user sees the result on the current or next invocation.
+**R3: Automatic update application.** When update checks find a newer version within the tool's pin boundary, tsuku automatically installs it. The lifecycle: a background goroutine checks for updates and writes results to a cache file. On the same or next invocation, tsuku reads the cache, downloads and installs the update (in the foreground, after the primary command completes), and notifies the user. The download/install phase doesn't run concurrently with state-mutating commands (install, update, remove) to avoid state.json write conflicts.
 
 **R4: Time-cached update checks.** Update checks are cached with a configurable interval (default 24 hours, range 1h-30d). Checks don't repeat within the interval. A force flag (`--check-updates`) bypasses the cache.
 
@@ -69,15 +69,15 @@ These problems compound. Users who try to stay current have incomplete informati
 
 **R6: All-provider support.** Update checks use the ProviderFactory to resolve versions from all supported sources (GitHub, PyPI, npm, crates.io, RubyGems, Homebrew, Go proxy, etc.). This replaces the current GitHub-only implementation in `outdated`.
 
-**R7: Self-update.** `tsuku self-update` updates the tsuku binary using a rename-in-place mechanism. The running binary downloads the new version to a temp file, verifies its checksum, renames the old binary aside, and renames the new binary into place. The old binary is kept as a backup until the next successful self-update.
+**R7: Self-update.** `tsuku self-update` updates the tsuku binary using a rename-in-place mechanism. The running binary downloads the new version to a temp file, verifies its checksum, renames the old binary to `$TSUKU_HOME/bin/tsuku.old`, and renames the new binary into place. The backup is kept until the next successful self-update. Self-update always tracks the latest stable release; there's no version pinning for tsuku itself.
 
 **R8: Self-update checks.** Tsuku's own version is included in the periodic update check. When a newer version is available, the notification appears alongside tool update notifications.
 
-**R9: Rollback.** `tsuku rollback <tool>` switches to the previously active version without re-downloading (if the version directory is still on disk). Rollback doesn't change the `Requested` field, so auto-update may re-apply the update on the next cycle. This is intentional: rollback is a temporary fix for a broken release, not a permanent pin change.
+**R9: Rollback.** `tsuku rollback <tool>` switches to the immediately preceding active version (one step back) without re-downloading if the version directory is still on disk. Rollback history is one level deep; further rollback requires `tsuku install tool@version`. Rollback doesn't change the `Requested` field, so auto-update may re-apply the update on the next cycle. This is intentional: rollback is a temporary fix for a broken release, not a permanent pin change.
 
 **R10: Automatic rollback on failure.** If an auto-update fails at any point (download, extraction, verification, symlink creation), the previous version remains active. No user intervention is needed. The failure is reported via the notification system.
 
-**R11: Deferred failure reporting.** Failed auto-updates write a notice to `$TSUKU_HOME/notices/`. The notice is displayed on the next tsuku command invocation (stderr, once). Transient failures (single network timeout) are suppressed. Only persistent failures (3+ consecutive) or actionable errors (checksum mismatch, disk full, recipe incompatibility) produce notices.
+**R11: Deferred failure reporting.** Failed auto-updates write a notice to `$TSUKU_HOME/notices/`. The notice is displayed on the next tsuku command invocation (stderr, once). Failures with fewer than 3 consecutive occurrences for the same tool are considered transient and suppressed. At 3+ consecutive failures, or on immediately actionable errors (checksum mismatch, disk full, recipe incompatibility), a notice is produced.
 
 **R12: Update notifications.** When updates are available (or have been applied), a stderr notification appears after the primary command's output. Notifications are suppressed when stdout is not a TTY, when `CI=true` is set, when `--quiet` is passed, or when `TSUKU_NO_UPDATE_CHECK=1` is set.
 
@@ -85,7 +85,9 @@ These problems compound. Users who try to stay current have incomplete informati
 
 **R14: Batch updates.** `tsuku update --all` updates all outdated tools within their pin boundaries.
 
-**R15: Improved outdated display.** `tsuku outdated` shows two columns: "available within pin" and "available overall." This gives users a clear view of both what auto-update would do and what's available if they widen their pin. The `--json` flag provides structured output.
+**R15a: All-provider outdated.** `tsuku outdated` checks tools from all version providers (via ProviderFactory), not just GitHub. This is a prerequisite fix.
+
+**R15b: Pin-aware outdated display.** `tsuku outdated` shows two columns: "available within pin" and "available overall." This gives users a clear view of both what auto-update would do and what's available if they widen their pin. The `--json` flag provides structured output with both values.
 
 **R16: CI environment detection.** Auto-update checks are suppressed when `CI=true` is set (standard across GitHub Actions, GitLab CI, CircleCI, etc.) or when stdout is not a TTY. Explicit opt-in via `TSUKU_AUTO_UPDATE=1` overrides CI detection.
 
@@ -116,9 +118,11 @@ These problems compound. Users who try to stay current have incomplete informati
 ### Automatic updates
 - [ ] After the check interval elapses, the next tsuku command triggers a background update check
 - [ ] Updates within pin boundaries are automatically downloaded and installed
-- [ ] The primary command's output is not delayed by the update check
+- [ ] The update check goroutine runs in the background and doesn't block the primary command's execution path
+- [ ] The download/install phase runs after the primary command completes (not concurrently with state-mutating commands)
 - [ ] An auto-applied update is reported via stderr notification
 - [ ] Tools with exact pins (3-component version) are never auto-updated
+- [ ] When `updates.auto_apply = false`, available updates are reported but not installed
 
 ### Self-update
 - [ ] `tsuku self-update` downloads, verifies, and replaces the tsuku binary
@@ -127,10 +131,11 @@ These problems compound. Users who try to stay current have incomplete informati
 - [ ] Self-update is included in periodic update checks
 
 ### Rollback
-- [ ] `tsuku rollback <tool>` switches to the previously active version
-- [ ] If the previous version directory exists, rollback is instant (no download)
+- [ ] `tsuku rollback <tool>` switches to the immediately preceding active version (one step back)
+- [ ] If the previous version directory exists, rollback completes without making network requests
 - [ ] Rollback doesn't change the `Requested` field
 - [ ] The rollback notification explains that auto-update may re-apply
+- [ ] Further rollback beyond one step requires `tsuku install tool@version`
 
 ### Failure handling
 - [ ] A failed auto-update preserves the previous working version
@@ -140,15 +145,16 @@ These problems compound. Users who try to stay current have incomplete informati
 - [ ] `tsuku doctor` detects orphaned staging directories and stale notices
 
 ### Notification and suppression
-- [ ] Update notifications appear on stderr after command output
+- [ ] Update notifications are written to stderr after command output
 - [ ] Notifications are suppressed when `CI=true` is set
-- [ ] Notifications are suppressed when stdout is not a TTY
+- [ ] Notifications are suppressed when stdout is not a TTY (indicating piped or scripted usage)
 - [ ] Notifications are suppressed with `--quiet` or `TSUKU_NO_UPDATE_CHECK=1`
-- [ ] Out-of-channel notifications appear at most once per week per tool
+- [ ] When both `CI=true` and `TSUKU_AUTO_UPDATE=1` are set, update checks run (explicit opt-in overrides CI detection)
+- [ ] Out-of-channel notifications appear at most once per week per tool (requires injectable clock for testing)
 - [ ] Out-of-channel notifications can be disabled via config
 
 ### Configuration
-- [ ] `config.toml` `[updates]` section supports: `enabled`, `check_interval`, `notify_out_of_channel`, `self_update`
+- [ ] `config.toml` `[updates]` section supports: `enabled`, `auto_apply`, `check_interval`, `notify_out_of_channel`, `self_update`
 - [ ] `TSUKU_NO_UPDATE_CHECK=1` disables all update checking
 - [ ] `TSUKU_UPDATE_CHECK_INTERVAL` overrides the check interval
 - [ ] `.tsuku.toml` version constraints take precedence over global auto-update policy
@@ -158,6 +164,16 @@ These problems compound. Users who try to stay current have incomplete informati
 - [ ] `tsuku outdated` checks tools from all version providers, not just GitHub
 - [ ] `tsuku outdated` shows "within pin" and "overall" columns
 - [ ] `tsuku outdated --json` includes both values in structured output
+
+### Offline and resilience
+- [ ] When network is unavailable, update checks fail silently with no stderr output
+- [ ] Cached check results are displayed when the network is unavailable
+- [ ] Two concurrent `tsuku update <tool>` invocations result in one success and one clean failure, with no state corruption
+
+### Batch and project
+- [ ] `tsuku update --all` updates all tools with available versions within their pin boundaries
+- [ ] A tool with an exact version in `.tsuku.toml` (e.g., `node = "20.16.0"`) is never auto-updated, even if global config has `updates.enabled = true`
+- [ ] A tool with a prefix version in `.tsuku.toml` (e.g., `node = "20"`) allows auto-update within 20.x.y
 
 ## Out of scope
 
@@ -203,7 +219,7 @@ These problems compound. Users who try to stay current have incomplete informati
 Prerequisite fixes and core auto-update in one delivery:
 
 - Fix `tsuku update` to respect the `Requested` field (R2)
-- Fix `tsuku outdated` to use ProviderFactory for all providers (R6, R15)
+- Fix `tsuku outdated` to use ProviderFactory for all providers (R6, R15a)
 - Cache `ResolveLatest` results (supports R4)
 - Version channel pinning semantics (R1)
 - Time-cached background update checks (R4, R5)
@@ -216,7 +232,7 @@ Prerequisite fixes and core auto-update in one delivery:
 
 ### Phase 2: polish and resilience
 
-- Pin-aware outdated display with dual columns (R15)
+- Pin-aware outdated display with dual columns (R15b)
 - Deferred failure reporting with consecutive-failure suppression (R11)
 - Out-of-channel notifications (R13)
 - Batch update `--all` (R14)
