@@ -28,44 +28,6 @@ rationale: |
 
 Current
 
-## Implementation Issues
-
-### Milestone: [Channel-aware version resolution](https://github.com/tsukumogami/tsuku/milestone/110)
-
-| Issue | Dependencies | Tier |
-|-------|--------------|------|
-| ~~[#2191: add pin level model](https://github.com/tsukumogami/tsuku/issues/2191)~~ | ~~None~~ | ~~testable~~ |
-| ~~_Add PinLevel type and derivation functions (PinLevelFromRequested, VersionMatchesPin with dot-boundary matching, ValidateRequested). Pure functions with no external dependencies -- the foundation everything else builds on._~~ | | |
-| ~~[#2192: add cache-backed pin-aware resolution helper](https://github.com/tsukumogami/tsuku/issues/2192)~~ | ~~[#2191](https://github.com/tsukumogami/tsuku/issues/2191)~~ | ~~testable~~ |
-| ~~_With the pin model in place, add ResolveWithinBoundary() that routes pin-aware queries through the cached ListVersions for VersionLister providers, falling back to ResolveVersion for resolver-only providers. Modifies CachedVersionLister.ResolveLatest() to derive from the cache._~~ | | |
-| ~~[#2193: respect Requested field version constraint](https://github.com/tsukumogami/tsuku/issues/2193)~~ | ~~[#2192](https://github.com/tsukumogami/tsuku/issues/2192)~~ | ~~testable~~ |
-| ~~_Wire ResolveWithinBoundary into the update command. Reads Requested from state and passes it as the version constraint so `tsuku update node` after `install node@18` stays within 18.x.y._~~ | | |
-| ~~[#2194: use ProviderFactory for all version providers](https://github.com/tsukumogami/tsuku/issues/2194)~~ | ~~[#2192](https://github.com/tsukumogami/tsuku/issues/2192)~~ | ~~testable~~ |
-| ~~_Replace hard-coded GitHub resolution in outdated with ProviderFactory + ResolveWithinBoundary. Covers all provider types. Excludes PinExact tools from output. Can parallelize with #2193._~~ | | |
-
-### Dependency graph
-
-```mermaid
-graph TD
-    I2191["#2191: Add pin level model"]
-    I2192["#2192: Cache-backed resolution..."]
-    I2193["#2193: Update respects Requested"]
-    I2194["#2194: Outdated uses ProviderFactory"]
-
-    I2191 --> I2192
-    I2192 --> I2193
-    I2192 --> I2194
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I2191,I2192,I2193,I2194 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
-
 ## Context and Problem Statement
 
 Tsuku stores the user's install-time version constraint in the `Requested` field of state.json (e.g., `tsuku install node@18` stores `Requested: "18"`), but `tsuku update` ignores it entirely. Running `tsuku update node` resolves to the absolute latest version from the provider, silently jumping from Node 18.x to Node 22.x. This breaks user expectations and makes any future auto-update system unsafe.
