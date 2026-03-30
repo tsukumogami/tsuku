@@ -1,5 +1,5 @@
 ---
-status: Draft
+status: Active
 theme: |
   Auto-update capabilities for tsuku and managed tools. Users install developer
   tools and forget about them; this initiative keeps tools current within
@@ -20,7 +20,7 @@ scope: |
 
 ## Status
 
-Draft
+Active
 
 ## Theme
 
