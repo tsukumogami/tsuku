@@ -1,5 +1,5 @@
 ---
-status: Draft
+status: Accepted
 problem: |
   Tsuku has manual update and outdated commands, but no automatic update mechanism
   for managed tools or its own binary. The outdated command only checks GitHub-sourced
@@ -15,7 +15,7 @@ goals: |
 
 ## Status
 
-Draft
+Accepted
 
 ## Problem statement
 
