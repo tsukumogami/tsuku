@@ -320,3 +320,16 @@ Deliverables:
 - Checking all tools is the simplest correct behavior. A "recently used" heuristic could be added later without schema changes (the cache files already have timestamps)
 - Cache cleanup is Feature 7's responsibility (old version retention and garbage collection). Per-tool files are small (~200 bytes each)
 - The 10-second timeout applies to the entire check run. Tools are checked in parallel with bounded concurrency, so most users won't hit the limit. If a check is interrupted, completed tools still have fresh cache entries
+
+### Resilience to corruption
+
+The update check infrastructure is self-healing: any missing or corrupt state triggers a fresh check cycle rather than a crash or degraded tool execution. No corruption scenario blocks normal tsuku operation.
+
+- **Sentinel missing or unreadable**: `isCheckStale` returns `true` on any `os.Stat` error, treating it as "never checked." The next trigger spawns a fresh check that recreates the sentinel.
+- **Per-tool cache files missing**: Consumers (`ReadEntry`, `ReadAllEntries`) treat a missing file as "no check result for this tool" and skip it. The next background check writes a fresh entry.
+- **Per-tool cache files corrupt** (invalid JSON, partial write from a previous crash): `json.Unmarshal` fails, `ReadEntry` returns an error, consumers skip the entry. The next background check overwrites the file with valid data via atomic temp+rename.
+- **Lock file missing**: `filelock.go` creates it with `O_CREATE` on the next lock attempt. Advisory flock state is kernel-managed, not dependent on file contents.
+- **Cache directory missing**: Both `CheckAndSpawnUpdateCheck` and `RunUpdateCheck` call `os.MkdirAll` before any file operations, recreating the directory structure.
+- **Atomic writes prevent partial corruption**: All cache file writes use temp-file-then-rename. A crash mid-write leaves either the previous valid file or no file -- never a half-written JSON blob.
+
+The general principle: every read path tolerates missing or malformed data by falling back to "stale" or "unknown," and every write path recreates missing infrastructure. The system converges to a correct state within one check cycle after any corruption event.
