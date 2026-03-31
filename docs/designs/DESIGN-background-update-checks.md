@@ -29,7 +29,33 @@ rationale: |
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [Auto-update](https://github.com/tsukumogami/tsuku/milestone/109)
+
+PLAN: `docs/plans/PLAN-background-update-checks.md` (single-pr mode, 3 issues)
+
+### Dependency Graph
+
+```mermaid
+graph LR
+    I1["Issue 1: Cache + config"]
+    I2["Issue 2: Background checker"]
+    I3["Issue 3: Trigger integration"]
+
+    I1 --> I2
+    I2 --> I3
+
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+
+    class I1 ready
+    class I2,I3 blocked
+```
+
+**Legend**: Blue = ready, Yellow = blocked
 
 ## Context and Problem Statement
 
