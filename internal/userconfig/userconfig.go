@@ -53,6 +53,35 @@ type Config struct {
 	// Registries maps registry names (e.g., "owner/repo") to their configuration.
 	// Used for distributed recipe sources.
 	Registries map[string]RegistryEntry `toml:"registries,omitempty"`
+
+	// Updates contains auto-update configuration.
+	Updates UpdatesConfig `toml:"updates,omitempty"`
+}
+
+// UpdatesConfig holds auto-update settings stored in the [updates] section of config.toml.
+type UpdatesConfig struct {
+	// Enabled controls whether update checks run at all.
+	// Default is true. Overridden by TSUKU_NO_UPDATE_CHECK=1 (disables).
+	Enabled *bool `toml:"enabled,omitempty"`
+
+	// AutoApply controls whether discovered updates are installed automatically.
+	// Default is true. Suppressed when CI=true unless TSUKU_AUTO_UPDATE=1.
+	AutoApply *bool `toml:"auto_apply,omitempty"`
+
+	// CheckInterval is the minimum time between update checks.
+	// Accepts Go duration format (e.g., "24h", "12h", "30m").
+	// Default is "24h". Range: 1h-720h (30d).
+	// Overridden by TSUKU_UPDATE_CHECK_INTERVAL env var.
+	CheckInterval *string `toml:"check_interval,omitempty"`
+
+	// NotifyOutOfChannel controls whether users are notified about versions
+	// outside their pin boundary.
+	// Default is true.
+	NotifyOutOfChannel *bool `toml:"notify_out_of_channel,omitempty"`
+
+	// SelfUpdate controls whether tsuku checks for and applies updates to itself.
+	// Default is true.
+	SelfUpdate *bool `toml:"self_update,omitempty"`
 }
 
 // LLMConfig holds LLM-specific settings.
@@ -106,6 +135,27 @@ const (
 
 	// IdleTimeoutEnvVar is the env var that overrides the idle timeout config.
 	IdleTimeoutEnvVar = "TSUKU_LLM_IDLE_TIMEOUT"
+
+	// DefaultCheckInterval is the default time between update checks.
+	DefaultCheckInterval = 24 * time.Hour
+
+	// MinCheckInterval is the minimum allowed check interval.
+	MinCheckInterval = 1 * time.Hour
+
+	// MaxCheckInterval is the maximum allowed check interval (30 days).
+	MaxCheckInterval = 30 * 24 * time.Hour
+
+	// EnvNoUpdateCheck disables all update checking when set to "1".
+	EnvNoUpdateCheck = "TSUKU_NO_UPDATE_CHECK"
+
+	// EnvAutoUpdate overrides CI detection for explicit opt-in when set to "1".
+	EnvAutoUpdate = "TSUKU_AUTO_UPDATE"
+
+	// EnvUpdateCheckInterval overrides the check interval from config.
+	EnvUpdateCheckInterval = "TSUKU_UPDATE_CHECK_INTERVAL"
+
+	// EnvCI is the standard CI environment variable.
+	EnvCI = "CI"
 )
 
 // validLLMBackends lists the valid values for llm.backend (excluding empty string which clears).
@@ -311,6 +361,89 @@ func (c *Config) LLMBackend() string {
 	return *c.LLM.Backend
 }
 
+// UpdatesEnabled returns whether update checks are enabled.
+// TSUKU_NO_UPDATE_CHECK=1 disables regardless of config.
+func (c *Config) UpdatesEnabled() bool {
+	if os.Getenv(EnvNoUpdateCheck) == "1" {
+		return false
+	}
+	if c.Updates.Enabled == nil {
+		return true
+	}
+	return *c.Updates.Enabled
+}
+
+// UpdatesAutoApplyEnabled returns whether updates should be installed automatically.
+// Suppressed in CI environments (CI=true) unless TSUKU_AUTO_UPDATE=1 overrides.
+func (c *Config) UpdatesAutoApplyEnabled() bool {
+	if os.Getenv(EnvAutoUpdate) == "1" {
+		return true
+	}
+	if strings.EqualFold(os.Getenv(EnvCI), "true") {
+		return false
+	}
+	if c.Updates.AutoApply == nil {
+		return true
+	}
+	return *c.Updates.AutoApply
+}
+
+// UpdatesCheckInterval returns the minimum time between update checks.
+// TSUKU_UPDATE_CHECK_INTERVAL env var takes precedence over config.
+// Returns DefaultCheckInterval (24h) if not configured.
+func (c *Config) UpdatesCheckInterval() time.Duration {
+	if envVal := os.Getenv(EnvUpdateCheckInterval); envVal != "" {
+		if d, err := time.ParseDuration(envVal); err == nil {
+			return clampCheckInterval(d, EnvUpdateCheckInterval)
+		}
+		fmt.Fprintf(os.Stderr, "Warning: invalid %s value, using default %v\n",
+			EnvUpdateCheckInterval, DefaultCheckInterval)
+		return DefaultCheckInterval
+	}
+
+	if c.Updates.CheckInterval != nil {
+		if d, err := time.ParseDuration(*c.Updates.CheckInterval); err == nil {
+			return clampCheckInterval(d, "updates.check_interval")
+		}
+	}
+
+	return DefaultCheckInterval
+}
+
+// clampCheckInterval enforces the 1h-30d range with warnings for out-of-range values.
+// Note: env var values are clamped (lenient), while Set() rejects out-of-range values
+// with an error (strict). This asymmetry is intentional: env vars may be set by
+// automation that can't handle errors, while tsuku config set is interactive.
+func clampCheckInterval(d time.Duration, source string) time.Duration {
+	if d < MinCheckInterval {
+		fmt.Fprintf(os.Stderr, "Warning: %s too low (%v), using minimum %v\n",
+			source, d, MinCheckInterval)
+		return MinCheckInterval
+	}
+	if d > MaxCheckInterval {
+		fmt.Fprintf(os.Stderr, "Warning: %s too high (%v), using maximum %v\n",
+			source, d, MaxCheckInterval)
+		return MaxCheckInterval
+	}
+	return d
+}
+
+// UpdatesNotifyOutOfChannel returns whether out-of-channel version notifications are shown.
+func (c *Config) UpdatesNotifyOutOfChannel() bool {
+	if c.Updates.NotifyOutOfChannel == nil {
+		return true
+	}
+	return *c.Updates.NotifyOutOfChannel
+}
+
+// UpdatesSelfUpdate returns whether tsuku should check for and apply self-updates.
+func (c *Config) UpdatesSelfUpdate() bool {
+	if c.Updates.SelfUpdate == nil {
+		return true
+	}
+	return *c.Updates.SelfUpdate
+}
+
 // Get returns the value of a config key as a string.
 // Returns empty string and false if the key doesn't exist.
 // Keys with the "secrets." prefix are resolved from the Secrets map.
@@ -351,6 +484,16 @@ func (c *Config) Get(key string) (string, bool) {
 		return c.LLMBackend(), true
 	case "auto_install_mode":
 		return c.AutoInstallMode, true
+	case "updates.enabled":
+		return strconv.FormatBool(c.UpdatesEnabled()), true
+	case "updates.auto_apply":
+		return strconv.FormatBool(c.UpdatesAutoApplyEnabled()), true
+	case "updates.check_interval":
+		return c.UpdatesCheckInterval().String(), true
+	case "updates.notify_out_of_channel":
+		return strconv.FormatBool(c.UpdatesNotifyOutOfChannel()), true
+	case "updates.self_update":
+		return strconv.FormatBool(c.UpdatesSelfUpdate()), true
 	default:
 		return "", false
 	}
@@ -461,6 +604,32 @@ func (c *Config) Set(key, value string) error {
 			}
 		}
 		return fmt.Errorf("invalid value for auto_install_mode: must be one of: %s", strings.Join(validAutoInstallModes, ", "))
+	case "updates.enabled", "updates.auto_apply", "updates.notify_out_of_channel", "updates.self_update":
+		b, err := strconv.ParseBool(value)
+		if err != nil {
+			return fmt.Errorf("invalid value for %s: must be true or false", lowerKey)
+		}
+		switch lowerKey {
+		case "updates.enabled":
+			c.Updates.Enabled = &b
+		case "updates.auto_apply":
+			c.Updates.AutoApply = &b
+		case "updates.notify_out_of_channel":
+			c.Updates.NotifyOutOfChannel = &b
+		case "updates.self_update":
+			c.Updates.SelfUpdate = &b
+		}
+		return nil
+	case "updates.check_interval":
+		d, err := time.ParseDuration(value)
+		if err != nil {
+			return fmt.Errorf("invalid value for updates.check_interval: must be a duration (e.g., 24h, 12h)")
+		}
+		if d < MinCheckInterval || d > MaxCheckInterval {
+			return fmt.Errorf("invalid value for updates.check_interval: must be between %v and %v", MinCheckInterval, MaxCheckInterval)
+		}
+		c.Updates.CheckInterval = &value
+		return nil
 	default:
 		return fmt.Errorf("unknown config key: %s", key)
 	}
@@ -469,15 +638,20 @@ func (c *Config) Set(key, value string) error {
 // AvailableKeys returns a list of all configurable keys with descriptions.
 func AvailableKeys() map[string]string {
 	return map[string]string{
-		"telemetry":             "Enable anonymous usage statistics (true/false)",
-		"llm.enabled":           "Enable LLM features for recipe generation (true/false)",
-		"llm.local_enabled":     "Enable local LLM inference via tsuku-llm addon (true/false)",
-		"llm.local_preemptive":  "Start local LLM addon early to hide loading latency (true/false)",
-		"llm.idle_timeout":      "How long addon stays alive after last request (e.g., 5m, 30s)",
-		"llm.providers":         "Preferred LLM provider order (comma-separated, e.g., claude,gemini)",
-		"llm.daily_budget":      "Daily LLM cost limit in USD (default: 5.0, 0 to disable)",
-		"llm.hourly_rate_limit": "Max LLM generations per hour (default: 10, 0 to disable)",
-		"llm.backend":           "Override GPU backend for local LLM (cpu to force CPU, empty to auto-detect)",
-		"auto_install_mode":     "Default install consent mode for tsuku run (suggest/confirm/auto)",
+		"telemetry":                     "Enable anonymous usage statistics (true/false)",
+		"llm.enabled":                   "Enable LLM features for recipe generation (true/false)",
+		"llm.local_enabled":             "Enable local LLM inference via tsuku-llm addon (true/false)",
+		"llm.local_preemptive":          "Start local LLM addon early to hide loading latency (true/false)",
+		"llm.idle_timeout":              "How long addon stays alive after last request (e.g., 5m, 30s)",
+		"llm.providers":                 "Preferred LLM provider order (comma-separated, e.g., claude,gemini)",
+		"llm.daily_budget":              "Daily LLM cost limit in USD (default: 5.0, 0 to disable)",
+		"llm.hourly_rate_limit":         "Max LLM generations per hour (default: 10, 0 to disable)",
+		"llm.backend":                   "Override GPU backend for local LLM (cpu to force CPU, empty to auto-detect)",
+		"auto_install_mode":             "Default install consent mode for tsuku run (suggest/confirm/auto)",
+		"updates.enabled":               "Enable automatic update checks (true/false)",
+		"updates.auto_apply":            "Automatically install updates within pin boundaries (true/false)",
+		"updates.check_interval":        "Minimum time between update checks (e.g., 24h, 12h, 1h)",
+		"updates.notify_out_of_channel": "Notify about versions outside pin boundary (true/false)",
+		"updates.self_update":           "Check for and apply tsuku self-updates (true/false)",
 	}
 }

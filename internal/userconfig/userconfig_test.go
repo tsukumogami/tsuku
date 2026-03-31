@@ -1626,3 +1626,196 @@ github_token = "ghp-from-file"
 		t.Errorf("expected 'ghp-from-file', got %q", cfg.Secrets["github_token"])
 	}
 }
+
+func TestUpdatesEnabledDefault(t *testing.T) {
+	t.Setenv("TSUKU_NO_UPDATE_CHECK", "")
+	cfg := DefaultConfig()
+	if !cfg.UpdatesEnabled() {
+		t.Error("expected UpdatesEnabled to default to true")
+	}
+}
+
+func TestUpdatesEnabledEnvOverride(t *testing.T) {
+	cfg := DefaultConfig()
+	t.Setenv("TSUKU_NO_UPDATE_CHECK", "1")
+	if cfg.UpdatesEnabled() {
+		t.Error("TSUKU_NO_UPDATE_CHECK=1 should disable updates")
+	}
+}
+
+func TestUpdatesEnabledConfigFalse(t *testing.T) {
+	cfg := DefaultConfig()
+	f := false
+	cfg.Updates.Enabled = &f
+	if cfg.UpdatesEnabled() {
+		t.Error("enabled=false should disable updates")
+	}
+}
+
+func TestUpdatesAutoApplyDefault(t *testing.T) {
+	t.Setenv("TSUKU_AUTO_UPDATE", "")
+	t.Setenv("CI", "")
+	cfg := DefaultConfig()
+	if !cfg.UpdatesAutoApplyEnabled() {
+		t.Error("expected UpdatesAutoApplyEnabled to default to true")
+	}
+}
+
+func TestUpdatesAutoApplyCISuppression(t *testing.T) {
+	cfg := DefaultConfig()
+	t.Setenv("CI", "true")
+	if cfg.UpdatesAutoApplyEnabled() {
+		t.Error("CI=true should suppress auto-apply")
+	}
+}
+
+func TestUpdatesAutoApplyCIOverride(t *testing.T) {
+	cfg := DefaultConfig()
+	t.Setenv("CI", "true")
+	t.Setenv("TSUKU_AUTO_UPDATE", "1")
+	if !cfg.UpdatesAutoApplyEnabled() {
+		t.Error("TSUKU_AUTO_UPDATE=1 should override CI suppression")
+	}
+}
+
+func TestUpdatesCheckIntervalDefault(t *testing.T) {
+	t.Setenv("TSUKU_UPDATE_CHECK_INTERVAL", "")
+	cfg := DefaultConfig()
+	got := cfg.UpdatesCheckInterval()
+	if got != 24*time.Hour {
+		t.Errorf("default interval = %v, want 24h", got)
+	}
+}
+
+func TestUpdatesCheckIntervalEnvOverride(t *testing.T) {
+	cfg := DefaultConfig()
+	t.Setenv("TSUKU_UPDATE_CHECK_INTERVAL", "12h")
+	got := cfg.UpdatesCheckInterval()
+	if got != 12*time.Hour {
+		t.Errorf("interval = %v, want 12h", got)
+	}
+}
+
+func TestUpdatesCheckIntervalClampMin(t *testing.T) {
+	cfg := DefaultConfig()
+	t.Setenv("TSUKU_UPDATE_CHECK_INTERVAL", "30m")
+	got := cfg.UpdatesCheckInterval()
+	if got != MinCheckInterval {
+		t.Errorf("interval = %v, want minimum %v", got, MinCheckInterval)
+	}
+}
+
+func TestUpdatesCheckIntervalClampMax(t *testing.T) {
+	cfg := DefaultConfig()
+	t.Setenv("TSUKU_UPDATE_CHECK_INTERVAL", "8760h")
+	got := cfg.UpdatesCheckInterval()
+	if got != MaxCheckInterval {
+		t.Errorf("interval = %v, want maximum %v", got, MaxCheckInterval)
+	}
+}
+
+func TestUpdatesCheckIntervalConfig(t *testing.T) {
+	cfg := DefaultConfig()
+	interval := "6h"
+	cfg.Updates.CheckInterval = &interval
+	got := cfg.UpdatesCheckInterval()
+	if got != 6*time.Hour {
+		t.Errorf("interval = %v, want 6h", got)
+	}
+}
+
+func TestUpdatesNotifyOutOfChannelDefault(t *testing.T) {
+	cfg := DefaultConfig()
+	if !cfg.UpdatesNotifyOutOfChannel() {
+		t.Error("expected UpdatesNotifyOutOfChannel to default to true")
+	}
+}
+
+func TestUpdatesSelfUpdateDefault(t *testing.T) {
+	cfg := DefaultConfig()
+	if !cfg.UpdatesSelfUpdate() {
+		t.Error("expected UpdatesSelfUpdate to default to true")
+	}
+}
+
+func TestUpdatesGetSet(t *testing.T) {
+	cfg := DefaultConfig()
+
+	// Set and verify updates.enabled
+	if err := cfg.Set("updates.enabled", "false"); err != nil {
+		t.Fatalf("Set updates.enabled: %v", err)
+	}
+	val, ok := cfg.Get("updates.enabled")
+	if !ok || val != "false" {
+		t.Errorf("Get updates.enabled = (%q, %v), want (\"false\", true)", val, ok)
+	}
+
+	// Set and verify updates.check_interval
+	if err := cfg.Set("updates.check_interval", "12h"); err != nil {
+		t.Fatalf("Set updates.check_interval: %v", err)
+	}
+
+	// Invalid interval should error
+	if err := cfg.Set("updates.check_interval", "not-a-duration"); err == nil {
+		t.Error("Set updates.check_interval with invalid value should error")
+	}
+
+	// Out of range should error
+	if err := cfg.Set("updates.check_interval", "30m"); err == nil {
+		t.Error("Set updates.check_interval below minimum should error")
+	}
+}
+
+func TestUpdatesAvailableKeys(t *testing.T) {
+	keys := AvailableKeys()
+	expected := []string{
+		"updates.enabled",
+		"updates.auto_apply",
+		"updates.check_interval",
+		"updates.notify_out_of_channel",
+		"updates.self_update",
+	}
+	for _, k := range expected {
+		if _, ok := keys[k]; !ok {
+			t.Errorf("AvailableKeys missing %q", k)
+		}
+	}
+}
+
+func TestUpdatesLoadFromToml(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.toml")
+
+	content := `
+[updates]
+enabled = false
+auto_apply = false
+check_interval = "6h"
+notify_out_of_channel = false
+self_update = false
+`
+	if err := os.WriteFile(path, []byte(content), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, err := loadFromPath(path)
+	if err != nil {
+		t.Fatalf("loadFromPath: %v", err)
+	}
+
+	if cfg.UpdatesEnabled() {
+		t.Error("expected enabled=false from config")
+	}
+	if cfg.UpdatesAutoApplyEnabled() {
+		t.Error("expected auto_apply=false from config")
+	}
+	if cfg.UpdatesCheckInterval() != 6*time.Hour {
+		t.Errorf("check_interval = %v, want 6h", cfg.UpdatesCheckInterval())
+	}
+	if cfg.UpdatesNotifyOutOfChannel() {
+		t.Error("expected notify_out_of_channel=false from config")
+	}
+	if cfg.UpdatesSelfUpdate() {
+		t.Error("expected self_update=false from config")
+	}
+}

@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/shellenv"
+	"github.com/tsukumogami/tsuku/internal/updates"
+	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
 
 var hookEnvCmd = &cobra.Command{
@@ -34,6 +36,11 @@ var hookEnvCmd = &cobra.Command{
 		result, err := shellenv.ComputeActivation(cwd, prevPath, curDir, cfg)
 		if err != nil {
 			return err
+		}
+
+		// Trigger background update check (best-effort, <1ms).
+		if userCfg, loadErr := userconfig.Load(); loadErr == nil {
+			updates.CheckAndSpawnUpdateCheck(cfg, userCfg)
 		}
 
 		// No-op: no output, exit 0.

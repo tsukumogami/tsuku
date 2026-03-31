@@ -15,6 +15,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/index"
 	"github.com/tsukumogami/tsuku/internal/project"
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/updates"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
 
@@ -77,6 +78,9 @@ Exit codes:
 			fmt.Fprintf(os.Stderr, "Failed to load user config: %v\n", err)
 			exitWithCode(ExitGeneral)
 		}
+
+		// Trigger background update check (best-effort)
+		updates.CheckAndSpawnUpdateCheck(cfg, userCfg)
 
 		mode, err := resolveMode(runModeFlag, userCfg)
 		if err != nil {

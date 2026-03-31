@@ -18,6 +18,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/registry"
+	"github.com/tsukumogami/tsuku/internal/updates"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
 
@@ -53,8 +54,27 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verboseFlag, "verbose", "v", false, "Show verbose output (INFO level)")
 	rootCmd.PersistentFlags().BoolVar(&debugFlag, "debug", false, "Show debug output (includes timestamps and source locations)")
 
-	// Initialize logger before command execution
-	rootCmd.PersistentPreRun = initLogger
+	// Initialize logger and trigger background update checks before command execution
+	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		initLogger(cmd, args)
+
+		// Skip update check for commands that have their own trigger or shouldn't check
+		skip := map[string]bool{
+			"check-updates": true,
+			"hook-env":      true,
+			"run":           true,
+			"help":          true,
+			"version":       true,
+			"completion":    true,
+		}
+		if !skip[cmd.Name()] {
+			if cfg, err := config.DefaultConfig(); err == nil {
+				if userCfg, err := userconfig.Load(); err == nil {
+					updates.CheckAndSpawnUpdateCheck(cfg, userCfg)
+				}
+			}
+		}
+	}
 
 	// Set version from build info (handles tagged releases and dev builds)
 	rootCmd.Version = buildinfo.Version()
