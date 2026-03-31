@@ -47,7 +47,7 @@ func CheckAndSpawnUpdateCheck(cfg *config.Config, userCfg *userconfig.Config) {
 		return
 	}
 	// Release the probe lock immediately -- the background process will acquire its own
-	lock.Unlock()
+	_ = lock.Unlock()
 
 	// Spawn detached check-updates process
 	spawnChecker()

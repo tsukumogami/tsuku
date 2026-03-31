@@ -14,8 +14,12 @@ import (
 func TestCheckAndSpawnFreshSentinel(t *testing.T) {
 	dir := t.TempDir()
 	cacheDir := filepath.Join(dir, "cache", "updates")
-	os.MkdirAll(cacheDir, 0755)
-	TouchSentinel(cacheDir)
+	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := TouchSentinel(cacheDir); err != nil {
+		t.Fatal(err)
+	}
 
 	cfg := &config.Config{HomeDir: dir}
 	userCfg := userconfig.DefaultConfig()
@@ -53,12 +57,18 @@ func TestCheckAndSpawnNilUserConfig(t *testing.T) {
 func TestCheckAndSpawnStaleSentinel(t *testing.T) {
 	dir := t.TempDir()
 	cacheDir := filepath.Join(dir, "cache", "updates")
-	os.MkdirAll(cacheDir, 0755)
+	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 
 	sentinelPath := filepath.Join(cacheDir, SentinelFile)
-	os.WriteFile(sentinelPath, nil, 0644)
+	if err := os.WriteFile(sentinelPath, nil, 0644); err != nil {
+		t.Fatal(err)
+	}
 	old := time.Now().Add(-25 * time.Hour)
-	os.Chtimes(sentinelPath, old, old)
+	if err := os.Chtimes(sentinelPath, old, old); err != nil {
+		t.Fatal(err)
+	}
 
 	cfg := &config.Config{HomeDir: dir}
 	userCfg := userconfig.DefaultConfig()
@@ -78,7 +88,9 @@ func TestCheckAndSpawnMissingSentinel(t *testing.T) {
 func TestCheckAndSpawnLockHeld(t *testing.T) {
 	dir := t.TempDir()
 	cacheDir := filepath.Join(dir, "cache", "updates")
-	os.MkdirAll(cacheDir, 0755)
+	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 
 	// Hold the lock using FileLock
 	lockPath := filepath.Join(cacheDir, LockFile)
@@ -86,7 +98,7 @@ func TestCheckAndSpawnLockHeld(t *testing.T) {
 	if err := lock.LockExclusive(); err != nil {
 		t.Fatal(err)
 	}
-	defer lock.Unlock()
+	defer func() { _ = lock.Unlock() }()
 
 	cfg := &config.Config{HomeDir: dir}
 	userCfg := userconfig.DefaultConfig()

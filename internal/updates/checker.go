@@ -38,7 +38,7 @@ func RunUpdateCheck(ctx context.Context, cfg *config.Config, userCfg *userconfig
 	if err := lock.LockExclusive(); err != nil {
 		return fmt.Errorf("acquire update check lock: %w", err)
 	}
-	defer lock.Unlock()
+	defer func() { _ = lock.Unlock() }()
 
 	// Double-check: re-verify staleness after lock acquisition.
 	// Another process may have completed a check while we waited for the lock.

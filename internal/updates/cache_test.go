@@ -250,7 +250,9 @@ func TestIsCheckStale(t *testing.T) {
 	// Expired sentinel (set mtime to 25 hours ago)
 	path := filepath.Join(dir, SentinelFile)
 	old := time.Now().Add(-25 * time.Hour)
-	os.Chtimes(path, old, old)
+	if err := os.Chtimes(path, old, old); err != nil {
+		t.Fatal(err)
+	}
 	if !IsCheckStale(dir, 24*time.Hour) {
 		t.Error("expired sentinel should be stale")
 	}

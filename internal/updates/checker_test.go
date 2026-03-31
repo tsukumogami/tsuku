@@ -107,10 +107,14 @@ func TestCheckToolRecipeError(t *testing.T) {
 func TestRunUpdateCheckDoubleCheck(t *testing.T) {
 	dir := t.TempDir()
 	cacheDir := filepath.Join(dir, "cache", "updates")
-	os.MkdirAll(cacheDir, 0755)
+	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 
 	// Touch sentinel to make cache fresh
-	TouchSentinel(cacheDir)
+	if err := TouchSentinel(cacheDir); err != nil {
+		t.Fatal(err)
+	}
 
 	cfg := &config.Config{HomeDir: dir}
 	userCfg := userconfig.DefaultConfig()
@@ -129,11 +133,15 @@ func TestRunUpdateCheckWritesEntries(t *testing.T) {
 
 	// Create state and tools directories
 	stateDir := filepath.Join(dir, "tools")
-	os.MkdirAll(stateDir, 0755)
+	if err := os.MkdirAll(stateDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 
 	// Write a minimal state.json
 	stateFile := filepath.Join(dir, "state.json")
-	os.WriteFile(stateFile, []byte(`{"installed":{}}`), 0644)
+	if err := os.WriteFile(stateFile, []byte(`{"installed":{}}`), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	cfg := &config.Config{
 		HomeDir:  dir,
