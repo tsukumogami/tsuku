@@ -47,6 +47,28 @@ func (fl *FileLock) lockExclusive() error {
 	return nil
 }
 
+// tryLockExclusive attempts a non-blocking exclusive lock.
+// Returns (true, nil) on success, (false, nil) if already held.
+func (fl *FileLock) tryLockExclusive() (bool, error) {
+	var overlapped windows.Overlapped
+	err := windows.LockFileEx(
+		windows.Handle(fl.file.Fd()),
+		lockfileExclusiveLock|windows.LOCKFILE_FAIL_IMMEDIATELY,
+		0,
+		1,
+		0,
+		&overlapped,
+	)
+	if err != nil {
+		// ERROR_LOCK_VIOLATION means the lock is held by another process
+		if err == windows.ERROR_LOCK_VIOLATION {
+			return false, nil
+		}
+		return false, fmt.Errorf("failed to try exclusive lock: %w", err)
+	}
+	return true, nil
+}
+
 // unlock releases the lock using UnlockFileEx.
 func (fl *FileLock) unlock() error {
 	var overlapped windows.Overlapped

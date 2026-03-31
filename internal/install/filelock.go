@@ -38,6 +38,16 @@ func (fl *FileLock) LockExclusive() error {
 	return fl.lockExclusive()
 }
 
+// TryLockExclusive attempts to acquire an exclusive lock without blocking.
+// Returns (true, nil) if the lock was acquired, (false, nil) if another process
+// holds it, and (false, err) on unexpected errors.
+func (fl *FileLock) TryLockExclusive() (bool, error) {
+	if err := fl.openFile(); err != nil {
+		return false, err
+	}
+	return fl.tryLockExclusive()
+}
+
 // Unlock releases the lock and closes the file.
 func (fl *FileLock) Unlock() error {
 	if fl.file == nil {

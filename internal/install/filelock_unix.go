@@ -23,6 +23,19 @@ func (fl *FileLock) lockExclusive() error {
 	return nil
 }
 
+// tryLockExclusive attempts a non-blocking exclusive lock.
+// Returns (true, nil) on success, (false, nil) if already held.
+func (fl *FileLock) tryLockExclusive() (bool, error) {
+	err := syscall.Flock(int(fl.file.Fd()), syscall.LOCK_EX|syscall.LOCK_NB)
+	if err != nil {
+		if err == syscall.EWOULDBLOCK {
+			return false, nil
+		}
+		return false, fmt.Errorf("failed to try exclusive lock: %w", err)
+	}
+	return true, nil
+}
+
 // unlock releases the flock.
 func (fl *FileLock) unlock() error {
 	if err := syscall.Flock(int(fl.file.Fd()), syscall.LOCK_UN); err != nil {
