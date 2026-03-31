@@ -146,9 +146,9 @@ func TouchSentinel(cacheDir string) error {
 	path := filepath.Join(cacheDir, SentinelFile)
 	now := time.Now()
 
-	// Try to update mtime of existing file first
+	// Try to update mtime of existing file; fall back to creating it
+	// on any error (missing file, permission issue, etc.)
 	if err := os.Chtimes(path, now, now); err != nil {
-		// File doesn't exist, create it
 		if err := os.WriteFile(path, nil, 0644); err != nil {
 			return fmt.Errorf("create sentinel file: %w", err)
 		}

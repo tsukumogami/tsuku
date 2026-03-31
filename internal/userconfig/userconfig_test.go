@@ -1628,6 +1628,7 @@ github_token = "ghp-from-file"
 }
 
 func TestUpdatesEnabledDefault(t *testing.T) {
+	t.Setenv("TSUKU_NO_UPDATE_CHECK", "")
 	cfg := DefaultConfig()
 	if !cfg.UpdatesEnabled() {
 		t.Error("expected UpdatesEnabled to default to true")
@@ -1652,6 +1653,8 @@ func TestUpdatesEnabledConfigFalse(t *testing.T) {
 }
 
 func TestUpdatesAutoApplyDefault(t *testing.T) {
+	t.Setenv("TSUKU_AUTO_UPDATE", "")
+	t.Setenv("CI", "")
 	cfg := DefaultConfig()
 	if !cfg.UpdatesAutoApplyEnabled() {
 		t.Error("expected UpdatesAutoApplyEnabled to default to true")
@@ -1676,6 +1679,7 @@ func TestUpdatesAutoApplyCIOverride(t *testing.T) {
 }
 
 func TestUpdatesCheckIntervalDefault(t *testing.T) {
+	t.Setenv("TSUKU_UPDATE_CHECK_INTERVAL", "")
 	cfg := DefaultConfig()
 	got := cfg.UpdatesCheckInterval()
 	if got != 24*time.Hour {

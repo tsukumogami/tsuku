@@ -411,6 +411,9 @@ func (c *Config) UpdatesCheckInterval() time.Duration {
 }
 
 // clampCheckInterval enforces the 1h-30d range with warnings for out-of-range values.
+// Note: env var values are clamped (lenient), while Set() rejects out-of-range values
+// with an error (strict). This asymmetry is intentional: env vars may be set by
+// automation that can't handle errors, while tsuku config set is interactive.
 func clampCheckInterval(d time.Duration, source string) time.Duration {
 	if d < MinCheckInterval {
 		fmt.Fprintf(os.Stderr, "Warning: %s too low (%v), using minimum %v\n",
