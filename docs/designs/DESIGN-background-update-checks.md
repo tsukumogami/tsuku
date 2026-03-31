@@ -50,18 +50,18 @@ PLAN: `docs/plans/PLAN-background-update-checks.md` (single-pr mode)
 
 ```mermaid
 graph LR
-    Cache["Issue 1: Cache + config"]
-    Checker["Issue 2: Background checker"]
-    Trigger["Issue 3: Trigger integration"]
+    M1["Issue 1: Cache + config"]
+    M2["Issue 2: Background checker"]
+    M3["Issue 3: Trigger integration"]
 
-    Cache --> Checker
-    Checker --> Trigger
+    M1 --> M2
+    M2 --> M3
 
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
 
-    class Cache ready
-    class Checker,Trigger blocked
+    class M1 ready
+    class M2,M3 blocked
 ```
 
 **Legend**: Blue = ready, Yellow = blocked
