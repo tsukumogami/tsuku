@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 upstream: docs/prds/PRD-auto-update.md
 spawned_from:
   issue: 2183
@@ -29,42 +29,7 @@ rationale: |
 
 ## Status
 
-Planned
-
-## Implementation Issues
-
-### Milestone: [Auto-update](https://github.com/tsukumogami/tsuku/milestone/109)
-
-| Issue | Dependencies | Tier |
-|-------|--------------|------|
-| Issue 1: Cache + config surface | None | testable |
-| _Per-tool JSON cache with UpdateCheckEntry struct, sentinel-based staleness, and [updates] config section with 5 getter methods following the LLMConfig pattern._ | | |
-| Issue 2: Background update checker | Issue 1 | testable |
-| _RunUpdateCheck iterates installed tools, queries providers via ResolveWithinBoundary and ResolveLatest, writes per-tool cache files atomically. Hidden check-updates subcommand with 10s timeout._ | | |
-| Issue 3: Layered trigger integration | Issue 1, Issue 2 | testable |
-| _TryLockExclusive on FileLock, CheckAndSpawnUpdateCheck with stat-flock-spawn protocol wired into hook-env, tsuku run, and PersistentPreRun._ | | |
-
-PLAN: `docs/plans/PLAN-background-update-checks.md` (single-pr mode)
-
-### Dependency Graph
-
-```mermaid
-graph LR
-    M1["Issue 1: Cache + config"]
-    M2["Issue 2: Background checker"]
-    M3["Issue 3: Trigger integration"]
-
-    M1 --> M2
-    M2 --> M3
-
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-
-    class M1 ready
-    class M2,M3 blocked
-```
-
-**Legend**: Blue = ready, Yellow = blocked
+Current
 
 ## Context and Problem Statement
 
