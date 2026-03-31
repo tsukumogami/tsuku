@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 upstream: docs/prds/PRD-auto-update.md
 spawned_from:
   issue: 2183
