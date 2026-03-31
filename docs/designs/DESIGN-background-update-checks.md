@@ -35,24 +35,33 @@ Planned
 
 ### Milestone: [Auto-update](https://github.com/tsukumogami/tsuku/milestone/109)
 
-PLAN: `docs/plans/PLAN-background-update-checks.md` (single-pr mode, 3 issues)
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| Issue 1: Cache + config surface | None | testable |
+| _Per-tool JSON cache with UpdateCheckEntry struct, sentinel-based staleness, and [updates] config section with 5 getter methods following the LLMConfig pattern._ | | |
+| Issue 2: Background update checker | Issue 1 | testable |
+| _RunUpdateCheck iterates installed tools, queries providers via ResolveWithinBoundary and ResolveLatest, writes per-tool cache files atomically. Hidden check-updates subcommand with 10s timeout._ | | |
+| Issue 3: Layered trigger integration | Issue 1, Issue 2 | testable |
+| _TryLockExclusive on FileLock, CheckAndSpawnUpdateCheck with stat-flock-spawn protocol wired into hook-env, tsuku run, and PersistentPreRun._ | | |
+
+PLAN: `docs/plans/PLAN-background-update-checks.md` (single-pr mode)
 
 ### Dependency Graph
 
 ```mermaid
 graph LR
-    I1["Issue 1: Cache + config"]
-    I2["Issue 2: Background checker"]
-    I3["Issue 3: Trigger integration"]
+    Cache["Issue 1: Cache + config"]
+    Checker["Issue 2: Background checker"]
+    Trigger["Issue 3: Trigger integration"]
 
-    I1 --> I2
-    I2 --> I3
+    Cache --> Checker
+    Checker --> Trigger
 
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
 
-    class I1 ready
-    class I2,I3 blocked
+    class Cache ready
+    class Checker,Trigger blocked
 ```
 
 **Legend**: Blue = ready, Yellow = blocked
