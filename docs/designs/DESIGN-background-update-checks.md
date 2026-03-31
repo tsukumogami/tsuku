@@ -251,10 +251,10 @@ isCheckStale: os.Stat("$TSUKU_HOME/cache/updates/.last-check")
 
 ### Phase 1: Cache and config
 
-Add the `UpdateCheckEntry` struct, read/write functions, and sentinel management in `internal/updates/cache.go`. Add the `UpdatesConfig` struct and getter methods to `internal/userconfig/userconfig.go`. Unit tests for both.
+Add the `UpdateCheckEntry` struct, read/write/remove functions, and sentinel management in `internal/updates/cache.go`. Include `RemoveEntry` so `tsuku remove` can clean up stale cache entries. Add the `UpdatesConfig` struct and getter methods to `internal/userconfig/userconfig.go`. Unit tests for both.
 
 Deliverables:
-- `internal/updates/cache.go`
+- `internal/updates/cache.go` (includes `ReadEntry`, `ReadAllEntries`, `WriteEntry`, `RemoveEntry`, `TouchSentinel`)
 - `internal/updates/cache_test.go`
 - `internal/userconfig/userconfig.go` (modified)
 - `internal/userconfig/userconfig_test.go` (updated)
@@ -270,12 +270,15 @@ Deliverables:
 
 ### Phase 3: Trigger integration
 
-Add `internal/updates/trigger.go` with `CheckAndSpawnUpdateCheck`. Wire it into hook-env.go, cmd_run.go, and PersistentPreRun. Integration tests verifying the stat-flock-spawn protocol.
+Add `internal/updates/trigger.go` with `CheckAndSpawnUpdateCheck`. Prerequisite: add `TryLockExclusive() (bool, error)` to `internal/install/filelock.go` (with implementations in `filelock_unix.go` and `filelock_windows.go`) for non-blocking flock probes. Wire the trigger into hook-env.go (adding `userconfig.Load()` call), cmd_run.go, and PersistentPreRun. Note: verify no subcommands override PersistentPreRun, or use explicit chaining to avoid silent skips. Integration tests verifying the stat-flock-spawn protocol.
 
 Deliverables:
+- `internal/install/filelock.go` (modified: add `TryLockExclusive`)
+- `internal/install/filelock_unix.go` (modified)
+- `internal/install/filelock_windows.go` (modified)
 - `internal/updates/trigger.go`
 - `internal/updates/trigger_test.go`
-- `cmd/tsuku/hook_env.go` (modified)
+- `cmd/tsuku/hook_env.go` (modified: add `userconfig.Load()` + trigger call)
 - `cmd/tsuku/cmd_run.go` (modified)
 - `cmd/tsuku/main.go` (modified)
 
