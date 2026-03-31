@@ -31,10 +31,10 @@ Sequencing matters here. The version resolution model (how pins work) must be so
 ## Features
 
 ### Feature 1: Channel-aware version resolution ([#2181](https://github.com/tsukumogami/tsuku/issues/2181))
-**Needs:** `needs-design` -- the pinning model, Requested field semantics, and version comparison logic need architectural decisions
 **Dependencies:** None
-**Status:** Not started
+**Status:** Done
 **Upstream:** [PRD-auto-update](../prds/PRD-auto-update.md) (R1, R2, R6, R15a)
+**Design:** [DESIGN-channel-aware-resolution.md](../designs/current/DESIGN-channel-aware-resolution.md) (Current)
 
 The foundation. Fix `tsuku update` to respect the `Requested` field so that `install node@18` followed by `update node` stays within 18.x.y. Fix `tsuku outdated` to use ProviderFactory for all version providers (not just GitHub). Cache `ResolveLatest` results. Define pin-level semantics: empty string = latest, "20" = major, "1.29" = minor, "1.29.3" = exact. Everything else depends on this being right.
 
@@ -125,8 +125,8 @@ The split between Phase 1 (Features 1-5) and Phase 2 (Features 6-9) reflects a n
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#2181: channel-aware version resolution](https://github.com/tsukumogami/tsuku/issues/2181) | None | testable |
-| _Fix `tsuku update` to respect the Requested field and `tsuku outdated` to use ProviderFactory. Establish pin-level semantics and cache ResolveLatest results. Everything else depends on this being correct._ | | |
+| ~~[#2181: channel-aware version resolution](https://github.com/tsukumogami/tsuku/issues/2181)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Fix `tsuku update` to respect the Requested field and `tsuku outdated` to use ProviderFactory. Establish pin-level semantics and cache ResolveLatest results. Everything else depends on this being correct._~~ | | |
 | [#2182: self-update mechanism](https://github.com/tsukumogami/tsuku/issues/2182) | None | testable |
 | _Independent track: rename-in-place binary replacement for `tsuku self-update`. Kept separate from the managed tool system to avoid bootstrap risk. Integrates with check infrastructure when available._ | | |
 | [#2183: background update check infrastructure](https://github.com/tsukumogami/tsuku/issues/2183) | [#2181](https://github.com/tsukumogami/tsuku/issues/2181) | testable |
@@ -186,8 +186,9 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2181,I2182 needsDesign
-    class I2183,I2184,I2185,I2186,I2187,I2188 needsDesign
+    class I2181 done
+    class I2182,I2183 needsDesign
+    class I2184,I2185,I2186,I2187,I2188 needsDesign
     class I2189 blocked
 ```
 

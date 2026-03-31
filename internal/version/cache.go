@@ -83,9 +83,18 @@ func (c *CachedVersionLister) Refresh(ctx context.Context) ([]string, error) {
 	return versions, nil
 }
 
-// ResolveLatest delegates to the underlying provider (no caching for resolution)
+// ResolveLatest derives the latest version from the cached version list.
+// If the list cache is warm, no network call happens. If the cache is cold
+// or expired, ListVersions is fetched first (populating the cache).
+// Falls back to the underlying provider's ResolveLatest if the list is empty.
 func (c *CachedVersionLister) ResolveLatest(ctx context.Context) (*VersionInfo, error) {
-	return c.underlying.ResolveLatest(ctx)
+	versions, err := c.ListVersions(ctx)
+	if err != nil || len(versions) == 0 {
+		// Fallback: delegate to underlying provider
+		return c.underlying.ResolveLatest(ctx)
+	}
+	// Versions are sorted newest first; resolve the first to get full VersionInfo
+	return c.underlying.ResolveVersion(ctx, versions[0])
 }
 
 // ResolveVersion delegates to the underlying provider (no caching for resolution)
