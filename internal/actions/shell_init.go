@@ -2,6 +2,8 @@ package actions
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"os/exec"
@@ -98,8 +100,12 @@ func (a *InstallShellInitAction) Execute(ctx *ExecutionContext, params map[strin
 	tsukuHome := filepath.Dir(ctx.ToolsDir)
 	shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
 
-	if err := os.MkdirAll(shellDDir, 0755); err != nil {
+	if err := os.MkdirAll(shellDDir, 0700); err != nil {
 		return fmt.Errorf("install_shell_init: failed to create shell.d directory: %w", err)
+	}
+	// Ensure restrictive permissions even if directory already existed
+	if err := os.Chmod(shellDDir, 0700); err != nil {
+		return fmt.Errorf("install_shell_init: failed to set permissions on shell.d directory: %w", err)
 	}
 
 	sourceFile, hasSourceFile := GetString(params, "source_file")
@@ -118,13 +124,20 @@ func (a *InstallShellInitAction) Execute(ctx *ExecutionContext, params map[strin
 	return a.executeSourceCommand(ctx, sourceCommand, target, shells, shellDDir)
 }
 
+// contentHash computes the SHA-256 hex digest of the given data.
+func contentHash(data []byte) string {
+	h := sha256.Sum256(data)
+	return hex.EncodeToString(h[:])
+}
+
 // recordCleanup appends a CleanupAction for a shell.d file to the execution context.
-// The path is stored relative to $TSUKU_HOME.
-func recordCleanup(ctx *ExecutionContext, target, shell string) {
+// The path is stored relative to $TSUKU_HOME. The hash is the SHA-256 of the file content.
+func recordCleanup(ctx *ExecutionContext, target, shell, hash string) {
 	relPath := fmt.Sprintf("share/shell.d/%s.%s", target, shell)
 	ctx.CleanupActions = append(ctx.CleanupActions, CleanupAction{
-		Action: "delete_file",
-		Path:   relPath,
+		Action:      "delete_file",
+		Path:        relPath,
+		ContentHash: hash,
 	})
 }
 
@@ -140,8 +153,18 @@ func (a *InstallShellInitAction) executeSourceFile(ctx *ExecutionContext, source
 		if err := copyFile(srcPath, destPath); err != nil {
 			return fmt.Errorf("install_shell_init: failed to copy to %s: %w", destPath, err)
 		}
+		// Set restrictive permissions on the shell.d file
+		if err := os.Chmod(destPath, 0600); err != nil {
+			return fmt.Errorf("install_shell_init: failed to set permissions on %s: %w", destPath, err)
+		}
+		// Compute content hash for integrity verification
+		written, err := os.ReadFile(destPath)
+		if err != nil {
+			return fmt.Errorf("install_shell_init: failed to read back %s for hashing: %w", destPath, err)
+		}
+		hash := contentHash(written)
 		fmt.Printf("   Installed shell init: %s\n", destPath)
-		recordCleanup(ctx, target, shell)
+		recordCleanup(ctx, target, shell, hash)
 	}
 
 	return nil
@@ -192,11 +215,12 @@ func (a *InstallShellInitAction) executeSourceCommand(ctx *ExecutionContext, sou
 		}
 
 		destPath := filepath.Join(shellDDir, fmt.Sprintf("%s.%s", target, shell))
-		if err := os.WriteFile(destPath, output, 0644); err != nil {
+		if err := os.WriteFile(destPath, output, 0600); err != nil {
 			return fmt.Errorf("install_shell_init: failed to write %s: %w", destPath, err)
 		}
+		hash := contentHash(output)
 		fmt.Printf("   Installed shell init: %s\n", destPath)
-		recordCleanup(ctx, target, shell)
+		recordCleanup(ctx, target, shell, hash)
 	}
 
 	return nil

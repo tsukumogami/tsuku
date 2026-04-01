@@ -739,3 +739,194 @@ func TestInstallShellInitAction_Registered(t *testing.T) {
 		t.Errorf("expected name install_shell_init, got %s", action.Name())
 	}
 }
+
+func TestInstallShellInitAction_ContentHash_SourceFile(t *testing.T) {
+	a := &InstallShellInitAction{}
+
+	tsukuHome := t.TempDir()
+	toolsDir := filepath.Join(tsukuHome, "tools")
+	installDir := filepath.Join(toolsDir, "mytool-1.0")
+
+	if err := os.MkdirAll(installDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	sourceContent := "export FOO=bar\n"
+	if err := os.WriteFile(filepath.Join(installDir, "init.sh"), []byte(sourceContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		InstallDir: installDir,
+		ToolsDir:   toolsDir,
+	}
+
+	params := map[string]interface{}{
+		"source_file": "init.sh",
+		"target":      "mytool",
+		"shells":      []interface{}{"bash"},
+	}
+
+	if err := a.Execute(ctx, params); err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	if len(ctx.CleanupActions) != 1 {
+		t.Fatalf("expected 1 cleanup action, got %d", len(ctx.CleanupActions))
+	}
+
+	ca := ctx.CleanupActions[0]
+	if ca.ContentHash == "" {
+		t.Fatal("expected ContentHash to be set")
+	}
+
+	// Verify the hash matches the actual content
+	expectedHash := contentHash([]byte(sourceContent))
+	if ca.ContentHash != expectedHash {
+		t.Errorf("ContentHash = %q, want %q", ca.ContentHash, expectedHash)
+	}
+}
+
+func TestInstallShellInitAction_ContentHash_SourceCommand(t *testing.T) {
+	a := &InstallShellInitAction{}
+
+	tsukuHome := t.TempDir()
+	toolsDir := filepath.Join(tsukuHome, "tools")
+	toolInstallDir := filepath.Join(toolsDir, "mytool-1.0")
+
+	if err := os.MkdirAll(toolInstallDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Script that outputs deterministic content
+	scriptContent := "#!/bin/sh\necho \"init for $1\"\n"
+	scriptPath := filepath.Join(toolInstallDir, "mytool")
+	if err := os.WriteFile(scriptPath, []byte(scriptContent), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		InstallDir:     toolInstallDir,
+		ToolInstallDir: toolInstallDir,
+		ToolsDir:       toolsDir,
+	}
+
+	params := map[string]interface{}{
+		"source_command": "{install_dir}/mytool {shell}",
+		"target":         "mytool",
+		"shells":         []interface{}{"bash"},
+	}
+
+	if err := a.Execute(ctx, params); err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	if len(ctx.CleanupActions) != 1 {
+		t.Fatalf("expected 1 cleanup action, got %d", len(ctx.CleanupActions))
+	}
+
+	ca := ctx.CleanupActions[0]
+	if ca.ContentHash == "" {
+		t.Fatal("expected ContentHash to be set")
+	}
+
+	// Verify the hash matches the command output
+	expectedHash := contentHash([]byte("init for bash\n"))
+	if ca.ContentHash != expectedHash {
+		t.Errorf("ContentHash = %q, want %q", ca.ContentHash, expectedHash)
+	}
+}
+
+func TestInstallShellInitAction_FilePermissions(t *testing.T) {
+	a := &InstallShellInitAction{}
+
+	tsukuHome := t.TempDir()
+	toolsDir := filepath.Join(tsukuHome, "tools")
+	installDir := filepath.Join(toolsDir, "mytool-1.0")
+
+	if err := os.MkdirAll(installDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(installDir, "init.sh"), []byte("# init\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		InstallDir: installDir,
+		ToolsDir:   toolsDir,
+	}
+
+	params := map[string]interface{}{
+		"source_file": "init.sh",
+		"target":      "mytool",
+		"shells":      []interface{}{"bash"},
+	}
+
+	if err := a.Execute(ctx, params); err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	// Check shell.d directory permissions
+	shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
+	dirInfo, err := os.Stat(shellDDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if perm := dirInfo.Mode().Perm(); perm != 0700 {
+		t.Errorf("expected shell.d directory permissions 0700, got %04o", perm)
+	}
+
+	// Check file permissions
+	filePath := filepath.Join(shellDDir, "mytool.bash")
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if perm := fileInfo.Mode().Perm(); perm != 0600 {
+		t.Errorf("expected file permissions 0600, got %04o", perm)
+	}
+}
+
+func TestInstallShellInitAction_FilePermissions_SourceCommand(t *testing.T) {
+	a := &InstallShellInitAction{}
+
+	tsukuHome := t.TempDir()
+	toolsDir := filepath.Join(tsukuHome, "tools")
+	toolInstallDir := filepath.Join(toolsDir, "mytool-1.0")
+
+	if err := os.MkdirAll(toolInstallDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	scriptContent := "#!/bin/sh\necho \"init for $1\"\n"
+	scriptPath := filepath.Join(toolInstallDir, "mytool")
+	if err := os.WriteFile(scriptPath, []byte(scriptContent), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		InstallDir:     toolInstallDir,
+		ToolInstallDir: toolInstallDir,
+		ToolsDir:       toolsDir,
+	}
+
+	params := map[string]interface{}{
+		"source_command": "{install_dir}/mytool {shell}",
+		"target":         "mytool",
+		"shells":         []interface{}{"bash"},
+	}
+
+	if err := a.Execute(ctx, params); err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
+	filePath := filepath.Join(shellDDir, "mytool.bash")
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if perm := fileInfo.Mode().Perm(); perm != 0600 {
+		t.Errorf("expected file permissions 0600, got %04o", perm)
+	}
+}

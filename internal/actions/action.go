@@ -39,8 +39,9 @@ type ExecutionContext struct {
 // CleanupAction describes a file-system cleanup operation to perform when
 // a tool version is removed. Paths are relative to $TSUKU_HOME.
 type CleanupAction struct {
-	Action string `json:"action"` // "delete_file", "delete_dir"
-	Path   string `json:"path"`   // relative to $TSUKU_HOME
+	Action      string `json:"action"`                 // "delete_file", "delete_dir"
+	Path        string `json:"path"`                   // relative to $TSUKU_HOME
+	ContentHash string `json:"content_hash,omitempty"` // SHA-256 hex digest of file content at install time
 }
 
 // Log returns the logger for this context.
