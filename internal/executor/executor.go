@@ -35,6 +35,7 @@ type Executor struct {
 	appsDir                 string               // Applications directory (~/.tsuku/apps/) for macOS .app bundles
 	currentDir              string               // Current symlinks directory (~/.tsuku/tools/current/) for binary symlinks
 	resolvedDeps            actions.ResolvedDeps // Pre-resolved dependencies (from state manager)
+	noShellInit             bool                 // Skip install_shell_init in post-install phase
 }
 
 // New creates a new executor
@@ -198,6 +199,32 @@ func (e *Executor) SetCurrentDir(dir string) {
 // can be used in variable expansion (e.g., {deps.openssl.version}).
 func (e *Executor) SetResolvedDeps(deps actions.ResolvedDeps) {
 	e.resolvedDeps = deps
+}
+
+// SetNoShellInit sets the flag to skip install_shell_init actions during
+// post-install phase execution. When true, no shell.d files are written
+// and no CleanupActions are recorded for shell init.
+func (e *Executor) SetNoShellInit(skip bool) {
+	e.noShellInit = skip
+}
+
+// SetToolInstallDir sets the ToolInstallDir on the execution context.
+// This must be called after ExecutePlan and before ExecutePhase("post-install")
+// so that post-install actions can find the installed tool's binary.
+func (e *Executor) SetToolInstallDir(dir string) {
+	if e.ctx != nil {
+		e.ctx.ToolInstallDir = dir
+	}
+}
+
+// GetCleanupActions returns the cleanup actions accumulated during phase execution.
+// Returns nil if no cleanup actions were recorded or if the execution context
+// is not initialized.
+func (e *Executor) GetCleanupActions() []actions.CleanupAction {
+	if e.ctx == nil {
+		return nil
+	}
+	return e.ctx.CleanupActions
 }
 
 // expandVars replaces {var} placeholders in a string
@@ -404,6 +431,7 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 		ExecPaths:               e.execPaths,
 		Logger:                  log.Default(),
 		Dependencies:            resolvedDeps,
+		NoShellInit:             e.noShellInit,
 	}
 	e.ctx = execCtx
 

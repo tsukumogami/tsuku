@@ -930,3 +930,95 @@ func TestInstallShellInitAction_FilePermissions_SourceCommand(t *testing.T) {
 		t.Errorf("expected file permissions 0600, got %04o", perm)
 	}
 }
+
+func TestInstallShellInitAction_NoShellInit_SourceFile(t *testing.T) {
+	a := &InstallShellInitAction{}
+
+	tsukuHome := t.TempDir()
+	toolsDir := filepath.Join(tsukuHome, "tools")
+	installDir := filepath.Join(toolsDir, "mytool-1.0")
+
+	if err := os.MkdirAll(installDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(installDir, "init.sh"), []byte("# init\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		InstallDir:  installDir,
+		ToolsDir:    toolsDir,
+		NoShellInit: true,
+	}
+
+	params := map[string]interface{}{
+		"source_file": "init.sh",
+		"target":      "mytool",
+		"shells":      []interface{}{"bash", "zsh"},
+	}
+
+	if err := a.Execute(ctx, params); err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	// No files should be created
+	shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
+	for _, shell := range []string{"bash", "zsh"} {
+		path := filepath.Join(shellDDir, "mytool."+shell)
+		if _, err := os.Stat(path); !os.IsNotExist(err) {
+			t.Errorf("expected file %s to NOT exist when NoShellInit is set", path)
+		}
+	}
+
+	// No cleanup actions should be recorded
+	if len(ctx.CleanupActions) != 0 {
+		t.Errorf("expected 0 cleanup actions when NoShellInit is set, got %d", len(ctx.CleanupActions))
+	}
+}
+
+func TestInstallShellInitAction_NoShellInit_SourceCommand(t *testing.T) {
+	a := &InstallShellInitAction{}
+
+	tsukuHome := t.TempDir()
+	toolsDir := filepath.Join(tsukuHome, "tools")
+	toolInstallDir := filepath.Join(toolsDir, "mytool-1.0")
+
+	if err := os.MkdirAll(toolInstallDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	scriptContent := "#!/bin/sh\necho \"init for $1\"\n"
+	scriptPath := filepath.Join(toolInstallDir, "mytool")
+	if err := os.WriteFile(scriptPath, []byte(scriptContent), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		InstallDir:     toolInstallDir,
+		ToolInstallDir: toolInstallDir,
+		ToolsDir:       toolsDir,
+		NoShellInit:    true,
+	}
+
+	params := map[string]interface{}{
+		"source_command": "{install_dir}/mytool {shell}",
+		"target":         "mytool",
+		"shells":         []interface{}{"bash"},
+	}
+
+	if err := a.Execute(ctx, params); err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	// No files should be created
+	shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
+	path := filepath.Join(shellDDir, "mytool.bash")
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Errorf("expected file %s to NOT exist when NoShellInit is set", path)
+	}
+
+	// No cleanup actions should be recorded
+	if len(ctx.CleanupActions) != 0 {
+		t.Errorf("expected 0 cleanup actions when NoShellInit is set, got %d", len(ctx.CleanupActions))
+	}
+}

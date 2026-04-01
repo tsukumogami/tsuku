@@ -34,6 +34,7 @@ type ExecutionContext struct {
 	Env                     []string          // Shared environment variables set by setup_build_env, used by build actions
 	AppResult               interface{}       // Result from app_bundle action for state tracking (stores *AppBundleResult)
 	CleanupActions          []CleanupAction   // Accumulated cleanup actions from post-install steps (e.g., shell.d files)
+	NoShellInit             bool              // When true, install_shell_init is skipped (--no-shell-init flag)
 }
 
 // CleanupAction describes a file-system cleanup operation to perform when

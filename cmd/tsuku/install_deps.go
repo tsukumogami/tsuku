@@ -12,6 +12,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/shellenv"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
@@ -347,6 +348,9 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	// Set key cache directory for PGP signature verification
 	exec.SetKeyCacheDir(cfg.KeyCacheDir)
 
+	// Pass through --no-shell-init flag
+	exec.SetNoShellInit(installNoShellInit)
+
 	// Look up resolved dependency versions for variable expansion
 	// This mirrors the logic in installLibrary() for libraries
 	if len(r.Metadata.Dependencies) > 0 {
@@ -470,7 +474,33 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		}
 		setInstalledInIndex(toolName, true)
 
-		// Update state with explicit flag, parent, and dependencies
+		// Execute post-install phase (e.g., install_shell_init).
+		// The ToolInstallDir must point to the final installed location so
+		// source_command can find the tool's binary.
+		exec.SetToolInstallDir(cfg.ToolDir(toolName, version))
+		if err := exec.ExecutePhase(globalCtx, plan, "post-install"); err != nil {
+			// Post-install failures warn but don't block installation
+			printInfof("Warning: post-install phase failed: %v\n", err)
+		}
+
+		// Collect cleanup actions recorded by post-install actions and
+		// rebuild shell caches for any shells that were written to.
+		postInstallCleanup := exec.GetCleanupActions()
+		if len(postInstallCleanup) > 0 {
+			affectedShells := make(map[string]bool)
+			for _, ca := range postInstallCleanup {
+				if shell := install.ShellFromCleanupPath(ca.Path); shell != "" {
+					affectedShells[shell] = true
+				}
+			}
+			for shell := range affectedShells {
+				if err := shellenv.RebuildShellCache(cfg.HomeDir, shell); err != nil {
+					printInfof("Warning: failed to rebuild shell cache for %s: %v\n", shell, err)
+				}
+			}
+		}
+
+		// Update state with explicit flag, parent, dependencies, and cleanup actions
 		err = mgr.GetState().UpdateTool(toolName, func(ts *install.ToolState) {
 			if isExplicit {
 				ts.IsExplicit = true
@@ -491,6 +521,14 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 			// Record dependencies in state for dependency tree display and uninstall warnings
 			ts.InstallDependencies = mapKeys(resolvedDeps.InstallTime)
 			ts.RuntimeDependencies = mapKeys(resolvedDeps.Runtime)
+
+			// Store cleanup actions from post-install phase in the version state
+			if len(postInstallCleanup) > 0 && ts.Versions != nil {
+				if vs, ok := ts.Versions[version]; ok {
+					vs.CleanupActions = convertCleanupActions(postInstallCleanup)
+					ts.Versions[version] = vs
+				}
+			}
 		})
 		if err != nil {
 			printInfof("Warning: failed to update state: %v\n", err)
@@ -606,6 +644,20 @@ func mapKeys(m map[string]string) []string {
 		keys = append(keys, k)
 	}
 	return keys
+}
+
+// convertCleanupActions converts executor-level CleanupActions to state-level
+// CleanupActions. The two types mirror each other but live in different packages.
+func convertCleanupActions(execActions []actions.CleanupAction) []install.CleanupAction {
+	result := make([]install.CleanupAction, len(execActions))
+	for i, a := range execActions {
+		result[i] = install.CleanupAction{
+			Action:      a.Action,
+			Path:        a.Path,
+			ContentHash: a.ContentHash,
+		}
+	}
+	return result
 }
 
 // isSystemDependencyPlan returns true if the plan only contains require_system steps.

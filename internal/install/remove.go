@@ -296,8 +296,13 @@ func (m *Manager) executeSingleCleanup(ca CleanupAction) {
 	}
 }
 
-// shellFromCleanupPath extracts the shell extension from a shell.d cleanup path.
+// ShellFromCleanupPath extracts the shell extension from a shell.d cleanup path.
 // Returns "" if the path doesn't look like a shell.d file.
+func ShellFromCleanupPath(path string) string {
+	return shellFromCleanupPath(path)
+}
+
+// shellFromCleanupPath is the unexported implementation.
 func shellFromCleanupPath(path string) string {
 	if !strings.HasPrefix(path, "share/shell.d/") {
 		return ""

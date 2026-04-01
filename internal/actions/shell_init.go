@@ -80,6 +80,13 @@ func (a *InstallShellInitAction) Preflight(params map[string]interface{}) *Prefl
 //   - target (required): name for the shell.d file (e.g., "niwa")
 //   - shells (optional): list of shells, defaults to ["bash", "zsh"]
 func (a *InstallShellInitAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
+	// When --no-shell-init is set, skip shell init entirely.
+	// No files are written and no CleanupActions are recorded.
+	if ctx.NoShellInit {
+		fmt.Printf("   Skipping shell init (--no-shell-init)\n")
+		return nil
+	}
+
 	target, ok := GetString(params, "target")
 	if !ok {
 		return fmt.Errorf("install_shell_init requires 'target' parameter")
