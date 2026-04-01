@@ -90,6 +90,18 @@ Examples:
 			}
 		}
 
+		// Snapshot old version's cleanup actions before installing new version.
+		// These are needed to compute stale cleanup (files the old version
+		// created that the new version no longer needs).
+		var oldCleanupActions []install.CleanupAction
+		if state != nil {
+			if ts, ok := state.Installed[toolName]; ok {
+				if vs, ok := ts.Versions[previousVersion]; ok {
+					oldCleanupActions = vs.CleanupActions
+				}
+			}
+		}
+
 		printInfof("Updating %s...\n", toolName)
 		if err := runInstallWithTelemetry(toolName, reqVersion, "", true, "", telemetryClient); err != nil {
 			exitWithCode(ExitInstallFailed)
@@ -102,6 +114,23 @@ Examples:
 			if tool.Name == toolName {
 				newVersion = tool.Version
 				break
+			}
+		}
+
+		// Lifecycle-aware stale cleanup: delete files the old version created
+		// that the new version no longer needs (e.g., shell.d scripts for a
+		// shell the new version dropped). Only runs when the version changed
+		// and the old version had cleanup actions recorded.
+		if newVersion != "" && newVersion != previousVersion && len(oldCleanupActions) > 0 {
+			// Reload state to get the new version's cleanup actions
+			newState, _ := mgr.GetState().Load()
+			if newState != nil {
+				if ts, ok := newState.Installed[toolName]; ok {
+					if vs, ok := ts.Versions[newVersion]; ok {
+						stale := install.StaleCleanupActions(oldCleanupActions, vs.CleanupActions)
+						mgr.ExecuteStaleCleanup(stale)
+					}
+				}
 			}
 		}
 
