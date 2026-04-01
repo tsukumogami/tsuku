@@ -472,6 +472,57 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 	return nil
 }
 
+// StepPhase returns the effective phase of a ResolvedStep.
+// Empty phase is treated as "install" for backward compatibility.
+func StepPhase(step ResolvedStep) string {
+	if step.Phase == "" {
+		return "install"
+	}
+	return step.Phase
+}
+
+// ExecutePhase executes only the steps matching the given phase from an installation plan.
+// Steps with an empty Phase field are treated as "install" phase.
+// The execution context (e.ctx) must already be set up by a prior call to ExecutePlan.
+func (e *Executor) ExecutePhase(ctx context.Context, plan *InstallationPlan, phase string) error {
+	if e.ctx == nil {
+		return fmt.Errorf("execution context not initialized; call ExecutePlan first")
+	}
+
+	// Filter steps by phase
+	var phaseSteps []ResolvedStep
+	for _, step := range plan.Steps {
+		if StepPhase(step) == phase {
+			phaseSteps = append(phaseSteps, step)
+		}
+	}
+
+	if len(phaseSteps) == 0 {
+		return nil
+	}
+
+	fmt.Printf("Executing phase %q: %d steps\n", phase, len(phaseSteps))
+
+	for i, step := range phaseSteps {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
+		fmt.Printf("  Phase %q step %d/%d: %s\n", phase, i+1, len(phaseSteps), step.Action)
+
+		action := actions.Get(step.Action)
+		if action == nil {
+			return fmt.Errorf("unknown action: %s", step.Action)
+		}
+
+		if err := action.Execute(e.ctx, step.Params); err != nil {
+			return fmt.Errorf("phase %q step %d (%s) failed: %w", phase, i+1, step.Action, err)
+		}
+	}
+
+	return nil
+}
+
 // executeDownloadWithVerification downloads a file and verifies its checksum against the plan.
 func (e *Executor) executeDownloadWithVerification(
 	ctx context.Context,

@@ -194,6 +194,9 @@ func init() {
 	Register(&GitHubFileAction{})
 	Register(&FossilArchiveAction{})
 
+	// Lifecycle actions
+	Register(&InstallShellInitAction{})
+
 	// macOS application bundles
 	Register(&AppBundleAction{})
 

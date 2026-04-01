@@ -216,6 +216,13 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 			return nil, fmt.Errorf("failed to resolve step %s: %w", step.Action, err)
 		}
 
+		// Propagate phase from recipe step to all resolved steps
+		if step.Phase != "" {
+			for i := range resolvedSteps {
+				resolvedSteps[i].Phase = step.Phase
+			}
+		}
+
 		steps = append(steps, resolvedSteps...)
 	}
 
