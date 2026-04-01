@@ -90,6 +90,87 @@ shell configuration.
 my shell environment and opt out of shell integration for specific tools, so that
 I can make informed trust decisions about what runs in my shell.
 
+## Recipe Example
+
+To ground the requirements, here's what a lifecycle-hook-enabled recipe looks like
+for two representative tools.
+
+**niwa** (generates init via its own binary -- `source_command` variant):
+
+```toml
+[metadata]
+name = "niwa"
+description = "Workspace manager CLI"
+
+[version]
+source = "github_releases"
+github_repo = "tsukumogami/niwa"
+
+[[steps]]
+action = "github_archive"
+repo = "tsukumogami/niwa"
+asset_pattern = "niwa-v{version}-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["niwa"]
+
+[[steps]]
+action = "install_shell_init"
+phase = "post-install"
+source_command = "niwa shell-init {shell}"
+target = "niwa"
+shells = ["bash", "zsh"]
+
+[verify]
+command = "niwa --version"
+pattern = "{version}"
+```
+
+**direnv** (ships pre-built init scripts in the archive -- `source_file` variant):
+
+```toml
+[metadata]
+name = "direnv"
+description = "Environment switcher for the shell"
+
+[version]
+source = "github_releases"
+github_repo = "direnv/direnv"
+
+[[steps]]
+action = "github_file"
+repo = "direnv/direnv"
+asset_pattern = "direnv.{os}-{arch}"
+binaries = ["direnv"]
+
+[[steps]]
+action = "install_shell_init"
+phase = "post-install"
+source_file = "contrib/direnv.bash"
+target = "direnv"
+shells = ["bash"]
+
+[[steps]]
+action = "install_shell_init"
+phase = "post-install"
+source_file = "contrib/direnv.zsh"
+target = "direnv"
+shells = ["zsh"]
+
+[verify]
+command = "direnv version"
+pattern = "{version}"
+```
+
+The key additions are the `install_shell_init` steps with `phase = "post-install"`.
+Everything else in the recipe is unchanged. The `source_command` variant calls the
+tool's binary at install time to generate shell-specific output. The `source_file`
+variant copies static files from the downloaded archive -- safer (content is
+reviewable) but requires the upstream project to ship init scripts in its release.
+
+After `tsuku install niwa`, the user's next shell session automatically has niwa's
+shell function wrapper active -- no manual `.bashrc` editing.
+
 ## Requirements
 
 ### Functional
