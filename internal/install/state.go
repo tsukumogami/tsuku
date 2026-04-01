@@ -254,6 +254,12 @@ func (sm *StateManager) saveWithLock(state *State) error {
 
 // loadWithoutLock reads the state from disk without acquiring the file lock.
 // Caller must already hold both sm.mu and the file lock.
+// LoadWithoutLock reads state without acquiring the file lock.
+// The caller must already hold the file lock.
+func (sm *StateManager) LoadWithoutLock() (*State, error) {
+	return sm.loadWithoutLock()
+}
+
 func (sm *StateManager) loadWithoutLock() (*State, error) {
 	path := sm.statePath()
 	if _, err := os.Stat(path); os.IsNotExist(err) {
