@@ -1732,6 +1732,8 @@ func TestUpdatesNotifyOutOfChannelDefault(t *testing.T) {
 }
 
 func TestUpdatesSelfUpdateDefault(t *testing.T) {
+	t.Setenv("CI", "")
+	t.Setenv("TSUKU_NO_SELF_UPDATE", "")
 	cfg := DefaultConfig()
 	if !cfg.UpdatesSelfUpdate() {
 		t.Error("expected UpdatesSelfUpdate to default to true")

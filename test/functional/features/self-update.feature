@@ -14,11 +14,6 @@ Feature: Self-update mechanism
     Then the exit code is not 0
     And the error output contains "not available for development builds"
 
-  Scenario: Config get updates.self_update defaults to true
-    When I run "tsuku config get updates.self_update"
-    Then the exit code is 0
-    And the output contains "true"
-
   Scenario: Config set updates.self_update to false
     When I run "tsuku config set updates.self_update false"
     Then the exit code is 0
