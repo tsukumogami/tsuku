@@ -14,9 +14,15 @@
 No conflicts found. All assumptions compatible across decisions.
 
 ## Security Review (Phase 5)
-**Outcome:** Pending
-**Summary:** Awaiting security researcher
+**Outcome:** Document considerations
+**Summary:** Checksum-only integrity is adequate for launch (matches gh, rustup). Cosign signing tracked as post-launch hardening.
+
+## Architecture Review (Phase 6)
+**Outcome:** One blocking finding (version normalization) resolved. Advisory items (HTTP client, parameter naming) noted for implementation.
+
+## Security Review (Phase 6)
+**Outcome:** Three pre-launch additions incorporated: downgrade protection, hard-fail on missing checksums, file lock for concurrency. Post-launch items tracked (cosign, .old cleanup).
 
 ## Current Status
-**Phase:** 5 - Security (in progress)
-**Last Updated:** 2026-03-31
+**Phase:** 6 - Final Review (complete, awaiting approval)
+**Last Updated:** 2026-04-01
