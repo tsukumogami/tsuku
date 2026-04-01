@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 upstream: docs/prds/PRD-tool-lifecycle-hooks.md
 problem: |
   Tsuku installs tools by downloading binaries and symlinking them, but tools
@@ -28,7 +28,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Planned
 
 ## Context and Problem Statement
 
