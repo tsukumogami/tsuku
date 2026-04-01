@@ -139,10 +139,11 @@ In all cases, the check is non-blocking: the entry point stats the cache file, s
 - [ ] The installer recommends enabling shell integration for timely update checks
 
 ### Self-update
-- [ ] `tsuku self-update` downloads, verifies, and replaces the tsuku binary
-- [ ] The old binary is preserved as a backup (`tsuku.old`)
-- [ ] Self-update failure leaves the current binary functional
-- [ ] Self-update is included in periodic update checks
+- [x] `tsuku self-update` downloads, verifies, and replaces the tsuku binary
+- [x] The old binary is preserved as a backup (`.old` next to the binary)
+- [x] Self-update failure leaves the current binary functional (two-rename with rollback)
+- [x] Self-update is included in periodic update checks
+- [x] Background auto-apply of self-updates (default: on, configurable via `updates.self_update`)
 
 ### Rollback
 - [ ] `tsuku rollback <tool>` switches to the immediately preceding active version (one step back)

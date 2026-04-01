@@ -55,12 +55,12 @@ The plumbing. Time-cached update checks with a configurable interval (default 24
 The core behavior. When cached check results show a newer version within pin boundaries, tsuku downloads and installs it during the next tsuku command. If installation fails, the previous version is automatically preserved and a basic failure notice is written to `$TSUKU_HOME/notices/`. `tsuku rollback <tool>` switches to the immediately preceding version (one level deep); rollback is temporary and doesn't change the `Requested` field (D7). `tsuku notices` displays failure details (R11a). This feature implements basic notice writing only -- every failure writes a notice. Consecutive-failure suppression (the "fewer than 3 = transient" logic from R11) ships in Feature 7. This ships together with auto-apply because auto-apply without rollback is unsafe as the default.
 
 ### Feature 4: Self-update ([#2182](https://github.com/tsukumogami/tsuku/issues/2182))
-**Needs:** `needs-design` -- binary replacement mechanism (rename-in-place vs. alternatives) and version check integration need design
 **Dependencies:** None (uses Feature 2's check infrastructure when available, but can ship independently)
-**Status:** Not started
+**Status:** Done
 **Upstream:** [PRD-auto-update](../prds/PRD-auto-update.md) (R7, R8)
+**Design:** [DESIGN-self-update.md](../designs/current/DESIGN-self-update.md) (Current)
 
-Independent from tool auto-update. `tsuku self-update` downloads the latest tsuku binary, verifies its checksum, renames the old binary to `tsuku.old`, and renames the new one into place. Self-update always tracks latest (no pinning for tsuku itself). When Feature 2's check infrastructure exists, tsuku's own version is included in the periodic check. Can ship before or after the tool auto-update features.
+Independent from tool auto-update. Tsuku auto-updates itself during the background update check by default, using a separate code path from the recipe pipeline. `tsuku self-update` provides a manual fallback. Binary replacement uses same-directory temp file with two-rename atomic swap and SHA256 verification. Self-update always tracks latest (no pinning for tsuku itself). Configurable via `updates.self_update` (default: true), suppressed in CI.
 
 ### Feature 5: Notification system ([#2185](https://github.com/tsukumogami/tsuku/issues/2185))
 **Needs:** `needs-design` -- notification timing, suppression layers, and configuration surface need design
@@ -127,8 +127,8 @@ The split between Phase 1 (Features 1-5) and Phase 2 (Features 6-9) reflects a n
 |-------|--------------|------|
 | ~~[#2181: channel-aware version resolution](https://github.com/tsukumogami/tsuku/issues/2181)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Fix `tsuku update` to respect the Requested field and `tsuku outdated` to use ProviderFactory. Establish pin-level semantics and cache ResolveLatest results. Everything else depends on this being correct._~~ | | |
-| [#2182: self-update mechanism](https://github.com/tsukumogami/tsuku/issues/2182) | None | testable |
-| _Independent track: rename-in-place binary replacement for `tsuku self-update`. Kept separate from the managed tool system to avoid bootstrap risk. Integrates with check infrastructure when available._ | | |
+| ~~[#2182: self-update mechanism](https://github.com/tsukumogami/tsuku/issues/2182)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Independent track: background auto-apply and manual `tsuku self-update` with rename-in-place binary replacement. Kept separate from the managed tool system to avoid bootstrap risk. Integrates with check infrastructure._~~ | | |
 | ~~[#2183: background update check infrastructure](https://github.com/tsukumogami/tsuku/issues/2183)~~ | ~~[#2181](https://github.com/tsukumogami/tsuku/issues/2181)~~ | ~~testable~~ |
 | ~~_With version resolution in place, add the time-cached check system: layered triggers (shell hook > shim > command), detached background process, cache file, and config.toml `[updates]` section._~~ | | |
 | ~~[#2184: auto-apply with rollback](https://github.com/tsukumogami/tsuku/issues/2184)~~ | ~~[#2181](https://github.com/tsukumogami/tsuku/issues/2181), [#2183](https://github.com/tsukumogami/tsuku/issues/2183)~~ | ~~testable~~ |
@@ -186,8 +186,7 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2181,I2183,I2184 done
-    class I2182 needsDesign
+    class I2181,I2182,I2183,I2184 done
     class I2185,I2186,I2187,I2188 needsDesign
     class I2189 blocked
 ```

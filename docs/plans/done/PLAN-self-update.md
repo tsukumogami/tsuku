@@ -1,8 +1,8 @@
 ---
 schema: plan/v1
-status: Draft
+status: Done
 execution_mode: single-pr
-upstream: docs/designs/DESIGN-self-update.md
+upstream: docs/designs/current/DESIGN-self-update.md
 milestone: "Self-Update Mechanism"
 issue_count: 3
 ---
@@ -11,7 +11,7 @@ issue_count: 3
 
 ## Status
 
-Draft
+Done
 
 ## Scope Summary
 
