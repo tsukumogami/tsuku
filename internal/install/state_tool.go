@@ -82,6 +82,45 @@ func (sm *StateManager) RemoveRequiredBy(dependency, dependent string) error {
 	})
 }
 
+// UpdateToolWithoutLock updates the state for a single tool without acquiring
+// the file lock. The caller must already hold the exclusive file lock and sm.mu
+// write lock. Used by auto-apply which holds a TryLockExclusive for the entire
+// apply cycle.
+func (sm *StateManager) UpdateToolWithoutLock(name string, update func(*ToolState)) error {
+	state, err := sm.loadWithoutLock()
+	if err != nil {
+		return err
+	}
+
+	toolState, exists := state.Installed[name]
+	if !exists {
+		toolState = ToolState{
+			RequiredBy: []string{},
+		}
+	}
+
+	update(&toolState)
+	state.Installed[name] = toolState
+
+	return sm.saveWithoutLock(state)
+}
+
+// GetToolStateWithoutLock reads the state for a specific tool without acquiring
+// the file lock. The caller must already hold the file lock.
+func (sm *StateManager) GetToolStateWithoutLock(name string) (*ToolState, error) {
+	state, err := sm.loadWithoutLock()
+	if err != nil {
+		return nil, err
+	}
+
+	toolState, exists := state.Installed[name]
+	if !exists {
+		return nil, nil
+	}
+
+	return &toolState, nil
+}
+
 // GetToolState returns the state for a specific tool, or nil if not found
 func (sm *StateManager) GetToolState(name string) (*ToolState, error) {
 	state, err := sm.Load()
