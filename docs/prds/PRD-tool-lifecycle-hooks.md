@@ -171,6 +171,12 @@ reviewable) but requires the upstream project to ship init scripts in its releas
 After `tsuku install niwa`, the user's next shell session automatically has niwa's
 shell function wrapper active -- no manual `.bashrc` editing.
 
+Note that recipes don't declare uninstall steps. Cleanup is automatic: when
+`install_shell_init` runs, it records what it created (e.g.,
+`share/shell.d/niwa.bash`) in the tool's state. When the user runs
+`tsuku remove niwa`, tsuku reads those recorded paths and deletes them -- no recipe
+involvement needed. This is why R5 requires cleanup state tracking at install time.
+
 ## Requirements
 
 ### Functional
