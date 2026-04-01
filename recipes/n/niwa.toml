@@ -1,0 +1,32 @@
+[metadata]
+  name = "niwa"
+  description = "Workspace manager CLI"
+  homepage = "https://github.com/tsukumogami/niwa"
+  version_format = "semver"
+  requires_sudo = false
+
+[version]
+  source = "github_releases"
+  github_repo = "tsukumogami/niwa"
+  tag_prefix = "v"
+
+[[steps]]
+  action = "github_archive"
+  repo = "tsukumogami/niwa"
+  asset_pattern = "niwa-v{version}-{os}-{arch}.tar.gz"
+  archive_format = "tar.gz"
+  strip_dirs = 1
+  binaries = ["niwa"]
+  os_mapping = { darwin = "darwin", linux = "linux" }
+  arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[[steps]]
+  action = "install_shell_init"
+  phase = "post-install"
+  source_command = "niwa shell-init {shell}"
+  target = "niwa"
+  shells = ["bash", "zsh", "fish"]
+
+[verify]
+  command = "niwa --version"
+  pattern = "{version}"
