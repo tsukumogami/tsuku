@@ -43,20 +43,38 @@ func IsSelfUpdate(entry *UpdateCheckEntry) bool {
 }
 
 // IsDevBuild returns true if the version string indicates a non-release build.
-// This includes "dev-*" versions from local builds and Go pseudo-versions
-// (e.g., "v0.7.1-0.20260401...") that contain a timestamp component.
+// This includes "dev", "unknown", "dev-<hash>" from local builds, and Go
+// pseudo-versions (e.g., "v0.7.1-0.20260401194153-abc123"). Pre-release
+// tags like "v1.0.0-rc.1" are NOT considered dev builds.
 func IsDevBuild(ver string) bool {
-	if strings.HasPrefix(ver, "dev") || ver == "unknown" {
+	if ver == "dev" || ver == "unknown" || strings.HasPrefix(ver, "dev-") {
 		return true
 	}
-	// Go pseudo-versions contain a timestamp: v0.0.0-YYYYMMDD... or v0.7.1-0.YYYYMMDD...
-	// Release versions from goreleaser are clean semver: v0.5.0
-	// Any version with a hyphen followed by digits is a pseudo-version or pre-release
+	// Go pseudo-versions: v0.0.0-YYYYMMDDHHMMSS-hash or v0.7.1-0.YYYYMMDDHHMMSS-hash
+	// The distinguishing pattern is "-0." or "-" followed by 14 digits (timestamp).
 	stripped := strings.TrimPrefix(ver, "v")
 	if idx := strings.Index(stripped, "-"); idx >= 0 {
-		return true
+		suffix := stripped[idx+1:]
+		// Pseudo-version: starts with "0." (base version prefix) or 14+ digit timestamp
+		if strings.HasPrefix(suffix, "0.") {
+			return true
+		}
+		// Also catch direct timestamp format (v0.0.0-20260401...)
+		if len(suffix) >= 14 && isAllDigits(suffix[:14]) {
+			return true
+		}
 	}
 	return false
+}
+
+// isAllDigits returns true if every byte in s is an ASCII digit.
+func isAllDigits(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] < '0' || s[i] > '9' {
+			return false
+		}
+	}
+	return len(s) > 0
 }
 
 // CheckAndApplySelf checks for a newer tsuku release and applies it if auto-apply
@@ -93,7 +111,7 @@ func CheckAndApplySelf(ctx context.Context, cfg *config.Config, userCfg *usercon
 		CheckedAt:     now,
 		ExpiresAt:     now.Add(24 * time.Hour),
 	}
-	_ = WriteEntry(cacheDir, entry)
+	_ = WriteEntry(cacheDir, entry) // best-effort, matching tool check pattern
 
 	// If current is equal to or newer than latest, nothing to do
 	cmp := CompareSemver(normalizedCurrent, normalizedLatest)
@@ -101,10 +119,10 @@ func CheckAndApplySelf(ctx context.Context, cfg *config.Config, userCfg *usercon
 		return nil
 	}
 
-	// Newer version available -- apply if auto-apply is enabled
-	if !userCfg.UpdatesAutoApplyEnabled() {
-		return nil
-	}
+	// Newer version available -- apply it.
+	// The UpdatesSelfUpdate() check at function entry is the sole gate; this path
+	// is independent of UpdatesAutoApplyEnabled() so that users can disable tool
+	// auto-apply while keeping tsuku self-updates enabled.
 
 	// Acquire non-blocking lock to prevent concurrent self-updates
 	lockPath := filepath.Join(cacheDir, SelfUpdateLockFile)
@@ -202,9 +220,10 @@ func ApplySelfUpdate(ctx context.Context, exePath, tag, assetName string) error 
 	}
 	tmpPath := tmpFile.Name()
 
-	// Compute SHA256 while writing
+	// Compute SHA256 while writing (cap at 200MB to bound resource usage)
+	const maxBinarySize = 200 << 20
 	hasher := sha256.New()
-	if _, err := io.Copy(tmpFile, io.TeeReader(binaryResp.Body, hasher)); err != nil {
+	if _, err := io.Copy(tmpFile, io.TeeReader(io.LimitReader(binaryResp.Body, maxBinarySize), hasher)); err != nil {
 		tmpFile.Close()
 		os.Remove(tmpPath)
 		return fmt.Errorf("write binary: %w", err)
@@ -279,8 +298,11 @@ func isHexString(s string) bool {
 	return true
 }
 
-// CompareSemver compares two semver strings (without "v" prefix).
+// CompareSemver compares two clean semver strings (without "v" prefix).
 // Returns -1 if a < b, 0 if a == b, 1 if a > b.
+// Only handles numeric segments (e.g., "1.2.3"). Non-numeric segments are
+// treated as 0. Pre-release suffixes are not parsed -- callers should filter
+// pre-release versions with IsDevBuild before comparing.
 func CompareSemver(a, b string) int {
 	aParts := strings.Split(a, ".")
 	bParts := strings.Split(b, ".")

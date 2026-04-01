@@ -35,9 +35,9 @@ var selfUpdateCmd = &cobra.Command{
 			return fmt.Errorf("resolve latest version: %w", err)
 		}
 
-		// Normalize versions for comparison
+		// Normalize versions for comparison (strip "v" prefix from both sides)
 		currentNorm := strings.TrimPrefix(current, "v")
-		latestNorm := latest.Version
+		latestNorm := strings.TrimPrefix(latest.Version, "v")
 
 		cmp := updates.CompareSemver(currentNorm, latestNorm)
 		if cmp == 0 {
@@ -91,6 +91,3 @@ var selfUpdateCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(selfUpdateCmd)
-}

@@ -24,6 +24,34 @@ func TestIsSelfUpdate(t *testing.T) {
 	}
 }
 
+func TestIsDevBuild(t *testing.T) {
+	tests := []struct {
+		name string
+		ver  string
+		want bool
+	}{
+		{"dev", "dev", true},
+		{"dev with hash", "dev-abc123def012", true},
+		{"dev dirty", "dev-abc123def012-dirty", true},
+		{"unknown", "unknown", true},
+		{"go pseudo-version", "v0.7.1-0.20260401194153-ddebba608cfd", true},
+		{"go pseudo-version dirty", "v0.7.1-0.20260401194153-ddebba608cfd+dirty", true},
+		{"go zero pseudo-version", "v0.0.0-20260401194153-abc123", true},
+		{"release version", "v0.5.0", false},
+		{"release version no v", "0.5.0", false},
+		{"release version major", "v1.0.0", false},
+		{"pre-release rc", "v1.0.0-rc.1", false},
+		{"pre-release beta", "v2.0.0-beta.3", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsDevBuild(tt.ver); got != tt.want {
+				t.Errorf("IsDevBuild(%q) = %v, want %v", tt.ver, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestParseChecksumForAsset(t *testing.T) {
 	tests := []struct {
 		name      string
