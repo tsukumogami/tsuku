@@ -119,7 +119,7 @@ action = "install_shell_init"
 phase = "post-install"
 source_command = "niwa shell-init {shell}"
 target = "niwa"
-shells = ["bash", "zsh"]
+shells = ["bash", "zsh", "fish"]
 
 [verify]
 command = "niwa --version"
@@ -189,7 +189,7 @@ install path.
 per-tool shell initialization scripts via two methods: (a) running the tool's own
 installed binary to generate init output (`source_command`), or (b) copying a
 static file from the tool's install directory (`source_file`). Scripts must be
-produced per shell type (at minimum bash and zsh). `source_file` must be validated
+produced per shell type (bash, zsh, and fish). `source_file` must be validated
 to resolve within the tool's install directory after symlink resolution.
 
 **R3. Shell init delivery.** Per-tool shell init scripts must be combined into a
@@ -258,7 +258,7 @@ change so the user can see what changed in their shell integration.
 
 **R20. Input validation.** The `source_command` parameter must be invoked via exec
 (not through a shell), preventing shell metacharacter injection. The `shells`
-parameter must be validated against a fixed allowlist (bash, zsh). The
+parameter must be validated against a fixed allowlist (bash, zsh, fish). The
 `source_command` must invoke the tool's own installed binary, not arbitrary
 commands.
 
@@ -320,8 +320,6 @@ format recipe authors already know.
 
 ## Out of Scope
 
-- **Fish shell support**: Deferred. Bash and zsh are required; fish can be added
-  later without design changes.
 - **Imperative hook scripts**: Only declarative actions with a limited vocabulary
   are in scope. Arbitrary shell script hooks (Level 2) are a future extension.
 - **Service/daemon registration**: Post-install hooks for systemd/launchd service
