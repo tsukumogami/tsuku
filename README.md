@@ -77,6 +77,24 @@ Applications installed via cask recipes are stored in `$TSUKU_HOME/apps/` and sy
 tsuku update kubectl
 ```
 
+### Self-Update
+
+tsuku keeps itself up to date automatically. During regular background update checks, it downloads and applies new versions of itself. On the next invocation after a successful update, you'll see a brief notice: "tsuku has been updated to vX.Y.Z".
+
+To update manually:
+
+```bash
+tsuku self-update
+```
+
+Self-update is enabled by default. To disable it:
+
+```bash
+tsuku config set updates.self_update false
+```
+
+In CI environments (`CI=true`), self-update is suppressed automatically. You can also disable it per-invocation with `TSUKU_NO_SELF_UPDATE=1`.
+
 ### Remove a tool
 
 ```bash

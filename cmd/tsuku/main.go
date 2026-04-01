@@ -66,6 +66,7 @@ func init() {
 			"help":          true,
 			"version":       true,
 			"completion":    true,
+			"self-update":   true,
 		}
 		if !skip[cmd.Name()] {
 			if cfg, err := config.DefaultConfig(); err == nil {
@@ -75,6 +76,9 @@ func init() {
 						return runInstallWithTelemetry(toolName, version, constraint, false, "", nil)
 					})
 				}
+				// Display unshown notices (self-update success, tool update failures)
+				// independent of auto-apply gate
+				updates.DisplayUnshownNotices(cfg)
 			}
 		}
 	}
@@ -163,6 +167,7 @@ func init() {
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(shimCmd)
+	rootCmd.AddCommand(selfUpdateCmd)
 }
 
 func main() {

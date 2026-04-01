@@ -43,6 +43,9 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, installFn In
 	// Filter for actionable entries
 	var pending []UpdateCheckEntry
 	for _, e := range entries {
+		if IsSelfUpdate(&e) {
+			continue
+		}
 		if e.LatestWithinPin != "" && e.Error == "" && e.LatestWithinPin != e.ActiveVersion {
 			pending = append(pending, e)
 		}
@@ -105,7 +108,7 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, installFn In
 	}
 
 	// Display unshown notices on stderr (one-time)
-	displayUnshownNotices(noticesDir)
+	DisplayUnshownNotices(cfg)
 }
 
 // applyResult captures the outcome of a single update attempt.
@@ -123,16 +126,29 @@ func applyUpdate(entry UpdateCheckEntry, installFn InstallFunc) applyResult {
 	return applyResult{}
 }
 
-// displayUnshownNotices reads and displays any unshown failure notices on stderr.
-func displayUnshownNotices(noticesDir string) {
+// DisplayUnshownNotices reads and displays any unshown notices on stderr.
+// Called from PersistentPreRun to show both tool update failures and
+// self-update success notifications.
+func DisplayUnshownNotices(cfg *config.Config) {
+	noticesDir := notices.NoticesDir(cfg.HomeDir)
 	unshown, err := notices.ReadUnshownNotices(noticesDir)
 	if err != nil || len(unshown) == 0 {
 		return
 	}
 
 	for _, n := range unshown {
-		fmt.Fprintf(os.Stderr, "\nUpdate failed: %s -> %s: %s\n", n.Tool, n.AttemptedVersion, n.Error)
-		fmt.Fprintf(os.Stderr, "  Run 'tsuku notices' for details, 'tsuku rollback %s' to revert.\n", n.Tool)
+		if n.Tool == SelfToolName && n.Error == "" {
+			// Self-update success
+			fmt.Fprintf(os.Stderr, "\ntsuku has been updated to %s\n", n.AttemptedVersion)
+		} else if n.Tool == SelfToolName {
+			// Self-update failure
+			fmt.Fprintf(os.Stderr, "\ntsuku self-update failed: %s\n", n.Error)
+			fmt.Fprintf(os.Stderr, "  Run 'tsuku self-update' to retry.\n")
+		} else {
+			// Tool update failure
+			fmt.Fprintf(os.Stderr, "\nUpdate failed: %s -> %s: %s\n", n.Tool, n.AttemptedVersion, n.Error)
+			fmt.Fprintf(os.Stderr, "  Run 'tsuku notices' for details, 'tsuku rollback %s' to revert.\n", n.Tool)
+		}
 		_ = notices.MarkShown(noticesDir, n.Tool)
 	}
 }
