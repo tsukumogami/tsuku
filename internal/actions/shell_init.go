@@ -118,6 +118,16 @@ func (a *InstallShellInitAction) Execute(ctx *ExecutionContext, params map[strin
 	return a.executeSourceCommand(ctx, sourceCommand, target, shells, shellDDir)
 }
 
+// recordCleanup appends a CleanupAction for a shell.d file to the execution context.
+// The path is stored relative to $TSUKU_HOME.
+func recordCleanup(ctx *ExecutionContext, target, shell string) {
+	relPath := fmt.Sprintf("share/shell.d/%s.%s", target, shell)
+	ctx.CleanupActions = append(ctx.CleanupActions, CleanupAction{
+		Action: "delete_file",
+		Path:   relPath,
+	})
+}
+
 // executeSourceFile copies a file from the tool install dir to shell.d for each shell.
 func (a *InstallShellInitAction) executeSourceFile(ctx *ExecutionContext, sourceFile, target string, shells []string, shellDDir string) error {
 	srcPath := filepath.Join(ctx.InstallDir, sourceFile)
@@ -131,6 +141,7 @@ func (a *InstallShellInitAction) executeSourceFile(ctx *ExecutionContext, source
 			return fmt.Errorf("install_shell_init: failed to copy to %s: %w", destPath, err)
 		}
 		fmt.Printf("   Installed shell init: %s\n", destPath)
+		recordCleanup(ctx, target, shell)
 	}
 
 	return nil
@@ -185,6 +196,7 @@ func (a *InstallShellInitAction) executeSourceCommand(ctx *ExecutionContext, sou
 			return fmt.Errorf("install_shell_init: failed to write %s: %w", destPath, err)
 		}
 		fmt.Printf("   Installed shell init: %s\n", destPath)
+		recordCleanup(ctx, target, shell)
 	}
 
 	return nil

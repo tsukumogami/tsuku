@@ -33,6 +33,14 @@ type ExecutionContext struct {
 	Dependencies            ResolvedDeps      // Resolved dependencies with their versions
 	Env                     []string          // Shared environment variables set by setup_build_env, used by build actions
 	AppResult               interface{}       // Result from app_bundle action for state tracking (stores *AppBundleResult)
+	CleanupActions          []CleanupAction   // Accumulated cleanup actions from post-install steps (e.g., shell.d files)
+}
+
+// CleanupAction describes a file-system cleanup operation to perform when
+// a tool version is removed. Paths are relative to $TSUKU_HOME.
+type CleanupAction struct {
+	Action string `json:"action"` // "delete_file", "delete_dir"
+	Path   string `json:"path"`   // relative to $TSUKU_HOME
 }
 
 // Log returns the logger for this context.
