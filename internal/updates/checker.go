@@ -8,6 +8,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 	"github.com/tsukumogami/tsuku/internal/version"
@@ -81,6 +82,11 @@ func RunUpdateCheck(ctx context.Context, cfg *config.Config, userCfg *userconfig
 		entry := checkTool(ctx, tool, requested, state, cfg, loader, res, factory)
 		// Write result (best effort, matching version cache pattern)
 		_ = WriteEntry(cacheDir, entry)
+	}
+
+	// Check for tsuku self-update (separate from managed tools)
+	if err := CheckAndApplySelf(ctx, cfg, userCfg, cacheDir, res); err != nil {
+		log.Default().Debug("self-update check", "error", err)
 	}
 
 	// Touch sentinel after all tools processed

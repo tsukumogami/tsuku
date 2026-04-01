@@ -1738,6 +1738,40 @@ func TestUpdatesSelfUpdateDefault(t *testing.T) {
 	}
 }
 
+func TestUpdatesSelfUpdate_EnvVar(t *testing.T) {
+	cfg := DefaultConfig()
+
+	// TSUKU_NO_SELF_UPDATE=1 disables self-updates
+	t.Setenv("TSUKU_NO_SELF_UPDATE", "1")
+	t.Setenv("CI", "")
+	if cfg.UpdatesSelfUpdate() {
+		t.Error("expected UpdatesSelfUpdate to be false when TSUKU_NO_SELF_UPDATE=1")
+	}
+
+	// Unset env var, should be true again
+	t.Setenv("TSUKU_NO_SELF_UPDATE", "")
+	if !cfg.UpdatesSelfUpdate() {
+		t.Error("expected UpdatesSelfUpdate to be true when env var is unset")
+	}
+}
+
+func TestUpdatesSelfUpdate_CI(t *testing.T) {
+	cfg := DefaultConfig()
+
+	// CI=true disables self-updates
+	t.Setenv("CI", "true")
+	t.Setenv("TSUKU_NO_SELF_UPDATE", "")
+	if cfg.UpdatesSelfUpdate() {
+		t.Error("expected UpdatesSelfUpdate to be false when CI=true")
+	}
+
+	// CI=false should not suppress
+	t.Setenv("CI", "false")
+	if !cfg.UpdatesSelfUpdate() {
+		t.Error("expected UpdatesSelfUpdate to be true when CI=false")
+	}
+}
+
 func TestUpdatesGetSet(t *testing.T) {
 	cfg := DefaultConfig()
 

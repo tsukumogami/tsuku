@@ -66,6 +66,7 @@ func init() {
 			"help":          true,
 			"version":       true,
 			"completion":    true,
+			"self-update":   true,
 		}
 		if !skip[cmd.Name()] {
 			if cfg, err := config.DefaultConfig(); err == nil {

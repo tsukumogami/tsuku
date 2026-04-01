@@ -43,6 +43,9 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, installFn In
 	// Filter for actionable entries
 	var pending []UpdateCheckEntry
 	for _, e := range entries {
+		if IsSelfUpdate(&e) {
+			continue
+		}
 		if e.LatestWithinPin != "" && e.Error == "" && e.LatestWithinPin != e.ActiveVersion {
 			pending = append(pending, e)
 		}

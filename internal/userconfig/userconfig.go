@@ -156,6 +156,9 @@ const (
 
 	// EnvCI is the standard CI environment variable.
 	EnvCI = "CI"
+
+	// EnvNoSelfUpdate disables self-updates when set to "1".
+	EnvNoSelfUpdate = "TSUKU_NO_SELF_UPDATE"
 )
 
 // validLLMBackends lists the valid values for llm.backend (excluding empty string which clears).
@@ -437,7 +440,14 @@ func (c *Config) UpdatesNotifyOutOfChannel() bool {
 }
 
 // UpdatesSelfUpdate returns whether tsuku should check for and apply self-updates.
+// Suppressed when TSUKU_NO_SELF_UPDATE=1 or in CI environments (CI=true).
 func (c *Config) UpdatesSelfUpdate() bool {
+	if os.Getenv(EnvNoSelfUpdate) == "1" {
+		return false
+	}
+	if strings.EqualFold(os.Getenv(EnvCI), "true") {
+		return false
+	}
 	if c.Updates.SelfUpdate == nil {
 		return true
 	}
