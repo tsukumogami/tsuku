@@ -156,11 +156,11 @@ Add `checkAndApplySelf()` called at the end of `RunUpdateCheck`, after the tool 
 3. Creates a `GitHubProvider` for `tsukumogami/tsuku` directly (no recipe needed).
 4. Calls `ResolveLatest()` to get the newest release.
 5. Writes a standard `UpdateCheckEntry` with `Tool: SelfToolName`, `ActiveVersion` set to the normalized current version, and `LatestOverall` set to the resolved version.
-6. If a newer version is available: acquires the self-update file lock, runs the full download-verify-replace flow from Decision 1 and Decision 2, and writes a notification file (`$TSUKU_HOME/cache/updates/.self-update-applied`) containing the old and new version strings.
+6. If a newer version is available: acquires the self-update file lock, runs the full download-verify-replace flow from Decision 1 and Decision 2, and writes a success notice via `internal/notices/WriteNotice` containing the old and new version strings.
 
-A package-level constant `const SelfToolName = "tsuku"` identifies the self-update entry. `MaybeAutoApply` skips entries where `entry.Tool == updates.SelfToolName` since self-updates are handled by their own code path (not via `tsuku update <tool>`). Consumers like `tsuku outdated` and Feature 5 check this constant to format the display differently.
+A package-level constant `const SelfToolName = "tsuku"` identifies the self-update entry. `MaybeAutoApply` skips entries where `entry.Tool == updates.SelfToolName` since self-updates are handled by their own code path (not via `tsuku update <tool>`). This is defense-in-depth -- the existing `LatestWithinPin != ""` filter would also exclude the tsuku entry since that field is never populated, but the explicit guard makes the exclusion visible and survives future filter changes. Consumers like `tsuku outdated` and Feature 5 check this constant to format the display differently.
 
-**Notification mechanism:** On the next tsuku invocation, `PersistentPreRun` checks for the `.self-update-applied` file. If present, it prints "tsuku has been updated from v0.5.0 to v0.6.0" to stderr, then removes the file. This is a one-shot notification -- the file is consumed on read.
+**Notification mechanism:** On the next tsuku invocation, the existing `displayUnshownNotices` flow in `PersistentPreRun` picks up the self-update notice. The notice is formatted using `IsSelfUpdate()` to produce "tsuku has been updated from v0.5.0 to v0.6.0" rather than the standard tool update format.
 
 **Failure handling:** If the background auto-apply fails (network error, checksum mismatch, permission error), the failure is logged to the cache entry but the current binary is untouched (rollback guarantees from Decision 2 apply). The user can retry manually with `tsuku self-update`. No notification is shown for failed background attempts -- the failure surfaces through `tsuku outdated` showing the available version.
 
@@ -178,13 +178,13 @@ The entry uses the same cache directory as tool entries (`$TSUKU_HOME/cache/upda
 
 The self-update mechanism has three components: a resolution and download flow, a binary replacement sequence, and background auto-apply with notification.
 
-Tsuku auto-updates itself during the background update check that runs on each invocation. The `checkAndApplySelf()` function, called at the end of `RunUpdateCheck`, resolves the latest stable release from `tsukumogami/tsuku` using `GitHubProvider.ResolveLatest()` and compares it against `buildinfo.Version()` (both normalized by stripping the `v` prefix). If the resolved version is older than the current version (semver comparison), it exits with no action to prevent downgrade attacks. If a newer version is available, it acquires a non-blocking file lock on `$TSUKU_HOME/cache/updates/.self-update.lock`, constructs the download URL from the known GoReleaser naming convention (`tsuku-{os}-{arch}`), downloads `checksums.txt` to get the expected SHA256 hash, and downloads the binary to a temp file in the same directory as the running binary. After verifying the checksum, it performs the two-rename replacement: rename the current binary to `.old`, rename the temp file into place. If the second rename fails, it restores from the `.old` backup. On success, it writes a `.self-update-applied` notification file.
+Tsuku auto-updates itself during the background update check that runs on each invocation. The `checkAndApplySelf()` function, called at the end of `RunUpdateCheck`, resolves the latest stable release from `tsukumogami/tsuku` using `GitHubProvider.ResolveLatest()` and compares it against `buildinfo.Version()` (both normalized by stripping the `v` prefix). If the resolved version is older than the current version (semver comparison), it exits with no action to prevent downgrade attacks. If a newer version is available, it acquires a non-blocking file lock on `$TSUKU_HOME/cache/updates/.self-update.lock`, constructs the download URL from the known GoReleaser naming convention (`tsuku-{os}-{arch}`), downloads `checksums.txt` to get the expected SHA256 hash, and downloads the binary to a temp file in the same directory as the running binary. After verifying the checksum, it performs the two-rename replacement: rename the current binary to `.old`, rename the temp file into place. If the second rename fails, it restores from the `.old` backup. On success, it writes a notice via the existing `internal/notices/` system.
 
 The binary path is resolved via `os.Executable()` plus `filepath.EvalSymlinks()`, so self-update works regardless of where tsuku is installed -- `$TSUKU_HOME/bin/`, `/usr/local/bin/`, or behind a symlink. The temp file is created in the same directory as the binary (`os.CreateTemp(filepath.Dir(exePath), ...)`), which guarantees same-filesystem atomicity for `os.Rename`. Permission bits are copied from the existing binary before the replacement.
 
-On the next invocation, `PersistentPreRun` detects the notification file and prints "tsuku has been updated from v0.5.0 to v0.6.0" to stderr, then removes the file. The `tsuku self-update` command provides the same flow as a manual fallback for users who want to trigger an update immediately or who have disabled auto-apply.
+On the next invocation, the existing `displayUnshownNotices` flow in `PersistentPreRun` picks up the notice and prints "tsuku has been updated from v0.5.0 to v0.6.0" to stderr. The `tsuku self-update` command provides the same flow as a manual fallback for users who want to trigger an update immediately or who have disabled auto-apply.
 
-Auto-apply is controlled by `updates.self_update` in user config (default: true). When disabled, the background check still writes the cache entry so `tsuku outdated` can report availability, but skips the download-and-replace step.
+Auto-apply is controlled by `updates.self_update` in user config (default: true). It is also suppressed when `CI=true` or `TSUKU_NO_SELF_UPDATE=1` is set, matching the suppression pattern used by `UpdatesAutoApplyEnabled()`. When disabled, the background check still writes the cache entry so `tsuku outdated` can report availability, but skips the download-and-replace step.
 
 The three decisions reinforce each other: the direct asset name construction (D1) keeps the download path simple enough to stay within D5's complexity budget. The same-directory temp file placement (D2) avoids cross-filesystem issues without adding staging infrastructure. The well-known constant (D3) reuses the entire cache ecosystem without schema changes, while giving the auto-apply path a clean way to identify and handle tsuku's entry separately from managed tools.
 
@@ -199,7 +199,7 @@ Two new files and three modifications compose the solution. The core self-update
 **`internal/updates/self.go`** (new file)
 - `const SelfToolName = "tsuku"` -- well-known constant
 - `const SelfRepo = "tsukumogami/tsuku"` -- GitHub repository
-- `checkAndApplySelf(ctx, cacheDir, resolver, exePath)` -- resolves latest version, writes cache entry, and if a newer version is available, downloads, verifies, and replaces the binary. Writes `.self-update-applied` notification file on success.
+- `checkAndApplySelf(ctx, cacheDir, resolver, exePath)` -- resolves latest version, writes cache entry, and if a newer version is available and auto-apply is enabled (not CI, not suppressed by env var), downloads, verifies, and replaces the binary. Writes a notice via `internal/notices/` on success.
 - `applySelfUpdate(ctx, exePath, tag, assetName)` -- the download-verify-replace core: fetches checksums.txt, downloads binary to same-directory temp, verifies SHA256, performs two-rename replacement with rollback.
 - `IsSelfUpdate(entry *UpdateCheckEntry) bool` -- convenience check against `SelfToolName`
 
@@ -209,15 +209,15 @@ Two new files and three modifications compose the solution. The core self-update
 - No flags. Self-update always tracks latest stable.
 
 **`internal/updates/checker.go`** (modified)
-- `RunUpdateCheck` gains a `checkAndApplySelf()` call after the tool iteration loop, gated on `userCfg.UpdatesSelfUpdate()`
+- `RunUpdateCheck` gains a `checkAndApplySelf()` call after the tool iteration loop, gated on `userCfg.UpdatesSelfUpdate()` (which checks config, `CI=true`, and `TSUKU_NO_SELF_UPDATE`)
 
 **`internal/updates/apply.go`** (modified, from Feature 3)
-- `MaybeAutoApply` gains a one-line skip: `if entry.Tool == SelfToolName { continue }`. Self-updates are handled by their own code path in `checkAndApplySelf`, not via `tsuku update <tool>`. The explicit guard prevents the managed tool path from attempting to process the tsuku cache entry.
+- `MaybeAutoApply` gains a one-line skip: `if entry.Tool == SelfToolName { continue }`. Self-updates are handled by their own code path in `checkAndApplySelf`, not via `tsuku update <tool>`. This is defense-in-depth -- the existing `LatestWithinPin` filter would also exclude the entry, but the explicit guard makes the exclusion visible.
 
 **`cmd/tsuku/main.go`** (modified)
 - `rootCmd.AddCommand(selfUpdateCmd)` added to command registration
 - `self-update` added to the PersistentPreRun skip list (alongside `check-updates`, `hook-env`, etc.) to avoid redundant background check spawns during self-update
-- `PersistentPreRun` gains a self-update notification check: reads and removes `$TSUKU_HOME/cache/updates/.self-update-applied`, prints version change to stderr
+- Self-update success notices are displayed by the existing `displayUnshownNotices` flow (no new notification mechanism needed)
 
 ### Key Interfaces
 
@@ -227,8 +227,9 @@ const SelfToolName = "tsuku"
 
 // checkAndApplySelf resolves tsuku's latest version, writes a cache entry,
 // and auto-applies the update if a newer version is available.
-// Skips the apply step if updates.self_update is disabled.
-func checkAndApplySelf(ctx context.Context, cacheDir string, resolver *version.Resolver, exePath string)
+// The caller (RunUpdateCheck) gates this on userCfg.UpdatesSelfUpdate().
+// When autoApply is false, only the cache entry is written (no download/replace).
+func checkAndApplySelf(ctx context.Context, cacheDir string, resolver *version.Resolver, exePath string, autoApply bool)
 
 // applySelfUpdate downloads, verifies, and replaces the tsuku binary.
 // Used by both the background checker and the manual self-update command.
@@ -276,7 +277,7 @@ Normalize versions (strip "v" prefix), semver compare
             Download binary to same-dir temp, verify SHA256
             Two-rename replacement with rollback
               |
-              +-- SUCCESS: write .self-update-applied notification
+              +-- SUCCESS: WriteNotice("tsuku updated from v0.5.0 to v0.6.0")
               +-- FAILURE: log error, current binary untouched
   |
   v
@@ -288,10 +289,10 @@ MaybeAutoApply skips entry where Tool == SelfToolName
 Next tsuku invocation (PersistentPreRun):
   |
   v
-Check for .self-update-applied file
+displayUnshownNotices (existing flow)
   |
-  +-- exists: print "tsuku has been updated from v0.5.0 to v0.6.0", remove file
-  +-- absent: continue normally
+  +-- self-update notice: print "tsuku has been updated from v0.5.0 to v0.6.0"
+  +-- no notices: continue normally
 ```
 
 **Manual self-update (fallback):**
@@ -327,7 +328,7 @@ Deliverables:
 - `internal/updates/self_test.go`
 - `internal/updates/checker.go` (modified: call `checkAndApplySelf` after tool loop)
 - `internal/updates/apply.go` (modified: skip `SelfToolName` in `MaybeAutoApply`)
-- `cmd/tsuku/main.go` (modified: notification check in `PersistentPreRun`)
+- `internal/userconfig/userconfig.go` (modified: CI and env var suppression for `UpdatesSelfUpdate`)
 
 ### Phase 2: Manual self-update command
 
@@ -356,6 +357,8 @@ Deliverables:
 **Downgrade protection.** The version comparison uses semver ordering, not just equality. If the resolved "latest" version is older than the running binary, self-update exits with no action. This prevents a compromised release from pointing "latest" at a known-vulnerable old version.
 
 **Background binary replacement.** The auto-apply runs in a background process spawned by `PersistentPreRun`. The running tsuku instance is unaffected because the OS keeps the old inode open until the process exits. The replacement binary takes effect on the next invocation. This is the same mechanism used by Claude Code's auto-updater and other CLI tools that update in the background.
+
+**CI environment suppression.** Auto-apply is suppressed when `CI=true` or `TSUKU_NO_SELF_UPDATE=1` is set, matching the suppression pattern used by `UpdatesAutoApplyEnabled()` for managed tools. This prevents the background process from replacing the tsuku binary mid-pipeline in CI, which would break reproducibility.
 
 **Concurrent self-update.** A non-blocking file lock (`$TSUKU_HOME/cache/updates/.self-update.lock`) prevents two simultaneous self-update operations (background or manual) from corrupting the binary via competing rename sequences. If the lock is held, the background checker skips the apply step silently; the manual command exits with an error message.
 
