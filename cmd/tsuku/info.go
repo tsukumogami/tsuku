@@ -14,6 +14,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/platform"
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/shellenv"
 )
 
 var infoCmd = &cobra.Command{
@@ -122,6 +123,7 @@ Examples:
 		// Check installation status and get dependencies
 		var installedVersion, location, toolSource string
 		var installDeps, runtimeDeps []string
+		var shellIntegration []string
 		status := "not_installed"
 
 		// Skip installation state and dependency resolution if metadata-only mode
@@ -138,6 +140,11 @@ Examples:
 						location = cfg.ToolDir(toolName, t.Version)
 						break
 					}
+				}
+
+				// Check shell integration for installed tools
+				if status == "installed" {
+					shellIntegration = shellenv.HasShellIntegration(cfg.HomeDir, toolName)
 				}
 
 				// Get dependencies and source from state for installed tools
@@ -197,6 +204,7 @@ Examples:
 				VerifyCommand        string            `json:"verify_command,omitempty"`
 				InstallDependencies  []string          `json:"install_dependencies,omitempty"`
 				RuntimeDependencies  []string          `json:"runtime_dependencies,omitempty"`
+				ShellIntegration     []string          `json:"shell_integration,omitempty"`
 			}
 			var verifyCmdStr string
 			if r.Verify != nil {
@@ -223,6 +231,7 @@ Examples:
 				VerifyCommand:        verifyCmdStr,
 				InstallDependencies:  installDeps,
 				RuntimeDependencies:  runtimeDeps,
+				ShellIntegration:     shellIntegration,
 			}
 			printJSON(output)
 			return
@@ -262,6 +271,11 @@ Examples:
 			} else {
 				fmt.Printf("Status:         Not installed\n")
 			}
+		}
+
+		// Show shell integration
+		if !metadataOnly && len(shellIntegration) > 0 {
+			fmt.Printf("Shell Init:     %s\n", strings.Join(shellIntegration, ", "))
 		}
 
 		// Show verification method

@@ -104,7 +104,9 @@ func RebuildShellCache(tsukuHome string, shell string, contentHashes ...map[stri
 	// Sort alphabetically for deterministic output
 	sort.Strings(files)
 
-	// Concatenate file contents with hash verification
+	// Concatenate file contents with hash verification and error isolation.
+	// Each tool's content is wrapped in a subshell so a syntax error in one
+	// tool's init script does not prevent others from loading.
 	var buf strings.Builder
 	for _, name := range files {
 		filePath := filepath.Join(shellDDir, name)
@@ -127,11 +129,20 @@ func RebuildShellCache(tsukuHome string, shell string, contentHashes ...map[stri
 			// If no hash is stored for this file (legacy install), include it
 		}
 
-		buf.Write(content)
-		// Ensure each file's content ends with a newline
-		if len(content) > 0 && content[len(content)-1] != '\n' {
+		// Derive tool name from filename (e.g., "starship.bash" -> "starship")
+		toolName := strings.TrimSuffix(name, suffix)
+
+		// Wrap in error-isolated block: a subshell that suppresses errors
+		// so one tool's failure doesn't break other tools' initialization
+		buf.WriteString("# tsuku: " + toolName + "\n")
+		buf.WriteString("( # begin " + toolName + "\n")
+		contentStr := string(content)
+		buf.WriteString(contentStr)
+		// Ensure content ends with a newline before the closing paren
+		if len(contentStr) > 0 && contentStr[len(contentStr)-1] != '\n' {
 			buf.WriteByte('\n')
 		}
+		buf.WriteString(") 2>/dev/null || true\n")
 	}
 
 	// If all files were excluded by hash verification, remove the cache

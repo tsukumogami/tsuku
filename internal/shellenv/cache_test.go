@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -20,6 +21,20 @@ func writeTestFile(t *testing.T, path string, content string) {
 func testHash(s string) string {
 	h := sha256.Sum256([]byte(s))
 	return hex.EncodeToString(h[:])
+}
+
+// wrapExpected wraps content in the error-isolated block format that
+// RebuildShellCache produces. toolName is the filename without the shell
+// extension (e.g., "aaa" for "aaa.bash").
+func wrapExpected(toolName, content string) string {
+	s := "# tsuku: " + toolName + "\n"
+	s += "( # begin " + toolName + "\n"
+	s += content
+	if len(content) > 0 && content[len(content)-1] != '\n' {
+		s += "\n"
+	}
+	s += ") 2>/dev/null || true\n"
+	return s
 }
 
 func TestRebuildShellCache_ConcatenatesFiles(t *testing.T) {
@@ -42,7 +57,7 @@ func TestRebuildShellCache_ConcatenatesFiles(t *testing.T) {
 		t.Fatalf("expected cache file to exist: %v", err)
 	}
 
-	expected := "# aaa\n# bbb\n"
+	expected := wrapExpected("aaa", "# aaa\n") + wrapExpected("bbb", "# bbb\n")
 	if string(content) != expected {
 		t.Errorf("expected cache content %q, got %q", expected, string(content))
 	}
@@ -67,7 +82,7 @@ func TestRebuildShellCache_SortedAlphabetically(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := "# aaa\n# zzz\n"
+	expected := wrapExpected("aaa", "# aaa\n") + wrapExpected("zzz", "# zzz\n")
 	if string(content) != expected {
 		t.Errorf("expected sorted content %q, got %q", expected, string(content))
 	}
@@ -92,7 +107,7 @@ func TestRebuildShellCache_ExcludesCacheFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := "# tool\n"
+	expected := wrapExpected("tool", "# tool\n")
 	if string(content) != expected {
 		t.Errorf("expected %q, got %q (cache file should not include itself)", expected, string(content))
 	}
@@ -145,7 +160,8 @@ func TestRebuildShellCache_OnlyMatchesCorrectShell(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if string(content) != "# bash\n" {
+	expected := wrapExpected("tool", "# bash\n")
+	if string(content) != expected {
 		t.Errorf("expected only bash content, got %q", string(content))
 	}
 }
@@ -168,7 +184,7 @@ func TestRebuildShellCache_AddsTrailingNewline(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := "# no newline\n"
+	expected := wrapExpected("tool", "# no newline")
 	if string(content) != expected {
 		t.Errorf("expected trailing newline added: %q, got %q", expected, string(content))
 	}
@@ -203,7 +219,7 @@ func TestRebuildShellCache_RejectsSymlinks(t *testing.T) {
 	}
 
 	// Only the real file should be included, symlink should be excluded
-	expected := "# real\n"
+	expected := wrapExpected("aaa", "# real\n")
 	if string(content) != expected {
 		t.Errorf("expected %q (symlink excluded), got %q", expected, string(content))
 	}
@@ -232,8 +248,9 @@ func TestRebuildShellCache_HashVerification_ValidHash(t *testing.T) {
 		t.Fatalf("expected cache file to exist: %v", err)
 	}
 
-	if string(content) != fileContent {
-		t.Errorf("expected %q, got %q", fileContent, string(content))
+	expected := wrapExpected("tool", fileContent)
+	if string(content) != expected {
+		t.Errorf("expected %q, got %q", expected, string(content))
 	}
 }
 
@@ -264,7 +281,7 @@ func TestRebuildShellCache_HashVerification_MismatchExcludesFile(t *testing.T) {
 	}
 
 	// Only the good file should be included
-	expected := "# good\n"
+	expected := wrapExpected("good", "# good\n")
 	if string(content) != expected {
 		t.Errorf("expected %q (tampered file excluded), got %q", expected, string(content))
 	}
@@ -324,7 +341,7 @@ func TestRebuildShellCache_LegacyTolerance_NoHashIncludesFile(t *testing.T) {
 	}
 
 	// Both files should be included (legacy without hash, new with valid hash)
-	expected := "# legacy\n# new\n"
+	expected := wrapExpected("legacy-tool", "# legacy\n") + wrapExpected("new-tool", "# new\n")
 	if string(content) != expected {
 		t.Errorf("expected %q (both files included), got %q", expected, string(content))
 	}
@@ -349,8 +366,9 @@ func TestRebuildShellCache_LegacyTolerance_NilHashMapIncludesAll(t *testing.T) {
 		t.Fatalf("expected cache file to exist: %v", err)
 	}
 
-	if string(content) != "# tool\n" {
-		t.Errorf("expected %q, got %q", "# tool\n", string(content))
+	expected := wrapExpected("tool", "# tool\n")
+	if string(content) != expected {
+		t.Errorf("expected %q, got %q", expected, string(content))
 	}
 }
 
@@ -419,8 +437,79 @@ func TestRebuildShellCache_ExcludesLockFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if string(content) != "# tool\n" {
+	expected := wrapExpected("tool", "# tool\n")
+	if string(content) != expected {
 		t.Errorf("expected only tool content, got %q", string(content))
+	}
+}
+
+func TestRebuildShellCache_ErrorIsolation_SubshellWrapping(t *testing.T) {
+	tsukuHome := t.TempDir()
+	shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
+	if err := os.MkdirAll(shellDDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	writeTestFile(t, filepath.Join(shellDDir, "starship.bash"), "eval \"$(starship init bash)\"\n")
+
+	if err := RebuildShellCache(tsukuHome, "bash"); err != nil {
+		t.Fatalf("RebuildShellCache failed: %v", err)
+	}
+
+	content, err := os.ReadFile(filepath.Join(shellDDir, ".init-cache.bash"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := string(content)
+
+	// Verify the wrapping structure
+	if !strings.Contains(got, "# tsuku: starship") {
+		t.Error("expected tool identifier comment")
+	}
+	if !strings.Contains(got, "( # begin starship") {
+		t.Error("expected subshell open with tool name")
+	}
+	if !strings.Contains(got, ") 2>/dev/null || true") {
+		t.Error("expected error-suppressing subshell close")
+	}
+	if !strings.Contains(got, "eval \"$(starship init bash)\"") {
+		t.Error("expected original content preserved inside wrapper")
+	}
+}
+
+func TestRebuildShellCache_ErrorIsolation_MultipleTools(t *testing.T) {
+	tsukuHome := t.TempDir()
+	shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
+	if err := os.MkdirAll(shellDDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	writeTestFile(t, filepath.Join(shellDDir, "alpha.bash"), "# alpha init\n")
+	writeTestFile(t, filepath.Join(shellDDir, "beta.bash"), "# beta init\n")
+
+	if err := RebuildShellCache(tsukuHome, "bash"); err != nil {
+		t.Fatalf("RebuildShellCache failed: %v", err)
+	}
+
+	content, err := os.ReadFile(filepath.Join(shellDDir, ".init-cache.bash"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := string(content)
+
+	// Each tool should have its own isolated block
+	if !strings.Contains(got, "# tsuku: alpha") {
+		t.Error("expected alpha tool identifier")
+	}
+	if !strings.Contains(got, "# tsuku: beta") {
+		t.Error("expected beta tool identifier")
+	}
+
+	// Count subshell wrappers -- should be exactly 2
+	if strings.Count(got, ") 2>/dev/null || true") != 2 {
+		t.Errorf("expected 2 error-isolation wrappers, got %d", strings.Count(got, ") 2>/dev/null || true"))
 	}
 }
 
