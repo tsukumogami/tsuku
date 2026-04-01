@@ -172,6 +172,12 @@ func (m *Manager) InstallWithOptions(name, version, workDir string, opts Install
 			ts.Versions = make(map[string]VersionState)
 		}
 
+		// Snapshot PreviousVersion before changing ActiveVersion.
+		// Only set when the active version is non-empty and actually changing.
+		if ts.ActiveVersion != "" && ts.ActiveVersion != version {
+			ts.PreviousVersion = ts.ActiveVersion
+		}
+
 		// Add this version to the map (preserves existing versions)
 		ts.Versions[version] = VersionState{
 			Requested:       opts.RequestedVersion,
@@ -270,8 +276,11 @@ func (m *Manager) Activate(name, version string) error {
 		return fmt.Errorf("failed to update symlinks: %w", err)
 	}
 
-	// Update state.json with new active version
+	// Update state.json with new active version and snapshot PreviousVersion
 	err = m.state.UpdateTool(name, func(ts *ToolState) {
+		if ts.ActiveVersion != "" && ts.ActiveVersion != version {
+			ts.PreviousVersion = ts.ActiveVersion
+		}
 		ts.ActiveVersion = version
 	})
 	if err != nil {

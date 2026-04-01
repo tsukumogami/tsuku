@@ -71,6 +71,9 @@ func init() {
 			if cfg, err := config.DefaultConfig(); err == nil {
 				if userCfg, err := userconfig.Load(); err == nil {
 					updates.CheckAndSpawnUpdateCheck(cfg, userCfg)
+					updates.MaybeAutoApply(cfg, userCfg, func(toolName, version, constraint string) error {
+						return runInstallWithTelemetry(toolName, version, constraint, false, "", nil)
+					})
 				}
 			}
 		}

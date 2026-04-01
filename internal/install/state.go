@@ -92,6 +92,12 @@ type ToolState struct {
 	// Provides an audit trail for what recipe content was used to install the tool.
 	RecipeHash string `json:"recipe_hash,omitempty"`
 
+	// PreviousVersion is the version that was active before the current one.
+	// Set when ActiveVersion changes during install or activate. Used by
+	// tsuku rollback to revert to the prior version. One level deep per R9.
+	// Cleared on explicit install with a pinned version.
+	PreviousVersion string `json:"previous_version,omitempty"`
+
 	IsExplicit            bool     `json:"is_explicit"`                    // User requested this tool directly
 	RequiredBy            []string `json:"required_by"`                    // Tools that depend on this tool
 	IsHidden              bool     `json:"is_hidden"`                      // Hidden from PATH and default list output
@@ -248,6 +254,12 @@ func (sm *StateManager) saveWithLock(state *State) error {
 
 // loadWithoutLock reads the state from disk without acquiring the file lock.
 // Caller must already hold both sm.mu and the file lock.
+// LoadWithoutLock reads state without acquiring the file lock.
+// The caller must already hold the file lock.
+func (sm *StateManager) LoadWithoutLock() (*State, error) {
+	return sm.loadWithoutLock()
+}
+
 func (sm *StateManager) loadWithoutLock() (*State, error) {
 	path := sm.statePath()
 	if _, err := os.Stat(path); os.IsNotExist(err) {

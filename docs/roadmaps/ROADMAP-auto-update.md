@@ -47,10 +47,10 @@ The foundation. Fix `tsuku update` to respect the `Requested` field so that `ins
 The plumbing. Time-cached update checks with a configurable interval (default 24h). Three trigger entry points: shell activation hook (primary, runs on every prompt), shim invocations (secondary), and tsuku commands (fallback). Staleness detection via a single stat on the cache file. Background process spawns detached and writes results to `$TSUKU_HOME/cache/update-check.json`. Update configuration in `config.toml` `[updates]` section.
 
 ### Feature 3: Auto-apply with rollback ([#2184](https://github.com/tsukumogami/tsuku/issues/2184))
-**Needs:** `needs-design` -- the apply lifecycle (when to apply, state locking, rollback mechanism) needs design alongside the check infrastructure
 **Dependencies:** Feature 1, Feature 2
-**Status:** Not started
+**Status:** Done
 **Upstream:** [PRD-auto-update](../prds/PRD-auto-update.md) (R3, R9, R10, R11a)
+**Design:** [DESIGN-auto-apply-rollback.md](../designs/current/DESIGN-auto-apply-rollback.md) (Current)
 
 The core behavior. When cached check results show a newer version within pin boundaries, tsuku downloads and installs it during the next tsuku command. If installation fails, the previous version is automatically preserved and a basic failure notice is written to `$TSUKU_HOME/notices/`. `tsuku rollback <tool>` switches to the immediately preceding version (one level deep); rollback is temporary and doesn't change the `Requested` field (D7). `tsuku notices` displays failure details (R11a). This feature implements basic notice writing only -- every failure writes a notice. Consecutive-failure suppression (the "fewer than 3 = transient" logic from R11) ships in Feature 7. This ships together with auto-apply because auto-apply without rollback is unsafe as the default.
 
@@ -131,8 +131,8 @@ The split between Phase 1 (Features 1-5) and Phase 2 (Features 6-9) reflects a n
 | _Independent track: rename-in-place binary replacement for `tsuku self-update`. Kept separate from the managed tool system to avoid bootstrap risk. Integrates with check infrastructure when available._ | | |
 | ~~[#2183: background update check infrastructure](https://github.com/tsukumogami/tsuku/issues/2183)~~ | ~~[#2181](https://github.com/tsukumogami/tsuku/issues/2181)~~ | ~~testable~~ |
 | ~~_With version resolution in place, add the time-cached check system: layered triggers (shell hook > shim > command), detached background process, cache file, and config.toml `[updates]` section._~~ | | |
-| [#2184: auto-apply with rollback](https://github.com/tsukumogami/tsuku/issues/2184) | [#2181](https://github.com/tsukumogami/tsuku/issues/2181), [#2183](https://github.com/tsukumogami/tsuku/issues/2183) | testable |
-| _The core behavior. Reads check results, downloads and installs updates within pin boundaries, auto-rolls back on failure, and writes basic notices. Adds `tsuku rollback` and `tsuku notices` commands._ | | |
+| ~~[#2184: auto-apply with rollback](https://github.com/tsukumogami/tsuku/issues/2184)~~ | ~~[#2181](https://github.com/tsukumogami/tsuku/issues/2181), [#2183](https://github.com/tsukumogami/tsuku/issues/2183)~~ | ~~testable~~ |
+| ~~_The core behavior. Reads check results, downloads and installs updates within pin boundaries, auto-rolls back on failure, and writes basic notices. Adds `tsuku rollback` and `tsuku notices` commands._~~ | | |
 | [#2185: notification system](https://github.com/tsukumogami/tsuku/issues/2185) | [#2183](https://github.com/tsukumogami/tsuku/issues/2183), [#2184](https://github.com/tsukumogami/tsuku/issues/2184) | testable |
 | _Cross-cutting stderr notification UX with layered suppression (non-TTY, CI, quiet, env var). Shared between tool updates and self-update. Completes the Phase 1 user experience._ | | |
 | [#2186: update polish](https://github.com/tsukumogami/tsuku/issues/2186) | [#2181](https://github.com/tsukumogami/tsuku/issues/2181), [#2184](https://github.com/tsukumogami/tsuku/issues/2184), [#2185](https://github.com/tsukumogami/tsuku/issues/2185) | testable |
@@ -186,9 +186,9 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2181,I2183 done
+    class I2181,I2183,I2184 done
     class I2182 needsDesign
-    class I2184,I2185,I2186,I2187,I2188 needsDesign
+    class I2185,I2186,I2187,I2188 needsDesign
     class I2189 blocked
 ```
 
