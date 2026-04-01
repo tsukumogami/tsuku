@@ -1,5 +1,6 @@
 ---
 status: Proposed
+upstream: docs/prds/PRD-tool-lifecycle-hooks.md
 problem: |
   Tsuku installs tools by downloading binaries and symlinking them, but tools
   that need shell integration (eval-init wrappers, completions, env files) or
