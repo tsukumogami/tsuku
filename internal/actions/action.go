@@ -206,6 +206,7 @@ func init() {
 
 	// Lifecycle actions
 	Register(&InstallShellInitAction{})
+	Register(&InstallCompletionsAction{})
 
 	// macOS application bundles
 	Register(&AppBundleAction{})
