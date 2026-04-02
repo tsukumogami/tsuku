@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   Auto-updates produce no outcome telemetry. Successful auto-applies reuse the
   existing install flow which fires a generic update event with no outcome field.
