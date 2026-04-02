@@ -24,7 +24,7 @@ upstream: docs/prds/PRD-auto-update.md
 
 ## Status
 
-Proposed
+Current
 
 ## Context and Problem Statement
 
