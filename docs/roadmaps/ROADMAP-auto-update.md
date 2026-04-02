@@ -63,10 +63,10 @@ The core behavior. When cached check results show a newer version within pin bou
 Independent from tool auto-update. Tsuku auto-updates itself during the background update check by default, using a separate code path from the recipe pipeline. `tsuku self-update` provides a manual fallback. Binary replacement uses same-directory temp file with two-rename atomic swap and SHA256 verification. Self-update always tracks latest (no pinning for tsuku itself). Configurable via `updates.self_update` (default: true), suppressed in CI.
 
 ### Feature 5: Notification system ([#2185](https://github.com/tsukumogami/tsuku/issues/2185))
-**Needs:** `needs-design` -- notification timing, suppression layers, and configuration surface need design
 **Dependencies:** Feature 2 (needs check results to display), Feature 3 (needs apply results to report)
-**Status:** Not started
+**Status:** Done
 **Upstream:** [PRD-auto-update](../prds/PRD-auto-update.md) (R12, R16)
+**Design:** [DESIGN-notification-system](../designs/DESIGN-notification-system.md)
 
 Cross-cutting. Stderr notifications after command output for available or applied updates. Suppression layers: non-TTY, `CI=true`, `--quiet`, `TSUKU_NO_UPDATE_CHECK=1`. `TSUKU_AUTO_UPDATE=1` overrides CI detection for explicit opt-in. The notification format and suppression logic are shared across tool updates and self-update.
 
@@ -134,8 +134,8 @@ The split between Phase 1 (Features 1-5) and Phase 2 (Features 6-9) reflects a n
 | ~~_With version resolution in place, add the time-cached check system: layered triggers (shell hook > shim > command), detached background process, cache file, and config.toml `[updates]` section._~~ | | |
 | ~~[#2184: auto-apply with rollback](https://github.com/tsukumogami/tsuku/issues/2184)~~ | ~~[#2181](https://github.com/tsukumogami/tsuku/issues/2181), [#2183](https://github.com/tsukumogami/tsuku/issues/2183)~~ | ~~testable~~ |
 | ~~_The core behavior. Reads check results, downloads and installs updates within pin boundaries, auto-rolls back on failure, and writes basic notices. Adds `tsuku rollback` and `tsuku notices` commands._~~ | | |
-| [#2185: notification system](https://github.com/tsukumogami/tsuku/issues/2185) | [#2183](https://github.com/tsukumogami/tsuku/issues/2183), [#2184](https://github.com/tsukumogami/tsuku/issues/2184) | testable |
-| _Cross-cutting stderr notification UX with layered suppression (non-TTY, CI, quiet, env var). Shared between tool updates and self-update. Completes the Phase 1 user experience._ | | |
+| ~~[#2185: notification system](https://github.com/tsukumogami/tsuku/issues/2185)~~ | ~~[#2183](https://github.com/tsukumogami/tsuku/issues/2183), [#2184](https://github.com/tsukumogami/tsuku/issues/2184)~~ | ~~testable~~ |
+| ~~_Cross-cutting stderr notification UX with layered suppression (non-TTY, CI, quiet, env var). Shared between tool updates and self-update. Completes the Phase 1 user experience._~~ | | |
 | [#2186: update polish](https://github.com/tsukumogami/tsuku/issues/2186) | [#2181](https://github.com/tsukumogami/tsuku/issues/2181), [#2184](https://github.com/tsukumogami/tsuku/issues/2184), [#2185](https://github.com/tsukumogami/tsuku/issues/2185) | testable |
 | _Phase 2 refinements: pin-aware dual-column `tsuku outdated`, out-of-channel notifications with weekly per-tool throttle, and `tsuku update --all` for batch updates._ | | |
 | [#2187: resilience](https://github.com/tsukumogami/tsuku/issues/2187) | [#2184](https://github.com/tsukumogami/tsuku/issues/2184) | testable |
@@ -187,8 +187,8 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2181,I2182,I2183,I2184,I2189 done
-    class I2185,I2186,I2187,I2188 needsDesign
+    class I2181,I2182,I2183,I2184,I2185,I2189 done
+    class I2186,I2187,I2188 needsDesign
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan

@@ -184,6 +184,26 @@ Indicates that tsuku is running inside a sandbox container.
 
 This variable is set automatically inside sandbox containers. Recipes or scripts can check for it to detect sandbox mode. Don't set this manually outside of sandbox contexts.
 
+## Updates
+
+### TSUKU_NO_UPDATE_CHECK
+
+Disable all update checking and notifications.
+
+- **Default:** (unset)
+- **Example:** `export TSUKU_NO_UPDATE_CHECK=1`
+
+When set to `1`, tsuku won't check for updates, auto-apply updates, or show update notifications. Takes precedence over all other update settings except `TSUKU_AUTO_UPDATE`.
+
+### TSUKU_AUTO_UPDATE
+
+Force update behavior in environments where it's normally suppressed.
+
+- **Default:** (unset)
+- **Example:** `export TSUKU_AUTO_UPDATE=1`
+
+When set to `1`, tsuku runs update checks and shows notifications even in CI, non-TTY, or quiet mode. This is an explicit opt-in that overrides all suppression signals. Use this when you want update behavior in CI pipelines or automated scripts.
+
 ## Development and Debugging
 
 ### TSUKU_DEBUG
@@ -277,6 +297,8 @@ The environment variable is checked first. If unset, tsuku falls back to `brave_
 | `TSUKU_LLM_IDLE_TIMEOUT` | `5m` | Local LLM addon server idle timeout |
 | `TSUKU_LLM_MODEL` | (unset) | Override addon model selection |
 | `TSUKU_LLM_BACKEND` | (unset) | Override addon backend detection |
+| `TSUKU_NO_UPDATE_CHECK` | (unset) | Disable update checks and notifications when `1` |
+| `TSUKU_AUTO_UPDATE` | (unset) | Force updates in suppressed environments when `1` |
 | `TSUKU_SANDBOX` | (unset) | Set inside sandbox containers to indicate sandbox mode |
 | `TSUKU_DEBUG` | (unset) | Enable verbose debug output |
 | `GITHUB_TOKEN` | (unset) | GitHub API token |
