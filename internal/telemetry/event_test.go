@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	"errors"
 	"runtime"
 	"testing"
 
@@ -285,5 +286,124 @@ func TestNewBinaryNameRepairEvent_NpmBuilder(t *testing.T) {
 	}
 	if e.Builder != "npm" {
 		t.Errorf("Builder = %q, want %q", e.Builder, "npm")
+	}
+}
+
+func TestNewUpdateOutcomeSuccessEvent(t *testing.T) {
+	e := NewUpdateOutcomeSuccessEvent("kubectl", "1.28.0", "1.29.0", "manual")
+
+	if e.Action != "update_outcome_success" {
+		t.Errorf("Action = %q, want %q", e.Action, "update_outcome_success")
+	}
+	if e.Recipe != "kubectl" {
+		t.Errorf("Recipe = %q, want %q", e.Recipe, "kubectl")
+	}
+	if e.VersionPrevious != "1.28.0" {
+		t.Errorf("VersionPrevious = %q, want %q", e.VersionPrevious, "1.28.0")
+	}
+	if e.VersionTarget != "1.29.0" {
+		t.Errorf("VersionTarget = %q, want %q", e.VersionTarget, "1.29.0")
+	}
+	if e.Trigger != "manual" {
+		t.Errorf("Trigger = %q, want %q", e.Trigger, "manual")
+	}
+	if e.ErrorType != "" {
+		t.Errorf("ErrorType = %q, want empty", e.ErrorType)
+	}
+	if e.OS != runtime.GOOS {
+		t.Errorf("OS = %q, want %q", e.OS, runtime.GOOS)
+	}
+	if e.Arch != runtime.GOARCH {
+		t.Errorf("Arch = %q, want %q", e.Arch, runtime.GOARCH)
+	}
+	if e.TsukuVersion != buildinfo.Version() {
+		t.Errorf("TsukuVersion = %q, want %q", e.TsukuVersion, buildinfo.Version())
+	}
+	if e.SchemaVersion != "1" {
+		t.Errorf("SchemaVersion = %q, want %q", e.SchemaVersion, "1")
+	}
+}
+
+func TestNewUpdateOutcomeFailureEvent(t *testing.T) {
+	e := NewUpdateOutcomeFailureEvent("terraform", "1.6.0", ErrorTypeDownloadFailed, "auto")
+
+	if e.Action != "update_outcome_failure" {
+		t.Errorf("Action = %q, want %q", e.Action, "update_outcome_failure")
+	}
+	if e.Recipe != "terraform" {
+		t.Errorf("Recipe = %q, want %q", e.Recipe, "terraform")
+	}
+	if e.VersionTarget != "1.6.0" {
+		t.Errorf("VersionTarget = %q, want %q", e.VersionTarget, "1.6.0")
+	}
+	if e.ErrorType != ErrorTypeDownloadFailed {
+		t.Errorf("ErrorType = %q, want %q", e.ErrorType, ErrorTypeDownloadFailed)
+	}
+	if e.Trigger != "auto" {
+		t.Errorf("Trigger = %q, want %q", e.Trigger, "auto")
+	}
+	if e.VersionPrevious != "" {
+		t.Errorf("VersionPrevious = %q, want empty", e.VersionPrevious)
+	}
+}
+
+func TestNewUpdateOutcomeRollbackEvent(t *testing.T) {
+	e := NewUpdateOutcomeRollbackEvent("node", "18.0.0", "20.0.0", "auto")
+
+	if e.Action != "update_outcome_rollback" {
+		t.Errorf("Action = %q, want %q", e.Action, "update_outcome_rollback")
+	}
+	if e.Recipe != "node" {
+		t.Errorf("Recipe = %q, want %q", e.Recipe, "node")
+	}
+	if e.VersionPrevious != "18.0.0" {
+		t.Errorf("VersionPrevious = %q, want %q", e.VersionPrevious, "18.0.0")
+	}
+	if e.VersionTarget != "20.0.0" {
+		t.Errorf("VersionTarget = %q, want %q", e.VersionTarget, "20.0.0")
+	}
+	if e.Trigger != "auto" {
+		t.Errorf("Trigger = %q, want %q", e.Trigger, "auto")
+	}
+}
+
+func TestClassifyError(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+		want string
+	}{
+		{"nil error", nil, ""},
+		{"checksum error", errors.New("checksum mismatch for file"), ErrorTypeChecksumFailed},
+		{"sha256 error", errors.New("sha256 verification failed"), ErrorTypeChecksumFailed},
+		{"signature error", errors.New("invalid signature"), ErrorTypeChecksumFailed},
+		{"extract error", errors.New("failed to extract archive"), ErrorTypeExtractionFailed},
+		{"untar error", errors.New("untar: unexpected EOF"), ErrorTypeExtractionFailed},
+		{"unzip error", errors.New("unzip failed"), ErrorTypeExtractionFailed},
+		{"decompress error", errors.New("decompress: invalid header"), ErrorTypeExtractionFailed},
+		{"permission error", errors.New("permission denied"), ErrorTypePermissionFailed},
+		{"chmod error", errors.New("chmod +x failed"), ErrorTypePermissionFailed},
+		{"symlink error", errors.New("symlink creation failed"), ErrorTypeSymlinkFailed},
+		{"verification error", errors.New("verification failed for tool"), ErrorTypeVerificationFailed},
+		{"verify error", errors.New("could not verify binary"), ErrorTypeVerificationFailed},
+		{"state.json error", errors.New("failed to write state.json"), ErrorTypeStateFailed},
+		{"state file error", errors.New("corrupt state file"), ErrorTypeStateFailed},
+		{"resolve error", errors.New("could not resolve version"), ErrorTypeVersionResolveFailed},
+		{"version provider error", errors.New("version provider timeout"), ErrorTypeVersionResolveFailed},
+		{"no matching version", errors.New("no matching version found"), ErrorTypeVersionResolveFailed},
+		{"download error", errors.New("download failed: 404"), ErrorTypeDownloadFailed},
+		{"HTTP error", errors.New("HTTP 503 from server"), ErrorTypeDownloadFailed},
+		{"timeout error", errors.New("connection timeout"), ErrorTypeDownloadFailed},
+		{"connection error", errors.New("connection refused"), ErrorTypeDownloadFailed},
+		{"unknown error", errors.New("something unexpected happened"), ErrorTypeUnknown},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ClassifyError(tt.err)
+			if got != tt.want {
+				t.Errorf("ClassifyError(%v) = %q, want %q", tt.err, got, tt.want)
+			}
+		})
 	}
 }

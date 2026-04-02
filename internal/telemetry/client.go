@@ -189,6 +189,22 @@ func (c *Client) SendVerifySelfRepair(event VerifySelfRepairEvent) {
 	go c.sendJSON(event)
 }
 
+// SendUpdateOutcome sends an update outcome event asynchronously.
+// It never blocks and never returns errors.
+func (c *Client) SendUpdateOutcome(event UpdateOutcomeEvent) {
+	if c.disabled {
+		return
+	}
+
+	if c.debug {
+		data, _ := json.Marshal(event)
+		fmt.Fprintf(os.Stderr, "[telemetry] %s\n", data)
+		return
+	}
+
+	go c.sendJSON(event)
+}
+
 // sendJSON performs the actual HTTP request for any event type.
 func (c *Client) sendJSON(event interface{}) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)

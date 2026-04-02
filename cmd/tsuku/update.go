@@ -104,6 +104,10 @@ Examples:
 
 		printInfof("Updating %s...\n", toolName)
 		if err := runInstallWithTelemetry(toolName, reqVersion, "", true, "", telemetryClient); err != nil {
+			if telemetryClient != nil {
+				telemetryClient.SendUpdateOutcome(telemetry.NewUpdateOutcomeFailureEvent(
+					toolName, reqVersion, telemetry.ClassifyError(err), "manual"))
+			}
 			exitWithCode(ExitInstallFailed)
 		}
 
@@ -143,6 +147,9 @@ Examples:
 		if telemetryClient != nil && newVersion != "" {
 			event := telemetry.NewUpdateEvent(toolName, previousVersion, newVersion)
 			telemetryClient.Send(event)
+			// Also emit outcome event for reliability tracking
+			telemetryClient.SendUpdateOutcome(telemetry.NewUpdateOutcomeSuccessEvent(
+				toolName, previousVersion, newVersion, "manual"))
 		}
 	},
 }

@@ -3,6 +3,7 @@ package telemetry
 
 import (
 	"runtime"
+	"strings"
 
 	"github.com/tsukumogami/tsuku/internal/buildinfo"
 )
@@ -354,4 +355,106 @@ func NewVerifySelfRepairEvent(toolName, method string, success bool) VerifySelfR
 	e.Method = method
 	e.Success = success
 	return e
+}
+
+// Update outcome error type taxonomy.
+const (
+	ErrorTypeDownloadFailed       = "download_failed"
+	ErrorTypeChecksumFailed       = "checksum_failed"
+	ErrorTypeExtractionFailed     = "extraction_failed"
+	ErrorTypePermissionFailed     = "permission_failed"
+	ErrorTypeSymlinkFailed        = "symlink_failed"
+	ErrorTypeVerificationFailed   = "verification_failed"
+	ErrorTypeStateFailed          = "state_failed"
+	ErrorTypeVersionResolveFailed = "version_resolve_failed"
+	ErrorTypeUnknown              = "unknown"
+)
+
+// UpdateOutcomeEvent represents a telemetry event for update outcomes.
+type UpdateOutcomeEvent struct {
+	Action          string `json:"action"`           // "update_outcome_success", "update_outcome_failure", "update_outcome_rollback"
+	Recipe          string `json:"recipe"`           // Tool name
+	VersionPrevious string `json:"version_previous"` // Version before update attempt
+	VersionTarget   string `json:"version_target"`   // Version the update tried to reach
+	Trigger         string `json:"trigger"`          // "auto" or "manual"
+	ErrorType       string `json:"error_type"`       // Error taxonomy value; empty on success
+	OS              string `json:"os"`
+	Arch            string `json:"arch"`
+	TsukuVersion    string `json:"tsuku_version"`
+	SchemaVersion   string `json:"schema_version"`
+}
+
+const updateOutcomeSchemaVersion = "1"
+
+func newBaseUpdateOutcomeEvent() UpdateOutcomeEvent {
+	return UpdateOutcomeEvent{
+		OS:            runtime.GOOS,
+		Arch:          runtime.GOARCH,
+		TsukuVersion:  buildinfo.Version(),
+		SchemaVersion: updateOutcomeSchemaVersion,
+	}
+}
+
+// NewUpdateOutcomeSuccessEvent creates an update outcome event for a successful update.
+func NewUpdateOutcomeSuccessEvent(recipe, versionPrevious, versionTarget, trigger string) UpdateOutcomeEvent {
+	e := newBaseUpdateOutcomeEvent()
+	e.Action = "update_outcome_success"
+	e.Recipe = recipe
+	e.VersionPrevious = versionPrevious
+	e.VersionTarget = versionTarget
+	e.Trigger = trigger
+	return e
+}
+
+// NewUpdateOutcomeFailureEvent creates an update outcome event for a failed update.
+func NewUpdateOutcomeFailureEvent(recipe, versionTarget, errorType, trigger string) UpdateOutcomeEvent {
+	e := newBaseUpdateOutcomeEvent()
+	e.Action = "update_outcome_failure"
+	e.Recipe = recipe
+	e.VersionTarget = versionTarget
+	e.ErrorType = errorType
+	e.Trigger = trigger
+	return e
+}
+
+// NewUpdateOutcomeRollbackEvent creates an update outcome event for a rollback.
+func NewUpdateOutcomeRollbackEvent(recipe, versionPrevious, versionTarget, trigger string) UpdateOutcomeEvent {
+	e := newBaseUpdateOutcomeEvent()
+	e.Action = "update_outcome_rollback"
+	e.Recipe = recipe
+	e.VersionPrevious = versionPrevious
+	e.VersionTarget = versionTarget
+	e.Trigger = trigger
+	return e
+}
+
+// ClassifyError maps a Go error to one of the fixed error taxonomy values.
+// It uses string matching on the error message. Raw error strings are never
+// transmitted; only taxonomy values cross the wire.
+func ClassifyError(err error) string {
+	if err == nil {
+		return ""
+	}
+	msg := err.Error()
+
+	switch {
+	case strings.Contains(msg, "checksum") || strings.Contains(msg, "sha256") || strings.Contains(msg, "signature"):
+		return ErrorTypeChecksumFailed
+	case strings.Contains(msg, "extract") || strings.Contains(msg, "untar") || strings.Contains(msg, "unzip") || strings.Contains(msg, "decompress"):
+		return ErrorTypeExtractionFailed
+	case strings.Contains(msg, "permission") || strings.Contains(msg, "chmod"):
+		return ErrorTypePermissionFailed
+	case strings.Contains(msg, "symlink"):
+		return ErrorTypeSymlinkFailed
+	case strings.Contains(msg, "verification") || strings.Contains(msg, "verify"):
+		return ErrorTypeVerificationFailed
+	case strings.Contains(msg, "state.json") || strings.Contains(msg, "state file"):
+		return ErrorTypeStateFailed
+	case strings.Contains(msg, "resolve") || strings.Contains(msg, "version provider") || strings.Contains(msg, "no matching version"):
+		return ErrorTypeVersionResolveFailed
+	case strings.Contains(msg, "download") || strings.Contains(msg, "HTTP") || strings.Contains(msg, "timeout") || strings.Contains(msg, "connection"):
+		return ErrorTypeDownloadFailed
+	default:
+		return ErrorTypeUnknown
+	}
 }
