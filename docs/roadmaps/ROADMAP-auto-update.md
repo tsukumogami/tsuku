@@ -71,10 +71,10 @@ Independent from tool auto-update. Tsuku auto-updates itself during the backgrou
 Cross-cutting. Stderr notifications after command output for available or applied updates. Suppression layers: non-TTY, `CI=true`, `--quiet`, `TSUKU_NO_UPDATE_CHECK=1`. `TSUKU_AUTO_UPDATE=1` overrides CI detection for explicit opt-in. The notification format and suppression logic are shared across tool updates and self-update.
 
 ### Feature 6: Update polish ([#2186](https://github.com/tsukumogami/tsuku/issues/2186))
-**Needs:** `needs-design` -- out-of-channel notification throttling (weekly per tool, persistence, injectable clock for testing) needs design decisions
 **Dependencies:** Feature 1, Feature 3, Feature 5
-**Status:** Not started
+**Status:** Done
 **Upstream:** [PRD-auto-update](../prds/PRD-auto-update.md) (R13, R14, R15b)
+**Design:** [DESIGN-update-polish.md](../designs/current/DESIGN-update-polish.md) (Current)
 
 Refinements that build on the core system. Pin-aware `tsuku outdated` with dual columns ("within pin" and "overall"). Out-of-channel notifications when a newer version exists outside the pin boundary (configurable via `updates.notify_out_of_channel`, at most weekly per tool -- requires per-tool throttle state and injectable clock). `tsuku update --all` for batch updates within pin boundaries.
 
@@ -136,8 +136,8 @@ The split between Phase 1 (Features 1-5) and Phase 2 (Features 6-9) reflects a n
 | ~~_The core behavior. Reads check results, downloads and installs updates within pin boundaries, auto-rolls back on failure, and writes basic notices. Adds `tsuku rollback` and `tsuku notices` commands._~~ | | |
 | ~~[#2185: notification system](https://github.com/tsukumogami/tsuku/issues/2185)~~ | ~~[#2183](https://github.com/tsukumogami/tsuku/issues/2183), [#2184](https://github.com/tsukumogami/tsuku/issues/2184)~~ | ~~testable~~ |
 | ~~_Cross-cutting stderr notification UX with layered suppression (non-TTY, CI, quiet, env var). Shared between tool updates and self-update. Completes the Phase 1 user experience._~~ | | |
-| [#2186: update polish](https://github.com/tsukumogami/tsuku/issues/2186) | [#2181](https://github.com/tsukumogami/tsuku/issues/2181), [#2184](https://github.com/tsukumogami/tsuku/issues/2184), [#2185](https://github.com/tsukumogami/tsuku/issues/2185) | testable |
-| _Phase 2 refinements: pin-aware dual-column `tsuku outdated`, out-of-channel notifications with weekly per-tool throttle, and `tsuku update --all` for batch updates._ | | |
+| ~~[#2186: update polish](https://github.com/tsukumogami/tsuku/issues/2186)~~ | ~~[#2181](https://github.com/tsukumogami/tsuku/issues/2181), [#2184](https://github.com/tsukumogami/tsuku/issues/2184), [#2185](https://github.com/tsukumogami/tsuku/issues/2185)~~ | ~~testable~~ |
+| ~~_Phase 2 refinements: pin-aware dual-column `tsuku outdated`, out-of-channel notifications with weekly per-tool throttle, and `tsuku update --all` for batch updates._~~ | | |
 | [#2187: resilience](https://github.com/tsukumogami/tsuku/issues/2187) | [#2184](https://github.com/tsukumogami/tsuku/issues/2184) | testable |
 | _Hardens auto-apply for real-world conditions. Adds consecutive-failure suppression (< 3 = transient), old version GC with configurable retention, graceful offline degradation, and `tsuku doctor` integration._ | | |
 | [#2188: project-level integration](https://github.com/tsukumogami/tsuku/issues/2188) | [#2181](https://github.com/tsukumogami/tsuku/issues/2181), [#2184](https://github.com/tsukumogami/tsuku/issues/2184) | testable |
@@ -187,8 +187,8 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2181,I2182,I2183,I2184,I2185,I2189 done
-    class I2186,I2187,I2188 needsDesign
+    class I2181,I2182,I2183,I2184,I2185,I2186,I2189 done
+    class I2187,I2188 needsDesign
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan

@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 upstream: docs/prds/PRD-auto-update.md
 spawned_from:
   issue: 2186
@@ -223,5 +223,5 @@ PLAN: `docs/plans/PLAN-update-polish.md` (single-pr mode)
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#2186: update polish](https://github.com/tsukumogami/tsuku/issues/2186) | [#2181](https://github.com/tsukumogami/tsuku/issues/2181), [#2184](https://github.com/tsukumogami/tsuku/issues/2184), [#2185](https://github.com/tsukumogami/tsuku/issues/2185) | testable |
-| _Pin-aware outdated display, batch update --all, and out-of-channel notifications with weekly per-tool throttle. Single-pr implementation with 3 internal issues tracked in PLAN doc._ | | |
+| ~~[#2186: update polish](https://github.com/tsukumogami/tsuku/issues/2186)~~ | ~~[#2181](https://github.com/tsukumogami/tsuku/issues/2181), [#2184](https://github.com/tsukumogami/tsuku/issues/2184), [#2185](https://github.com/tsukumogami/tsuku/issues/2185)~~ | ~~testable~~ |
+| ~~_Pin-aware outdated display, batch update --all, and out-of-channel notifications with weekly per-tool throttle. Single-pr implementation with 3 internal issues tracked in PLAN doc._~~ | | |

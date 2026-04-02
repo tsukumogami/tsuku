@@ -37,7 +37,7 @@ Examples:
 		}
 		if !updateAll && len(args) == 0 {
 			fmt.Fprintf(os.Stderr, "Error: provide a tool name or use --all\n")
-			cmd.Usage()
+			_ = cmd.Usage()
 			exitWithCode(ExitUsage)
 		}
 
