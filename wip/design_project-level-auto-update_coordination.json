@@ -1,9 +1,0 @@
-{
-  "topic": "project-level-auto-update",
-  "decisions": [
-    {"id": 1, "question": "How does .tsuku.toml modify the auto-apply decision?", "status": "complete", "complexity": "standard", "chosen": "Project pin overrides global pin during auto-apply filtering", "confidence": "high", "report": "wip/design_project-level-auto-update_decision_1_report.md"},
-    {"id": 2, "question": "Where and how is project config injected into MaybeAutoApply?", "status": "complete", "complexity": "standard", "chosen": "Pass project config as parameter", "confidence": "high", "report": "wip/design_project-level-auto-update_decision_2_report.md"}
-  ],
-  "cross_validation": "passed",
-  "round": 0
-}

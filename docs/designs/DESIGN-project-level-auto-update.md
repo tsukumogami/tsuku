@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   The auto-update system ignores .tsuku.toml project-level version constraints.
   MaybeAutoApply operates globally on cached check entries with no project
