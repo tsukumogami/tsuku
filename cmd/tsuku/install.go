@@ -33,6 +33,7 @@ var installSearchProvider string
 var installEnv []string
 var installSkipSecurity bool
 var installYes bool
+var installNoShellInit bool
 
 var installCmd = &cobra.Command{
 	Use:   "install [tool]...",
@@ -331,6 +332,7 @@ func init() {
 	installCmd.Flags().StringVar(&installSearchProvider, "search-provider", "", "Search provider for LLM discovery: ddg, tavily, or brave")
 	installCmd.Flags().StringArrayVar(&installEnv, "env", nil, "Pass environment variable to sandbox container (KEY=VALUE or KEY)")
 	installCmd.Flags().BoolVarP(&installYes, "yes", "y", false, "Skip confirmation prompts (e.g., unregistered source approval)")
+	installCmd.Flags().BoolVar(&installNoShellInit, "no-shell-init", false, "Skip shell integration setup (shell.d files)")
 	installCmd.Flags().BoolVar(&installSkipSecurity, "dangerously-suppress-security", false, "Skip cache directory security checks (symlink/permissions). CI only.")
 	_ = installCmd.Flags().MarkHidden("dangerously-suppress-security")
 }

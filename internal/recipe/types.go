@@ -349,6 +349,7 @@ func (w *WhenClause) Matches(target Matchable) bool {
 // We use interface{} for the full step data and extract fields manually
 type Step struct {
 	Action       string
+	Phase        string // Lifecycle phase: "install" (default), "post-install", "pre-remove", "pre-update"
 	When         *WhenClause
 	Note         string
 	Description  string
@@ -493,6 +494,10 @@ func (s *Step) UnmarshalTOML(data interface{}) error {
 		}
 	}
 
+	if phase, ok := stepMap["phase"].(string); ok {
+		s.Phase = phase
+	}
+
 	if note, ok := stepMap["note"].(string); ok {
 		s.Note = note
 	}
@@ -520,7 +525,7 @@ func (s *Step) UnmarshalTOML(data interface{}) error {
 	// All other fields go into Params
 	s.Params = make(map[string]interface{})
 	for k, v := range stepMap {
-		if k != "action" && k != "when" && k != "note" && k != "description" && k != "dependencies" {
+		if k != "action" && k != "phase" && k != "when" && k != "note" && k != "description" && k != "dependencies" {
 			s.Params[k] = v
 		}
 	}
@@ -537,6 +542,9 @@ func (s Step) ToMap() map[string]interface{} {
 	result["action"] = s.Action
 
 	// Add optional fields if set
+	if s.Phase != "" {
+		result["phase"] = s.Phase
+	}
 	if s.Note != "" {
 		result["note"] = s.Note
 	}

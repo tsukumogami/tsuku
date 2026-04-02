@@ -2874,3 +2874,92 @@ func TestRecipe_IsExternallyManagedFor_AllStepsFilteredOut(t *testing.T) {
 		t.Error("IsExternallyManagedFor() = false when all steps filtered out, want true")
 	}
 }
+
+func TestStep_Phase_UnmarshalTOML(t *testing.T) {
+	t.Run("step with phase field", func(t *testing.T) {
+		tomlData := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "install_shell_init"
+phase = "post-install"
+source_file = "init.sh"
+target = "test"
+`
+		var recipe Recipe
+		if err := toml.Unmarshal([]byte(tomlData), &recipe); err != nil {
+			t.Fatalf("Unmarshal failed: %v", err)
+		}
+
+		if len(recipe.Steps) != 1 {
+			t.Fatalf("expected 1 step, got %d", len(recipe.Steps))
+		}
+
+		step := recipe.Steps[0]
+		if step.Phase != "post-install" {
+			t.Errorf("expected phase 'post-install', got %q", step.Phase)
+		}
+		if step.Action != "install_shell_init" {
+			t.Errorf("expected action 'install_shell_init', got %q", step.Action)
+		}
+		// Phase should not leak into Params
+		if _, ok := step.Params["phase"]; ok {
+			t.Error("phase should not appear in step Params")
+		}
+		// source_file should be in Params
+		if sf, ok := step.Params["source_file"]; !ok || sf != "init.sh" {
+			t.Errorf("expected source_file in Params, got %v", step.Params)
+		}
+	})
+
+	t.Run("step without phase defaults to empty", func(t *testing.T) {
+		tomlData := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "download_file"
+url = "https://example.com/file.tar.gz"
+`
+		var recipe Recipe
+		if err := toml.Unmarshal([]byte(tomlData), &recipe); err != nil {
+			t.Fatalf("Unmarshal failed: %v", err)
+		}
+
+		if len(recipe.Steps) != 1 {
+			t.Fatalf("expected 1 step, got %d", len(recipe.Steps))
+		}
+
+		if recipe.Steps[0].Phase != "" {
+			t.Errorf("expected empty phase for step without phase field, got %q", recipe.Steps[0].Phase)
+		}
+	})
+
+	t.Run("ToMap includes phase when set", func(t *testing.T) {
+		step := Step{
+			Action: "install_shell_init",
+			Phase:  "post-install",
+			Params: map[string]interface{}{
+				"source_file": "init.sh",
+			},
+		}
+		m := step.ToMap()
+		if phase, ok := m["phase"]; !ok || phase != "post-install" {
+			t.Errorf("expected phase in ToMap output, got %v", m)
+		}
+	})
+
+	t.Run("ToMap omits phase when empty", func(t *testing.T) {
+		step := Step{
+			Action: "download_file",
+			Params: map[string]interface{}{
+				"url": "https://example.com/file.tar.gz",
+			},
+		}
+		m := step.ToMap()
+		if _, ok := m["phase"]; ok {
+			t.Error("expected empty phase to be omitted from ToMap output")
+		}
+	})
+}

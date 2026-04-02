@@ -97,6 +97,10 @@ type ResolvedStep struct {
 	// Action is the action name (e.g., "download", "extract", "install_binaries")
 	Action string `json:"action"`
 
+	// Phase is the lifecycle phase for this step: "install" (default), "post-install", etc.
+	// Empty string is treated as "install" for backward compatibility.
+	Phase string `json:"phase,omitempty"`
+
 	// Params contains the resolved action parameters
 	Params map[string]interface{} `json:"params"`
 
@@ -132,15 +136,16 @@ type ResolvedStep struct {
 // - Package manager actions: External dependency resolution
 var ActionEvaluability = map[string]bool{
 	// Primitive actions - evaluable (direct execution with deterministic outcomes)
-	"download_file":     true, // Primitive: requires checksum, used in plans
-	"extract":           true,
-	"chmod":             true,
-	"install_binaries":  true,
-	"set_env":           true,
-	"set_rpath":         true,
-	"link_dependencies": true,
-	"install_libraries": true,
-	"validate_checksum": true,
+	"download_file":      true, // Primitive: requires checksum, used in plans
+	"extract":            true,
+	"chmod":              true,
+	"install_binaries":   true,
+	"set_env":            true,
+	"set_rpath":          true,
+	"link_dependencies":  true,
+	"install_libraries":  true,
+	"validate_checksum":  true,
+	"install_shell_init": true, // Lifecycle: copies init scripts to shell.d
 
 	// Ecosystem primitives - evaluable through ecosystem-specific configuration
 	"npm_exec": true,

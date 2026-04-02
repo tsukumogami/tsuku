@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/shellenv"
 )
 
 var doctorCmd = &cobra.Command{
@@ -103,6 +106,67 @@ for use as a gate in scripts and CI:
 			}
 		} else {
 			fmt.Println(" ... ok")
+		}
+
+		// Check 5: Shell.d health
+		fmt.Fprintf(os.Stdout, "  Shell integration")
+
+		// Collect content hashes from cleanup actions in state
+		var contentHashes map[string]string
+		stateMgr := install.NewStateManager(cfg)
+		state, stateErr := stateMgr.Load()
+		if stateErr == nil && state != nil {
+			contentHashes = make(map[string]string)
+			for _, ts := range state.Installed {
+				activeVer := ts.ActiveVersion
+				if activeVer == "" {
+					activeVer = ts.Version // legacy
+				}
+				if vs, ok := ts.Versions[activeVer]; ok {
+					for _, ca := range vs.CleanupActions {
+						if ca.ContentHash != "" {
+							contentHashes[ca.Path] = ca.ContentHash
+						}
+					}
+				}
+			}
+		}
+
+		shellCheck := shellenv.CheckShellD(homeDir, contentHashes)
+
+		// Count total active scripts across all shells
+		totalScripts := 0
+		for _, scripts := range shellCheck.ActiveScripts {
+			totalScripts += len(scripts)
+		}
+
+		if totalScripts == 0 {
+			fmt.Println(" ... ok (no shell hooks)")
+		} else if !shellCheck.HasIssues() {
+			// Build a summary of active shells
+			var shellSummary []string
+			for shell, scripts := range shellCheck.ActiveScripts {
+				shellSummary = append(shellSummary, fmt.Sprintf("%d %s", len(scripts), shell))
+			}
+			fmt.Printf(" ... ok (%s)\n", strings.Join(shellSummary, ", "))
+		} else {
+			fmt.Println(" ... FAIL")
+			failed = true
+
+			for shell, stale := range shellCheck.CacheStale {
+				if stale {
+					fmt.Fprintf(os.Stderr, "    %s cache is stale (run: tsuku doctor --rebuild-cache)\n", shell)
+				}
+			}
+			for _, name := range shellCheck.HashMismatches {
+				fmt.Fprintf(os.Stderr, "    %s: content hash mismatch\n", name)
+			}
+			for _, name := range shellCheck.Symlinks {
+				fmt.Fprintf(os.Stderr, "    %s: symlink detected (security risk)\n", name)
+			}
+			for _, se := range shellCheck.SyntaxErrors {
+				fmt.Fprintf(os.Stderr, "    %s: syntax error: %s\n", se.File, se.Message)
+			}
 		}
 
 		// Summary

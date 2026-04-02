@@ -2868,3 +2868,82 @@ func TestSourceField_AbsentInJSON_WithPlan(t *testing.T) {
 		t.Errorf("Source = %q, want %q (inferred from Plan.RecipeSource)", tool.Source, "local")
 	}
 }
+
+func TestCleanupActions_StateRoundTrip(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	actions := []CleanupAction{
+		{Action: "delete_file", Path: "share/shell.d/niwa.bash"},
+		{Action: "delete_file", Path: "share/shell.d/niwa.zsh"},
+		{Action: "delete_dir", Path: "share/completions/niwa"},
+	}
+
+	err := sm.UpdateTool("niwa", func(ts *ToolState) {
+		ts.ActiveVersion = "1.0.0"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {
+				Binaries:       []string{"bin/niwa"},
+				CleanupActions: actions,
+			},
+		}
+	})
+	if err != nil {
+		t.Fatalf("UpdateTool() error = %v", err)
+	}
+
+	// Load back and verify round-trip
+	state, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	vs := state.Installed["niwa"].Versions["1.0.0"]
+	if len(vs.CleanupActions) != 3 {
+		t.Fatalf("expected 3 cleanup actions, got %d", len(vs.CleanupActions))
+	}
+
+	for i, ca := range vs.CleanupActions {
+		if ca.Action != actions[i].Action {
+			t.Errorf("CleanupActions[%d].Action = %q, want %q", i, ca.Action, actions[i].Action)
+		}
+		if ca.Path != actions[i].Path {
+			t.Errorf("CleanupActions[%d].Path = %q, want %q", i, ca.Path, actions[i].Path)
+		}
+	}
+}
+
+func TestCleanupActions_OmitEmptyInJSON(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Save a version with no cleanup actions
+	err := sm.UpdateTool("plain-tool", func(ts *ToolState) {
+		ts.ActiveVersion = "1.0.0"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {Binaries: []string{"bin/plain-tool"}},
+		}
+	})
+	if err != nil {
+		t.Fatalf("UpdateTool() error = %v", err)
+	}
+
+	// Read the raw JSON and verify cleanup_actions is absent
+	data, err := os.ReadFile(sm.statePath())
+	if err != nil {
+		t.Fatalf("ReadFile() error = %v", err)
+	}
+	if strings.Contains(string(data), "cleanup_actions") {
+		t.Error("expected cleanup_actions to be omitted from JSON when empty")
+	}
+
+	// Load back and verify nil
+	state, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	vs := state.Installed["plain-tool"].Versions["1.0.0"]
+	if vs.CleanupActions != nil {
+		t.Errorf("expected nil CleanupActions, got %v", vs.CleanupActions)
+	}
+}

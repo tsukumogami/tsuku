@@ -465,6 +465,335 @@ func TestRemoveVersion_EmptyBinariesFallback(t *testing.T) {
 	}
 }
 
+// TestRemoveVersion_ExecutesCleanupActions tests that cleanup actions are executed during removal.
+func TestRemoveVersion_ExecutesCleanupActions(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Create the shell.d files that cleanup actions should delete
+	shellDDir := filepath.Join(cfg.HomeDir, "share", "shell.d")
+	if err := os.MkdirAll(shellDDir, 0755); err != nil {
+		t.Fatalf("failed to create shell.d dir: %v", err)
+	}
+	bashFile := filepath.Join(shellDDir, "mytool.bash")
+	zshFile := filepath.Join(shellDDir, "mytool.zsh")
+	for _, f := range []string{bashFile, zshFile} {
+		if err := os.WriteFile(f, []byte("# init\n"), 0644); err != nil {
+			t.Fatalf("failed to write shell init file: %v", err)
+		}
+	}
+
+	// Set up state with cleanup actions
+	err := mgr.state.UpdateTool("mytool", func(ts *ToolState) {
+		ts.ActiveVersion = "1.0.0"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {
+				Binaries:    []string{"bin/mytool"},
+				InstalledAt: time.Now(),
+				CleanupActions: []CleanupAction{
+					{Action: "delete_file", Path: "share/shell.d/mytool.bash"},
+					{Action: "delete_file", Path: "share/shell.d/mytool.zsh"},
+				},
+			},
+		}
+	})
+	if err != nil {
+		t.Fatalf("failed to set up state: %v", err)
+	}
+
+	// Create tool directory
+	toolDir := cfg.ToolDir("mytool", "1.0.0")
+	binDir := filepath.Join(toolDir, "bin")
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		t.Fatalf("failed to create bin dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(binDir, "mytool"), []byte("#!/bin/sh"), 0755); err != nil {
+		t.Fatalf("failed to create binary: %v", err)
+	}
+
+	// Create symlink
+	symlinkPath := cfg.CurrentSymlink("mytool")
+	if err := os.Symlink(filepath.Join(binDir, "mytool"), symlinkPath); err != nil {
+		t.Fatalf("failed to create symlink: %v", err)
+	}
+
+	// Remove the tool
+	err = mgr.RemoveVersion("mytool", "1.0.0")
+	if err != nil {
+		t.Fatalf("RemoveVersion() error = %v", err)
+	}
+
+	// Shell.d files should be deleted
+	for _, f := range []string{bashFile, zshFile} {
+		if _, err := os.Stat(f); !os.IsNotExist(err) {
+			t.Errorf("expected %s to be deleted by cleanup", f)
+		}
+	}
+}
+
+// TestRemoveVersion_CleanupMultiVersionSafety tests that shared cleanup paths are not deleted
+// when another version of the same tool references them.
+func TestRemoveVersion_CleanupMultiVersionSafety(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Create the shell.d file
+	shellDDir := filepath.Join(cfg.HomeDir, "share", "shell.d")
+	if err := os.MkdirAll(shellDDir, 0755); err != nil {
+		t.Fatalf("failed to create shell.d dir: %v", err)
+	}
+	bashFile := filepath.Join(shellDDir, "mytool.bash")
+	if err := os.WriteFile(bashFile, []byte("# init\n"), 0644); err != nil {
+		t.Fatalf("failed to write shell init file: %v", err)
+	}
+
+	// Both versions reference the same cleanup path
+	sharedCleanup := []CleanupAction{
+		{Action: "delete_file", Path: "share/shell.d/mytool.bash"},
+	}
+
+	v1Time := time.Now().Add(-1 * time.Hour)
+	v2Time := time.Now()
+	err := mgr.state.UpdateTool("mytool", func(ts *ToolState) {
+		ts.ActiveVersion = "2.0.0"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {Binaries: []string{"bin/mytool"}, InstalledAt: v1Time, CleanupActions: sharedCleanup},
+			"2.0.0": {Binaries: []string{"bin/mytool"}, InstalledAt: v2Time, CleanupActions: sharedCleanup},
+		}
+	})
+	if err != nil {
+		t.Fatalf("failed to set up state: %v", err)
+	}
+
+	// Create tool directories
+	for _, v := range []string{"1.0.0", "2.0.0"} {
+		toolDir := cfg.ToolDir("mytool", v)
+		binDir := filepath.Join(toolDir, "bin")
+		if err := os.MkdirAll(binDir, 0755); err != nil {
+			t.Fatalf("failed to create bin dir: %v", err)
+		}
+		if err := os.WriteFile(filepath.Join(binDir, "mytool"), []byte("#!/bin/sh\necho "+v), 0755); err != nil {
+			t.Fatalf("failed to create binary: %v", err)
+		}
+	}
+
+	symlinkPath := cfg.CurrentSymlink("mytool")
+	if err := os.Symlink(filepath.Join(cfg.ToolDir("mytool", "2.0.0"), "bin", "mytool"), symlinkPath); err != nil {
+		t.Fatalf("failed to create symlink: %v", err)
+	}
+
+	// Remove v1 -- v2 still references the same cleanup path, so file should survive
+	err = mgr.RemoveVersion("mytool", "1.0.0")
+	if err != nil {
+		t.Fatalf("RemoveVersion() error = %v", err)
+	}
+
+	// Shell.d file should still exist
+	if _, err := os.Stat(bashFile); os.IsNotExist(err) {
+		t.Error("expected shell.d file to be preserved when another version references it")
+	}
+}
+
+// TestRemoveVersion_LegacyNoCleanupActions tests that legacy tools without cleanup
+// actions are removed cleanly (graceful degradation).
+func TestRemoveVersion_LegacyNoCleanupActions(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Set up state with NO cleanup actions (legacy install)
+	err := mgr.state.UpdateTool("oldtool", func(ts *ToolState) {
+		ts.ActiveVersion = "1.0.0"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {Binaries: []string{"bin/oldtool"}, InstalledAt: time.Now()},
+		}
+	})
+	if err != nil {
+		t.Fatalf("failed to set up state: %v", err)
+	}
+
+	// Create tool directory
+	toolDir := cfg.ToolDir("oldtool", "1.0.0")
+	binDir := filepath.Join(toolDir, "bin")
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		t.Fatalf("failed to create bin dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(binDir, "oldtool"), []byte("#!/bin/sh"), 0755); err != nil {
+		t.Fatalf("failed to create binary: %v", err)
+	}
+
+	symlinkPath := cfg.CurrentSymlink("oldtool")
+	if err := os.Symlink(filepath.Join(binDir, "oldtool"), symlinkPath); err != nil {
+		t.Fatalf("failed to create symlink: %v", err)
+	}
+
+	// Remove should succeed without errors
+	err = mgr.RemoveVersion("oldtool", "1.0.0")
+	if err != nil {
+		t.Fatalf("RemoveVersion() error = %v", err)
+	}
+
+	// Verify tool is gone from state
+	state, err := mgr.state.Load()
+	if err != nil {
+		t.Fatalf("failed to load state: %v", err)
+	}
+	if _, exists := state.Installed["oldtool"]; exists {
+		t.Error("legacy tool should be removed from state")
+	}
+}
+
+// TestRemoveAllVersions_ExecutesCleanupActions tests that RemoveAllVersions runs cleanup.
+func TestRemoveAllVersions_ExecutesCleanupActions(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Create shell.d files
+	shellDDir := filepath.Join(cfg.HomeDir, "share", "shell.d")
+	if err := os.MkdirAll(shellDDir, 0755); err != nil {
+		t.Fatalf("failed to create shell.d dir: %v", err)
+	}
+	bashFile := filepath.Join(shellDDir, "mytool.bash")
+	if err := os.WriteFile(bashFile, []byte("# init\n"), 0644); err != nil {
+		t.Fatalf("failed to write shell init file: %v", err)
+	}
+
+	err := mgr.state.UpdateTool("mytool", func(ts *ToolState) {
+		ts.ActiveVersion = "2.0.0"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {
+				Binaries:    []string{"bin/mytool"},
+				InstalledAt: time.Now().Add(-1 * time.Hour),
+				CleanupActions: []CleanupAction{
+					{Action: "delete_file", Path: "share/shell.d/mytool.bash"},
+				},
+			},
+			"2.0.0": {
+				Binaries:    []string{"bin/mytool"},
+				InstalledAt: time.Now(),
+				CleanupActions: []CleanupAction{
+					{Action: "delete_file", Path: "share/shell.d/mytool.bash"},
+				},
+			},
+		}
+	})
+	if err != nil {
+		t.Fatalf("failed to set up state: %v", err)
+	}
+
+	// Create tool directories
+	for _, v := range []string{"1.0.0", "2.0.0"} {
+		toolDir := cfg.ToolDir("mytool", v)
+		binDir := filepath.Join(toolDir, "bin")
+		if err := os.MkdirAll(binDir, 0755); err != nil {
+			t.Fatalf("failed to create bin dir: %v", err)
+		}
+		if err := os.WriteFile(filepath.Join(binDir, "mytool"), []byte("#!/bin/sh"), 0755); err != nil {
+			t.Fatalf("failed to create binary: %v", err)
+		}
+	}
+
+	symlinkPath := cfg.CurrentSymlink("mytool")
+	if err := os.Symlink(filepath.Join(cfg.ToolDir("mytool", "2.0.0"), "bin", "mytool"), symlinkPath); err != nil {
+		t.Fatalf("failed to create symlink: %v", err)
+	}
+
+	err = mgr.RemoveAllVersions("mytool")
+	if err != nil {
+		t.Fatalf("RemoveAllVersions() error = %v", err)
+	}
+
+	// Shell.d file should be deleted
+	if _, err := os.Stat(bashFile); !os.IsNotExist(err) {
+		t.Error("expected shell.d file to be deleted after RemoveAllVersions")
+	}
+}
+
+// TestRemoveVersion_CleanupFailureDoesNotBlockRemoval tests that cleanup failures
+// are logged but don't prevent tool removal.
+func TestRemoveVersion_CleanupFailureDoesNotBlockRemoval(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Set up state with cleanup actions pointing to non-existent files
+	err := mgr.state.UpdateTool("mytool", func(ts *ToolState) {
+		ts.ActiveVersion = "1.0.0"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {
+				Binaries:    []string{"bin/mytool"},
+				InstalledAt: time.Now(),
+				CleanupActions: []CleanupAction{
+					{Action: "delete_file", Path: "share/shell.d/nonexistent.bash"},
+				},
+			},
+		}
+	})
+	if err != nil {
+		t.Fatalf("failed to set up state: %v", err)
+	}
+
+	// Create tool directory
+	toolDir := cfg.ToolDir("mytool", "1.0.0")
+	binDir := filepath.Join(toolDir, "bin")
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		t.Fatalf("failed to create bin dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(binDir, "mytool"), []byte("#!/bin/sh"), 0755); err != nil {
+		t.Fatalf("failed to create binary: %v", err)
+	}
+
+	symlinkPath := cfg.CurrentSymlink("mytool")
+	if err := os.Symlink(filepath.Join(binDir, "mytool"), symlinkPath); err != nil {
+		t.Fatalf("failed to create symlink: %v", err)
+	}
+
+	// Should succeed despite cleanup pointing to non-existent file
+	err = mgr.RemoveVersion("mytool", "1.0.0")
+	if err != nil {
+		t.Fatalf("RemoveVersion() should not fail on cleanup errors, got: %v", err)
+	}
+
+	// Tool should still be removed from state
+	state, err := mgr.state.Load()
+	if err != nil {
+		t.Fatalf("failed to load state: %v", err)
+	}
+	if _, exists := state.Installed["mytool"]; exists {
+		t.Error("tool should be removed from state despite cleanup failure")
+	}
+}
+
+// TestShellFromCleanupPath tests the shellFromCleanupPath helper.
+func TestShellFromCleanupPath(t *testing.T) {
+	tests := []struct {
+		path string
+		want string
+	}{
+		{"share/shell.d/niwa.bash", "bash"},
+		{"share/shell.d/niwa.zsh", "zsh"},
+		{"share/shell.d/niwa.fish", "fish"},
+		{"share/completions/niwa", ""},
+		{"other/path.txt", ""},
+		{"", ""},
+	}
+
+	for _, tc := range tests {
+		got := shellFromCleanupPath(tc.path)
+		if got != tc.want {
+			t.Errorf("shellFromCleanupPath(%q) = %q, want %q", tc.path, got, tc.want)
+		}
+	}
+}
+
 // TestRemoveVersion_MultipleBinaries tests removing a tool with multiple binaries.
 func TestRemoveVersion_MultipleBinaries(t *testing.T) {
 	cfg, cleanup := testutil.NewTestConfig(t)

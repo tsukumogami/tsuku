@@ -90,6 +90,18 @@ Examples:
 			}
 		}
 
+		// Snapshot old version's cleanup actions before installing new version.
+		// These are needed to compute stale cleanup (files the old version
+		// created that the new version no longer needs).
+		var oldCleanupActions []install.CleanupAction
+		if state != nil {
+			if ts, ok := state.Installed[toolName]; ok {
+				if vs, ok := ts.Versions[previousVersion]; ok {
+					oldCleanupActions = vs.CleanupActions
+				}
+			}
+		}
+
 		printInfof("Updating %s...\n", toolName)
 		if err := runInstallWithTelemetry(toolName, reqVersion, "", true, "", telemetryClient); err != nil {
 			exitWithCode(ExitInstallFailed)
@@ -105,12 +117,66 @@ Examples:
 			}
 		}
 
+		// Lifecycle-aware stale cleanup: delete files the old version created
+		// that the new version no longer needs (e.g., shell.d scripts for a
+		// shell the new version dropped). Only runs when the version changed
+		// and the old version had cleanup actions recorded.
+		if newVersion != "" && newVersion != previousVersion && len(oldCleanupActions) > 0 {
+			// Reload state to get the new version's cleanup actions
+			newState, _ := mgr.GetState().Load()
+			if newState != nil {
+				if ts, ok := newState.Installed[toolName]; ok {
+					if vs, ok := ts.Versions[newVersion]; ok {
+						stale := install.StaleCleanupActions(oldCleanupActions, vs.CleanupActions)
+						mgr.ExecuteStaleCleanup(stale)
+
+						// Update diff visibility: warn when shell init content
+						// changed between versions. This surfaces silent supply-chain
+						// changes where an upstream binary alters its init output.
+						warnShellInitChanges(toolName, oldCleanupActions, vs.CleanupActions)
+					}
+				}
+			}
+		}
+
 		// Send telemetry event for update
 		if telemetryClient != nil && newVersion != "" {
 			event := telemetry.NewUpdateEvent(toolName, previousVersion, newVersion)
 			telemetryClient.Send(event)
 		}
 	},
+}
+
+// warnShellInitChanges compares content hashes between old and new cleanup
+// actions for shell.d paths. When a matching path has different hashes, it
+// means the tool's shell init output changed during the update -- a signal
+// worth surfacing to the user.
+func warnShellInitChanges(toolName string, old, new []install.CleanupAction) {
+	// Build a map of path -> content hash from old actions
+	oldHashes := make(map[string]string)
+	for _, ca := range old {
+		if ca.ContentHash != "" {
+			oldHashes[ca.Path] = ca.ContentHash
+		}
+	}
+
+	for _, ca := range new {
+		if ca.ContentHash == "" {
+			continue
+		}
+		oldHash, exists := oldHashes[ca.Path]
+		if !exists {
+			// New path not in old -- new shell init file, not a change
+			continue
+		}
+		if oldHash != ca.ContentHash {
+			shell := install.ShellFromCleanupPath(ca.Path)
+			if shell == "" {
+				shell = ca.Path
+			}
+			fmt.Fprintf(os.Stderr, "Warning: shell init changed for %s (%s)\n", toolName, shell)
+		}
+	}
 }
 
 // isDistributedSource returns true if the source string is a distributed
