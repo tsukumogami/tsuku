@@ -96,6 +96,32 @@ tsuku config set updates.self_update false
 
 In CI environments (`CI=true`), self-update is suppressed automatically. You can also disable it per-invocation with `TSUKU_NO_SELF_UPDATE=1`.
 
+### Update Notifications
+
+tsuku shows brief notifications on stderr when updates are relevant:
+
+- **Applied updates:** When auto-apply is enabled, you'll see `Updated <tool> 1.2.0 -> 1.3.0` for each tool updated in the background.
+- **Failed updates:** If a background update fails (and gets rolled back), tsuku tells you what happened and how to recover.
+- **Self-update results:** After tsuku updates itself, the next invocation shows the new version.
+- **Available updates:** When auto-apply is off, tsuku shows `N updates available. Run 'tsuku update' to apply.` once per check cycle.
+
+Notifications are suppressed automatically in these contexts:
+
+| Condition | Rationale |
+|-----------|-----------|
+| `CI=true` | CI pipelines shouldn't see update noise |
+| Non-TTY stdout | Piped or scripted output stays clean |
+| `--quiet` / `-q` flag | User asked for silence |
+| `TSUKU_NO_UPDATE_CHECK=1` | Explicit opt-out of all update behavior |
+
+To force notifications in a suppressed environment (for example, a CI job that should auto-update):
+
+```bash
+TSUKU_AUTO_UPDATE=1 tsuku install kubectl
+```
+
+`TSUKU_AUTO_UPDATE=1` overrides all suppression signals. See [ENVIRONMENT.md](docs/ENVIRONMENT.md) for details.
+
 ### Remove a tool
 
 ```bash

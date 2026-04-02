@@ -2,7 +2,6 @@ package updates
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -19,16 +18,27 @@ import (
 // Parameters: toolName, version (the resolved version to install), constraint (the Requested pin).
 type InstallFunc func(toolName, version, constraint string) error
 
+// ApplyResult captures the outcome of a single auto-apply attempt.
+// Returned by MaybeAutoApply for rendering by DisplayNotifications.
+type ApplyResult struct {
+	Tool       string
+	OldVersion string
+	NewVersion string
+	Err        error
+}
+
 // MaybeAutoApply reads cached update check entries and installs pending updates.
+// It returns results for each attempted update so callers can render notifications.
+//
 // It uses a non-blocking TryLock on state.json.lock to avoid blocking when another
 // tsuku process is running. If the lock can't be acquired, auto-apply silently skips
 // and the cached entries persist for the next command invocation.
 //
 // On install failure, auto-rollback activates the previous version and writes a
 // failure notice to $TSUKU_HOME/notices/.
-func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, installFn InstallFunc, tc *telemetry.Client) {
+func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, installFn InstallFunc, tc *telemetry.Client) []ApplyResult {
 	if userCfg == nil || !userCfg.UpdatesAutoApplyEnabled() {
-		return
+		return nil
 	}
 
 	cacheDir := CacheDir(cfg.HomeDir)
@@ -38,7 +48,7 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, installFn In
 	entries, err := ReadAllEntries(cacheDir)
 	if err != nil {
 		log.Default().Debug("auto-apply: read cache entries", "error", err)
-		return
+		return nil
 	}
 
 	// Filter for actionable entries
@@ -53,7 +63,7 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, installFn In
 	}
 
 	if len(pending) == 0 {
-		return
+		return nil
 	}
 
 	// Probe state lock (non-blocking): check if another tsuku process is running.
@@ -64,15 +74,16 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, installFn In
 	acquired, err := lock.TryLockExclusive()
 	if err != nil {
 		log.Default().Debug("auto-apply: try lock", "error", err)
-		return
+		return nil
 	}
 	if !acquired {
-		return
+		return nil
 	}
 	// Release probe lock immediately -- install flow acquires its own locks
 	_ = lock.Unlock()
 
 	mgr := install.New(cfg)
+	var results []ApplyResult
 
 	for _, entry := range pending {
 		// Read current active version for rollback target
@@ -83,6 +94,14 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, installFn In
 		}
 
 		result := applyUpdate(entry, installFn)
+
+		ar := ApplyResult{
+			Tool:       entry.Tool,
+			OldVersion: entry.ActiveVersion,
+			NewVersion: entry.LatestWithinPin,
+			Err:        result.err,
+		}
+		results = append(results, ar)
 
 		if result.err == nil {
 			if tc != nil {
@@ -126,11 +145,10 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, installFn In
 		_ = RemoveEntry(cacheDir, entry.Tool)
 	}
 
-	// Display unshown notices on stderr (one-time)
-	DisplayUnshownNotices(cfg)
+	return results
 }
 
-// applyResult captures the outcome of a single update attempt.
+// applyResult captures the internal outcome of a single update attempt.
 type applyResult struct {
 	err error
 }
@@ -143,31 +161,4 @@ func applyUpdate(entry UpdateCheckEntry, installFn InstallFunc) applyResult {
 		}
 	}
 	return applyResult{}
-}
-
-// DisplayUnshownNotices reads and displays any unshown notices on stderr.
-// Called from PersistentPreRun to show both tool update failures and
-// self-update success notifications.
-func DisplayUnshownNotices(cfg *config.Config) {
-	noticesDir := notices.NoticesDir(cfg.HomeDir)
-	unshown, err := notices.ReadUnshownNotices(noticesDir)
-	if err != nil || len(unshown) == 0 {
-		return
-	}
-
-	for _, n := range unshown {
-		if n.Tool == SelfToolName && n.Error == "" {
-			// Self-update success
-			fmt.Fprintf(os.Stderr, "\ntsuku has been updated to %s\n", n.AttemptedVersion)
-		} else if n.Tool == SelfToolName {
-			// Self-update failure
-			fmt.Fprintf(os.Stderr, "\ntsuku self-update failed: %s\n", n.Error)
-			fmt.Fprintf(os.Stderr, "  Run 'tsuku self-update' to retry.\n")
-		} else {
-			// Tool update failure
-			fmt.Fprintf(os.Stderr, "\nUpdate failed: %s -> %s: %s\n", n.Tool, n.AttemptedVersion, n.Error)
-			fmt.Fprintf(os.Stderr, "  Run 'tsuku notices' for details, 'tsuku rollback %s' to revert.\n", n.Tool)
-		}
-		_ = notices.MarkShown(noticesDir, n.Tool)
-	}
 }
