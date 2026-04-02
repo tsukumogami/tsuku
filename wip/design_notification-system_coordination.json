@@ -1,9 +1,0 @@
-{
-  "topic": "notification-system",
-  "decisions": [
-    {"id": 1, "question": "How do suppression signals compose into a single gate?", "status": "complete", "complexity": "standard", "report": "wip/design_notification-system_decision_1_report.md"},
-    {"id": 2, "question": "When do notifications fire and what types exist?", "status": "complete", "complexity": "standard", "report": "wip/design_notification-system_decision_2_report.md"}
-  ],
-  "cross_validation": "passed",
-  "round": 0
-}
