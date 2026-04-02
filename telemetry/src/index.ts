@@ -36,6 +36,7 @@ interface BatchMetricsPayload {
 const SCHEMA_VERSION = "1";
 const LLM_SCHEMA_VERSION = "1";
 const DISCOVERY_SCHEMA_VERSION = "1";
+const UPDATE_OUTCOME_SCHEMA_VERSION = "1";
 
 type ActionType = "install" | "update" | "remove" | "create" | "command";
 
@@ -53,6 +54,11 @@ type DiscoveryActionType =
   | "discovery_not_found"
   | "discovery_disambiguation"
   | "discovery_error";
+
+type UpdateOutcomeActionType =
+  | "update_outcome_success"
+  | "update_outcome_failure"
+  | "update_outcome_rollback";
 
 interface TelemetryEvent {
   action: ActionType;
@@ -101,6 +107,34 @@ interface DiscoveryTelemetryEvent {
   arch?: string;
   tsuku_version?: string;
   schema_version?: string;
+}
+
+const VALID_ERROR_TYPES = [
+  "download_failed",
+  "checksum_failed",
+  "extraction_failed",
+  "permission_failed",
+  "symlink_failed",
+  "verification_failed",
+  "state_failed",
+  "version_resolve_failed",
+  "unknown",
+] as const;
+
+const MAX_RECIPE_LENGTH = 128;
+const MAX_VERSION_LENGTH = 64;
+
+interface UpdateOutcomeTelemetryEvent {
+  action: UpdateOutcomeActionType;
+  recipe: string;
+  version_previous: string;
+  version_target: string;
+  trigger: string;
+  error_type: string;
+  os: string;
+  arch: string;
+  tsuku_version: string;
+  schema_version: string;
 }
 
 function validateEvent(event: TelemetryEvent): string | null {
@@ -318,6 +352,47 @@ function validateDiscoveryEvent(event: DiscoveryTelemetryEvent): string | null {
     case "discovery_not_found":
       // No additional requirements
       break;
+  }
+
+  return null;
+}
+
+function validateUpdateOutcomeEvent(event: UpdateOutcomeTelemetryEvent): string | null {
+  // Common required fields
+  if (!event.os || typeof event.os !== "string") return "os is required";
+  if (!event.arch || typeof event.arch !== "string") return "arch is required";
+  if (!event.tsuku_version || typeof event.tsuku_version !== "string") return "tsuku_version is required";
+
+  // recipe required, max 128 chars
+  if (!event.recipe || typeof event.recipe !== "string") return "recipe is required";
+  if (event.recipe.length > MAX_RECIPE_LENGTH) return `recipe exceeds max length of ${MAX_RECIPE_LENGTH}`;
+
+  // version fields required, max 64 chars
+  if (!event.version_previous || typeof event.version_previous !== "string") return "version_previous is required";
+  if (event.version_previous.length > MAX_VERSION_LENGTH) return `version_previous exceeds max length of ${MAX_VERSION_LENGTH}`;
+  if (!event.version_target || typeof event.version_target !== "string") return "version_target is required";
+  if (event.version_target.length > MAX_VERSION_LENGTH) return `version_target exceeds max length of ${MAX_VERSION_LENGTH}`;
+
+  // trigger must be "auto" or "manual"
+  if (event.trigger !== "auto" && event.trigger !== "manual") return 'trigger must be "auto" or "manual"';
+
+  // error_type validation is action-dependent
+  if (event.action === "update_outcome_success") {
+    if (event.error_type && event.error_type !== "") return "error_type must be empty for success action";
+  } else {
+    // failure and rollback require error_type from taxonomy (or empty for rollback)
+    if (event.action === "update_outcome_failure") {
+      if (!event.error_type) return "error_type is required for failure action";
+      if (!VALID_ERROR_TYPES.includes(event.error_type as typeof VALID_ERROR_TYPES[number])) {
+        return `error_type must be one of: ${VALID_ERROR_TYPES.join(", ")}`;
+      }
+    }
+    // rollback: error_type can be empty or from taxonomy
+    if (event.action === "update_outcome_rollback" && event.error_type && event.error_type !== "") {
+      if (!VALID_ERROR_TYPES.includes(event.error_type as typeof VALID_ERROR_TYPES[number])) {
+        return `error_type must be one of: ${VALID_ERROR_TYPES.join(", ")}`;
+      }
+    }
   }
 
   return null;
@@ -575,6 +650,121 @@ async function getDiscoveryStats(env: Env): Promise<DiscoveryStatsResponse> {
   };
 }
 
+interface UpdateStatsResponse {
+  generated_at: string;
+  period: string;
+  total_updates: number;
+  by_outcome: {
+    success: number;
+    failure: number;
+    rollback: number;
+  };
+  success_rate: number;
+  by_trigger: {
+    auto: number;
+    manual: number;
+  };
+  by_error_type: { type: string; count: number }[];
+  top_failing: { name: string; failures: number; total: number }[];
+}
+
+async function getUpdateStats(env: Env): Promise<UpdateStatsResponse> {
+  // Update outcome events: blob0=action, blob1=recipe, blob4=trigger, blob5=error_type
+
+  // Outcome counts
+  const outcomeQuery = `
+    SELECT blob1 as action, count() as count
+    FROM tsuku_telemetry
+    WHERE blob1 LIKE 'update_outcome_%'
+    GROUP BY blob1
+  `;
+
+  // Trigger breakdown
+  const triggerQuery = `
+    SELECT blob5 as trigger, count() as count
+    FROM tsuku_telemetry
+    WHERE blob1 LIKE 'update_outcome_%'
+    GROUP BY blob5
+  `;
+
+  // Error type distribution (top 10)
+  const errorTypeQuery = `
+    SELECT blob6 as error_type, count() as count
+    FROM tsuku_telemetry
+    WHERE blob1 LIKE 'update_outcome_%'
+      AND blob6 != ''
+    GROUP BY blob6
+    ORDER BY count DESC
+    LIMIT 10
+  `;
+
+  // Top failing recipes (top 10)
+  const failingQuery = `
+    SELECT blob2 as recipe,
+           sum(if(blob1 = 'update_outcome_failure', 1, 0)) as failures,
+           count() as total
+    FROM tsuku_telemetry
+    WHERE blob1 LIKE 'update_outcome_%'
+      AND blob2 != ''
+    GROUP BY blob2
+    HAVING failures > 0
+    ORDER BY failures DESC
+    LIMIT 10
+  `;
+
+  const [outcomeData, triggerData, errorTypeData, failingData] = await Promise.all([
+    queryAnalyticsEngine(env, outcomeQuery),
+    queryAnalyticsEngine(env, triggerQuery),
+    queryAnalyticsEngine(env, errorTypeQuery),
+    queryAnalyticsEngine(env, failingQuery),
+  ]);
+
+  let success = 0;
+  let failure = 0;
+  let rollback = 0;
+  for (const row of outcomeData) {
+    const action = String(row.action);
+    const count = Number(row.count) || 0;
+    switch (action) {
+      case "update_outcome_success": success = count; break;
+      case "update_outcome_failure": failure = count; break;
+      case "update_outcome_rollback": rollback = count; break;
+    }
+  }
+  const totalUpdates = success + failure + rollback;
+
+  let auto = 0;
+  let manual = 0;
+  for (const row of triggerData) {
+    const trigger = String(row.trigger);
+    const count = Number(row.count) || 0;
+    if (trigger === "auto") auto = count;
+    else if (trigger === "manual") manual = count;
+  }
+
+  const byErrorType = errorTypeData.map((row) => ({
+    type: String(row.error_type),
+    count: Number(row.count) || 0,
+  }));
+
+  const topFailing = failingData.map((row) => ({
+    name: String(row.recipe),
+    failures: Number(row.failures) || 0,
+    total: Number(row.total) || 0,
+  }));
+
+  return {
+    generated_at: new Date().toISOString(),
+    period: "all_time",
+    total_updates: totalUpdates,
+    by_outcome: { success, failure, rollback },
+    success_rate: totalUpdates > 0 ? success / totalUpdates : 0,
+    by_trigger: { auto, manual },
+    by_error_type: byErrorType,
+    top_failing: topFailing,
+  };
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -711,6 +901,55 @@ export default {
           return new Response("ok", { status: 200, headers: corsHeaders });
         }
 
+        // Check if it's an update outcome event
+        const updateOutcomeActions: UpdateOutcomeActionType[] = [
+          "update_outcome_success",
+          "update_outcome_failure",
+          "update_outcome_rollback",
+        ];
+
+        if (typeof event.action === "string" && updateOutcomeActions.includes(event.action as UpdateOutcomeActionType)) {
+          const outcomeEvent: UpdateOutcomeTelemetryEvent = {
+            action: event.action as UpdateOutcomeActionType,
+            recipe: (event.recipe as string) || "",
+            version_previous: (event.version_previous as string) || "",
+            version_target: (event.version_target as string) || "",
+            trigger: (event.trigger as string) || "",
+            error_type: (event.error_type as string) || "",
+            os: (event.os as string) || "",
+            arch: (event.arch as string) || "",
+            tsuku_version: (event.tsuku_version as string) || "",
+            schema_version: (event.schema_version as string) || "",
+          };
+
+          const validationError = validateUpdateOutcomeEvent(outcomeEvent);
+          if (validationError) {
+            return new Response(`Bad request: ${validationError}`, {
+              status: 400,
+              headers: corsHeaders,
+            });
+          }
+
+          // Write update outcome event with 10-blob layout
+          env.ANALYTICS.writeDataPoint({
+            blobs: [
+              outcomeEvent.action,           // blob0: action
+              outcomeEvent.recipe,           // blob1: recipe
+              outcomeEvent.version_previous, // blob2: version_previous
+              outcomeEvent.version_target,   // blob3: version_target
+              outcomeEvent.trigger,          // blob4: trigger
+              outcomeEvent.error_type,       // blob5: error_type
+              outcomeEvent.os,               // blob6: os
+              outcomeEvent.arch,             // blob7: arch
+              outcomeEvent.tsuku_version,    // blob8: tsuku_version
+              UPDATE_OUTCOME_SCHEMA_VERSION, // blob9: schema_version
+            ],
+            indexes: [outcomeEvent.recipe],
+          });
+
+          return new Response("ok", { status: 200, headers: corsHeaders });
+        }
+
         // Validate required action field for regular events
         const validActions: ActionType[] = [
           "install",
@@ -817,6 +1056,22 @@ export default {
     if (request.method === "GET" && url.pathname === "/stats/discovery") {
       try {
         const stats = await getDiscoveryStats(env);
+        return new Response(JSON.stringify(stats), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (error) {
+        return new Response(JSON.stringify({ error: String(error) }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // GET /stats/updates - return update outcome statistics
+    if (request.method === "GET" && url.pathname === "/stats/updates") {
+      try {
+        const stats = await getUpdateStats(env);
         return new Response(JSON.stringify(stats), {
           status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
