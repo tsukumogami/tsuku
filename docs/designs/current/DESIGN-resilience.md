@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 upstream: docs/prds/PRD-auto-update.md
 spawned_from:
   issue: 2187
@@ -31,7 +31,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Current
 
 ## Context and Problem Statement
 
@@ -241,3 +241,10 @@ These are hardening changes with no new external inputs. GC deletes directories 
 - The `omitempty` tag means existing notice files without the field parse correctly (counter defaults to 0, treated as first failure)
 - The retention period is configurable. Users who need longer retention can set `updates.version_retention = "720h"` (30 days)
 - `tsuku doctor` warns about conditions, it doesn't auto-fix them
+
+## Implementation Issues
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| ~~[#2187: resilience](https://github.com/tsukumogami/tsuku/issues/2187)~~ | ~~[#2184](https://github.com/tsukumogami/tsuku/issues/2184)~~ | ~~testable~~ |
+| ~~_Consecutive-failure suppression, version GC, and doctor integration. Single-pr implementation._~~ | | |
