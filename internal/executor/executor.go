@@ -448,11 +448,18 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 		}
 	}
 
-	// Execute each step (including flattened dependency steps)
+	// Execute each step (including flattened dependency steps).
+	// Post-install steps are skipped here — they run after SetToolInstallDir
+	// is called, via a separate ExecutePhase("post-install") call.
 	for i, step := range allSteps {
 		// Check for context cancellation
 		if err := ctx.Err(); err != nil {
 			return err
+		}
+
+		// Skip post-install steps — ToolInstallDir is not set yet.
+		if StepPhase(step) != "install" {
+			continue
 		}
 
 		fmt.Printf("Step %d/%d: %s\n", i+1, len(allSteps), step.Action)
