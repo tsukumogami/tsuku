@@ -169,6 +169,18 @@ Switching directly between two projects works correctly. Tsuku uses the saved or
 
 Tools not declared in `.tsuku.toml` still resolve through your normal PATH, including `$TSUKU_HOME/tools/current/`.
 
+### Per-Tool Shell Init
+
+Some tools need shell functions or environment setup beyond a simple binary on PATH. Recipes that include an `install_shell_init` step place init scripts in `$TSUKU_HOME/share/shell.d/`, and `tsuku shellenv` sources them automatically alongside the PATH export. You don't need to add anything extra to your shell profile.
+
+To skip shell init for a specific tool, pass `--no-shell-init` when installing:
+
+```sh
+tsuku install direnv --no-shell-init
+```
+
+This only affects `install_shell_init` steps. The tool's binary is still installed normally.
+
 ### What if a version isn't installed?
 
 Activation only works with already-installed tool versions. If `.tsuku.toml` declares `go = "1.22"` but you haven't installed Go 1.22, that tool is skipped. Run `tsuku install` to install missing versions. The auto-install feature (next section) handles this more smoothly.
