@@ -95,8 +95,9 @@ Hardening for real-world conditions. Adds consecutive-failure suppression on top
 
 ### Feature 9: Update telemetry ([#2189](https://github.com/tsukumogami/tsuku/issues/2189))
 **Dependencies:** Feature 3 (needs update events to track)
-**Status:** Not started
+**Status:** Done
 **Upstream:** [PRD-auto-update](../prds/PRD-auto-update.md) (R22)
+**Design:** [DESIGN-update-outcome-telemetry.md](../designs/current/DESIGN-update-outcome-telemetry.md) (Current)
 
 Extend the existing telemetry system (`NewUpdateEvent`) with success/failure/rollback outcomes for auto-updates. Respects the existing opt-out mechanism. Low priority but valuable for understanding update reliability at scale.
 
@@ -141,8 +142,8 @@ The split between Phase 1 (Features 1-5) and Phase 2 (Features 6-9) reflects a n
 | _Hardens auto-apply for real-world conditions. Adds consecutive-failure suppression (< 3 = transient), old version GC with configurable retention, graceful offline degradation, and `tsuku doctor` integration._ | | |
 | [#2188: project-level integration](https://github.com/tsukumogami/tsuku/issues/2188) | [#2181](https://github.com/tsukumogami/tsuku/issues/2181), [#2184](https://github.com/tsukumogami/tsuku/issues/2184) | testable |
 | _Defines how `.tsuku.toml` version constraints interact with auto-update: exact versions disable it, prefix versions allow it within the pin. Project config takes precedence over global policy._ | | |
-| [#2189: update outcome telemetry](https://github.com/tsukumogami/tsuku/issues/2189) | [#2184](https://github.com/tsukumogami/tsuku/issues/2184) | simple |
-| _Extends existing `NewUpdateEvent` telemetry with success/failure/rollback outcomes. Low priority but valuable for understanding update reliability at scale._ | | |
+| ~~[#2189: update outcome telemetry](https://github.com/tsukumogami/tsuku/issues/2189)~~ | ~~[#2184](https://github.com/tsukumogami/tsuku/issues/2184)~~ | ~~simple~~ |
+| ~~_Extends existing `NewUpdateEvent` telemetry with success/failure/rollback outcomes. Low priority but valuable for understanding update reliability at scale._~~ | | |
 
 ### Dependency graph
 
@@ -186,9 +187,8 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2181,I2182,I2183,I2184 done
+    class I2181,I2182,I2183,I2184,I2189 done
     class I2185,I2186,I2187,I2188 needsDesign
-    class I2189 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan

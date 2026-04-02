@@ -80,6 +80,48 @@
                 </tbody>
             </table>
 
+            <p>When an auto-update succeeds, fails, or triggers a rollback, tsuku sends an outcome event containing:</p>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Example</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>action</code></td>
+                        <td>update_outcome_success</td>
+                        <td>Track update reliability</td>
+                    </tr>
+                    <tr>
+                        <td><code>recipe</code></td>
+                        <td>nodejs</td>
+                        <td>Identify which tools fail</td>
+                    </tr>
+                    <tr>
+                        <td><code>trigger</code></td>
+                        <td>auto</td>
+                        <td>Distinguish auto from manual updates</td>
+                    </tr>
+                    <tr>
+                        <td><code>error_type</code></td>
+                        <td>download_failed</td>
+                        <td>Categorize failures (fixed taxonomy, never raw error text)</td>
+                    </tr>
+                    <tr>
+                        <td><code>os</code>, <code>arch</code>, <code>tsuku_version</code></td>
+                        <td>linux, amd64, 0.5.0</td>
+                        <td>Same as above</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>
+                Error classification uses a fixed set of categories (like <code>download_failed</code> or
+                <code>checksum_failed</code>). Raw error messages, which may contain file paths, are never transmitted.
+            </p>
+
             <h2>What We Do NOT Collect</h2>
             <p>We are committed to your privacy. tsuku does not collect:</p>
             <ul>
