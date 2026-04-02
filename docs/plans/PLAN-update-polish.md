@@ -39,6 +39,12 @@ Add pin-aware dual-column `tsuku outdated`, `tsuku update --all` for batch updat
 - [ ] Self-update entry in JSON also includes overall version (already has it from cache)
 - [ ] Unit tests for new JSON output structure
 
+**Functional tests** (`test/functional/features/outdated.feature`):
+- [ ] Scenario: `tsuku outdated` shows help text mentioning pin-aware display
+- [ ] Scenario: `tsuku outdated --json` with no tools returns empty updates array (existing, verify not broken)
+- [ ] Scenario: install a tool at a pinned version, run `tsuku outdated --json`, verify `latest_overall` field exists in JSON output
+- [ ] Scenario: `tsuku outdated` text output contains "OVERALL" column header when tools are installed
+
 **Dependencies:** None
 
 ### Issue 2: feat(update): add batch update with --all flag
@@ -56,6 +62,13 @@ Add pin-aware dual-column `tsuku outdated`, `tsuku update --all` for batch updat
 - [ ] `--all` and positional `<tool>` argument are mutually exclusive (error if both provided)
 - [ ] `--dry-run` works with `--all` (shows what would update without installing)
 - [ ] Unit tests for flag validation and batch logic
+
+**Functional tests** (`test/functional/features/update.feature`):
+- [ ] Scenario: `tsuku update --all` with no tools installed exits 0 with "No tools installed" or "All tools up to date"
+- [ ] Scenario: `tsuku update --all` shows help text mentioning batch update
+- [ ] Scenario: `tsuku update foo --all` errors with mutual exclusivity message
+- [ ] Scenario: install a tool, run `tsuku update --all --dry-run`, verify it reports the tool without installing
+- [ ] Scenario: install a tool, run `tsuku update --all`, verify exit 0 and summary output
 
 **Dependencies:** None
 
@@ -77,7 +90,12 @@ Add pin-aware dual-column `tsuku outdated`, `tsuku update --all` for batch updat
 - [ ] Clock injection via `time.Time` parameter (not package-level NowFunc)
 - [ ] Unit tests for throttle (fresh, expired, missing file) with controlled time
 - [ ] Unit tests for OOC rendering in DisplayNotifications
-- [ ] Functional test scenario for OOC notification display
+
+**Functional tests** (`test/functional/features/notifications.feature`):
+- [ ] Scenario: `tsuku config set updates.notify_out_of_channel false` then `tsuku config get updates.notify_out_of_channel` returns "false"
+- [ ] Scenario: `tsuku config set updates.notify_out_of_channel true` then `tsuku config get updates.notify_out_of_channel` returns "true"
+- [ ] Scenario: out-of-channel notifications suppressed when `--quiet` is passed
+- [ ] Scenario: out-of-channel notifications suppressed in CI (`CI=true`)
 
 **Dependencies:** None (parallel with Issues 1 and 2)
 
