@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Planned
 problem: |
   Auto-updates produce no outcome telemetry. Successful auto-applies reuse the
   existing install flow which fires a generic update event with no outcome field.
@@ -22,7 +22,7 @@ upstream: docs/prds/PRD-auto-update.md
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context and Problem Statement
 
