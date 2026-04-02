@@ -5,10 +5,12 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/notices"
 	"github.com/tsukumogami/tsuku/internal/shellenv"
 )
 
@@ -167,6 +169,52 @@ for use as a gate in scripts and CI:
 			for _, se := range shellCheck.SyntaxErrors {
 				fmt.Fprintf(os.Stderr, "    %s: syntax error: %s\n", se.File, se.Message)
 			}
+		}
+
+		// Check 6: Orphaned staging directories
+		fmt.Fprintf(os.Stdout, "  Orphaned staging dirs")
+		toolsDir := filepath.Join(homeDir, "tools")
+		var orphanedStaging []string
+		if entries, err := os.ReadDir(toolsDir); err == nil {
+			for _, e := range entries {
+				if strings.HasPrefix(e.Name(), ".staging-") {
+					orphanedStaging = append(orphanedStaging, e.Name())
+				}
+			}
+		}
+		if len(orphanedStaging) == 0 {
+			fmt.Println(" ... ok")
+		} else {
+			fmt.Printf(" ... WARN (%d found)\n", len(orphanedStaging))
+			for _, name := range orphanedStaging {
+				fmt.Fprintf(os.Stderr, "    %s (remove manually: rm -rf %s)\n", name, filepath.Join(toolsDir, name))
+			}
+		}
+
+		// Check 7: Stale notices
+		fmt.Fprintf(os.Stdout, "  Stale notices")
+		noticesDir := notices.NoticesDir(homeDir)
+		var staleNotices []string
+		staleThreshold := 30 * 24 * time.Hour
+		if entries, err := os.ReadDir(noticesDir); err == nil {
+			for _, e := range entries {
+				if e.IsDir() || strings.HasPrefix(e.Name(), ".") {
+					continue
+				}
+				info, err := e.Info()
+				if err != nil {
+					continue
+				}
+				if time.Since(info.ModTime()) > staleThreshold {
+					staleNotices = append(staleNotices, e.Name())
+				}
+			}
+		}
+		if len(staleNotices) == 0 {
+			fmt.Println(" ... ok")
+		} else {
+			fmt.Printf(" ... WARN (%d stale, >30 days old)\n", len(staleNotices))
+			fmt.Fprintf(os.Stderr, "    Run: rm %s/*.json to clear\n", noticesDir)
 		}
 
 		// Summary
