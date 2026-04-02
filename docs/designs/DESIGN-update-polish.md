@@ -25,7 +25,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Planned
 
 ## Context and Problem Statement
 
@@ -216,3 +216,12 @@ These are UI-only changes to existing data flows. No new external inputs, networ
 - The double resolution is bounded by the tool count and runs in the foreground (user expects to wait). Cache entries from the background checker often have `LatestOverall` pre-populated, so the second call may hit cache.
 - `tsuku remove` can clean up `.ooc-<tool>` files alongside cache entries. Orphans are harmless (small dotfiles, stat-only access).
 - JSON output is the stable contract (`--json`). Text output is explicitly not guaranteed stable. The PRD specifies the dual-column format.
+
+## Implementation Issues
+
+PLAN: `docs/plans/PLAN-update-polish.md` (single-pr mode)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#2186: update polish](https://github.com/tsukumogami/tsuku/issues/2186) | [#2181](https://github.com/tsukumogami/tsuku/issues/2181), [#2184](https://github.com/tsukumogami/tsuku/issues/2184), [#2185](https://github.com/tsukumogami/tsuku/issues/2185) | testable |
+| _Pin-aware outdated display, batch update --all, and out-of-channel notifications with weekly per-tool throttle. Single-pr implementation with 3 internal issues tracked in PLAN doc._ | | |
