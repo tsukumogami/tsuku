@@ -94,7 +94,7 @@ func TestMaybeAutoApplySuccessfulUpdate(t *testing.T) {
 
 	tc := telemetry.NewClientWithOptions("", 0, true, false) // disabled client for test coverage
 	var installedTool, installedVersion string
-	MaybeAutoApply(cfg, userCfg, func(toolName, version, constraint string) error {
+	results := MaybeAutoApply(cfg, userCfg, func(toolName, version, constraint string) error {
 		installedTool = toolName
 		installedVersion = version
 		return nil
@@ -105,6 +105,15 @@ func TestMaybeAutoApplySuccessfulUpdate(t *testing.T) {
 	}
 	if installedVersion != "1.1.0" {
 		t.Errorf("installed version = %q, want %q", installedVersion, "1.1.0")
+	}
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result, got %d", len(results))
+	}
+	if results[0].Err != nil {
+		t.Errorf("expected nil error, got %v", results[0].Err)
+	}
+	if results[0].NewVersion != "1.1.0" {
+		t.Errorf("result version = %q, want %q", results[0].NewVersion, "1.1.0")
 	}
 
 	// Cache entry should be removed
@@ -153,7 +162,7 @@ func TestMaybeAutoApplyFailureWritesNotice(t *testing.T) {
 		return fmt.Errorf("download failed: network error")
 	}, tc)
 
-	// Notice should be written (and marked shown by displayUnshownNotices at the end of MaybeAutoApply)
+	// Notice should be written
 	allNotices, err := notices.ReadAllNotices(noticesDir)
 	if err != nil {
 		t.Fatal(err)
@@ -164,9 +173,10 @@ func TestMaybeAutoApplyFailureWritesNotice(t *testing.T) {
 	if allNotices[0].Tool != "fail-tool" {
 		t.Errorf("notice tool = %q, want %q", allNotices[0].Tool, "fail-tool")
 	}
-	// Notice is marked shown because MaybeAutoApply displays it on stderr
-	if !allNotices[0].Shown {
-		t.Error("notice should be shown after MaybeAutoApply displays it")
+	// Notice is NOT marked shown -- MaybeAutoApply returns results and
+	// DisplayNotifications (called separately) handles the display and marking.
+	if allNotices[0].Shown {
+		t.Error("notice should not be marked shown by MaybeAutoApply")
 	}
 
 	// Cache entry should be removed (prevents repeated attempts)

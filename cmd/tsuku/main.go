@@ -74,13 +74,11 @@ func init() {
 				if userCfg, err := userconfig.Load(); err == nil {
 					updates.CheckAndSpawnUpdateCheck(cfg, userCfg)
 					tc := telemetry.NewClient()
-					updates.MaybeAutoApply(cfg, userCfg, func(toolName, version, constraint string) error {
+					results := updates.MaybeAutoApply(cfg, userCfg, func(toolName, version, constraint string) error {
 						return runInstallWithTelemetry(toolName, version, constraint, false, "", nil)
 					}, tc)
+					updates.DisplayNotifications(cfg, userCfg, quietFlag, results)
 				}
-				// Display unshown notices (self-update success, tool update failures)
-				// independent of auto-apply gate
-				updates.DisplayUnshownNotices(cfg)
 			}
 		}
 	}

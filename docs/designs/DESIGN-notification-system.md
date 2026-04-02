@@ -29,7 +29,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Planned
 
 ## Context and Problem Statement
 
@@ -281,6 +281,12 @@ Deliverables:
 - `test/functional/features/notifications.feature`
 - Update README if notification behavior is user-facing
 
+## Security Considerations
+
+The notification system is a display layer that reads locally-generated JSON from user-owned directories (`$TSUKU_HOME/notices/`, `$TSUKU_HOME/cache/updates/`) and writes formatted text to stderr. It introduces no new external inputs, no network access, no privilege changes, and no sensitive data handling. The suppression gate correctly prevents output leakage in CI environments by checking `CI=true` before any stderr writes.
+
+One hardening consideration: error messages from failed updates flow through to stderr notifications. These can contain URLs with query parameters or sensitive path components. Implementation should sanitize URLs in error strings (strip auth and query parameters) before rendering.
+
 ## Consequences
 
 ### Positive
@@ -302,8 +308,22 @@ Deliverables:
 - Duplication is intentional: userconfig methods control subsystem execution, the gate controls output visibility. Different responsibilities, shared signals.
 - The sentinel is a zero-byte file with no parsing overhead; it's created in a directory that already exists
 
-## Security Considerations
+## Implementation Issues
 
-The notification system is a display layer that reads locally-generated JSON from user-owned directories (`$TSUKU_HOME/notices/`, `$TSUKU_HOME/cache/updates/`) and writes formatted text to stderr. It introduces no new external inputs, no network access, no privilege changes, and no sensitive data handling. The suppression gate correctly prevents output leakage in CI environments by checking `CI=true` before any stderr writes.
+PLAN: `docs/plans/PLAN-notification-system.md`
 
-One hardening consideration: error messages from failed updates flow through to stderr notifications. These can contain URLs with query parameters or sensitive path components. Implementation should sanitize URLs in error strings (strip auth and query parameters) before rendering.
+```mermaid
+graph LR
+    I1["#1: Notification suppression gate"]
+    I2["#2: Unified notification renderer"]
+    I3["#3: PostRun supplement + tests"]
+
+    I1 --> I2
+    I2 --> I3
+
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+
+    class I1 ready
+    class I2,I3 blocked
+```
