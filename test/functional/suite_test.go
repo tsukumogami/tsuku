@@ -158,6 +158,8 @@ func initializeScenario(ctx *godog.ScenarioContext, binPath string) {
 	ctx.Step(`^the file "([^"]*)" exists$`, theFileExists)
 	ctx.Step(`^the file "([^"]*)" does not exist$`, theFileDoesNotExist)
 	ctx.Step(`^I can run "([^"]*)"$`, iCanRun)
+	ctx.Step(`^I create home file "([^"]*)" with content:$`, iCreateHomeFile)
+	ctx.Step(`^I run from "([^"]*)" "([^"]*)"$`, iRunFromDir)
 }
 
 // filteredPATH returns a PATH string with directories containing any of the

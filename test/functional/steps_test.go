@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/cucumber/godog"
 )
 
 // aCleanTsukuEnvironment is a no-op because the Before hook already sets up
@@ -143,6 +145,84 @@ func theFileDoesNotExist(ctx context.Context, path string) error {
 		return fmt.Errorf("expected file %q not to exist", fullPath)
 	}
 	return nil
+}
+
+// iCreateHomeFile writes a file at a path relative to $TSUKU_HOME.
+func iCreateHomeFile(ctx context.Context, path string, content *godog.DocString) (context.Context, error) {
+	state := getState(ctx)
+	if state == nil {
+		return ctx, fmt.Errorf("no test state")
+	}
+	fullPath := filepath.Join(state.homeDir, path)
+	if err := os.MkdirAll(filepath.Dir(fullPath), 0o755); err != nil {
+		return ctx, fmt.Errorf("creating parent dirs for %s: %w", path, err)
+	}
+	if err := os.WriteFile(fullPath, []byte(content.Content), 0o644); err != nil {
+		return ctx, fmt.Errorf("writing %s: %w", path, err)
+	}
+	return ctx, nil
+}
+
+// iRunFromDir executes a command from a specific directory relative to $TSUKU_HOME.
+// This lets tests simulate running tsuku from a project directory with a .tsuku.toml.
+func iRunFromDir(ctx context.Context, dir, command string) (context.Context, error) {
+	state := getState(ctx)
+	if state == nil {
+		return ctx, fmt.Errorf("no test state")
+	}
+
+	fullDir := filepath.Join(state.homeDir, dir)
+	if err := os.MkdirAll(fullDir, 0o755); err != nil {
+		return ctx, fmt.Errorf("creating dir %s: %w", dir, err)
+	}
+
+	args := strings.Fields(command)
+	if len(args) > 0 && args[0] == "tsuku" {
+		args[0] = state.binPath
+	}
+
+	cmd := exec.Command(args[0], args[1:]...)
+	cmd.Dir = fullDir
+
+	registryURL := state.repoRoot
+	if state.emptyRegistry {
+		emptyRegistry := filepath.Join(state.homeDir, "empty-registry")
+		_ = os.MkdirAll(emptyRegistry, 0o755)
+		registryURL = emptyRegistry
+	}
+
+	env := append(os.Environ(),
+		"TSUKU_HOME="+state.homeDir,
+		"TSUKU_NO_TELEMETRY=1",
+		"TSUKU_REGISTRY_URL="+registryURL,
+	)
+	if len(state.hiddenBinaries) > 0 {
+		env = append(env, "PATH="+filteredPATH(state.hiddenBinaries))
+	}
+	for k, v := range state.envOverrides {
+		env = append(env, k+"="+v)
+	}
+	cmd.Env = env
+
+	var stdout, stderr strings.Builder
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	state.stdout = stdout.String()
+	state.stderr = stderr.String()
+
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			state.exitCode = exitErr.ExitCode()
+		} else {
+			return ctx, fmt.Errorf("command execution failed: %w", err)
+		}
+	} else {
+		state.exitCode = 0
+	}
+
+	return ctx, nil
 }
 
 func iCanRun(ctx context.Context, command string) (context.Context, error) {
