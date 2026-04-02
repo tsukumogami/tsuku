@@ -310,31 +310,20 @@ One hardening consideration: error messages from failed updates flow through to 
 
 ## Implementation Issues
 
-PLAN: `docs/plans/PLAN-notification-system.md` (single-pr mode, local issue numbers)
+PLAN: `docs/plans/PLAN-notification-system.md` (single-pr mode)
 
-| Issue | Dependencies | Complexity |
-|-------|--------------|------------|
-| 1: feat(updates): add notification suppression gate | None | testable |
-| _Add ShouldSuppressNotifications with 5-signal precedence in internal/updates/suppress.go_ | | |
-| 2: feat(updates): add unified notification renderer | 1 | testable |
-| _Replace DisplayUnshownNotices with DisplayNotifications, change MaybeAutoApply to return ApplyResult_ | | |
-| 3: feat(updates): add PostRun notification supplement and functional tests | 2 | testable |
-| _Add DisplayAvailableSummary in PersistentPostRun, functional test scenarios_ | | |
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#2185: notification system](https://github.com/tsukumogami/tsuku/issues/2185) | [#2183](https://github.com/tsukumogami/tsuku/issues/2183), [#2184](https://github.com/tsukumogami/tsuku/issues/2184) | testable |
+| _Suppression gate, unified renderer, PostRun supplement. Single-pr implementation with 3 internal issues tracked in PLAN doc._ | | |
 
 ```mermaid
 graph LR
-    N1["Notification suppression gate"]
-    N2["Unified notification renderer"]
-    N3["PostRun supplement + tests"]
-
-    N1 --> N2
-    N2 --> N3
+    I2185["#2185: Notification system"]
 
     classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
 
-    class N1 ready
-    class N2,N3 blocked
+    class I2185 ready
 ```
 
 **Legend**: Blue = ready, Yellow = blocked
