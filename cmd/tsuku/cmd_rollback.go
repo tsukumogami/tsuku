@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/telemetry"
 )
 
 var rollbackCmd = &cobra.Command{
@@ -62,6 +63,10 @@ a temporary fix for a broken release, not a permanent pin change.`,
 			fmt.Fprintf(os.Stderr, "Error rolling back %s: %v\n", toolName, err)
 			exitWithCode(ExitGeneral)
 		}
+
+		tc := telemetry.NewClient()
+		tc.SendUpdateOutcome(telemetry.NewUpdateOutcomeRollbackEvent(
+			toolName, ts.PreviousVersion, currentVersion, "manual"))
 
 		printInfof("Rolled back %s from %s to %s\n", toolName, currentVersion, ts.PreviousVersion)
 		printInfo("Note: auto-update may re-apply this update on the next cycle.")

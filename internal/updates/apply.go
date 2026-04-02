@@ -10,6 +10,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/notices"
+	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
 
@@ -25,7 +26,7 @@ type InstallFunc func(toolName, version, constraint string) error
 //
 // On install failure, auto-rollback activates the previous version and writes a
 // failure notice to $TSUKU_HOME/notices/.
-func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, installFn InstallFunc) {
+func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, installFn InstallFunc, tc *telemetry.Client) {
 	if userCfg == nil || !userCfg.UpdatesAutoApplyEnabled() {
 		return
 	}
@@ -83,12 +84,30 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, installFn In
 
 		result := applyUpdate(entry, installFn)
 
+		if result.err == nil {
+			if tc != nil {
+				tc.SendUpdateOutcome(telemetry.NewUpdateOutcomeSuccessEvent(
+					entry.Tool, previousVersion, entry.LatestWithinPin, "auto"))
+			}
+		}
+
 		if result.err != nil {
+			// Emit failure event
+			if tc != nil {
+				tc.SendUpdateOutcome(telemetry.NewUpdateOutcomeFailureEvent(
+					entry.Tool, entry.LatestWithinPin, telemetry.ClassifyError(result.err), "auto"))
+			}
+
 			// Auto-rollback: activate previous version
 			if previousVersion != "" {
 				if rollbackErr := mgr.Activate(entry.Tool, previousVersion); rollbackErr != nil {
 					log.Default().Debug("auto-apply: rollback failed",
 						"tool", entry.Tool, "error", rollbackErr)
+				} else {
+					if tc != nil {
+						tc.SendUpdateOutcome(telemetry.NewUpdateOutcomeRollbackEvent(
+							entry.Tool, previousVersion, entry.LatestWithinPin, "auto"))
+					}
 				}
 			}
 

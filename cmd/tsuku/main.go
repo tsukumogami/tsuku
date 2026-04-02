@@ -18,6 +18,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/registry"
+	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/updates"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
@@ -72,9 +73,10 @@ func init() {
 			if cfg, err := config.DefaultConfig(); err == nil {
 				if userCfg, err := userconfig.Load(); err == nil {
 					updates.CheckAndSpawnUpdateCheck(cfg, userCfg)
+					tc := telemetry.NewClient()
 					updates.MaybeAutoApply(cfg, userCfg, func(toolName, version, constraint string) error {
 						return runInstallWithTelemetry(toolName, version, constraint, false, "", nil)
-					})
+					}, tc)
 				}
 				// Display unshown notices (self-update success, tool update failures)
 				// independent of auto-apply gate

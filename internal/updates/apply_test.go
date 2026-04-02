@@ -25,7 +25,7 @@ func TestMaybeAutoApplyDisabled(t *testing.T) {
 		return nil
 	}
 
-	MaybeAutoApply(cfg, userCfg, installFn)
+	MaybeAutoApply(cfg, userCfg, installFn, nil)
 	if called {
 		t.Error("installFn should not be called when auto-apply is disabled")
 	}
@@ -36,7 +36,7 @@ func TestMaybeAutoApplyNilUserConfig(t *testing.T) {
 	cfg := &config.Config{HomeDir: dir}
 
 	// Should not panic
-	MaybeAutoApply(cfg, nil, func(_, _, _ string) error { return nil })
+	MaybeAutoApply(cfg, nil, func(_, _, _ string) error { return nil }, nil)
 }
 
 func TestMaybeAutoApplyNoPendingEntries(t *testing.T) {
@@ -50,7 +50,7 @@ func TestMaybeAutoApplyNoPendingEntries(t *testing.T) {
 	MaybeAutoApply(cfg, userCfg, func(_, _, _ string) error {
 		called = true
 		return nil
-	})
+	}, nil)
 	if called {
 		t.Error("installFn should not be called with no pending entries")
 	}
@@ -96,7 +96,7 @@ func TestMaybeAutoApplySuccessfulUpdate(t *testing.T) {
 		installedTool = toolName
 		installedVersion = version
 		return nil
-	})
+	}, nil)
 
 	if installedTool != "test-tool" {
 		t.Errorf("installed tool = %q, want %q", installedTool, "test-tool")
@@ -148,7 +148,7 @@ func TestMaybeAutoApplyFailureWritesNotice(t *testing.T) {
 
 	MaybeAutoApply(cfg, userCfg, func(_, _, _ string) error {
 		return fmt.Errorf("download failed: network error")
-	})
+	}, nil)
 
 	// Notice should be written (and marked shown by displayUnshownNotices at the end of MaybeAutoApply)
 	allNotices, err := notices.ReadAllNotices(noticesDir)
@@ -202,7 +202,7 @@ func TestMaybeAutoApplySkipsErrorEntries(t *testing.T) {
 	MaybeAutoApply(cfg, userCfg, func(_, _, _ string) error {
 		called = true
 		return nil
-	})
+	}, nil)
 
 	if called {
 		t.Error("installFn should not be called for entries with Error")
@@ -238,7 +238,7 @@ func TestMaybeAutoApplySkipsAlreadyCurrent(t *testing.T) {
 	MaybeAutoApply(cfg, userCfg, func(_, _, _ string) error {
 		called = true
 		return nil
-	})
+	}, nil)
 
 	if called {
 		t.Error("installFn should not be called when already at latest within pin")
