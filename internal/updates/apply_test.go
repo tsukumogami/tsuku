@@ -259,33 +259,42 @@ func TestMaybeAutoApplySkipsAlreadyCurrent(t *testing.T) {
 	}
 }
 
-func TestMaybeAutoApplyProjectExactPinSuppresses(t *testing.T) {
+// setupProjectAutoApplyTest creates a temp directory with cache entry and state for project pin tests.
+func setupProjectAutoApplyTest(t *testing.T, tool, activeVersion, requested, latestWithinPin, latestOverall, stateJSON string) (*config.Config, *userconfig.Config) {
+	t.Helper()
 	dir := t.TempDir()
 	cacheDir := filepath.Join(dir, "cache", "updates")
-	os.MkdirAll(cacheDir, 0755)
-
+	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 	entry := &UpdateCheckEntry{
-		Tool: "node", ActiveVersion: "20.16.0", Requested: "20",
-		LatestWithinPin: "20.17.0", LatestOverall: "22.0.0",
+		Tool: tool, ActiveVersion: activeVersion, Requested: requested,
+		LatestWithinPin: latestWithinPin, LatestOverall: latestOverall,
 		CheckedAt: time.Now(), ExpiresAt: time.Now().Add(24 * time.Hour),
 	}
-	WriteEntry(cacheDir, entry)
-
+	if err := WriteEntry(cacheDir, entry); err != nil {
+		t.Fatal(err)
+	}
 	stateDir := filepath.Join(dir, "tools")
-	os.MkdirAll(stateDir, 0755)
-	os.WriteFile(filepath.Join(dir, "state.json"),
-		[]byte(`{"installed":{"node":{"active_version":"20.16.0","versions":{"20.16.0":{"requested":"20"}}}}}`), 0644)
-
+	if err := os.MkdirAll(stateDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "state.json"), []byte(stateJSON), 0644); err != nil {
+		t.Fatal(err)
+	}
 	cfg := &config.Config{HomeDir: dir, ToolsDir: stateDir}
 	t.Setenv("TSUKU_AUTO_UPDATE", "")
 	t.Setenv("CI", "")
-	userCfg := userconfig.DefaultConfig()
+	return cfg, userconfig.DefaultConfig()
+}
+
+func TestMaybeAutoApplyProjectExactPinSuppresses(t *testing.T) {
+	cfg, userCfg := setupProjectAutoApplyTest(t, "node", "20.16.0", "20", "20.17.0", "22.0.0",
+		`{"installed":{"node":{"active_version":"20.16.0","versions":{"20.16.0":{"requested":"20"}}}}}`)
 
 	projCfg := &project.ConfigResult{
 		Config: &project.ProjectConfig{
-			Tools: map[string]project.ToolRequirement{
-				"node": {Version: "20.16.0"},
-			},
+			Tools: map[string]project.ToolRequirement{"node": {Version: "20.16.0"}},
 		},
 	}
 
@@ -301,32 +310,12 @@ func TestMaybeAutoApplyProjectExactPinSuppresses(t *testing.T) {
 }
 
 func TestMaybeAutoApplyProjectPrefixPinNarrows(t *testing.T) {
-	dir := t.TempDir()
-	cacheDir := filepath.Join(dir, "cache", "updates")
-	os.MkdirAll(cacheDir, 0755)
-
-	entry := &UpdateCheckEntry{
-		Tool: "node", ActiveVersion: "20.16.0", Requested: "",
-		LatestWithinPin: "22.0.0", LatestOverall: "22.0.0",
-		CheckedAt: time.Now(), ExpiresAt: time.Now().Add(24 * time.Hour),
-	}
-	WriteEntry(cacheDir, entry)
-
-	stateDir := filepath.Join(dir, "tools")
-	os.MkdirAll(stateDir, 0755)
-	os.WriteFile(filepath.Join(dir, "state.json"),
-		[]byte(`{"installed":{"node":{"active_version":"20.16.0","versions":{"20.16.0":{"requested":""}}}}}`), 0644)
-
-	cfg := &config.Config{HomeDir: dir, ToolsDir: stateDir}
-	t.Setenv("TSUKU_AUTO_UPDATE", "")
-	t.Setenv("CI", "")
-	userCfg := userconfig.DefaultConfig()
+	cfg, userCfg := setupProjectAutoApplyTest(t, "node", "20.16.0", "", "22.0.0", "22.0.0",
+		`{"installed":{"node":{"active_version":"20.16.0","versions":{"20.16.0":{"requested":""}}}}}`)
 
 	projCfg := &project.ConfigResult{
 		Config: &project.ProjectConfig{
-			Tools: map[string]project.ToolRequirement{
-				"node": {Version: "20"},
-			},
+			Tools: map[string]project.ToolRequirement{"node": {Version: "20"}},
 		},
 	}
 
@@ -342,32 +331,12 @@ func TestMaybeAutoApplyProjectPrefixPinNarrows(t *testing.T) {
 }
 
 func TestMaybeAutoApplyProjectPrefixPinAllows(t *testing.T) {
-	dir := t.TempDir()
-	cacheDir := filepath.Join(dir, "cache", "updates")
-	os.MkdirAll(cacheDir, 0755)
-
-	entry := &UpdateCheckEntry{
-		Tool: "node", ActiveVersion: "20.16.0", Requested: "20",
-		LatestWithinPin: "20.17.0", LatestOverall: "22.0.0",
-		CheckedAt: time.Now(), ExpiresAt: time.Now().Add(24 * time.Hour),
-	}
-	WriteEntry(cacheDir, entry)
-
-	stateDir := filepath.Join(dir, "tools")
-	os.MkdirAll(stateDir, 0755)
-	os.WriteFile(filepath.Join(dir, "state.json"),
-		[]byte(`{"installed":{"node":{"active_version":"20.16.0","versions":{"20.16.0":{"requested":"20"}}}}}`), 0644)
-
-	cfg := &config.Config{HomeDir: dir, ToolsDir: stateDir}
-	t.Setenv("TSUKU_AUTO_UPDATE", "")
-	t.Setenv("CI", "")
-	userCfg := userconfig.DefaultConfig()
+	cfg, userCfg := setupProjectAutoApplyTest(t, "node", "20.16.0", "20", "20.17.0", "22.0.0",
+		`{"installed":{"node":{"active_version":"20.16.0","versions":{"20.16.0":{"requested":"20"}}}}}`)
 
 	projCfg := &project.ConfigResult{
 		Config: &project.ProjectConfig{
-			Tools: map[string]project.ToolRequirement{
-				"node": {Version: "20"},
-			},
+			Tools: map[string]project.ToolRequirement{"node": {Version: "20"}},
 		},
 	}
 
@@ -384,26 +353,8 @@ func TestMaybeAutoApplyProjectPrefixPinAllows(t *testing.T) {
 }
 
 func TestMaybeAutoApplyProjectNilConfigUnchanged(t *testing.T) {
-	dir := t.TempDir()
-	cacheDir := filepath.Join(dir, "cache", "updates")
-	os.MkdirAll(cacheDir, 0755)
-
-	entry := &UpdateCheckEntry{
-		Tool: "ripgrep", ActiveVersion: "13.0.0", Requested: "",
-		LatestWithinPin: "14.0.0", LatestOverall: "14.0.0",
-		CheckedAt: time.Now(), ExpiresAt: time.Now().Add(24 * time.Hour),
-	}
-	WriteEntry(cacheDir, entry)
-
-	stateDir := filepath.Join(dir, "tools")
-	os.MkdirAll(stateDir, 0755)
-	os.WriteFile(filepath.Join(dir, "state.json"),
-		[]byte(`{"installed":{"ripgrep":{"active_version":"13.0.0","versions":{"13.0.0":{"requested":""}}}}}`), 0644)
-
-	cfg := &config.Config{HomeDir: dir, ToolsDir: stateDir}
-	t.Setenv("TSUKU_AUTO_UPDATE", "")
-	t.Setenv("CI", "")
-	userCfg := userconfig.DefaultConfig()
+	cfg, userCfg := setupProjectAutoApplyTest(t, "ripgrep", "13.0.0", "", "14.0.0", "14.0.0",
+		`{"installed":{"ripgrep":{"active_version":"13.0.0","versions":{"13.0.0":{"requested":""}}}}}`)
 
 	var installedVersion string
 	tc := telemetry.NewClientWithOptions("", 0, true, false)
@@ -418,32 +369,12 @@ func TestMaybeAutoApplyProjectNilConfigUnchanged(t *testing.T) {
 }
 
 func TestMaybeAutoApplyProjectUndeclaredToolUnchanged(t *testing.T) {
-	dir := t.TempDir()
-	cacheDir := filepath.Join(dir, "cache", "updates")
-	os.MkdirAll(cacheDir, 0755)
-
-	entry := &UpdateCheckEntry{
-		Tool: "ripgrep", ActiveVersion: "13.0.0", Requested: "",
-		LatestWithinPin: "14.0.0", LatestOverall: "14.0.0",
-		CheckedAt: time.Now(), ExpiresAt: time.Now().Add(24 * time.Hour),
-	}
-	WriteEntry(cacheDir, entry)
-
-	stateDir := filepath.Join(dir, "tools")
-	os.MkdirAll(stateDir, 0755)
-	os.WriteFile(filepath.Join(dir, "state.json"),
-		[]byte(`{"installed":{"ripgrep":{"active_version":"13.0.0","versions":{"13.0.0":{"requested":""}}}}}`), 0644)
-
-	cfg := &config.Config{HomeDir: dir, ToolsDir: stateDir}
-	t.Setenv("TSUKU_AUTO_UPDATE", "")
-	t.Setenv("CI", "")
-	userCfg := userconfig.DefaultConfig()
+	cfg, userCfg := setupProjectAutoApplyTest(t, "ripgrep", "13.0.0", "", "14.0.0", "14.0.0",
+		`{"installed":{"ripgrep":{"active_version":"13.0.0","versions":{"13.0.0":{"requested":""}}}}}`)
 
 	projCfg := &project.ConfigResult{
 		Config: &project.ProjectConfig{
-			Tools: map[string]project.ToolRequirement{
-				"python": {Version: "3.12"},
-			},
+			Tools: map[string]project.ToolRequirement{"python": {Version: "3.12"}},
 		},
 	}
 
