@@ -9,6 +9,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/notices"
+	"github.com/tsukumogami/tsuku/internal/project"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
@@ -27,6 +28,21 @@ type ApplyResult struct {
 	Err        error
 }
 
+// effectivePin returns the version constraint to use for auto-apply filtering.
+// Project config takes precedence over the cached global pin when the tool is declared.
+func effectivePin(tool string, entry UpdateCheckEntry, projectCfg *project.ConfigResult) string {
+	if projectCfg != nil && projectCfg.Config != nil {
+		if req, ok := projectCfg.Config.Tools[tool]; ok {
+			if err := install.ValidateRequested(req.Version); err != nil {
+				log.Default().Debug("auto-apply: invalid project pin", "tool", tool, "version", req.Version, "error", err)
+				return entry.Requested
+			}
+			return req.Version
+		}
+	}
+	return entry.Requested
+}
+
 // MaybeAutoApply reads cached update check entries and installs pending updates.
 // It returns results for each attempted update so callers can render notifications.
 //
@@ -36,7 +52,7 @@ type ApplyResult struct {
 //
 // On install failure, auto-rollback activates the previous version and writes a
 // failure notice to $TSUKU_HOME/notices/.
-func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, installFn InstallFunc, tc *telemetry.Client) []ApplyResult {
+func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, projectCfg *project.ConfigResult, installFn InstallFunc, tc *telemetry.Client) []ApplyResult {
 	if userCfg == nil || !userCfg.UpdatesAutoApplyEnabled() {
 		return nil
 	}
@@ -64,6 +80,30 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, installFn In
 
 	if len(pending) == 0 {
 		return nil
+	}
+
+	// Apply project-level pin overrides
+	if projectCfg != nil && projectCfg.Config != nil {
+		var filtered []UpdateCheckEntry
+		for _, entry := range pending {
+			pin := effectivePin(entry.Tool, entry, projectCfg)
+			pinLevel := install.PinLevelFromRequested(pin)
+			if pinLevel == install.PinExact || pinLevel == install.PinChannel {
+				log.Default().Debug("auto-apply: project pin suppresses update",
+					"tool", entry.Tool, "pin", pin, "level", pinLevel)
+				continue
+			}
+			if pin != "" && pin != "latest" && !install.VersionMatchesPin(entry.LatestWithinPin, pin) {
+				log.Default().Debug("auto-apply: project pin narrows boundary",
+					"tool", entry.Tool, "pin", pin, "candidate", entry.LatestWithinPin)
+				continue
+			}
+			filtered = append(filtered, entry)
+		}
+		pending = filtered
+		if len(pending) == 0 {
+			return nil
+		}
 	}
 
 	// Probe state lock (non-blocking): check if another tsuku process is running.

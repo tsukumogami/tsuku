@@ -9,6 +9,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/notices"
+	"github.com/tsukumogami/tsuku/internal/project"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
@@ -26,7 +27,7 @@ func TestMaybeAutoApplyDisabled(t *testing.T) {
 		return nil
 	}
 
-	MaybeAutoApply(cfg, userCfg, installFn, nil)
+	MaybeAutoApply(cfg, userCfg, nil, installFn, nil)
 	if called {
 		t.Error("installFn should not be called when auto-apply is disabled")
 	}
@@ -37,7 +38,7 @@ func TestMaybeAutoApplyNilUserConfig(t *testing.T) {
 	cfg := &config.Config{HomeDir: dir}
 
 	// Should not panic
-	MaybeAutoApply(cfg, nil, func(_, _, _ string) error { return nil }, nil)
+	MaybeAutoApply(cfg, nil, nil, func(_, _, _ string) error { return nil }, nil)
 }
 
 func TestMaybeAutoApplyNoPendingEntries(t *testing.T) {
@@ -48,7 +49,7 @@ func TestMaybeAutoApplyNoPendingEntries(t *testing.T) {
 	userCfg := userconfig.DefaultConfig()
 
 	called := false
-	MaybeAutoApply(cfg, userCfg, func(_, _, _ string) error {
+	MaybeAutoApply(cfg, userCfg, nil, func(_, _, _ string) error {
 		called = true
 		return nil
 	}, nil)
@@ -94,7 +95,7 @@ func TestMaybeAutoApplySuccessfulUpdate(t *testing.T) {
 
 	tc := telemetry.NewClientWithOptions("", 0, true, false) // disabled client for test coverage
 	var installedTool, installedVersion string
-	results := MaybeAutoApply(cfg, userCfg, func(toolName, version, constraint string) error {
+	results := MaybeAutoApply(cfg, userCfg, nil, func(toolName, version, constraint string) error {
 		installedTool = toolName
 		installedVersion = version
 		return nil
@@ -158,7 +159,7 @@ func TestMaybeAutoApplyFailureWritesNotice(t *testing.T) {
 	userCfg := userconfig.DefaultConfig()
 
 	tc := telemetry.NewClientWithOptions("", 0, true, false) // disabled client for test coverage
-	MaybeAutoApply(cfg, userCfg, func(_, _, _ string) error {
+	MaybeAutoApply(cfg, userCfg, nil, func(_, _, _ string) error {
 		return fmt.Errorf("download failed: network error")
 	}, tc)
 
@@ -212,7 +213,7 @@ func TestMaybeAutoApplySkipsErrorEntries(t *testing.T) {
 	userCfg := userconfig.DefaultConfig()
 
 	called := false
-	MaybeAutoApply(cfg, userCfg, func(_, _, _ string) error {
+	MaybeAutoApply(cfg, userCfg, nil, func(_, _, _ string) error {
 		called = true
 		return nil
 	}, nil)
@@ -248,12 +249,212 @@ func TestMaybeAutoApplySkipsAlreadyCurrent(t *testing.T) {
 	userCfg := userconfig.DefaultConfig()
 
 	called := false
-	MaybeAutoApply(cfg, userCfg, func(_, _, _ string) error {
+	MaybeAutoApply(cfg, userCfg, nil, func(_, _, _ string) error {
 		called = true
 		return nil
 	}, nil)
 
 	if called {
 		t.Error("installFn should not be called when already at latest within pin")
+	}
+}
+
+func TestMaybeAutoApplyProjectExactPinSuppresses(t *testing.T) {
+	dir := t.TempDir()
+	cacheDir := filepath.Join(dir, "cache", "updates")
+	os.MkdirAll(cacheDir, 0755)
+
+	entry := &UpdateCheckEntry{
+		Tool: "node", ActiveVersion: "20.16.0", Requested: "20",
+		LatestWithinPin: "20.17.0", LatestOverall: "22.0.0",
+		CheckedAt: time.Now(), ExpiresAt: time.Now().Add(24 * time.Hour),
+	}
+	WriteEntry(cacheDir, entry)
+
+	stateDir := filepath.Join(dir, "tools")
+	os.MkdirAll(stateDir, 0755)
+	os.WriteFile(filepath.Join(dir, "state.json"),
+		[]byte(`{"installed":{"node":{"active_version":"20.16.0","versions":{"20.16.0":{"requested":"20"}}}}}`), 0644)
+
+	cfg := &config.Config{HomeDir: dir, ToolsDir: stateDir}
+	t.Setenv("TSUKU_AUTO_UPDATE", "")
+	t.Setenv("CI", "")
+	userCfg := userconfig.DefaultConfig()
+
+	projCfg := &project.ConfigResult{
+		Config: &project.ProjectConfig{
+			Tools: map[string]project.ToolRequirement{
+				"node": {Version: "20.16.0"},
+			},
+		},
+	}
+
+	installed := false
+	MaybeAutoApply(cfg, userCfg, projCfg, func(_, _, _ string) error {
+		installed = true
+		return nil
+	}, nil)
+
+	if installed {
+		t.Error("exact project pin should suppress auto-update, but install was called")
+	}
+}
+
+func TestMaybeAutoApplyProjectPrefixPinNarrows(t *testing.T) {
+	dir := t.TempDir()
+	cacheDir := filepath.Join(dir, "cache", "updates")
+	os.MkdirAll(cacheDir, 0755)
+
+	entry := &UpdateCheckEntry{
+		Tool: "node", ActiveVersion: "20.16.0", Requested: "",
+		LatestWithinPin: "22.0.0", LatestOverall: "22.0.0",
+		CheckedAt: time.Now(), ExpiresAt: time.Now().Add(24 * time.Hour),
+	}
+	WriteEntry(cacheDir, entry)
+
+	stateDir := filepath.Join(dir, "tools")
+	os.MkdirAll(stateDir, 0755)
+	os.WriteFile(filepath.Join(dir, "state.json"),
+		[]byte(`{"installed":{"node":{"active_version":"20.16.0","versions":{"20.16.0":{"requested":""}}}}}`), 0644)
+
+	cfg := &config.Config{HomeDir: dir, ToolsDir: stateDir}
+	t.Setenv("TSUKU_AUTO_UPDATE", "")
+	t.Setenv("CI", "")
+	userCfg := userconfig.DefaultConfig()
+
+	projCfg := &project.ConfigResult{
+		Config: &project.ProjectConfig{
+			Tools: map[string]project.ToolRequirement{
+				"node": {Version: "20"},
+			},
+		},
+	}
+
+	installed := false
+	MaybeAutoApply(cfg, userCfg, projCfg, func(_, _, _ string) error {
+		installed = true
+		return nil
+	}, nil)
+
+	if installed {
+		t.Error("project pin '20' should block node 22.0.0 update, but install was called")
+	}
+}
+
+func TestMaybeAutoApplyProjectPrefixPinAllows(t *testing.T) {
+	dir := t.TempDir()
+	cacheDir := filepath.Join(dir, "cache", "updates")
+	os.MkdirAll(cacheDir, 0755)
+
+	entry := &UpdateCheckEntry{
+		Tool: "node", ActiveVersion: "20.16.0", Requested: "20",
+		LatestWithinPin: "20.17.0", LatestOverall: "22.0.0",
+		CheckedAt: time.Now(), ExpiresAt: time.Now().Add(24 * time.Hour),
+	}
+	WriteEntry(cacheDir, entry)
+
+	stateDir := filepath.Join(dir, "tools")
+	os.MkdirAll(stateDir, 0755)
+	os.WriteFile(filepath.Join(dir, "state.json"),
+		[]byte(`{"installed":{"node":{"active_version":"20.16.0","versions":{"20.16.0":{"requested":"20"}}}}}`), 0644)
+
+	cfg := &config.Config{HomeDir: dir, ToolsDir: stateDir}
+	t.Setenv("TSUKU_AUTO_UPDATE", "")
+	t.Setenv("CI", "")
+	userCfg := userconfig.DefaultConfig()
+
+	projCfg := &project.ConfigResult{
+		Config: &project.ProjectConfig{
+			Tools: map[string]project.ToolRequirement{
+				"node": {Version: "20"},
+			},
+		},
+	}
+
+	var installedVersion string
+	tc := telemetry.NewClientWithOptions("", 0, true, false)
+	MaybeAutoApply(cfg, userCfg, projCfg, func(_, version, _ string) error {
+		installedVersion = version
+		return nil
+	}, tc)
+
+	if installedVersion != "20.17.0" {
+		t.Errorf("project pin '20' should allow 20.17.0 update, got installed=%q", installedVersion)
+	}
+}
+
+func TestMaybeAutoApplyProjectNilConfigUnchanged(t *testing.T) {
+	dir := t.TempDir()
+	cacheDir := filepath.Join(dir, "cache", "updates")
+	os.MkdirAll(cacheDir, 0755)
+
+	entry := &UpdateCheckEntry{
+		Tool: "ripgrep", ActiveVersion: "13.0.0", Requested: "",
+		LatestWithinPin: "14.0.0", LatestOverall: "14.0.0",
+		CheckedAt: time.Now(), ExpiresAt: time.Now().Add(24 * time.Hour),
+	}
+	WriteEntry(cacheDir, entry)
+
+	stateDir := filepath.Join(dir, "tools")
+	os.MkdirAll(stateDir, 0755)
+	os.WriteFile(filepath.Join(dir, "state.json"),
+		[]byte(`{"installed":{"ripgrep":{"active_version":"13.0.0","versions":{"13.0.0":{"requested":""}}}}}`), 0644)
+
+	cfg := &config.Config{HomeDir: dir, ToolsDir: stateDir}
+	t.Setenv("TSUKU_AUTO_UPDATE", "")
+	t.Setenv("CI", "")
+	userCfg := userconfig.DefaultConfig()
+
+	var installedVersion string
+	tc := telemetry.NewClientWithOptions("", 0, true, false)
+	MaybeAutoApply(cfg, userCfg, nil, func(_, version, _ string) error {
+		installedVersion = version
+		return nil
+	}, tc)
+
+	if installedVersion != "14.0.0" {
+		t.Errorf("nil project config should allow update, got installed=%q", installedVersion)
+	}
+}
+
+func TestMaybeAutoApplyProjectUndeclaredToolUnchanged(t *testing.T) {
+	dir := t.TempDir()
+	cacheDir := filepath.Join(dir, "cache", "updates")
+	os.MkdirAll(cacheDir, 0755)
+
+	entry := &UpdateCheckEntry{
+		Tool: "ripgrep", ActiveVersion: "13.0.0", Requested: "",
+		LatestWithinPin: "14.0.0", LatestOverall: "14.0.0",
+		CheckedAt: time.Now(), ExpiresAt: time.Now().Add(24 * time.Hour),
+	}
+	WriteEntry(cacheDir, entry)
+
+	stateDir := filepath.Join(dir, "tools")
+	os.MkdirAll(stateDir, 0755)
+	os.WriteFile(filepath.Join(dir, "state.json"),
+		[]byte(`{"installed":{"ripgrep":{"active_version":"13.0.0","versions":{"13.0.0":{"requested":""}}}}}`), 0644)
+
+	cfg := &config.Config{HomeDir: dir, ToolsDir: stateDir}
+	t.Setenv("TSUKU_AUTO_UPDATE", "")
+	t.Setenv("CI", "")
+	userCfg := userconfig.DefaultConfig()
+
+	projCfg := &project.ConfigResult{
+		Config: &project.ProjectConfig{
+			Tools: map[string]project.ToolRequirement{
+				"python": {Version: "3.12"},
+			},
+		},
+	}
+
+	var installedVersion string
+	tc := telemetry.NewClientWithOptions("", 0, true, false)
+	MaybeAutoApply(cfg, userCfg, projCfg, func(_, version, _ string) error {
+		installedVersion = version
+		return nil
+	}, tc)
+
+	if installedVersion != "14.0.0" {
+		t.Errorf("undeclared tool should use global pin, got installed=%q", installedVersion)
 	}
 }
