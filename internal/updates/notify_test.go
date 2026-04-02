@@ -32,7 +32,7 @@ func TestDisplayNotifications_Suppressed(t *testing.T) {
 
 	w.Close()
 	var buf bytes.Buffer
-	buf.ReadFrom(r)
+	_, _ = buf.ReadFrom(r)
 	os.Stderr = old
 
 	if buf.Len() > 0 {
@@ -224,7 +224,7 @@ func captureStderr(t *testing.T, fn func()) []byte {
 	fn()
 	w.Close()
 	var buf bytes.Buffer
-	buf.ReadFrom(r)
+	_, _ = buf.ReadFrom(r)
 	os.Stderr = old
 	return buf.Bytes()
 }
