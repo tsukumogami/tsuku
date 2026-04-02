@@ -12,18 +12,40 @@ import (
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 )
 
-var updateDryRun bool
+var (
+	updateDryRun bool
+	updateAll    bool
+)
 
 var updateCmd = &cobra.Command{
-	Use:   "update <tool>",
+	Use:   "update [tool]",
 	Short: "Update a tool to the latest version",
-	Long: `Update an installed tool to its latest version.
+	Long: `Update an installed tool to its latest version within pin boundaries.
+
+Use --all to update all installed tools at once.
 
 Examples:
   tsuku update kubectl
-  tsuku update terraform`,
-	Args: cobra.ExactArgs(1),
+  tsuku update terraform
+  tsuku update --all
+  tsuku update --all --dry-run`,
+	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		if updateAll && len(args) > 0 {
+			fmt.Fprintf(os.Stderr, "Error: --all and a tool name are mutually exclusive\n")
+			exitWithCode(ExitUsage)
+		}
+		if !updateAll && len(args) == 0 {
+			fmt.Fprintf(os.Stderr, "Error: provide a tool name or use --all\n")
+			cmd.Usage()
+			exitWithCode(ExitUsage)
+		}
+
+		if updateAll {
+			runUpdateAll(cmd)
+			return
+		}
+
 		toolName := args[0]
 
 		// Initialize telemetry
@@ -192,6 +214,96 @@ func isDistributedSource(source string) bool {
 	return strings.Contains(source, "/")
 }
 
+// runUpdateAll updates all installed tools within their pin boundaries.
+func runUpdateAll(cmd *cobra.Command) {
+	cfg, err := config.DefaultConfig()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to get config: %v\n", err)
+		exitWithCode(ExitGeneral)
+	}
+
+	mgr := install.New(cfg)
+	tools, err := mgr.List()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to list tools: %v\n", err)
+		exitWithCode(ExitGeneral)
+	}
+
+	if len(tools) == 0 {
+		printInfo("No tools installed.")
+		return
+	}
+
+	state, _ := mgr.GetState().Load()
+	telemetryClient := telemetry.NewClient()
+	telemetry.ShowNoticeIfNeeded()
+
+	var updated, failed, skipped int
+
+	for _, tool := range tools {
+		// Read pin constraint
+		var requested string
+		if state != nil {
+			if ts, ok := state.Installed[tool.Name]; ok {
+				if vs, ok := ts.Versions[ts.ActiveVersion]; ok {
+					requested = vs.Requested
+				}
+			}
+		}
+
+		// Skip exact-pinned tools
+		if install.PinLevelFromRequested(requested) == install.PinExact {
+			skipped++
+			continue
+		}
+
+		if updateDryRun {
+			printInfof("Checking %s...\n", tool.Name)
+			if err := runDryRun(tool.Name, ""); err != nil {
+				printError(err)
+				failed++
+			}
+			continue
+		}
+
+		// Load recipe from correct source
+		if r, loadErr := loadRecipeForTool(context.Background(), tool.Name, state, cfg); loadErr == nil && r != nil {
+			loader.CacheRecipe(tool.Name, r)
+		}
+
+		printInfof("Updating %s...\n", tool.Name)
+		if err := runInstallWithTelemetry(tool.Name, requested, "", true, "", telemetryClient); err != nil {
+			fmt.Fprintf(os.Stderr, "  Failed to update %s: %v\n", tool.Name, err)
+			if telemetryClient != nil {
+				telemetryClient.SendUpdateOutcome(telemetry.NewUpdateOutcomeFailureEvent(
+					tool.Name, requested, telemetry.ClassifyError(err), "manual-batch"))
+			}
+			failed++
+			continue
+		}
+		updated++
+	}
+
+	if updateDryRun {
+		return
+	}
+
+	total := len(tools) - skipped
+	if total == 0 {
+		printInfo("All tools are exact-pinned, nothing to update.")
+		return
+	}
+
+	if updated == 0 && failed == 0 {
+		printInfo("All tools are up to date.")
+	} else if failed == 0 {
+		printInfof("Updated %d/%d tools.\n", updated, total)
+	} else {
+		printInfof("Updated %d/%d tools (%d failed).\n", updated, total, failed)
+	}
+}
+
 func init() {
 	updateCmd.Flags().BoolVar(&updateDryRun, "dry-run", false, "Show what would be updated without making changes")
+	updateCmd.Flags().BoolVar(&updateAll, "all", false, "Update all installed tools within pin boundaries")
 }
