@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Done
 problem: |
   Tsuku installs tools by downloading pre-built binaries and symlinking them, but
   tools that need shell integration, completions, environment setup, or cleanup on
