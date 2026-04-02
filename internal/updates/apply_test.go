@@ -173,10 +173,13 @@ func TestMaybeAutoApplyFailureWritesNotice(t *testing.T) {
 	if allNotices[0].Tool != "fail-tool" {
 		t.Errorf("notice tool = %q, want %q", allNotices[0].Tool, "fail-tool")
 	}
-	// Notice is NOT marked shown -- MaybeAutoApply returns results and
-	// DisplayNotifications (called separately) handles the display and marking.
-	if allNotices[0].Shown {
-		t.Error("notice should not be marked shown by MaybeAutoApply")
+	// First failure is suppressed (consecutive count = 1, below threshold of 3).
+	// Notice is marked Shown=true to suppress display.
+	if !allNotices[0].Shown {
+		t.Error("first failure should be marked shown (suppressed, count < 3)")
+	}
+	if allNotices[0].ConsecutiveFailures != 1 {
+		t.Errorf("consecutive failures = %d, want 1", allNotices[0].ConsecutiveFailures)
 	}
 
 	// Cache entry should be removed (prevents repeated attempts)

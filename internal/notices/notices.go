@@ -18,6 +18,16 @@ type Notice struct {
 	Error            string    `json:"error"`
 	Timestamp        time.Time `json:"timestamp"`
 	Shown            bool      `json:"shown"`
+	// ConsecutiveFailures tracks how many times in a row this tool has failed.
+	// Notices with fewer than 3 consecutive failures are suppressed (Shown=true).
+	// Backward compatible: old files without this field default to 0.
+	ConsecutiveFailures int `json:"consecutive_failures,omitempty"`
+}
+
+// ReadNotice reads a single tool's notice file. Exported for use by apply.go.
+// Returns (nil, nil) if the file does not exist.
+func ReadNotice(noticesDir, toolName string) (*Notice, error) {
+	return readNotice(noticesDir, toolName)
 }
 
 // WriteNotice atomically writes a notice to the notices directory.
