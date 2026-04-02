@@ -1,0 +1,8 @@
+{
+  "topic": "update-polish",
+  "decisions": [
+    {"id": 1, "question": "Out-of-channel throttle persistence and clock injection", "status": "complete", "complexity": "standard", "report": "wip/design_update-polish_decision_1_report.md"}
+  ],
+  "cross_validation": "passed",
+  "round": 0
+}
