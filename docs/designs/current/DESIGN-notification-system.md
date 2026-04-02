@@ -29,7 +29,7 @@ rationale: |
 
 ## Status
 
-Implemented
+Current
 
 ## Context and Problem Statement
 
@@ -316,14 +316,3 @@ PLAN: `docs/plans/PLAN-notification-system.md` (single-pr mode)
 |-------|--------------|------|
 | ~~[#2185: notification system](https://github.com/tsukumogami/tsuku/issues/2185)~~ | ~~[#2183](https://github.com/tsukumogami/tsuku/issues/2183), [#2184](https://github.com/tsukumogami/tsuku/issues/2184)~~ | ~~testable~~ |
 | ~~_Suppression gate, unified renderer, PostRun supplement. Single-pr implementation with 3 internal issues tracked in PLAN doc._~~ | | |
-
-```mermaid
-graph LR
-    I2185["#2185: Notification system"]
-
-    classDef done fill:#c8e6c9
-
-    class I2185 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked
