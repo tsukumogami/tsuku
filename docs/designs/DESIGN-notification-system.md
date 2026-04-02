@@ -310,20 +310,31 @@ One hardening consideration: error messages from failed updates flow through to 
 
 ## Implementation Issues
 
-PLAN: `docs/plans/PLAN-notification-system.md`
+PLAN: `docs/plans/PLAN-notification-system.md` (single-pr mode, local issue numbers)
+
+| Issue | Dependencies | Complexity |
+|-------|--------------|------------|
+| 1: feat(updates): add notification suppression gate | None | testable |
+| _Add ShouldSuppressNotifications with 5-signal precedence in internal/updates/suppress.go_ | | |
+| 2: feat(updates): add unified notification renderer | 1 | testable |
+| _Replace DisplayUnshownNotices with DisplayNotifications, change MaybeAutoApply to return ApplyResult_ | | |
+| 3: feat(updates): add PostRun notification supplement and functional tests | 2 | testable |
+| _Add DisplayAvailableSummary in PersistentPostRun, functional test scenarios_ | | |
 
 ```mermaid
 graph LR
-    I1["#1: Notification suppression gate"]
-    I2["#2: Unified notification renderer"]
-    I3["#3: PostRun supplement + tests"]
+    N1["Notification suppression gate"]
+    N2["Unified notification renderer"]
+    N3["PostRun supplement + tests"]
 
-    I1 --> I2
-    I2 --> I3
+    N1 --> N2
+    N2 --> N3
 
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
 
-    class I1 ready
-    class I2,I3 blocked
+    class N1 ready
+    class N2,N3 blocked
 ```
+
+**Legend**: Blue = ready, Yellow = blocked
