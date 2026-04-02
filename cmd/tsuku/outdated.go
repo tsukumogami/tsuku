@@ -60,9 +60,10 @@ var outdatedCmd = &cobra.Command{
 		ctx := context.Background()
 
 		type updateInfo struct {
-			Name    string `json:"name"`
-			Current string `json:"current"`
-			Latest  string `json:"latest"`
+			Name          string `json:"name"`
+			Current       string `json:"current"`
+			Latest        string `json:"latest"`
+			LatestOverall string `json:"latest_overall,omitempty"`
 		}
 		var toolUpdates []updateInfo
 
@@ -99,12 +100,26 @@ var outdatedCmd = &cobra.Command{
 				continue
 			}
 
-			if latest.Version != tool.Version {
-				toolUpdates = append(toolUpdates, updateInfo{
+			// Resolve latest overall (regardless of pin)
+			var overallVersion string
+			if requested != "" {
+				overall, err := provider.ResolveLatest(ctx)
+				if err == nil && overall.Version != latest.Version {
+					overallVersion = overall.Version
+				}
+			}
+
+			if latest.Version != tool.Version || overallVersion != "" {
+				info := updateInfo{
 					Name:    tool.Name,
 					Current: tool.Version,
 					Latest:  latest.Version,
-				})
+				}
+				// Only include overall if it differs from within-pin
+				if overallVersion != "" && overallVersion != latest.Version {
+					info.LatestOverall = overallVersion
+				}
+				toolUpdates = append(toolUpdates, info)
 			}
 		}
 
@@ -142,11 +157,27 @@ var outdatedCmd = &cobra.Command{
 		}
 
 		if len(toolUpdates) > 0 {
-			fmt.Printf("%-15s  %-15s  %-15s\n", "TOOL", "CURRENT", "LATEST")
+			// Check if any tool has an overall version to show
+			hasOverall := false
 			for _, u := range toolUpdates {
-				fmt.Printf("%-15s  %-15s  %-15s\n", u.Name, u.Current, u.Latest)
+				if u.LatestOverall != "" {
+					hasOverall = true
+					break
+				}
 			}
-			printInfo("\nTo update, run: tsuku update <tool>")
+
+			if hasOverall {
+				fmt.Printf("%-15s  %-15s  %-15s  %-15s\n", "TOOL", "CURRENT", "LATEST", "OVERALL")
+				for _, u := range toolUpdates {
+					fmt.Printf("%-15s  %-15s  %-15s  %-15s\n", u.Name, u.Current, u.Latest, u.LatestOverall)
+				}
+			} else {
+				fmt.Printf("%-15s  %-15s  %-15s\n", "TOOL", "CURRENT", "LATEST")
+				for _, u := range toolUpdates {
+					fmt.Printf("%-15s  %-15s  %-15s\n", u.Name, u.Current, u.Latest)
+				}
+			}
+			printInfo("\nTo update, run: tsuku update <tool> or tsuku update --all")
 		}
 
 		if selfUpdate != nil {

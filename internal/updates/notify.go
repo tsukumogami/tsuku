@@ -3,6 +3,7 @@ package updates
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/notices"
@@ -44,6 +45,11 @@ func DisplayNotifications(cfg *config.Config, userCfg *userconfig.Config, quiet 
 	// 3. Render available-update summary (when auto_apply is disabled)
 	if userCfg != nil && !userCfg.UpdatesAutoApplyEnabled() {
 		renderAvailableSummary(cacheDir)
+	}
+
+	// 4. Render out-of-channel notifications (when enabled)
+	if userCfg != nil && userCfg.UpdatesNotifyOutOfChannel() {
+		renderOutOfChannelNotifications(cacheDir, time.Now())
 	}
 }
 
@@ -144,5 +150,41 @@ func touchSentinel(path string) {
 	f, err := os.Create(path)
 	if err == nil {
 		f.Close()
+	}
+}
+
+// renderOutOfChannelNotifications checks cache entries for tools where a newer
+// version exists outside the pin boundary and shows a notification if not throttled.
+func renderOutOfChannelNotifications(cacheDir string, now time.Time) {
+	entries, err := ReadAllEntries(cacheDir)
+	if err != nil {
+		return
+	}
+
+	for _, e := range entries {
+		// Skip entries without overall version data
+		if e.LatestOverall == "" || e.Error != "" {
+			continue
+		}
+		// Skip if overall matches within-pin (no out-of-channel version)
+		if e.LatestOverall == e.LatestWithinPin || e.LatestOverall == e.ActiveVersion {
+			continue
+		}
+		// Skip if within-pin is empty and overall equals active (already current)
+		if e.LatestWithinPin == "" && e.LatestOverall == e.ActiveVersion {
+			continue
+		}
+
+		// Check throttle
+		if IsOOCThrottled(cacheDir, e.Tool, now) {
+			continue
+		}
+
+		pin := e.Requested
+		if pin == "" {
+			pin = "latest"
+		}
+		fmt.Fprintf(os.Stderr, "\n%s %s available (pinned to %s)\n", e.Tool, e.LatestOverall, pin)
+		_ = TouchOOCThrottle(cacheDir, e.Tool)
 	}
 }

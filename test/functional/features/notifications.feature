@@ -13,3 +13,17 @@ Feature: Update notifications
     When I run "tsuku list"
     Then the exit code is 0
     And the error output does not contain "update"
+
+  Scenario: Out-of-channel notification config set to false
+    When I run "tsuku config set updates.notify_out_of_channel false"
+    Then the exit code is 0
+    When I run "tsuku config get updates.notify_out_of_channel"
+    Then the exit code is 0
+    And the output contains "false"
+
+  Scenario: Out-of-channel notification config set to true
+    When I run "tsuku config set updates.notify_out_of_channel true"
+    Then the exit code is 0
+    When I run "tsuku config get updates.notify_out_of_channel"
+    Then the exit code is 0
+    And the output contains "true"
