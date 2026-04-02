@@ -147,6 +147,19 @@ func theFileDoesNotExist(ctx context.Context, path string) error {
 	return nil
 }
 
+// iSetEnv sets an environment variable override for subsequent commands in this scenario.
+func iSetEnv(ctx context.Context, key, value string) (context.Context, error) {
+	state := getState(ctx)
+	if state == nil {
+		return ctx, fmt.Errorf("no test state")
+	}
+	if state.envOverrides == nil {
+		state.envOverrides = make(map[string]string)
+	}
+	state.envOverrides[key] = value
+	return ctx, nil
+}
+
 // iCreateHomeFile writes a file at a path relative to $TSUKU_HOME.
 func iCreateHomeFile(ctx context.Context, path string, content *godog.DocString) (context.Context, error) {
 	state := getState(ctx)

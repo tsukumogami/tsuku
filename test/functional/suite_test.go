@@ -160,6 +160,7 @@ func initializeScenario(ctx *godog.ScenarioContext, binPath string) {
 	ctx.Step(`^I can run "([^"]*)"$`, iCanRun)
 	ctx.Step(`^I create home file "([^"]*)" with content:$`, iCreateHomeFile)
 	ctx.Step(`^I run from "([^"]*)" "([^"]*)"$`, iRunFromDir)
+	ctx.Step(`^I set env "([^"]*)" to "([^"]*)"$`, iSetEnv)
 }
 
 // filteredPATH returns a PATH string with directories containing any of the
