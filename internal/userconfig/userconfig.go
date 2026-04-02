@@ -82,6 +82,11 @@ type UpdatesConfig struct {
 	// SelfUpdate controls whether tsuku checks for and applies updates to itself.
 	// Default is true.
 	SelfUpdate *bool `toml:"self_update,omitempty"`
+
+	// VersionRetention is the minimum time to keep old version directories
+	// after a successful auto-update. Accepts Go duration format.
+	// Default is "168h" (7 days).
+	VersionRetention *string `toml:"version_retention,omitempty"`
 }
 
 // LLMConfig holds LLM-specific settings.
@@ -159,6 +164,9 @@ const (
 
 	// EnvNoSelfUpdate disables self-updates when set to "1".
 	EnvNoSelfUpdate = "TSUKU_NO_SELF_UPDATE"
+
+	// DefaultVersionRetention is the default time to keep old version directories.
+	DefaultVersionRetention = 7 * 24 * time.Hour
 )
 
 // validLLMBackends lists the valid values for llm.backend (excluding empty string which clears).
@@ -439,6 +447,17 @@ func (c *Config) UpdatesNotifyOutOfChannel() bool {
 	return *c.Updates.NotifyOutOfChannel
 }
 
+// UpdatesVersionRetention returns the minimum time to keep old version directories.
+// Returns DefaultVersionRetention (7 days) if not configured.
+func (c *Config) UpdatesVersionRetention() time.Duration {
+	if c.Updates.VersionRetention != nil {
+		if d, err := time.ParseDuration(*c.Updates.VersionRetention); err == nil {
+			return d
+		}
+	}
+	return DefaultVersionRetention
+}
+
 // UpdatesSelfUpdate returns whether tsuku should check for and apply self-updates.
 // Suppressed when TSUKU_NO_SELF_UPDATE=1 or in CI environments (CI=true).
 func (c *Config) UpdatesSelfUpdate() bool {
@@ -504,6 +523,8 @@ func (c *Config) Get(key string) (string, bool) {
 		return strconv.FormatBool(c.UpdatesNotifyOutOfChannel()), true
 	case "updates.self_update":
 		return strconv.FormatBool(c.UpdatesSelfUpdate()), true
+	case "updates.version_retention":
+		return c.UpdatesVersionRetention().String(), true
 	default:
 		return "", false
 	}
@@ -640,6 +661,12 @@ func (c *Config) Set(key, value string) error {
 		}
 		c.Updates.CheckInterval = &value
 		return nil
+	case "updates.version_retention":
+		if _, err := time.ParseDuration(value); err != nil {
+			return fmt.Errorf("invalid value for updates.version_retention: must be a duration (e.g., 168h, 720h)")
+		}
+		c.Updates.VersionRetention = &value
+		return nil
 	default:
 		return fmt.Errorf("unknown config key: %s", key)
 	}
@@ -663,5 +690,6 @@ func AvailableKeys() map[string]string {
 		"updates.check_interval":        "Minimum time between update checks (e.g., 24h, 12h, 1h)",
 		"updates.notify_out_of_channel": "Notify about versions outside pin boundary (true/false)",
 		"updates.self_update":           "Check for and apply tsuku self-updates (true/false)",
+		"updates.version_retention":     "Minimum time to keep old version directories (e.g., 168h, 720h)",
 	}
 }

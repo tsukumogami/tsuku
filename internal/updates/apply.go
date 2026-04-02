@@ -3,6 +3,7 @@ package updates
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/config"
@@ -13,6 +14,10 @@ import (
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
+
+// FailureSuppressionThreshold is the number of consecutive failures before
+// a notice is shown to the user. Fewer than this = transient, suppressed.
+const FailureSuppressionThreshold = 3
 
 // InstallFunc is the callback type for the install flow.
 // Injected by cmd/tsuku/main.go wrapping runInstallWithTelemetry.
@@ -148,6 +153,11 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, projectCfg *
 				tc.SendUpdateOutcome(telemetry.NewUpdateOutcomeSuccessEvent(
 					entry.Tool, previousVersion, entry.LatestWithinPin, "auto"))
 			}
+			// Success resets the failure counter by removing the notice
+			_ = notices.RemoveNotice(noticesDir, entry.Tool)
+			// Garbage collect old version directories
+			retention := userCfg.UpdatesVersionRetention()
+			_ = GarbageCollectVersions(cfg.ToolsDir, entry.Tool, entry.LatestWithinPin, previousVersion, retention, time.Now())
 		}
 
 		if result.err != nil {
@@ -170,13 +180,24 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, projectCfg *
 				}
 			}
 
-			// Write failure notice
+			// Write failure notice with consecutive-failure tracking
+			consecutiveCount := 1
+			if existing, _ := notices.ReadNotice(noticesDir, entry.Tool); existing != nil {
+				consecutiveCount = existing.ConsecutiveFailures + 1
+			}
+
+			// Actionable errors bypass the suppression threshold
+			if isActionableError(result.err) {
+				consecutiveCount = FailureSuppressionThreshold
+			}
+
 			notice := &notices.Notice{
-				Tool:             entry.Tool,
-				AttemptedVersion: entry.LatestWithinPin,
-				Error:            result.err.Error(),
-				Timestamp:        time.Now(),
-				Shown:            false,
+				Tool:                entry.Tool,
+				AttemptedVersion:    entry.LatestWithinPin,
+				Error:               result.err.Error(),
+				Timestamp:           time.Now(),
+				Shown:               consecutiveCount < FailureSuppressionThreshold,
+				ConsecutiveFailures: consecutiveCount,
 			}
 			_ = notices.WriteNotice(noticesDir, notice)
 		}
@@ -201,4 +222,19 @@ func applyUpdate(entry UpdateCheckEntry, installFn InstallFunc) applyResult {
 		}
 	}
 	return applyResult{}
+}
+
+// isActionableError returns true for errors that should bypass the consecutive-
+// failure suppression threshold and always produce a visible notice.
+func isActionableError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	for _, pattern := range []string{"checksum", "disk full", "no space", "recipe"} {
+		if strings.Contains(msg, pattern) {
+			return true
+		}
+	}
+	return false
 }
