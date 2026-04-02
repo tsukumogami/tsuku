@@ -1,0 +1,10 @@
+{
+  "topic": "update-outcome-telemetry",
+  "decisions": [
+    {"id": 1, "question": "How should update outcome events be structured?", "status": "complete", "complexity": "standard", "chosen": "Separate UpdateOutcomeEvent struct", "confidence": "high", "report": "wip/design_update-outcome-telemetry_decision_1_report.md"},
+    {"id": 2, "question": "Where and when should outcome events fire?", "status": "complete", "complexity": "standard", "chosen": "Emit from MaybeAutoApply directly", "confidence": "high", "report": "wip/design_update-outcome-telemetry_decision_2_report.md"},
+    {"id": 3, "question": "How should stats API and dashboard surface data?", "status": "complete", "complexity": "standard", "chosen": "New /stats/updates endpoint", "confidence": "high", "report": "wip/design_update-outcome-telemetry_decision_3_report.md"}
+  ],
+  "cross_validation": "passed",
+  "round": 0
+}
