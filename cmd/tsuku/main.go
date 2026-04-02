@@ -16,6 +16,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/distributed"
 	"github.com/tsukumogami/tsuku/internal/log"
+	"github.com/tsukumogami/tsuku/internal/project"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/registry"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
@@ -74,7 +75,8 @@ func init() {
 				if userCfg, err := userconfig.Load(); err == nil {
 					updates.CheckAndSpawnUpdateCheck(cfg, userCfg)
 					tc := telemetry.NewClient()
-					results := updates.MaybeAutoApply(cfg, userCfg, func(toolName, version, constraint string) error {
+					projCfg, _ := project.LoadProjectConfig(".")
+					results := updates.MaybeAutoApply(cfg, userCfg, projCfg, func(toolName, version, constraint string) error {
 						return runInstallWithTelemetry(toolName, version, constraint, false, "", nil)
 					}, tc)
 					updates.DisplayNotifications(cfg, userCfg, quietFlag, results)
