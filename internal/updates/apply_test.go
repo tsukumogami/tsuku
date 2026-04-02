@@ -9,6 +9,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/notices"
+	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
 
@@ -91,12 +92,13 @@ func TestMaybeAutoApplySuccessfulUpdate(t *testing.T) {
 	t.Setenv("CI", "")
 	userCfg := userconfig.DefaultConfig()
 
+	tc := telemetry.NewClientWithOptions("", 0, true, false) // disabled client for test coverage
 	var installedTool, installedVersion string
 	MaybeAutoApply(cfg, userCfg, func(toolName, version, constraint string) error {
 		installedTool = toolName
 		installedVersion = version
 		return nil
-	}, nil)
+	}, tc)
 
 	if installedTool != "test-tool" {
 		t.Errorf("installed tool = %q, want %q", installedTool, "test-tool")
@@ -146,9 +148,10 @@ func TestMaybeAutoApplyFailureWritesNotice(t *testing.T) {
 	t.Setenv("CI", "")
 	userCfg := userconfig.DefaultConfig()
 
+	tc := telemetry.NewClientWithOptions("", 0, true, false) // disabled client for test coverage
 	MaybeAutoApply(cfg, userCfg, func(_, _, _ string) error {
 		return fmt.Errorf("download failed: network error")
-	}, nil)
+	}, tc)
 
 	// Notice should be written (and marked shown by displayUnshownNotices at the end of MaybeAutoApply)
 	allNotices, err := notices.ReadAllNotices(noticesDir)
