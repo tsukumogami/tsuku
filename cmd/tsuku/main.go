@@ -83,6 +83,25 @@ func init() {
 		}
 	}
 
+	// Best-effort available-update summary after command output
+	rootCmd.PersistentPostRun = func(cmd *cobra.Command, args []string) {
+		skip := map[string]bool{
+			"check-updates": true,
+			"hook-env":      true,
+			"run":           true,
+			"help":          true,
+			"version":       true,
+			"completion":    true,
+		}
+		if !skip[cmd.Name()] {
+			if cfg, err := config.DefaultConfig(); err == nil {
+				if userCfg, err := userconfig.Load(); err == nil {
+					updates.DisplayAvailableSummary(cfg, userCfg, quietFlag)
+				}
+			}
+		}
+	}
+
 	// Set version from build info (handles tagged releases and dev builds)
 	rootCmd.Version = buildinfo.Version()
 
