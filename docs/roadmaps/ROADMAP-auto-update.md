@@ -1,5 +1,5 @@
 ---
-status: Active
+status: Done
 theme: |
   Auto-update capabilities for tsuku and managed tools. Users install developer
   tools and forget about them; this initiative keeps tools current within
@@ -20,7 +20,7 @@ scope: |
 
 ## Status
 
-Active
+Done
 
 ## Theme
 
@@ -87,10 +87,10 @@ Refinements that build on the core system. Pin-aware `tsuku outdated` with dual 
 Hardening for real-world conditions. Adds consecutive-failure suppression on top of Feature 3's basic notice writing -- failures with fewer than 3 consecutive occurrences for the same tool are treated as transient and suppressed (R11, building on R11a from Feature 3). Old version retention with configurable period (default 7 days) and garbage collection. Graceful offline degradation using cached results when network is unavailable. `tsuku doctor` detects orphaned staging directories and stale notices.
 
 ### Feature 8: Project-level integration ([#2188](https://github.com/tsukumogami/tsuku/issues/2188))
-**Needs:** `needs-design` -- interaction between `.tsuku.toml` version constraints and global auto-update policy needs design
 **Dependencies:** Feature 1, Feature 3
-**Status:** Not started
+**Status:** Done
 **Upstream:** [PRD-auto-update](../prds/PRD-auto-update.md) (R17)
+**Design:** [DESIGN-project-level-auto-update.md](../designs/current/DESIGN-project-level-auto-update.md) (Current)
 
 `.tsuku.toml` version constraints take precedence over global auto-update policy. Exact versions in project config (e.g., `node = "20.16.0"`) disable auto-update for that tool in that project context. Prefix versions (e.g., `node = "20"`) allow auto-update within the pin. The project config's `ToolRequirement` struct may need extension.
 
@@ -141,8 +141,8 @@ The split between Phase 1 (Features 1-5) and Phase 2 (Features 6-9) reflects a n
 | ~~_Phase 2 refinements: pin-aware dual-column `tsuku outdated`, out-of-channel notifications with weekly per-tool throttle, and `tsuku update --all` for batch updates._~~ | | |
 | ~~[#2187: resilience](https://github.com/tsukumogami/tsuku/issues/2187)~~ | ~~[#2184](https://github.com/tsukumogami/tsuku/issues/2184)~~ | ~~testable~~ |
 | ~~_Hardens auto-apply for real-world conditions. Adds consecutive-failure suppression (< 3 = transient), old version GC with configurable retention, graceful offline degradation, and `tsuku doctor` integration._~~ | | |
-| [#2188: project-level integration](https://github.com/tsukumogami/tsuku/issues/2188) | [#2181](https://github.com/tsukumogami/tsuku/issues/2181), [#2184](https://github.com/tsukumogami/tsuku/issues/2184) | testable |
-| _Defines how `.tsuku.toml` version constraints interact with auto-update: exact versions disable it, prefix versions allow it within the pin. Project config takes precedence over global policy._ | | |
+| ~~[#2188: project-level integration](https://github.com/tsukumogami/tsuku/issues/2188)~~ | ~~[#2181](https://github.com/tsukumogami/tsuku/issues/2181), [#2184](https://github.com/tsukumogami/tsuku/issues/2184)~~ | ~~testable~~ |
+| ~~_Defines how `.tsuku.toml` version constraints interact with auto-update: exact versions disable it, prefix versions allow it within the pin. Project config takes precedence over global policy._~~ | | |
 | ~~[#2189: update outcome telemetry](https://github.com/tsukumogami/tsuku/issues/2189)~~ | ~~[#2184](https://github.com/tsukumogami/tsuku/issues/2184)~~ | ~~simple~~ |
 | ~~_Extends existing `NewUpdateEvent` telemetry with success/failure/rollback outcomes. Low priority but valuable for understanding update reliability at scale._~~ | | |
 
@@ -188,8 +188,7 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2181,I2182,I2183,I2184,I2185,I2186,I2187,I2189 done
-    class I2188 needsDesign
+    class I2181,I2182,I2183,I2184,I2185,I2186,I2187,I2188,I2189 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan
