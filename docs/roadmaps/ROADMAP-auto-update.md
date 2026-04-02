@@ -66,7 +66,7 @@ Independent from tool auto-update. Tsuku auto-updates itself during the backgrou
 **Dependencies:** Feature 2 (needs check results to display), Feature 3 (needs apply results to report)
 **Status:** Done
 **Upstream:** [PRD-auto-update](../prds/PRD-auto-update.md) (R12, R16)
-**Design:** [DESIGN-notification-system](../designs/DESIGN-notification-system.md)
+**Design:** [DESIGN-notification-system](../designs/current/DESIGN-notification-system.md) (Current)
 
 Cross-cutting. Stderr notifications after command output for available or applied updates. Suppression layers: non-TTY, `CI=true`, `--quiet`, `TSUKU_NO_UPDATE_CHECK=1`. `TSUKU_AUTO_UPDATE=1` overrides CI detection for explicit opt-in. The notification format and suppression logic are shared across tool updates and self-update.
 

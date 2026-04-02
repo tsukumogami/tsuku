@@ -2,7 +2,7 @@
 schema: plan/v1
 status: Draft
 execution_mode: single-pr
-upstream: docs/designs/DESIGN-notification-system.md
+upstream: docs/designs/current/DESIGN-notification-system.md
 milestone: "Notification system"
 issue_count: 3
 ---
