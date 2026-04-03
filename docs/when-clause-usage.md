@@ -250,6 +250,6 @@ Difference: `install_guide` uses hierarchical fallback (lookup table), while `wh
 
 ## See Also
 
-- [Hybrid Libc Recipes Guide](GUIDE-hybrid-libc-recipes.md) - How to write recipes for glibc and musl
+- [Hybrid Libc Recipes Guide](guides/GUIDE-hybrid-libc-recipes.md) - How to write recipes for glibc and musl
 - [Platform Tuple Support in install_guide](platform-tuple-support.md)
 - [Design: When Clause Platform Tuples](designs/current/DESIGN-when-clause-platform-tuples.md)

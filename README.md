@@ -163,7 +163,7 @@ tsuku install -y acme-corp/internal-tools:deploy-cli
 
 Once installed, distributed tools work exactly like central registry tools with `update`, `outdated`, `verify`, and `remove`.
 
-See the [Distributed Recipes Guide](docs/GUIDE-distributed-recipes.md) for the full workflow.
+See the [Distributed Recipes Guide](docs/guides/GUIDE-distributed-recipes.md) for the full workflow.
 
 ### Manage recipe registries
 
@@ -241,7 +241,7 @@ tsuku llm download        # Interactive -- prompts before downloading
 tsuku llm download --yes  # Skip prompts (for CI)
 ```
 
-See the [Local LLM Guide](docs/GUIDE-local-llm.md) for hardware requirements, configuration, and troubleshooting.
+See the [Local LLM Guide](docs/guides/GUIDE-local-llm.md) for hardware requirements, configuration, and troubleshooting.
 
 **Cloud providers (optional).** If you prefer cloud inference or want higher quality on unusual release layouts, set an API key for Claude or Gemini:
 
@@ -341,7 +341,7 @@ tsuku llm download
 tsuku llm download --yes
 ```
 
-The `download` command detects your GPU, VRAM, and system RAM, then downloads the appropriate model. Run it ahead of time to avoid download prompts during `tsuku create`. See the [Local LLM Guide](docs/GUIDE-local-llm.md) for details.
+The `download` command detects your GPU, VRAM, and system RAM, then downloads the appropriate model. Run it ahead of time to avoid download prompts during `tsuku create`. See the [Local LLM Guide](docs/guides/GUIDE-local-llm.md) for details.
 
 ### Secrets Management
 
@@ -613,7 +613,7 @@ tsuku install --plan kubectl-plan.json
 tsuku eval kubectl | tsuku install --plan -
 ```
 
-See the [Plan-Based Installation Guide](docs/GUIDE-plan-based-installation.md) for air-gapped deployment and CI distribution workflows.
+See the [Plan-Based Installation Guide](docs/guides/GUIDE-plan-based-installation.md) for air-gapped deployment and CI distribution workflows.
 
 ### Ecosystem-Native Installation
 

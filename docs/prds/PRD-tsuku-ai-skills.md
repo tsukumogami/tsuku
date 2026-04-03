@@ -175,7 +175,7 @@ must note that external consumers won't have access to this directory.
 **R14** -- recipe-author SKILL.md must cover distributed recipe authoring:
 .tsuku-recipes/ directory setup, file naming convention (kebab-case TOML),
 install syntax (owner/repo, owner/repo:recipe, owner/repo@version), and a
-pointer to GUIDE-distributed-recipe-authoring.md for the full trust model
+pointer to docs/guides/GUIDE-distributed-recipe-authoring.md for the full trust model
 and caching behavior.
 
 ### recipe-test Skill (Workstream D)
@@ -223,7 +223,7 @@ security reasons as R26.
 
 ### External Distribution (Workstream F)
 
-**R19** -- Update GUIDE-distributed-recipe-authoring.md with a "Claude Code
+**R19** -- Update docs/guides/GUIDE-distributed-recipe-authoring.md with a "Claude Code
 Integration" section containing a settings.json snippet for external consumers.
 The snippet must use sparsePaths to limit downloads to .claude-plugin/ and
 plugins/tsuku-recipes/ only. autoUpdate must be omitted (defaults to false) so
@@ -315,7 +315,7 @@ arbitrary commands on their machines is not acceptable.
 
 ### External Distribution
 
-- [ ] GUIDE-distributed-recipe-authoring.md contains a "Claude Code Integration" section
+- [ ] docs/guides/GUIDE-distributed-recipe-authoring.md contains a "Claude Code Integration" section
 - [ ] The section contains a settings.json snippet with sparsePaths
 - [ ] The snippet does not include autoUpdate: true
 - [ ] plugins/tsuku-recipes/AGENTS.md exists and is 120 lines or fewer

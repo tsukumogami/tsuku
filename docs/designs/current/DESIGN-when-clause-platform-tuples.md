@@ -588,7 +588,7 @@ Note: All matching steps execute (additive semantics)
 **Deliverables:**
 - Update `docs/platform-tuple-support.md` with `when` clause examples
 - Add migration guide for recipe authors
-- Update GUIDE-actions-and-primitives.md with when clause usage
+- Update docs/guides/GUIDE-actions-and-primitives.md with when clause usage
 
 **Dependencies:** Phase 5.5
 

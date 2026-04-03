@@ -457,7 +457,7 @@ The `homebrew` action operates with minimal privileges:
 
 ## References
 
-- **Action documentation**: `docs/GUIDE-actions-and-primitives.md`
+- **Action documentation**: `docs/guides/GUIDE-actions-and-primitives.md`
 - **Dependency provisioning**: `docs/DESIGN-dependency-provisioning.md`
 - **Relocatable libraries**: `docs/DESIGN-relocatable-library-deps.md`
 - **Homebrew documentation**: https://docs.brew.sh/Formula-Cookbook

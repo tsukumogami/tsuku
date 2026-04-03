@@ -259,7 +259,7 @@ Each skill's SKILL.md follows the hybrid pattern:
 - Quick-reference: version provider types (~10 lines)
 - Quick-reference: platform conditional syntax with examples (~15 lines)
 - Quick-reference: verification patterns (~10 lines)
-- Deep-dive pointers: "Read GUIDE-actions-and-primitives.md for full action parameters", "Read GUIDE-hybrid-libc-recipes.md for libc-conditional patterns", etc.
+- Deep-dive pointers: "Read docs/guides/GUIDE-actions-and-primitives.md for full action parameters", "Read docs/guides/GUIDE-hybrid-libc-recipes.md for libc-conditional patterns", etc.
 - Exemplar recipes: curated by pattern category (~8 entries, see selection criteria below)
 - Workflow note: "If the user says `tsuku create` failed or they need to fix a generated recipe, start by reading the generated recipe and comparing against the exemplars."
 
@@ -352,7 +352,7 @@ Deliverables:
 Update documentation for external recipe authors.
 
 Deliverables:
-- Update `docs/GUIDE-distributed-recipe-authoring.md` with Claude Code integration section containing the settings.json snippet
+- Update `docs/guides/GUIDE-distributed-recipe-authoring.md` with Claude Code integration section containing the settings.json snippet
 - `plugins/tsuku-recipes/AGENTS.md` for non-Claude-Code agents
 - `plugins/tsuku-dev/AGENTS.md`
 

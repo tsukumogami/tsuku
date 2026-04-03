@@ -12,7 +12,7 @@ rationale: Plans enable golden file testing for recipe validation, provide users
 - **Created**: 2025-12-10
 - **Scope**: Tactical
 - **Archived**: 2025-12-19
-- **See Also**: docs/GUIDE-plan-based-installation.md (user guide)
+- **See Also**: docs/guides/GUIDE-plan-based-installation.md (user guide)
 
 ## Upstream Design Reference
 

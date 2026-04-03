@@ -142,7 +142,7 @@ jobs:
                unsupported_reason = "Upstream only provides glibc binaries"
                \`\`\`
 
-            See [GUIDE-hybrid-libc-recipes.md](../docs/GUIDE-hybrid-libc-recipes.md) for details.
+            See [GUIDE-hybrid-libc-recipes.md](../docs/guides/GUIDE-hybrid-libc-recipes.md) for details.
 
             ---
             *This issue was automatically created by the weekly coverage report workflow.*`;
