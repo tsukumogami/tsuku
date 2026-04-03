@@ -1,0 +1,92 @@
+name: Validate Skill Content
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'plugins/**'
+      - 'recipes/**/*.toml'
+      - '.github/workflows/validate-skill-content.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'plugins/**'
+      - 'recipes/**/*.toml'
+      - '.github/workflows/validate-skill-content.yml'
+
+jobs:
+  validate-exemplars:
+    name: Validate Exemplar Recipes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Set up Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
+
+      - name: Validate exemplar recipes
+        run: |
+          EXEMPLAR_FILE="plugins/tsuku-recipes/skills/recipe-author/references/exemplar-recipes.md"
+          if [ ! -f "$EXEMPLAR_FILE" ]; then
+            echo "::error::Exemplar file not found: $EXEMPLAR_FILE"
+            exit 1
+          fi
+
+          failed=0
+          passed=0
+
+          while IFS= read -r path; do
+            # Check file exists
+            if [ ! -f "$path" ]; then
+              echo "::error::Referenced recipe does not exist: $path"
+              failed=$((failed + 1))
+              continue
+            fi
+
+            # Validate with tsuku
+            if output=$(./tsuku validate "$path" 2>&1); then
+              passed=$((passed + 1))
+            else
+              echo "::error::Validation failed for $path"
+              echo "$output"
+              failed=$((failed + 1))
+            fi
+          done < <(grep -oP 'recipes/\S+\.toml' "$EXEMPLAR_FILE" | sort -u)
+
+          total=$((passed + failed))
+          echo "---"
+          echo "Summary: $passed/$total exemplar recipes passed"
+
+          if [ $failed -gt 0 ]; then
+            echo "::error::$failed exemplar recipe(s) failed"
+            exit 1
+          fi
+
+  no-hooks:
+    name: Check No Hooks Files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Verify hooks.json files do not exist
+        run: |
+          failed=0
+
+          for plugin in tsuku-recipes tsuku-user; do
+            if [ -f "plugins/$plugin/hooks.json" ]; then
+              echo "::error::plugins/$plugin/hooks.json must not exist"
+              failed=$((failed + 1))
+            fi
+          done
+
+          if [ $failed -gt 0 ]; then
+            exit 1
+          fi
+
+          echo "No hooks.json files found (expected)"
