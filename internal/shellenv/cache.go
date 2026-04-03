@@ -105,8 +105,9 @@ func RebuildShellCache(tsukuHome string, shell string, contentHashes ...map[stri
 	sort.Strings(files)
 
 	// Concatenate file contents with hash verification and error isolation.
-	// Each tool's content is wrapped in a subshell so a syntax error in one
-	// tool's init script does not prevent others from loading.
+	// Each tool's content is wrapped in a brace group so runtime errors in one
+	// tool's init script do not prevent others from loading, while still allowing
+	// function definitions and variable exports to affect the current shell.
 	var buf strings.Builder
 	for _, name := range files {
 		filePath := filepath.Join(shellDDir, name)
@@ -132,17 +133,19 @@ func RebuildShellCache(tsukuHome string, shell string, contentHashes ...map[stri
 		// Derive tool name from filename (e.g., "starship.bash" -> "starship")
 		toolName := strings.TrimSuffix(name, suffix)
 
-		// Wrap in error-isolated block: a subshell that suppresses errors
-		// so one tool's failure doesn't break other tools' initialization
+		// Wrap in a brace group (not a subshell) so function definitions and
+		// variable assignments propagate to the current shell. Stderr is
+		// suppressed and non-zero exits are swallowed so one tool's runtime
+		// failure does not prevent other tools' initialization.
 		buf.WriteString("# tsuku: " + toolName + "\n")
-		buf.WriteString("( # begin " + toolName + "\n")
+		buf.WriteString("{ # begin " + toolName + "\n")
 		contentStr := string(content)
 		buf.WriteString(contentStr)
-		// Ensure content ends with a newline before the closing paren
+		// Ensure content ends with a newline before the closing brace
 		if len(contentStr) > 0 && contentStr[len(contentStr)-1] != '\n' {
 			buf.WriteByte('\n')
 		}
-		buf.WriteString(") 2>/dev/null || true\n")
+		buf.WriteString("} 2>/dev/null || true\n")
 	}
 
 	// If all files were excluded by hash verification, remove the cache

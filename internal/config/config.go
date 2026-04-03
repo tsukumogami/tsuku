@@ -439,26 +439,119 @@ func (c *Config) EnvFile() string {
 	return filepath.Join(c.HomeDir, "env")
 }
 
-// envFileContent is the canonical content for $TSUKU_HOME/env.
-// Keep in sync with website/install.sh (lines 115-119).
-const envFileContent = `# tsuku shell configuration
-# Add tsuku directories to PATH
+// EnvFileContent is the canonical content for $TSUKU_HOME/env.
+// Keep in sync with website/install.sh.
+// This file is managed by tsuku — do not edit directly. To customize, create
+// $TSUKU_HOME/env.local (sourced automatically at the end of this file).
+const EnvFileContent = `# tsuku shell configuration — managed by tsuku, do not edit
+# To customize, create $TSUKU_HOME/env.local (sourced automatically)
 export PATH="${TSUKU_HOME:-$HOME/.tsuku}/bin:${TSUKU_HOME:-$HOME/.tsuku}/tools/current:$PATH"
+
+# Source shell init cache if available
+if [ -n "$BASH_VERSION" ]; then
+  _tsuku_init_cache="${TSUKU_HOME:-$HOME/.tsuku}/share/shell.d/.init-cache.bash"
+elif [ -n "$ZSH_VERSION" ]; then
+  _tsuku_init_cache="${TSUKU_HOME:-$HOME/.tsuku}/share/shell.d/.init-cache.zsh"
+fi
+if [ -n "${_tsuku_init_cache:-}" ] && [ -f "$_tsuku_init_cache" ]; then
+  . "$_tsuku_init_cache"
+fi
+unset _tsuku_init_cache
+
+# Source user customizations if present
+if [ -f "${TSUKU_HOME:-$HOME/.tsuku}/env.local" ]; then
+  . "${TSUKU_HOME:-$HOME/.tsuku}/env.local"
+fi
 `
 
-// EnsureEnvFile creates or updates $TSUKU_HOME/env with the standard PATH
+// EnsureEnvFile creates or updates $TSUKU_HOME/env with the standard shell
 // configuration. The file is idempotent: if it already exists with the correct
 // content, it is not rewritten.
+//
+// When the existing env contains export lines not present in EnvFileContent,
+// those lines are appended to $TSUKU_HOME/env.local (creating it if absent)
+// before the rewrite. This preserves user customizations (e.g.
+// TSUKU_NO_TELEMETRY=1 written by the installer) through managed env updates.
+// Comment lines in the existing env are dropped and not written to env.local.
+// The migration is dedup-safe: repeated calls never produce duplicate lines.
 func (c *Config) EnsureEnvFile() error {
 	path := c.EnvFile()
 
 	existing, err := os.ReadFile(path)
-	if err == nil && string(existing) == envFileContent {
-		return nil // Already correct
+	if err == nil && string(existing) == EnvFileContent {
+		return nil // Already correct, nothing to do
 	}
 
-	if err := os.WriteFile(path, []byte(envFileContent), 0644); err != nil {
+	// Migrate any export lines not in EnvFileContent to env.local.
+	if err == nil {
+		if migrateErr := c.migrateEnvExports(string(existing)); migrateErr != nil {
+			return fmt.Errorf("failed to migrate env exports: %w", migrateErr)
+		}
+	}
+
+	if err := os.WriteFile(path, []byte(EnvFileContent), 0644); err != nil {
 		return fmt.Errorf("failed to write env file %s: %w", path, err)
 	}
+	return nil
+}
+
+// migrateEnvExports reads export lines from the existing env content that are
+// not already in EnvFileContent and appends them to $TSUKU_HOME/env.local.
+// Lines already present in env.local are skipped to ensure dedup safety.
+// Comment lines are silently dropped.
+func (c *Config) migrateEnvExports(existing string) error {
+	var toMigrate []string
+	for line := range strings.Lines(existing) {
+		line = strings.TrimSpace(line)
+		if !strings.HasPrefix(line, "export ") {
+			continue // Skip blank lines, comments, and non-export lines
+		}
+		if strings.Contains(EnvFileContent, line) {
+			continue // Already in managed content, no migration needed
+		}
+		toMigrate = append(toMigrate, line)
+	}
+
+	if len(toMigrate) == 0 {
+		return nil
+	}
+
+	localPath := filepath.Join(c.HomeDir, "env.local")
+
+	// Read existing env.local content for dedup checking.
+	existingLocal, _ := os.ReadFile(localPath)
+	existingLocalStr := string(existingLocal)
+
+	var newLines []string
+	for _, line := range toMigrate {
+		if strings.Contains(existingLocalStr, line) {
+			continue // Already present, skip
+		}
+		newLines = append(newLines, line)
+	}
+
+	if len(newLines) == 0 {
+		return nil
+	}
+
+	f, err := os.OpenFile(localPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open env.local %s: %w", localPath, err)
+	}
+	defer f.Close()
+
+	// Ensure we start on a new line if the file already has content.
+	if len(existingLocal) > 0 && !strings.HasSuffix(existingLocalStr, "\n") {
+		if _, err := fmt.Fprintln(f); err != nil {
+			return fmt.Errorf("failed to write newline to env.local: %w", err)
+		}
+	}
+
+	for _, line := range newLines {
+		if _, err := fmt.Fprintln(f, line); err != nil {
+			return fmt.Errorf("failed to write to env.local: %w", err)
+		}
+	}
+
 	return nil
 }

@@ -45,6 +45,12 @@ tmp/
 .test-progress
 tmp/
 
+# Python virtualenvs created by venv action tests
+internal/actions/venvs/
+
+# QA test binary
+/tsuku-test
+
 # Local environment files with secrets
 .local.env
 .env.local

@@ -171,7 +171,7 @@ Tools not declared in `.tsuku.toml` still resolve through your normal PATH, incl
 
 ### Per-Tool Shell Init
 
-Some tools need shell functions or environment setup beyond a simple binary on PATH. Recipes that include an `install_shell_init` step place init scripts in `$TSUKU_HOME/share/shell.d/`, and `tsuku shellenv` sources them automatically alongside the PATH export. You don't need to add anything extra to your shell profile.
+Some tools need shell functions or environment setup beyond a simple binary on PATH. Recipes that include an `install_shell_init` step place init scripts in `$TSUKU_HOME/share/shell.d/`. The managed `$TSUKU_HOME/env` file sources the appropriate per-shell init cache (`.init-cache.bash` or `.init-cache.zsh`) at startup, so tools with shell functions are available in every new terminal after install — no `tsuku shellenv` call required, and nothing extra to add to your shell profile.
 
 To skip shell init for a specific tool, pass `--no-shell-init` when installing:
 

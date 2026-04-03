@@ -16,7 +16,7 @@ tsuku is a package manager that makes it easy to install and manage development 
 - **Automatic PATH management**: Shell integration for easy access
 - **Dependency management**: Automatic installation and cleanup of tool dependencies
 - **Ecosystem integration**: Full support for npm, cargo, go, pip, gem, nix, and cpan with lockfile-based reproducibility
-- **Tool shell integration**: Recipes can register shell functions and completions automatically via `tsuku shellenv`
+- **Tool shell integration**: Recipes can register shell functions and completions — loaded automatically via `$TSUKU_HOME/env` at shell startup
 - **No dependencies**: Single binary, no system prerequisites
 
 ## Installation
@@ -893,7 +893,7 @@ Removes the marker block from the rc file (or deletes `~/.config/fish/conf.d/tsu
 
 ### Tool Shell Integration
 
-Some tools register shell functions or environment setup during installation. Recipes that include an `install_shell_init` step place init scripts in `$TSUKU_HOME/share/shell.d/`, and `tsuku shellenv` sources them automatically. This means tools like direnv or nvm can set up their shell hooks without manual configuration.
+Some tools register shell functions or environment setup during installation. Recipes that include an `install_shell_init` step place init scripts in `$TSUKU_HOME/share/shell.d/`. The managed `$TSUKU_HOME/env` file sources the appropriate per-shell init cache at startup, so tools like direnv or nvm have their shell hooks available in every new terminal — no manual configuration needed.
 
 If you don't want a tool's shell init scripts, pass `--no-shell-init` during installation:
 
@@ -902,6 +902,8 @@ tsuku install direnv --no-shell-init
 ```
 
 `tsuku info <tool>` shows whether a tool has shell integration files installed.
+
+If shell functions from a tool aren't available after installation, run `tsuku doctor` to diagnose the issue. If the shell init cache is stale, `tsuku doctor --fix` rebuilds it automatically.
 
 ## Operations
 
