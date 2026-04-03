@@ -1,0 +1,9 @@
+{
+  "name": "tsuku-user",
+  "version": "0.1.0",
+  "description": "End-user CLI and project configuration skills",
+  "author": { "name": "tsukumogami" },
+  "skills": [
+    "./skills/tsuku-user"
+  ]
+}

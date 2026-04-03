@@ -1,0 +1,20 @@
+{
+  "enabledPlugins": {
+    "tsuku-recipes@tsuku": true,
+    "tsuku-user@tsuku": true,
+    "shirabe@shirabe": true
+  },
+  "extraKnownMarketplaces": {
+    "tsuku": {
+      "source": { "source": "file", "path": ".claude-plugin/marketplace.json" }
+    },
+    "shirabe": {
+      "source": {
+        "source": "github",
+        "repo": "tsukumogami/shirabe",
+        "sparsePaths": [".claude-plugin", "skills"]
+      },
+      "autoUpdate": true
+    }
+  }
+}

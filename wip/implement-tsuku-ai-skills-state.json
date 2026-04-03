@@ -1,0 +1,21 @@
+{
+  "design_doc": "docs/plans/PLAN-tsuku-ai-skills.md",
+  "source_doc_type": "plan",
+  "execution_mode": "single-pr",
+  "deliverable_type": "docs",
+  "branch": "docs/tsuku-ai-skills",
+  "pr_number": 2237,
+  "issues": [
+    {"number": 1, "title": "docs: reorganize public guides into docs/guides/", "status": "pending", "complexity": "simple"},
+    {"number": 2, "title": "docs: commit CLAUDE.md and reduce CLAUDE.local.md", "status": "pending", "complexity": "simple"},
+    {"number": 3, "title": "feat(plugins): add plugin infrastructure and committed settings.json", "status": "pending", "complexity": "simple"},
+    {"number": 4, "title": "feat(plugins): add recipe-author skill with bundled references", "status": "pending", "complexity": "testable"},
+    {"number": 5, "title": "feat(plugins): add recipe-test skill", "status": "pending", "complexity": "testable"},
+    {"number": 6, "title": "feat(plugins): add tsuku-user skill", "status": "pending", "complexity": "testable"},
+    {"number": 7, "title": "docs: add external distribution documentation", "status": "pending", "complexity": "simple"},
+    {"number": 8, "title": "ci: add skill exemplar validation workflow", "status": "pending", "complexity": "simple"},
+    {"number": 9, "title": "docs: finalize CLAUDE.md plugin maintenance with actual skill paths", "status": "pending", "complexity": "simple"},
+    {"number": 10, "title": "chore: clean up research catalogs and update design doc", "status": "pending", "complexity": "simple"}
+  ],
+  "skipped_issues": []
+}

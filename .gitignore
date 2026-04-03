@@ -56,3 +56,4 @@ testdata/golden/plans/[a-z]/
 coverage-analytics
 target/
 .claude/
+!.claude/settings.json
