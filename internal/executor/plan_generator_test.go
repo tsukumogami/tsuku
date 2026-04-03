@@ -2070,6 +2070,121 @@ func (m *mockRecipeLoader) GetWithContext(_ context.Context, name string, _ reci
 	return nil, fmt.Errorf("recipe %q not found", name)
 }
 
+// TestGeneratePlan_LibraryActionDepsRequireRecipeLoader verifies that a library
+// recipe with step-level dependencies (like patchelf for homebrew_relocate)
+// generates nested dependency plans only when RecipeLoader is provided.
+// This is a regression test for #2231 where installLibrary did not pass
+// RecipeLoader, causing action-level dependencies to be missing from plans.
+func TestGeneratePlan_LibraryActionDepsRequireRecipeLoader(t *testing.T) {
+	// Library recipe with a step that declares a dependency (simulates
+	// homebrew_relocate declaring patchelf as LinuxInstallTime dep).
+	// Uses non-composite actions to avoid network during decomposition.
+	libRecipe := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "test-lib",
+			Type: "library",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action:       "chmod",
+				Params:       map[string]interface{}{"path": "lib/libtest.so", "mode": "0755"},
+				When:         &recipe.WhenClause{OS: []string{"linux"}},
+				Dependencies: []string{"patchelf"},
+			},
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{
+					"install_mode": "directory",
+					"outputs":      []interface{}{"lib/libtest.so"},
+				},
+			},
+		},
+	}
+
+	patchelfRecipe := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "patchelf",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{"path": "patchelf", "mode": "0755"},
+			},
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{"files": []interface{}{"patchelf"}},
+			},
+		},
+	}
+
+	loader := &mockRecipeLoader{
+		recipes: map[string]*recipe.Recipe{
+			"patchelf": patchelfRecipe,
+		},
+	}
+
+	// With RecipeLoader: patchelf should appear as a nested dependency
+	exec, err := New(libRecipe)
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	defer exec.Cleanup()
+
+	plan, err := exec.GeneratePlan(context.Background(), PlanConfig{
+		OS:           "linux",
+		Arch:         "amd64",
+		LinuxFamily:  "debian",
+		RecipeSource: "test",
+		RecipeLoader: loader,
+	})
+	if err != nil {
+		t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
+	}
+
+	var hasPatchelf bool
+	for _, dep := range plan.Dependencies {
+		if dep.Tool == "patchelf" {
+			hasPatchelf = true
+			break
+		}
+	}
+	if !hasPatchelf {
+		depNames := make([]string, len(plan.Dependencies))
+		for i, d := range plan.Dependencies {
+			depNames[i] = d.Tool
+		}
+		t.Errorf("with RecipeLoader, expected patchelf dependency, found: %v", depNames)
+	}
+
+	// Without RecipeLoader (nil): no dependency plans generated.
+	// This was the bug in installLibrary before the fix for #2231.
+	exec2, err := New(libRecipe)
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	defer exec2.Cleanup()
+
+	planNoDeps, err := exec2.GeneratePlan(context.Background(), PlanConfig{
+		OS:           "linux",
+		Arch:         "amd64",
+		LinuxFamily:  "debian",
+		RecipeSource: "test",
+	})
+	if err != nil {
+		t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
+	}
+
+	if len(planNoDeps.Dependencies) != 0 {
+		t.Errorf("without RecipeLoader, expected 0 dependencies, got %d", len(planNoDeps.Dependencies))
+	}
+}
+
 func TestGeneratePlan_GPUPropagationThroughDependencies(t *testing.T) {
 	// Verify that GPU is propagated from the parent config to dependency plan generation.
 	// The parent recipe has a GPU-filtered step that declares a dependency.
