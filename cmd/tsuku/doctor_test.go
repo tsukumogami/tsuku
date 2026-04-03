@@ -158,20 +158,11 @@ func TestDoctorFix_EnvRewrite(t *testing.T) {
 	defer func() { doctorFixFlag = origFix }()
 
 	captureDoctorOutput(func() {
-		// Run the command logic inline
-		homeDir, _ := filepath.Abs(cfg.HomeDir)
-		failed, contentHashes := runDoctorChecks(cfg, homeDir)
-
-		// Apply env fix
-		envData, envErr := os.ReadFile(cfg.EnvFile())
-		envStale := envErr != nil || !bytes.Equal(envData, []byte(config.EnvFileContent))
-		if envStale {
-			if fixErr := cfg.EnsureEnvFile(); fixErr != nil {
-				t.Errorf("EnsureEnvFile failed: %v", fixErr)
-			}
+		if err := doctorCmd.RunE(doctorCmd, nil); err != nil {
+			// RunE returns non-nil when checks still fail after fix (e.g. PATH not set).
+			// That's expected in a test environment; we only care that the env file was repaired.
+			_ = err
 		}
-		_ = failed
-		_ = contentHashes
 	})
 
 	// Verify env file was repaired
