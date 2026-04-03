@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Planned
 problem: |
   When a tool with install_shell_init is installed, its shell functions are written to
   $TSUKU_HOME/share/shell.d/ and the init cache is rebuilt, but $TSUKU_HOME/env (the
@@ -27,7 +27,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Planned
 
 ## Context and Problem Statement
 
