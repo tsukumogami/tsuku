@@ -133,19 +133,20 @@ When referring to the tsuku installation directory in code comments or documenta
 
 This applies to code comments, design documents, README and other documentation, and error messages that reference paths.
 
-## tsuku-recipes Plugin Maintenance
+## Plugin Maintenance
 
-Skills in `plugins/tsuku-recipes/skills/` guide agents authoring and testing tsuku recipes. They drift silently when tsuku internals change without a corresponding skill update.
+Skills in `plugins/` guide agents through recipe authoring, testing, and end-user workflows. They drift silently when tsuku internals change without a corresponding skill update.
 
 | Skill | Path | Scope |
 |-------|------|-------|
 | recipe-author | plugins/tsuku-recipes/skills/recipe-author/ | Recipe TOML writing |
 | recipe-test | plugins/tsuku-recipes/skills/recipe-test/ | Recipe testing workflow |
+| tsuku-user | plugins/tsuku-user/skills/tsuku-user/ | CLI usage, project config, shell integration, updates |
 
-**After completing any source change in the areas below, assess both skills:**
+**After completing any source change in the areas below, assess the relevant skills:**
 
-1. **Broken contracts** -- read the diff and each skill's SKILL.md plus reference files: does anything documented no longer match the code?
-2. **New surface** -- does this change add behavior that neither skill mentions? If so, update the relevant skill in the same PR.
+1. **Broken contracts** -- read the diff and each affected skill's SKILL.md plus reference files: does anything documented no longer match the code?
+2. **New surface** -- does this change add behavior that no skill mentions? If so, update the relevant skill in the same PR.
 
 | Source Area | What to check | Relevant Skill |
 |-------------|---------------|----------------|
@@ -154,3 +155,8 @@ Skills in `plugins/tsuku-recipes/skills/` guide agents authoring and testing tsu
 | internal/recipe/ -- TOML structure, when clauses, validation | Changed recipe fields, new clause types | recipe-author |
 | internal/executor/ -- plan generation, decomposition | Changed step ordering, new decomposition rules | recipe-test |
 | cmd/tsuku/validate.go -- validation rules, exit codes | New validation checks, changed exit semantics | recipe-test |
+| cmd/tsuku/ -- CLI commands, flags, exit codes | New commands, changed flags or output format | tsuku-user |
+| internal/project/ -- .tsuku.toml parsing, pin resolution | Changed config fields, new pin levels | tsuku-user |
+| internal/shellenv/ -- shell integration, doctor checks | Changed PATH setup, new doctor diagnostics | tsuku-user |
+| internal/userconfig/ -- config.toml structure | New settings, changed defaults | tsuku-user |
+| internal/updates/ -- background checks, auto-apply, self-update | Changed update behavior, new env overrides | tsuku-user |
