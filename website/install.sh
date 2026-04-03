@@ -36,6 +36,7 @@ REPO="tsukumogami/tsuku"
 INSTALL_DIR="${TSUKU_INSTALL_DIR:-$HOME/.tsuku}"
 BIN_DIR="$INSTALL_DIR/bin"
 ENV_FILE="$INSTALL_DIR/env"
+ENV_LOCAL_FILE="$INSTALL_DIR/env.local"
 TELEMETRY_NOTICE_FILE="$INSTALL_DIR/telemetry_notice_shown"
 
 # Detect OS
@@ -116,17 +117,29 @@ echo ""
 echo "tsuku ${LATEST} installed successfully!"
 echo ""
 
-# Create env file with PATH exports
+# Create env file with PATH exports and shell init cache sourcing.
+# Keep in sync with envFileContent in internal/config/config.go.
 cat > "$ENV_FILE" << 'ENVEOF'
-# tsuku shell configuration
-# Add tsuku directories to PATH
+# tsuku shell configuration — managed by tsuku, do not edit
+# To customize, create $TSUKU_HOME/env.local (sourced automatically)
 export PATH="${TSUKU_HOME:-$HOME/.tsuku}/bin:${TSUKU_HOME:-$HOME/.tsuku}/tools/current:$PATH"
+
+# Source shell init cache if available
+if [ -n "$BASH_VERSION" ]; then
+  _tsuku_init_cache="${TSUKU_HOME:-$HOME/.tsuku}/share/shell.d/.init-cache.bash"
+elif [ -n "$ZSH_VERSION" ]; then
+  _tsuku_init_cache="${TSUKU_HOME:-$HOME/.tsuku}/share/shell.d/.init-cache.zsh"
+fi
+[ -n "${_tsuku_init_cache:-}" ] && [ -f "$_tsuku_init_cache" ] && . "$_tsuku_init_cache"
+unset _tsuku_init_cache
+
+# Source user customizations if present
+[ -f "${TSUKU_HOME:-$HOME/.tsuku}/env.local" ] && . "${TSUKU_HOME:-$HOME/.tsuku}/env.local"
 ENVEOF
 
-# Add telemetry opt-out to env file if requested
+# Write telemetry opt-out to env.local so it survives managed env rewrites.
 if [ "$NO_TELEMETRY" = true ]; then
-    cat >> "$ENV_FILE" << 'ENVEOF'
-
+    cat >> "$ENV_LOCAL_FILE" << 'ENVEOF'
 # Telemetry opt-out (set during installation)
 export TSUKU_NO_TELEMETRY=1
 ENVEOF

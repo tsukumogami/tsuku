@@ -810,4 +810,140 @@ func TestEnsureEnvFile_ContentFormat(t *testing.T) {
 	if !strings.Contains(content, "TSUKU_HOME") || !strings.Contains(content, ".tsuku") {
 		t.Error("Env file should reference TSUKU_HOME with fallback to ~/.tsuku")
 	}
+
+	// Verify shell init cache sourcing block.
+	if !strings.Contains(content, "$BASH_VERSION") {
+		t.Error("Env file should check $BASH_VERSION for bash init cache")
+	}
+	if !strings.Contains(content, "$ZSH_VERSION") {
+		t.Error("Env file should check $ZSH_VERSION for zsh init cache")
+	}
+	if !strings.Contains(content, "_tsuku_init_cache") {
+		t.Error("Env file should use _tsuku_init_cache local variable")
+	}
+	if !strings.Contains(content, "unset _tsuku_init_cache") {
+		t.Error("Env file should unset _tsuku_init_cache after use")
+	}
+	// The init cache sourcing line must include a file existence guard.
+	if !strings.Contains(content, "[ -f ") {
+		t.Error("Env file should guard init cache sourcing with a file existence check")
+	}
+
+	// Verify env.local conditional sourcing.
+	if !strings.Contains(content, "env.local") {
+		t.Error("Env file should source env.local when present")
+	}
+}
+
+// TestEnsureEnvFile_MigratesExports verifies that export lines in the existing env
+// that are not part of envFileContent are moved to env.local, and that comment
+// lines in the existing env are not written to env.local.
+func TestEnsureEnvFile_MigratesExports(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	cfg := &Config{HomeDir: tmpDir}
+
+	// Simulate an old-style env file with a telemetry opt-out appended.
+	oldEnv := `# tsuku shell configuration
+# Add tsuku directories to PATH
+export PATH="${TSUKU_HOME:-$HOME/.tsuku}/bin:${TSUKU_HOME:-$HOME/.tsuku}/tools/current:$PATH"
+
+# Telemetry opt-out (set during installation)
+export TSUKU_NO_TELEMETRY=1
+`
+	if err := os.WriteFile(cfg.EnvFile(), []byte(oldEnv), 0644); err != nil {
+		t.Fatalf("failed to write old env: %v", err)
+	}
+
+	if err := cfg.EnsureEnvFile(); err != nil {
+		t.Fatalf("EnsureEnvFile() failed: %v", err)
+	}
+
+	// env should now contain the new canonical content.
+	envData, err := os.ReadFile(cfg.EnvFile())
+	if err != nil {
+		t.Fatalf("failed to read env: %v", err)
+	}
+	if string(envData) != envFileContent {
+		t.Errorf("env content after migration:\n%s\nwant:\n%s", string(envData), envFileContent)
+	}
+
+	// env.local should contain the migrated export line.
+	localPath := filepath.Join(tmpDir, "env.local")
+	localData, err := os.ReadFile(localPath)
+	if err != nil {
+		t.Fatalf("env.local not created: %v", err)
+	}
+	localContent := string(localData)
+
+	if !strings.Contains(localContent, "export TSUKU_NO_TELEMETRY=1") {
+		t.Errorf("env.local should contain migrated export, got:\n%s", localContent)
+	}
+
+	// Comment lines must not appear in env.local.
+	if strings.Contains(localContent, "# tsuku shell configuration") ||
+		strings.Contains(localContent, "# Add tsuku") ||
+		strings.Contains(localContent, "# Telemetry") {
+		t.Errorf("env.local should not contain comment lines, got:\n%s", localContent)
+	}
+}
+
+// TestEnsureEnvFile_IdempotentAfterMigration verifies that calling EnsureEnvFile() a
+// second time after migration is a no-op: env is unchanged and env.local has no
+// duplicate lines.
+func TestEnsureEnvFile_IdempotentAfterMigration(t *testing.T) {
+	t.Parallel()
+
+	tmpDir := t.TempDir()
+	cfg := &Config{HomeDir: tmpDir}
+
+	// Simulate old env with a non-managed export.
+	oldEnv := `# tsuku shell configuration
+export PATH="${TSUKU_HOME:-$HOME/.tsuku}/bin:${TSUKU_HOME:-$HOME/.tsuku}/tools/current:$PATH"
+export TSUKU_NO_TELEMETRY=1
+`
+	if err := os.WriteFile(cfg.EnvFile(), []byte(oldEnv), 0644); err != nil {
+		t.Fatalf("failed to write old env: %v", err)
+	}
+
+	// First call: migrates and rewrites.
+	if err := cfg.EnsureEnvFile(); err != nil {
+		t.Fatalf("first EnsureEnvFile() failed: %v", err)
+	}
+
+	localPath := filepath.Join(tmpDir, "env.local")
+	localAfterFirst, err := os.ReadFile(localPath)
+	if err != nil {
+		t.Fatalf("env.local not created after first call: %v", err)
+	}
+
+	envInfo1, _ := os.Stat(cfg.EnvFile())
+
+	// Second call: env already matches envFileContent, should be a no-op.
+	if err := cfg.EnsureEnvFile(); err != nil {
+		t.Fatalf("second EnsureEnvFile() failed: %v", err)
+	}
+
+	envInfo2, _ := os.Stat(cfg.EnvFile())
+	if !envInfo1.ModTime().Equal(envInfo2.ModTime()) {
+		t.Error("second EnsureEnvFile() rewrote env when content was already correct")
+	}
+
+	localAfterSecond, err := os.ReadFile(localPath)
+	if err != nil {
+		t.Fatalf("env.local missing after second call: %v", err)
+	}
+
+	if string(localAfterFirst) != string(localAfterSecond) {
+		t.Errorf("env.local changed on second call (duplicate lines?):\nfirst:\n%s\nsecond:\n%s",
+			string(localAfterFirst), string(localAfterSecond))
+	}
+
+	// Count occurrences of the export line to confirm no duplicates.
+	count := strings.Count(string(localAfterSecond), "export TSUKU_NO_TELEMETRY=1")
+	if count != 1 {
+		t.Errorf("env.local contains %d copies of TSUKU_NO_TELEMETRY=1, want 1:\n%s",
+			count, string(localAfterSecond))
+	}
 }
