@@ -11,8 +11,7 @@
     "shirabe": {
       "source": {
         "source": "github",
-        "repo": "tsukumogami/shirabe",
-        "sparsePaths": [".claude-plugin", "skills"]
+        "repo": "tsukumogami/shirabe"
       },
       "autoUpdate": true
     }
