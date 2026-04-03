@@ -110,11 +110,13 @@ func runProjectInstall(cmd *cobra.Command) {
 	var results []projectToolResult
 	for _, t := range tools {
 		resolveVersion := t.Version
+		constraint := t.Version
 		if resolveVersion == "latest" {
 			resolveVersion = ""
+			constraint = ""
 		}
 
-		err := runInstallWithTelemetry(t.Name, resolveVersion, t.Version, true, "", telemetryClient)
+		err := runInstallWithTelemetry(t.Name, resolveVersion, constraint, true, "", telemetryClient)
 		if err != nil {
 			results = append(results, projectToolResult{Name: t.Name, Status: "failed", Error: err})
 		} else {

@@ -116,7 +116,7 @@ func (e *Executor) ResolveVersion(ctx context.Context, constraint string) (strin
 	}
 
 	var versionInfo *version.VersionInfo
-	if constraint == "" {
+	if constraint == "" || constraint == "latest" {
 		versionInfo, err = provider.ResolveLatest(ctx)
 	} else {
 		versionInfo, err = provider.ResolveVersion(ctx, constraint)

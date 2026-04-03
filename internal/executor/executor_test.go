@@ -125,6 +125,40 @@ func TestResolveVersion_EmptyConstraint(t *testing.T) {
 	}
 }
 
+// TestResolveVersion_LatestConstraint tests that "latest" constraint resolves
+// to the latest version, same as empty string.
+func TestResolveVersion_LatestConstraint(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:          "test-tool",
+			Description:   "Test tool",
+			VersionFormat: "semver",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	ctx := context.Background()
+	version, err := exec.ResolveVersion(ctx, "latest")
+
+	// Network failure is acceptable in unit tests
+	if err != nil {
+		t.Logf("ResolveVersion(\"latest\") failed (expected in offline tests): %v", err)
+	} else {
+		t.Logf("ResolveVersion(\"latest\") succeeded: version=%s", version)
+		if version == "" {
+			t.Error("ResolveVersion(\"latest\") returned empty version string")
+		}
+	}
+}
+
 // TestResolveVersion_SpecificConstraint tests resolving a specific version
 func TestResolveVersion_SpecificConstraint(t *testing.T) {
 	r := &recipe.Recipe{
