@@ -439,11 +439,11 @@ func (c *Config) EnvFile() string {
 	return filepath.Join(c.HomeDir, "env")
 }
 
-// envFileContent is the canonical content for $TSUKU_HOME/env.
+// EnvFileContent is the canonical content for $TSUKU_HOME/env.
 // Keep in sync with website/install.sh.
 // This file is managed by tsuku — do not edit directly. To customize, create
 // $TSUKU_HOME/env.local (sourced automatically at the end of this file).
-const envFileContent = `# tsuku shell configuration — managed by tsuku, do not edit
+const EnvFileContent = `# tsuku shell configuration — managed by tsuku, do not edit
 # To customize, create $TSUKU_HOME/env.local (sourced automatically)
 export PATH="${TSUKU_HOME:-$HOME/.tsuku}/bin:${TSUKU_HOME:-$HOME/.tsuku}/tools/current:$PATH"
 
@@ -464,7 +464,7 @@ unset _tsuku_init_cache
 // configuration. The file is idempotent: if it already exists with the correct
 // content, it is not rewritten.
 //
-// When the existing env contains export lines not present in envFileContent,
+// When the existing env contains export lines not present in EnvFileContent,
 // those lines are appended to $TSUKU_HOME/env.local (creating it if absent)
 // before the rewrite. This preserves user customizations (e.g.
 // TSUKU_NO_TELEMETRY=1 written by the installer) through managed env updates.
@@ -474,25 +474,25 @@ func (c *Config) EnsureEnvFile() error {
 	path := c.EnvFile()
 
 	existing, err := os.ReadFile(path)
-	if err == nil && string(existing) == envFileContent {
+	if err == nil && string(existing) == EnvFileContent {
 		return nil // Already correct, nothing to do
 	}
 
-	// Migrate any export lines not in envFileContent to env.local.
+	// Migrate any export lines not in EnvFileContent to env.local.
 	if err == nil {
 		if migrateErr := c.migrateEnvExports(string(existing)); migrateErr != nil {
 			return fmt.Errorf("failed to migrate env exports: %w", migrateErr)
 		}
 	}
 
-	if err := os.WriteFile(path, []byte(envFileContent), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(EnvFileContent), 0644); err != nil {
 		return fmt.Errorf("failed to write env file %s: %w", path, err)
 	}
 	return nil
 }
 
 // migrateEnvExports reads export lines from the existing env content that are
-// not already in envFileContent and appends them to $TSUKU_HOME/env.local.
+// not already in EnvFileContent and appends them to $TSUKU_HOME/env.local.
 // Lines already present in env.local are skipped to ensure dedup safety.
 // Comment lines are silently dropped.
 func (c *Config) migrateEnvExports(existing string) error {
@@ -502,7 +502,7 @@ func (c *Config) migrateEnvExports(existing string) error {
 		if !strings.HasPrefix(line, "export ") {
 			continue // Skip blank lines, comments, and non-export lines
 		}
-		if strings.Contains(envFileContent, line) {
+		if strings.Contains(EnvFileContent, line) {
 			continue // Already in managed content, no migration needed
 		}
 		toMigrate = append(toMigrate, line)

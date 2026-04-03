@@ -746,8 +746,8 @@ func TestEnsureEnvFile_CreatesFile(t *testing.T) {
 	}
 
 	content := string(data)
-	if content != envFileContent {
-		t.Errorf("Env file content mismatch.\nGot:\n%s\nWant:\n%s", content, envFileContent)
+	if content != EnvFileContent {
+		t.Errorf("Env file content mismatch.\nGot:\n%s\nWant:\n%s", content, EnvFileContent)
 	}
 }
 
@@ -836,7 +836,7 @@ func TestEnsureEnvFile_ContentFormat(t *testing.T) {
 }
 
 // TestEnsureEnvFile_MigratesExports verifies that export lines in the existing env
-// that are not part of envFileContent are moved to env.local, and that comment
+// that are not part of EnvFileContent are moved to env.local, and that comment
 // lines in the existing env are not written to env.local.
 func TestEnsureEnvFile_MigratesExports(t *testing.T) {
 	t.Parallel()
@@ -865,8 +865,8 @@ export TSUKU_NO_TELEMETRY=1
 	if err != nil {
 		t.Fatalf("failed to read env: %v", err)
 	}
-	if string(envData) != envFileContent {
-		t.Errorf("env content after migration:\n%s\nwant:\n%s", string(envData), envFileContent)
+	if string(envData) != EnvFileContent {
+		t.Errorf("env content after migration:\n%s\nwant:\n%s", string(envData), EnvFileContent)
 	}
 
 	// env.local should contain the migrated export line.
@@ -920,7 +920,7 @@ export TSUKU_NO_TELEMETRY=1
 
 	envInfo1, _ := os.Stat(cfg.EnvFile())
 
-	// Second call: env already matches envFileContent, should be a no-op.
+	// Second call: env already matches EnvFileContent, should be a no-op.
 	if err := cfg.EnsureEnvFile(); err != nil {
 		t.Fatalf("second EnsureEnvFile() failed: %v", err)
 	}
