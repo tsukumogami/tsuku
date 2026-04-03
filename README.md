@@ -903,6 +903,8 @@ tsuku install direnv --no-shell-init
 
 `tsuku info <tool>` shows whether a tool has shell integration files installed.
 
+If shell functions from a tool aren't available after installation, run `tsuku doctor` to diagnose the issue. If the shell init cache is stale, `tsuku doctor --fix` rebuilds it automatically.
+
 ## Operations
 
 tsuku includes a batch operations control plane for managing automated recipe imports:
