@@ -453,11 +453,15 @@ if [ -n "$BASH_VERSION" ]; then
 elif [ -n "$ZSH_VERSION" ]; then
   _tsuku_init_cache="${TSUKU_HOME:-$HOME/.tsuku}/share/shell.d/.init-cache.zsh"
 fi
-[ -n "${_tsuku_init_cache:-}" ] && [ -f "$_tsuku_init_cache" ] && . "$_tsuku_init_cache"
+if [ -n "${_tsuku_init_cache:-}" ] && [ -f "$_tsuku_init_cache" ]; then
+  . "$_tsuku_init_cache"
+fi
 unset _tsuku_init_cache
 
 # Source user customizations if present
-[ -f "${TSUKU_HOME:-$HOME/.tsuku}/env.local" ] && . "${TSUKU_HOME:-$HOME/.tsuku}/env.local"
+if [ -f "${TSUKU_HOME:-$HOME/.tsuku}/env.local" ]; then
+  . "${TSUKU_HOME:-$HOME/.tsuku}/env.local"
+fi
 `
 
 // EnsureEnvFile creates or updates $TSUKU_HOME/env with the standard shell
