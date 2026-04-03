@@ -9,7 +9,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/project"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 )
 
@@ -54,28 +56,79 @@ func runProjectInstall(cmd *cobra.Command) {
 		exitWithCode(ExitSuccess)
 	}
 
-	// Build sorted tool list
+	// Build sorted tool list with distributed-name parsing
 	type toolEntry struct {
-		Name    string
-		Version string
+		Name         string
+		Version      string
+		Distributed  *distributedInstallArgs // non-nil for org-scoped tools
+		SourceFailed bool                    // true if source bootstrap failed
 	}
 	var tools []toolEntry
 	for name, req := range result.Config.Tools {
-		tools = append(tools, toolEntry{Name: name, Version: req.Version})
+		entry := toolEntry{Name: name, Version: req.Version}
+		if dArgs := parseDistributedName(name); dArgs != nil {
+			// Override version from dArgs if present (e.g., "org/repo@1.0")
+			if dArgs.Version != "" && entry.Version == "" {
+				entry.Version = dArgs.Version
+			}
+			entry.Distributed = dArgs
+		}
+		tools = append(tools, entry)
 	}
 	sort.Slice(tools, func(i, j int) bool {
 		return tools[i].Name < tools[j].Name
 	})
+
+	// Pre-scan: batch-bootstrap distributed sources
+	var sysCfg *config.Config
+	uniqueSources := make(map[string]bool)
+	failedSources := make(map[string]error)
+
+	for _, t := range tools {
+		if t.Distributed != nil {
+			uniqueSources[t.Distributed.Source] = true
+		}
+	}
+
+	if len(uniqueSources) > 0 {
+		var cfgErr error
+		sysCfg, cfgErr = config.DefaultConfig()
+		if cfgErr != nil {
+			printError(fmt.Errorf("failed to load config: %w", cfgErr))
+			exitWithCode(ExitGeneral)
+		}
+
+		for source := range uniqueSources {
+			if err := ensureDistributedSource(source, installYes || installForce, sysCfg); err != nil {
+				failedSources[source] = err
+				printWarning(fmt.Sprintf("Warning: failed to register source %q: %v", source, err))
+			}
+		}
+
+		// Mark tools from failed sources
+		for i := range tools {
+			if tools[i].Distributed != nil {
+				if _, failed := failedSources[tools[i].Distributed.Source]; failed {
+					tools[i].SourceFailed = true
+				}
+			}
+		}
+	}
 
 	// Display config path and tool list
 	fmt.Printf("Using: %s\n", result.Path)
 
 	var displayParts []string
 	for _, t := range tools {
+		displayName := t.Name
+		// For org-scoped tools, show the bare recipe name for cleaner output
+		if t.Distributed != nil {
+			displayName = t.Distributed.RecipeName
+		}
 		if t.Version != "" {
-			displayParts = append(displayParts, t.Name+"@"+t.Version)
+			displayParts = append(displayParts, displayName+"@"+t.Version)
 		} else {
-			displayParts = append(displayParts, t.Name)
+			displayParts = append(displayParts, displayName)
 		}
 	}
 	fmt.Printf("Tools: %s\n", strings.Join(displayParts, ", "))
@@ -84,7 +137,11 @@ func runProjectInstall(cmd *cobra.Command) {
 	var unpinned []string
 	for _, t := range tools {
 		if t.Version == "" || t.Version == "latest" {
-			unpinned = append(unpinned, t.Name)
+			name := t.Name
+			if t.Distributed != nil {
+				name = t.Distributed.RecipeName
+			}
+			unpinned = append(unpinned, name)
 		}
 	}
 	if len(unpinned) > 0 {
@@ -109,6 +166,16 @@ func runProjectInstall(cmd *cobra.Command) {
 
 	var results []projectToolResult
 	for _, t := range tools {
+		// Skip tools from failed sources
+		if t.SourceFailed {
+			results = append(results, projectToolResult{
+				Name:   t.Name,
+				Status: "failed",
+				Error:  fmt.Errorf("source %q failed to register: %v", t.Distributed.Source, failedSources[t.Distributed.Source]),
+			})
+			continue
+		}
+
 		resolveVersion := t.Version
 		constraint := t.Version
 		if resolveVersion == "latest" {
@@ -116,14 +183,65 @@ func runProjectInstall(cmd *cobra.Command) {
 			constraint = ""
 		}
 
-		err := runInstallWithTelemetry(t.Name, resolveVersion, constraint, true, "", telemetryClient)
-		if err != nil {
-			results = append(results, projectToolResult{Name: t.Name, Status: "failed", Error: err})
-		} else {
-			// runInstallWithTelemetry returns nil for both new installs and
-			// already-current tools. We classify as "installed" since we can't
-			// distinguish here without deeper state inspection.
+		if t.Distributed != nil {
+			// Distributed install path
+			dArgs := t.Distributed
+
+			// Check for source collision
+			if sysCfg != nil {
+				if collErr := checkSourceCollision(dArgs.RecipeName, dArgs.Source, installForce, sysCfg); collErr != nil {
+					results = append(results, projectToolResult{Name: t.Name, Status: "failed", Error: collErr})
+					continue
+				}
+			}
+
+			// Build qualified name and pre-load recipe through distributed provider
+			qualifiedName := dArgs.Source + ":" + dArgs.RecipeName
+
+			// Fetch recipe bytes for hash computation
+			recipeBytes, bytesErr := fetchRecipeBytes(dArgs.Source, dArgs.RecipeName)
+
+			// Load recipe via qualified name to route through distributed provider
+			r, loadErr := loader.GetWithContext(globalCtx, qualifiedName, recipe.LoaderOptions{})
+			if loadErr != nil {
+				results = append(results, projectToolResult{
+					Name:   t.Name,
+					Status: "failed",
+					Error:  fmt.Errorf("recipe %q not found in %s: %w", dArgs.RecipeName, dArgs.Source, loadErr),
+				})
+				continue
+			}
+
+			// Cache under bare name for dependency resolution
+			loader.CacheRecipe(dArgs.RecipeName, r)
+
+			// Install using bare recipe name
+			installErr := runInstallWithTelemetry(dArgs.RecipeName, resolveVersion, constraint, true, "", telemetryClient)
+			if installErr != nil {
+				results = append(results, projectToolResult{Name: t.Name, Status: "failed", Error: installErr})
+				continue
+			}
+
+			// Record source and recipe hash
+			var recipeHash string
+			if bytesErr == nil && recipeBytes != nil {
+				recipeHash = computeRecipeHash(recipeBytes)
+			}
+			if sysCfg != nil {
+				if recordErr := recordDistributedSource(dArgs.RecipeName, dArgs.Source, recipeHash, sysCfg); recordErr != nil {
+					printInfof("Warning: failed to record source for %s: %v\n", dArgs.RecipeName, recordErr)
+				}
+			}
+
 			results = append(results, projectToolResult{Name: t.Name, Status: "installed"})
+		} else {
+			// Standard install path (unchanged)
+			err := runInstallWithTelemetry(t.Name, resolveVersion, constraint, true, "", telemetryClient)
+			if err != nil {
+				results = append(results, projectToolResult{Name: t.Name, Status: "failed", Error: err})
+			} else {
+				results = append(results, projectToolResult{Name: t.Name, Status: "installed"})
+			}
 		}
 	}
 
