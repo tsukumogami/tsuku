@@ -1,10 +1,25 @@
 ---
 status: Proposed
 problem: |
-  When a tool with install_shell_init is installed, its shell functions are written
-  to ~/.tsuku/share/shell.d/ and the init cache is rebuilt, but ~/.tsuku/env (the
-  static file sourced from .bashrc) only sets PATH. The init cache is never sourced
-  in new terminals, so shell integration silently fails for every user.
+  When a tool with install_shell_init is installed, its shell functions are written to
+  $TSUKU_HOME/share/shell.d/ and the init cache is rebuilt, but $TSUKU_HOME/env (the
+  static file the installer adds to .bashrc) only exports PATH. The init cache is never
+  sourced in new terminals, so shell integration silently fails for every user.
+decision: |
+  Update the envFileContent constant in config.go to include shell detection
+  ($BASH_VERSION/$ZSH_VERSION) and source the appropriate init cache, plus a line to
+  source env.local for user customizations. EnsureEnvFile() gains a one-time migration
+  that extracts any existing TSUKU_NO_TELEMETRY line to env.local before rewriting.
+  The installer writes telemetry opt-outs to env.local instead of env. tsuku doctor
+  gains an env file staleness check and a --fix flag that calls EnsureEnvFile() and
+  rebuilds the shell.d caches.
+rationale: |
+  Updating the static env file avoids subprocess overhead on every shell start. The
+  existing EnsureEnvFile() idempotency mechanism provides an automatic migration path
+  for active users without any extra scaffolding. Splitting managed content (env) from
+  user content (env.local) lets EnsureEnvFile() stay trivially simple while giving
+  user additions a safe, permanent home. A single --fix flag in doctor covers the full
+  repair scenario for users who never trigger the automatic migration.
 ---
 
 # DESIGN: Shell Env Integration
@@ -17,78 +32,455 @@ Proposed
 
 `tsuku install` can install tools that provide shell functions (completions, aliases,
 auto-cd hooks) via the `install_shell_init` action. These functions are written to
-`~/.tsuku/share/shell.d/<tool>.<shell>` and aggregated into
-`~/.tsuku/share/shell.d/.init-cache.<shell>` by `RebuildShellCache`.
+`$TSUKU_HOME/share/shell.d/<tool>.<shell>` and aggregated into
+`$TSUKU_HOME/share/shell.d/.init-cache.<shell>` by `RebuildShellCache`.
 
-The problem: `~/.tsuku/env` — the static file the installer adds to users' `.bashrc`
-— only exports `PATH`. It doesn't source `.init-cache.<shell>`. So tools' shell
-functions are built correctly but never loaded in new terminals.
+The problem: `$TSUKU_HOME/env` — the static file the installer adds to users' `.bashrc`
+and `.zshenv` — only exports `PATH`. It doesn't source `.init-cache.<shell>`. So tools'
+shell functions are built correctly but never loaded in new terminals.
 
-This is a design sequencing gap: `~/.tsuku/env` was introduced on March 1, 2026;
-the `shell.d` system on March 28, 2026. They were never wired together.
+This is a design sequencing gap: `$TSUKU_HOME/env` was introduced on March 1, 2026; the
+`shell.d` system on March 28, 2026. They were never wired together. `tsuku shellenv`
+does source the init cache, but it was designed as a fallback for non-standard installs,
+not the primary path.
 
-The impact is universal. Every user who installs via the official script is broken
-for tools with shell integration. `tsuku shellenv` does source the init cache, but
-it was designed as a fallback for non-standard installs, not as the primary path.
-
-As of this writing, niwa is the only recipe using `install_shell_init` (~1,400 total
-recipes), making this the right moment to fix the infrastructure.
+The impact is universal. Every user who installs via the official script is broken for
+tools with shell integration. As of this writing, niwa is the only recipe using
+`install_shell_init` (~1,400 total recipes), making this the right moment to fix the
+infrastructure before adoption grows.
 
 ## Decision Drivers
 
-- **No subprocess overhead**: Shell startup performance matters. The fix should not
-  add a subprocess call (as `eval "$(tsuku shellenv)"` would) to every terminal open.
+- **No subprocess overhead**: Shell startup performance matters. The fix must not add a
+  subprocess call (`eval "$(tsuku shellenv)"`) to every terminal open.
 - **Automatic migration for active users**: `EnsureEnvFile()` is called on every
-  `tsuku install` and rewrites the file when content differs from `envFileContent` in
-  `config.go`. Updating the constant is the migration path for active users.
-- **Static file with shell detection**: `~/.tsuku/env` is sourced by both bash and zsh.
-  It needs to source the right cache file. Shell detection via `$BASH_VERSION` /
-  `$ZSH_VERSION` is the standard approach for static env files.
-- **Don't break CI/Docker**: The init cache may not exist in non-interactive environments.
-  Any sourcing line must use `[ -f ... ] &&` to fail safely.
+  `tsuku install` and rewrites the file when content differs from `envFileContent`.
+  Updating the constant is the migration path for active users.
+- **Static file with shell detection**: `$TSUKU_HOME/env` is sourced by both bash and
+  zsh. It needs to source the right cache file without spawning a subprocess.
+- **Don't break CI/Docker**: The init cache may not exist in non-interactive
+  environments. Any sourcing line must be conditional on file existence.
 - **TSUKU_NO_TELEMETRY preservation**: `EnsureEnvFile()` currently clobbers any
-  customizations added by the installer (e.g., `TSUKU_NO_TELEMETRY=1`). The rewrite
-  behavior needs to preserve these or be refactored to avoid losing user preferences.
-- **Doctor repair path**: Users who never run `tsuku install` after this fix need a
-  way to update their env file. `tsuku doctor --rebuild-cache` is referenced in doctor's
-  error messages but not implemented. This is the repair surface.
+  customizations the installer appended (e.g., `TSUKU_NO_TELEMETRY=1`). The rewrite
+  must preserve these or be refactored to avoid losing user preferences.
+- **Doctor repair path**: Users who never run `tsuku install` again need a way to
+  update their env file. `tsuku doctor --rebuild-cache` is referenced in doctor's error
+  messages but not implemented. This is the repair surface.
 
-## Decisions Already Made
+## Considered Options
 
-From exploration (Round 1):
+### Decision 1: Shell detection in `$TSUKU_HOME/env`
 
-- **Update static env file, not switch to eval**: Avoids subprocess overhead on every
-  shell start. `EnsureEnvFile()` provides an automatic migration path.
-- **Fix in tsuku repo, not user dotfiles**: The problem is in `EnsureEnvFile()` and
-  `website/install.sh`, not in individual user configurations.
-- **Three-part fix scope**:
-  1. Update `envFileContent` in `internal/config/config.go` to source the init cache
-     with shell detection. Update `website/install.sh` to match.
-  2. Fix `EnsureEnvFile()` to preserve user customizations (TSUKU_NO_TELEMETRY and
-     any others) when rewriting.
-  3. Implement `tsuku doctor --rebuild-cache` and add a check for env file staleness.
-- **Niwa recipe fix is out of scope**: The `source_command` bare binary name bug is a
-  separate PR in the niwa repo.
-- **Fish shell deferred**: Handle bash and zsh first. Fish shell integration for the
-  env file is a follow-on.
+The env file is sourced by both bash and zsh from different shell config files
+(`.bashrc` and `.zshenv` respectively). It needs to source the right per-shell cache
+file (`init-cache.bash` vs `init-cache.zsh`) without spawning any subprocess.
 
-## Open Design Questions
+The cache files are generated by `internal/shellenv/cache.go` and contain shell-specific
+content. Bash and zsh have syntax differences (completions, builtins, `declare` usage)
+that make cross-shell sourcing unsafe. The per-shell cache design is intentional.
 
-1. **Shell detection in the static env file**: What's the correct guard? Options:
-   - `[ -n "$BASH_VERSION" ]` / `[ -n "$ZSH_VERSION" ]` (standard, widely compatible)
-   - `case "$0" in *bash*) ... ;; *zsh*) ... ;; esac` (more explicit)
-   What's the right idiom for a file sourced by both bash and zsh?
+Key assumptions: the detection must work in all modes (interactive, non-interactive,
+login, non-login), must fail safely when no cache exists, and the env file must remain
+valid POSIX sh so it can be sourced from scripts with `set -euo pipefail`.
 
-2. **EnsureEnvFile rewrite behavior**: Currently idempotent against `envFileContent`.
-   How should it preserve user-added content like `TSUKU_NO_TELEMETRY=1`? Options:
-   - Replace only the managed section (marker-delimited block)
-   - Read existing file, parse out user additions, and write them back
-   - Stop clobbering: move the telemetry opt-out to a separate file
+#### Chosen: `$BASH_VERSION` / `$ZSH_VERSION` variables
 
-3. **Doctor --rebuild-cache scope**: Should `tsuku doctor --rebuild-cache` also update
-   the env file if it's stale? Or are these two separate actions? Should there be a
-   `--fix` flag that runs all repairs?
+Both bash and zsh set their respective version variable unconditionally at startup,
+regardless of interactivity or login mode. Neither is set in the other shell. The
+pattern is zero-overhead (pure variable reads), POSIX-compatible, and idiomatic — used
+by nvm, oh-my-zsh, and other widely-deployed cross-shell scripts.
 
-4. **Staleness detection**: How does doctor know whether the env file is outdated?
-   Check if it contains the init cache sourcing line? Compare against `envFileContent`?
-   What's the right heuristic for "env file needs updating"?
+```sh
+if [ -n "$BASH_VERSION" ]; then
+  _tsuku_init_cache="${TSUKU_HOME:-$HOME/.tsuku}/share/shell.d/.init-cache.bash"
+elif [ -n "$ZSH_VERSION" ]; then
+  _tsuku_init_cache="${TSUKU_HOME:-$HOME/.tsuku}/share/shell.d/.init-cache.zsh"
+fi
+[ -n "${_tsuku_init_cache:-}" ] && [ -f "$_tsuku_init_cache" ] && . "$_tsuku_init_cache"
+unset _tsuku_init_cache
+```
+
+The file existence guard (`[ -f "$_tsuku_init_cache" ]`) handles CI/Docker environments
+where no tools are installed and no cache exists. Unsetting `_tsuku_init_cache` avoids
+polluting the shell environment.
+
+#### Alternatives Considered
+
+**`$0` / process name parsing**: `$0` is unreliable when a file is sourced — it reflects
+the calling script's name, not the interpreter. `/proc/$$/exe` is Linux-only. `basename`
+spawns a subprocess, violating the no-overhead constraint.
+
+**Source both cache files**: Requires all tool init scripts to be cross-shell safe. The
+per-shell cache architecture explicitly does not guarantee this; bash-specific syntax
+(e.g., `local -n` nameref) in zsh causes errors even when wrapped in error-isolation
+subshells.
+
+**Single unified cache file (POSIX-only)**: Architectural change requiring all tools to
+provide POSIX-compatible init scripts. Loses shell-specific completions and features.
+The per-shell design is intentional.
+
+**`$SHELL` variable (as in shellenv.go)**: `$SHELL` reflects the user's configured login
+shell, not the currently-executing interpreter. Wrong in cross-shell sourcing scenarios.
+Also requires `basename` subprocess.
+
+---
+
+### Decision 2: `EnsureEnvFile()` preservation strategy
+
+`EnsureEnvFile()` in `internal/config/config.go` is currently 8 lines: read file,
+compare to `envFileContent` constant, rewrite if different. This works because the
+constant never changes.
+
+Once `envFileContent` is updated to include init cache sourcing, any user with the old
+content gets their file rewritten on the next `tsuku install`. This is the intended
+migration path — but `website/install.sh` conditionally appends `export TSUKU_NO_TELEMETRY=1`
+to `$TSUKU_HOME/env` when users decline telemetry during install (lines 127–133). The Go
+constant never includes this line. Without a preservation strategy, the rewrite silently
+re-enables telemetry for users who opted out.
+
+The telemetry client checks `os.Getenv("TSUKU_NO_TELEMETRY")` at runtime and also reads
+`userconfig` as a fallback, so the env file is the only place the opt-out is stored for
+users who installed via the official script.
+
+#### Chosen: `env.local` split with one-time migration
+
+`$TSUKU_HOME/env` becomes fully tsuku-managed. A new `$TSUKU_HOME/env.local` file holds
+user-specific content. The managed `env` sources `env.local` if it exists. `EnsureEnvFile()`
+rewrites `env` freely without parsing.
+
+For existing users whose `env` contains `TSUKU_NO_TELEMETRY=1`, a one-time migration in
+`EnsureEnvFile()` extracts that line to `env.local` before rewriting. The detection is a
+simple `strings.Contains` check — narrow enough to be reliable.
+
+New managed `envFileContent`:
+```sh
+# tsuku shell configuration — managed by tsuku, do not edit
+# To customize, create $TSUKU_HOME/env.local (sourced automatically)
+export PATH="${TSUKU_HOME:-$HOME/.tsuku}/bin:${TSUKU_HOME:-$HOME/.tsuku}/tools/current:$PATH"
+
+# Source shell init cache if available
+if [ -n "$BASH_VERSION" ]; then
+  _tsuku_init_cache="${TSUKU_HOME:-$HOME/.tsuku}/share/shell.d/.init-cache.bash"
+elif [ -n "$ZSH_VERSION" ]; then
+  _tsuku_init_cache="${TSUKU_HOME:-$HOME/.tsuku}/share/shell.d/.init-cache.zsh"
+fi
+[ -n "${_tsuku_init_cache:-}" ] && [ -f "$_tsuku_init_cache" ] && . "$_tsuku_init_cache"
+unset _tsuku_init_cache
+
+# Source user customizations if present
+[ -f "${TSUKU_HOME:-$HOME/.tsuku}/env.local" ] && . "${TSUKU_HOME:-$HOME/.tsuku}/env.local"
+```
+
+The installer changes from appending `TSUKU_NO_TELEMETRY=1` to `$ENV_FILE` to writing it
+to `$ENV_LOCAL_FILE` (`$TSUKU_HOME/env.local`). The telemetry client requires no changes
+— it already checks `os.Getenv("TSUKU_NO_TELEMETRY")` at runtime.
+
+#### Alternatives Considered
+
+**Marker-delimited managed section**: Wrap managed content in `# tsuku:begin` / `# tsuku:end`
+markers; replace only that section. Rejected because parsing shell scripts for markers
+introduces correctness risk in the lowest-level config primitive. The legacy migration
+path (files without markers) requires a second code path, compounding the risk.
+
+**Snapshot-and-restore (line diffing)**: Read existing file, subtract lines in
+`envFileContent`, append remaining lines to the new content. Rejected — shell scripts
+cannot be safely diffed line by line. Comments, whitespace, and ordering edge cases will
+cause silent corruption, which is the exact failure mode to prevent.
+
+**Move telemetry opt-out to userconfig only**: Have the installer write to `config.toml`
+instead of `env.local`. Rejected as a standalone solution: the installer is a shell script
+running before tsuku is available and cannot safely write TOML. Does not address the
+general user-content-in-env problem.
+
+---
+
+### Decision 3: Doctor staleness detection and repair
+
+Doctor needs to detect that `$TSUKU_HOME/env` is outdated and offer a repair path. Two
+problems are coupled: the `--rebuild-cache` flag referenced in doctor's error output does
+not exist, and users who never re-run `tsuku install` won't get the automatic migration.
+
+#### Chosen: Content comparison detection + single `--fix` flag
+
+Detection: compare `$TSUKU_HOME/env` against the `envFileContent` constant. If bytes
+differ or the file is missing, report stale. This is the same logic `EnsureEnvFile()`
+already uses — detection and repair share one code path.
+
+Repair: a single `--fix` flag rewrites the env file via `cfg.EnsureEnvFile()` (including
+the migration) and rebuilds all shell.d caches. The existing `--rebuild-cache` reference
+in doctor's error messages is updated to `--fix`. The flag was never shipped in a release
+(referenced in error output but not implemented), so there is no compatibility cost.
+
+Doctor output when env file is stale:
+```
+  Env file... FAIL
+    Env file is outdated (run: tsuku doctor --fix)
+```
+
+`--fix` behavior: runs all checks, then repairs each detected issue in order — rewrites
+env file, rebuilds caches — and prints what it repaired. Re-runs checks afterward and
+prints the final summary. Does not repair hash mismatches, symlinks, or syntax errors
+(those require manual investigation).
+
+#### Alternatives Considered
+
+**Feature detection**: Check for the presence of specific patterns (e.g., the PATH export
+line) rather than exact content. Rejected because it requires maintaining a separate
+"minimum required patterns" definition that diverges from the canonical constant as the
+content evolves. Exact-match comparison is simpler and has no false-positive risk for
+this managed file.
+
+**Hash-based detection**: Store a hash of the managed section and compare on each run.
+Rejected — over-engineered for a single static file. Adds a separate state artifact that
+can itself go out of sync.
+
+**Separate flags (`--fix-env` + `--rebuild-cache`)**: Two flags targeting one subsystem
+each. Rejected because the motivating scenario (migration) requires both repairs. Users
+shouldn't need to know which subsystem failed.
+
+**Implement `--rebuild-cache` as cache-only, add `--fix-env`**: Honors the existing flag
+name but doubles the surface. Users with both issues need two commands. The existing flag
+is broken anyway, so the message text must change regardless.
+
+## Decision Outcome
+
+**Chosen: 1A + 2B+E + 3A**
+
+### Summary
+
+The `envFileContent` constant in `internal/config/config.go` is updated to include
+shell detection via `$BASH_VERSION`/`$ZSH_VERSION` and a conditional source of the
+appropriate init cache, plus a line to source `$TSUKU_HOME/env.local` for user
+customizations. `EnsureEnvFile()` gains a one-time migration that detects `TSUKU_NO_TELEMETRY`
+in the existing file and writes it to `env.local` before rewriting. `website/install.sh`
+changes its telemetry opt-out append target from `$ENV_FILE` to `$ENV_LOCAL_FILE`.
+
+Active users get the fix automatically on their next `tsuku install` — the idempotency
+check in `EnsureEnvFile()` detects the content mismatch and rewrites. The migration is
+narrow: it only extracts the specific `TSUKU_NO_TELEMETRY` line the installer writes, not
+arbitrary user content. After the rewrite, `$TSUKU_HOME/env.local` is sourced at the end
+of `env`, so any content written there (by the installer or by the user) takes effect.
+
+For users who never run `tsuku install` again, `tsuku doctor` gains a new check comparing
+`$TSUKU_HOME/env` against `envFileContent`. When stale, it reports the problem and
+suggests `tsuku doctor --fix`. The `--fix` flag calls `EnsureEnvFile()` (triggering the
+migration) and rebuilds all shell.d caches. The existing broken `--rebuild-cache`
+reference in doctor's output is replaced with `--fix`.
+
+### Rationale
+
+The three decisions reinforce each other cleanly. Shell detection in the env file (D1)
+defines the new `envFileContent` content. The env.local split (D2) lets `EnsureEnvFile()`
+rewrite that content freely without a parsing-based preservation strategy. Doctor's
+content-comparison detection (D3) uses the same constant as the rewrite, so detection
+and repair can't diverge. The combination adds zero subprocess overhead (pure shell
+variable reads), preserves telemetry opt-outs through a narrow migration, and requires
+no changes to the telemetry client or the shell.d cache infrastructure.
+
+The main trade-off accepted: users who never run `tsuku install` or `tsuku doctor --fix`
+remain broken until one of those runs. There is no push-based notification. This is
+acceptable because the broken state is silent but not destructive — no data is lost,
+and the fix is self-service.
+
+## Solution Architecture
+
+### Overview
+
+Three components change: the managed env file content, the env file update function, and
+the doctor command. The shell.d cache infrastructure (RebuildShellCache, per-shell cache
+files) is unchanged — this design only adds the missing link between the cache and the
+env file that users actually source.
+
+### Components
+
+```
+$TSUKU_HOME/
+├── env              ← managed by tsuku (EnsureEnvFile); never edit directly
+│                      sources init cache + env.local
+├── env.local        ← user-owned; optional; sourced last by env
+│                      holds TSUKU_NO_TELEMETRY and future user customizations
+└── share/shell.d/
+    ├── niwa.bash    ← written by install_shell_init
+    ├── niwa.zsh
+    ├── .init-cache.bash  ← aggregated by RebuildShellCache
+    └── .init-cache.zsh
+
+internal/config/config.go
+  envFileContent    ← updated constant (shell detection + env.local sourcing)
+  EnsureEnvFile()   ← unchanged logic + one-time migration for TSUKU_NO_TELEMETRY
+
+website/install.sh
+  telemetry block   ← writes TSUKU_NO_TELEMETRY to env.local instead of env
+
+cmd/tsuku/doctor.go
+  env file check    ← new: compare env vs envFileContent, report stale
+  --fix flag        ← new: calls EnsureEnvFile() + rebuilds caches
+```
+
+### Key Interfaces
+
+**`EnsureEnvFile()` updated behavior** (pseudo-code):
+```
+1. existing = read($TSUKU_HOME/env) or ""
+2. if existing == envFileContent: return nil
+3. if strings.Contains(existing, "TSUKU_NO_TELEMETRY"):
+   a. extract lines containing "TSUKU_NO_TELEMETRY"
+   b. if $TSUKU_HOME/env.local does NOT already contain "TSUKU_NO_TELEMETRY":
+        append extracted lines to $TSUKU_HOME/env.local (create if absent)
+4. write envFileContent to $TSUKU_HOME/env
+```
+
+**`tsuku doctor` new check**:
+```
+existing = read($TSUKU_HOME/env) or ""
+if existing != envFileContent:
+    print "  Env file... FAIL"
+    print "    Env file is outdated (run: tsuku doctor --fix)"
+    problemFound = true
+```
+
+**`tsuku doctor --fix` sequence**:
+```
+1. run all checks, collect problems
+2. for each problem:
+   - stale env file: cfg.EnsureEnvFile()   → "  Rewrote $TSUKU_HOME/env"
+   - stale bash cache: shellenv.RebuildShellCache(homeDir, "bash")  → "  Rebuilt bash cache"
+   - stale zsh cache:  shellenv.RebuildShellCache(homeDir, "zsh")   → "  Rebuilt zsh cache"
+3. re-run all checks, print final summary
+```
+
+### Data Flow
+
+Shell startup (after fix):
+```
+.bashrc / .zshenv
+  → . $TSUKU_HOME/env
+       → export PATH (bin/, tools/current/)
+       → [ -n "$BASH_VERSION" ] && [ -f .init-cache.bash ] && . .init-cache.bash
+             → niwa shell functions, completions, etc.
+       → [ -f env.local ] && . env.local
+             → TSUKU_NO_TELEMETRY=1 (if user opted out)
+```
+
+`tsuku install <tool-with-shell-init>` flow (after fix):
+```
+install_shell_init action
+  → writes $TSUKU_HOME/share/shell.d/tool.bash + tool.zsh
+  → RebuildShellCache("bash") → .init-cache.bash updated
+  → RebuildShellCache("zsh")  → .init-cache.zsh updated
+EnsureEnvFile()
+  → detects content mismatch (old env lacks init-cache sourcing)
+  → migration: extracts TSUKU_NO_TELEMETRY to env.local if present
+  → rewrites env with new envFileContent
+```
+
+## Implementation Approach
+
+### Phase 1: Update `envFileContent` and `EnsureEnvFile()`
+
+Core fix. Highest priority — everything else depends on the new constant.
+
+Deliverables:
+- `internal/config/config.go`: update `envFileContent` constant to include shell
+  detection and env.local sourcing. Add migration logic to `EnsureEnvFile()` that
+  extracts `TSUKU_NO_TELEMETRY` to `env.local` before rewriting.
+- `website/install.sh`: change telemetry opt-out block to write to `$ENV_LOCAL_FILE`.
+  Define `ENV_LOCAL_FILE="$TSUKU_HOME/env.local"` alongside `ENV_FILE`.
+- Tests: update `TestEnsureEnvFile` to cover migration path (existing file with
+  `TSUKU_NO_TELEMETRY` → migrated to `env.local`, env rewritten).
+
+### Phase 2: Update `tsuku doctor`
+
+Adds the detection and repair surface for users who don't trigger automatic migration.
+
+Deliverables:
+- `cmd/tsuku/doctor.go`: add env file staleness check (content comparison vs
+  `envFileContent`). Add `--fix` flag with `BoolVar`. When `--fix` is set, call
+  `cfg.EnsureEnvFile()` for stale env file and `shellenv.RebuildCache()` for stale
+  caches. Update all existing `--rebuild-cache` references to `--fix`.
+- `internal/shellenv/`: `RebuildShellCache(homeDir, shell string) error` is already
+  exported. No new export needed.
+- Tests: add `TestDoctorEnvFileCheck` covering stale-detected, missing, and current
+  states. Add `TestDoctorFix` covering env rewrite + cache rebuild.
+
+### Phase 3: Verify end-to-end
+
+Manual verification that the full flow works:
+
+1. Fresh install via install script → `env` has init-cache sourcing, `env.local` has
+   opt-out if chosen.
+2. `tsuku install niwa` → init cache built, new terminal has niwa shell functions.
+3. Old env file (no init-cache sourcing) + `tsuku install anything` → env migrated,
+   `TSUKU_NO_TELEMETRY` moved to `env.local`.
+4. `tsuku doctor` on stale env → reports FAIL. `tsuku doctor --fix` → repairs and
+   re-checks to OK.
+
+## Security Considerations
+
+This design sources the shell.d init cache for all users by default (via the updated
+`$TSUKU_HOME/env`), which widens the audience affected by the integrity of that pipeline.
+The existing mitigations are sound, but one must be explicitly required for the new
+`--fix` path.
+
+**Init cache trust chain.** Shell.d files are written by `install_shell_init` from a
+tool binary's stdout. Each file's SHA-256 hash is stored in `state.json` at write time.
+`RebuildShellCache` can verify these hashes before including files in the cache. When
+`tsuku doctor --fix` calls `RebuildShellCache`, it must pass the stored content hashes
+from `state.json` — the same map that `CheckShellD()` uses. Calling `RebuildShellCache`
+without hashes would skip tamper detection, allowing modified shell.d files to load at
+every login. Doctor already reads `state.json` for hash verification in the check path;
+the fix path must use the same data.
+
+**No privilege escalation.** All file operations are in user space under `$TSUKU_HOME`.
+The env file, env.local, and shell.d are all 0644/0600 user-owned files. There is no
+setuid or system-directory involvement. The `env.local` sourcing inherits the security
+properties of `$TSUKU_HOME` — if that directory is user-owned, there is no escalation
+path.
+
+**Shell injection isolation.** The subshell wrapper in the init cache (`( ... ) 2>/dev/null || true`)
+provides error isolation, not security isolation. Valid shell commands in shell.d files
+execute normally. The design relies on the integrity chain (checksums at install, hash
+verification at rebuild) rather than on the wrapper for security. This is the same model
+that existed before this design; widening the affected audience does not change the model.
+
+**Migration safety.** The `EnsureEnvFile()` migration reads `$TSUKU_HOME/env` and
+conditionally writes to `$TSUKU_HOME/env.local`. All paths are constructed via
+`filepath.Join` from `config.HomeDir` — no user-supplied path components. The migration
+deduplicates before appending to `env.local`, so concurrent or repeated calls produce
+the same result. No secrets are involved.
+
+## Consequences
+
+### Positive
+
+- Tools with `install_shell_init` work immediately after install, without user
+  intervention or manual dotfile editing.
+- Active users get the fix automatically on their next `tsuku install` — no separate
+  migration command required.
+- `$TSUKU_HOME/env.local` gives users a documented, stable place for customizations
+  that survive tsuku upgrades.
+- `tsuku doctor --fix` provides a self-service repair path for inactive users.
+- The telemetry opt-out is preserved through the migration and continues to work via
+  the same env var mechanism.
+
+### Negative
+
+- Users who never run `tsuku install` or `tsuku doctor --fix` after upgrading remain
+  broken. There is no push-based notification.
+- `env.local` is a new file that needs documentation. Users who already manually
+  added content to `env` (not `TSUKU_NO_TELEMETRY`) will lose it during the rewrite.
+  Only `TSUKU_NO_TELEMETRY` is migrated.
+- The `envFileContent` constant and `website/install.sh` must be kept in sync
+  manually (existing constraint; this design adds more content to keep in sync).
+
+### Mitigations
+
+- **No push notification**: `tsuku doctor` (without `--fix`) detects the stale state
+  and reports it whenever users run health checks. The broken state is silent but not
+  destructive.
+- **Non-TSUKU_NO_TELEMETRY content loss**: The managed env file comment says "do not
+  edit — use env.local for customizations." Users who ignored that and added content
+  to `env` directly will lose it, but this is the documented expectation.
+- **Sync requirement**: the existing comment in `config.go` (`// Keep in sync with
+  website/install.sh`) is preserved. A CI check or test that validates the two are
+  identical would strengthen this (out of scope for this design).
