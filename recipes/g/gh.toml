@@ -1,22 +1,38 @@
 [metadata]
-  name = "gh"
-  description = "GitHub command-line tool"
-  homepage = "https://cli.github.com/"
-  version_format = ""
-  requires_sudo = false
-  tier = 0
-  type = ""
-  llm_validation = "skipped"
-supported_os = ["darwin"]
+name = "gh"
+description = "GitHub command-line tool"
+homepage = "https://cli.github.com/"
+version_format = "semver"
+supported_os = ["darwin", "linux"]
+supported_arch = ["amd64", "arm64"]
+supported_libc = ["glibc"]
+
+[version]
+github_repo = "cli/cli"
+tag_prefix = "v"
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "gh"
+when = { os = ["darwin"] }
 
 [[steps]]
-  action = "homebrew"
-  formula = "gh"
+action = "install_binaries"
+binaries = ["bin/gh"]
+when = { os = ["darwin"] }
 
+# Linux: GitHub release tarball (gh_VERSION_linux_ARCH.tar.gz)
 [[steps]]
-  action = "install_binaries"
-  binaries = ["bin/gh"]
+action = "github_archive"
+when = { os = ["linux"] }
+repo = "cli/cli"
+asset_pattern = "gh_{version}_{os}_{arch}.tar.gz"
+strip_dirs = 1
+binaries = ["bin/gh"]
+os_mapping = { linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
 
 [verify]
-  command = "gh --version"
-  pattern = ""
+command = "gh --version"
+pattern = ""
