@@ -57,7 +57,7 @@ func TestDoctorEnvFileCheck_Missing(t *testing.T) {
 	// Do NOT create env file
 
 	stdout, stderr := captureDoctorOutput(func() {
-		failed, _ := runDoctorChecks(cfg, dir, false)
+		failed, _ := runDoctorChecks(cfg, dir)
 		if !failed {
 			t.Error("expected failed=true for missing env file")
 		}
@@ -86,7 +86,7 @@ func TestDoctorEnvFileCheck_Stale(t *testing.T) {
 	}
 
 	stdout, stderr := captureDoctorOutput(func() {
-		failed, _ := runDoctorChecks(cfg, dir, false)
+		failed, _ := runDoctorChecks(cfg, dir)
 		if !failed {
 			t.Error("expected failed=true for stale env file")
 		}
@@ -112,7 +112,7 @@ func TestDoctorEnvFileCheck_Current(t *testing.T) {
 	}
 
 	stdout, _ := captureDoctorOutput(func() {
-		runDoctorChecks(cfg, dir, false)
+		runDoctorChecks(cfg, dir)
 	})
 
 	// Find the "Env file" line in stdout
@@ -160,7 +160,7 @@ func TestDoctorFix_EnvRewrite(t *testing.T) {
 	captureDoctorOutput(func() {
 		// Run the command logic inline
 		homeDir, _ := filepath.Abs(cfg.HomeDir)
-		failed, contentHashes := runDoctorChecks(cfg, homeDir, doctorFixFlag)
+		failed, contentHashes := runDoctorChecks(cfg, homeDir)
 
 		// Apply env fix
 		envData, envErr := os.ReadFile(cfg.EnvFile())
@@ -242,7 +242,7 @@ func TestDoctorFix_NeverCallsRebuildWithNilHashes(t *testing.T) {
 	}
 
 	captureDoctorOutput(func() {
-		_, hashes := runDoctorChecks(cfg, dir, false)
+		_, hashes := runDoctorChecks(cfg, dir)
 		if hashes == nil {
 			t.Error("runDoctorChecks must return a non-nil hashes map")
 		}

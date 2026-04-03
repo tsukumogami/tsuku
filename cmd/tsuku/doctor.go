@@ -41,7 +41,7 @@ Use --fix to automatically repair stale env files and shell caches.`,
 			return fmt.Errorf("failed to resolve home directory: %w", err)
 		}
 
-		failed, contentHashes := runDoctorChecks(cfg, homeDir, doctorFixFlag)
+		failed, contentHashes := runDoctorChecks(cfg, homeDir)
 
 		if doctorFixFlag {
 			// Apply repairs
@@ -75,7 +75,7 @@ Use --fix to automatically repair stale env files and shell caches.`,
 			if fixed {
 				fmt.Println()
 				fmt.Println("Re-checking after repair...")
-				failed, _ = runDoctorChecks(cfg, homeDir, false)
+				failed, _ = runDoctorChecks(cfg, homeDir)
 			}
 		}
 
@@ -96,9 +96,7 @@ func init() {
 
 // runDoctorChecks performs all environment checks and returns whether any check
 // failed and the content hashes loaded from state (needed for cache repair).
-// When fix is true, the --fix suggestion is suppressed since the
-// caller will perform repairs immediately after.
-func runDoctorChecks(cfg *config.Config, homeDir string, fix bool) (failed bool, contentHashes map[string]string) {
+func runDoctorChecks(cfg *config.Config, homeDir string) (failed bool, contentHashes map[string]string) {
 	fmt.Println("Checking tsuku environment...")
 
 	// Check 1: Home directory
