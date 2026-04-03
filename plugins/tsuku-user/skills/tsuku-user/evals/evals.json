@@ -1,0 +1,97 @@
+{
+  "skill_name": "tsuku-user",
+  "evals": [
+    {
+      "id": 1,
+      "name": "project-config-pinning",
+      "prompt": "I need to set up a .tsuku.toml for my project that pins node to major version 20, python to 3.12 exactly, and lets jq float to latest. What's the syntax?",
+      "expected_output": "Skill triggers on .tsuku.toml project configuration. Agent explains pin syntax for major version (20), exact version (3.12), and unpinned/latest. Shows a complete .tsuku.toml example with all three pin levels.",
+      "assertions": [
+        "Output includes .tsuku.toml syntax with node pinned to major version 20",
+        "Output includes python pinned to exact version 3.12",
+        "Output includes jq configured to float to latest (no version pin or 'latest')",
+        "Output shows a valid .tsuku.toml file structure"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "shell-integration-setup",
+      "prompt": "tsuku install keeps saying 'command not found' even though I installed it via the install script. I think my shell PATH isn't set up right -- how do I fix this?",
+      "expected_output": "Skill triggers on PATH/shell integration debugging. Agent explains the shellenv setup requirement, provides the eval command for the user's shell, and mentions tsuku doctor as a diagnostic tool.",
+      "assertions": [
+        "Output includes the eval \"$(tsuku shellenv)\" command or equivalent shell integration line",
+        "Output explains where to add the shellenv line (shell config file like .bashrc, .zshrc, or config.fish)",
+        "Output mentions tsuku doctor or a diagnostic command to verify shell integration"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "fish-shell-setup",
+      "prompt": "how do I add eval \"$(tsuku shellenv)\" to my fish config? The bash syntax doesn't work in fish",
+      "expected_output": "Skill triggers on shell-specific integration. Agent provides the fish-specific shellenv syntax (which differs from bash/zsh) and explains where to put it in the fish config.",
+      "assertions": [
+        "Output provides fish-specific syntax (not the bash eval syntax)",
+        "Output references the fish config location (config.fish or similar)"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "version-pin-update-interaction",
+      "prompt": "tsuku outdated shows ripgrep 13.0.0 -> 14.1.0 available but tsuku update ripgrep says 'already at latest within pin'. My .tsuku.toml pins ripgrep = \"13\". How do version pins interact with updates?",
+      "expected_output": "Skill triggers on version pin semantics. Agent explains that major version pins constrain updates to within that major version, so pinning to '13' means tsuku update won't cross to 14.x. Explains how to change the pin to allow the update.",
+      "assertions": [
+        "Output explains that the pin '13' constrains updates to the 13.x range",
+        "Output explains why tsuku update won't cross major version boundaries with this pin",
+        "Output explains how to update the pin (change to '14' or remove the pin) to allow the update"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "verify-exit-code",
+      "prompt": "I'm getting exit code 8 when I run tsuku verify on a tool I installed yesterday. What does that mean and how do I fix it?",
+      "expected_output": "Skill triggers on verification troubleshooting. Agent explains exit code 8 (verification failure) and provides steps to diagnose and resolve the issue.",
+      "assertions": [
+        "Output explains what exit code 8 means in the context of tsuku verify",
+        "Output provides at least one concrete step to diagnose the verification failure"
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "telemetry-config",
+      "prompt": "I want to configure tsuku to not send telemetry. Where do I set that?",
+      "expected_output": "Skill triggers on tsuku configuration. Agent explains how to disable telemetry via environment variable or config file.",
+      "assertions": [
+        "Output mentions TSUKU_TELEMETRY=0 or equivalent environment variable to disable telemetry",
+        "Output provides at least one method to persistently disable telemetry"
+      ],
+      "files": []
+    },
+    {
+      "id": 7,
+      "name": "negative-recipe-authoring",
+      "prompt": "I need to write a recipe TOML file for a tool that uses cargo_install. What actions and parameters should I use?",
+      "expected_output": "Skill should NOT trigger. This is a recipe authoring question (recipe-author territory), not CLI usage.",
+      "assertions": [
+        "Agent does NOT focus on tsuku commands (install, doctor, shellenv, etc.)",
+        "Response focuses on TOML recipe structure or action parameters for cargo_install"
+      ],
+      "files": []
+    },
+    {
+      "id": 8,
+      "name": "negative-recipe-testing",
+      "prompt": "tsuku validate --strict is giving me warnings about my recipe's verify section. How do I fix the pattern?",
+      "expected_output": "Skill should NOT trigger. This is a recipe testing/validation question (recipe-test territory), not general CLI usage.",
+      "assertions": [
+        "Agent does NOT focus on shell integration, PATH setup, or .tsuku.toml configuration",
+        "Response focuses on recipe validation or the verify section syntax"
+      ],
+      "files": []
+    }
+  ]
+}

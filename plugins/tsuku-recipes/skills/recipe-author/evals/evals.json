@@ -1,0 +1,105 @@
+{
+  "skill_name": "recipe-author",
+  "evals": [
+    {
+      "id": 1,
+      "name": "github-binary-recipe",
+      "prompt": "I need to write a recipe for ripgrep that downloads the binary from GitHub releases and installs it on both linux and macOS, with different archive formats per platform",
+      "expected_output": "Skill triggers on recipe authoring request. Agent uses the action reference to identify download, extract, and install_binaries actions. Produces a TOML recipe with when clauses splitting linux (tar.gz) from macOS (zip). Uses github version provider. Includes a verify section.",
+      "assertions": [
+        "Output contains a TOML recipe with [metadata] section including name and description",
+        "Output uses the github version provider or references GitHub releases for version resolution",
+        "Output includes when clauses or platform conditionals to differentiate linux and macOS",
+        "Output references tar.gz or tar extraction for linux and zip extraction for macOS",
+        "Output includes install_binaries or equivalent binary installation action",
+        "Output includes a [verify] section or verification step"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "platform-when-clauses",
+      "prompt": "the oniguruma recipe needs a when clause to split between homebrew on glibc and apk_install on musl -- can you help me add the platform conditionals?",
+      "expected_output": "Skill triggers on platform conditional editing. Agent references the platform reference for libc detection (glibc vs musl). Produces when clause syntax using os and libc fields. Shows homebrew action gated on glibc and apk_install gated on musl.",
+      "assertions": [
+        "Output contains when clause syntax with libc = 'glibc' or libc = 'gnu' for the homebrew path",
+        "Output contains when clause syntax with libc = 'musl' for the apk_install path",
+        "Output shows two separate step blocks (or equivalent) gated by the when conditions",
+        "Output references the homebrew action for the glibc path",
+        "Output references the apk_install action for the musl path"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "distributed-recipe-setup",
+      "prompt": "I'm setting up a .tsuku-recipes/ folder in my company's monorepo so our team can install internal tools with tsuku. What's the directory structure and how do I test it?",
+      "expected_output": "Skill triggers on distributed recipe authoring. Agent references the distributed reference for directory structure. Explains .tsuku-recipes/ layout, recipe discovery, and how to test with tsuku validate and tsuku install from the local path.",
+      "assertions": [
+        "Output describes the .tsuku-recipes/ directory structure",
+        "Output explains how tsuku discovers recipes from the local directory",
+        "Output mentions tsuku validate or validation as a testing step",
+        "Output mentions testing installation from the local recipe path"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "cargo-install-recipe",
+      "prompt": "I want to add a cargo_install recipe for a rust tool called fd-find. Does tsuku auto-detect the version provider from the action or do I need to set [version] source explicitly?",
+      "expected_output": "Skill triggers on recipe authoring question about cargo_install and version providers. Agent clarifies the relationship between actions and version providers -- they are independent. Explains that [version] source must be set explicitly. Suggests crates_io or github as the version provider for a Rust tool.",
+      "assertions": [
+        "Output explains that the version provider must be set explicitly (not auto-detected from the action)",
+        "Output mentions crates_io or github as appropriate version provider options for a Rust tool",
+        "Output includes cargo_install action usage or syntax"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "python-actions",
+      "prompt": "what actions are available for installing python packages? I need to create a recipe that uses pipx to install black and make sure it gets the right python dependency",
+      "expected_output": "Skill triggers on action discovery for Python. Agent references the action reference to list Python-related actions (pipx_install, pip_install, or similar). Explains dependency declaration for the python runtime dependency.",
+      "assertions": [
+        "Output lists at least one Python-related installation action (pipx_install, pip_install, or equivalent)",
+        "Output explains how to declare python as a dependency in the recipe",
+        "Output shows recipe syntax or structure for installing black via pipx"
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "negative-install-failure",
+      "prompt": "tsuku install ripgrep is failing with exit code 6 and something about containers -- what's going wrong?",
+      "expected_output": "Skill should NOT trigger. This is an installation debugging question (tsuku-user or recipe-test territory), not a recipe authoring question. The agent should not invoke recipe-author for troubleshooting install failures.",
+      "assertions": [
+        "Agent does NOT produce a new recipe TOML file",
+        "Agent does NOT reference the action reference or recipe authoring workflow",
+        "Response focuses on troubleshooting the installation failure, not writing or editing a recipe"
+      ],
+      "files": []
+    },
+    {
+      "id": 7,
+      "name": "negative-shell-setup",
+      "prompt": "how do I set up tsuku shellenv in my .zshrc? I keep getting 'command not found' for tools I installed",
+      "expected_output": "Skill should NOT trigger. This is a CLI usage question about shell integration, which is tsuku-user territory. No recipe authoring involved.",
+      "assertions": [
+        "Agent does NOT produce recipe TOML syntax",
+        "Response addresses shell configuration or PATH setup, not recipe authoring"
+      ],
+      "files": []
+    },
+    {
+      "id": 8,
+      "name": "negative-go-internals",
+      "prompt": "I need to add a new version provider to tsuku's Go codebase -- where's the VersionResolver interface and how do I register a new provider?",
+      "expected_output": "Skill should NOT trigger. This is about Go code internals, not TOML recipe authoring. The agent should help navigate the Go codebase instead.",
+      "assertions": [
+        "Agent does NOT produce recipe TOML syntax",
+        "Response focuses on Go code structure or the VersionResolver interface, not recipe file format"
+      ],
+      "files": []
+    }
+  ]
+}
