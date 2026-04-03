@@ -1,11 +1,9 @@
 ---
 name: tsuku-user
 description: |
-  End-user reference for managing tools with tsuku: project configuration
-  via .tsuku.toml, CLI commands, shell integration, troubleshooting,
-  auto-updates, and user settings. Use this skill when helping someone
-  install tools, configure a project, debug PATH issues, or understand
-  tsuku's update behavior.
+  Use when helping someone manage tools with tsuku -- installing, configuring
+  .tsuku.toml project files, setting up shell integration, or debugging
+  PATH and update issues.
 ---
 
 ## .tsuku.toml Project Configuration

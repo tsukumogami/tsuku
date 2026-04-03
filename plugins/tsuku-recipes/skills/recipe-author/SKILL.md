@@ -1,15 +1,10 @@
 ---
 name: recipe-author
 description: |
-  Guides authoring tsuku recipe TOML files for both the central registry
-  and distributed (.tsuku-recipes/) repositories. Covers actions, version
-  providers, platform targeting, verification, and dependency declaration.
-
-  Use this skill when writing or modifying recipe TOML files. For scaffolding
-  a new recipe interactively, run `tsuku create` first -- it generates a
-  starter TOML from a GitHub repo. This skill covers everything `tsuku create`
-  doesn't handle: platform conditionals, custom verification, library outputs,
-  dependency chains, and distributed recipe publishing.
+  Use when writing or modifying tsuku recipe TOML files. The recipe format
+  has 60+ actions, 14 version providers, and platform-conditional logic
+  that tsuku create doesn't fully cover. This skill provides quick-reference
+  tables and bundled references for the cases that need manual authoring.
 ---
 
 # Recipe Authoring

@@ -1,10 +1,9 @@
 ---
 name: recipe-test
 description: |
-  Full recipe testing workflow: validation, plan evaluation, sandbox
-  testing, golden file regression, and failure debugging. Use when
-  testing new recipes, debugging install failures, or validating
-  changes before a PR.
+  Use when a recipe needs testing or an installation is failing. Covers
+  the full validate-eval-sandbox-golden workflow with exact commands,
+  cross-family testing, and common failure patterns with exit codes.
 ---
 
 ## Phase 1: Validate
