@@ -9,6 +9,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/shellenv"
 )
 
 // runPlanBasedInstall installs a tool from an external plan file or stdin.
@@ -100,6 +101,31 @@ func runPlanBasedInstall(planPath, toolName string) error {
 		// Install to permanent location
 		if err := mgr.InstallWithOptions(effectiveToolName, plan.Version, exec.WorkDir(), installOpts); err != nil {
 			return fmt.Errorf("failed to install to permanent location: %w", err)
+		}
+
+		// Execute post-install phase (e.g., install_shell_init).
+		// The ToolInstallDir must point to the final installed location so
+		// source_command can find the tool's binary.
+		exec.SetToolInstallDir(cfg.ToolDir(effectiveToolName, plan.Version))
+		if err := exec.ExecutePhase(globalCtx, plan, "post-install"); err != nil {
+			printInfof("Warning: post-install phase failed: %v\n", err)
+		}
+
+		// Collect cleanup actions recorded by post-install actions and
+		// rebuild shell caches for any shells that were written to.
+		postInstallCleanup := exec.GetCleanupActions()
+		if len(postInstallCleanup) > 0 {
+			affectedShells := make(map[string]bool)
+			for _, ca := range postInstallCleanup {
+				if shell := install.ShellFromCleanupPath(ca.Path); shell != "" {
+					affectedShells[shell] = true
+				}
+			}
+			for shell := range affectedShells {
+				if err := shellenv.RebuildShellCache(cfg.HomeDir, shell); err != nil {
+					printInfof("Warning: failed to rebuild shell cache for %s: %v\n", shell, err)
+				}
+			}
 		}
 
 		// Update state to mark as explicit installation

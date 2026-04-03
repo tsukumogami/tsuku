@@ -444,6 +444,87 @@ func TestNewDiscoveryDisambiguationEvent(t *testing.T) {
 	}
 }
 
+func TestSendUpdateOutcome_Disabled(t *testing.T) {
+	called := false
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		called = true
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	c := NewClientWithOptions(server.URL, time.Second, true, false)
+	c.SendUpdateOutcome(NewUpdateOutcomeSuccessEvent("node", "18.0.0", "20.0.0", "auto"))
+
+	time.Sleep(50 * time.Millisecond)
+
+	if called {
+		t.Error("server was called when telemetry was disabled")
+	}
+}
+
+func TestSendUpdateOutcome_Debug(t *testing.T) {
+	oldStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	c := NewClientWithOptions("http://unused", time.Second, false, true)
+	c.SendUpdateOutcome(NewUpdateOutcomeFailureEvent("terraform", "1.6.0", ErrorTypeDownloadFailed, "auto"))
+
+	w.Close()
+	os.Stderr = oldStderr
+
+	var buf bytes.Buffer
+	_, _ = io.Copy(&buf, r)
+	output := buf.String()
+
+	if !strings.Contains(output, "[telemetry]") {
+		t.Errorf("output does not contain [telemetry] prefix: %q", output)
+	}
+	if !strings.Contains(output, "update_outcome_failure") {
+		t.Errorf("output does not contain action: %q", output)
+	}
+	if !strings.Contains(output, "terraform") {
+		t.Errorf("output does not contain recipe: %q", output)
+	}
+}
+
+func TestSendUpdateOutcome_Success(t *testing.T) {
+	received := make(chan UpdateOutcomeEvent, 1)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var event UpdateOutcomeEvent
+		if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
+			t.Errorf("failed to decode event: %v", err)
+		}
+		received <- event
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	c := NewClientWithOptions(server.URL, time.Second, false, false)
+	c.SendUpdateOutcome(NewUpdateOutcomeRollbackEvent("kubectl", "1.28.0", "1.29.0", "manual"))
+
+	select {
+	case event := <-received:
+		if event.Action != "update_outcome_rollback" {
+			t.Errorf("Action = %q, want %q", event.Action, "update_outcome_rollback")
+		}
+		if event.Recipe != "kubectl" {
+			t.Errorf("Recipe = %q, want %q", event.Recipe, "kubectl")
+		}
+		if event.VersionPrevious != "1.28.0" {
+			t.Errorf("VersionPrevious = %q, want %q", event.VersionPrevious, "1.28.0")
+		}
+		if event.VersionTarget != "1.29.0" {
+			t.Errorf("VersionTarget = %q, want %q", event.VersionTarget, "1.29.0")
+		}
+		if event.Trigger != "manual" {
+			t.Errorf("Trigger = %q, want %q", event.Trigger, "manual")
+		}
+	case <-time.After(time.Second):
+		t.Error("event not received within timeout")
+	}
+}
+
 func TestSendLLM_Success(t *testing.T) {
 	received := make(chan LLMEvent, 1)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

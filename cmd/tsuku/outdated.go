@@ -9,6 +9,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/updates"
 	"github.com/tsukumogami/tsuku/internal/version"
 )
 
@@ -59,11 +60,12 @@ var outdatedCmd = &cobra.Command{
 		ctx := context.Background()
 
 		type updateInfo struct {
-			Name    string `json:"name"`
-			Current string `json:"current"`
-			Latest  string `json:"latest"`
+			Name          string `json:"name"`
+			Current       string `json:"current"`
+			Latest        string `json:"latest"`
+			LatestOverall string `json:"latest_overall,omitempty"`
 		}
-		var updates []updateInfo
+		var toolUpdates []updateInfo
 
 		for _, tool := range tools {
 			// Skip exact-pinned tools (they can't update by definition)
@@ -98,12 +100,39 @@ var outdatedCmd = &cobra.Command{
 				continue
 			}
 
-			if latest.Version != tool.Version {
-				updates = append(updates, updateInfo{
+			// Resolve latest overall (regardless of pin)
+			var overallVersion string
+			if requested != "" {
+				overall, err := provider.ResolveLatest(ctx)
+				if err == nil && overall.Version != latest.Version {
+					overallVersion = overall.Version
+				}
+			}
+
+			if latest.Version != tool.Version || overallVersion != "" {
+				info := updateInfo{
 					Name:    tool.Name,
 					Current: tool.Version,
 					Latest:  latest.Version,
-				})
+				}
+				// Only include overall if it differs from within-pin
+				if overallVersion != "" && overallVersion != latest.Version {
+					info.LatestOverall = overallVersion
+				}
+				toolUpdates = append(toolUpdates, info)
+			}
+		}
+
+		// Check for tsuku self-update from cache
+		var selfUpdate *updateInfo
+		cacheDir := updates.CacheDir(cfg.HomeDir)
+		if selfEntry, err := updates.ReadEntry(cacheDir, updates.SelfToolName); err == nil && selfEntry != nil {
+			if selfEntry.LatestOverall != "" && selfEntry.LatestOverall != selfEntry.ActiveVersion {
+				selfUpdate = &updateInfo{
+					Name:    updates.SelfToolName,
+					Current: selfEntry.ActiveVersion,
+					Latest:  selfEntry.LatestOverall,
+				}
 			}
 		}
 
@@ -111,8 +140,9 @@ var outdatedCmd = &cobra.Command{
 		if jsonOutput {
 			type outdatedOutput struct {
 				Updates []updateInfo `json:"updates"`
+				Self    *updateInfo  `json:"self,omitempty"`
 			}
-			output := outdatedOutput{Updates: updates}
+			output := outdatedOutput{Updates: toolUpdates, Self: selfUpdate}
 			if output.Updates == nil {
 				output.Updates = []updateInfo{}
 			}
@@ -121,16 +151,42 @@ var outdatedCmd = &cobra.Command{
 		}
 
 		printInfo()
-		if len(updates) == 0 {
+		if len(toolUpdates) == 0 && selfUpdate == nil {
 			printInfo("All tools are up to date!")
 			return
 		}
 
-		fmt.Printf("%-15s  %-15s  %-15s\n", "TOOL", "CURRENT", "LATEST")
-		for _, u := range updates {
-			fmt.Printf("%-15s  %-15s  %-15s\n", u.Name, u.Current, u.Latest)
+		if len(toolUpdates) > 0 {
+			// Check if any tool has an overall version to show
+			hasOverall := false
+			for _, u := range toolUpdates {
+				if u.LatestOverall != "" {
+					hasOverall = true
+					break
+				}
+			}
+
+			if hasOverall {
+				fmt.Printf("%-15s  %-15s  %-15s  %-15s\n", "TOOL", "CURRENT", "LATEST", "OVERALL")
+				for _, u := range toolUpdates {
+					fmt.Printf("%-15s  %-15s  %-15s  %-15s\n", u.Name, u.Current, u.Latest, u.LatestOverall)
+				}
+			} else {
+				fmt.Printf("%-15s  %-15s  %-15s\n", "TOOL", "CURRENT", "LATEST")
+				for _, u := range toolUpdates {
+					fmt.Printf("%-15s  %-15s  %-15s\n", u.Name, u.Current, u.Latest)
+				}
+			}
+			printInfo("\nTo update, run: tsuku update <tool> or tsuku update --all")
 		}
-		printInfo("\nTo update, run: tsuku update <tool>")
+
+		if selfUpdate != nil {
+			if len(toolUpdates) > 0 {
+				printInfo()
+			}
+			fmt.Fprintf(os.Stderr, "tsuku %s available (current: %s)\n", selfUpdate.Latest, selfUpdate.Current)
+			fmt.Fprintf(os.Stderr, "  Run 'tsuku self-update' to update, or it will auto-update in the background.\n")
+		}
 	},
 }
 

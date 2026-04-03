@@ -331,6 +331,7 @@
     <script>
         const API_URL = 'https://telemetry.tsuku.dev/stats';
         const DISCOVERY_API_URL = 'https://telemetry.tsuku.dev/stats/discovery';
+        const UPDATES_API_URL = 'https://telemetry.tsuku.dev/stats/updates';
 
         function formatNumber(num) {
             return num.toLocaleString();
@@ -347,7 +348,13 @@
             });
         }
 
-        function renderStats(data, discoveryData) {
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function renderStats(data, discoveryData, updatesData) {
             const container = document.getElementById('stats-content');
             const maxInstalls = data.recipes.length > 0 ? data.recipes[0].installs : 1;
 
@@ -424,6 +431,125 @@
                                 ${stageItems}
                             </div>
                             ${notFoundCard}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Update Reliability section
+            let updatesSection = '';
+            if (updatesData) {
+                const successRate = (updatesData.success_rate * 100).toFixed(1);
+                const autoShare = updatesData.total_updates > 0
+                    ? (updatesData.by_trigger.auto / updatesData.total_updates * 100).toFixed(0)
+                    : 0;
+
+                const outcomeTotal = updatesData.by_outcome.success + updatesData.by_outcome.failure + updatesData.by_outcome.rollback;
+                const outcomeItems = [
+                    { label: 'Success', count: updatesData.by_outcome.success },
+                    { label: 'Failure', count: updatesData.by_outcome.failure },
+                    { label: 'Rollback', count: updatesData.by_outcome.rollback }
+                ].map(item => {
+                    const percent = outcomeTotal > 0 ? (item.count / outcomeTotal * 100).toFixed(0) : 0;
+                    return `
+                        <div class="distribution-item">
+                            <span class="distribution-label">${item.label}</span>
+                            <div class="distribution-bar-container">
+                                <div class="distribution-bar" style="width: ${percent}%"></div>
+                            </div>
+                            <span class="distribution-percent">${percent}%</span>
+                        </div>
+                    `;
+                }).join('');
+
+                const triggerTotal = updatesData.by_trigger.auto + updatesData.by_trigger.manual;
+                const triggerItems = [
+                    { label: 'Auto', count: updatesData.by_trigger.auto },
+                    { label: 'Manual', count: updatesData.by_trigger.manual }
+                ].map(item => {
+                    const percent = triggerTotal > 0 ? (item.count / triggerTotal * 100).toFixed(0) : 0;
+                    return `
+                        <div class="distribution-item">
+                            <span class="distribution-label">${item.label}</span>
+                            <div class="distribution-bar-container">
+                                <div class="distribution-bar" style="width: ${percent}%"></div>
+                            </div>
+                            <span class="distribution-percent">${percent}%</span>
+                        </div>
+                    `;
+                }).join('');
+
+                const maxErrorCount = updatesData.by_error_type.length > 0 ? updatesData.by_error_type[0].count : 1;
+                const errorItems = updatesData.by_error_type.map(item => {
+                    const barWidth = (item.count / maxErrorCount * 100).toFixed(0);
+                    return `
+                        <div class="distribution-item">
+                            <span class="distribution-label" style="width: 100px; font-family: 'SF Mono', Consolas, monospace; font-size: 0.8rem;">${escapeHtml(item.type)}</span>
+                            <div class="distribution-bar-container">
+                                <div class="distribution-bar" style="width: ${barWidth}%"></div>
+                            </div>
+                            <span class="distribution-percent">${formatNumber(item.count)}</span>
+                        </div>
+                    `;
+                }).join('');
+
+                const maxFailures = updatesData.top_failing.length > 0 ? updatesData.top_failing[0].failures : 1;
+                const failingItems = updatesData.top_failing.map(item => {
+                    const barWidth = (item.failures / maxFailures * 100).toFixed(0);
+                    return `
+                        <div class="distribution-item">
+                            <span class="distribution-label" style="width: 80px; font-family: 'SF Mono', Consolas, monospace;">${escapeHtml(item.name)}</span>
+                            <div class="distribution-bar-container">
+                                <div class="distribution-bar" style="width: ${barWidth}%"></div>
+                            </div>
+                            <span class="distribution-percent">${formatNumber(item.failures)}</span>
+                        </div>
+                    `;
+                }).join('');
+
+                const errorCard = updatesData.by_error_type.length > 0 ? `
+                    <div class="distribution-card">
+                        <h3>Top Errors</h3>
+                        ${errorItems}
+                    </div>
+                ` : '';
+
+                const failingCard = updatesData.top_failing.length > 0 ? `
+                    <div class="distribution-card">
+                        <h3>Top Failing Recipes</h3>
+                        ${failingItems}
+                    </div>
+                ` : '';
+
+                updatesSection = `
+                    <div class="recipes-section">
+                        <h2 class="section-title">Update Reliability</h2>
+                        <div class="overview" style="margin-bottom: 1.5rem;">
+                            <div class="stat-card">
+                                <div class="value">${formatNumber(updatesData.total_updates)}</div>
+                                <div class="label">Total Updates</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="value">${successRate}%</div>
+                                <div class="label">Success Rate</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="value">${autoShare}%</div>
+                                <div class="label">Auto-Update Share</div>
+                            </div>
+                        </div>
+
+                        <div class="distribution-grid" style="margin-bottom: 1.5rem;">
+                            <div class="distribution-card">
+                                <h3>Outcome Distribution</h3>
+                                ${outcomeItems}
+                            </div>
+                            <div class="distribution-card">
+                                <h3>Trigger Breakdown</h3>
+                                ${triggerItems}
+                            </div>
+                            ${errorCard}
+                            ${failingCard}
                         </div>
                     </div>
                 `;
@@ -512,6 +638,8 @@
                 </div>
 
                 ${discoverySection}
+
+                ${updatesSection}
             `;
         }
 
@@ -536,10 +664,11 @@
             `;
 
             try {
-                // Fetch both endpoints in parallel
-                const [statsResponse, discoveryResponse] = await Promise.all([
+                // Fetch all endpoints in parallel
+                const [statsResponse, discoveryResponse, updatesResponse] = await Promise.all([
                     fetch(API_URL),
-                    fetch(DISCOVERY_API_URL).catch(() => null) // Discovery is optional
+                    fetch(DISCOVERY_API_URL).catch(() => null),
+                    fetch(UPDATES_API_URL).catch(() => null)
                 ]);
 
                 if (!statsResponse.ok) {
@@ -558,7 +687,17 @@
                     }
                 }
 
-                renderStats(data, discoveryData);
+                // Parse updates data if available
+                let updatesData = null;
+                if (updatesResponse && updatesResponse.ok) {
+                    try {
+                        updatesData = await updatesResponse.json();
+                    } catch (e) {
+                        console.warn('Failed to parse update stats:', e);
+                    }
+                }
+
+                renderStats(data, discoveryData, updatesData);
             } catch (error) {
                 console.error('Failed to load stats:', error);
                 renderError('Unable to connect to the telemetry service. The service may be temporarily unavailable.');

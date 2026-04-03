@@ -38,6 +38,28 @@ Usage for one-off sessions:
 		currentDir := filepath.Join(homeDir, "tools", "current")
 
 		fmt.Fprintf(os.Stdout, "export PATH=\"%s:%s:$PATH\"\n", binDir, currentDir)
+
+		// Source the shell init cache if it exists.
+		// Detect the current shell to pick the right cache file.
+		shell := detectShellForEnv()
+		cachePath := filepath.Join(homeDir, "share", "shell.d", ".init-cache."+shell)
+		if _, err := os.Stat(cachePath); err == nil {
+			fmt.Fprintf(os.Stdout, ". \"%s\"\n", cachePath)
+		}
+
 		return nil
 	},
+}
+
+// detectShellForEnv returns the shell name to use for shellenv output.
+// Uses $SHELL to determine the current shell, defaulting to "bash".
+func detectShellForEnv() string {
+	if s := os.Getenv("SHELL"); s != "" {
+		base := filepath.Base(s)
+		switch base {
+		case "bash", "zsh", "fish":
+			return base
+		}
+	}
+	return "bash"
 }

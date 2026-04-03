@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"path/filepath"
 	"runtime"
 	"testing"
 
@@ -120,6 +121,40 @@ func TestResolveVersion_EmptyConstraint(t *testing.T) {
 		t.Logf("ResolveVersion() succeeded: version=%s", version)
 		if version == "" {
 			t.Error("ResolveVersion() returned empty version string")
+		}
+	}
+}
+
+// TestResolveVersion_LatestConstraint tests that "latest" constraint resolves
+// to the latest version, same as empty string.
+func TestResolveVersion_LatestConstraint(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:          "test-tool",
+			Description:   "Test tool",
+			VersionFormat: "semver",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	ctx := context.Background()
+	version, err := exec.ResolveVersion(ctx, "latest")
+
+	// Network failure is acceptable in unit tests
+	if err != nil {
+		t.Logf("ResolveVersion(\"latest\") failed (expected in offline tests): %v", err)
+	} else {
+		t.Logf("ResolveVersion(\"latest\") succeeded: version=%s", version)
+		if version == "" {
+			t.Error("ResolveVersion(\"latest\") returned empty version string")
 		}
 	}
 }
@@ -1798,5 +1833,228 @@ func TestBuildResolvedDepsFromPlan_Empty(t *testing.T) {
 	}
 	if len(result.Runtime) != 0 {
 		t.Errorf("Runtime should be empty, got %d entries", len(result.Runtime))
+	}
+}
+
+func TestExecutor_SetNoShellInit(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "test-tool",
+		},
+	}
+	exec, err := New(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer exec.Cleanup()
+
+	exec.SetNoShellInit(true)
+	if !exec.noShellInit {
+		t.Error("expected noShellInit to be true")
+	}
+}
+
+func TestExecutor_GetCleanupActions_NilContext(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "test-tool",
+		},
+	}
+	exec, err := New(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer exec.Cleanup()
+
+	// Before ExecutePlan, ctx is nil
+	if got := exec.GetCleanupActions(); got != nil {
+		t.Errorf("expected nil cleanup actions before ExecutePlan, got %v", got)
+	}
+}
+
+func TestExecutor_SetToolInstallDir(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "test-tool",
+		},
+	}
+	exec, err := New(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer exec.Cleanup()
+
+	// Before ExecutePlan, SetToolInstallDir is a no-op (ctx is nil)
+	exec.SetToolInstallDir("/some/path")
+	// Should not panic
+
+	// Manually set ctx to test it works
+	exec.ctx = &actions.ExecutionContext{}
+	exec.SetToolInstallDir("/tools/mytool-1.0")
+	if exec.ctx.ToolInstallDir != "/tools/mytool-1.0" {
+		t.Errorf("expected ToolInstallDir = /tools/mytool-1.0, got %s", exec.ctx.ToolInstallDir)
+	}
+}
+
+// TestExecutePlan_SkipsPostInstallSteps verifies that ExecutePlan does not execute
+// steps tagged phase="post-install". Without this guard, install_shell_init with
+// source_command would fail because ToolInstallDir is not set during ExecutePlan.
+func TestExecutePlan_SkipsPostInstallSteps(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{Name: "test-tool"},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	exec.SetToolsDir(t.TempDir())
+
+	plan := &InstallationPlan{
+		FormatVersion: PlanFormatVersion,
+		Tool:          "test-tool",
+		Version:       "1.0.0",
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
+		Steps: []ResolvedStep{
+			{
+				Action: "install_shell_init",
+				Phase:  "post-install",
+				Params: map[string]interface{}{
+					"source_command": "test-tool shell-init {shell}",
+					"target":         "test-tool",
+				},
+			},
+		},
+	}
+
+	if err := exec.ExecutePlan(context.Background(), plan); err != nil {
+		t.Errorf("ExecutePlan() should skip post-install steps and succeed, got: %v", err)
+	}
+}
+
+// TestExecutePlan_TwoPhaseSequence verifies the full two-phase lifecycle:
+// ExecutePlan (install phase only) → SetToolInstallDir → ExecutePhase("post-install").
+// The post-install step must run after SetToolInstallDir so that shell init
+// files are written with the correct final install location.
+func TestExecutePlan_TwoPhaseSequence(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{Name: "test-tool"},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	// toolsDir parent becomes TSUKU_HOME for shell.d path derivation
+	tsukuHome := t.TempDir()
+	exec.SetToolsDir(filepath.Join(tsukuHome, "tools"))
+
+	// Place the source file in the executor's install dir (workDir/.install)
+	installDir := filepath.Join(exec.WorkDir(), ".install")
+	srcFile := filepath.Join(installDir, "init.sh")
+	if err := os.WriteFile(srcFile, []byte("# shell init\n"), 0644); err != nil {
+		t.Fatalf("failed to create source file: %v", err)
+	}
+
+	plan := &InstallationPlan{
+		FormatVersion: PlanFormatVersion,
+		Tool:          "test-tool",
+		Version:       "1.0.0",
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
+		Steps: []ResolvedStep{
+			{
+				Action: "install_shell_init",
+				Phase:  "post-install",
+				Params: map[string]interface{}{
+					"source_file": "init.sh",
+					"target":      "test-tool",
+					"shells":      []interface{}{"bash"},
+				},
+			},
+		},
+	}
+
+	// Phase 1: ExecutePlan must succeed even though post-install step is present.
+	if err := exec.ExecutePlan(context.Background(), plan); err != nil {
+		t.Fatalf("ExecutePlan() error = %v", err)
+	}
+
+	// Phase 2: SetToolInstallDir sets the final install location on the context.
+	finalInstallDir := filepath.Join(tsukuHome, "tools", "test-tool-1.0.0")
+	exec.SetToolInstallDir(finalInstallDir)
+
+	// Phase 3: ExecutePhase runs only the post-install steps.
+	if err := exec.ExecutePhase(context.Background(), plan, "post-install"); err != nil {
+		t.Fatalf("ExecutePhase(post-install) error = %v", err)
+	}
+
+	// Verify the shell init file was written to $TSUKU_HOME/share/shell.d/
+	shellDFile := filepath.Join(tsukuHome, "share", "shell.d", "test-tool.bash")
+	if _, err := os.Stat(shellDFile); os.IsNotExist(err) {
+		t.Errorf("expected shell init file at %s, but it does not exist", shellDFile)
+	}
+}
+
+func TestExecutor_NoShellInit_PropagatedToContext(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "test-tool",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{
+					"binaries": []interface{}{"test-tool"},
+				},
+			},
+		},
+	}
+	exec, err := New(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer exec.Cleanup()
+
+	exec.SetNoShellInit(true)
+	exec.SetToolsDir(t.TempDir())
+
+	// Create a minimal plan to trigger ExecutePlan context creation
+	plan := &InstallationPlan{
+		FormatVersion: PlanFormatVersion,
+		Tool:          "test-tool",
+		Version:       "1.0.0",
+		Platform: Platform{
+			OS:   runtime.GOOS,
+			Arch: runtime.GOARCH,
+		},
+		Steps: []ResolvedStep{
+			{
+				Action:    "install_binaries",
+				Evaluable: true,
+				Params: map[string]interface{}{
+					"binaries": []interface{}{"test-tool"},
+				},
+			},
+		},
+	}
+
+	// Create a bin dir with a fake binary so install_binaries succeeds
+	binDir := exec.installDir
+	testBin := binDir + "/test-tool"
+	_ = os.MkdirAll(binDir, 0755)
+	_ = os.WriteFile(testBin, []byte("#!/bin/sh\n"), 0755)
+
+	_ = exec.ExecutePlan(context.Background(), plan)
+
+	// Check that NoShellInit propagated to the execution context
+	if exec.ctx == nil {
+		t.Fatal("expected ctx to be set after ExecutePlan")
+	}
+	if !exec.ctx.NoShellInit {
+		t.Error("expected NoShellInit to be true on the execution context")
 	}
 }

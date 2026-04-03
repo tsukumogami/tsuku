@@ -77,7 +77,7 @@ In all cases, the check is non-blocking: the entry point stats the cache file, s
 
 **R6: All-provider support.** Update checks use the ProviderFactory to resolve versions from all supported sources (GitHub, PyPI, npm, crates.io, RubyGems, Homebrew, Go proxy, etc.). This replaces the current GitHub-only implementation in `outdated`.
 
-**R7: Self-update.** `tsuku self-update` updates the tsuku binary using a rename-in-place mechanism. The running binary downloads the new version to a temp file, verifies its checksum, renames the old binary to `$TSUKU_HOME/bin/tsuku.old`, and renames the new binary into place. The backup is kept until the next successful self-update. Self-update always tracks the latest stable release; there's no version pinning for tsuku itself.
+**R7: Self-update.** Tsuku auto-updates itself during the background update check using a rename-in-place mechanism. The background process downloads the new version to a temp file, verifies its checksum, renames the old binary to a `.old` backup next to the current binary, and renames the new binary into place. The backup is kept until the next successful self-update. On the next invocation, tsuku notifies the user of the version change. `tsuku self-update` provides the same flow as a manual fallback. Auto-apply is on by default (`updates.self_update`), suppressed in CI, and can be disabled so the background check only reports availability. Self-update always tracks the latest stable release; there's no version pinning for tsuku itself.
 
 **R8: Self-update checks.** Tsuku's own version is included in the periodic update check. When a newer version is available, the notification appears alongside tool update notifications.
 
@@ -139,10 +139,11 @@ In all cases, the check is non-blocking: the entry point stats the cache file, s
 - [ ] The installer recommends enabling shell integration for timely update checks
 
 ### Self-update
-- [ ] `tsuku self-update` downloads, verifies, and replaces the tsuku binary
-- [ ] The old binary is preserved as a backup (`tsuku.old`)
-- [ ] Self-update failure leaves the current binary functional
-- [ ] Self-update is included in periodic update checks
+- [x] `tsuku self-update` downloads, verifies, and replaces the tsuku binary
+- [x] The old binary is preserved as a backup (`.old` next to the binary)
+- [x] Self-update failure leaves the current binary functional (two-rename with rollback)
+- [x] Self-update is included in periodic update checks
+- [x] Background auto-apply of self-updates (default: on, configurable via `updates.self_update`)
 
 ### Rollback
 - [ ] `tsuku rollback <tool>` switches to the immediately preceding active version (one step back)
@@ -221,7 +222,7 @@ In all cases, the check is non-blocking: the entry point stats the cache file, s
 
 **D4: Prerequisites included in auto-update scope (not separate PRs).** The Requested field bug fix and the outdated/ProviderFactory fix are part of the auto-update work. They could ship separately as bug fixes, but combining them avoids coordinating across multiple PRs.
 
-**D5: Self-update as a separate code path (not self-as-managed-tool).** The tsuku binary uses rename-in-place, not the managed tool system. This avoids a bootstrap problem where a broken updater can't fix itself. Two update mechanisms to maintain, but the self-update path is simple (~30 lines of Go) and well-understood. Alternative: treat tsuku as its own managed tool (like proto). Rejected due to bootstrap risk.
+**D5: Self-update as a separate code path (not self-as-managed-tool).** The tsuku binary uses rename-in-place, not the managed tool system. This avoids a bootstrap problem where a broken recipe pipeline can't update tsuku through itself. The self-update path is separate from managed tools but still auto-applies by default during the background check -- "separate code path" means architectural isolation, not manual-only. Two update mechanisms to maintain, but the self-update path is simple (~30 lines of Go) and well-understood. Alternative: treat tsuku as its own managed tool (like proto). Rejected due to bootstrap risk.
 
 **D6: Rollback moves to Phase 1 alongside auto-apply.** Since auto-apply is the default, users need a fast revert path from day one. Without rollback, a broken auto-update would require `tsuku install tool@previous-version` (which works but requires knowing the previous version). The multi-version directory model makes rollback cheap. Alternative: keep rollback in Phase 2 and rely on explicit install for reversion. Rejected because auto-apply without rollback is too risky for the default behavior.
 

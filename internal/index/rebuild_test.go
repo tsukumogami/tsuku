@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 )
@@ -21,6 +22,7 @@ import (
 // are separate operations with separate failure modes. Tests for Issue 2's
 // bounded-fetch path must use fetchRecipes and fetchErr, not recipes/getErr.
 type stubRegistry struct {
+	mu sync.Mutex
 	// cache path
 	recipes map[string][]byte
 	listErr error
@@ -34,6 +36,8 @@ func (s *stubRegistry) ListCached() ([]string, error) {
 	if s.listErr != nil {
 		return nil, s.listErr
 	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	names := make([]string, 0, len(s.recipes))
 	for name := range s.recipes {
 		names = append(names, name)
@@ -47,6 +51,8 @@ func (s *stubRegistry) GetCached(name string) ([]byte, error) {
 			return nil, err
 		}
 	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	data, ok := s.recipes[name]
 	if !ok {
 		return nil, nil // cache miss: matches *registry.Registry.GetCached contract
@@ -533,20 +539,27 @@ func TestRebuild_WarmCacheNeverFetches(t *testing.T) {
 // cacheTrackingRegistry wraps stubRegistry and records CacheRecipe calls.
 type cacheTrackingRegistry struct {
 	*stubRegistry
+	mu     sync.Mutex
 	cached map[string][]byte
 }
 
 func (c *cacheTrackingRegistry) CacheRecipe(name string, data []byte) error {
+	// Protect c.cached (concurrent CacheRecipe calls from the goroutine pool).
+	c.mu.Lock()
 	if c.cached == nil {
 		c.cached = make(map[string][]byte)
 	}
 	c.cached[name] = data
-	// Also populate the underlying recipes map so a second Rebuild call finds
-	// the recipe in the cache (simulating a real CacheRecipe write).
+	c.mu.Unlock()
+
+	// Protect stubRegistry.recipes against concurrent GetCached reads.
+	c.stubRegistry.mu.Lock()
 	if c.stubRegistry.recipes == nil {
 		c.stubRegistry.recipes = make(map[string][]byte)
 	}
 	c.stubRegistry.recipes[name] = data
+	c.stubRegistry.mu.Unlock()
+
 	return nil
 }
 

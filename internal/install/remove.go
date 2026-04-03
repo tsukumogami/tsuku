@@ -5,7 +5,10 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
+
+	"github.com/tsukumogami/tsuku/internal/shellenv"
 )
 
 // Remove removes an installed tool (legacy method - removes active version only)
@@ -70,6 +73,10 @@ func (m *Manager) RemoveVersion(name, version string) error {
 		return m.versionNotInstalledError(name, version, toolState)
 	}
 
+	// Execute cleanup actions before removing the directory.
+	// Collect other versions' cleanup paths so we don't delete shared resources.
+	affectedShells := m.executeCleanupActions(name, version, versionState.CleanupActions, toolState)
+
 	// Remove version directory
 	toolDir := m.config.ToolDir(name, version)
 	if err := os.RemoveAll(toolDir); err != nil {
@@ -83,6 +90,9 @@ func (m *Manager) RemoveVersion(name, version string) error {
 	if versionState.ApplicationSymlink != "" {
 		_ = os.Remove(versionState.ApplicationSymlink)
 	}
+
+	// Rebuild shell cache for affected shells
+	m.rebuildShellCaches(affectedShells)
 
 	// Check if this was the last version
 	if len(toolState.Versions) == 1 {
@@ -142,6 +152,18 @@ func (m *Manager) RemoveAllVersions(name string) error {
 		return fmt.Errorf("tool %q is not installed", name)
 	}
 
+	// Execute cleanup actions for all versions. When removing all versions,
+	// no cross-version safety check is needed -- everything goes.
+	allShells := make(map[string]bool)
+	for _, vs := range toolState.Versions {
+		for _, ca := range vs.CleanupActions {
+			m.executeSingleCleanup(ca)
+			if shell := shellFromCleanupPath(ca.Path); shell != "" {
+				allShells[shell] = true
+			}
+		}
+	}
+
 	// Remove all version directories
 	for version := range toolState.Versions {
 		toolDir := m.config.ToolDir(name, version)
@@ -149,6 +171,9 @@ func (m *Manager) RemoveAllVersions(name string) error {
 			return fmt.Errorf("failed to remove version %s: %w", version, err)
 		}
 	}
+
+	// Rebuild shell cache for affected shells
+	m.rebuildShellCaches(allShells)
 
 	// Remove symlinks and state
 	return m.removeToolEntirely(name, toolState)
@@ -214,4 +239,86 @@ func getMostRecentVersion(versions map[string]VersionState) string {
 		}
 	}
 	return mostRecent
+}
+
+// executeCleanupActions runs cleanup actions for a version being removed.
+// It skips any cleanup path that another version of the same tool also references
+// (multi-version safety). Returns the set of shell names affected for cache rebuild.
+func (m *Manager) executeCleanupActions(name, version string, actions []CleanupAction, toolState *ToolState) map[string]bool {
+	if len(actions) == 0 {
+		return nil
+	}
+
+	// Build set of cleanup paths owned by other versions of this tool.
+	otherPaths := make(map[string]bool)
+	for v, vs := range toolState.Versions {
+		if v == version {
+			continue
+		}
+		for _, ca := range vs.CleanupActions {
+			otherPaths[ca.Path] = true
+		}
+	}
+
+	affectedShells := make(map[string]bool)
+	for _, ca := range actions {
+		if otherPaths[ca.Path] {
+			// Another version still references this path -- skip.
+			fmt.Printf("   Cleanup: skipping %s (still referenced by another version)\n", ca.Path)
+			continue
+		}
+		m.executeSingleCleanup(ca)
+		if shell := shellFromCleanupPath(ca.Path); shell != "" {
+			affectedShells[shell] = true
+		}
+	}
+	return affectedShells
+}
+
+// executeSingleCleanup performs one cleanup action. Failures log a warning
+// and never block removal.
+func (m *Manager) executeSingleCleanup(ca CleanupAction) {
+	absPath := filepath.Join(m.config.HomeDir, ca.Path)
+
+	var err error
+	switch ca.Action {
+	case "delete_file":
+		err = os.Remove(absPath)
+	case "delete_dir":
+		err = os.RemoveAll(absPath)
+	default:
+		fmt.Printf("   Warning: unknown cleanup action %q for %s\n", ca.Action, ca.Path)
+		return
+	}
+
+	if err != nil && !os.IsNotExist(err) {
+		fmt.Printf("   Warning: cleanup %s %s failed: %v\n", ca.Action, ca.Path, err)
+	}
+}
+
+// ShellFromCleanupPath extracts the shell extension from a shell.d cleanup path.
+// Returns "" if the path doesn't look like a shell.d file.
+func ShellFromCleanupPath(path string) string {
+	return shellFromCleanupPath(path)
+}
+
+// shellFromCleanupPath is the unexported implementation.
+func shellFromCleanupPath(path string) string {
+	if !strings.HasPrefix(path, "share/shell.d/") {
+		return ""
+	}
+	ext := filepath.Ext(path)
+	if ext == "" {
+		return ""
+	}
+	return ext[1:] // strip leading dot
+}
+
+// rebuildShellCaches rebuilds shell init caches for the given set of shells.
+func (m *Manager) rebuildShellCaches(shells map[string]bool) {
+	for shell := range shells {
+		if err := shellenv.RebuildShellCache(m.config.HomeDir, shell); err != nil {
+			fmt.Printf("   Warning: failed to rebuild shell cache for %s: %v\n", shell, err)
+		}
+	}
 }

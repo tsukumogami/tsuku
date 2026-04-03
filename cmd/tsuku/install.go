@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -33,6 +34,7 @@ var installSearchProvider string
 var installEnv []string
 var installSkipSecurity bool
 var installYes bool
+var installNoShellInit bool
 
 var installCmd = &cobra.Command{
 	Use:   "install [tool]...",
@@ -313,6 +315,9 @@ Exit codes for project install:
 				handleInstallError(err)
 			}
 		}
+
+		// Recommend shell integration for timely update checks (R5)
+		suggestShellIntegration()
 	},
 }
 
@@ -331,6 +336,7 @@ func init() {
 	installCmd.Flags().StringVar(&installSearchProvider, "search-provider", "", "Search provider for LLM discovery: ddg, tavily, or brave")
 	installCmd.Flags().StringArrayVar(&installEnv, "env", nil, "Pass environment variable to sandbox container (KEY=VALUE or KEY)")
 	installCmd.Flags().BoolVarP(&installYes, "yes", "y", false, "Skip confirmation prompts (e.g., unregistered source approval)")
+	installCmd.Flags().BoolVar(&installNoShellInit, "no-shell-init", false, "Skip shell integration setup (shell.d files)")
 	installCmd.Flags().BoolVar(&installSkipSecurity, "dangerously-suppress-security", false, "Skip cache directory security checks (symlink/permissions). CI only.")
 	_ = installCmd.Flags().MarkHidden("dangerously-suppress-security")
 }
@@ -340,6 +346,36 @@ func init() {
 // ModeCharDevice check incorrectly returned true for /dev/null.
 func isInteractive() bool {
 	return term.IsTerminal(int(os.Stdin.Fd()))
+}
+
+// suggestShellIntegration prints a one-time hint when shell integration
+// isn't set up. Checks if $TSUKU_HOME/tools/current is in PATH. Only
+// prints in interactive (TTY) mode and not in quiet/CI contexts.
+func suggestShellIntegration() {
+	if quietFlag {
+		return
+	}
+
+	cfg, err := config.DefaultConfig()
+	if err != nil {
+		return
+	}
+
+	currentDir := filepath.Join(cfg.HomeDir, "tools", "current")
+	absCurrentDir, err := filepath.Abs(currentDir)
+	if err != nil {
+		return
+	}
+
+	for _, dir := range filepath.SplitList(os.Getenv("PATH")) {
+		absDir, _ := filepath.Abs(dir)
+		if absDir == absCurrentDir {
+			return // already in PATH
+		}
+	}
+
+	fmt.Fprintf(os.Stderr, "\nTip: enable shell integration for automatic update checks:\n")
+	fmt.Fprintf(os.Stderr, "  eval $(tsuku shellenv)\n\n")
 }
 
 // runDryRun shows what would be installed without making changes

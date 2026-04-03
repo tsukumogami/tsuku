@@ -12,6 +12,14 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 )
 
+// CleanupAction describes a file-system cleanup operation to perform when
+// a tool version is removed. Paths are relative to $TSUKU_HOME.
+type CleanupAction struct {
+	Action      string `json:"action"`                 // "delete_file", "delete_dir"
+	Path        string `json:"path"`                   // relative to $TSUKU_HOME
+	ContentHash string `json:"content_hash,omitempty"` // SHA-256 hex digest of file content at install time
+}
+
 // VersionState holds per-version metadata for an installed tool version.
 type VersionState struct {
 	Requested          string            `json:"requested"`                     // What user asked for ("17", "@lts", "")
@@ -21,6 +29,7 @@ type VersionState struct {
 	Plan               *Plan             `json:"plan,omitempty"`                // Installation plan (if generated)
 	AppPath            string            `json:"app_path,omitempty"`            // Path to installed .app bundle (macOS only)
 	ApplicationSymlink string            `json:"application_symlink,omitempty"` // Path to ~/Applications symlink (if created)
+	CleanupActions     []CleanupAction   `json:"cleanup_actions,omitempty"`     // Files to delete on remove (recorded by post-install actions)
 }
 
 // Plan represents a stored installation plan. This is a simplified view of

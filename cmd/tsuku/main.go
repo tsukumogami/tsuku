@@ -16,8 +16,10 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/distributed"
 	"github.com/tsukumogami/tsuku/internal/log"
+	"github.com/tsukumogami/tsuku/internal/project"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/registry"
+	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/updates"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
@@ -66,14 +68,37 @@ func init() {
 			"help":          true,
 			"version":       true,
 			"completion":    true,
+			"self-update":   true,
 		}
 		if !skip[cmd.Name()] {
 			if cfg, err := config.DefaultConfig(); err == nil {
 				if userCfg, err := userconfig.Load(); err == nil {
 					updates.CheckAndSpawnUpdateCheck(cfg, userCfg)
-					updates.MaybeAutoApply(cfg, userCfg, func(toolName, version, constraint string) error {
+					tc := telemetry.NewClient()
+					projCfg, _ := project.LoadProjectConfig(".")
+					results := updates.MaybeAutoApply(cfg, userCfg, projCfg, func(toolName, version, constraint string) error {
 						return runInstallWithTelemetry(toolName, version, constraint, false, "", nil)
-					})
+					}, tc)
+					updates.DisplayNotifications(cfg, userCfg, quietFlag, results)
+				}
+			}
+		}
+	}
+
+	// Best-effort available-update summary after command output
+	rootCmd.PersistentPostRun = func(cmd *cobra.Command, args []string) {
+		skip := map[string]bool{
+			"check-updates": true,
+			"hook-env":      true,
+			"run":           true,
+			"help":          true,
+			"version":       true,
+			"completion":    true,
+		}
+		if !skip[cmd.Name()] {
+			if cfg, err := config.DefaultConfig(); err == nil {
+				if userCfg, err := userconfig.Load(); err == nil {
+					updates.DisplayAvailableSummary(cfg, userCfg, quietFlag)
 				}
 			}
 		}
@@ -163,6 +188,7 @@ func init() {
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(shimCmd)
+	rootCmd.AddCommand(selfUpdateCmd)
 }
 
 func main() {

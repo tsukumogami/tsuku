@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
 )
@@ -343,6 +344,34 @@ func TestPlanRetrievalConfig(t *testing.T) {
 		}
 		if cfg.Arch != "amd64" {
 			t.Errorf("Arch = %q, want %q", cfg.Arch, "amd64")
+		}
+	})
+}
+
+func TestConvertCleanupActions(t *testing.T) {
+	t.Run("converts actions correctly", func(t *testing.T) {
+		input := []actions.CleanupAction{
+			{Action: "delete_file", Path: "share/shell.d/tool.bash", ContentHash: "abc123"},
+			{Action: "delete_dir", Path: "share/completions/bash"},
+		}
+
+		result := convertCleanupActions(input)
+
+		if len(result) != 2 {
+			t.Fatalf("expected 2 actions, got %d", len(result))
+		}
+		if result[0].Action != "delete_file" || result[0].Path != "share/shell.d/tool.bash" || result[0].ContentHash != "abc123" {
+			t.Errorf("action[0] = %+v, unexpected", result[0])
+		}
+		if result[1].Action != "delete_dir" || result[1].Path != "share/completions/bash" {
+			t.Errorf("action[1] = %+v, unexpected", result[1])
+		}
+	})
+
+	t.Run("returns empty slice for empty input", func(t *testing.T) {
+		result := convertCleanupActions([]actions.CleanupAction{})
+		if len(result) != 0 {
+			t.Errorf("expected 0 actions, got %d", len(result))
 		}
 	})
 }

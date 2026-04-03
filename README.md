@@ -16,6 +16,7 @@ tsuku is a package manager that makes it easy to install and manage development 
 - **Automatic PATH management**: Shell integration for easy access
 - **Dependency management**: Automatic installation and cleanup of tool dependencies
 - **Ecosystem integration**: Full support for npm, cargo, go, pip, gem, nix, and cpan with lockfile-based reproducibility
+- **Tool shell integration**: Recipes can register shell functions and completions automatically via `tsuku shellenv`
 - **No dependencies**: Single binary, no system prerequisites
 
 ## Installation
@@ -76,6 +77,50 @@ Applications installed via cask recipes are stored in `$TSUKU_HOME/apps/` and sy
 ```bash
 tsuku update kubectl
 ```
+
+### Self-Update
+
+tsuku keeps itself up to date automatically. During regular background update checks, it downloads and applies new versions of itself. On the next invocation after a successful update, you'll see a brief notice: "tsuku has been updated to vX.Y.Z".
+
+To update manually:
+
+```bash
+tsuku self-update
+```
+
+Self-update is enabled by default. To disable it:
+
+```bash
+tsuku config set updates.self_update false
+```
+
+In CI environments (`CI=true`), self-update is suppressed automatically. You can also disable it per-invocation with `TSUKU_NO_SELF_UPDATE=1`.
+
+### Update Notifications
+
+tsuku shows brief notifications on stderr when updates are relevant:
+
+- **Applied updates:** When auto-apply is enabled, you'll see `Updated <tool> 1.2.0 -> 1.3.0` for each tool updated in the background.
+- **Failed updates:** If a background update fails (and gets rolled back), tsuku tells you what happened and how to recover.
+- **Self-update results:** After tsuku updates itself, the next invocation shows the new version.
+- **Available updates:** When auto-apply is off, tsuku shows `N updates available. Run 'tsuku update' to apply.` once per check cycle.
+
+Notifications are suppressed automatically in these contexts:
+
+| Condition | Rationale |
+|-----------|-----------|
+| `CI=true` | CI pipelines shouldn't see update noise |
+| Non-TTY stdout | Piped or scripted output stays clean |
+| `--quiet` / `-q` flag | User asked for silence |
+| `TSUKU_NO_UPDATE_CHECK=1` | Explicit opt-out of all update behavior |
+
+To force notifications in a suppressed environment (for example, a CI job that should auto-update):
+
+```bash
+TSUKU_AUTO_UPDATE=1 tsuku install kubectl
+```
+
+`TSUKU_AUTO_UPDATE=1` overrides all suppression signals. See [ENVIRONMENT.md](docs/ENVIRONMENT.md) for details.
 
 ### Remove a tool
 
@@ -845,6 +890,18 @@ tsuku hook uninstall --shell=bash
 ```
 
 Removes the marker block from the rc file (or deletes `~/.config/fish/conf.d/tsuku.fish` for fish). Also idempotent.
+
+### Tool Shell Integration
+
+Some tools register shell functions or environment setup during installation. Recipes that include an `install_shell_init` step place init scripts in `$TSUKU_HOME/share/shell.d/`, and `tsuku shellenv` sources them automatically. This means tools like direnv or nvm can set up their shell hooks without manual configuration.
+
+If you don't want a tool's shell init scripts, pass `--no-shell-init` during installation:
+
+```bash
+tsuku install direnv --no-shell-init
+```
+
+`tsuku info <tool>` shows whether a tool has shell integration files installed.
 
 ## Operations
 

@@ -116,6 +116,7 @@ func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, te
 		RecipeSource:  "registry",
 		Downloader:    downloader,
 		DownloadCache: downloadCache,
+		RecipeLoader:  loader,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to generate library plan: %w", err)
