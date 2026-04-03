@@ -1,0 +1,23 @@
+{
+  "topic": "org-scoped-project-config",
+  "decisions": [
+    {
+      "id": 1,
+      "question": "How should runProjectInstall detect org-scoped tool keys, bootstrap distributed providers, and handle auto-registration from project config?",
+      "status": "complete",
+      "complexity": "standard",
+      "chosen": "Pre-scan and batch-bootstrap",
+      "report_file": "wip/design_org-scoped-project-config_decision_1_report.md"
+    },
+    {
+      "id": 2,
+      "question": "How should the resolver reconcile org-prefixed config keys (tsukumogami/koto) with bare binary-index recipe names (koto)?",
+      "status": "complete",
+      "complexity": "standard",
+      "chosen": "Dual-key lookup in the resolver",
+      "report_file": "wip/design_org-scoped-project-config_decision_2_report.md"
+    }
+  ],
+  "cross_validation": "pending",
+  "round": 0
+}
