@@ -33,15 +33,17 @@ recipes/ (git) → CI generates plans → R2 storage → CI validates plans
 
 ### Token Inventory
 
-| Secret Name | Permission | Usage |
-|-------------|------------|-------|
-| `R2_BUCKET_URL` | N/A | Bucket endpoint URL |
-| `R2_ACCESS_KEY_ID_READONLY` | Object Read | Validation workflows |
-| `R2_SECRET_ACCESS_KEY_READONLY` | Object Read | Validation workflows |
-| `R2_ACCESS_KEY_ID_WRITE` | Object Read & Write | Upload, cleanup workflows |
-| `R2_SECRET_ACCESS_KEY_WRITE` | Object Read & Write | Upload, cleanup workflows |
+Three Cloudflare R2 API tokens:
 
-All tokens are scoped to the `tsuku-golden-registry` bucket only, not account-wide.
+| Cloudflare Token Name | Permission | Scope | Issued | GitHub Secrets |
+|-----------------------|------------|-------|--------|----------------|
+| `tsuku-golden-readonly` | Object Read | `tsuku-golden-registry` bucket | Jan 24, 2026 | `R2_ACCESS_KEY_ID_READONLY`, `R2_SECRET_ACCESS_KEY_READONLY` |
+| `tsuku-golden-readwrite` | Object Read & Write | `tsuku-golden-registry` bucket | Jan 24, 2026 | `R2_ACCESS_KEY_ID_WRITE`, `R2_SECRET_ACCESS_KEY_WRITE` |
+| `R2 Account Token` | Admin Read & Write | All buckets | Feb 1, 2026 | _(not in GitHub -- used for manual admin operations only)_ |
+
+Additionally, `R2_BUCKET_URL` stores the bucket endpoint URL (not rotated).
+
+The first two tokens are bucket-scoped and used by CI workflows. The account token is for manual admin operations (cost monitoring scripts, bucket management) and should be rotated on the same schedule.
 
 ### Rotation Schedule
 
@@ -55,48 +57,65 @@ Tokens rotate every 90 days (quarterly). Set calendar reminders for:
 
 **Prerequisites**: Cloudflare dashboard access and GitHub admin access.
 
-1. **Generate new tokens in Cloudflare**:
-   ```
-   Cloudflare Dashboard → R2 → Manage R2 API Tokens → Create API Token
-   ```
-   - Create one read-only token
-   - Create one read-write token
-   - Note both Access Key ID and Secret Access Key for each
+#### 1. Generate new tokens in Cloudflare
 
-2. **Update GitHub Secrets**:
-   ```bash
-   # Update read-only tokens
-   gh secret set R2_ACCESS_KEY_ID_READONLY
-   gh secret set R2_SECRET_ACCESS_KEY_READONLY
+Go to [R2 API Tokens](https://dash.cloudflare.com/?to=/:account/r2/api-tokens) and create replacement tokens:
 
-   # Update write tokens
-   gh secret set R2_ACCESS_KEY_ID_WRITE
-   gh secret set R2_SECRET_ACCESS_KEY_WRITE
-   ```
+| Old Token | New Token Name | Permission | Scope |
+|-----------|---------------|------------|-------|
+| `tsuku-golden-readonly` | `tsuku-golden-readonly` | Object Read only | `tsuku-golden-registry` bucket |
+| `tsuku-golden-readwrite` | `tsuku-golden-readwrite` | Object Read & Write | `tsuku-golden-registry` bucket |
+| `R2 Account Token` | `R2 Account Token` | Admin Read & Write | All buckets |
 
-3. **Verify new tokens work**:
-   ```bash
-   # Trigger health check to verify read access
-   gh workflow run r2-health-monitor.yml
+Save the Access Key ID and Secret Access Key for each -- they're shown only once.
 
-   # Wait for completion and check result
-   gh run list --workflow=r2-health-monitor.yml --limit=1
-   ```
+#### 2. Update GitHub Secrets
 
-4. **Verify write access** (optional, use with caution):
-   ```bash
-   # Trigger cleanup in dry-run mode
-   gh workflow run r2-cleanup.yml -f dry_run=true
-   ```
+```bash
+# Read-only token (from tsuku-golden-readonly)
+gh secret set R2_ACCESS_KEY_ID_READONLY
+gh secret set R2_SECRET_ACCESS_KEY_READONLY
 
-5. **Revoke old tokens** (only after verification):
-   ```
-   Cloudflare Dashboard → R2 → Manage R2 API Tokens → Delete old tokens
-   ```
+# Read-write token (from tsuku-golden-readwrite)
+gh secret set R2_ACCESS_KEY_ID_WRITE
+gh secret set R2_SECRET_ACCESS_KEY_WRITE
+```
 
-6. **Document rotation**:
-   - Update rotation tracking issue or internal log
-   - Note date and any issues encountered
+Each command prompts for the value interactively (paste from step 1).
+
+#### 3. Verify read access
+
+```bash
+gh workflow run r2-health-monitor.yml
+# Wait ~1 minute, then check result
+gh run list --workflow=r2-health-monitor.yml --limit=1
+```
+
+If the run fails, the read-only token has wrong permissions or bucket scope.
+
+#### 4. Verify write access
+
+```bash
+gh workflow run r2-cleanup.yml -f dry_run=true
+# Wait ~1 minute, then check result
+gh run list --workflow=r2-cleanup.yml --limit=1
+```
+
+If the run fails, the read-write token has wrong permissions or bucket scope.
+
+#### 5. Rotate the account token
+
+The `R2 Account Token` (Admin Read & Write, all buckets) isn't stored in GitHub secrets but should be rotated on the same schedule. Create a replacement with the same permissions, verify it works for any local admin scripts, then revoke the old one.
+
+#### 6. Revoke old tokens
+
+Only after all verifications pass, go to [R2 API Tokens](https://dash.cloudflare.com/?to=/:account/r2/api-tokens) and delete the old versions of all three tokens (`tsuku-golden-readonly`, `tsuku-golden-readwrite`, `R2 Account Token`).
+
+#### 7. Close the rotation issue
+
+```bash
+gh issue close <issue-number>
+```
 
 ### Rotation Tracking
 
