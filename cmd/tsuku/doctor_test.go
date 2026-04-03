@@ -31,8 +31,8 @@ func captureDoctorOutput(fn func()) (stdout, stderr string) {
 	wErr.Close()
 
 	var bufOut, bufErr bytes.Buffer
-	bufOut.ReadFrom(rOut)
-	bufErr.ReadFrom(rErr)
+	_, _ = bufOut.ReadFrom(rOut)
+	_, _ = bufErr.ReadFrom(rErr)
 	return bufOut.String(), bufErr.String()
 }
 
