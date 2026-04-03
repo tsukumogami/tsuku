@@ -9,7 +9,8 @@ decision: |
   Update the envFileContent constant in config.go to include shell detection
   ($BASH_VERSION/$ZSH_VERSION) and source the appropriate init cache, plus a line to
   source env.local for user customizations. EnsureEnvFile() gains a one-time migration
-  that extracts any existing TSUKU_NO_TELEMETRY line to env.local before rewriting.
+  that extracts any export lines not in the new envFileContent to env.local before
+  rewriting (generic: handles TSUKU_NO_TELEMETRY and any future additions).
   The installer writes telemetry opt-outs to env.local instead of env. tsuku doctor
   gains an env file staleness check and a --fix flag that calls EnsureEnvFile() and
   rebuilds the shell.d caches.
@@ -155,9 +156,12 @@ users who installed via the official script.
 user-specific content. The managed `env` sources `env.local` if it exists. `EnsureEnvFile()`
 rewrites `env` freely without parsing.
 
-For existing users whose `env` contains `TSUKU_NO_TELEMETRY=1`, a one-time migration in
-`EnsureEnvFile()` extracts that line to `env.local` before rewriting. The detection is a
-simple `strings.Contains` check — narrow enough to be reliable.
+For existing users whose `env` contains content beyond the managed block, a one-time
+migration in `EnsureEnvFile()` extracts any `export` lines not present in the new
+`envFileContent` and appends them to `env.local` before rewriting. This handles
+`TSUKU_NO_TELEMETRY=1` (the only thing the official installer ever appends) and any
+other exports a user or future installer feature might have added. Comment lines are
+dropped — they're generated content, not user prose.
 
 New managed `envFileContent`:
 ```sh
@@ -258,15 +262,17 @@ is broken anyway, so the message text must change regardless.
 The `envFileContent` constant in `internal/config/config.go` is updated to include
 shell detection via `$BASH_VERSION`/`$ZSH_VERSION` and a conditional source of the
 appropriate init cache, plus a line to source `$TSUKU_HOME/env.local` for user
-customizations. `EnsureEnvFile()` gains a one-time migration that detects `TSUKU_NO_TELEMETRY`
-in the existing file and writes it to `env.local` before rewriting. `website/install.sh`
-changes its telemetry opt-out append target from `$ENV_FILE` to `$ENV_LOCAL_FILE`.
+customizations. `EnsureEnvFile()` gains a one-time migration that extracts any `export` lines from the
+existing `env` that aren't present in the new `envFileContent`, and appends them to
+`env.local` before rewriting. `website/install.sh` changes its telemetry opt-out append
+target from `$ENV_FILE` to `$ENV_LOCAL_FILE`.
 
 Active users get the fix automatically on their next `tsuku install` — the idempotency
 check in `EnsureEnvFile()` detects the content mismatch and rewrites. The migration is
-narrow: it only extracts the specific `TSUKU_NO_TELEMETRY` line the installer writes, not
-arbitrary user content. After the rewrite, `$TSUKU_HOME/env.local` is sourced at the end
-of `env`, so any content written there (by the installer or by the user) takes effect.
+generic: it extracts any non-managed export from the existing `env` (today that's
+`TSUKU_NO_TELEMETRY`; future installer additions are handled automatically). After the
+rewrite, `$TSUKU_HOME/env.local` is sourced at the end of `env`, so any content written
+there (by the installer or by the user) takes effect.
 
 For users who never run `tsuku install` again, `tsuku doctor` gains a new check comparing
 `$TSUKU_HOME/env` against `envFileContent`. When stale, it reports the problem and
@@ -314,7 +320,7 @@ $TSUKU_HOME/
 
 internal/config/config.go
   envFileContent    ← updated constant (shell detection + env.local sourcing)
-  EnsureEnvFile()   ← unchanged logic + one-time migration for TSUKU_NO_TELEMETRY
+  EnsureEnvFile()   ← unchanged logic + one-time migration for non-managed exports
 
 website/install.sh
   telemetry block   ← writes TSUKU_NO_TELEMETRY to env.local instead of env
@@ -330,12 +336,17 @@ cmd/tsuku/doctor.go
 ```
 1. existing = read($TSUKU_HOME/env) or ""
 2. if existing == envFileContent: return nil
-3. if strings.Contains(existing, "TSUKU_NO_TELEMETRY"):
-   a. extract lines containing "TSUKU_NO_TELEMETRY"
-   b. if $TSUKU_HOME/env.local does NOT already contain "TSUKU_NO_TELEMETRY":
-        append extracted lines to $TSUKU_HOME/env.local (create if absent)
+3. for each line in existing where line starts with "export":
+     if line is NOT in envFileContent:
+       if $TSUKU_HOME/env.local does NOT already contain line:
+         append line to $TSUKU_HOME/env.local (create if absent)
 4. write envFileContent to $TSUKU_HOME/env
 ```
+
+The migration extracts any non-managed export (e.g., `TSUKU_NO_TELEMETRY=1`, or any
+future export the installer might add) without hardcoding specific variable names.
+Comment lines in the existing `env` are dropped — they're generated content, not
+user-written prose.
 
 **`tsuku doctor` new check**:
 ```
@@ -377,7 +388,7 @@ install_shell_init action
   → RebuildShellCache("zsh")  → .init-cache.zsh updated
 EnsureEnvFile()
   → detects content mismatch (old env lacks init-cache sourcing)
-  → migration: extracts TSUKU_NO_TELEMETRY to env.local if present
+  → migration: extracts any non-managed export lines to env.local
   → rewrites env with new envFileContent
 ```
 
@@ -390,11 +401,11 @@ Core fix. Highest priority — everything else depends on the new constant.
 Deliverables:
 - `internal/config/config.go`: update `envFileContent` constant to include shell
   detection and env.local sourcing. Add migration logic to `EnsureEnvFile()` that
-  extracts `TSUKU_NO_TELEMETRY` to `env.local` before rewriting.
+  extracts any `export` lines not in `envFileContent` to `env.local` before rewriting.
 - `website/install.sh`: change telemetry opt-out block to write to `$ENV_LOCAL_FILE`.
   Define `ENV_LOCAL_FILE="$TSUKU_HOME/env.local"` alongside `ENV_FILE`.
-- Tests: update `TestEnsureEnvFile` to cover migration path (existing file with
-  `TSUKU_NO_TELEMETRY` → migrated to `env.local`, env rewritten).
+- Tests: update `TestEnsureEnvFile` to cover migration path (existing file with unknown
+  exports → migrated to `env.local`, env rewritten; idempotent on second run).
 
 ### Phase 2: Update `tsuku doctor`
 
