@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   Org-scoped recipes (like tsukumogami/koto) have no working syntax in
   .tsuku.toml. The TOML format forbids slash in bare keys, the project install
@@ -24,7 +24,7 @@ rationale: |
 
 ## Status
 
-Accepted
+Planned
 
 ## Context and Problem Statement
 
