@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Done
 problem: |
   The tsuku repo has no committed CLAUDE.md and no AI skills for recipe authoring,
   despite recipe authoring being the most complex and frequent contributor workflow.
@@ -21,7 +21,7 @@ goals: |
 
 ## Status
 
-Accepted
+Done
 
 ## Problem Statement
 

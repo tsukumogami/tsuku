@@ -1,10 +1,6 @@
 ---
-status: Superseded
-superseded_by: docs/prds/PRD-tsuku-ai-skills.md
-note: |
-  The PRD revised the scope to: single tsuku-recipes plugin with bundled
-  references, separate tsuku-user plugin, committed CLAUDE.md instead of
-  tsuku-dev plugin.
+status: Current
+upstream: docs/prds/PRD-tsuku-ai-skills.md
 problem: |
   The tsuku package manager has no AI skills for Claude Code, despite having
   three distinct personas (recipe authors, CLI contributors, maintainers)
@@ -33,7 +29,7 @@ rationale: |
 
 ## Status
 
-Superseded by [`docs/prds/PRD-tsuku-ai-skills.md`](../prds/PRD-tsuku-ai-skills.md). The PRD revised the scope to a single `tsuku-recipes` plugin with bundled references, a separate `tsuku-user` plugin, and committed CLAUDE.md instead of a `tsuku-dev` plugin.
+Current
 
 ## Context and Problem Statement
 
