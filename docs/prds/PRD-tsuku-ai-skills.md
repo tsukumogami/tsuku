@@ -148,13 +148,18 @@ dependencies, platform-conditional with when clauses, ecosystem-delegated
 (cargo/npm/pip/go), library with outputs and rpath, and custom verification.
 Exemplar recipes must be human-authored (not llm_validation = "skipped").
 
-**R13** -- recipe-author SKILL.md must include deep-dive pointers to existing
-guide files. At minimum: GUIDE-actions-and-primitives.md,
-GUIDE-hybrid-libc-recipes.md, GUIDE-library-dependencies.md,
-GUIDE-recipe-verification.md, GUIDE-troubleshooting-verification.md,
-GUIDE-distributed-recipe-authoring.md. The skill must also include a pointer
-to the public documentation root (docs/guides/) so agents running older skill
-versions can discover new guides independently.
+**R13** -- recipe-author must include agent-shaped reference files under
+references/ covering the depth topics that recipe authors need mid-task. At
+minimum: an action reference (action names with key parameters, shaped as a
+lookup table), a platform and verification reference (when clause patterns,
+verification modes, format transforms), and the exemplar-recipes.md from R12.
+These files are bundled with the skill so external consumers who install via
+sparsePaths get complete guidance without access to docs/guides/.
+
+**R13a** -- recipe-author SKILL.md must include a fallback pointer to
+docs/guides/ as the public documentation root for contributors who have the
+repo cloned and for topics the bundled references don't cover. The pointer
+must note that external consumers won't have access to this directory.
 
 **R14** -- recipe-author SKILL.md must cover distributed recipe authoring:
 .tsuku-recipes/ directory setup, file naming convention (kebab-case TOML),
@@ -246,7 +251,10 @@ arbitrary commands on their machines is not acceptable.
 - [ ] references/exemplar-recipes.md exists with at least 7 recipe paths (one per required category)
 - [ ] All listed exemplar recipe files exist in the recipes/ directory
 - [ ] No listed exemplar has llm_validation = "skipped" in its metadata
-- [ ] SKILL.md includes pointers to at least 6 GUIDE-*.md files
+- [ ] references/ contains an action reference file with action names and key parameters
+- [ ] references/ contains a platform and verification reference file with when clause patterns and format transforms
+- [ ] SKILL.md links to each bundled reference file with a one-line description of when to follow it
+- [ ] SKILL.md includes a fallback pointer to docs/guides/ with a note about external consumer access
 - [ ] SKILL.md covers .tsuku-recipes/ directory setup and documents all three install syntax forms: owner/repo, owner/repo:recipe, owner/repo@version
 
 ### recipe-test Skill
@@ -269,8 +277,7 @@ arbitrary commands on their machines is not acceptable.
 
 - [ ] All GUIDE-*.md files have been moved from docs/ to docs/guides/
 - [ ] No GUIDE-*.md files remain at docs/ root
-- [ ] All cross-references to moved guide files are updated (SKILL.md, CONTRIBUTING.md, design docs)
-- [ ] recipe-author SKILL.md includes a pointer to docs/guides/ as the public documentation root
+- [ ] All cross-references to moved guide files are updated (CONTRIBUTING.md, design docs, and any other internal references)
 
 ### Skill Freshness
 
@@ -306,11 +313,15 @@ that's standard repo orientation. The koto pattern confirms this: CLAUDE.md for
 contributor context, plugin skills only for external domain workflows. This
 simplifies the plan from 2 plugins to 1.
 
-**Hybrid quick-reference over full embedding**: The 11 GUIDE-*.md files total
-1,700+ lines. Embedding them in SKILL.md creates drift risk and context bloat.
-The hybrid approach (action names table + guide pointers) handles 80% of lookups
-(action name, syntax check) without file reads, while deep dives use the
-authoritative source docs.
+**Bundled agent-shaped references over guide pointers**: External recipe authors
+install the plugin via sparsePaths and don't have access to docs/guides/. Guide
+pointers would be broken links for the primary external audience. Following the
+koto pattern, we bundle 2-3 focused reference files shaped for agent consumption
+(lookup tables, cheat sheets) alongside a docs/guides/ fallback pointer for
+contributors who have the repo cloned. The bundled references are not duplicates
+of the guides -- they cover the same facts but in agent-optimized formats
+(dispatch tables vs. narrative explanations). The CLAUDE.md maintenance protocol
+catches drift between them.
 
 **File-existence CI over eval harness**: A CI check that verifies exemplar recipe
 paths exist and pass `tsuku validate` catches the most common drift (deleted or
