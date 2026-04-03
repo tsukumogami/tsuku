@@ -100,9 +100,11 @@ shellenv, telemetry.
 **R3** -- CLAUDE.md must include a "tsuku-recipes Plugin Maintenance" section
 following the koto pattern. The section must instruct contributors to assess
 recipe skills after changes to internal/actions/, internal/version/, and
-internal/recipe/. It must distinguish between broken contracts (existing skill
-content that no longer matches code) and new surface (added behavior not yet
-covered by the skill).
+internal/recipe/ by: (1) reading the diff and each skill, then checking whether
+anything the skill documents no longer matches the code (broken contracts), and
+(2) checking whether the change adds action names, parameter schemas, version
+source types, or when clause filters that neither skill mentions (new surface).
+If either check surfaces gaps, the contributor updates the skill in the same PR.
 
 **R4** -- CLAUDE.local.md must be reduced to workspace-specific content only:
 Repo Visibility, Default Scope, QA Configuration, and Environment sections.
@@ -125,9 +127,9 @@ in settings.local.json.
 ### recipe-author Skill (Workstream C)
 
 **R8** -- Create plugins/tsuku-recipes/skills/recipe-author/SKILL.md with a
-hybrid quick-reference architecture. The skill must embed a compact action names
-table covering all action categories (composites and primitives) with one-line
-descriptions.
+hybrid quick-reference architecture. The skill must embed an action names table
+with columns: action name, category, and one-line description. The table must
+cover all action categories (composites and primitives).
 
 **R9** -- recipe-author SKILL.md must list all version provider types with the
 corresponding [version] source value.
@@ -140,17 +142,19 @@ filters.
 version mode, output mode, and common format transforms (semver, strip_v, calver).
 
 **R12** -- recipe-author must include a references/exemplar-recipes.md file with
-5-8 curated recipe paths covering distinct pattern categories: binary download,
-homebrew-backed, source build with dependencies, platform-conditional with when
-clauses, ecosystem-delegated (cargo/npm/pip/go), library with outputs and rpath,
-and custom verification. Exemplar recipes must be human-authored (not
-llm_validation = "skipped").
+curated recipe paths covering these pattern categories (one exemplar per
+category, minimum 7): binary download, homebrew-backed, source build with
+dependencies, platform-conditional with when clauses, ecosystem-delegated
+(cargo/npm/pip/go), library with outputs and rpath, and custom verification.
+Exemplar recipes must be human-authored (not llm_validation = "skipped").
 
 **R13** -- recipe-author SKILL.md must include deep-dive pointers to existing
 guide files. At minimum: GUIDE-actions-and-primitives.md,
 GUIDE-hybrid-libc-recipes.md, GUIDE-library-dependencies.md,
 GUIDE-recipe-verification.md, GUIDE-troubleshooting-verification.md,
-GUIDE-distributed-recipe-authoring.md.
+GUIDE-distributed-recipe-authoring.md. The skill must also include a pointer
+to the public documentation root (docs/guides/) so agents running older skill
+versions can discover new guides independently.
 
 **R14** -- recipe-author SKILL.md must cover distributed recipe authoring:
 .tsuku-recipes/ directory setup, file naming convention (kebab-case TOML),
@@ -168,8 +172,8 @@ tsuku install --sandbox, and golden file validation.
 docker-dev.sh for container setup, make build-test for local builds, tsuku doctor
 for environment checks, TSUKU_HOME isolation for safe local testing.
 
-**R17** -- recipe-test SKILL.md must document common failure patterns with exit
-codes: exit 6 (container failure), exit 8 (verification failure).
+**R17** -- recipe-test SKILL.md must document at least exit codes 6 (container
+failure) and 8 (verification failure) with their failure scenarios.
 
 **R18** -- recipe-test SKILL.md must include a pointer to CONTRIBUTING.md for full
 testing documentation, including cross-family testing instructions.
@@ -183,15 +187,30 @@ plugins/tsuku-recipes/ only. autoUpdate must be omitted (defaults to false) so
 external consumers explicitly control update timing.
 
 **R20** -- Create plugins/tsuku-recipes/AGENTS.md providing recipe authoring
-guidance for non-Claude-Code agents.
+guidance for non-Claude-Code agents. Content must cover: what tsuku recipes are,
+recipe TOML format overview, pointer to the action names table in recipe-author
+SKILL.md, the testing workflow (validate -> eval -> sandbox), and links to
+GUIDE-*.md files. Length must not exceed 120 lines.
 
-### Skill Freshness (Workstream F)
+### Documentation Organization (Workstream F)
 
-**R21** -- Create a CI check that validates all recipe file paths referenced in
+**R23** -- Move public-facing guide files (GUIDE-*.md) from docs/ root into
+docs/guides/. Public guides are documentation intended for recipe authors and
+tool users. Internal artifacts (designs, PRDs, roadmaps, plans) stay at their
+current paths. This separation prevents agents browsing the guide directory
+from loading internal planning artifacts into context.
+
+**R24** -- Update all internal cross-references to moved guide files. This
+includes SKILL.md pointers, CONTRIBUTING.md links, and any design docs that
+reference GUIDE-*.md paths.
+
+### Skill Freshness (Workstream G)
+
+**R25** -- Create a CI check that validates all recipe file paths referenced in
 exemplar-recipes.md still exist and pass tsuku validate. The check must run when
 skill files or referenced recipes change.
 
-**R22** -- The tsuku-recipes plugin must not contain a hooks.json file. External
+**R26** -- The tsuku-recipes plugin must not contain a hooks.json file. External
 recipe authors install the plugin with potentially-enabled autoUpdate; executing
 arbitrary commands on their machines is not acceptable.
 
@@ -200,11 +219,12 @@ arbitrary commands on their machines is not acceptable.
 ### CLAUDE.md
 
 - [ ] CLAUDE.md exists at the tsuku repo root and is committed to git
+- [ ] CLAUDE.md contains: repo description, monorepo structure diagram, build/test/lint commands, CLI command table, development workflow, release process, and conventions sections
 - [ ] CLAUDE.md contains a "Key Internal Packages" section listing at least 12 packages
 - [ ] CLAUDE.md contains a "tsuku-recipes Plugin Maintenance" section that names internal/actions/, internal/version/, and internal/recipe/ as trigger areas
-- [ ] The maintenance section distinguishes between "broken contracts" and "new surface"
-- [ ] CLAUDE.local.md contains only workspace-specific sections (Repo Visibility, Default Scope, QA Configuration, Environment)
-- [ ] No content is duplicated between CLAUDE.md and CLAUDE.local.md
+- [ ] The maintenance section distinguishes between "broken contracts" and "new surface" and instructs contributors to update skills in the same PR
+- [ ] CLAUDE.local.md contains only: Repo Visibility, Default Scope, QA Configuration, and Environment sections
+- [ ] No section headings or multi-line blocks from CLAUDE.local.md appear verbatim in CLAUDE.md
 
 ### Plugin Infrastructure
 
@@ -212,7 +232,8 @@ arbitrary commands on their machines is not acceptable.
 - [ ] plugins/tsuku-recipes/.claude-plugin/plugin.json exists and lists recipe-author and recipe-test
 - [ ] .claude/settings.json exists and is committed
 - [ ] settings.json enables tsuku-recipes@tsuku and shirabe@shirabe
-- [ ] settings.json does not contain credentials, env vars, or personal configuration
+- [ ] settings.json does not contain env, hooks, permissions, or mcpServers keys
+- [ ] settings.json declares tsuku marketplace via file source and shirabe via GitHub source with sparsePaths
 - [ ] plugins/tsuku-recipes/hooks.json does not exist
 
 ### recipe-author Skill
@@ -220,13 +241,13 @@ arbitrary commands on their machines is not acceptable.
 - [ ] plugins/tsuku-recipes/skills/recipe-author/SKILL.md exists
 - [ ] SKILL.md contains an action names table covering composites and primitives
 - [ ] SKILL.md lists all version provider types with source values
-- [ ] SKILL.md includes when clause syntax with os, libc, linux_family examples
+- [ ] SKILL.md includes when clause syntax with os, libc, linux_family, and gpu examples
 - [ ] SKILL.md includes verification quick-start (version mode, output mode, format transforms)
-- [ ] references/exemplar-recipes.md exists with 5-8 recipe paths
+- [ ] references/exemplar-recipes.md exists with at least 7 recipe paths (one per required category)
 - [ ] All listed exemplar recipe files exist in the recipes/ directory
 - [ ] No listed exemplar has llm_validation = "skipped" in its metadata
 - [ ] SKILL.md includes pointers to at least 6 GUIDE-*.md files
-- [ ] SKILL.md covers .tsuku-recipes/ directory setup and install syntax
+- [ ] SKILL.md covers .tsuku-recipes/ directory setup and documents all three install syntax forms: owner/repo, owner/repo:recipe, owner/repo@version
 
 ### recipe-test Skill
 
@@ -241,7 +262,15 @@ arbitrary commands on their machines is not acceptable.
 - [ ] GUIDE-distributed-recipe-authoring.md contains a "Claude Code Integration" section
 - [ ] The section contains a settings.json snippet with sparsePaths
 - [ ] The snippet does not include autoUpdate: true
-- [ ] plugins/tsuku-recipes/AGENTS.md exists
+- [ ] plugins/tsuku-recipes/AGENTS.md exists and is 120 lines or fewer
+- [ ] AGENTS.md covers recipe format overview, action reference pointer, testing workflow, and GUIDE-*.md links
+
+### Documentation Organization
+
+- [ ] All GUIDE-*.md files have been moved from docs/ to docs/guides/
+- [ ] No GUIDE-*.md files remain at docs/ root
+- [ ] All cross-references to moved guide files are updated (SKILL.md, CONTRIBUTING.md, design docs)
+- [ ] recipe-author SKILL.md includes a pointer to docs/guides/ as the public documentation root
 
 ### Skill Freshness
 
