@@ -123,6 +123,13 @@ The per-shell design is intentional.
 shell, not the currently-executing interpreter. Wrong in cross-shell sourcing scenarios.
 Also requires `basename` subprocess.
 
+**Fish scope note**: Fish is not handled here because `$TSUKU_HOME/env` is a POSIX sh
+file that fish cannot source — fish uses its own syntax and configures itself via
+`~/.config/fish/config.fish`. The installer already treats fish as out-of-scope for the
+`env` file path (the `*)` case, lines 185–191 of `install.sh`). Fish users who want shell
+integration use `eval (tsuku shellenv)` in `config.fish`, which already outputs
+fish-formatted commands. This is a pre-existing gap, not introduced by this design.
+
 ---
 
 ### Decision 2: `EnsureEnvFile()` preservation strategy
