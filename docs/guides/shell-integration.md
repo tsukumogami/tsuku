@@ -42,13 +42,17 @@ ripgrep = "14.1.0"
 jq = "latest"
 ```
 
-A few things about version strings:
+Version strings control which release gets installed:
 
-- **Exact version** (`"20.16.0"`): installs that specific release
-- **Prefix** (`"1.22"`): resolves to the latest matching release (e.g., 1.22.5). How prefix matching works depends on the tool's version provider.
-- **`"latest"` or `""`**: resolves to the newest stable release
+- **Exact version** (`"20.16.0"`): installs that specific release. Most reproducible option.
+- **Prefix** (`"1.22"`): resolves to the latest release that starts with `1.22.` (e.g., `1.22.5`). Prefix matching is dot-boundary-aware — `"1"` matches `"1.29.3"` but not `"10.0.0"`. A single major component like `"0"` resolves to the newest `0.x.y`.
+- **`""` or `"latest"`**: both resolve to the newest stable release. They're equivalent. Tsuku shows a "Pin versions for reproducibility" warning for either.
 
-Pin exact versions when reproducibility matters. Tsuku warns about unpinned versions during install.
+To see which versions are actually available for a tool, run `tsuku versions <tool>`.
+
+**Homebrew recipes have limited version availability.** For tools installed from Homebrew bottles, only the current stable version (and named versioned formulae like `shellcheck@0.9`) is available. Pinning to an older patch release that Homebrew no longer bottles will fail with "version not found". For these tools, either use `""` to track the current bottle, or check `tsuku versions <tool>` to confirm which versions are available before pinning.
+
+Pin exact versions when reproducibility matters.
 
 For tools that need extra options later, an inline table form is also supported:
 
