@@ -11,9 +11,10 @@ problem: |
 goals: |
   Recipe authors (both central registry contributors and distributed recipe maintainers)
   can install a focused AI skill that accurately guides them through authoring and testing.
-  Tsuku contributors get a committed CLAUDE.md with repo orientation, key internal packages,
-  and a skill maintenance protocol. Skill content stays fresh through CI checks and a
-  contributor-facing assessment protocol.
+  Tsuku end users can install a skill covering .tsuku.toml project configuration, CLI
+  usage, shell integration, and troubleshooting. Tsuku contributors get a committed
+  CLAUDE.md with repo orientation, key internal packages, and a skill maintenance protocol.
+  Skill content stays fresh through CI checks and a contributor-facing assessment protocol.
 ---
 
 # PRD: tsuku AI Skills
@@ -53,6 +54,8 @@ aren't unified into a single guided experience.
 
 - Recipe authors can install the tsuku-recipes plugin and get contextual guidance
   for writing and testing TOML recipes, including distributed .tsuku-recipes/ folders.
+- Tsuku end users can install the tsuku-user plugin and get guidance for .tsuku.toml
+  project configuration, CLI usage, shell integration, and troubleshooting.
 - A committed CLAUDE.md gives every tsuku contributor (including external ones)
   repo orientation, key internal package pointers, and a skill maintenance protocol.
 - Skill content stays accurate through CI exemplar validation and a contributor
@@ -73,6 +76,11 @@ of guessing the right action and parameter combination.
 **As a recipe author debugging a failed installation**, I want a testing workflow
 skill that walks me through validate, eval, sandbox install, and verification so I
 can diagnose issues without piecing together commands from 4 separate guide files.
+
+**As a developer using tsuku** to manage my tools, I want a skill that helps me
+write .tsuku.toml project configs, troubleshoot failed installations, configure
+shell integration, and understand version pinning so I can manage my toolchain
+without reading tsuku's internals.
 
 **As a tsuku contributor** modifying action code or version providers, I want
 CLAUDE.md to tell me which source areas affect recipe skills so I can assess whether
@@ -113,16 +121,19 @@ Content promoted to CLAUDE.md must not be duplicated.
 ### tsuku-recipes Plugin Infrastructure (Workstream B)
 
 **R5** -- Create .claude-plugin/marketplace.json declaring the tsuku marketplace
-with the tsuku-recipes plugin.
+with the tsuku-recipes and tsuku-user plugins.
 
 **R6** -- Create plugins/tsuku-recipes/.claude-plugin/plugin.json listing
 recipe-author and recipe-test as skills.
 
-**R7** -- Create .claude/settings.json (committed) enabling tsuku-recipes@tsuku
-and shirabe@shirabe. The committed settings must declare the local tsuku
-marketplace via file source and shirabe via GitHub source with sparsePaths.
-Personal configuration (tsukumogami, env vars, hooks, permissions) must remain
-in settings.local.json.
+**R6a** -- Create plugins/tsuku-user/.claude-plugin/plugin.json listing
+tsuku-user as a skill.
+
+**R7** -- Create .claude/settings.json (committed) enabling tsuku-recipes@tsuku,
+tsuku-user@tsuku, and shirabe@shirabe. The committed settings must declare the
+local tsuku marketplace via file source and shirabe via GitHub source with
+sparsePaths. Personal configuration (tsukumogami, env vars, hooks, permissions)
+must remain in settings.local.json.
 
 ### recipe-author Skill (Workstream C)
 
@@ -183,7 +194,34 @@ failure) and 8 (verification failure) with their failure scenarios.
 **R18** -- recipe-test SKILL.md must include a pointer to CONTRIBUTING.md for full
 testing documentation, including cross-family testing instructions.
 
-### External Distribution (Workstream E)
+### tsuku-user Skill (Workstream E)
+
+**R15a** -- Create plugins/tsuku-user/.claude-plugin/plugin.json listing
+tsuku-user as a skill, and plugins/tsuku-user/skills/tsuku-user/SKILL.md
+covering the end-user experience.
+
+**R15b** -- tsuku-user SKILL.md must cover .tsuku.toml project configuration:
+[tools] section syntax, version pinning levels (exact, major, minor, latest,
+channel), the interaction between project pins and auto-update, and a
+minimal working example.
+
+**R15c** -- tsuku-user SKILL.md must cover the core CLI workflow: install
+(with version constraints and --force), remove, update, list, outdated,
+search, info, and versions commands with one-line descriptions and common
+flag combinations.
+
+**R15d** -- tsuku-user SKILL.md must cover shell integration: tsuku shellenv,
+the eval pattern for bash/zsh/fish, PATH setup, and tsuku doctor for
+diagnosing integration issues.
+
+**R15e** -- tsuku-user SKILL.md must cover troubleshooting: common exit codes,
+tsuku verify for checking installations, tsuku doctor for environment checks,
+and the auto-update system (tsuku outdated, update channels, TSUKU_AUTO_UPDATE).
+
+**R15f** -- tsuku-user must not contain a hooks.json file, for the same
+security reasons as R26.
+
+### External Distribution (Workstream F)
 
 **R19** -- Update GUIDE-distributed-recipe-authoring.md with a "Claude Code
 Integration" section containing a settings.json snippet for external consumers.
@@ -197,7 +235,7 @@ recipe TOML format overview, pointer to the action names table in recipe-author
 SKILL.md, the testing workflow (validate -> eval -> sandbox), and links to
 GUIDE-*.md files. Length must not exceed 120 lines.
 
-### Documentation Organization (Workstream F)
+### Documentation Organization (Workstream G)
 
 **R23** -- Move public-facing guide files (GUIDE-*.md) from docs/ root into
 docs/guides/. Public guides are documentation intended for recipe authors and
@@ -209,7 +247,7 @@ from loading internal planning artifacts into context.
 includes SKILL.md pointers, CONTRIBUTING.md links, and any design docs that
 reference GUIDE-*.md paths.
 
-### Skill Freshness (Workstream G)
+### Skill Freshness (Workstream H)
 
 **R25** -- Create a CI check that validates all recipe file paths referenced in
 exemplar-recipes.md still exist and pass tsuku validate. The check must run when
@@ -233,13 +271,15 @@ arbitrary commands on their machines is not acceptable.
 
 ### Plugin Infrastructure
 
-- [ ] .claude-plugin/marketplace.json exists and declares the tsuku marketplace
+- [ ] .claude-plugin/marketplace.json exists and declares tsuku-recipes and tsuku-user plugins
 - [ ] plugins/tsuku-recipes/.claude-plugin/plugin.json exists and lists recipe-author and recipe-test
+- [ ] plugins/tsuku-user/.claude-plugin/plugin.json exists and lists tsuku-user
 - [ ] .claude/settings.json exists and is committed
-- [ ] settings.json enables tsuku-recipes@tsuku and shirabe@shirabe
+- [ ] settings.json enables tsuku-recipes@tsuku, tsuku-user@tsuku, and shirabe@shirabe
 - [ ] settings.json does not contain env, hooks, permissions, or mcpServers keys
 - [ ] settings.json declares tsuku marketplace via file source and shirabe via GitHub source with sparsePaths
 - [ ] plugins/tsuku-recipes/hooks.json does not exist
+- [ ] plugins/tsuku-user/hooks.json does not exist
 
 ### recipe-author Skill
 
@@ -265,6 +305,14 @@ arbitrary commands on their machines is not acceptable.
 - [ ] SKILL.md documents exit codes 6 and 8
 - [ ] SKILL.md contains a pointer to CONTRIBUTING.md
 
+### tsuku-user Skill
+
+- [ ] plugins/tsuku-user/skills/tsuku-user/SKILL.md exists
+- [ ] SKILL.md covers .tsuku.toml [tools] section with version pinning examples (exact, major, minor, latest, channel)
+- [ ] SKILL.md covers core CLI commands: install, remove, update, list, outdated, search, info, versions
+- [ ] SKILL.md covers shell integration: tsuku shellenv, eval pattern, PATH setup, tsuku doctor
+- [ ] SKILL.md covers troubleshooting: common exit codes, tsuku verify, tsuku doctor, auto-update configuration
+
 ### External Distribution
 
 - [ ] GUIDE-distributed-recipe-authoring.md contains a "Claude Code Integration" section
@@ -287,7 +335,7 @@ arbitrary commands on their machines is not acceptable.
 ## Out of Scope
 
 - tsuku-dev plugin or contributor skill (contributor content goes in CLAUDE.md)
-- End-user skills (tsuku install/update workflows for tool consumers)
+- Changes to tsuku CLI behavior, recipe format, or version providers
 - Changes to the action system, recipe format, or version providers
 - LLM eval harness for skill correctness (start with file-existence CI checks)
 - Migrating .claude/shirabe-extensions/ to the new plugin structure
@@ -334,7 +382,14 @@ same persona (recipe authors) in different modes (writing vs testing). Splitting
 into two plugins would force external authors to install both separately. A single
 plugin with two skills keeps installation simple.
 
-**No hooks.json in tsuku-recipes**: External recipe authors install the plugin
-from a GitHub source, potentially with autoUpdate enabled. Hooks execute arbitrary
-commands on consumers' machines. The blast radius of a compromised hook is
-unacceptable for a lightweight documentation plugin.
+**Separate tsuku-user plugin over third skill in tsuku-recipes**: End users and
+recipe authors are different personas. Putting tsuku-user in tsuku-recipes would
+mean external recipe authors (via sparsePaths) pull end-user content they don't
+need, and the plugin name becomes misleading. A separate plugin keeps install
+paths clean: end users pull only tsuku-user, recipe authors pull only
+tsuku-recipes, contributors get both via committed settings.json.
+
+**No hooks.json in tsuku-recipes or tsuku-user**: External consumers install
+these plugins from a GitHub source, potentially with autoUpdate enabled. Hooks
+execute arbitrary commands on consumers' machines. The blast radius of a
+compromised hook is unacceptable for lightweight documentation plugins.
