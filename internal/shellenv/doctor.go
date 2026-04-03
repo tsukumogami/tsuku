@@ -161,13 +161,13 @@ func isCacheStale(shellDDir, shell string, files []string) bool {
 		}
 		toolName := strings.TrimSuffix(name, suffix)
 		buf.WriteString("# tsuku: " + toolName + "\n")
-		buf.WriteString("( # begin " + toolName + "\n")
+		buf.WriteString("{ # begin " + toolName + "\n")
 		contentStr := string(content)
 		buf.WriteString(contentStr)
 		if len(contentStr) > 0 && contentStr[len(contentStr)-1] != '\n' {
 			buf.WriteByte('\n')
 		}
-		buf.WriteString(") 2>/dev/null || true\n")
+		buf.WriteString("} 2>/dev/null || true\n")
 	}
 
 	return string(cacheContent) != buf.String()

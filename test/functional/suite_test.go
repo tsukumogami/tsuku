@@ -52,9 +52,14 @@ func TestFeatures(t *testing.T) {
 	}
 	binPath = absBin
 
+	paths := []string{"features"}
+	if p := os.Getenv("TSUKU_TEST_PATHS"); p != "" {
+		paths = strings.Split(p, string(os.PathListSeparator))
+	}
+
 	opts := &godog.Options{
 		Format:   "pretty",
-		Paths:    []string{"features"},
+		Paths:    paths,
 		TestingT: t,
 	}
 	if tags := os.Getenv("TSUKU_TEST_TAGS"); tags != "" {
@@ -157,6 +162,9 @@ func initializeScenario(ctx *godog.ScenarioContext, binPath string) {
 	ctx.Step(`^the error output does not contain "([^"]*)"$`, theErrorOutputDoesNotContain)
 	ctx.Step(`^the file "([^"]*)" exists$`, theFileExists)
 	ctx.Step(`^the file "([^"]*)" does not exist$`, theFileDoesNotExist)
+	ctx.Step(`^the file "([^"]*)" contains "([^"]*)"$`, theFileContains)
+	ctx.Step(`^the file "([^"]*)" does not contain "([^"]*)"$`, theFileDoesNotContain)
+	ctx.Step(`^I source home file "([^"]*)" and can run "([^"]*)"$`, iSourceHomeFileAndCanRun)
 	ctx.Step(`^I can run "([^"]*)"$`, iCanRun)
 	ctx.Step(`^I create home file "([^"]*)" with content:$`, iCreateHomeFile)
 	ctx.Step(`^I run from "([^"]*)" "([^"]*)"$`, iRunFromDir)

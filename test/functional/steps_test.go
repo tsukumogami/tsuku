@@ -238,6 +238,53 @@ func iRunFromDir(ctx context.Context, dir, command string) (context.Context, err
 	return ctx, nil
 }
 
+func theFileContains(ctx context.Context, path, text string) error {
+	state := getState(ctx)
+	fullPath := filepath.Join(state.homeDir, path)
+	data, err := os.ReadFile(fullPath)
+	if err != nil {
+		return fmt.Errorf("reading %q: %w", fullPath, err)
+	}
+	if !strings.Contains(string(data), text) {
+		return fmt.Errorf("expected file %q to contain %q, got:\n%s", fullPath, text, string(data))
+	}
+	return nil
+}
+
+func theFileDoesNotContain(ctx context.Context, path, text string) error {
+	state := getState(ctx)
+	fullPath := filepath.Join(state.homeDir, path)
+	data, err := os.ReadFile(fullPath)
+	if err != nil {
+		return fmt.Errorf("reading %q: %w", fullPath, err)
+	}
+	if strings.Contains(string(data), text) {
+		return fmt.Errorf("expected file %q not to contain %q", fullPath, text)
+	}
+	return nil
+}
+
+// iSourceHomeFileAndCanRun sources a file relative to $TSUKU_HOME in bash and then
+// runs a command in the same shell. It verifies the command succeeds.
+func iSourceHomeFileAndCanRun(ctx context.Context, sourceFile, command string) (context.Context, error) {
+	state := getState(ctx)
+	fullPath := filepath.Join(state.homeDir, sourceFile)
+
+	script := fmt.Sprintf(`. "%s" && %s`, fullPath, command)
+	cmd := exec.Command("bash", "-c", script)
+	cmd.Env = append(os.Environ(),
+		"TSUKU_HOME="+state.homeDir,
+		"TSUKU_NO_TELEMETRY=1",
+	)
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return ctx, fmt.Errorf("after sourcing %q, command %q failed: %v\noutput: %s",
+			sourceFile, command, err, string(out))
+	}
+	return ctx, nil
+}
+
 func iCanRun(ctx context.Context, command string) (context.Context, error) {
 	state := getState(ctx)
 

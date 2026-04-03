@@ -28,12 +28,12 @@ func testHash(s string) string {
 // extension (e.g., "aaa" for "aaa.bash").
 func wrapExpected(toolName, content string) string {
 	s := "# tsuku: " + toolName + "\n"
-	s += "( # begin " + toolName + "\n"
+	s += "{ # begin " + toolName + "\n"
 	s += content
 	if len(content) > 0 && content[len(content)-1] != '\n' {
 		s += "\n"
 	}
-	s += ") 2>/dev/null || true\n"
+	s += "} 2>/dev/null || true\n"
 	return s
 }
 
@@ -467,11 +467,11 @@ func TestRebuildShellCache_ErrorIsolation_SubshellWrapping(t *testing.T) {
 	if !strings.Contains(got, "# tsuku: starship") {
 		t.Error("expected tool identifier comment")
 	}
-	if !strings.Contains(got, "( # begin starship") {
-		t.Error("expected subshell open with tool name")
+	if !strings.Contains(got, "{ # begin starship") {
+		t.Error("expected brace open with tool name")
 	}
-	if !strings.Contains(got, ") 2>/dev/null || true") {
-		t.Error("expected error-suppressing subshell close")
+	if !strings.Contains(got, "} 2>/dev/null || true") {
+		t.Error("expected error-suppressing brace close")
 	}
 	if !strings.Contains(got, "eval \"$(starship init bash)\"") {
 		t.Error("expected original content preserved inside wrapper")
@@ -507,9 +507,9 @@ func TestRebuildShellCache_ErrorIsolation_MultipleTools(t *testing.T) {
 		t.Error("expected beta tool identifier")
 	}
 
-	// Count subshell wrappers -- should be exactly 2
-	if strings.Count(got, ") 2>/dev/null || true") != 2 {
-		t.Errorf("expected 2 error-isolation wrappers, got %d", strings.Count(got, ") 2>/dev/null || true"))
+	// Count brace wrappers -- should be exactly 2
+	if strings.Count(got, "} 2>/dev/null || true") != 2 {
+		t.Errorf("expected 2 error-isolation brace groups, got %d", strings.Count(got, "} 2>/dev/null || true"))
 	}
 }
 
