@@ -7,16 +7,20 @@ supported_os = ["darwin", "linux"]
 supported_arch = ["amd64", "arm64"]
 supported_libc = ["glibc"]
 
-# macOS: Homebrew
-[[steps]]
-action = "homebrew"
-formula = "gh"
-when = { os = ["darwin"] }
+[version]
+github_repo = "cli/cli"
+tag_prefix = "v"
 
+# macOS: GitHub release zip (gh_VERSION_macOS_ARCH.zip)
 [[steps]]
-action = "install_binaries"
-binaries = ["bin/gh"]
+action = "github_archive"
 when = { os = ["darwin"] }
+repo = "cli/cli"
+asset_pattern = "gh_{version}_{os}_{arch}.zip"
+strip_dirs = 1
+binaries = ["bin/gh"]
+os_mapping = { darwin = "macOS" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
 
 # Linux: GitHub release tarball (gh_VERSION_linux_ARCH.tar.gz)
 [[steps]]
