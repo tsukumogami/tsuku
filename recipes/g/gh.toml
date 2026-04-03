@@ -7,10 +7,6 @@ supported_os = ["darwin", "linux"]
 supported_arch = ["amd64", "arm64"]
 supported_libc = ["glibc"]
 
-[version]
-github_repo = "cli/cli"
-tag_prefix = "v"
-
 # macOS: Homebrew
 [[steps]]
 action = "homebrew"
