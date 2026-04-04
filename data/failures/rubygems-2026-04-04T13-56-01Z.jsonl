@@ -1,0 +1,1 @@
+{"schema_version":1,"ecosystem":"rubygems","environment":"linux-glibc-x86_64","updated_at":"2026-04-04T13-56-01Z","failures":[{"package_id":"rubygems:amp","category":"install_failed","message":"Error: recipe validation failed for 'amp'\n  - metadata.homepage: homepage must start with https:// (got: http://amp.carboni.ca/)","timestamp":"2026-04-04T13:55:09.609616741Z"}]}
