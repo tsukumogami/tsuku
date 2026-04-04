@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-04T15:37:13Z",
+  "updated_at": "2026-04-04T16:38:18Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 108,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 228,
-      "next_retry_at": "1733-12-24T14:50:05.318665384Z"
+      "failure_count": 229,
+      "next_retry_at": "1733-12-24T16:51:02.01653166Z"
     },
     {
       "name": "libaacs",
@@ -50986,11 +50986,11 @@
       "name": "webdav",
       "source": "npm:webdav",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-03-27T19:28:30.91696712Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-04-11T16:38:18.871307468Z"
     },
     {
       "name": "webhook",
