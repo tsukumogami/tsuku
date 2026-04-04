@@ -298,6 +298,11 @@ jobs:
             RECIPE_START=$(date +%s)
             PIDS=()
             for family in "${FAMILIES[@]}"; do
+              # Skip musl/alpine if recipe only supports glibc
+              if [ "$family" = "alpine" ] && grep -q 'supported_libc' "$recipe_path" && ! grep 'supported_libc' "$recipe_path" | grep -q '"musl"'; then
+                echo "SKIP: $recipe_name on $family (supported_libc excludes musl)"
+                continue
+              fi
               TOTAL=$((TOTAL + 1))
               RESULT_FILE=".result-${recipe_name}-${family}.json"
               LOG_FILE=".log-${recipe_name}-${family}.txt"
@@ -327,6 +332,10 @@ jobs:
 
             # Collect results
             for family in "${FAMILIES[@]}"; do
+              # Skip musl/alpine if recipe only supports glibc
+              if [ "$family" = "alpine" ] && grep -q 'supported_libc' "$recipe_path" && ! grep 'supported_libc' "$recipe_path" | grep -q '"musl"'; then
+                continue
+              fi
               RESULT_FILE=".result-${recipe_name}-${family}.json"
 
               echo "::group::$recipe_name on $family (x86_64)"
@@ -440,6 +449,11 @@ jobs:
             RECIPE_START=$(date +%s)
             PIDS=()
             for family in "${FAMILIES[@]}"; do
+              # Skip musl/alpine if recipe only supports glibc
+              if [ "$family" = "alpine" ] && grep -q 'supported_libc' "$recipe_path" && ! grep 'supported_libc' "$recipe_path" | grep -q '"musl"'; then
+                echo "SKIP: $recipe_name on $family (supported_libc excludes musl)"
+                continue
+              fi
               TOTAL=$((TOTAL + 1))
               RESULT_FILE=".result-${recipe_name}-${family}.json"
               LOG_FILE=".log-${recipe_name}-${family}.txt"
@@ -469,6 +483,10 @@ jobs:
 
             # Collect results
             for family in "${FAMILIES[@]}"; do
+              # Skip musl/alpine if recipe only supports glibc
+              if [ "$family" = "alpine" ] && grep -q 'supported_libc' "$recipe_path" && ! grep 'supported_libc' "$recipe_path" | grep -q '"musl"'; then
+                continue
+              fi
               RESULT_FILE=".result-${recipe_name}-${family}.json"
 
               echo "::group::$recipe_name on $family (arm64)"
