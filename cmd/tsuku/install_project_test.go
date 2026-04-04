@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -240,9 +241,9 @@ func TestProjectInstall_PartialFailure(t *testing.T) {
 }
 
 func TestProjectInstall_DryRunFlagSupported(t *testing.T) {
-	// Verify --dry-run, --force, --fresh exist and are compatible with no-args.
+	// Verify --dry-run, --force, --fresh, --json exist and are compatible with no-args.
 	// These flags should not be in the incompatible list.
-	supported := []string{"dry-run", "force", "fresh"}
+	supported := []string{"dry-run", "force", "fresh", "json"}
 	incompatible := map[string]bool{"plan": true, "recipe": true, "from": true, "sandbox": true}
 	for _, name := range supported {
 		if incompatible[name] {
@@ -252,5 +253,94 @@ func TestProjectInstall_DryRunFlagSupported(t *testing.T) {
 		if flag == nil {
 			t.Errorf("expected flag --%s to exist on install command", name)
 		}
+	}
+}
+
+func TestProjectInstall_JSONSummaryFormat(t *testing.T) {
+	tests := []struct {
+		name       string
+		results    []projectToolResult
+		exitCode   int
+		wantStatus string
+		wantCount  int
+	}{
+		{
+			name: "all success",
+			results: []projectToolResult{
+				{Name: "go", Status: "installed"},
+				{Name: "node", Status: "installed"},
+			},
+			exitCode:   ExitSuccess,
+			wantStatus: "success",
+			wantCount:  2,
+		},
+		{
+			name: "all failed",
+			results: []projectToolResult{
+				{Name: "go", Status: "failed", Error: fmt.Errorf("not found")},
+			},
+			exitCode:   ExitInstallFailed,
+			wantStatus: "error",
+			wantCount:  1,
+		},
+		{
+			name: "partial failure",
+			results: []projectToolResult{
+				{Name: "go", Status: "installed"},
+				{Name: "node", Status: "failed", Error: fmt.Errorf("timeout")},
+			},
+			exitCode:   ExitPartialFailure,
+			wantStatus: "partial",
+			wantCount:  2,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			summary := buildProjectSummaryJSON(tt.results, tt.exitCode)
+			if summary.Status != tt.wantStatus {
+				t.Errorf("status = %q, want %q", summary.Status, tt.wantStatus)
+			}
+			if len(summary.Tools) != tt.wantCount {
+				t.Errorf("tool count = %d, want %d", len(summary.Tools), tt.wantCount)
+			}
+			if summary.ExitCode != tt.exitCode {
+				t.Errorf("exit code = %d, want %d", summary.ExitCode, tt.exitCode)
+			}
+		})
+	}
+}
+
+func TestProjectInstall_JSONToolErrorField(t *testing.T) {
+	results := []projectToolResult{
+		{Name: "go", Status: "installed"},
+		{Name: "node", Status: "failed", Error: fmt.Errorf("recipe not found")},
+	}
+	summary := buildProjectSummaryJSON(results, ExitPartialFailure)
+
+	// Successful tool should have no error
+	if summary.Tools[0].Error != "" {
+		t.Errorf("successful tool should have empty error, got %q", summary.Tools[0].Error)
+	}
+	// Failed tool should have error message
+	if summary.Tools[1].Error != "recipe not found" {
+		t.Errorf("failed tool error = %q, want %q", summary.Tools[1].Error, "recipe not found")
+	}
+}
+
+func TestProjectInstall_ToolEntryType(t *testing.T) {
+	// Verify toolEntry is usable as a package-level type (moved from local scope)
+	entry := toolEntry{
+		Name:    "test-tool",
+		Version: "1.0.0",
+	}
+	if entry.Name != "test-tool" {
+		t.Errorf("Name = %q, want %q", entry.Name, "test-tool")
+	}
+	if entry.Distributed != nil {
+		t.Error("Distributed should be nil for standard tool")
+	}
+	if entry.SourceFailed {
+		t.Error("SourceFailed should default to false")
 	}
 }

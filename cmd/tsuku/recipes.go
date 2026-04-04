@@ -28,19 +28,19 @@ Use --local to show only recipes from your local recipes directory
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 
 		var recipes []recipe.RecipeInfo
-		var err error
 
 		if recipesLocalOnly {
+			var err error
 			recipes, err = loader.ListLocal()
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error listing local recipes: %v\n", err)
 				exitWithCode(ExitGeneral)
 			}
 		} else {
-			recipes, err = loader.ListAllWithSource()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error listing recipes: %v\n", err)
-				exitWithCode(ExitGeneral)
+			var listErrs []error
+			recipes, listErrs = loader.ListAllWithSource()
+			for _, e := range listErrs {
+				fmt.Fprintf(os.Stderr, "Warning: %v\n", e)
 			}
 		}
 

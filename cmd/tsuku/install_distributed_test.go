@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
 
@@ -408,5 +411,117 @@ func TestInstallYesFlag(t *testing.T) {
 	}
 	if f.DefValue != "false" {
 		t.Errorf("--yes default = %q, want %q", f.DefValue, "false")
+	}
+}
+
+func TestEnsureDistributedSource_NonTTY_AutoApproves(t *testing.T) {
+	// In non-TTY environments (like CI), ensureDistributedSource should
+	// auto-approve unregistered sources instead of failing with
+	// "installation canceled: source not approved".
+	//
+	// This test runs in a non-TTY environment (test runner), so
+	// isInteractive() returns false.
+
+	tmpDir := t.TempDir()
+	origHome := os.Getenv("TSUKU_HOME")
+	os.Setenv("TSUKU_HOME", tmpDir)
+	defer os.Setenv("TSUKU_HOME", origHome)
+
+	// Create directories expected by config
+	_ = os.MkdirAll(filepath.Join(tmpDir, "bin"), 0755)
+	_ = os.MkdirAll(filepath.Join(tmpDir, "cache"), 0755)
+
+	// Write an empty user config (no registries, strict_registries=false)
+	configDir := filepath.Join(tmpDir, "config")
+	_ = os.MkdirAll(configDir, 0755)
+	ucfg := userconfig.DefaultConfig()
+	if err := ucfg.SaveToPathForTest(filepath.Join(configDir, "config.toml")); err != nil {
+		t.Fatalf("failed to write user config: %v", err)
+	}
+
+	sysCfg, err := config.DefaultConfig()
+	if err != nil {
+		t.Fatalf("failed to load config: %v", err)
+	}
+
+	// Save and restore globals since we need them non-nil
+	origLoader := loader
+	defer func() { loader = origLoader }()
+	loader = recipe.NewLoader()
+
+	origCtx := globalCtx
+	defer func() { globalCtx = origCtx }()
+	globalCtx = context.Background()
+
+	// Call with autoApprove=false. Before the fix, this would fail with
+	// "installation canceled" because confirmWithUser returns false in
+	// non-TTY. After the fix, it skips the prompt and proceeds to
+	// auto-register, which may fail at addDistributedProvider (no GitHub
+	// access), but that's a different error.
+	err = ensureDistributedSource("testorg/testrepo", false, sysCfg)
+
+	if err != nil && strings.Contains(err.Error(), "installation canceled") {
+		t.Errorf("non-TTY environment should auto-approve, but got: %v", err)
+	}
+
+	// If we got an error, it should be from the provider creation step
+	// (expected in test environment without GitHub access), not from
+	// the confirmation prompt.
+	if err != nil {
+		t.Logf("expected non-cancel error from provider creation: %v", err)
+	}
+
+	// Verify the source was auto-registered in the config
+	reloaded, loadErr := userconfig.Load()
+	if loadErr != nil {
+		t.Fatalf("failed to reload config: %v", loadErr)
+	}
+	entry, exists := reloaded.Registries["testorg/testrepo"]
+	if !exists {
+		// If the error came before auto-registration, the test setup may
+		// need adjustment, but the source should have been registered
+		// before addDistributedProvider was called.
+		if err != nil && !strings.Contains(err.Error(), "initializing distributed provider") {
+			t.Error("source was not auto-registered in config")
+		}
+	} else if !entry.AutoRegistered {
+		t.Error("expected AutoRegistered=true on auto-registered source")
+	}
+}
+
+func TestEnsureDistributedSource_AutoApprove_SkipsPrompt(t *testing.T) {
+	// Verify that autoApprove=true also skips the prompt (existing behavior).
+	tmpDir := t.TempDir()
+	origHome := os.Getenv("TSUKU_HOME")
+	os.Setenv("TSUKU_HOME", tmpDir)
+	defer os.Setenv("TSUKU_HOME", origHome)
+
+	_ = os.MkdirAll(filepath.Join(tmpDir, "bin"), 0755)
+	_ = os.MkdirAll(filepath.Join(tmpDir, "cache"), 0755)
+
+	configDir := filepath.Join(tmpDir, "config")
+	_ = os.MkdirAll(configDir, 0755)
+	ucfg := userconfig.DefaultConfig()
+	if err := ucfg.SaveToPathForTest(filepath.Join(configDir, "config.toml")); err != nil {
+		t.Fatalf("failed to write user config: %v", err)
+	}
+
+	sysCfg, err := config.DefaultConfig()
+	if err != nil {
+		t.Fatalf("failed to load config: %v", err)
+	}
+
+	origLoader := loader
+	defer func() { loader = origLoader }()
+	loader = recipe.NewLoader()
+
+	origCtx := globalCtx
+	defer func() { globalCtx = origCtx }()
+	globalCtx = context.Background()
+
+	err = ensureDistributedSource("testorg/testrepo2", true, sysCfg)
+
+	if err != nil && strings.Contains(err.Error(), "installation canceled") {
+		t.Errorf("autoApprove=true should skip prompt, but got: %v", err)
 	}
 }

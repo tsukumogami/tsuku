@@ -9,6 +9,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/testutil"
 )
 
 // Mock implementations for testing
@@ -374,4 +375,96 @@ func TestConvertCleanupActions(t *testing.T) {
 			t.Errorf("expected 0 actions, got %d", len(result))
 		}
 	})
+}
+
+func TestIsSystemDependencyPlan(t *testing.T) {
+	tests := []struct {
+		name string
+		plan *executor.InstallationPlan
+		want bool
+	}{
+		{
+			name: "nil plan",
+			plan: nil,
+			want: false,
+		},
+		{
+			name: "empty steps",
+			plan: &executor.InstallationPlan{Steps: []executor.ResolvedStep{}},
+			want: false,
+		},
+		{
+			name: "all require_system",
+			plan: &executor.InstallationPlan{
+				Steps: []executor.ResolvedStep{
+					{Action: "require_system"},
+					{Action: "require_system"},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "mixed steps",
+			plan: &executor.InstallationPlan{
+				Steps: []executor.ResolvedStep{
+					{Action: "require_system"},
+					{Action: "download"},
+				},
+			},
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := isSystemDependencyPlan(tt.plan)
+			if got != tt.want {
+				t.Errorf("isSystemDependencyPlan() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAlreadyInstalledShortCircuit(t *testing.T) {
+	// This test verifies that the pre-execution version check correctly
+	// identifies an already-installed tool using the resolved plan version.
+	// It exercises the same IsVersionInstalled path used in installWithDependencies
+	// to short-circuit before ExecutePlan.
+
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := install.New(cfg)
+
+	// Simulate a tool already installed at version 2.40.0 by writing state directly
+	err := mgr.GetState().UpdateTool("gh", func(ts *install.ToolState) {
+		ts.Version = "2.40.0"
+		ts.ActiveVersion = "2.40.0"
+		ts.Versions = map[string]install.VersionState{
+			"2.40.0": {Binaries: []string{"bin/gh"}},
+		}
+	})
+	if err != nil {
+		t.Fatalf("failed to set up installed tool state: %v", err)
+	}
+
+	// Exact match: plan resolves to same version -- should short-circuit
+	if !mgr.IsVersionInstalled("gh", "2.40.0") {
+		t.Error("IsVersionInstalled(gh, 2.40.0) = false, want true (exact match should short-circuit)")
+	}
+
+	// Different version: should not short-circuit
+	if mgr.IsVersionInstalled("gh", "2.41.0") {
+		t.Error("IsVersionInstalled(gh, 2.41.0) = true, want false (different version proceeds to install)")
+	}
+
+	// Different tool: should not short-circuit
+	if mgr.IsVersionInstalled("jq", "2.40.0") {
+		t.Error("IsVersionInstalled(jq, 2.40.0) = true, want false (different tool proceeds to install)")
+	}
+
+	// Empty plan version falls back to "dev" -- not installed as dev
+	if mgr.IsVersionInstalled("gh", "dev") {
+		t.Error("IsVersionInstalled(gh, dev) = true, want false (dev fallback should not match real version)")
+	}
 }

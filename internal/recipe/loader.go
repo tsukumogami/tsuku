@@ -493,14 +493,18 @@ func (l *Loader) LookupSatisfies(name string) (string, bool) {
 
 // ListAllWithSource returns all available recipes from all providers.
 // Priority order follows provider order (same as resolution chain).
-func (l *Loader) ListAllWithSource() ([]RecipeInfo, error) {
+// Providers that fail to list (e.g., due to network errors) are skipped
+// and their errors are collected in the returned slice.
+func (l *Loader) ListAllWithSource() ([]RecipeInfo, []error) {
 	seen := make(map[string]bool)
 	var result []RecipeInfo
+	var errs []error
 
 	for _, p := range l.providers {
 		recipes, err := p.List(context.Background())
 		if err != nil {
-			return nil, fmt.Errorf("failed to list recipes from %s: %w", p.Source(), err)
+			errs = append(errs, fmt.Errorf("failed to list recipes from %s: %w", p.Source(), err))
+			continue
 		}
 		for _, info := range recipes {
 			if !seen[info.Name] {
@@ -510,7 +514,7 @@ func (l *Loader) ListAllWithSource() ([]RecipeInfo, error) {
 		}
 	}
 
-	return result, nil
+	return result, errs
 }
 
 // ListLocal returns only recipes from local providers.

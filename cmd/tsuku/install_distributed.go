@@ -114,8 +114,10 @@ func ensureDistributedSource(source string, autoApprove bool, sysCfg *config.Con
 		)
 	}
 
-	// Prompt for confirmation (unless --yes)
-	if !autoApprove {
+	// Prompt for confirmation (unless --yes or non-TTY).
+	// In non-interactive environments (CI, piped stdin), auto-approve to match
+	// the project-install confirmation behavior (install_project.go:163).
+	if !autoApprove && isInteractive() {
 		prompt := fmt.Sprintf("Install from unregistered source %q?", source)
 		if !confirmWithUser(prompt) {
 			return fmt.Errorf("installation canceled: source %q not approved", source)
