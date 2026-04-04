@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-04T20:35:41Z",
+  "generated_at": "2026-04-04T20:36:43Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -68,7 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
+        "failed": 19,
+        "pending": 1,
         "success": 55,
         "total": 75
       },
@@ -80,8 +81,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 5,
-        "pending": 74,
+        "failed": 6,
+        "pending": 73,
         "success": 9,
         "total": 89
       }
@@ -489,15 +490,6 @@
           "next_retry_at": "2026-04-11T15:37:13Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 111,
-          "next_retry_at": "1733-12-24T18:58:11Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -523,6 +515,15 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-04-11T18:45:28Z"
+        },
+        {
+          "id": "rubygems:bup",
+          "name": "bup",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "network_error",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-11T20:36:12Z"
         },
         {
           "id": "npm:chainsaw",
@@ -615,15 +616,6 @@
           "next_retry_at": "2026-04-11T14:37:22Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 230,
-          "next_retry_at": "1733-12-24T18:58:11Z"
-        },
-        {
           "id": "npm:mailhog",
           "name": "mailhog",
           "ecosystem": "npm",
@@ -703,6 +695,15 @@
           "category": "install_failed",
           "failure_count": 10,
           "next_retry_at": "2026-04-11T15:37:13Z"
+        },
+        {
+          "id": "pypi:tctl",
+          "name": "tctl",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-11T20:36:12Z"
         },
         {
           "id": "npm:wartremover",
@@ -2625,6 +2626,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 111,
+          "next_retry_at": "1733-12-24T18:58:11Z"
+        },
+        {
           "id": "homebrew:azure-cli",
           "name": "azure-cli",
           "ecosystem": "homebrew",
@@ -3604,15 +3614,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:bup",
-          "name": "bup",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "network_error",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-02T12:01:28Z"
         },
         {
           "id": "homebrew:burp",
@@ -13212,6 +13213,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 230,
+          "next_retry_at": "1733-12-24T18:58:11Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -24955,15 +24965,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:tctl",
-          "name": "tctl",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-02T12:01:28Z"
         },
         {
           "id": "homebrew:tdlib",
