@@ -2058,3 +2058,128 @@ func TestExecutor_NoShellInit_PropagatedToContext(t *testing.T) {
 		t.Error("expected NoShellInit to be true on the execution context")
 	}
 }
+
+// --- Partial semver resolution tests (reproducer for #2240) ---
+
+// testVersionLister is a mock VersionLister for testing boundary-aware resolution
+// without network access. It simulates providers like Homebrew that can list versions.
+type testVersionLister struct {
+	versions []string
+}
+
+func (m *testVersionLister) ListVersions(_ context.Context) ([]string, error) {
+	return m.versions, nil
+}
+
+func (m *testVersionLister) ResolveLatest(_ context.Context) (*version.VersionInfo, error) {
+	if len(m.versions) == 0 {
+		return nil, errors.New("no versions")
+	}
+	v := m.versions[0]
+	return &version.VersionInfo{Version: v, Tag: v}, nil
+}
+
+func (m *testVersionLister) ResolveVersion(_ context.Context, ver string) (*version.VersionInfo, error) {
+	return &version.VersionInfo{Version: ver, Tag: ver}, nil
+}
+
+func (m *testVersionLister) SourceDescription() string {
+	return "test-lister"
+}
+
+// TestResolveWithinBoundary_PartialSemver_Lister verifies that partial semver
+// constraints resolve to the highest matching version when the provider implements
+// VersionLister. This is the code path now used by resolveVersionWith and
+// ResolveVersion after the fix for #2240.
+func TestResolveWithinBoundary_PartialSemver_Lister(t *testing.T) {
+	tests := []struct {
+		name       string
+		versions   []string // newest-first
+		constraint string
+		want       string
+	}{
+		{
+			name:       "major pin selects highest minor",
+			versions:   []string{"2.3.1", "2.2.0", "1.7.5", "1.7.4", "1.6.0", "0.5.3"},
+			constraint: "1",
+			want:       "1.7.5",
+		},
+		{
+			name:       "minor pin selects highest patch",
+			versions:   []string{"0.6.0", "0.5.3", "0.5.2", "0.5.1", "0.4.0"},
+			constraint: "0.5",
+			want:       "0.5.3",
+		},
+		{
+			name:       "exact match returns exact",
+			versions:   []string{"1.7.5", "1.7.4", "1.7.3"},
+			constraint: "1.7.4",
+			want:       "1.7.4",
+		},
+		{
+			name:       "major pin does not cross dot boundary",
+			versions:   []string{"10.0.0", "1.5.0", "1.0.0"},
+			constraint: "1",
+			want:       "1.5.0",
+		},
+		{
+			name:       "single digit major version",
+			versions:   []string{"3.1.0", "2.5.0", "2.4.1", "2.4.0", "1.0.0"},
+			constraint: "2",
+			want:       "2.5.0",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			provider := &testVersionLister{versions: tt.versions}
+			info, err := version.ResolveWithinBoundary(context.Background(), provider, tt.constraint)
+			if err != nil {
+				t.Fatalf("ResolveWithinBoundary(%q) error: %v", tt.constraint, err)
+			}
+			if info.Version != tt.want {
+				t.Errorf("ResolveWithinBoundary(%q) = %q, want %q", tt.constraint, info.Version, tt.want)
+			}
+		})
+	}
+}
+
+// testVersionResolver is a mock VersionResolver (not VersionLister) for testing
+// the fallback path used by distributed source providers that cannot list versions.
+type testVersionResolver struct {
+	resolvedVersions map[string]string // constraint -> resolved version
+}
+
+func (m *testVersionResolver) ResolveLatest(_ context.Context) (*version.VersionInfo, error) {
+	return &version.VersionInfo{Version: "1.0.0", Tag: "v1.0.0"}, nil
+}
+
+func (m *testVersionResolver) ResolveVersion(_ context.Context, ver string) (*version.VersionInfo, error) {
+	if resolved, ok := m.resolvedVersions[ver]; ok {
+		return &version.VersionInfo{Version: resolved, Tag: "v" + resolved}, nil
+	}
+	return &version.VersionInfo{Version: ver, Tag: "v" + ver}, nil
+}
+
+func (m *testVersionResolver) SourceDescription() string {
+	return "test-resolver"
+}
+
+// TestResolveWithinBoundary_PartialSemver_ResolverOnly verifies that partial
+// semver constraints are passed through to ResolveVersion when the provider
+// does not implement VersionLister (the distributed source case).
+func TestResolveWithinBoundary_PartialSemver_ResolverOnly(t *testing.T) {
+	provider := &testVersionResolver{
+		resolvedVersions: map[string]string{
+			"0.5": "0.5.3",
+		},
+	}
+
+	info, err := version.ResolveWithinBoundary(context.Background(), provider, "0.5")
+	if err != nil {
+		t.Fatalf("ResolveWithinBoundary(\"0.5\") error: %v", err)
+	}
+	if info.Version != "0.5.3" {
+		t.Errorf("ResolveWithinBoundary(\"0.5\") = %q, want %q", info.Version, "0.5.3")
+	}
+}

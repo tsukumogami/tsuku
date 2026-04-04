@@ -93,11 +93,10 @@ func (e *Executor) resolveVersionWith(ctx context.Context, resolver *version.Res
 		return nil, err
 	}
 
-	// Resolve version using provider
-	if e.reqVersion != "" {
-		return provider.ResolveVersion(ctx, e.reqVersion)
-	}
-	return provider.ResolveLatest(ctx)
+	// Resolve version using boundary-aware resolution so that partial semver
+	// constraints (e.g., "1.7", "2") match the highest version within that
+	// prefix for providers that implement VersionLister.
+	return version.ResolveWithinBoundary(ctx, provider, e.reqVersion)
 }
 
 // ResolveVersion resolves a version constraint to a concrete version string.
@@ -115,12 +114,10 @@ func (e *Executor) ResolveVersion(ctx context.Context, constraint string) (strin
 		return "", err
 	}
 
-	var versionInfo *version.VersionInfo
-	if constraint == "" || constraint == "latest" {
-		versionInfo, err = provider.ResolveLatest(ctx)
-	} else {
-		versionInfo, err = provider.ResolveVersion(ctx, constraint)
-	}
+	// Use boundary-aware resolution so that partial semver constraints
+	// (e.g., "1.7", "2") match the highest version within that prefix
+	// for providers that implement VersionLister.
+	versionInfo, err := version.ResolveWithinBoundary(ctx, provider, constraint)
 	if err != nil {
 		return "", err
 	}
