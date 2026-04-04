@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-04T16:37:42Z",
+  "generated_at": "2026-04-04T16:38:51Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 24,
-      "pending": 3908,
+      "failed": 25,
+      "pending": 3907,
       "success": 1340
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 24,
-        "pending": 3885,
+        "failed": 25,
+        "pending": 3884,
         "success": 1327
       }
     },
@@ -74,7 +74,8 @@
         "total": 75
       },
       "pypi": {
-        "pending": 3,
+        "failed": 1,
+        "pending": 2,
         "success": 4,
         "total": 7
       },
@@ -489,15 +490,6 @@
           "next_retry_at": "2026-04-11T15:37:13Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 108,
-          "next_retry_at": "1733-12-24T15:49:56Z"
-        },
-        {
           "id": "npm:chainsaw",
           "name": "chainsaw",
           "ecosystem": "npm",
@@ -588,6 +580,15 @@
           "next_retry_at": "2026-04-11T14:37:22Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 229,
+          "next_retry_at": "1733-12-24T16:51:02Z"
+        },
+        {
           "id": "npm:mailhog",
           "name": "mailhog",
           "ecosystem": "npm",
@@ -676,6 +677,15 @@
           "category": "install_failed",
           "failure_count": 10,
           "next_retry_at": "2026-04-11T15:37:13Z"
+        },
+        {
+          "id": "npm:webdav",
+          "name": "webdav",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-04-11T16:38:18Z"
         }
       ],
       "pending": [
@@ -2578,6 +2588,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 108,
+          "next_retry_at": "1733-12-24T15:49:56Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -13194,15 +13213,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 228,
-          "next_retry_at": "1733-12-24T14:50:05Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -27206,15 +27216,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:webdav",
-          "name": "webdav",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-03-27T19:28:30Z"
         },
         {
           "id": "rubygems:webhook",
