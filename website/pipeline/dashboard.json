@@ -1,12 +1,13 @@
 {
-  "generated_at": "2026-04-04T12:54:21Z",
+  "generated_at": "2026-04-04T12:55:32Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "pending": 3933,
-      "success": 1339
+      "failed": 2,
+      "pending": 3930,
+      "success": 1340
     },
     "by_tier": {
       "1": {
@@ -22,8 +23,9 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "pending": 3910,
-        "success": 1326
+        "failed": 2,
+        "pending": 3907,
+        "success": 1327
       }
     },
     "by_ecosystem": {
@@ -65,18 +67,20 @@
         "total": 1
       },
       "npm": {
-        "pending": 21,
-        "success": 54,
+        "pending": 20,
+        "success": 55,
         "total": 75
       },
       "pypi": {
-        "pending": 3,
+        "failed": 1,
+        "pending": 2,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "pending": 79,
+        "failed": 1,
+        "pending": 78,
         "success": 9,
         "total": 89
       }
@@ -453,6 +457,26 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
+        }
+      ],
+      "failed": [
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 227,
+          "next_retry_at": "1733-12-24T13:07:18Z"
+        },
+        {
+          "id": "rubygems:meli",
+          "name": "meli",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-04-09T20:54:35Z"
         }
       ],
       "pending": [
@@ -7478,15 +7502,6 @@
           "failure_count": 1
         },
         {
-          "id": "npm:fastmcp",
-          "name": "fastmcp",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-03-27T17:41:06Z"
-        },
-        {
           "id": "homebrew:fastmod",
           "name": "fastmod",
           "ecosystem": "homebrew",
@@ -13108,15 +13123,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 226,
-          "next_retry_at": "1733-12-22T01:59:38Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -15380,15 +15386,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:meli",
-          "name": "meli",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-03-27T10:01:29Z"
         },
         {
           "id": "rubygems:memcached",
@@ -30658,6 +30655,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:fastmcp",
+          "name": "fastmcp",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-03-27T17:41:06Z"
         },
         {
           "id": "homebrew:fcrackzip",
