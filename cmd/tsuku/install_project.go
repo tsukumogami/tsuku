@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
 	"sort"
@@ -18,8 +19,17 @@ import (
 // projectToolResult tracks the outcome of installing a single tool.
 type projectToolResult struct {
 	Name   string
-	Status string // "installed", "current", "failed"
+	Status string // "installed", "current", "failed", "dry-run"
 	Error  error
+}
+
+// toolEntry represents a tool declared in the project config, with parsed
+// metadata for version and distributed source information.
+type toolEntry struct {
+	Name         string
+	Version      string
+	Distributed  *distributedInstallArgs // non-nil for org-scoped tools
+	SourceFailed bool                    // true if source bootstrap failed
 }
 
 // runProjectInstall handles the no-args install path: discover the nearest
@@ -57,12 +67,6 @@ func runProjectInstall(cmd *cobra.Command) {
 	}
 
 	// Build sorted tool list with distributed-name parsing
-	type toolEntry struct {
-		Name         string
-		Version      string
-		Distributed  *distributedInstallArgs // non-nil for org-scoped tools
-		SourceFailed bool                    // true if source bootstrap failed
-	}
 	var tools []toolEntry
 	for name, req := range result.Config.Tools {
 		entry := toolEntry{Name: name, Version: req.Version}
@@ -147,6 +151,12 @@ func runProjectInstall(cmd *cobra.Command) {
 	if len(unpinned) > 0 {
 		printWarning(fmt.Sprintf("Warning: %s %s unpinned (no version or \"latest\"). Pin versions for reproducibility.",
 			strings.Join(unpinned, ", "), pluralVerb(len(unpinned))))
+	}
+
+	// Dry-run mode: show what would be installed without making changes
+	if installDryRun {
+		runProjectDryRun(tools)
+		return
 	}
 
 	// Interactive confirmation unless --yes or non-TTY
@@ -245,9 +255,6 @@ func runProjectInstall(cmd *cobra.Command) {
 		}
 	}
 
-	// Print summary
-	printProjectSummary(results)
-
 	// Determine exit code
 	failCount := 0
 	for _, r := range results {
@@ -255,13 +262,22 @@ func runProjectInstall(cmd *cobra.Command) {
 			failCount++
 		}
 	}
+
+	exitCode := ExitSuccess
 	if failCount == len(results) {
-		exitWithCode(ExitInstallFailed)
+		exitCode = ExitInstallFailed
+	} else if failCount > 0 {
+		exitCode = ExitPartialFailure
 	}
-	if failCount > 0 {
-		exitWithCode(ExitPartialFailure)
+
+	// Print summary
+	if installJSON {
+		printProjectSummaryJSON(results, exitCode)
+	} else {
+		printProjectSummary(results)
 	}
-	exitWithCode(ExitSuccess)
+
+	exitWithCode(exitCode)
 }
 
 // printProjectSummary prints the batch install summary.
@@ -306,4 +322,122 @@ func pluralVerb(n int) string {
 		return "is"
 	}
 	return "are"
+}
+
+// runProjectDryRun runs dry-run for each tool in the project config.
+// It calls runDryRun for each tool and collects results, then prints
+// a summary. For distributed tools, it uses the qualified name so the
+// recipe can be resolved through the distributed provider.
+func runProjectDryRun(tools []toolEntry) {
+	var results []projectToolResult
+	for _, t := range tools {
+		if t.SourceFailed {
+			results = append(results, projectToolResult{
+				Name:   t.Name,
+				Status: "failed",
+				Error:  fmt.Errorf("source failed to register (skipped)"),
+			})
+			continue
+		}
+
+		resolveVersion := t.Version
+		if resolveVersion == "latest" {
+			resolveVersion = ""
+		}
+
+		toolName := t.Name
+		if t.Distributed != nil {
+			toolName = t.Distributed.Source + ":" + t.Distributed.RecipeName
+		}
+
+		if err := runDryRun(toolName, resolveVersion); err != nil {
+			results = append(results, projectToolResult{
+				Name:   t.Name,
+				Status: "failed",
+				Error:  err,
+			})
+		} else {
+			results = append(results, projectToolResult{
+				Name:   t.Name,
+				Status: "dry-run",
+			})
+		}
+	}
+
+	// Print summary
+	failCount := 0
+	for _, r := range results {
+		if r.Status == "failed" {
+			failCount++
+		}
+	}
+
+	if failCount > 0 {
+		fmt.Fprintf(os.Stderr, "\nDry-run completed with %d %s failing to resolve.\n", failCount, pluralTool(failCount))
+		for _, r := range results {
+			if r.Status == "failed" {
+				fmt.Fprintf(os.Stderr, "  %s: %v\n", r.Name, r.Error)
+			}
+		}
+		if failCount == len(results) {
+			exitWithCode(ExitInstallFailed)
+		}
+		exitWithCode(ExitPartialFailure)
+	}
+	exitWithCode(ExitSuccess)
+}
+
+// projectToolJSON is the JSON representation of a single tool result
+// in the project install summary.
+type projectToolJSON struct {
+	Name   string `json:"name"`
+	Status string `json:"status"`
+	Error  string `json:"error,omitempty"`
+}
+
+// projectSummaryJSON is the structured JSON output for project install.
+type projectSummaryJSON struct {
+	Status   string            `json:"status"`
+	Tools    []projectToolJSON `json:"tools"`
+	ExitCode int               `json:"exit_code"`
+}
+
+// buildProjectSummaryJSON constructs the structured JSON summary for project
+// install results. Separated from printProjectSummaryJSON for testability.
+func buildProjectSummaryJSON(results []projectToolResult, exitCode int) projectSummaryJSON {
+	status := "success"
+	if exitCode == ExitInstallFailed {
+		status = "error"
+	} else if exitCode == ExitPartialFailure {
+		status = "partial"
+	}
+
+	tools := make([]projectToolJSON, len(results))
+	for i, r := range results {
+		tools[i] = projectToolJSON{
+			Name:   r.Name,
+			Status: r.Status,
+		}
+		if r.Error != nil {
+			tools[i].Error = r.Error.Error()
+		}
+	}
+
+	return projectSummaryJSON{
+		Status:   status,
+		Tools:    tools,
+		ExitCode: exitCode,
+	}
+}
+
+// printProjectSummaryJSON prints the project install summary as JSON.
+func printProjectSummaryJSON(results []projectToolResult, exitCode int) {
+	summary := buildProjectSummaryJSON(results, exitCode)
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(summary); err != nil {
+		fmt.Fprintf(os.Stderr, "Error encoding JSON: %v\n", err)
+		exitWithCode(ExitGeneral)
+	}
 }
