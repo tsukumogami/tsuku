@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-04T17:34:49Z",
+  "generated_at": "2026-04-04T17:39:44Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 27,
-      "pending": 3905,
+      "failed": 26,
+      "pending": 3906,
       "success": 1340
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 27,
-        "pending": 3882,
+        "failed": 26,
+        "pending": 3883,
         "success": 1327
       }
     },
@@ -68,7 +68,8 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
+        "failed": 19,
+        "pending": 1,
         "success": 55,
         "total": 75
       },
@@ -486,15 +487,6 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-04-11T15:37:13Z"
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 110,
-          "next_retry_at": "1733-12-24T17:47:02Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -2604,6 +2596,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 110,
+          "next_retry_at": "1733-12-24T17:47:02Z"
         },
         {
           "id": "homebrew:azure-cli",
