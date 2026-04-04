@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-04T12:54:35Z",
+  "updated_at": "2026-04-04T13:58:25Z",
   "entries": [
     {
       "name": "node",
@@ -636,11 +636,11 @@
       "name": "numpy",
       "source": "crates.io:numpy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-01T21:43:49.53185737Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-11T13:58:25.68337299Z"
     },
     {
       "name": "p11-kit",
@@ -1906,11 +1906,11 @@
       "name": "amp",
       "source": "rubygems:amp",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-04-02T08:58:30.562311969Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-04-11T13:58:25.68337299Z"
     },
     {
       "name": "amplify",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 105,
-      "next_retry_at": "1733-12-16T19:11:08.081873179Z"
+      "failure_count": 106,
+      "next_retry_at": "1733-12-24T14:11:08.828597182Z"
     },
     {
       "name": "azqr",
@@ -7036,11 +7036,11 @@
       "name": "chainsaw",
       "source": "npm:chainsaw",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-02T07:10:46.089753885Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-11T13:58:25.68337299Z"
     },
     {
       "name": "chamber",
@@ -9116,11 +9116,11 @@
       "name": "countdown",
       "source": "npm:countdown",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-02T10:06:33.148962572Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-11T13:58:25.68337299Z"
     },
     {
       "name": "coursier",
@@ -10236,11 +10236,11 @@
       "name": "datasette",
       "source": "npm:datasette",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-02T17:05:50.61546431Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-11T13:58:25.68337299Z"
     },
     {
       "name": "datawire/blackbird/telepresence",
@@ -11186,11 +11186,11 @@
       "name": "dmd",
       "source": "npm:dmd",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-03T02:12:37.114928022Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-11T13:58:25.68337299Z"
     },
     {
       "name": "dmg2img",
@@ -12396,11 +12396,11 @@
       "name": "e2b",
       "source": "npm:e2b",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-03T07:10:20.465245034Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-11T13:58:25.68337299Z"
     },
     {
       "name": "e2fsprogs",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 227,
