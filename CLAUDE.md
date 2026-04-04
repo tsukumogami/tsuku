@@ -139,8 +139,8 @@ Skills in `plugins/` guide agents through recipe authoring, testing, and end-use
 
 | Skill | Path | Scope |
 |-------|------|-------|
-| recipe-author | plugins/tsuku-recipes/skills/recipe-author/ | Recipe TOML writing |
-| recipe-test | plugins/tsuku-recipes/skills/recipe-test/ | Recipe testing workflow |
+| tsuku-recipe-author | plugins/tsuku-recipes/skills/recipe-author/ | Recipe TOML writing |
+| tsuku-recipe-test | plugins/tsuku-recipes/skills/recipe-test/ | Recipe testing workflow |
 | tsuku-user | plugins/tsuku-user/skills/tsuku-user/ | CLI usage, project config, shell integration, updates |
 
 **After completing any source change in the areas below, assess the relevant skills:**
@@ -150,11 +150,11 @@ Skills in `plugins/` guide agents through recipe authoring, testing, and end-use
 
 | Source Area | What to check | Relevant Skill |
 |-------------|---------------|----------------|
-| internal/actions/ -- action names, params, `Dependencies()` | New or renamed actions, changed parameters | recipe-author |
-| internal/version/ -- provider types, source values | New version providers, changed resolution logic | recipe-author |
-| internal/recipe/ -- TOML structure, when clauses, validation | Changed recipe fields, new clause types | recipe-author |
-| internal/executor/ -- plan generation, decomposition | Changed step ordering, new decomposition rules | recipe-test |
-| cmd/tsuku/validate.go -- validation rules, exit codes | New validation checks, changed exit semantics | recipe-test |
+| internal/actions/ -- action names, params, `Dependencies()` | New or renamed actions, changed parameters | tsuku-recipe-author |
+| internal/version/ -- provider types, source values | New version providers, changed resolution logic | tsuku-recipe-author |
+| internal/recipe/ -- TOML structure, when clauses, validation | Changed recipe fields, new clause types | tsuku-recipe-author |
+| internal/executor/ -- plan generation, decomposition | Changed step ordering, new decomposition rules | tsuku-recipe-test |
+| cmd/tsuku/validate.go -- validation rules, exit codes | New validation checks, changed exit semantics | tsuku-recipe-test |
 | cmd/tsuku/ -- CLI commands, flags, exit codes | New commands, changed flags or output format | tsuku-user |
 | internal/project/ -- .tsuku.toml parsing, pin resolution | Changed config fields, new pin levels | tsuku-user |
 | internal/shellenv/ -- shell integration, doctor checks | Changed PATH setup, new doctor diagnostics | tsuku-user |

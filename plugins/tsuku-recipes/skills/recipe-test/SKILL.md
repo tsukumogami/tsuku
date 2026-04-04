@@ -1,5 +1,5 @@
 ---
-name: recipe-test
+name: tsuku-recipe-test
 description: |
   Use when a recipe needs testing or an installation is failing. Covers
   the full validate-eval-sandbox-golden workflow with exact commands,

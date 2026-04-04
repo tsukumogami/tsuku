@@ -94,7 +94,7 @@ for family in debian rhel alpine arch suse; do
 done
 ```
 
-The recipe-test skill (skills/recipe-test/SKILL.md) covers golden file
+The tsuku-recipe-test skill (skills/recipe-test/SKILL.md) covers golden file
 validation, common failure patterns, and test infrastructure in detail.
 
 ## Guides

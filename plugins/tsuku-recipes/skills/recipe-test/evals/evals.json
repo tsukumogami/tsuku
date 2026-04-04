@@ -1,5 +1,5 @@
 {
-  "skill_name": "recipe-test",
+  "skill_name": "tsuku-recipe-test",
   "evals": [
     {
       "id": 1,
@@ -65,10 +65,10 @@
       "id": 6,
       "name": "negative-recipe-authoring",
       "prompt": "I want to write a recipe for a new tool that downloads binaries from GitHub releases. What actions should I use and what parameters do they take?",
-      "expected_output": "Skill should NOT trigger. This is a recipe authoring question (recipe-author territory), not a testing question. Agent should recognize the question is out of scope and redirect to the recipe-author skill.",
+      "expected_output": "Skill should NOT trigger. This is a recipe authoring question (recipe-author territory), not a testing question. Agent should recognize the question is out of scope and redirect to the tsuku-recipe-author skill.",
       "assertions": [
         "Agent acknowledges the question is about recipe authoring, not testing",
-        "Agent redirects to the recipe-author skill or notes this is outside recipe-test scope"
+        "Agent redirects to the tsuku-recipe-author skill or notes this is outside tsuku-recipe-test scope"
       ],
       "files": []
     },
@@ -79,7 +79,7 @@
       "expected_output": "Skill should NOT trigger. This is a CLI configuration question (tsuku-user territory), not recipe testing. Agent should recognize the question is out of scope.",
       "assertions": [
         "Agent acknowledges the question is about CLI configuration, not recipe testing",
-        "Agent redirects to tsuku-user skill or notes this is outside recipe-test scope"
+        "Agent redirects to tsuku-user skill or notes this is outside tsuku-recipe-test scope"
       ],
       "files": []
     }

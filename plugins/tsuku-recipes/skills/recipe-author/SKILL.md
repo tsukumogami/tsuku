@@ -1,5 +1,5 @@
 ---
-name: recipe-author
+name: tsuku-recipe-author
 description: |
   Use when writing or modifying tsuku recipe TOML files. The recipe format
   has 60+ actions, 14 version providers, and platform-conditional logic
