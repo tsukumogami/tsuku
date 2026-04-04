@@ -52,10 +52,10 @@
     {
       "id": 5,
       "name": "verify-exit-code",
-      "prompt": "I'm getting exit code 8 when I run tsuku verify on a tool I installed yesterday. What does that mean and how do I fix it?",
-      "expected_output": "Skill triggers on verification troubleshooting. Agent explains exit code 8 (verification failure) and provides steps to diagnose and resolve the issue.",
+      "prompt": "I'm getting exit code 7 when I run tsuku verify on a tool I installed yesterday. What does that mean and how do I fix it?",
+      "expected_output": "Skill triggers on verification troubleshooting. Agent explains exit code 7 (verification failed) and provides steps to diagnose and resolve the issue.",
       "assertions": [
-        "Output explains what exit code 8 means in the context of tsuku verify",
+        "Output explains what exit code 7 means (verification failed)",
         "Output provides at least one concrete step to diagnose the verification failure"
       ],
       "files": []
@@ -75,10 +75,10 @@
       "id": 7,
       "name": "negative-recipe-authoring",
       "prompt": "I need to write a recipe TOML file for a tool that uses cargo_install. What actions and parameters should I use?",
-      "expected_output": "Skill should NOT trigger. This is a recipe authoring question (recipe-author territory), not CLI usage.",
+      "expected_output": "Skill should NOT trigger. This is a recipe authoring question (recipe-author territory), not CLI usage. Agent should either redirect to recipe-author or attempt to answer from general knowledge, but should NOT give CLI usage advice.",
       "assertions": [
-        "Agent does NOT focus on tsuku commands (install, doctor, shellenv, etc.)",
-        "Response focuses on TOML recipe structure or action parameters for cargo_install"
+        "Agent does NOT focus on tsuku CLI commands (install, doctor, shellenv, update, etc.) as the primary answer",
+        "Agent does NOT confuse recipe authoring with tool installation or shell setup"
       ],
       "files": []
     },
@@ -86,10 +86,10 @@
       "id": 8,
       "name": "negative-recipe-testing",
       "prompt": "tsuku validate --strict is giving me warnings about my recipe's verify section. How do I fix the pattern?",
-      "expected_output": "Skill should NOT trigger. This is a recipe testing/validation question (recipe-test territory), not general CLI usage.",
+      "expected_output": "Skill should NOT trigger. This is a recipe testing/validation question (recipe-test territory), not general CLI usage. Agent should either redirect to recipe-test or attempt to answer, but should NOT give CLI usage advice.",
       "assertions": [
-        "Agent does NOT focus on shell integration, PATH setup, or .tsuku.toml configuration",
-        "Response focuses on recipe validation or the verify section syntax"
+        "Agent does NOT focus on shell integration, PATH setup, or .tsuku.toml configuration as the primary answer",
+        "Agent does NOT confuse recipe validation with tool installation or shell setup"
       ],
       "files": []
     }

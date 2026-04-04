@@ -218,7 +218,7 @@ tsuku config set telemetry false
 
 ### Key Settings
 
-**Telemetry**: Opt out of anonymous usage stats with `tsuku config set telemetry false`.
+**Telemetry**: Opt out of anonymous usage stats with `tsuku config set telemetry false`, or set environment variables: `TSUKU_NO_TELEMETRY=1` or `TSUKU_TELEMETRY=0`.
 
 **Updates** (`[updates]` section):
 - `enabled` -- toggle background update checks (default: true)

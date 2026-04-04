@@ -5,12 +5,12 @@
       "id": 1,
       "name": "github-binary-recipe",
       "prompt": "I need to write a recipe for ripgrep that downloads the binary from GitHub releases and installs it on both linux and macOS, with different archive formats per platform",
-      "expected_output": "Skill triggers on recipe authoring request. Agent uses the action reference to identify download, extract, and install_binaries actions. Produces a TOML recipe with when clauses splitting linux (tar.gz) from macOS (zip). Uses github version provider. Includes a verify section.",
+      "expected_output": "Skill triggers on recipe authoring request. Agent uses the action reference to identify download, extract, and install_binaries actions. Produces a TOML recipe with when clauses splitting linux from macOS. Uses github version provider. Includes a verify section.",
       "assertions": [
         "Output contains a TOML recipe with [metadata] section including name and description",
         "Output uses the github version provider or references GitHub releases for version resolution",
         "Output includes when clauses or platform conditionals to differentiate linux and macOS",
-        "Output references tar.gz or tar extraction for linux and zip extraction for macOS",
+        "Output references archive extraction (tar.gz, zip, or similar) for the downloaded assets",
         "Output includes install_binaries or equivalent binary installation action",
         "Output includes a [verify] section or verification step"
       ],
@@ -47,10 +47,10 @@
       "id": 4,
       "name": "cargo-install-recipe",
       "prompt": "I want to add a cargo_install recipe for a rust tool called fd-find. Does tsuku auto-detect the version provider from the action or do I need to set [version] source explicitly?",
-      "expected_output": "Skill triggers on recipe authoring question about cargo_install and version providers. Agent clarifies the relationship between actions and version providers -- they are independent. Explains that [version] source must be set explicitly. Suggests crates_io or github as the version provider for a Rust tool.",
+      "expected_output": "Skill triggers on recipe authoring question about cargo_install and version providers. Agent explains that ecosystem actions like cargo_install auto-infer the version provider (crates_io), so an explicit [version] section is often unnecessary. Mentions crates_io or github as version provider options.",
       "assertions": [
-        "Output explains that the version provider must be set explicitly (not auto-detected from the action)",
-        "Output mentions crates_io or github as appropriate version provider options for a Rust tool",
+        "Output explains that cargo_install auto-infers the crates_io version provider (or that [version] can be omitted for ecosystem actions)",
+        "Output mentions crates_io or github as version provider options for a Rust tool",
         "Output includes cargo_install action usage or syntax"
       ],
       "files": []
@@ -73,9 +73,9 @@
       "prompt": "tsuku install ripgrep is failing with exit code 6 and something about containers -- what's going wrong?",
       "expected_output": "Skill should NOT trigger. This is an installation debugging question (tsuku-user or recipe-test territory), not a recipe authoring question. The agent should not invoke recipe-author for troubleshooting install failures.",
       "assertions": [
-        "Agent does NOT produce a new recipe TOML file",
-        "Agent does NOT reference the action reference or recipe authoring workflow",
-        "Response focuses on troubleshooting the installation failure, not writing or editing a recipe"
+        "Agent does NOT treat this as a request to write a new recipe from scratch",
+        "Agent recognizes this is an installation troubleshooting question, not a recipe authoring task",
+        "Response includes diagnostic steps or explains the failure cause"
       ],
       "files": []
     },

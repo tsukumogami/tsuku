@@ -123,11 +123,15 @@ export TSUKU_HOME=$(mktemp -d)
 
 **Exit code 5 -- network error.** GitHub API rate limiting is the most common cause. Set `GITHUB_TOKEN` and retry.
 
+**Exit code 6 -- installation failed.** The install step itself failed (bad archive, build error, container failure in sandbox mode). Run with `--debug` to see the full error. For sandbox failures, verify Docker/Podman is running and the container image can be pulled.
+
+**Exit code 7 -- verification failed.** The verify command ran but the output didn't match the expected pattern. Run the tool directly (e.g., `my-tool --version`) to see its actual output, then update the recipe's `verify.pattern` to match. Common issues: the tool prints `v1.2.3` but the pattern expects `1.2.3` (use `strip_v = true`), or the version appears in a different format.
+
 **Exit code 8 -- dependency failed.** A required dependency isn't available or its recipe is broken. Test the dependency in isolation: `tsuku eval <dep>`.
 
-**Sandbox won't start (exit code 12).** Docker/Podman not running or not in PATH. Run `docker --version` or `podman --version` to confirm.
+**Sandbox won't start.** Docker/Podman not running or not in PATH. Run `docker --version` or `podman --version` to confirm. Sandbox failures typically surface as exit code 6 (installation failed).
 
-**Verification fails after successful install.** The verify command can't find the binary. Check that the recipe's `verify.command` matches the installed binary name and that it lands on PATH.
+**Verification fails after successful install.** Run the tool manually (e.g., `my-tool --version`) to see what it actually prints. Then update the recipe's `[verify]` section: set `command` to the correct binary, `pattern` to match the actual output format, and add `strip_v = true` if the tool prints a `v` prefix. Check that `verify.command` matches the installed binary name and that it lands on PATH.
 
 **"patchelf not found" warning.** A dependency is missing and RPATH won't be fixed. The recipe needs patchelf as a dependency, or the tool needs static linking.
 
