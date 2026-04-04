@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-04T14:37:22Z",
+  "updated_at": "2026-04-04T15:37:13Z",
   "entries": [
     {
       "name": "node",
@@ -2866,11 +2866,11 @@
       "name": "arturo",
       "source": "rubygems:arturo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-01T13:10:33.98423563Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-11T15:37:13.544448801Z"
     },
     {
       "name": "arxiv_latex_cleaner",
@@ -2886,11 +2886,11 @@
       "name": "ascii",
       "source": "crates.io:ascii",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-01T23:38:20.821063102Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-11T15:37:13.544448801Z"
     },
     {
       "name": "asciidoc",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 106,
-      "next_retry_at": "1733-12-24T14:11:08.828597182Z"
+      "failure_count": 108,
+      "next_retry_at": "1733-12-24T15:49:56.689672993Z"
     },
     {
       "name": "azqr",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 228,
@@ -37216,11 +37216,11 @@
       "name": "pocketbase",
       "source": "npm:pocketbase",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-03-31T15:02:36.055461489Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-11T15:37:13.544448801Z"
     },
     {
       "name": "poco",
@@ -38126,11 +38126,11 @@
       "name": "protoc-gen-js",
       "source": "npm:protoc-gen-js",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-04-01T02:05:20.243329297Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-11T15:37:13.544448801Z"
     },
     {
       "name": "protolint",
@@ -39116,11 +39116,11 @@
       "name": "q",
       "source": "npm:q",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-04-01T15:03:56.622221581Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-11T15:37:13.544448801Z"
     },
     {
       "name": "qalculate-gtk",
@@ -43656,11 +43656,11 @@
       "name": "sigstore",
       "source": "npm:sigstore",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-04-02T02:11:05.09224652Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-11T15:37:13.544448801Z"
     },
     {
       "name": "sile",
@@ -50766,11 +50766,11 @@
       "name": "wartremover",
       "source": "npm:wartremover",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-04-03T10:50:49.714462588Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-11T15:37:13.544448801Z"
     },
     {
       "name": "wasm-bindgen",
