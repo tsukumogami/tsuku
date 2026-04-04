@@ -1,8 +1,10 @@
 {
   "name": "tsuku-user",
-  "version": "0.1.0",
+  "version": "0.1.0-dev",
   "description": "End-user CLI and project configuration skills",
-  "author": { "name": "tsukumogami" },
+  "author": {
+    "name": "tsukumogami"
+  },
   "skills": [
     "./skills/tsuku-user"
   ]

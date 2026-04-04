@@ -1,8 +1,10 @@
 {
   "name": "tsuku-recipes",
-  "version": "0.1.0",
+  "version": "0.1.0-dev",
   "description": "Recipe authoring and testing skills",
-  "author": { "name": "tsukumogami" },
+  "author": {
+    "name": "tsukumogami"
+  },
   "skills": [
     "./skills/recipe-author",
     "./skills/recipe-test"
