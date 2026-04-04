@@ -571,9 +571,9 @@ command = "registry-tool --version"
 	reg := registry.New(cacheDir)
 	loader := newTestLoaderNoEmbedded(reg, recipesDir)
 
-	recipes, err := loader.ListAllWithSource()
-	if err != nil {
-		t.Fatalf("ListAllWithSource() failed: %v", err)
+	recipes, listErrs := loader.ListAllWithSource()
+	if len(listErrs) > 0 {
+		t.Fatalf("ListAllWithSource() had errors: %v", listErrs)
 	}
 
 	if len(recipes) != 2 {
@@ -643,9 +643,9 @@ command = "shared-tool --version"
 	reg := registry.New(cacheDir)
 	loader := newTestLoaderNoEmbedded(reg, recipesDir)
 
-	recipes, err := loader.ListAllWithSource()
-	if err != nil {
-		t.Fatalf("ListAllWithSource() failed: %v", err)
+	recipes, listErrs := loader.ListAllWithSource()
+	if len(listErrs) > 0 {
+		t.Fatalf("ListAllWithSource() had errors: %v", listErrs)
 	}
 
 	// Should only have one recipe (local shadows registry)
@@ -1813,5 +1813,58 @@ command = "dist-tool --version"
 	}
 	if source != RecipeSource("acme/tools") {
 		t.Errorf("source = %q, want %q", source, "acme/tools")
+	}
+}
+
+// failingProvider is a test provider that always returns an error on List.
+type failingProvider struct{}
+
+func (f *failingProvider) Get(_ context.Context, _ string) ([]byte, error) {
+	return nil, fmt.Errorf("always fails")
+}
+
+func (f *failingProvider) List(_ context.Context) ([]RecipeInfo, error) {
+	return nil, fmt.Errorf("list always fails")
+}
+
+func (f *failingProvider) Source() RecipeSource {
+	return RecipeSource("failing/source")
+}
+
+func TestLoader_ListAllWithSource_ContinuesOnProviderError(t *testing.T) {
+	// Create a loader with a working provider and a failing one
+	store := NewMemoryStore(map[string][]byte{
+		"good-tool.toml": []byte(`[metadata]
+name = "good-tool"
+description = "A good tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/good.tar.gz"
+
+[verify]
+command = "good-tool --version"
+`),
+	})
+	goodProvider := NewRegistryProvider("test", SourceLocal, Manifest{Layout: "flat"}, store)
+
+	loader := NewLoader(goodProvider, &failingProvider{})
+
+	recipes, errs := loader.ListAllWithSource()
+
+	// Should have the good tool's recipe
+	if len(recipes) != 1 {
+		t.Errorf("expected 1 recipe, got %d", len(recipes))
+	}
+	if len(recipes) > 0 && recipes[0].Name != "good-tool" {
+		t.Errorf("expected recipe 'good-tool', got %q", recipes[0].Name)
+	}
+
+	// Should have collected the error from the failing provider
+	if len(errs) != 1 {
+		t.Errorf("expected 1 error, got %d", len(errs))
+	}
+	if len(errs) > 0 && !strings.Contains(errs[0].Error(), "failing/source") {
+		t.Errorf("expected error to mention failing source, got: %v", errs[0])
 	}
 }
