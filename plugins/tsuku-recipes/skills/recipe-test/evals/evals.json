@@ -1,0 +1,87 @@
+{
+  "skill_name": "tsuku-recipe-test",
+  "evals": [
+    {
+      "id": 1,
+      "name": "cross-family-testing",
+      "prompt": "I just wrote a recipe for dav1d and I want to test it across debian, alpine, and arch before submitting the PR. What's the testing workflow?",
+      "expected_output": "Skill triggers on cross-family recipe testing. Agent describes the validate-eval-sandbox workflow. Mentions tsuku validate, tsuku eval for plan preview, and tsuku install --sandbox for containerized testing across linux families.",
+      "assertions": [
+        "Output mentions tsuku validate as the first testing step",
+        "Output mentions tsuku eval or plan preview to check resolution before installing",
+        "Output mentions tsuku install --sandbox or sandbox/containerized testing",
+        "Output addresses testing across multiple linux families (debian, alpine, arch)"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "sandbox-container-debug",
+      "prompt": "tsuku validate passes on my recipe but when I try tsuku install --sandbox it fails with exit code 6. The container isn't starting -- how do I debug this?",
+      "expected_output": "Skill triggers on sandbox debugging. Agent explains exit code 6 (installation failed) and its relevance to sandbox mode (container failures). Suggests checking container runtime availability and provides debugging steps.",
+      "assertions": [
+        "Output explains what exit code 6 means (installation failed or container/sandbox failure)",
+        "Output suggests checking container runtime (docker, podman, or equivalent) or running with --debug",
+        "Output provides at least one concrete debugging step beyond 'check the logs'"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "golden-file-regeneration",
+      "prompt": "I changed the curl recipe to use configure_make instead of homebrew on musl and I need to regenerate the golden files. What's the command?",
+      "expected_output": "Skill triggers on golden file workflow. Agent provides the exact command to regenerate golden files for a specific recipe after a recipe change.",
+      "assertions": [
+        "Output includes the command or script to regenerate golden files",
+        "Output is specific to regenerating golden files for a single recipe (not all recipes)"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "verification-failure",
+      "prompt": "my recipe's verification is failing with exit code 7 -- the pattern doesn't match the tool's output. How do I figure out what the tool actually prints?",
+      "expected_output": "Skill triggers on verification debugging. Agent explains exit code 7 (verification failed), suggests running the tool manually to see actual output, and explains how to adjust the verify pattern or use strip_v.",
+      "assertions": [
+        "Output explains what exit code 7 means (verification failed)",
+        "Output suggests running the installed tool directly (e.g., my-tool --version) to see its actual version output",
+        "Output explains how to update the verify pattern or verify section to match the actual output"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "eval-command-usage",
+      "prompt": "how do I run the recipe eval command to see the resolved plan before actually installing? I want to check that my when clauses are filtering correctly on linux/amd64",
+      "expected_output": "Skill triggers on eval/plan preview usage. Agent provides the tsuku eval command syntax for previewing the resolved installation plan without executing it, showing how to verify platform-specific when clause filtering.",
+      "assertions": [
+        "Output includes the tsuku eval command or equivalent plan preview command",
+        "Output explains how the plan preview shows which steps are selected by when clauses",
+        "Output addresses platform-specific filtering (linux/amd64 or similar)"
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "negative-recipe-authoring",
+      "prompt": "I want to write a recipe for a new tool that downloads binaries from GitHub releases. What actions should I use and what parameters do they take?",
+      "expected_output": "Skill should NOT trigger. This is a recipe authoring question (recipe-author territory), not a testing question. Agent should recognize the question is out of scope and redirect to the tsuku-recipe-author skill.",
+      "assertions": [
+        "Agent acknowledges the question is about recipe authoring, not testing",
+        "Agent redirects to the tsuku-recipe-author skill or notes this is outside tsuku-recipe-test scope"
+      ],
+      "files": []
+    },
+    {
+      "id": 7,
+      "name": "negative-cli-usage",
+      "prompt": "how do I configure tsuku's auto-update to check for new versions daily?",
+      "expected_output": "Skill should NOT trigger. This is a CLI configuration question (tsuku-user territory), not recipe testing. Agent should recognize the question is out of scope.",
+      "assertions": [
+        "Agent acknowledges the question is about CLI configuration, not recipe testing",
+        "Agent redirects to tsuku-user skill or notes this is outside tsuku-recipe-test scope"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "tsuku",
+  "description": "AI skills for the tsuku package manager",
+  "owner": {
+    "name": "tsukumogami"
+  },
+  "plugins": [
+    {
+      "name": "tsuku-recipes",
+      "description": "Recipe authoring and testing skills",
+      "version": "0.8.2-dev",
+      "author": {
+        "name": "tsukumogami"
+      },
+      "source": "./plugins/tsuku-recipes"
+    },
+    {
+      "name": "tsuku-user",
+      "description": "End-user CLI and project configuration skills",
+      "version": "0.8.2-dev",
+      "author": {
+        "name": "tsukumogami"
+      },
+      "source": "./plugins/tsuku-user"
+    }
+  ]
+}

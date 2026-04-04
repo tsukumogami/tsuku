@@ -195,7 +195,7 @@ jobs:
             echo "  1. Add a musl step: [[steps]] action = \"apk_install\" packages = [\"...\"] when = { os = [\"linux\"], libc = [\"musl\"] }"
             echo "  2. Add explicit constraint: supported_libc = [\"glibc\"] with unsupported_reason"
             echo ""
-            echo "See docs/GUIDE-hybrid-libc-recipes.md for details."
+            echo "See docs/guides/GUIDE-hybrid-libc-recipes.md for details."
             exit 1
           fi
 

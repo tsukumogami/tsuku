@@ -15,7 +15,7 @@ Current
 - **Created**: 2025-12-09
 - **Scope**: Strategic
 - **Archived**: 2025-12-19
-- **See Also**: docs/GUIDE-plan-based-installation.md (user guide)
+- **See Also**: docs/guides/GUIDE-plan-based-installation.md (user guide)
 
 ## Context and Problem Statement
 

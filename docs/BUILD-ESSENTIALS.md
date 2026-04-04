@@ -290,6 +290,6 @@ See the [Build Essentials CI workflow](../.github/workflows/build-essentials.yml
 
 ## See Also
 
-- [Actions and Primitives Guide](GUIDE-actions-and-primitives.md#build-environment-configuration) - Detailed action documentation
+- [Actions and Primitives Guide](guides/GUIDE-actions-and-primitives.md#build-environment-configuration) - Detailed action documentation
 - [Design: Dependency Provisioning](DESIGN-dependency-provisioning.md) - How tsuku manages build dependencies
 - [Contributing Guide](../CONTRIBUTING.md#testing-build-essentials) - How to test build essential recipes

@@ -152,3 +152,33 @@ tsuku registry add your-org/my-tool
 ```
 
 This skips the first-install confirmation prompt on future installs.
+
+## Claude Code Integration
+
+If you use Claude Code (or another AI coding agent), the tsuku-recipes plugin provides contextual guidance for recipe authoring and testing.
+
+Add this to your project's `.claude/settings.json` to install the plugin:
+
+```json
+{
+  "enabledPlugins": {
+    "tsuku-recipes@tsuku": true
+  },
+  "extraKnownMarketplaces": {
+    "tsuku": {
+      "source": {
+        "source": "github",
+        "repo": "tsukumogami/tsuku",
+        "sparsePaths": [".claude-plugin", "plugins/tsuku-recipes"]
+      }
+    }
+  }
+}
+```
+
+This gives Claude Code two skills:
+
+- **recipe-author** -- guidance on recipe TOML structure, actions, version providers, platform conditionals, verification, and dependencies. Includes bundled reference files so the agent doesn't need access to the full tsuku repo.
+- **recipe-test** -- the validate-eval-sandbox testing workflow, cross-family testing, golden file validation, and common failure patterns.
+
+The `autoUpdate` field is intentionally omitted. This means Claude Code won't pull plugin updates automatically -- you control when updates happen by re-fetching the plugin on your own schedule.
