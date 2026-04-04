@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-04T15:37:44Z",
+  "generated_at": "2026-04-04T16:37:42Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -37829,12 +37829,39 @@
   ],
   "failures": {
     "generation_failed": 618,
-    "install_failed": 1593,
+    "install_failed": 1596,
     "missing_dep": 68,
     "network_error": 7,
     "recipe_not_found": 74
   },
   "failure_details": [
+    {
+      "id": "npm-2026-04-04T16-35-50Z-webdav",
+      "package": "webdav",
+      "ecosystem": "npm",
+      "category": "install_failed",
+      "message": "Installation failed: step 1 (npm_exec) failed: expected executable webdav not found at /tmp/action-validator-3193919839/.install/node_modules/.bin/webdav",
+      "batch_id": "2026-04-04T16-35-50Z",
+      "timestamp": "2026-04-04T16:35:50.429099529Z"
+    },
+    {
+      "id": "pypi-2026-04-04T16-35-45Z-lib3mf",
+      "package": "lib3mf",
+      "ecosystem": "pypi",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\nGenerating plan for python-standalone@20260325\nExecuting plan: python-standalone@20260325\n   Work directory: /tmp/action-validator-3605356118\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: cpython-3.10.20+20260325-x86_64-unknown-linux-gnu-install_only.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: cpython-3.10.20+20260325-x86_64-unknown-linux-gn",
+      "batch_id": "2026-04-04T16-35-50Z",
+      "timestamp": "2026-04-04T16:35:45.599779809Z"
+    },
+    {
+      "id": "npm-2026-04-04T16-35-35Z-azion",
+      "package": "azion",
+      "ecosystem": "npm",
+      "category": "install_failed",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\nInstalling eval-time dependencies: [nodejs]\nInstalling nodejs...\nChecking runtime dependencies for nodejs...\n  Resolving runtime dependency 'gcc-libs'...\nExecuting plan: gcc-libs@15.2.0\n   Work directory: /tmp/action-validator-1218013497\n   Total steps: 9 (including 4 from depend",
+      "batch_id": "2026-04-04T16-35-50Z",
+      "timestamp": "2026-04-04T16:35:35.929252159Z"
+    },
     {
       "id": "npm-2026-04-04T15-33-58Z-wartremover",
       "package": "wartremover",
@@ -39613,33 +39640,6 @@
       "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1",
       "batch_id": "2026-03-25T16-14-00Z",
       "timestamp": "2026-03-25T16:11:46.370232254Z"
-    },
-    {
-      "id": "github-2026-03-25T16-11-42Z-bat",
-      "package": "bat",
-      "ecosystem": "github",
-      "category": "generation_failed",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'bat' resolved to github (sharkdp/bat), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
-      "batch_id": "2026-03-25T16-14-00Z",
-      "timestamp": "2026-03-25T16:11:42.789033358Z"
-    },
-    {
-      "id": "npm-2026-03-25T15-01-25Z-q",
-      "package": "q",
-      "ecosystem": "npm",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\nChecking runtime dependencies for nodejs...\n  Resolving runtime dependency 'gcc-libs'...\nExecuting plan: gcc-libs@15.2.0\n   Work directory: /tmp/action-validator-141321818\n   Total steps: 5 (including 0 from dependencies)\n\nStep 1/5: download_file\n   Using cached: gcc.tar.gz\n   ✓ Restored from cache\n\nStep 2/5: extract\n   Extracting: gcc.tar.gz\n   Format: tar.gz\n   Strip dirs: 2\n\nStep 3/5: homebrew_relocate\n   Relocating placeholde",
-      "batch_id": "2026-03-25T15-01-25Z",
-      "timestamp": "2026-03-25T15:01:25.276655601Z"
-    },
-    {
-      "id": "rubygems-2026-03-25T15-00-37Z-mailcatcher",
-      "package": "mailcatcher",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [ruby]\nInstalling ruby...\nChecking dependencies for ruby...\n  Resolving dependency 'libyaml'...\nExecuting plan: libyaml@0.2.5\n   Work directory: /tmp/action-validator-2229531718\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: libyaml.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: libyaml.tar.gz\n   Format: tar.gz\n   Strip dirs: 2\n\nStep 3/4: homebrew_relocate\n   Relocating placeholders: libyaml (lib",
-      "batch_id": "2026-03-25T15-01-25Z",
-      "timestamp": "2026-03-25T15:00:37.449769585Z"
     }
   ],
   "health": {
@@ -39668,15 +39668,15 @@
       },
       "npm": {
         "breaker_state": "closed",
-        "failures": 3,
-        "last_failure": "2026-04-04T15:36:17Z",
+        "failures": 4,
+        "last_failure": "2026-04-04T16:37:18Z",
         "opens_at": "2026-03-27T19:57:33Z"
       },
       "pypi": {
         "breaker_state": "open",
-        "failures": 277,
-        "last_failure": "2026-04-04T14:36:20Z",
-        "opens_at": "2026-04-04T15:36:20Z"
+        "failures": 278,
+        "last_failure": "2026-04-04T16:37:18Z",
+        "opens_at": "2026-04-04T17:37:18Z"
       },
       "rubygems": {
         "breaker_state": "open",
@@ -39686,15 +39686,12 @@
       }
     },
     "last_run": {
-      "batch_id": "2026-04-04T15-36-23Z",
+      "batch_id": "2026-04-04T16-37-27Z",
       "ecosystems": {
-        "crates.io": 1,
-        "github": 1,
-        "homebrew": 1,
-        "npm": 6,
-        "rubygems": 1
+        "npm": 2,
+        "pypi": 1
       },
-      "timestamp": "2026-04-04T15:36:23Z",
+      "timestamp": "2026-04-04T16:37:27Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39715,7 +39712,7 @@
       "total": 1,
       "recipes_merged": 1
     },
-    "runs_since_last_success": 3
+    "runs_since_last_success": 4
   },
   "runs": [
     {
