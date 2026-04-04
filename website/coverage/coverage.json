@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-04-03T20:22:04Z",
-  "total_recipes": 1400,
+  "generated_at": "2026-04-04T12:54:15Z",
+  "total_recipes": 1401,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 836,
-        "total": 1400,
-        "pct": 59.71428571428572
+        "supported": 837,
+        "total": 1401,
+        "pct": 59.743040685224834
       },
       "glibc": {
-        "supported": 1368,
-        "total": 1400,
-        "pct": 97.71428571428571
+        "supported": 1369,
+        "total": 1401,
+        "pct": 97.71591720199856
       },
       "musl": {
         "supported": 1226,
-        "total": 1400,
-        "pct": 87.57142857142857
+        "total": 1401,
+        "pct": 87.5089221984297
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1248,
+        "total": 1249,
         "musl_support": 1076,
-        "glibc_support": 1218
+        "glibc_support": 1219
       }
     }
   },
@@ -5061,6 +5061,20 @@
       "warnings": [
         "recipe 'fastly' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "fastmcp",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": false
+      },
+      "gaps": [
+        "musl"
+      ],
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "fcgi",
