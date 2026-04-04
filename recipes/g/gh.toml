@@ -5,7 +5,6 @@ homepage = "https://cli.github.com/"
 version_format = "semver"
 supported_os = ["darwin", "linux"]
 supported_arch = ["amd64", "arm64"]
-supported_libc = ["glibc"]
 
 [version]
 github_repo = "cli/cli"
