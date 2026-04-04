@@ -1,6 +1,6 @@
 {
   "name": "tsuku-user",
-  "version": "0.1.0-dev",
+  "version": "0.8.2-dev",
   "description": "End-user CLI and project configuration skills",
   "author": {
     "name": "tsukumogami"
