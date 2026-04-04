@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-04T13:58:25Z",
+  "updated_at": "2026-04-04T14:37:22Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 106,
@@ -12966,11 +12966,11 @@
       "name": "ent",
       "source": "npm:ent",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-03T17:55:03.851543713Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-11T14:37:22.173441192Z"
     },
     {
       "name": "ente-cli",
@@ -18186,11 +18186,11 @@
       "name": "got",
       "source": "npm:got",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-03-28T16:32:54.265672875Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-11T14:37:22.173441192Z"
     },
     {
       "name": "gotests",
@@ -19736,11 +19736,11 @@
       "name": "hasura-cli",
       "source": "npm:hasura-cli",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-03-28T23:28:38.908072298Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-11T14:37:22.173441192Z"
     },
     {
       "name": "hatari",
@@ -23566,11 +23566,11 @@
       "name": "kew",
       "source": "npm:kew",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-03-29T04:33:51.822863644Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-11T14:37:22.173441192Z"
     },
     {
       "name": "keychain",
@@ -24896,11 +24896,11 @@
       "name": "lcm",
       "source": "npm:lcm",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-03-30T02:07:55.669315864Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-11T14:37:22.173441192Z"
     },
     {
       "name": "lcov",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 227,
-      "next_retry_at": "1733-12-24T13:07:18.721015994Z"
+      "failure_count": 228,
+      "next_retry_at": "1733-12-24T14:50:05.318665384Z"
     },
     {
       "name": "libaacs",
@@ -28556,11 +28556,11 @@
       "name": "mailhog",
       "source": "npm:mailhog",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-03-30T05:07:11.821895443Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-11T14:37:22.173441192Z"
     },
     {
       "name": "mailpit",
@@ -28896,11 +28896,11 @@
       "name": "markdown-toc",
       "source": "npm:markdown-toc",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-03-30T08:58:55.097414675Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-11T14:37:22.173441192Z"
     },
     {
       "name": "markdownlint-cli",
@@ -30826,11 +30826,11 @@
       "name": "mongoose",
       "source": "npm:mongoose",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-03-30T18:02:14.818212633Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-11T14:37:22.173441192Z"
     },
     {
       "name": "mongosh",
