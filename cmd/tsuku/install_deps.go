@@ -390,30 +390,15 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		return err
 	}
 
-	// Execute the plan
-	if err := exec.ExecutePlan(globalCtx, plan); err != nil {
-		// Handle ChecksumMismatchError specially - it has a user-friendly message
-		var checksumErr *executor.ChecksumMismatchError
-		if errors.As(err, &checksumErr) {
-			fmt.Fprintf(os.Stderr, "\n%s\n", checksumErr.Error())
-			return err
-		}
-		fmt.Fprintf(os.Stderr, "Installation failed: %v\n", err)
-		return err
+	// Short-circuit: if the resolved version is already installed, skip plan
+	// execution entirely. This avoids re-downloading and re-extracting tools
+	// that are already present (e.g., during idempotent `tsuku install -y`).
+	planVersion := plan.Version
+	if planVersion == "" {
+		planVersion = "dev"
 	}
-
-	// Get version from plan (plan always has resolved version)
-	version := plan.Version
-	if version == "" {
-		// Fallback for recipes without dynamic versioning
-		version = "dev"
-	}
-
-	// Check if this exact version is already installed (multi-version support)
-	// Skip installation if exact version exists, but still update state
-	if mgr.IsVersionInstalled(toolName, version) {
-		printInfof("%s@%s is already installed\n", toolName, version)
-		// Still update state flags (is_explicit, required_by)
+	if mgr.IsVersionInstalled(toolName, planVersion) {
+		printInfof("%s@%s is already installed\n", toolName, planVersion)
 		err = mgr.GetState().UpdateTool(toolName, func(ts *install.ToolState) {
 			if isExplicit {
 				ts.IsExplicit = true
@@ -434,10 +419,27 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		if err != nil {
 			printInfof("Warning: failed to update state: %v\n", err)
 		}
-		// Ensure the index reflects this tool as installed (idempotent).
-		// This handles the case where the index DB was deleted and rebuilt.
 		setInstalledInIndex(toolName, true)
 		return nil
+	}
+
+	// Execute the plan
+	if err := exec.ExecutePlan(globalCtx, plan); err != nil {
+		// Handle ChecksumMismatchError specially - it has a user-friendly message
+		var checksumErr *executor.ChecksumMismatchError
+		if errors.As(err, &checksumErr) {
+			fmt.Fprintf(os.Stderr, "\n%s\n", checksumErr.Error())
+			return err
+		}
+		fmt.Fprintf(os.Stderr, "Installation failed: %v\n", err)
+		return err
+	}
+
+	// Get version from plan (plan always has resolved version)
+	version := plan.Version
+	if version == "" {
+		// Fallback for recipes without dynamic versioning
+		version = "dev"
 	}
 
 	// Install to permanent location
