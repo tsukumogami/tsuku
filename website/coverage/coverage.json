@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-04T12:54:15Z",
+  "generated_at": "2026-04-04T17:38:16Z",
   "total_recipes": 1401,
   "summary": {
     "by_platform": {
@@ -14,9 +14,9 @@
         "pct": 97.71591720199856
       },
       "musl": {
-        "supported": 1226,
+        "supported": 1227,
         "total": 1401,
-        "pct": 87.5089221984297
+        "pct": 87.58029978586723
       }
     },
     "by_category": {
@@ -27,7 +27,7 @@
       },
       "tool": {
         "total": 1249,
-        "musl_support": 1076,
+        "musl_support": 1077,
         "glibc_support": 1219
       }
     }
@@ -5898,11 +5898,9 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": false
+        "musl": true
       },
-      "gaps": [
-        "musl"
-      ],
+      "gaps": null,
       "errors": null,
       "warnings": [
         "recipe 'gh' has platform-specific actions without libc when clauses and no musl fallback"
