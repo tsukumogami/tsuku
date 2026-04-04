@@ -33,6 +33,117 @@ in isolation. No walking skeleton needed.
 | 6 | [#2242](https://github.com/tsukumogami/tsuku/issues/2242) | fix(install): idempotent install re-executes full plan for already-installed tools | testable | None |
 | 7 | [#2243](https://github.com/tsukumogami/tsuku/issues/2243) | feat(search): include distributed source recipes in search results | testable | None |
 
+## Issue Outlines
+
+### Issue 1: fix(install): plumb --dry-run, --json, and --fresh flags through project install path
+
+**Complexity:** testable
+
+**Goal:** Make --dry-run, --json, and --fresh flags functional in runProjectInstall(), not just the named-tool path.
+
+**Acceptance Criteria:**
+- [ ] --dry-run shows planned installations without executing
+- [ ] --json produces structured JSON output
+- [ ] --fresh bypasses cached plans
+- [ ] Tests cover all three flags in project install mode
+
+**Dependencies:** None
+
+---
+
+### Issue 2: fix(install): partial semver version resolution fails for distributed source and Homebrew recipes
+
+**Complexity:** testable
+
+**Goal:** Use ResolveWithinBoundary in the executor so partial semver works across all providers.
+
+**Acceptance Criteria:**
+- [ ] Partial semver ("0.5", "1.7", "2") resolves for distributed source recipes
+- [ ] Partial semver resolves for Homebrew-sourced recipes
+- [ ] Existing GitHub provider resolution still works
+- [ ] Test covers partial semver across provider types
+
+**Dependencies:** None
+
+---
+
+### Issue 3: fix(install): distributed source approval fails in non-TTY environments
+
+**Complexity:** testable
+
+**Goal:** Auto-approve distributed sources in non-TTY when --yes is passed or source is already registered.
+
+**Acceptance Criteria:**
+- [ ] --yes flag bypasses distributed source confirmation prompt
+- [ ] Non-TTY environments auto-approve when --yes is passed
+- [ ] Pre-registered sources proceed without prompting
+- [ ] Test covers non-TTY distributed source approval
+
+**Dependencies:** None
+
+---
+
+### Issue 4: fix(actions): patchelf discovery fails during homebrew_relocate
+
+**Complexity:** testable
+
+**Goal:** Make patchelf discoverable during RPATH relocation and fail loudly when not found.
+
+**Acceptance Criteria:**
+- [ ] patchelf found via $TSUKU_HOME/tools/current/ or installed dependency path
+- [ ] Failure is an error (not a silent warning) when patchelf is required
+- [ ] RPATH set on both tool binary and shared libraries
+- [ ] Test covers patchelf discovery during relocation
+
+**Dependencies:** None
+
+---
+
+### Issue 5: fix(recipes): investigate gh segfault and fix supported_libc metadata
+
+**Complexity:** simple
+
+**Goal:** Verify the segfault is a misreport, remove incorrect supported_libc constraint from gh recipe.
+
+**Acceptance Criteria:**
+- [ ] supported_libc removed from gh recipe (binary is statically linked)
+- [ ] Recipe validates successfully after change
+
+**Dependencies:** None
+
+---
+
+### Issue 6: fix(install): idempotent install re-executes full plan for already-installed tools
+
+**Complexity:** testable
+
+**Goal:** Short-circuit plan execution when tool is already installed at requested version.
+
+**Acceptance Criteria:**
+- [ ] Second tsuku install -y skips plan execution for already-installed tools
+- [ ] Output shows "already installed" without plan step noise
+- [ ] Test covers idempotent install scenario
+
+**Dependencies:** None
+
+---
+
+### Issue 7: feat(search): include distributed source recipes in search results
+
+**Complexity:** testable
+
+**Goal:** Extend tsuku search to query registered distributed sources alongside built-in recipes.
+
+**Acceptance Criteria:**
+- [ ] Distributed source recipes appear in search results
+- [ ] Results indicate the source (distributed vs built-in)
+- [ ] AI install suggestion suppressed when tool exists in a distributed source
+- [ ] Test covers distributed source search
+
+**Dependencies:** None
+
+---
+
 ## Dependency Graph
 
 ```mermaid
