@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-04T18:45:28Z",
+  "updated_at": "2026-04-04T20:36:12Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 111,
@@ -5896,11 +5896,11 @@
       "name": "bup",
       "source": "rubygems:bup",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-02T12:01:28.64577279Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-11T20:36:12.043541079Z"
     },
     {
       "name": "burp",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 230,
@@ -46686,11 +46686,11 @@
       "name": "tctl",
       "source": "pypi:tctl",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-02T12:01:28.64577279Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-11T20:36:12.043541079Z"
     },
     {
       "name": "tdlib",
