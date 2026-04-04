@@ -9,7 +9,7 @@
     {
       "name": "tsuku-recipes",
       "description": "Recipe authoring and testing skills",
-      "version": "0.9.1-dev",
+      "version": "0.9.1",
       "author": {
         "name": "tsukumogami"
       },
@@ -18,7 +18,7 @@
     {
       "name": "tsuku-user",
       "description": "End-user CLI and project configuration skills",
-      "version": "0.9.1-dev",
+      "version": "0.9.1",
       "author": {
         "name": "tsukumogami"
       },
