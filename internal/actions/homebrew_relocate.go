@@ -307,27 +307,64 @@ func (a *HomebrewRelocateAction) fixBinaryRpath(ctx *ExecutionContext, binaryPat
 	return nil
 }
 
-// fixElfRpath uses patchelf to set RPATH on Linux ELF binaries
-func (a *HomebrewRelocateAction) fixElfRpath(ctx *ExecutionContext, binaryPath, installPath string) error {
-	// Find patchelf - check ExecPaths first (for installed dependencies), then fall back to PATH
-	patchelfPath := ""
+// findPatchelf locates the patchelf binary by checking (in order):
+//  1. ctx.ExecPaths (dependency bin dirs added during plan execution)
+//  2. System PATH
+//  3. $TSUKU_HOME/tools/patchelf-*/bin/patchelf (glob for any installed version)
+//  4. $TSUKU_HOME/tools/current/patchelf (current symlink)
+//
+// Returns the path to patchelf, or an error if not found anywhere.
+func (a *HomebrewRelocateAction) findPatchelf(ctx *ExecutionContext) (string, error) {
+	// 1. Check ExecPaths (dependency bin dirs from earlier plan steps)
 	for _, p := range ctx.ExecPaths {
-		candidatePath := filepath.Join(p, "patchelf")
-		if _, err := os.Stat(candidatePath); err == nil {
-			patchelfPath = candidatePath
-			break
+		candidate := filepath.Join(p, "patchelf")
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate, nil
 		}
 	}
-	if patchelfPath == "" {
-		// Fall back to system PATH
-		var err error
-		patchelfPath, err = exec.LookPath("patchelf")
-		if err != nil {
-			// Patchelf is declared as a dependency but may not be in PATH yet during bootstrap.
-			// Gracefully degrade - the dependency declaration ensures it gets installed for future use.
-			fmt.Printf("   Warning: patchelf not found, skipping RPATH fix for %s\n", filepath.Base(binaryPath))
-			return nil
+
+	// 2. Check system PATH
+	if p, err := exec.LookPath("patchelf"); err == nil {
+		return p, nil
+	}
+
+	// 3-4. Check $TSUKU_HOME tools directory (glob and current symlink)
+	if p, err := a.findPatchelfInToolsDir(ctx.ToolsDir, ctx.CurrentDir); err == nil {
+		return p, nil
+	}
+
+	return "", fmt.Errorf("patchelf not found: checked ExecPaths, system PATH, %s/patchelf-*/bin/, and %s/", ctx.ToolsDir, ctx.CurrentDir)
+}
+
+// findPatchelfInToolsDir searches for patchelf in the tsuku tools directory.
+// It first globs for versioned install dirs, then checks the current symlink dir.
+func (a *HomebrewRelocateAction) findPatchelfInToolsDir(toolsDir, currentDir string) (string, error) {
+	// Glob $TSUKU_HOME/tools/patchelf-*/bin/patchelf
+	if toolsDir != "" {
+		matches, err := filepath.Glob(filepath.Join(toolsDir, "patchelf-*", "bin", "patchelf"))
+		if err == nil && len(matches) > 0 {
+			// Use the last match (highest version due to lexicographic sort)
+			return matches[len(matches)-1], nil
 		}
+	}
+
+	// Check $TSUKU_HOME/tools/current/patchelf
+	if currentDir != "" {
+		candidate := filepath.Join(currentDir, "patchelf")
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate, nil
+		}
+	}
+
+	return "", fmt.Errorf("patchelf not found in tools directory")
+}
+
+// fixElfRpath uses patchelf to set RPATH on Linux ELF binaries
+func (a *HomebrewRelocateAction) fixElfRpath(ctx *ExecutionContext, binaryPath, installPath string) error {
+	// Find patchelf using multi-location discovery
+	patchelfPath, err := a.findPatchelf(ctx)
+	if err != nil {
+		return fmt.Errorf("cannot fix RPATH for %s: %w", filepath.Base(binaryPath), err)
 	}
 
 	// Homebrew bottles often have read-only files; make writable before patching
