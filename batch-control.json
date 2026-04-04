@@ -33,15 +33,15 @@
     },
     "npm": {
       "state": "closed",
-      "failures": 3,
-      "last_failure": "2026-04-04T15:36:17Z",
+      "failures": 4,
+      "last_failure": "2026-04-04T16:37:18Z",
       "opens_at": "2026-03-27T19:57:33Z"
     },
     "pypi": {
       "state": "open",
-      "failures": 277,
-      "last_failure": "2026-04-04T14:36:20Z",
-      "opens_at": "2026-04-04T15:36:20Z"
+      "failures": 278,
+      "last_failure": "2026-04-04T16:37:18Z",
+      "opens_at": "2026-04-04T17:37:18Z"
     },
     "default": {
       "state": "closed",
