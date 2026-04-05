@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-05T10:38:16Z",
+  "updated_at": "2026-04-05T12:59:42Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 117,
-      "next_retry_at": "1733-12-25T08:59:43.800981918Z"
+      "failure_count": 119,
+      "next_retry_at": "1733-12-25T13:12:25.67441207Z"
     },
     {
       "name": "azqr",
@@ -9326,11 +9326,11 @@
       "name": "cql",
       "source": "rubygems:cql",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-03-28T07:38:25.337686564Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-12T12:59:42.529187878Z"
     },
     {
       "name": "cqlabs/dcm/dcm",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 234,
-      "next_retry_at": "1733-12-25T08:59:43.800981918Z"
+      "failure_count": 236,
+      "next_retry_at": "1733-12-25T13:12:25.67441207Z"
     },
     {
       "name": "libaacs",
