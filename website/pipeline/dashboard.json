@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-05T07:08:35Z",
+  "generated_at": "2026-04-05T07:09:34Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 35,
-      "pending": 3897,
+      "failed": 34,
+      "pending": 3898,
       "success": 1340
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 35,
-        "pending": 3874,
+        "failed": 34,
+        "pending": 3875,
         "success": 1327
       }
     },
@@ -68,19 +68,21 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
+        "failed": 19,
+        "pending": 1,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 9,
-        "pending": 70,
+        "failed": 10,
+        "pending": 69,
         "success": 9,
         "total": 89
       }
@@ -488,15 +490,6 @@
           "next_retry_at": "2026-04-11T15:37:13Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 115,
-          "next_retry_at": "1733-12-25T05:30:02Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -567,6 +560,15 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-04-12T05:17:18Z"
+        },
+        {
+          "id": "rubygems:chroma",
+          "name": "chroma",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-12T07:09:08Z"
         },
         {
           "id": "npm:countdown",
@@ -648,15 +650,6 @@
           "category": "install_failed",
           "failure_count": 10,
           "next_retry_at": "2026-04-11T14:37:22Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 232,
-          "next_retry_at": "1733-12-25T05:30:02Z"
         },
         {
           "id": "npm:mailhog",
@@ -2678,6 +2671,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 115,
+          "next_retry_at": "1733-12-25T05:30:02Z"
+        },
+        {
           "id": "homebrew:azure-cli",
           "name": "azure-cli",
           "ecosystem": "homebrew",
@@ -4317,15 +4319,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:chroma",
-          "name": "chroma",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-03T02:12:37Z"
         },
         {
           "id": "homebrew:chromaprint",
@@ -13229,6 +13222,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 232,
+          "next_retry_at": "1733-12-25T05:30:02Z"
         },
         {
           "id": "homebrew:libaacs",
