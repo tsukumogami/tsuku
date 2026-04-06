@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-06T20:43:12Z",
+  "updated_at": "2026-04-06T22:40:58Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 133,
-      "next_retry_at": "1733-12-26T19:15:20.574302371Z"
+      "failure_count": 135,
+      "next_retry_at": "1733-12-26T22:53:41.240240172Z"
     },
     {
       "name": "azqr",
@@ -21416,11 +21416,11 @@
       "name": "influxdb",
       "source": "rubygems:influxdb",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-04-03T10:50:49.714462588Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-13T22:40:58.09501598Z"
     },
     {
       "name": "influxdb-cli",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 250,
-      "next_retry_at": "1733-12-26T19:15:20.574302371Z"
+      "failure_count": 252,
+      "next_retry_at": "1733-12-26T22:53:41.240240172Z"
     },
     {
       "name": "libaacs",
