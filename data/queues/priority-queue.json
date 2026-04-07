@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-07T02:15:25Z",
+  "updated_at": "2026-04-07T05:14:11Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 135,
-      "next_retry_at": "1733-12-26T22:53:41.240240172Z"
+      "failure_count": 137,
+      "next_retry_at": "1733-12-27T05:26:54.237219853Z"
     },
     {
       "name": "azqr",
@@ -23966,11 +23966,11 @@
       "name": "kor",
       "source": "rubygems:kor",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-04-03T16:00:46.909851709Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-14T05:14:11.091995661Z"
     },
     {
       "name": "kosli-cli",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 252,
-      "next_retry_at": "1733-12-26T22:53:41.240240172Z"
+      "failure_count": 254,
+      "next_retry_at": "1733-12-27T05:26:54.237219853Z"
     },
     {
       "name": "libaacs",
