@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-07T20:50:15Z",
+  "updated_at": "2026-04-07T22:42:59Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 145,
-      "next_retry_at": "1733-12-27T19:24:35.176486399Z"
+      "failure_count": 147,
+      "next_retry_at": "1733-12-27T22:55:42.249452752Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 262,
-      "next_retry_at": "1733-12-27T19:24:35.176486399Z"
+      "failure_count": 264,
+      "next_retry_at": "1733-12-27T22:55:42.249452752Z"
     },
     {
       "name": "libaacs",
@@ -31296,11 +31296,11 @@
       "name": "multimarkdown",
       "source": "rubygems:multimarkdown",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-27T21:15:59.346508318Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-04-10T14:42:59.10422856Z"
     },
     {
       "name": "multitail",
