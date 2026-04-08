@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-07T23:39:10Z",
+  "generated_at": "2026-04-08T02:15:16Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -37827,13 +37827,67 @@
     }
   ],
   "failures": {
-    "generation_failed": 656,
-    "install_failed": 1784,
+    "generation_failed": 657,
+    "install_failed": 1789,
     "missing_dep": 68,
     "network_error": 8,
     "recipe_not_found": 74
   },
   "failure_details": [
+    {
+      "id": "pypi-2026-04-08T02-12-48Z-lib3mf",
+      "package": "lib3mf",
+      "ecosystem": "pypi",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\nGenerating plan for python-standalone@20260408\nExecuting plan: python-standalone@20260408\n   Work directory: /tmp/action-validator-3286134769\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: cpython-3.10.20+20260408-x86_64-unknown-linux-gnu-install_only.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: cpython-3.10.20+20260408-x86_64-unknown-linux-gn",
+      "batch_id": "2026-04-08T02-12-48Z",
+      "timestamp": "2026-04-08T02:12:48.646311867Z"
+    },
+    {
+      "id": "npm-2026-04-08T02-12-34Z-azion",
+      "package": "azion",
+      "ecosystem": "npm",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\nChecking runtime dependencies for nodejs...\n  Resolving runtime dependency 'gcc-libs'...\nExecuting plan: gcc-libs@15.2.0\n   Work directory: /tmp/action-validator-3666306496\n   Total steps: 9 (including 4 from dependencies)\n\nSkipping dependency: patchelf@0.18.0 (already installed)\n\nStep 1/5: download_file\n   Using cached: gcc.tar.gz\n   ✓ Restored from cache\n\nStep 2/5: extract\n   Extracting: gcc.tar.gz\n   Format: tar.gz\n   Strip di",
+      "batch_id": "2026-04-08T02-12-48Z",
+      "timestamp": "2026-04-08T02:12:34.86969811Z"
+    },
+    {
+      "id": "rubygems-2026-04-08T02-11-34Z-neo4j",
+      "package": "neo4j",
+      "ecosystem": "rubygems",
+      "category": "install_failed",
+      "message": "Error: recipe validation failed for 'neo4j'\n  - metadata.homepage: homepage must start with https:// (got: http://neo4jrb.io/)",
+      "batch_id": "2026-04-08T02-12-48Z",
+      "timestamp": "2026-04-08T02:11:34.495598692Z"
+    },
+    {
+      "id": "crates.io-2026-04-08T02-11-28Z-bindgen",
+      "package": "bindgen",
+      "ecosystem": "crates.io",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\nGenerating plan for rust@1.94.1\nExecuting plan: rust@1.94.1\n   Work directory: /tmp/action-validator-3501073248\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: rust-1.94.1-x86_64-unknown-linux-gnu.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: rust-1.94.1-x86_64-unknown-linux-gnu.tar.gz\n   Format: tar.gz\n   Strip dirs: 1\n\nStep 3/4: run_command\n   Running: ./install.sh --p",
+      "batch_id": "2026-04-08T02-12-48Z",
+      "timestamp": "2026-04-08T02:11:28.070654189Z"
+    },
+    {
+      "id": "homebrew-2026-04-08T02-10-02Z-task",
+      "package": "task",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1",
+      "batch_id": "2026-04-08T02-12-48Z",
+      "timestamp": "2026-04-08T02:10:02.687348218Z"
+    },
+    {
+      "id": "github-2026-04-08T02-09-58Z-bat",
+      "package": "bat",
+      "ecosystem": "github",
+      "category": "generation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'bat' resolved to github (sharkdp/bat), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "2026-04-08T02-12-48Z",
+      "timestamp": "2026-04-08T02:09:58.168435457Z"
+    },
     {
       "id": "rubygems-2026-04-07T22-40-31Z-multimarkdown",
       "package": "multimarkdown",
@@ -39582,69 +39636,15 @@
       "message": "Installing eval-time dependencies: [ruby]\nInstalling ruby...\nChecking dependencies for ruby...\n  Resolving dependency 'libyaml'...\nExecuting plan: libyaml@0.2.5\n   Work directory: /tmp/action-validator-4267831863\n   Total steps: 8 (including 4 from dependencies)\n\nSkipping dependency: patchelf@0.18.0 (already installed)\n\nStep 1/4: download_file\n   Using cached: libyaml.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: libyaml.tar.gz\n   Format: tar.gz\n   Strip dirs: 2\n\nStep 3/4: ",
       "batch_id": "2026-04-05T05-14-35Z",
       "timestamp": "2026-04-05T05:14:24.798916387Z"
-    },
-    {
-      "id": "crates.io-2026-04-05T05-14-09Z-bindgen",
-      "package": "bindgen",
-      "ecosystem": "crates.io",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\nGenerating plan for rust@1.94.1\nExecuting plan: rust@1.94.1\n   Work directory: /tmp/action-validator-639023077\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: rust-1.94.1-x86_64-unknown-linux-gnu.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: rust-1.94.1-x86_64-unknown-linux-gnu.tar.gz\n   Format: tar.gz\n   Strip dirs: 1\n\nStep 3/4: run_command\n   Running: ./install.sh --pr",
-      "batch_id": "2026-04-05T05-14-35Z",
-      "timestamp": "2026-04-05T05:14:09.873762371Z"
-    },
-    {
-      "id": "npm-2026-04-05T05-12-53Z-azion",
-      "package": "azion",
-      "ecosystem": "npm",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\nChecking runtime dependencies for nodejs...\n  Resolving runtime dependency 'gcc-libs'...\nExecuting plan: gcc-libs@15.2.0\n   Work directory: /tmp/action-validator-4173788065\n   Total steps: 9 (including 4 from dependencies)\n\nSkipping dependency: patchelf@0.18.0 (already installed)\n\nStep 1/5: download_file\n   Using cached: gcc.tar.gz\n   ✓ Restored from cache\n\nStep 2/5: extract\n   Extracting: gcc.tar.gz\n   Format: tar.gz\n   Strip di",
-      "batch_id": "2026-04-05T05-14-35Z",
-      "timestamp": "2026-04-05T05:12:53.45925463Z"
-    },
-    {
-      "id": "homebrew-2026-04-05T05-12-17Z-task",
-      "package": "task",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1",
-      "batch_id": "2026-04-05T05-14-35Z",
-      "timestamp": "2026-04-05T05:12:17.794992378Z"
-    },
-    {
-      "id": "github-2026-04-05T05-12-13Z-bat",
-      "package": "bat",
-      "ecosystem": "github",
-      "category": "generation_failed",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'bat' resolved to github (sharkdp/bat), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
-      "batch_id": "2026-04-05T05-14-35Z",
-      "timestamp": "2026-04-05T05:12:13.767197055Z"
-    },
-    {
-      "id": "npm-2026-04-05T02-20-02Z-azion",
-      "package": "azion",
-      "ecosystem": "npm",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\nChecking runtime dependencies for nodejs...\n  Resolving runtime dependency 'gcc-libs'...\nExecuting plan: gcc-libs@15.2.0\n   Work directory: /tmp/action-validator-451466846\n   Total steps: 9 (including 4 from dependencies)\n\nSkipping dependency: patchelf@0.18.0 (already installed)\n\nStep 1/5: download_file\n   Using cached: gcc.tar.gz\n   ✓ Restored from cache\n\nStep 2/5: extract\n   Extracting: gcc.tar.gz\n   Format: tar.gz\n   Strip dir",
-      "batch_id": "2026-04-05T02-20-02Z",
-      "timestamp": "2026-04-05T02:20:02.869964986Z"
-    },
-    {
-      "id": "pypi-2026-04-05T02-19-24Z-vllm",
-      "package": "vllm",
-      "ecosystem": "pypi",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\nGenerating plan for python-standalone@20260325\nExecuting plan: python-standalone@20260325\n   Work directory: /tmp/action-validator-524747200\n   Total steps: 4 (including 0 from dependencies)\n\nStep 1/4: download_file\n   Using cached: cpython-3.10.20+20260325-x86_64-unknown-linux-gnu-install_only.tar.gz\n   ✓ Restored from cache\n\nStep 2/4: extract\n   Extracting: cpython-3.10.20+20260325-x86_64-unknown-linux-gnu",
-      "batch_id": "2026-04-05T02-20-02Z",
-      "timestamp": "2026-04-05T02:19:24.381405482Z"
     }
   ],
   "health": {
     "ecosystems": {
       "crates.io": {
         "breaker_state": "open",
-        "failures": 335,
-        "last_failure": "2026-04-07T22:41:59Z",
-        "opens_at": "2026-04-07T23:41:59Z"
+        "failures": 336,
+        "last_failure": "2026-04-08T02:14:51Z",
+        "opens_at": "2026-04-08T03:14:51Z"
       },
       "default": {
         "breaker_state": "closed",
@@ -39652,38 +39652,46 @@
       },
       "github": {
         "breaker_state": "open",
-        "failures": 338,
-        "last_failure": "2026-04-07T22:41:59Z",
-        "opens_at": "2026-04-07T23:41:59Z"
+        "failures": 339,
+        "last_failure": "2026-04-08T02:14:51Z",
+        "opens_at": "2026-04-08T03:14:51Z"
       },
       "homebrew": {
         "breaker_state": "open",
-        "failures": 299,
-        "last_failure": "2026-04-07T22:41:59Z",
-        "opens_at": "2026-04-07T23:41:59Z"
+        "failures": 300,
+        "last_failure": "2026-04-08T02:14:51Z",
+        "opens_at": "2026-04-08T03:14:51Z"
       },
       "npm": {
         "breaker_state": "open",
-        "failures": 42,
-        "last_failure": "2026-04-07T22:41:59Z",
-        "opens_at": "2026-04-07T23:41:59Z"
+        "failures": 43,
+        "last_failure": "2026-04-08T02:14:51Z",
+        "opens_at": "2026-04-08T03:14:51Z"
       },
       "pypi": {
         "breaker_state": "open",
-        "failures": 315,
-        "last_failure": "2026-04-07T22:41:59Z",
-        "opens_at": "2026-04-07T23:41:59Z"
+        "failures": 316,
+        "last_failure": "2026-04-08T02:14:51Z",
+        "opens_at": "2026-04-08T03:14:51Z"
       },
       "rubygems": {
         "breaker_state": "open",
-        "failures": 234,
-        "last_failure": "2026-04-07T22:41:59Z",
-        "opens_at": "2026-04-07T23:41:59Z"
+        "failures": 235,
+        "last_failure": "2026-04-08T02:14:51Z",
+        "opens_at": "2026-04-08T03:14:51Z"
       }
     },
     "last_run": {
-      "batch_id": "2026-04-07T23-38-57Z",
-      "timestamp": "2026-04-07T23:38:57Z",
+      "batch_id": "2026-04-08T02-15-00Z",
+      "ecosystems": {
+        "crates.io": 1,
+        "github": 1,
+        "homebrew": 1,
+        "npm": 1,
+        "pypi": 1,
+        "rubygems": 1
+      },
+      "timestamp": "2026-04-08T02:15:00Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39704,7 +39712,7 @@
       "total": 1,
       "recipes_merged": 1
     },
-    "runs_since_last_success": 62
+    "runs_since_last_success": 63
   },
   "runs": [
     {
