@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-08T13:22:55Z",
+  "updated_at": "2026-04-08T15:15:16Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 153,
-      "next_retry_at": "1733-12-28T12:12:56.212961955Z"
+      "failure_count": 155,
+      "next_retry_at": "1733-12-28T15:27:59.57884808Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 270,
-      "next_retry_at": "1733-12-28T12:12:56.212961955Z"
+      "failure_count": 272,
+      "next_retry_at": "1733-12-28T15:27:59.57884808Z"
     },
     {
       "name": "libaacs",
@@ -32586,11 +32586,11 @@
       "name": "nkf",
       "source": "rubygems:nkf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-04-08T13:17:16.884432011Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-04-09T07:15:16.433623888Z"
     },
     {
       "name": "nload",
