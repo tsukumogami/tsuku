@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-04-04T17:38:16Z",
-  "total_recipes": 1401,
+  "generated_at": "2026-04-09T13:29:15Z",
+  "total_recipes": 1402,
   "summary": {
     "by_platform": {
       "darwin": {
         "supported": 837,
-        "total": 1401,
-        "pct": 59.743040685224834
+        "total": 1402,
+        "pct": 59.700427960057056
       },
       "glibc": {
-        "supported": 1369,
-        "total": 1401,
-        "pct": 97.71591720199856
+        "supported": 1370,
+        "total": 1402,
+        "pct": 97.71754636233952
       },
       "musl": {
-        "supported": 1227,
-        "total": 1401,
-        "pct": 87.58029978586723
+        "supported": 1228,
+        "total": 1402,
+        "pct": 87.58915834522111
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1249,
-        "musl_support": 1077,
-        "glibc_support": 1219
+        "total": 1250,
+        "musl_support": 1078,
+        "glibc_support": 1220
       }
     }
   },
@@ -14888,6 +14888,20 @@
       "warnings": [
         "recipe 'osv-scanner' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "overmind",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "oxfmt",
