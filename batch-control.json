@@ -9,15 +9,15 @@
   "circuit_breaker": {
     "github": {
       "state": "open",
-      "failures": 358,
-      "last_failure": "2026-04-09T13:28:33Z",
-      "opens_at": "2026-04-09T14:28:33Z"
+      "failures": 359,
+      "last_failure": "2026-04-09T15:28:24Z",
+      "opens_at": "2026-04-09T16:28:24Z"
     },
     "homebrew": {
       "state": "open",
-      "failures": 319,
-      "last_failure": "2026-04-09T13:28:33Z",
-      "opens_at": "2026-04-09T14:28:33Z"
+      "failures": 320,
+      "last_failure": "2026-04-09T15:28:24Z",
+      "opens_at": "2026-04-09T16:28:24Z"
     },
     "rubygems": {
       "state": "closed",
@@ -27,9 +27,9 @@
     },
     "crates.io": {
       "state": "open",
-      "failures": 355,
-      "last_failure": "2026-04-09T13:28:33Z",
-      "opens_at": "2026-04-09T14:28:33Z"
+      "failures": 356,
+      "last_failure": "2026-04-09T15:28:24Z",
+      "opens_at": "2026-04-09T16:28:24Z"
     },
     "npm": {
       "state": "open",
