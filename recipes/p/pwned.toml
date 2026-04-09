@@ -1,0 +1,32 @@
+[metadata]
+  name = "pwned"
+  description = "Tools to use the Pwned Passwords API."
+  homepage = "https://github.com/philnash/pwned"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+unsupported_platforms = ["linux/rhel", "linux/arch/amd64", "linux/suse", "linux/alpine"]
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "gem_install"
+  executables = ["pwned"]
+  gem = "pwned"
+
+[verify]
+  command = "pwned --version"
+  pattern = ""
