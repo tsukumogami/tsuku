@@ -1,0 +1,16 @@
+{"schema_version":1,"recipe":"pandocomatic","platform":"linux-rhel-glibc-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T15:28:24Z"}
+{"schema_version":1,"recipe":"pandocomatic","platform":"linux-arch-glibc-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T15:28:24Z"}
+{"schema_version":1,"recipe":"pandocomatic","platform":"linux-suse-glibc-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T15:28:24Z"}
+{"schema_version":1,"recipe":"pandocomatic","platform":"linux-alpine-musl-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T15:28:24Z"}
+{"schema_version":1,"recipe":"pandocomatic","platform":"linux-rhel-glibc-arm64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T15:28:24Z"}
+{"schema_version":1,"recipe":"pandocomatic","platform":"linux-suse-glibc-arm64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T15:28:24Z"}
+{"schema_version":1,"recipe":"pandocomatic","platform":"linux-alpine-musl-arm64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T15:28:24Z"}
+{"schema_version":1,"recipe":"passenger","platform":"linux-debian-glibc-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T15:28:24Z"}
+{"schema_version":1,"recipe":"passenger","platform":"linux-rhel-glibc-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T15:28:24Z"}
+{"schema_version":1,"recipe":"passenger","platform":"linux-arch-glibc-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T15:28:24Z"}
+{"schema_version":1,"recipe":"passenger","platform":"linux-suse-glibc-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T15:28:24Z"}
+{"schema_version":1,"recipe":"passenger","platform":"linux-alpine-musl-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T15:28:24Z"}
+{"schema_version":1,"recipe":"passenger","platform":"linux-debian-glibc-arm64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T15:28:24Z"}
+{"schema_version":1,"recipe":"passenger","platform":"linux-rhel-glibc-arm64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T15:28:24Z"}
+{"schema_version":1,"recipe":"passenger","platform":"linux-suse-glibc-arm64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T15:28:24Z"}
+{"schema_version":1,"recipe":"passenger","platform":"linux-alpine-musl-arm64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T15:28:24Z"}

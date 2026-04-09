@@ -1,0 +1,32 @@
+[metadata]
+  name = "passenger"
+  description = "A modern web server and application server for Ruby, Python and Node.js, optimized for performance, low memory usage and ease of use."
+  homepage = "https://www.phusionpassenger.com/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+unsupported_platforms = ["linux/arm64", "linux/debian", "linux/rhel", "linux/arch/amd64", "linux/suse", "linux/alpine"]
+
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "gem_install"
+  executables = ["passenger", "passenger-install-apache2-module", "passenger-install-nginx-module", "passenger-config", "passenger-status", "passenger-memory-stats"]
+  gem = "passenger"
+
+[verify]
+  command = "passenger --version"
+  pattern = ""
