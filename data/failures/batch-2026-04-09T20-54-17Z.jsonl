@@ -1,0 +1,7 @@
+{"schema_version":1,"recipe":"pwned","platform":"linux-rhel-glibc-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T20:54:17Z"}
+{"schema_version":1,"recipe":"pwned","platform":"linux-arch-glibc-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T20:54:17Z"}
+{"schema_version":1,"recipe":"pwned","platform":"linux-suse-glibc-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T20:54:17Z"}
+{"schema_version":1,"recipe":"pwned","platform":"linux-alpine-musl-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T20:54:17Z"}
+{"schema_version":1,"recipe":"pwned","platform":"linux-rhel-glibc-arm64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T20:54:17Z"}
+{"schema_version":1,"recipe":"pwned","platform":"linux-suse-glibc-arm64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T20:54:17Z"}
+{"schema_version":1,"recipe":"pwned","platform":"linux-alpine-musl-arm64","exit_code":6,"category":"generation_failed","timestamp":"2026-04-09T20:54:17Z"}
