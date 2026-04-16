@@ -45,7 +45,7 @@ func ResolveWithinBoundary(ctx context.Context, provider VersionResolver, reques
 				return provider.ResolveVersion(ctx, v)
 			}
 		}
-		return nil, fmt.Errorf("no version matching %q found", requested)
+		return nil, fmt.Errorf("version %s not found", requested)
 	}
 
 	// VersionResolver-only providers: use fuzzy prefix matching
