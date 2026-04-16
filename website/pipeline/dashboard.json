@@ -1,12 +1,13 @@
 {
-  "generated_at": "2026-04-16T23:18:28Z",
+  "generated_at": "2026-04-16T23:19:39Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "pending": 3929,
-      "success": 1343
+      "failed": 6,
+      "pending": 3922,
+      "success": 1344
     },
     "by_tier": {
       "1": {
@@ -22,8 +23,9 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "pending": 3906,
-        "success": 1330
+        "failed": 6,
+        "pending": 3899,
+        "success": 1331
       }
     },
     "by_ecosystem": {
@@ -65,19 +67,22 @@
         "total": 1
       },
       "npm": {
-        "pending": 20,
+        "failed": 1,
+        "pending": 19,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "pending": 3,
+        "failed": 1,
+        "pending": 2,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "pending": 76,
-        "success": 12,
+        "failed": 4,
+        "pending": 71,
+        "success": 13,
         "total": 89
       }
     },
@@ -453,6 +458,62 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
+        }
+      ],
+      "failed": [
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 169,
+          "next_retry_at": "1734-01-05T23:31:45Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 286,
+          "next_retry_at": "1734-01-05T23:31:45Z"
+        },
+        {
+          "id": "rubygems:pidof",
+          "name": "pidof",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-04-17T01:19:02Z"
+        },
+        {
+          "id": "rubygems:pioneer",
+          "name": "pioneer",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-04-17T01:19:02Z"
+        },
+        {
+          "id": "rubygems:pngcheck",
+          "name": "pngcheck",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-04-17T01:19:02Z"
+        },
+        {
+          "id": "rubygems:progress",
+          "name": "progress",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-04-17T00:19:02Z"
         }
       ],
       "pending": [
@@ -2382,15 +2443,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 168,
-          "next_retry_at": "1733-12-29T17:24:58Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -13099,15 +13151,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 285,
-          "next_retry_at": "1733-12-29T17:24:58Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -19201,15 +19244,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:pidof",
-          "name": "pidof",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-04-09T20:09:32Z"
-        },
-        {
           "id": "homebrew:pie",
           "name": "pie",
           "ecosystem": "homebrew",
@@ -19264,15 +19298,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:pioneer",
-          "name": "pioneer",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-04-09T20:09:32Z"
         },
         {
           "id": "homebrew:pip-audit",
@@ -19464,15 +19489,6 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:pngcheck",
-          "name": "pngcheck",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-04-09T20:09:32Z"
         },
         {
           "id": "homebrew:pngpaste",
@@ -19897,14 +19913,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:progress",
-          "name": "progress",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:prometheus",
           "name": "prometheus",
           "ecosystem": "homebrew",
@@ -20204,13 +20212,6 @@
           "id": "homebrew:pwgen",
           "name": "pwgen",
           "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "rubygems:pwned",
-          "name": "pwned",
-          "ecosystem": "rubygems",
           "priority": 3,
           "failure_count": 0
         },
@@ -35550,6 +35551,13 @@
           "id": "homebrew:pvetui",
           "name": "pvetui",
           "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "rubygems:pwned",
+          "name": "pwned",
+          "ecosystem": "rubygems",
           "priority": 3,
           "failure_count": 0
         },
