@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-16T23:45:21Z",
+  "generated_at": "2026-04-16T23:46:28Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 6,
-      "pending": 3922,
+      "failed": 12,
+      "pending": 3916,
       "success": 1344
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 6,
-        "pending": 3899,
+        "failed": 12,
+        "pending": 3893,
         "success": 1331
       }
     },
@@ -39,7 +39,8 @@
       },
       "crates.io": {
         "excluded": 5,
-        "pending": 77,
+        "failed": 1,
+        "pending": 76,
         "success": 23,
         "total": 105
       },
@@ -67,21 +68,19 @@
         "total": 1
       },
       "npm": {
-        "failed": 1,
-        "pending": 19,
+        "pending": 20,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 1,
-        "pending": 2,
+        "pending": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 4,
-        "pending": 71,
+        "failed": 11,
+        "pending": 64,
         "success": 13,
         "total": 89
       }
@@ -462,22 +461,76 @@
       ],
       "failed": [
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
+          "id": "rubygems:amp",
+          "name": "amp",
+          "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 169,
-          "next_retry_at": "1734-01-05T23:31:45Z"
+          "failure_count": 13,
+          "next_retry_at": "2026-04-23T23:45:58Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
+          "id": "rubygems:arturo",
+          "name": "arturo",
+          "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 286,
-          "next_retry_at": "1734-01-05T23:31:45Z"
+          "failure_count": 12,
+          "next_retry_at": "2026-04-23T23:45:58Z"
+        },
+        {
+          "id": "rubygems:bettercap",
+          "name": "bettercap",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-04-23T23:45:58Z"
+        },
+        {
+          "id": "rubygems:bullet",
+          "name": "bullet",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-04-23T23:45:58Z"
+        },
+        {
+          "id": "rubygems:bup",
+          "name": "bup",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-04-23T23:45:58Z"
+        },
+        {
+          "id": "rubygems:cassandra",
+          "name": "cassandra",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-04-23T23:45:58Z"
+        },
+        {
+          "id": "rubygems:cdo",
+          "name": "cdo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-04-23T23:45:58Z"
+        },
+        {
+          "id": "crates.io:numpy",
+          "name": "numpy",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-04-23T23:45:58Z"
         },
         {
           "id": "rubygems:pidof",
@@ -1235,15 +1288,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:amp",
-          "name": "amp",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-04-11T13:58:25Z"
-        },
-        {
           "id": "homebrew:amplitude/ampli/ampli",
           "name": "amplitude/ampli/ampli",
           "ecosystem": "homebrew",
@@ -1807,15 +1851,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:arturo",
-          "name": "arturo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T15:37:13Z"
         },
         {
           "id": "homebrew:arxiv_latex_cleaner",
@@ -2445,6 +2480,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 169,
+          "next_retry_at": "1734-01-05T23:31:45Z"
+        },
+        {
           "id": "homebrew:azure-cli",
           "name": "azure-cli",
           "ecosystem": "homebrew",
@@ -2893,15 +2937,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:bettercap",
-          "name": "bettercap",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T17:34:19Z"
         },
         {
           "id": "homebrew:bfg",
@@ -3423,15 +3458,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:bullet",
-          "name": "bullet",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T18:45:28Z"
-        },
-        {
           "id": "homebrew:bulletty",
           "name": "bulletty",
           "ecosystem": "homebrew",
@@ -3451,15 +3477,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:bup",
-          "name": "bup",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T20:36:12Z"
         },
         {
           "id": "homebrew:burp",
@@ -3749,15 +3766,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:cassandra",
-          "name": "cassandra",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T22:33:07Z"
-        },
-        {
           "id": "homebrew:cassandra-reaper",
           "name": "cassandra-reaper",
           "ecosystem": "homebrew",
@@ -3847,15 +3855,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:cdo",
-          "name": "cdo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-12T02:22:57Z"
         },
         {
           "id": "homebrew:ceres-solver",
@@ -13151,6 +13150,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 286,
+          "next_retry_at": "1734-01-05T23:31:45Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -17257,15 +17265,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "crates.io:numpy",
-          "name": "numpy",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T13:58:25Z"
         },
         {
           "id": "homebrew:nuonco/tap/nuon",
