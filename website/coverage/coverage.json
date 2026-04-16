@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-09T15:29:19Z",
+  "generated_at": "2026-04-16T23:09:03Z",
   "total_recipes": 1404,
   "summary": {
     "by_platform": {
@@ -9,14 +9,14 @@
         "pct": 59.75783475783476
       },
       "glibc": {
-        "supported": 1372,
+        "supported": 1370,
         "total": 1404,
-        "pct": 97.72079772079772
+        "pct": 97.57834757834758
       },
       "musl": {
-        "supported": 1230,
+        "supported": 1228,
         "total": 1404,
-        "pct": 87.6068376068376
+        "pct": 87.46438746438746
       }
     },
     "by_category": {
@@ -27,8 +27,8 @@
       },
       "tool": {
         "total": 1252,
-        "musl_support": 1080,
-        "glibc_support": 1222
+        "musl_support": 1078,
+        "glibc_support": 1220
       }
     }
   },
@@ -15009,10 +15009,13 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
-        "musl": true
+        "glibc": false,
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "glibc",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -15051,10 +15054,13 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": true,
-        "musl": true
+        "glibc": false,
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "glibc",
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
