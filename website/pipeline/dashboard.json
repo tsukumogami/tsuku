@@ -1,12 +1,11 @@
 {
-  "generated_at": "2026-04-09T19:09:59Z",
+  "generated_at": "2026-04-16T23:09:58Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 77,
-      "pending": 3852,
+      "pending": 3929,
       "success": 1343
     },
     "by_tier": {
@@ -23,8 +22,7 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 77,
-        "pending": 3829,
+        "pending": 3906,
         "success": 1330
       }
     },
@@ -39,8 +37,7 @@
       },
       "crates.io": {
         "excluded": 5,
-        "failed": 3,
-        "pending": 74,
+        "pending": 77,
         "success": 23,
         "total": 105
       },
@@ -68,21 +65,18 @@
         "total": 1
       },
       "npm": {
-        "failed": 19,
-        "pending": 1,
+        "pending": 20,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "pending": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 53,
-        "pending": 23,
+        "pending": 76,
         "success": 12,
         "total": 89
       }
@@ -459,701 +453,6 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
-        }
-      ],
-      "failed": [
-        {
-          "id": "rubygems:amp",
-          "name": "amp",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-04-11T13:58:25Z"
-        },
-        {
-          "id": "rubygems:arturo",
-          "name": "arturo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T15:37:13Z"
-        },
-        {
-          "id": "crates.io:ascii",
-          "name": "ascii",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T15:37:13Z"
-        },
-        {
-          "id": "crates.io:basis_universal",
-          "name": "basis_universal",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T17:34:19Z"
-        },
-        {
-          "id": "rubygems:bettercap",
-          "name": "bettercap",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T17:34:19Z"
-        },
-        {
-          "id": "rubygems:bullet",
-          "name": "bullet",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T18:45:28Z"
-        },
-        {
-          "id": "rubygems:bup",
-          "name": "bup",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "network_error",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T20:36:12Z"
-        },
-        {
-          "id": "rubygems:cassandra",
-          "name": "cassandra",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T22:33:07Z"
-        },
-        {
-          "id": "rubygems:cdo",
-          "name": "cdo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-12T02:22:57Z"
-        },
-        {
-          "id": "npm:chainsaw",
-          "name": "chainsaw",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T13:58:25Z"
-        },
-        {
-          "id": "rubygems:chisel",
-          "name": "chisel",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-12T05:17:18Z"
-        },
-        {
-          "id": "rubygems:chroma",
-          "name": "chroma",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-12T07:09:08Z"
-        },
-        {
-          "id": "rubygems:cog",
-          "name": "cog",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-12T08:47:00Z"
-        },
-        {
-          "id": "npm:countdown",
-          "name": "countdown",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T13:58:25Z"
-        },
-        {
-          "id": "rubygems:cowsay",
-          "name": "cowsay",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-12T10:38:16Z"
-        },
-        {
-          "id": "rubygems:cql",
-          "name": "cql",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-12T12:59:42Z"
-        },
-        {
-          "id": "npm:datasette",
-          "name": "datasette",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T13:58:25Z"
-        },
-        {
-          "id": "rubygems:dict",
-          "name": "dict",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-12T14:40:26Z"
-        },
-        {
-          "id": "npm:dmd",
-          "name": "dmd",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T13:58:25Z"
-        },
-        {
-          "id": "rubygems:doggo",
-          "name": "doggo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-12T16:40:52Z"
-        },
-        {
-          "id": "rubygems:dug",
-          "name": "dug",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-12T18:47:46Z"
-        },
-        {
-          "id": "npm:e2b",
-          "name": "e2b",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T13:58:25Z"
-        },
-        {
-          "id": "npm:ent",
-          "name": "ent",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T14:37:22Z"
-        },
-        {
-          "id": "rubygems:exiv2",
-          "name": "exiv2",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-12T20:37:07Z"
-        },
-        {
-          "id": "rubygems:flash",
-          "name": "flash",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-12T22:35:44Z"
-        },
-        {
-          "id": "rubygems:gitingest",
-          "name": "gitingest",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-13T02:18:51Z"
-        },
-        {
-          "id": "rubygems:glassfish",
-          "name": "glassfish",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-13T05:28:56Z"
-        },
-        {
-          "id": "npm:got",
-          "name": "got",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-11T14:37:22Z"
-        },
-        {
-          "id": "rubygems:gsl",
-          "name": "gsl",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-13T07:33:14Z"
-        },
-        {
-          "id": "rubygems:haproxy",
-          "name": "haproxy",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-13T09:13:16Z"
-        },
-        {
-          "id": "npm:hasura-cli",
-          "name": "hasura-cli",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-11T14:37:22Z"
-        },
-        {
-          "id": "rubygems:hercules",
-          "name": "hercules",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-13T11:01:23Z"
-        },
-        {
-          "id": "rubygems:htmldoc",
-          "name": "htmldoc",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-13T13:10:55Z"
-        },
-        {
-          "id": "rubygems:httpx",
-          "name": "httpx",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-13T14:50:48Z"
-        },
-        {
-          "id": "rubygems:hydra",
-          "name": "hydra",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-13T16:50:13Z"
-        },
-        {
-          "id": "rubygems:hyperkit",
-          "name": "hyperkit",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-13T19:02:37Z"
-        },
-        {
-          "id": "rubygems:imgproxy",
-          "name": "imgproxy",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-13T20:43:11Z"
-        },
-        {
-          "id": "rubygems:influxdb",
-          "name": "influxdb",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-13T22:40:58Z"
-        },
-        {
-          "id": "rubygems:ipfs",
-          "name": "ipfs",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-14T02:15:25Z"
-        },
-        {
-          "id": "npm:kew",
-          "name": "kew",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-11T14:37:22Z"
-        },
-        {
-          "id": "rubygems:kor",
-          "name": "kor",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-14T05:14:11Z"
-        },
-        {
-          "id": "npm:lcm",
-          "name": "lcm",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-11T14:37:22Z"
-        },
-        {
-          "id": "rubygems:lemon",
-          "name": "lemon",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-14T07:19:32Z"
-        },
-        {
-          "id": "rubygems:less",
-          "name": "less",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-04-14T09:06:12Z"
-        },
-        {
-          "id": "rubygems:libnotify",
-          "name": "libnotify",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-04-14T10:18:49Z"
-        },
-        {
-          "id": "rubygems:lsof",
-          "name": "lsof",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-04-14T11:59:20Z"
-        },
-        {
-          "id": "rubygems:mailcatcher",
-          "name": "mailcatcher",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-04-14T13:24:43Z"
-        },
-        {
-          "id": "npm:mailhog",
-          "name": "mailhog",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-11T14:37:22Z"
-        },
-        {
-          "id": "npm:markdown-toc",
-          "name": "markdown-toc",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-11T14:37:22Z"
-        },
-        {
-          "id": "rubygems:mdv",
-          "name": "mdv",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-04-14T15:13:42Z"
-        },
-        {
-          "id": "rubygems:medusa",
-          "name": "medusa",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-04-14T17:01:54Z"
-        },
-        {
-          "id": "rubygems:meli",
-          "name": "meli",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-04-09T20:54:35Z"
-        },
-        {
-          "id": "rubygems:memcached",
-          "name": "memcached",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-04-13T03:11:52Z"
-        },
-        {
-          "id": "rubygems:mktorrent",
-          "name": "mktorrent",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-04-13T04:50:15Z"
-        },
-        {
-          "id": "npm:mongoose",
-          "name": "mongoose",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-11T14:37:22Z"
-        },
-        {
-          "id": "rubygems:multimarkdown",
-          "name": "multimarkdown",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-04-10T14:42:59Z"
-        },
-        {
-          "id": "rubygems:neo4j",
-          "name": "neo4j",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-04-10T04:04:40Z"
-        },
-        {
-          "id": "rubygems:nkf",
-          "name": "nkf",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-04-10T18:19:25Z"
-        },
-        {
-          "id": "rubygems:notifiers",
-          "name": "notifiers",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-04-09T22:28:06Z"
-        },
-        {
-          "id": "crates.io:numpy",
-          "name": "numpy",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T13:58:25Z"
-        },
-        {
-          "id": "rubygems:nut",
-          "name": "nut",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-04-10T07:29:48Z"
-        },
-        {
-          "id": "rubygems:nyan",
-          "name": "nyan",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-04-11T03:09:32Z"
-        },
-        {
-          "id": "rubygems:ocp",
-          "name": "ocp",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-04-10T01:12:15Z"
-        },
-        {
-          "id": "rubygems:parallel",
-          "name": "parallel",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-04-09T23:09:32Z"
-        },
-        {
-          "id": "rubygems:pastel",
-          "name": "pastel",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-04-09T23:09:32Z"
-        },
-        {
-          "id": "rubygems:pdftohtml",
-          "name": "pdftohtml",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-04-09T23:09:32Z"
-        },
-        {
-          "id": "rubygems:pidof",
-          "name": "pidof",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-04-09T20:09:32Z"
-        },
-        {
-          "id": "rubygems:pioneer",
-          "name": "pioneer",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-04-09T20:09:32Z"
-        },
-        {
-          "id": "rubygems:pngcheck",
-          "name": "pngcheck",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-04-09T20:09:32Z"
-        },
-        {
-          "id": "npm:pocketbase",
-          "name": "pocketbase",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-11T15:37:13Z"
-        },
-        {
-          "id": "npm:protoc-gen-js",
-          "name": "protoc-gen-js",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-11T15:37:13Z"
-        },
-        {
-          "id": "npm:q",
-          "name": "q",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-11T15:37:13Z"
-        },
-        {
-          "id": "npm:sigstore",
-          "name": "sigstore",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-11T15:37:13Z"
-        },
-        {
-          "id": "pypi:tctl",
-          "name": "tctl",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T20:36:12Z"
-        },
-        {
-          "id": "pypi:vllm",
-          "name": "vllm",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-12T02:22:57Z"
-        },
-        {
-          "id": "npm:wartremover",
-          "name": "wartremover",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-11T15:37:13Z"
-        },
-        {
-          "id": "npm:webdav",
-          "name": "webdav",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-04-11T16:38:18Z"
         }
       ],
       "pending": [
@@ -1875,6 +1174,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:amp",
+          "name": "amp",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-04-11T13:58:25Z"
+        },
+        {
           "id": "homebrew:amplitude/ampli/ampli",
           "name": "amplitude/ampli/ampli",
           "ecosystem": "homebrew",
@@ -2440,11 +1748,29 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:arturo",
+          "name": "arturo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-11T15:37:13Z"
+        },
+        {
           "id": "homebrew:arxiv_latex_cleaner",
           "name": "arxiv_latex_cleaner",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "crates.io:ascii",
+          "name": "ascii",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-11T15:37:13Z"
         },
         {
           "id": "homebrew:asciidoc",
@@ -3319,6 +2645,15 @@
           "failure_count": 1
         },
         {
+          "id": "crates.io:basis_universal",
+          "name": "basis_universal",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-11T17:34:19Z"
+        },
+        {
           "id": "homebrew:bastet",
           "name": "bastet",
           "ecosystem": "homebrew",
@@ -3506,6 +2841,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:bettercap",
+          "name": "bettercap",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-11T17:34:19Z"
         },
         {
           "id": "homebrew:bfg",
@@ -4027,6 +3371,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:bullet",
+          "name": "bullet",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-11T18:45:28Z"
+        },
+        {
           "id": "homebrew:bulletty",
           "name": "bulletty",
           "ecosystem": "homebrew",
@@ -4046,6 +3399,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:bup",
+          "name": "bup",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "network_error",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-11T20:36:12Z"
         },
         {
           "id": "homebrew:burp",
@@ -4335,6 +3697,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:cassandra",
+          "name": "cassandra",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-11T22:33:07Z"
+        },
+        {
           "id": "homebrew:cassandra-reaper",
           "name": "cassandra-reaper",
           "ecosystem": "homebrew",
@@ -4426,6 +3797,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:cdo",
+          "name": "cdo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-12T02:22:57Z"
+        },
+        {
           "id": "homebrew:ceres-solver",
           "name": "ceres-solver",
           "ecosystem": "homebrew",
@@ -4510,6 +3890,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:chainsaw",
+          "name": "chainsaw",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-11T13:58:25Z"
         },
         {
           "id": "homebrew:changie",
@@ -4673,6 +4062,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:chisel",
+          "name": "chisel",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-12T05:17:18Z"
+        },
+        {
           "id": "homebrew:chisel-tunnel",
           "name": "chisel-tunnel",
           "ecosystem": "homebrew",
@@ -4706,6 +4104,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:chroma",
+          "name": "chroma",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-12T07:09:08Z"
         },
         {
           "id": "homebrew:chromaprint",
@@ -5324,6 +4731,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:cog",
+          "name": "cog",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-12T08:47:00Z"
+        },
+        {
           "id": "homebrew:coin3d",
           "name": "coin3d",
           "ecosystem": "homebrew",
@@ -5583,6 +4999,15 @@
           "failure_count": 0
         },
         {
+          "id": "npm:countdown",
+          "name": "countdown",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-11T13:58:25Z"
+        },
+        {
           "id": "homebrew:coursier",
           "name": "coursier",
           "ecosystem": "homebrew",
@@ -5602,6 +5027,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:cowsay",
+          "name": "cowsay",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-12T10:38:16Z"
         },
         {
           "id": "homebrew:cp2k",
@@ -5693,6 +5127,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:cql",
+          "name": "cql",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-12T12:59:42Z"
         },
         {
           "id": "homebrew:cqlabs/dcm/dcm",
@@ -6199,6 +5642,15 @@
           "failure_count": 0
         },
         {
+          "id": "npm:datasette",
+          "name": "datasette",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-11T13:58:25Z"
+        },
+        {
           "id": "homebrew:datawire/blackbird/telepresence",
           "name": "datawire/blackbird/telepresence",
           "ecosystem": "homebrew",
@@ -6542,6 +5994,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:dict",
+          "name": "dict",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-12T14:40:26Z"
+        },
+        {
           "id": "crates.io:diesel",
           "name": "diesel",
           "ecosystem": "crates.io",
@@ -6687,6 +6148,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:dmd",
+          "name": "dmd",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-11T13:58:25Z"
         },
         {
           "id": "homebrew:dmg2img",
@@ -6841,6 +6311,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:doggo",
+          "name": "doggo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-12T16:40:52Z"
         },
         {
           "id": "homebrew:dokku/repo/dokku",
@@ -7109,6 +6588,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:dug",
+          "name": "dug",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-12T18:47:46Z"
+        },
+        {
           "id": "homebrew:dumbpipe",
           "name": "dumbpipe",
           "ecosystem": "homebrew",
@@ -7261,6 +6749,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:e2b",
+          "name": "e2b",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-11T13:58:25Z"
         },
         {
           "id": "homebrew:eask-cli",
@@ -7585,6 +7082,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:ent",
+          "name": "ent",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-11T14:37:22Z"
+        },
+        {
           "id": "homebrew:env0/terratag/terratag",
           "name": "env0/terratag/terratag",
           "ecosystem": "homebrew",
@@ -7779,6 +7285,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:exiv2",
+          "name": "exiv2",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-12T20:37:07Z"
         },
         {
           "id": "homebrew:exoscale/tap/exoscale-cli",
@@ -8395,6 +7910,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:flash",
+          "name": "flash",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-12T22:35:44Z"
         },
         {
           "id": "homebrew:flashrom",
@@ -9622,6 +9146,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:gitingest",
+          "name": "gitingest",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-13T02:18:51Z"
+        },
+        {
           "id": "homebrew:gitlab-ci-local",
           "name": "gitlab-ci-local",
           "ecosystem": "homebrew",
@@ -9704,6 +9237,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:glassfish",
+          "name": "glassfish",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-13T05:28:56Z"
         },
         {
           "id": "homebrew:glaze",
@@ -10082,6 +9624,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:got",
+          "name": "got",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-11T14:37:22Z"
         },
         {
           "id": "homebrew:gpa",
@@ -10469,6 +10020,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:gsl",
+          "name": "gsl",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-13T07:33:14Z"
+        },
+        {
           "id": "homebrew:gspell",
           "name": "gspell",
           "ecosystem": "homebrew",
@@ -10763,6 +10323,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:haproxy",
+          "name": "haproxy",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-13T09:13:16Z"
+        },
+        {
           "id": "homebrew:harbor-cli",
           "name": "harbor-cli",
           "ecosystem": "homebrew",
@@ -10910,6 +10479,15 @@
           "failure_count": 0
         },
         {
+          "id": "npm:hasura-cli",
+          "name": "hasura-cli",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-11T14:37:22Z"
+        },
+        {
           "id": "homebrew:hatch",
           "name": "hatch",
           "ecosystem": "homebrew",
@@ -11027,6 +10605,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:hercules",
+          "name": "hercules",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-13T11:01:23Z"
         },
         {
           "id": "homebrew:heremaps/olp-cli/olp",
@@ -11267,6 +10854,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:htmldoc",
+          "name": "htmldoc",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-13T13:10:55Z"
+        },
+        {
           "id": "homebrew:htmlhint",
           "name": "htmlhint",
           "ecosystem": "homebrew",
@@ -11321,6 +10917,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:httpx",
+          "name": "httpx",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-13T14:50:48Z"
         },
         {
           "id": "homebrew:httpyac",
@@ -11407,11 +11012,29 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:hydra",
+          "name": "hydra",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-13T16:50:13Z"
+        },
+        {
           "id": "homebrew:hyfetch",
           "name": "hyfetch",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:hyperkit",
+          "name": "hyperkit",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-13T19:02:37Z"
         },
         {
           "id": "homebrew:hypre",
@@ -11682,6 +11305,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:imgproxy",
+          "name": "imgproxy",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-13T20:43:11Z"
+        },
+        {
           "id": "homebrew:imlib2",
           "name": "imlib2",
           "ecosystem": "homebrew",
@@ -11708,6 +11340,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:influxdb",
+          "name": "influxdb",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-13T22:40:58Z"
         },
         {
           "id": "homebrew:influxdb-cli",
@@ -11883,6 +11524,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:ipfs",
+          "name": "ipfs",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-14T02:15:25Z"
         },
         {
           "id": "homebrew:ipopt",
@@ -12767,6 +12417,15 @@
           "failure_count": 0
         },
         {
+          "id": "npm:kew",
+          "name": "kew",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-11T14:37:22Z"
+        },
+        {
           "id": "homebrew:keychain",
           "name": "keychain",
           "ecosystem": "homebrew",
@@ -12961,6 +12620,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:kor",
+          "name": "kor",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-14T05:14:11Z"
         },
         {
           "id": "homebrew:kotlin",
@@ -13278,6 +12946,15 @@
           "failure_count": 0
         },
         {
+          "id": "npm:lcm",
+          "name": "lcm",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-11T14:37:22Z"
+        },
+        {
           "id": "homebrew:ldid",
           "name": "ldid",
           "ecosystem": "homebrew",
@@ -13348,6 +13025,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:lemon",
+          "name": "lemon",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-14T07:19:32Z"
+        },
+        {
           "id": "homebrew:leoafarias/fvm/fvm",
           "name": "leoafarias/fvm/fvm",
           "ecosystem": "homebrew",
@@ -13367,6 +13053,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:less",
+          "name": "less",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-04-14T09:06:12Z"
         },
         {
           "id": "homebrew:lesspipe",
@@ -13742,6 +13437,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:libnotify",
+          "name": "libnotify",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-04-14T10:18:49Z"
         },
         {
           "id": "homebrew:libolm",
@@ -14761,6 +14465,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:lsof",
+          "name": "lsof",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-04-14T11:59:20Z"
+        },
+        {
           "id": "homebrew:lspmux",
           "name": "lspmux",
           "ecosystem": "homebrew",
@@ -15034,6 +14747,24 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:mailcatcher",
+          "name": "mailcatcher",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-04-14T13:24:43Z"
+        },
+        {
+          "id": "npm:mailhog",
+          "name": "mailhog",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-11T14:37:22Z"
+        },
+        {
           "id": "homebrew:mailsy",
           "name": "mailsy",
           "ecosystem": "homebrew",
@@ -15221,6 +14952,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:markdown-toc",
+          "name": "markdown-toc",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-11T14:37:22Z"
         },
         {
           "id": "homebrew:markdownlint-cli",
@@ -15559,6 +15299,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:mdv",
+          "name": "mdv",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-04-14T15:13:42Z"
+        },
+        {
           "id": "homebrew:mecab",
           "name": "mecab",
           "ecosystem": "homebrew",
@@ -15587,6 +15336,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:medusa",
+          "name": "medusa",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-04-14T17:01:54Z"
+        },
+        {
           "id": "homebrew:megacmd",
           "name": "megacmd",
           "ecosystem": "homebrew",
@@ -15613,6 +15371,24 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:meli",
+          "name": "meli",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-04-09T20:54:35Z"
+        },
+        {
+          "id": "rubygems:memcached",
+          "name": "memcached",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-04-13T03:11:52Z"
         },
         {
           "id": "homebrew:mender-artifact",
@@ -16000,6 +15776,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:mktorrent",
+          "name": "mktorrent",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-04-13T04:50:15Z"
+        },
+        {
           "id": "homebrew:mkvtomp4",
           "name": "mkvtomp4",
           "ecosystem": "homebrew",
@@ -16208,6 +15993,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:mongoose",
+          "name": "mongoose",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-11T14:37:22Z"
         },
         {
           "id": "homebrew:mongosh",
@@ -16453,6 +16247,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:multimarkdown",
+          "name": "multimarkdown",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-04-10T14:42:59Z"
         },
         {
           "id": "homebrew:mupdf",
@@ -16819,6 +16622,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:neo4j",
+          "name": "neo4j",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-04-10T04:04:40Z"
+        },
+        {
           "id": "homebrew:neocmakelsp",
           "name": "neocmakelsp",
           "ecosystem": "homebrew",
@@ -17099,6 +16911,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:nkf",
+          "name": "nkf",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-04-10T18:19:25Z"
+        },
+        {
           "id": "homebrew:nload",
           "name": "nload",
           "ecosystem": "homebrew",
@@ -17260,6 +17081,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:notifiers",
+          "name": "notifiers",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-04-09T22:28:06Z"
+        },
+        {
           "id": "homebrew:notion-mcp-server",
           "name": "notion-mcp-server",
           "ecosystem": "homebrew",
@@ -17386,6 +17216,15 @@
           "failure_count": 0
         },
         {
+          "id": "crates.io:numpy",
+          "name": "numpy",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-11T13:58:25Z"
+        },
+        {
           "id": "homebrew:nuonco/tap/nuon",
           "name": "nuonco/tap/nuon",
           "ecosystem": "homebrew",
@@ -17398,6 +17237,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:nut",
+          "name": "nut",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-04-10T07:29:48Z"
         },
         {
           "id": "homebrew:nuxi",
@@ -17426,6 +17274,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:nyan",
+          "name": "nyan",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-04-11T03:09:32Z"
         },
         {
           "id": "homebrew:nyancat",
@@ -17517,6 +17374,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:ocp",
+          "name": "ocp",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-04-10T01:12:15Z"
         },
         {
           "id": "homebrew:ocrmypdf",
@@ -18818,6 +18684,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:parallel",
+          "name": "parallel",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-04-09T23:09:32Z"
+        },
+        {
           "id": "homebrew:pari",
           "name": "pari",
           "ecosystem": "homebrew",
@@ -18879,6 +18754,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:pastel",
+          "name": "pastel",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-04-09T23:09:32Z"
         },
         {
           "id": "homebrew:patchpal",
@@ -18998,6 +18882,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:pdftohtml",
+          "name": "pdftohtml",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-04-09T23:09:32Z"
         },
         {
           "id": "homebrew:pdm",
@@ -19308,6 +19201,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:pidof",
+          "name": "pidof",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-04-09T20:09:32Z"
+        },
+        {
           "id": "homebrew:pie",
           "name": "pie",
           "ecosystem": "homebrew",
@@ -19362,6 +19264,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:pioneer",
+          "name": "pioneer",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-04-09T20:09:32Z"
         },
         {
           "id": "homebrew:pip-audit",
@@ -19555,6 +19466,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:pngcheck",
+          "name": "pngcheck",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-04-09T20:09:32Z"
+        },
+        {
           "id": "homebrew:pngpaste",
           "name": "pngpaste",
           "ecosystem": "homebrew",
@@ -19581,6 +19501,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:pocketbase",
+          "name": "pocketbase",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-11T15:37:13Z"
         },
         {
           "id": "homebrew:poco",
@@ -20064,6 +19993,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:protoc-gen-js",
+          "name": "protoc-gen-js",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-11T15:37:13Z"
         },
         {
           "id": "homebrew:protonpass/tap/pass-cli",
@@ -20680,6 +20618,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:q",
+          "name": "q",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-11T15:37:13Z"
         },
         {
           "id": "homebrew:qalculate-gtk",
@@ -23300,6 +23247,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:sigstore",
+          "name": "sigstore",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-11T15:37:13Z"
+        },
+        {
           "id": "homebrew:sile",
           "name": "sile",
           "ecosystem": "homebrew",
@@ -24971,6 +24927,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:tctl",
+          "name": "tctl",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-11T20:36:12Z"
         },
         {
           "id": "homebrew:tdlib",
@@ -26837,6 +26802,15 @@
           "failure_count": 0
         },
         {
+          "id": "pypi:vllm",
+          "name": "vllm",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-12T02:22:57Z"
+        },
+        {
           "id": "homebrew:vmware-tanzu/carvel/vendir",
           "name": "vmware-tanzu/carvel/vendir",
           "ecosystem": "homebrew",
@@ -27089,6 +27063,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:wartremover",
+          "name": "wartremover",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-11T15:37:13Z"
+        },
+        {
           "id": "crates.io:wasm-bindgen",
           "name": "wasm-bindgen",
           "ecosystem": "crates.io",
@@ -27213,6 +27196,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:webdav",
+          "name": "webdav",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-04-11T16:38:18Z"
         },
         {
           "id": "rubygems:webhook",
@@ -38034,6 +38026,26 @@
       "timestamp": "2026-04-09T17:07:00.239260074Z"
     },
     {
+      "id": "batch-2026-04-09T15-28-24Z-pandocomatic",
+      "package": "pandocomatic",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64",
+        "linux-arch-glibc-x86_64",
+        "linux-rhel-glibc-arm64",
+        "linux-rhel-glibc-x86_64",
+        "linux-suse-glibc-arm64",
+        "linux-suse-glibc-x86_64"
+      ],
+      "batch_id": "2026-04-09T15-28-24Z",
+      "timestamp": "2026-04-09T15:28:24Z"
+    },
+    {
       "id": "batch-2026-04-09T15-28-24Z-passenger",
       "package": "passenger",
       "ecosystem": "batch",
@@ -38047,26 +38059,6 @@
         "linux-arch-glibc-x86_64",
         "linux-debian-glibc-arm64",
         "linux-debian-glibc-x86_64",
-        "linux-rhel-glibc-arm64",
-        "linux-rhel-glibc-x86_64",
-        "linux-suse-glibc-arm64",
-        "linux-suse-glibc-x86_64"
-      ],
-      "batch_id": "2026-04-09T15-28-24Z",
-      "timestamp": "2026-04-09T15:28:24Z"
-    },
-    {
-      "id": "batch-2026-04-09T15-28-24Z-pandocomatic",
-      "package": "pandocomatic",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64",
-        "linux-arch-glibc-x86_64",
         "linux-rhel-glibc-arm64",
         "linux-rhel-glibc-x86_64",
         "linux-suse-glibc-arm64",
