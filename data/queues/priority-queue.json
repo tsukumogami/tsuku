@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-16T23:09:22Z",
+  "updated_at": "2026-04-16T23:19:02Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 168,
-      "next_retry_at": "1733-12-29T17:24:58.863500403Z"
+      "failure_count": 169,
+      "next_retry_at": "1734-01-05T23:31:45.888693993Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 285,
-      "next_retry_at": "1733-12-29T17:24:58.863500403Z"
+      "failure_count": 286,
+      "next_retry_at": "1734-01-05T23:31:45.888693993Z"
     },
     {
       "name": "libaacs",
@@ -36616,11 +36616,11 @@
       "name": "pidof",
       "source": "rubygems:pidof",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-04-09T20:09:32.272529265Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-04-17T01:19:02.743469801Z"
     },
     {
       "name": "pie",
@@ -36726,11 +36726,11 @@
       "name": "pioneer",
       "source": "rubygems:pioneer",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-04-09T20:09:32.272529265Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-04-17T01:19:02.743469801Z"
     },
     {
       "name": "pioneers",
@@ -37146,11 +37146,11 @@
       "name": "pngcheck",
       "source": "rubygems:pngcheck",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-04-09T20:09:32.272529265Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-04-17T01:19:02.743469801Z"
     },
     {
       "name": "pngcrush",
@@ -37956,11 +37956,11 @@
       "name": "progress",
       "source": "rubygems:progress",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 1,
+      "next_retry_at": "2026-04-17T00:19:02.743469801Z"
     },
     {
       "name": "proj",
@@ -38486,7 +38486,7 @@
       "name": "pwned",
       "source": "rubygems:pwned",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
