@@ -1,13 +1,13 @@
 [metadata]
   name = "pandocomatic"
-  description = "Pandocomatic is a tool to automate using pandoc. With pandocomatic you can express common patterns of using pandoc for generating your documents. Applied to a directory, pandocomatic can act as a static site generator."
+  description = "Tool to automate pandoc usage by expressing common document generation patterns. Applied to a directory, it acts as a static site generator."
   homepage = "https://heerdebeer.org/Software/markdown/pandocomatic/"
   version_format = ""
   requires_sudo = false
   tier = 0
   type = ""
   llm_validation = "skipped"
-unsupported_platforms = ["linux/rhel", "linux/arch/amd64", "linux/suse", "linux/alpine"]
+unsupported_platforms = ["linux/amd64", "linux/arm64"]
 
 [version]
   source = ""
