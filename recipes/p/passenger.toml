@@ -7,7 +7,7 @@
   tier = 0
   type = ""
   llm_validation = "skipped"
-unsupported_platforms = ["linux/arm64"]
+unsupported_platforms = ["linux/amd64", "linux/arm64"]
 
 [version]
   source = ""
