@@ -1,0 +1,32 @@
+[metadata]
+name = "bat"
+description = "A cat(1) clone with syntax highlighting and Git integration"
+homepage = "https://github.com/sharkdp/bat"
+version_format = "semver"
+curated = true
+
+[version]
+github_repo = "sharkdp/bat"
+tag_prefix = "v"
+
+[[steps]]
+action = "github_archive"
+when = { os = ["linux"] }
+repo = "sharkdp/bat"
+asset_pattern = "bat-v{version}-{arch}.tar.gz"
+strip_dirs = 1
+binaries = ["bat"]
+arch_mapping = { amd64 = "x86_64-unknown-linux-gnu", arm64 = "aarch64-unknown-linux-gnu" }
+
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "sharkdp/bat"
+asset_pattern = "bat-v{version}-{arch}.tar.gz"
+strip_dirs = 1
+binaries = ["bat"]
+arch_mapping = { amd64 = "x86_64-apple-darwin", arm64 = "aarch64-apple-darwin" }
+
+[verify]
+command = "bat --version"
+pattern = "{version}"
