@@ -1,0 +1,23 @@
+{
+  "topic": "registry-refresh-ttl-semantics",
+  "decisions": [
+    {
+      "id": 1,
+      "question": "Should plain 'tsuku update-registry' (no flags) force-fetch all cached recipes regardless of TTL, or should it keep the TTL skip and instead surface a hint (e.g., 'run --all to force refresh') in the 'already fresh' output?",
+      "status": "complete",
+      "complexity": "standard",
+      "chosen": "Force-refresh by default",
+      "report_file": "wip/design_registry-refresh-ttl-semantics_decision_1_report.md"
+    },
+    {
+      "id": 2,
+      "question": "Should the TTL-bypass for explicit refresh live in the command layer (routing to the existing private forceRegistryRefreshAll) or should CachedRegistry gain a new API to express the distinction explicitly?",
+      "status": "complete",
+      "complexity": "standard",
+      "chosen": "Delete forceRegistryRefreshAll and --all flag; inline the force loop in runRegistryRefreshAll",
+      "report_file": "wip/design_registry-refresh-ttl-semantics_decision_2_report.md"
+    }
+  ],
+  "cross_validation": "passed",
+  "round": 0
+}
