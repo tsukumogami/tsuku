@@ -4,6 +4,7 @@ description = "Gemini CLI — Google's AI assistant for the terminal"
 homepage = "https://github.com/google-gemini/gemini-cli"
 version_format = "semver"
 curated = true
+supported_libc = ["glibc"]
 
 [[steps]]
 action = "npm_install"

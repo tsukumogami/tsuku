@@ -618,3 +618,55 @@ this residual risk entirely.
   check, so by the time curated recipes exist, the signal is enforced.
 - **Node.js deferred to Phase 4**: by the time Node.js is authored, the team has
   already established patterns from the GitHub-release recipes in Phase 3.
+
+## Implementation Issues
+
+Plan: [docs/plans/PLAN-curated-recipes.md](../plans/PLAN-curated-recipes.md)
+
+| Issue | Dependencies | Complexity |
+|-------|-------------|------------|
+| [#2259: feat(recipe): add curated flag to recipe metadata and CI infrastructure](https://github.com/tsukumogami/tsuku/issues/2259) | None | testable |
+| [#2260: docs(recipes): produce top-100 developer tool priority list](https://github.com/tsukumogami/tsuku/issues/2260) | None | simple |
+| [#2261: feat(recipes): add handcrafted recipes for claude and gemini-cli](https://github.com/tsukumogami/tsuku/issues/2261) | #2259 | testable |
+| [#2262: feat(recipes): add cross-platform kubectl recipe](https://github.com/tsukumogami/tsuku/issues/2262) | #2259 | testable |
+| [#2263: feat(recipes): replace Linux-only helm recipe with cross-platform version](https://github.com/tsukumogami/tsuku/issues/2263) | #2259 | testable |
+| [#2264: feat(recipes): add handcrafted recipes for bat, starship, and neovim](https://github.com/tsukumogami/tsuku/issues/2264) | #2259 | testable |
+| [#2265: feat(recipes): add handcrafted node.js recipe](https://github.com/tsukumogami/tsuku/issues/2265) | #2259 | testable |
+| [#2266: feat(recipes): backfill curated recipes — cloud CLIs and build tools](https://github.com/tsukumogami/tsuku/issues/2266) | #2259, #2260 | testable |
+| [#2267: feat(recipes): backfill curated recipes — modern CLI tools and AI assistants](https://github.com/tsukumogami/tsuku/issues/2267) | #2259, #2260 | testable |
+| [#2268: feat(recipes): backfill curated recipes — remaining top-100 gaps](https://github.com/tsukumogami/tsuku/issues/2268) | #2259, #2260, #2266, #2267 | testable |
+
+```mermaid
+graph TD
+    I2259["#2259: curated flag + CI infrastructure"]
+    I2260["#2260: top-100 priority list"]
+    I2261["#2261: claude + gemini-cli recipes"]
+    I2262["#2262: cross-platform kubectl"]
+    I2263["#2263: cross-platform helm"]
+    I2264["#2264: bat + starship + neovim"]
+    I2265["#2265: node.js recipe"]
+    I2266["#2266: backfill — cloud CLIs + build tools"]
+    I2267["#2267: backfill — modern CLIs + AI tools"]
+    I2268["#2268: backfill — remaining top-100"]
+
+    I2259 --> I2261
+    I2259 --> I2262
+    I2259 --> I2263
+    I2259 --> I2264
+    I2259 --> I2265
+    I2259 --> I2266
+    I2259 --> I2267
+    I2259 --> I2268
+    I2260 --> I2266
+    I2260 --> I2267
+    I2260 --> I2268
+    I2266 --> I2268
+    I2267 --> I2268
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+
+    class I2259,I2260 ready
+    class I2261,I2262,I2263,I2264,I2265,I2266,I2267,I2268 blocked
+```
