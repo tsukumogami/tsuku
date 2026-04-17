@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Planned
 problem: |
   `tsuku update-registry` applies a 24-hour TTL to skip recently-cached recipes, so a
   recipe fix merged upstream does not reach users who run the command explicitly if they
@@ -27,7 +27,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Planned
 
 ## Context and Problem Statement
 
