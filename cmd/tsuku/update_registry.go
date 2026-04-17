@@ -204,7 +204,10 @@ func runRegistryRefreshAll(ctx context.Context, cachedReg *registry.CachedRegist
 
 	// Print summary
 	fmt.Println()
-	if stats.Errors > 0 {
+	if stats.Errors == 1 {
+		printInfo(fmt.Sprintf("Refreshed %d of %d cached recipes (1 error).",
+			stats.Refreshed, stats.Total))
+	} else if stats.Errors > 1 {
 		printInfo(fmt.Sprintf("Refreshed %d of %d cached recipes (%d errors).",
 			stats.Refreshed, stats.Total, stats.Errors))
 	} else {

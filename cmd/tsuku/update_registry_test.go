@@ -276,7 +276,8 @@ func TestRunRegistryRefreshAll_EmptyCache(t *testing.T) {
 	reg.BaseURL = server.URL
 	cachedReg := registry.NewCachedRegistry(reg, time.Hour)
 
-	// Pre-populate in-memory loader to verify ClearCache is NOT called
+	// Pre-populate the in-memory loader as a sentinel: if ClearCache() were called,
+	// loader.Count() would drop to zero. It is unrelated to the disk cache refresh path.
 	loader = recipe.NewLoader()
 	loader.CacheRecipe("my-tool", &recipe.Recipe{})
 
@@ -426,8 +427,8 @@ func TestRunRegistryRefreshAll_PartialError(t *testing.T) {
 	if !strings.Contains(stderr, "tool-fail") {
 		t.Errorf("expected tool-fail error in stderr, got %q", stderr)
 	}
-	if !strings.Contains(stdout, "Refreshed 2 of 3 cached recipes (1 errors).") {
-		t.Errorf("expected error summary 'Refreshed 2 of 3 cached recipes (1 errors).' in stdout, got %q", stdout)
+	if !strings.Contains(stdout, "Refreshed 2 of 3 cached recipes (1 error).") {
+		t.Errorf("expected error summary 'Refreshed 2 of 3 cached recipes (1 error).' in stdout, got %q", stdout)
 	}
 }
 
