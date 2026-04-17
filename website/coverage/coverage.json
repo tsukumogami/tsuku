@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-04-17T22:01:06Z",
-  "total_recipes": 1407,
+  "generated_at": "2026-04-17T22:31:25Z",
+  "total_recipes": 1408,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 841,
-        "total": 1407,
-        "pct": 59.772565742715
+        "supported": 842,
+        "total": 1408,
+        "pct": 59.80113636363637
       },
       "glibc": {
-        "supported": 1372,
-        "total": 1407,
-        "pct": 97.51243781094527
+        "supported": 1373,
+        "total": 1408,
+        "pct": 97.51420454545455
       },
       "musl": {
-        "supported": 1228,
-        "total": 1407,
-        "pct": 87.27789623312012
+        "supported": 1229,
+        "total": 1408,
+        "pct": 87.28693181818183
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1255,
-        "musl_support": 1078,
-        "glibc_support": 1222
+        "total": 1256,
+        "musl_support": 1079,
+        "glibc_support": 1223
       }
     }
   },
@@ -9901,6 +9901,20 @@
       "errors": null,
       "warnings": [
         "recipe 'kubeconform' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "kubectl",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'kubectl' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
