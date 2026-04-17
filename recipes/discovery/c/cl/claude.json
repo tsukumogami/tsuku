@@ -1,0 +1,6 @@
+{
+  "builder": "npm",
+  "source": "@anthropic-ai/claude-code",
+  "description": "Claude Code AI coding assistant",
+  "homepage": "https://github.com/anthropics/claude-code"
+}

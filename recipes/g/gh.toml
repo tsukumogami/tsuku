@@ -3,6 +3,7 @@ name = "gh"
 description = "GitHub command-line tool"
 homepage = "https://cli.github.com/"
 version_format = "semver"
+curated = true
 supported_os = ["darwin", "linux"]
 supported_arch = ["amd64", "arm64"]
 
