@@ -1,22 +1,33 @@
 [metadata]
-  name = "helm"
-  description = "Kubernetes package manager"
-  homepage = "https://helm.sh/"
-  version_format = ""
-  requires_sudo = false
-  tier = 0
-  type = ""
-  llm_validation = "skipped"
-supported_os = ["linux"]
+name = "helm"
+description = "Kubernetes package manager"
+homepage = "https://helm.sh/"
+version_format = "semver"
+curated = true
+
+[version]
+github_repo = "helm/helm"
+tag_prefix = "v"
 
 [[steps]]
-  action = "homebrew"
-  formula = "helm"
+action = "download"
+url = "https://get.helm.sh/helm-v{version}-{os}-{arch}.tar.gz"
+checksum_url = "https://get.helm.sh/helm-v{version}-{os}-{arch}.tar.gz.sha256sum"
 
 [[steps]]
-  action = "install_binaries"
-  binaries = ["bin/helm"]
+action = "extract"
+archive = "helm-v{version}-{os}-{arch}.tar.gz"
+format = "tar.gz"
+strip_dirs = 1
+
+[[steps]]
+action = "chmod"
+files = ["helm"]
+
+[[steps]]
+action = "install_binaries"
+binaries = ["helm"]
 
 [verify]
-  command = "helm --version"
-  pattern = ""
+command = "helm version"
+pattern = "{version}"
