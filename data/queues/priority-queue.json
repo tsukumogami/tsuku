@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-16T23:45:58Z",
+  "updated_at": "2026-04-17T02:22:15Z",
   "entries": [
     {
       "name": "node",
@@ -2886,11 +2886,11 @@
       "name": "ascii",
       "source": "crates.io:ascii",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-04-11T15:37:13.544448801Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-04-24T02:22:15.642209897Z"
     },
     {
       "name": "asciidoc",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 169,
-      "next_retry_at": "1734-01-05T23:31:45.888693993Z"
+      "failure_count": 170,
+      "next_retry_at": "1734-01-06T02:34:58.787434089Z"
     },
     {
       "name": "azqr",
@@ -7356,11 +7356,11 @@
       "name": "chisel",
       "source": "rubygems:chisel",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-04-12T05:17:18.900829805Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-04-24T02:22:15.642209897Z"
     },
     {
       "name": "chisel-tunnel",
@@ -7436,11 +7436,11 @@
       "name": "chroma",
       "source": "rubygems:chroma",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-04-12T07:09:08.781415872Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-04-24T02:22:15.642209897Z"
     },
     {
       "name": "chromaprint",
@@ -8626,11 +8626,11 @@
       "name": "cog",
       "source": "rubygems:cog",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-04-12T08:47:00.655757726Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-04-24T02:22:15.642209897Z"
     },
     {
       "name": "coin3d",
@@ -9156,11 +9156,11 @@
       "name": "cowsay",
       "source": "rubygems:cowsay",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-04-12T10:38:16.500435482Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-04-24T02:22:15.642209897Z"
     },
     {
       "name": "cp2k",
@@ -9326,11 +9326,11 @@
       "name": "cql",
       "source": "rubygems:cql",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-12T12:59:42.529187878Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-24T02:22:15.642209897Z"
     },
     {
       "name": "cqlabs/dcm/dcm",
@@ -10876,11 +10876,11 @@
       "name": "dict",
       "source": "rubygems:dict",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-04-12T14:40:26.816305367Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-04-24T02:22:15.642209897Z"
     },
     {
       "name": "diesel",
@@ -36616,7 +36616,7 @@
       "name": "pidof",
       "source": "rubygems:pidof",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -36726,7 +36726,7 @@
       "name": "pioneer",
       "source": "rubygems:pioneer",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -37146,7 +37146,7 @@
       "name": "pngcheck",
       "source": "rubygems:pngcheck",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -37956,7 +37956,7 @@
       "name": "progress",
       "source": "rubygems:progress",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
