@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-17T22:31:25Z",
+  "generated_at": "2026-04-17T22:52:37Z",
   "total_recipes": 1408,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 842,
+        "supported": 843,
         "total": 1408,
-        "pct": 59.80113636363637
+        "pct": 59.87215909090909
       },
       "glibc": {
         "supported": 1373,
@@ -7906,13 +7906,11 @@
       "name": "helm",
       "type": "tool",
       "platforms": {
-        "darwin": false,
+        "darwin": true,
         "glibc": true,
         "musl": true
       },
-      "gaps": [
-        "darwin"
-      ],
+      "gaps": null,
       "errors": null,
       "warnings": [
         "recipe 'helm' has platform-specific actions without libc when clauses and no musl fallback"
