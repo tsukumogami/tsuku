@@ -631,8 +631,8 @@ Plan: [docs/plans/PLAN-curated-recipes.md](../plans/PLAN-curated-recipes.md)
 | ~~_Researches and ranks the top 100 most-used developer tools, categorizing each by coverage status (handcrafted, batch-generated, discovery-only, or missing)._~~ | | |
 | ~~[#2261: feat(recipes): add handcrafted recipes for claude and gemini-cli](https://github.com/tsukumogami/tsuku/issues/2261)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259)~~ | ~~testable~~ |
 | ~~_Adds `recipes/c/claude.toml` and `recipes/g/gemini.toml` using npm_install with glibc-only constraint, plus discovery entries for both tools._~~ | | |
-| [#2262: feat(recipes): add cross-platform kubectl recipe](https://github.com/tsukumogami/tsuku/issues/2262) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259) | testable |
-| _Replaces or supplements the existing kubectl recipe with a cross-platform version supporting Linux and macOS via direct download from the Kubernetes release server._ | | |
+| ~~[#2262: feat(recipes): add cross-platform kubectl recipe](https://github.com/tsukumogami/tsuku/issues/2262)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259)~~ | ~~testable~~ |
+| ~~_Replaces or supplements the existing kubectl recipe with a cross-platform version supporting Linux and macOS via direct download from the Kubernetes release server._~~ | | |
 | [#2263: feat(recipes): replace Linux-only helm recipe with cross-platform version](https://github.com/tsukumogami/tsuku/issues/2263) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259) | testable |
 | _Rewrites the helm recipe to download from official Helm GitHub releases for both Linux and macOS, replacing the Linux-only version._ | | |
 | [#2264: feat(recipes): add handcrafted recipes for bat, starship, and neovim](https://github.com/tsukumogami/tsuku/issues/2264) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259) | testable |
@@ -677,8 +677,8 @@ graph TD
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
 
-    class I2259,I2260,I2261 done
-    class I2262,I2263,I2264,I2265,I2266,I2267 ready
+    class I2259,I2260,I2261,I2262 done
+    class I2263,I2264,I2265,I2266,I2267 ready
     class I2268 blocked
 ```
 
