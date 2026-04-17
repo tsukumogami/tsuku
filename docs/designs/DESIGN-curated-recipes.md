@@ -109,11 +109,13 @@ curated = true
 ```
 
 The flag is an opt-in signal. Existing handcrafted recipes work without it; they can
-be tagged incrementally. New handcrafted recipes are required by CI to include it (a
-lint rule in `recipe-validation-core.yml` can enforce this for PRs adding recipes to
-known-curated paths). The flag has no runtime effect on the install path — it's
-metadata-only, parsed by `MetadataSection` in `internal/recipe/types.go` where `Tier`
-and other metadata fields already live.
+be tagged incrementally. CI cannot distinguish a handcrafted recipe from a
+batch-generated one by file inspection alone — the enforcement boundary is the
+`ci.curated` array: any recipe listed there is required to carry `curated = true`.
+Batch-generated recipes (like those in PRs from the automation pipeline) are never
+added to `ci.curated`, so the lint check never fires for them. The flag has no runtime
+effect on the install path — it's metadata-only, parsed by `MetadataSection` in
+`internal/recipe/types.go` where `Tier` and other metadata fields already live.
 
 This approach is backward-compatible with all 184 existing handcrafted recipes (they
 continue to work and can be tagged in a follow-up batch commit), requires no changes
@@ -263,8 +265,10 @@ its own test coverage, not bundled into initial recipe authoring.
 The curated recipe system introduces three coordinated changes. First, handcrafted
 recipes gain a `curated = true` field in `[metadata]` — a boolean provenance signal
 that CI can enforce, linters can read, and the batch pipeline can use to avoid
-overwriting manually authored content. New handcrafted recipe PRs are required to
-include this field; existing recipes are tagged incrementally.
+overwriting manually authored content. The enforcement boundary is the `ci.curated`
+array: recipes listed there are required to carry the flag. Batch-generated recipes
+(never in `ci.curated`) are unaffected. Existing handcrafted recipes can be tagged
+incrementally in a follow-up commit.
 
 Second, `test-matrix.json` gains a `ci.curated` array listing recipes by path. The
 nightly workflow reads this array and runs full cross-platform install tests for each
