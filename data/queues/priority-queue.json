@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-17T17:58:40Z",
+  "updated_at": "2026-04-17T19:04:53Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 174,
@@ -12396,11 +12396,11 @@
       "name": "e2b",
       "source": "npm:e2b",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-04-11T13:58:25.68337299Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-04-24T19:04:53.525230395Z"
     },
     {
       "name": "e2fsprogs",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 289,
@@ -29546,11 +29546,11 @@
       "name": "medusa",
       "source": "rubygems:medusa",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-04-14T17:01:54.141457594Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-24T19:04:53.525230395Z"
     },
     {
       "name": "megacmd",
