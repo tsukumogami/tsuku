@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-04-17T22:52:37Z",
-  "total_recipes": 1408,
+  "generated_at": "2026-04-17T23:08:32Z",
+  "total_recipes": 1411,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 843,
-        "total": 1408,
-        "pct": 59.87215909090909
+        "supported": 846,
+        "total": 1411,
+        "pct": 59.957476966690294
       },
       "glibc": {
-        "supported": 1373,
-        "total": 1408,
-        "pct": 97.51420454545455
+        "supported": 1376,
+        "total": 1411,
+        "pct": 97.51948972360029
       },
       "musl": {
-        "supported": 1229,
-        "total": 1408,
-        "pct": 87.28693181818183
+        "supported": 1232,
+        "total": 1411,
+        "pct": 87.31396172927002
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1256,
-        "musl_support": 1079,
-        "glibc_support": 1223
+        "total": 1259,
+        "musl_support": 1082,
+        "glibc_support": 1226
       }
     }
   },
@@ -1176,6 +1176,20 @@
       "errors": null,
       "warnings": [
         "recipe 'bashdb' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "bat",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'bat' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -14007,6 +14021,20 @@
       ]
     },
     {
+      "name": "neovim",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'neovim' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "net-snmp",
       "type": "tool",
       "platforms": {
@@ -18065,6 +18093,20 @@
       "errors": null,
       "warnings": [
         "recipe 'sshpass' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "starship",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'starship' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
