@@ -107,6 +107,9 @@ func runRegistryDryRun(cachedReg *registry.CachedRegistry) {
 			continue
 		}
 
+		// Dry-run reports TTL-expiry status to show which recipes are stale.
+		// The actual update-registry run force-fetches all recipes regardless of TTL;
+		// "already fresh" here does not mean a recipe would be skipped by the real command.
 		if status.Status == "expired" {
 			fmt.Printf("  %s: would refresh (cached %s ago)\n", name, formatAgeDuration(status.Age))
 			expiredCount++
