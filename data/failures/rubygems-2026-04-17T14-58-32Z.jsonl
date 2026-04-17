@@ -1,0 +1,1 @@
+{"schema_version":1,"ecosystem":"rubygems","environment":"linux-glibc-x86_64","updated_at":"2026-04-17T14-58-32Z","failures":[{"package_id":"rubygems:lsof","category":"install_failed","message":"Error: recipe validation failed for 'lsof'\n  - metadata.homepage: homepage must start with https:// (got: http://pivotallabs.com)","timestamp":"2026-04-17T14:58:32.069503517Z"}]}
