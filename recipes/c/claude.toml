@@ -5,6 +5,7 @@ homepage = "https://github.com/anthropics/claude-code"
 version_format = "semver"
 curated = true
 supported_libc = ["glibc"]
+supported_os = ["linux"]
 
 [[steps]]
 action = "npm_install"
