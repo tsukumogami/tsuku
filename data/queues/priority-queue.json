@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-17T07:36:32Z",
+  "updated_at": "2026-04-17T09:21:39Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 171,
@@ -9116,11 +9116,11 @@
       "name": "countdown",
       "source": "npm:countdown",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-04-11T13:58:25.68337299Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-04-24T09:21:39.477211792Z"
     },
     {
       "name": "coursier",
@@ -20816,11 +20816,11 @@
       "name": "hyperkit",
       "source": "rubygems:hyperkit",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-13T19:02:37.429078179Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-24T09:21:39.477211792Z"
     },
     {
       "name": "hypre",
@@ -21326,11 +21326,11 @@
       "name": "imgproxy",
       "source": "rubygems:imgproxy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-13T20:43:11.958198209Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-24T09:21:39.477211792Z"
     },
     {
       "name": "imlib2",
@@ -21416,11 +21416,11 @@
       "name": "influxdb",
       "source": "rubygems:influxdb",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-13T22:40:58.09501598Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-24T09:21:39.477211792Z"
     },
     {
       "name": "influxdb-cli",
@@ -21756,11 +21756,11 @@
       "name": "ipfs",
       "source": "rubygems:ipfs",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-14T02:15:25.871882739Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-24T09:21:39.477211792Z"
     },
     {
       "name": "ipinfo-cli",
@@ -23966,11 +23966,11 @@
       "name": "kor",
       "source": "rubygems:kor",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-14T05:14:11.091995661Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-24T09:21:39.477211792Z"
     },
     {
       "name": "kosli-cli",
@@ -25056,11 +25056,11 @@
       "name": "lemon",
       "source": "rubygems:lemon",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-14T07:19:32.182164137Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-24T09:21:39.477211792Z"
     },
     {
       "name": "lensfun",
