@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-04-16T23:18:41Z",
-  "total_recipes": 1405,
+  "generated_at": "2026-04-17T22:01:06Z",
+  "total_recipes": 1407,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 840,
-        "total": 1405,
-        "pct": 59.7864768683274
+        "supported": 841,
+        "total": 1407,
+        "pct": 59.772565742715
       },
       "glibc": {
-        "supported": 1370,
-        "total": 1405,
-        "pct": 97.50889679715303
+        "supported": 1372,
+        "total": 1407,
+        "pct": 97.51243781094527
       },
       "musl": {
         "supported": 1228,
-        "total": 1405,
-        "pct": 87.40213523131672
+        "total": 1407,
+        "pct": 87.27789623312012
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1253,
+        "total": 1255,
         "musl_support": 1078,
-        "glibc_support": 1220
+        "glibc_support": 1222
       }
     }
   },
@@ -2686,6 +2686,21 @@
       "warnings": [
         "recipe 'clang-uml' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "claude",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": false
+      },
+      "gaps": [
+        "darwin",
+        "musl"
+      ],
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "clifm",
@@ -5805,6 +5820,20 @@
       "warnings": [
         "recipe 'gedit' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "gemini",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": false
+      },
+      "gaps": [
+        "musl"
+      ],
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "geoipupdate",
