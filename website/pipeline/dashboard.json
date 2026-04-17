@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-17T10:59:37Z",
+  "generated_at": "2026-04-17T11:00:47Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 36,
-      "pending": 3892,
+      "failed": 39,
+      "pending": 3889,
       "success": 1344
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 36,
-        "pending": 3869,
+        "failed": 39,
+        "pending": 3866,
         "success": 1331
       }
     },
@@ -68,20 +68,21 @@
         "total": 1
       },
       "npm": {
-        "failed": 2,
-        "pending": 18,
+        "failed": 3,
+        "pending": 17,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "pending": 3,
+        "failed": 1,
+        "pending": 2,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 31,
-        "pending": 44,
+        "failed": 32,
+        "pending": 43,
         "success": 13,
         "total": 89
       }
@@ -489,6 +490,15 @@
           "next_retry_at": "2026-04-24T02:22:15Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 172,
+          "next_retry_at": "1734-01-06T11:13:00Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -775,6 +785,24 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-04-24T09:21:39Z"
+        },
+        {
+          "id": "rubygems:less",
+          "name": "less",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-24T11:00:17Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 287,
+          "next_retry_at": "1734-01-06T11:13:00Z"
         },
         {
           "id": "crates.io:numpy",
@@ -2686,15 +2714,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 171,
-          "next_retry_at": "1734-01-06T07:49:15Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -13071,15 +13090,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:less",
-          "name": "less",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-04-14T09:06:12Z"
-        },
-        {
           "id": "homebrew:lesspipe",
           "name": "lesspipe",
           "ecosystem": "homebrew",
@@ -13113,15 +13123,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 286,
-          "next_retry_at": "1734-01-05T23:31:45Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -38634,26 +38635,6 @@
       "timestamp": "2026-04-09T17:07:00.239260074Z"
     },
     {
-      "id": "batch-2026-04-09T15-28-24Z-pandocomatic",
-      "package": "pandocomatic",
-      "ecosystem": "batch",
-      "category": "generation_failed",
-      "subcategory": "install_failed",
-      "exit_code": 6,
-      "platform": "multiple",
-      "platforms": [
-        "linux-alpine-musl-arm64",
-        "linux-alpine-musl-x86_64",
-        "linux-arch-glibc-x86_64",
-        "linux-rhel-glibc-arm64",
-        "linux-rhel-glibc-x86_64",
-        "linux-suse-glibc-arm64",
-        "linux-suse-glibc-x86_64"
-      ],
-      "batch_id": "2026-04-09T15-28-24Z",
-      "timestamp": "2026-04-09T15:28:24Z"
-    },
-    {
       "id": "batch-2026-04-09T15-28-24Z-passenger",
       "package": "passenger",
       "ecosystem": "batch",
@@ -38667,6 +38648,26 @@
         "linux-arch-glibc-x86_64",
         "linux-debian-glibc-arm64",
         "linux-debian-glibc-x86_64",
+        "linux-rhel-glibc-arm64",
+        "linux-rhel-glibc-x86_64",
+        "linux-suse-glibc-arm64",
+        "linux-suse-glibc-x86_64"
+      ],
+      "batch_id": "2026-04-09T15-28-24Z",
+      "timestamp": "2026-04-09T15:28:24Z"
+    },
+    {
+      "id": "batch-2026-04-09T15-28-24Z-pandocomatic",
+      "package": "pandocomatic",
+      "ecosystem": "batch",
+      "category": "generation_failed",
+      "subcategory": "install_failed",
+      "exit_code": 6,
+      "platform": "multiple",
+      "platforms": [
+        "linux-alpine-musl-arm64",
+        "linux-alpine-musl-x86_64",
+        "linux-arch-glibc-x86_64",
         "linux-rhel-glibc-arm64",
         "linux-rhel-glibc-x86_64",
         "linux-suse-glibc-arm64",
