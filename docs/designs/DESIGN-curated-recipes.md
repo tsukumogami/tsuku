@@ -667,6 +667,9 @@ graph TD
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
 
-    class I2259,I2260 ready
-    class I2261,I2262,I2263,I2264,I2265,I2266,I2267,I2268 blocked
+    class I2259,I2260,I2261 done
+    class I2262,I2263,I2264,I2265,I2266,I2267 ready
+    class I2268 blocked
 ```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design.
