@@ -711,7 +711,7 @@ tsuku cache cleanup --force-limit
 Registry recipe cache configuration is available via environment variables. See [ENVIRONMENT.md](docs/ENVIRONMENT.md) for details on `TSUKU_RECIPE_CACHE_TTL`, `TSUKU_RECIPE_CACHE_SIZE_LIMIT`, and other cache settings.
 
 ```bash
-# Refresh recipe cache
+# Refresh all cached recipes
 tsuku update-registry
 
 # Preview what would be refreshed
@@ -719,9 +719,6 @@ tsuku update-registry --dry-run
 
 # Refresh a specific recipe only
 tsuku update-registry --recipe fzf
-
-# Force refresh all cached recipes
-tsuku update-registry --all
 ```
 
 On a clean machine, the first `tsuku update-registry` fetches all recipe TOMLs to build the binary index — this takes roughly 15-20 seconds. Subsequent runs are fast because the recipes are cached locally.

@@ -85,7 +85,7 @@ tsuku finds `.tsuku.toml` by walking up from the current directory, stopping at 
 | `tsuku verify <tool>` | Check binary integrity and deps | `--system-deps`, `--integrity` |
 | `tsuku doctor` | Environment health check | `--rebuild-cache` |
 | `tsuku cache clear` | Clear download and version caches | `--downloads`, `--versions` |
-| `tsuku update-registry` | Refresh recipe cache and binary index | `--force` |
+| `tsuku update-registry` | Refresh all cached recipes and rebuild the binary index | `--dry-run`, `--recipe` |
 
 All commands accept `--verbose` (`-v`), `--quiet` (`-q`), and `--debug` for log control.
 
