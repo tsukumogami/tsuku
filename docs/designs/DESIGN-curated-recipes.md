@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   tsuku has ~1,400 recipes but roughly 20-50 developer tools that users install most
   frequently are either missing from the registry, restricted to Linux, or served by
@@ -29,7 +29,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context and Problem Statement
 
