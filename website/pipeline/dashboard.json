@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-17T13:20:06Z",
+  "generated_at": "2026-04-17T13:21:13Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 27,
       "excluded": 6,
-      "failed": 39,
-      "pending": 3889,
+      "failed": 40,
+      "pending": 3888,
       "success": 1344
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 39,
-        "pending": 3866,
+        "failed": 40,
+        "pending": 3865,
         "success": 1331
       }
     },
@@ -81,8 +81,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 32,
-        "pending": 43,
+        "failed": 33,
+        "pending": 42,
         "success": 13,
         "total": 89
       }
@@ -490,15 +490,6 @@
           "next_retry_at": "2026-04-24T02:22:15Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 172,
-          "next_retry_at": "1734-01-06T11:13:00Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -614,6 +605,15 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-04-24T02:22:15Z"
+        },
+        {
+          "id": "npm:datasette",
+          "name": "datasette",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-04-24T13:20:32Z"
         },
         {
           "id": "rubygems:dict",
@@ -796,13 +796,13 @@
           "next_retry_at": "2026-04-24T11:00:17Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
+          "id": "rubygems:libnotify",
+          "name": "libnotify",
+          "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 287,
-          "next_retry_at": "1734-01-06T11:13:00Z"
+          "failure_count": 10,
+          "next_retry_at": "2026-04-24T13:20:32Z"
         },
         {
           "id": "crates.io:numpy",
@@ -812,6 +812,15 @@
           "category": "install_failed",
           "failure_count": 12,
           "next_retry_at": "2026-04-23T23:45:58Z"
+        },
+        {
+          "id": "pypi:tctl",
+          "name": "tctl",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-04-24T13:20:32Z"
         }
       ],
       "pending": [
@@ -2714,6 +2723,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 172,
+          "next_retry_at": "1734-01-06T11:13:00Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -5846,15 +5864,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:datasette",
-          "name": "datasette",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T13:58:25Z"
         },
         {
           "id": "homebrew:datawire/blackbird/telepresence",
@@ -13125,6 +13134,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 287,
+          "next_retry_at": "1734-01-06T11:13:00Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -13454,15 +13472,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:libnotify",
-          "name": "libnotify",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-04-14T10:18:49Z"
         },
         {
           "id": "homebrew:libolm",
@@ -24930,15 +24939,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:tctl",
-          "name": "tctl",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-11T20:36:12Z"
         },
         {
           "id": "homebrew:tdlib",
