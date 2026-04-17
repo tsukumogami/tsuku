@@ -635,8 +635,8 @@ Plan: [docs/plans/PLAN-curated-recipes.md](../plans/PLAN-curated-recipes.md)
 | ~~_Replaces or supplements the existing kubectl recipe with a cross-platform version supporting Linux and macOS via direct download from the Kubernetes release server._~~ | | |
 | ~~[#2263: feat(recipes): replace Linux-only helm recipe with cross-platform version](https://github.com/tsukumogami/tsuku/issues/2263)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259)~~ | ~~testable~~ |
 | ~~_Rewrites the helm recipe to download from official Helm GitHub releases for both Linux and macOS, replacing the Linux-only version._~~ | | |
-| [#2264: feat(recipes): add handcrafted recipes for bat, starship, and neovim](https://github.com/tsukumogami/tsuku/issues/2264) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259) | testable |
-| _Adds curated handcrafted recipes for bat, starship, and neovim using github_archive with proper platform-specific asset patterns._ | | |
+| ~~[#2264: feat(recipes): add handcrafted recipes for bat, starship, and neovim](https://github.com/tsukumogami/tsuku/issues/2264)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259)~~ | ~~testable~~ |
+| ~~_Adds curated handcrafted recipes for bat, starship, and neovim using github_archive with proper platform-specific asset patterns._~~ | | |
 | [#2265: feat(recipes): add handcrafted node.js recipe](https://github.com/tsukumogami/tsuku/issues/2265) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259) | testable |
 | _Adds `recipes/n/node.toml` using direct download from nodejs.org with platform-specific tarballs for Linux (glibc and musl) and macOS._ | | |
 | [#2266: feat(recipes): backfill curated recipes — cloud CLIs and build tools](https://github.com/tsukumogami/tsuku/issues/2266) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260) | testable |
@@ -677,8 +677,8 @@ graph TD
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
 
-    class I2259,I2260,I2261,I2262,I2263 done
-    class I2264,I2265,I2266,I2267 ready
+    class I2259,I2260,I2261,I2262,I2263,I2264 done
+    class I2265,I2266,I2267 ready
     class I2268 blocked
 ```
 

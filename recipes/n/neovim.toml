@@ -1,0 +1,32 @@
+[metadata]
+name = "neovim"
+description = "Hyperextensible Vim-based text editor"
+homepage = "https://neovim.io"
+version_format = "semver"
+curated = true
+
+[version]
+github_repo = "neovim/neovim"
+tag_prefix = "v"
+
+[[steps]]
+action = "github_archive"
+when = { os = ["linux"] }
+repo = "neovim/neovim"
+asset_pattern = "nvim-linux-{arch}.tar.gz"
+strip_dirs = 1
+binaries = ["bin/nvim"]
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "neovim/neovim"
+asset_pattern = "nvim-macos-{arch}.tar.gz"
+strip_dirs = 1
+binaries = ["bin/nvim"]
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+
+[verify]
+command = "nvim --version"
+pattern = "{version}"
