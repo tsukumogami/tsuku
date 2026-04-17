@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-17T05:33:26Z",
+  "updated_at": "2026-04-17T07:36:32Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 170,
-      "next_retry_at": "1734-01-06T02:34:58.787434089Z"
+      "failure_count": 171,
+      "next_retry_at": "1734-01-06T07:49:15.177749612Z"
     },
     {
       "name": "azqr",
@@ -18966,11 +18966,11 @@
       "name": "gsl",
       "source": "rubygems:gsl",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-13T07:33:14.866640702Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-24T07:36:32.03252542Z"
     },
     {
       "name": "gsmartcontrol",
@@ -19496,11 +19496,11 @@
       "name": "haproxy",
       "source": "rubygems:haproxy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-13T09:13:16.423343739Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-24T07:36:32.03252542Z"
     },
     {
       "name": "harbor-cli",
@@ -20056,11 +20056,11 @@
       "name": "hercules",
       "source": "rubygems:hercules",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-13T11:01:23.712621477Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-24T07:36:32.03252542Z"
     },
     {
       "name": "heremaps/olp-cli/olp",
@@ -20486,11 +20486,11 @@
       "name": "htmldoc",
       "source": "rubygems:htmldoc",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-13T13:10:55.558107216Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-24T07:36:32.03252542Z"
     },
     {
       "name": "htmlhint",
@@ -20626,11 +20626,11 @@
       "name": "httpx",
       "source": "rubygems:httpx",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-13T14:50:48.805436267Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-24T07:36:32.03252542Z"
     },
     {
       "name": "httpyac",
@@ -20786,11 +20786,11 @@
       "name": "hydra",
       "source": "rubygems:hydra",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-13T16:50:13.470967332Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-24T07:36:32.03252542Z"
     },
     {
       "name": "hyfetch",
