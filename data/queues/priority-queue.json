@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-17T13:20:32Z",
+  "updated_at": "2026-04-17T15:01:00Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 172,
-      "next_retry_at": "1734-01-06T11:13:00.523497272Z"
+      "failure_count": 173,
+      "next_retry_at": "1734-01-06T15:13:43.864220712Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 287,
-      "next_retry_at": "1734-01-06T11:13:00.523497272Z"
+      "failure_count": 288,
+      "next_retry_at": "1734-01-06T15:13:43.864220712Z"
     },
     {
       "name": "libaacs",
@@ -28016,11 +28016,11 @@
       "name": "lsof",
       "source": "rubygems:lsof",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-04-14T11:59:20.63632489Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-24T15:01:00.71899652Z"
     },
     {
       "name": "lspmux",
