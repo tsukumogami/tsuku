@@ -1,21 +1,25 @@
+# Node.js - JavaScript runtime built on Chrome's V8 JavaScript engine
+# Official site: https://nodejs.org/
+
 [metadata]
 name = "nodejs"
 description = "JavaScript runtime built on Chrome's V8 JavaScript engine"
 homepage = "https://nodejs.org"
 version_format = "semver"
 curated = true
-supported_libc = ["glibc"]
 runtime_dependencies = ["gcc-libs"]
 
 [version]
 github_repo = "nodejs/node"
 tag_prefix = "v"
 
+# glibc Linux: Download pre-built Node.js binaries with checksum verification
 [[steps]]
 action = "download"
 url = "https://nodejs.org/dist/v{version}/node-v{version}-{os}-{arch}.tar.gz"
 checksum_url = "https://nodejs.org/dist/v{version}/SHASUMS256.txt"
 arch_mapping = { amd64 = "x64", arm64 = "arm64" }
+when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
 action = "extract"
@@ -23,12 +27,13 @@ archive = "node-v{version}-{os}-{arch}.tar.gz"
 format = "tar.gz"
 strip_dirs = 1
 arch_mapping = { amd64 = "x64", arm64 = "arm64" }
+when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
 action = "link_dependencies"
 library = "gcc-libs"
 dependencies = ["gcc-libs"]
-when = { os = ["linux"] }
+when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
 action = "run_command"
@@ -44,12 +49,41 @@ WRAPPER
 chmod +x bin/node
 '''
 description = "Creating LD_LIBRARY_PATH wrapper for node binary"
-when = { os = ["linux"] }
+when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
 action = "install_binaries"
 binaries = ["bin/node", "bin/npm", "bin/npx"]
 install_mode = "directory"
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: System packages (apk handles transitive deps)
+[[steps]]
+action = "apk_install"
+packages = ["nodejs", "npm"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Download pre-built Node.js binaries with checksum verification
+[[steps]]
+action = "download"
+url = "https://nodejs.org/dist/v{version}/node-v{version}-{os}-{arch}.tar.gz"
+checksum_url = "https://nodejs.org/dist/v{version}/SHASUMS256.txt"
+arch_mapping = { amd64 = "x64", arm64 = "arm64" }
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "extract"
+archive = "node-v{version}-{os}-{arch}.tar.gz"
+format = "tar.gz"
+strip_dirs = 1
+arch_mapping = { amd64 = "x64", arm64 = "arm64" }
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+binaries = ["bin/node", "bin/npm", "bin/npx"]
+install_mode = "directory"
+when = { os = ["darwin"] }
 
 [verify]
 command = "node --version"
