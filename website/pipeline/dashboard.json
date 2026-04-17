@@ -1,19 +1,19 @@
 {
-  "generated_at": "2026-04-17T22:53:30Z",
+  "generated_at": "2026-04-17T23:09:30Z",
   "queue": {
     "total": 5305,
     "by_status": {
-      "blocked": 27,
+      "blocked": 26,
       "excluded": 6,
       "failed": 49,
-      "pending": 3879,
-      "success": 1344
+      "pending": 3877,
+      "success": 1347
     },
     "by_tier": {
       "1": {
-        "blocked": 3,
-        "pending": 10,
-        "success": 5
+        "blocked": 2,
+        "pending": 9,
+        "success": 7
       },
       "2": {
         "blocked": 6,
@@ -24,8 +24,8 @@
         "blocked": 18,
         "excluded": 6,
         "failed": 49,
-        "pending": 3856,
-        "success": 1331
+        "pending": 3855,
+        "success": 1332
       }
     },
     "by_ecosystem": {
@@ -45,8 +45,8 @@
         "total": 105
       },
       "github": {
-        "pending": 8,
-        "success": 103,
+        "pending": 7,
+        "success": 104,
         "total": 111
       },
       "go": {
@@ -54,9 +54,9 @@
         "total": 8
       },
       "homebrew": {
-        "blocked": 27,
-        "pending": 3745,
-        "success": 1111,
+        "blocked": 26,
+        "pending": 3744,
+        "success": 1113,
         "total": 4883
       },
       "manual": {
@@ -89,19 +89,6 @@
     },
     "packages": {
       "blocked": [
-        {
-          "id": "homebrew:neovim",
-          "name": "neovim",
-          "ecosystem": "homebrew",
-          "priority": 1,
-          "category": "missing_dep",
-          "blocked_by": [
-            "tree-sitter@0.25",
-            "luv",
-            "unibilium"
-          ],
-          "failure_count": 4
-        },
         {
           "id": "homebrew:node",
           "name": "node",
@@ -905,15 +892,6 @@
         }
       ],
       "pending": [
-        {
-          "id": "github:sharkdp/bat",
-          "name": "bat",
-          "ecosystem": "github",
-          "priority": 1,
-          "category": "generation_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-02-24T06:13:30Z"
-        },
         {
           "id": "github:dandavison/delta",
           "name": "delta",
@@ -24152,13 +24130,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:starship",
-          "name": "starship",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:startergo/virglrenderer/virglrenderer",
           "name": "startergo/virglrenderer/virglrenderer",
           "ecosystem": "homebrew",
@@ -28292,6 +28263,15 @@
       ],
       "success": [
         {
+          "id": "github:sharkdp/bat",
+          "name": "bat",
+          "ecosystem": "github",
+          "priority": 1,
+          "category": "generation_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-02-24T06:13:30Z"
+        },
+        {
           "id": "homebrew:eza",
           "name": "eza",
           "ecosystem": "homebrew",
@@ -28315,6 +28295,14 @@
           "category": "generation_failed",
           "failure_count": 3,
           "next_retry_at": "2026-02-24T06:13:38Z"
+        },
+        {
+          "id": "homebrew:neovim",
+          "name": "neovim",
+          "ecosystem": "homebrew",
+          "priority": 1,
+          "category": "missing_dep",
+          "failure_count": 4
         },
         {
           "id": "homebrew:shellcheck",
@@ -36369,6 +36357,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:starship",
+          "name": "starship",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "go:honnef.co/go/tools/cmd/staticcheck",
           "name": "staticcheck",
           "ecosystem": "go",
@@ -40099,6 +40094,11 @@
       "validation_status": "valid"
     },
     {
+      "name": "neovim",
+      "source": "homebrew:neovim",
+      "validation_status": "valid"
+    },
+    {
       "name": "rg",
       "source": "github:BurntSushi/ripgrep",
       "validation_status": "valid"
@@ -41441,6 +41441,11 @@
     {
       "name": "sshpass",
       "source": "homebrew:sshpass",
+      "validation_status": "valid"
+    },
+    {
+      "name": "starship",
+      "source": "homebrew:starship",
       "validation_status": "valid"
     },
     {
