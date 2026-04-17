@@ -1,0 +1,27 @@
+[metadata]
+name = "kubectl"
+description = "Kubernetes command-line tool"
+homepage = "https://kubernetes.io/docs/reference/kubectl/"
+version_format = "semver"
+curated = true
+
+[version]
+github_repo = "kubernetes/kubernetes"
+tag_prefix = "v"
+
+[[steps]]
+action = "download"
+url = "https://dl.k8s.io/release/v{version}/bin/{os}/{arch}/kubectl"
+checksum_url = "https://dl.k8s.io/release/v{version}/bin/{os}/{arch}/kubectl.sha256"
+
+[[steps]]
+action = "chmod"
+files = ["kubectl"]
+
+[[steps]]
+action = "install_binaries"
+binaries = ["kubectl"]
+
+[verify]
+command = "kubectl version --client"
+pattern = "{version}"
