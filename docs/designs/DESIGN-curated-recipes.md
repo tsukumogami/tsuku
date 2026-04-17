@@ -623,18 +623,18 @@ this residual risk entirely.
 
 Plan: [docs/plans/PLAN-curated-recipes.md](../plans/PLAN-curated-recipes.md)
 
-| Issue | Dependencies | Complexity |
-|-------|-------------|------------|
-| [#2259: feat(recipe): add curated flag to recipe metadata and CI infrastructure](https://github.com/tsukumogami/tsuku/issues/2259) | None | testable |
-| [#2260: docs(recipes): produce top-100 developer tool priority list](https://github.com/tsukumogami/tsuku/issues/2260) | None | simple |
-| [#2261: feat(recipes): add handcrafted recipes for claude and gemini-cli](https://github.com/tsukumogami/tsuku/issues/2261) | #2259 | testable |
-| [#2262: feat(recipes): add cross-platform kubectl recipe](https://github.com/tsukumogami/tsuku/issues/2262) | #2259 | testable |
-| [#2263: feat(recipes): replace Linux-only helm recipe with cross-platform version](https://github.com/tsukumogami/tsuku/issues/2263) | #2259 | testable |
-| [#2264: feat(recipes): add handcrafted recipes for bat, starship, and neovim](https://github.com/tsukumogami/tsuku/issues/2264) | #2259 | testable |
-| [#2265: feat(recipes): add handcrafted node.js recipe](https://github.com/tsukumogami/tsuku/issues/2265) | #2259 | testable |
-| [#2266: feat(recipes): backfill curated recipes — cloud CLIs and build tools](https://github.com/tsukumogami/tsuku/issues/2266) | #2259, #2260 | testable |
-| [#2267: feat(recipes): backfill curated recipes — modern CLI tools and AI assistants](https://github.com/tsukumogami/tsuku/issues/2267) | #2259, #2260 | testable |
-| [#2268: feat(recipes): backfill curated recipes — remaining top-100 gaps](https://github.com/tsukumogami/tsuku/issues/2268) | #2259, #2260, #2266, #2267 | testable |
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259)~~ | ~~feat(recipe): add curated flag to recipe metadata and CI infrastructure~~ | ~~None~~ | ~~testable~~ |
+| ~~[#2260](https://github.com/tsukumogami/tsuku/issues/2260)~~ | ~~docs(recipes): produce top-100 developer tool priority list~~ | ~~None~~ | ~~simple~~ |
+| ~~[#2261](https://github.com/tsukumogami/tsuku/issues/2261)~~ | ~~feat(recipes): add handcrafted recipes for claude and gemini-cli~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259)~~ | ~~testable~~ |
+| [#2262](https://github.com/tsukumogami/tsuku/issues/2262) | feat(recipes): add cross-platform kubectl recipe | [#2259](https://github.com/tsukumogami/tsuku/issues/2259) | testable |
+| [#2263](https://github.com/tsukumogami/tsuku/issues/2263) | feat(recipes): replace Linux-only helm recipe with cross-platform version | [#2259](https://github.com/tsukumogami/tsuku/issues/2259) | testable |
+| [#2264](https://github.com/tsukumogami/tsuku/issues/2264) | feat(recipes): add handcrafted recipes for bat, starship, and neovim | [#2259](https://github.com/tsukumogami/tsuku/issues/2259) | testable |
+| [#2265](https://github.com/tsukumogami/tsuku/issues/2265) | feat(recipes): add handcrafted node.js recipe | [#2259](https://github.com/tsukumogami/tsuku/issues/2259) | testable |
+| [#2266](https://github.com/tsukumogami/tsuku/issues/2266) | feat(recipes): backfill curated recipes — cloud CLIs and build tools | [#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260) | testable |
+| [#2267](https://github.com/tsukumogami/tsuku/issues/2267) | feat(recipes): backfill curated recipes — modern CLI tools and AI assistants | [#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260) | testable |
+| [#2268](https://github.com/tsukumogami/tsuku/issues/2268) | feat(recipes): backfill curated recipes — remaining top-100 gaps | [#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260), [#2266](https://github.com/tsukumogami/tsuku/issues/2266), [#2267](https://github.com/tsukumogami/tsuku/issues/2267) | testable |
 
 ```mermaid
 graph TD
