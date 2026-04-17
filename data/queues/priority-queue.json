@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-17T02:22:15Z",
+  "updated_at": "2026-04-17T05:33:26Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 170,
@@ -4446,11 +4446,11 @@
       "name": "basis_universal",
       "source": "crates.io:basis_universal",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-04-11T17:34:19.34996246Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-04-24T05:33:26.771352032Z"
     },
     {
       "name": "bastet",
@@ -7036,11 +7036,11 @@
       "name": "chainsaw",
       "source": "npm:chainsaw",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-04-11T13:58:25.68337299Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-04-24T05:33:26.771352032Z"
     },
     {
       "name": "chamber",
@@ -11566,11 +11566,11 @@
       "name": "doggo",
       "source": "rubygems:doggo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-04-12T16:40:52.051500221Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-04-24T05:33:26.771352032Z"
     },
     {
       "name": "dokku/repo/dokku",
@@ -12116,11 +12116,11 @@
       "name": "dug",
       "source": "rubygems:dug",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-12T18:47:46.383494513Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-24T05:33:26.771352032Z"
     },
     {
       "name": "dumbpipe",
@@ -13386,11 +13386,11 @@
       "name": "exiv2",
       "source": "rubygems:exiv2",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-12T20:37:07.632755477Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-24T05:33:26.771352032Z"
     },
     {
       "name": "exoscale/tap/exoscale-cli",
@@ -14536,11 +14536,11 @@
       "name": "flash",
       "source": "rubygems:flash",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-12T22:35:44.215541337Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-24T05:33:26.771352032Z"
     },
     {
       "name": "flashrom",
@@ -16906,11 +16906,11 @@
       "name": "gitingest",
       "source": "rubygems:gitingest",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-13T02:18:51.168527691Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-24T05:33:26.771352032Z"
     },
     {
       "name": "gitlab-ci-linter",
@@ -17116,11 +17116,11 @@
       "name": "glassfish",
       "source": "rubygems:glassfish",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-13T05:28:56.981623787Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-24T05:33:26.771352032Z"
     },
     {
       "name": "glaze",
