@@ -163,6 +163,7 @@ type MetadataSection struct {
 	Tier                     int                 `toml:"tier"`                       // Installation tier: 1=binary, 2=package manager, 3=nix
 	Type                     string              `toml:"type"`                       // Recipe type: "tool" (default) or "library"
 	LLMValidation            string              `toml:"llm_validation,omitempty"`   // LLM validation status: "skipped" or empty
+	Curated                  bool                `toml:"curated,omitempty"`          // True for handcrafted recipes in ci.curated
 	Binaries                 []string            `toml:"binaries,omitempty"`         // Explicit binary paths for homebrew recipes
 	Satisfies                map[string][]string `toml:"satisfies,omitempty"`        // Ecosystem name mappings: ecosystem -> []package_names
 

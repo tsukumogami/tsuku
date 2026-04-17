@@ -1,0 +1,16 @@
+[metadata]
+name = "gemini"
+description = "Gemini CLI — Google's AI assistant for the terminal"
+homepage = "https://github.com/google-gemini/gemini-cli"
+version_format = "semver"
+curated = true
+
+[[steps]]
+action = "npm_install"
+package = "@google/gemini-cli"
+executables = ["gemini"]
+
+[verify]
+command = "gemini --version"
+mode = "output"
+reason = "gemini --version output is not a parseable semver string"

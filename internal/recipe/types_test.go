@@ -1,6 +1,7 @@
 package recipe
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/BurntSushi/toml"
@@ -2960,6 +2961,65 @@ url = "https://example.com/file.tar.gz"
 		m := step.ToMap()
 		if _, ok := m["phase"]; ok {
 			t.Error("expected empty phase to be omitted from ToMap output")
+		}
+	})
+}
+
+func TestMetadataSection_Curated(t *testing.T) {
+	t.Run("curated = true parses into Curated == true", func(t *testing.T) {
+		tomlData := `
+[metadata]
+name = "claude"
+description = "Claude Code CLI"
+curated = true
+
+[[steps]]
+action = "npm_install"
+package = "@anthropic-ai/claude-code"
+executables = ["claude"]
+`
+		var recipe Recipe
+		if err := toml.Unmarshal([]byte(tomlData), &recipe); err != nil {
+			t.Fatalf("Unmarshal failed: %v", err)
+		}
+		if !recipe.Metadata.Curated {
+			t.Error("expected Metadata.Curated == true for recipe with curated = true")
+		}
+	})
+
+	t.Run("recipe without curated field parses with Curated == false", func(t *testing.T) {
+		tomlData := `
+[metadata]
+name = "some-tool"
+description = "Some tool"
+
+[[steps]]
+action = "github_archive"
+repo = "example/some-tool"
+`
+		var recipe Recipe
+		if err := toml.Unmarshal([]byte(tomlData), &recipe); err != nil {
+			t.Fatalf("Unmarshal failed: %v", err)
+		}
+		if recipe.Metadata.Curated {
+			t.Error("expected Metadata.Curated == false for recipe without curated field")
+		}
+	})
+
+	t.Run("ToTOML does not serialize Curated field", func(t *testing.T) {
+		recipe := &Recipe{
+			Metadata: MetadataSection{
+				Name:        "claude",
+				Description: "Claude Code CLI",
+				Curated:     true,
+			},
+		}
+		out, err := recipe.ToTOML()
+		if err != nil {
+			t.Fatalf("ToTOML failed: %v", err)
+		}
+		if strings.Contains(string(out), "curated") {
+			t.Errorf("ToTOML should not serialize Curated field, but got: %s", out)
 		}
 	})
 }

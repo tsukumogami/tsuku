@@ -1,0 +1,16 @@
+[metadata]
+name = "claude"
+description = "Claude Code — Anthropic's AI coding assistant"
+homepage = "https://github.com/anthropics/claude-code"
+version_format = "semver"
+curated = true
+
+[[steps]]
+action = "npm_install"
+package = "@anthropic-ai/claude-code"
+executables = ["claude"]
+
+[verify]
+command = "claude --version"
+mode = "output"
+reason = "claude --version output is not a parseable semver string"

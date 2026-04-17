@@ -1,0 +1,6 @@
+{
+  "builder": "npm",
+  "source": "@google/gemini-cli",
+  "description": "Gemini CLI — Google's AI assistant for the terminal",
+  "homepage": "https://github.com/google-gemini/gemini-cli"
+}
