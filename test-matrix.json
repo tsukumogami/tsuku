@@ -295,11 +295,6 @@
     "blocked": {
       "npm_netlify-cli_basic": "https://github.com/tsukumogami/tsuku/issues/1592",
       "gem_bundler_multi_exec": "gem_install verification fails - binstubs call system Ruby instead of installed gem (#1580)"
-    },
-    "curated": [
-      "recipes/c/claude.toml",
-      "recipes/g/gemini.toml",
-      "recipes/g/gh.toml"
-    ]
+    }
   }
 }

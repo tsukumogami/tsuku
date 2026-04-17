@@ -1,12 +1,11 @@
 name: Curated Recipe Nightly
-# Nightly cross-platform validation for recipes in the ci.curated list.
-# Calls recipe-validation-core.yml (full validation suite) and creates a
-# GitHub issue labeled curated-recipe-failure when any job fails.
+# Nightly cross-platform validation for all recipes with curated = true in
+# their [metadata] section. Calls recipe-validation-core.yml (full validation
+# suite) and creates a GitHub issue labeled curated-recipe-failure when any
+# job fails.
 #
-# The ci.curated array in test-matrix.json defines which recipes are
-# monitored by this workflow. Each entry must carry curated = true in its
-# [metadata] section — enforced by the curated recipe lint step in
-# recipe-validation-core.yml's prepare job.
+# Recipes are discovered dynamically — setting curated = true in a recipe's
+# [metadata] is sufficient to enroll it in nightly CI.
 
 on:
   schedule:
@@ -19,37 +18,31 @@ permissions:
   issues: write
 
 jobs:
-  # Read ci.curated and expose the list for use in the failure issue body
+  # Discover all recipes with curated = true and expose the list for use in
+  # the failure issue body
   setup:
-    name: Read curated recipe list
+    name: Discover curated recipes
     runs-on: ubuntu-latest
     outputs:
-      curated_recipes: ${{ steps.read.outputs.curated_recipes }}
-      has_recipes: ${{ steps.read.outputs.has_recipes }}
+      curated_recipes: ${{ steps.discover.outputs.curated_recipes }}
+      has_recipes: ${{ steps.discover.outputs.has_recipes }}
     steps:
       - uses: actions/checkout@v6
 
-      - name: Read ci.curated from test-matrix.json
-        id: read
+      - name: Discover recipes with curated = true
+        id: discover
         run: |
-          if ! jq -e '.ci.curated | type == "array"' test-matrix.json > /dev/null 2>&1; then
-            echo "has_recipes=false" >> "$GITHUB_OUTPUT"
-            echo "curated_recipes=[]" >> "$GITHUB_OUTPUT"
-            echo "No ci.curated array in test-matrix.json"
-            exit 0
-          fi
-
-          COUNT=$(jq '[.ci.curated[]] | length' test-matrix.json)
-          RECIPES=$(jq -c '[.ci.curated[]]' test-matrix.json)
+          RECIPES=$(grep -rl 'curated = true' recipes/ | sort | jq -R . | jq -sc .)
+          COUNT=$(echo "$RECIPES" | jq 'length')
           echo "curated_recipes=$RECIPES" >> "$GITHUB_OUTPUT"
 
           if [ "$COUNT" -gt 0 ]; then
             echo "has_recipes=true" >> "$GITHUB_OUTPUT"
             echo "Found $COUNT curated recipe(s):"
-            jq -r '.ci.curated[]' test-matrix.json | sed 's/^/  - /'
+            echo "$RECIPES" | jq -r '.[]' | sed 's/^/  - /'
           else
             echo "has_recipes=false" >> "$GITHUB_OUTPUT"
-            echo "ci.curated is empty"
+            echo "No recipes with curated = true found"
           fi
 
   # Run full recipe validation (includes all curated recipes)

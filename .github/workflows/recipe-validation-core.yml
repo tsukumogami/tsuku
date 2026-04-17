@@ -36,33 +36,6 @@ jobs:
           CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o tsuku-darwin-arm64 ./cmd/tsuku
           CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o tsuku-darwin-amd64 ./cmd/tsuku
 
-      - name: Lint curated recipes
-        run: |
-          # Verify every recipe in ci.curated exists and carries curated = true
-          if ! jq -e '.ci.curated | type == "array"' test-matrix.json > /dev/null 2>&1; then
-            echo "No ci.curated array in test-matrix.json — skipping curated lint"
-            exit 0
-          fi
-
-          FAILED=0
-          while IFS= read -r recipe_path; do
-            if [ ! -f "$recipe_path" ]; then
-              echo "::error::ci.curated: recipe file not found: $recipe_path"
-              FAILED=1
-              continue
-            fi
-            if ! grep -q 'curated = true' "$recipe_path"; then
-              echo "::error::ci.curated: $recipe_path is missing 'curated = true' in [metadata]"
-              FAILED=1
-            fi
-          done < <(jq -r '.ci.curated[]' test-matrix.json)
-
-          if [ "$FAILED" -ne 0 ]; then
-            echo "Curated recipe lint failed. Add 'curated = true' to the [metadata] section of each listed recipe."
-            exit 1
-          fi
-          echo "Curated recipe lint passed."
-
       - name: Collect all recipes
         id: collect
         run: |
