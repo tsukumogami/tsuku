@@ -569,17 +569,16 @@ tsuku update-registry [flags]
 Flags:
   --dry-run          Show what would be refreshed without fetching
   --recipe <name>    Refresh a specific recipe only
-  --all              Refresh all cached recipes (default if no --recipe)
 ```
 
 Output:
 ```
 Refreshing recipe cache...
-  fzf: refreshed (was 2 days old)
-  ripgrep: already fresh
   bat: refreshed (was 5 days old)
+  fzf: refreshed (was 2 days old)
+  ripgrep: refreshed
 
-Refreshed 2 of 3 cached recipes.
+Refreshed 3 of 3 cached recipes.
 ```
 
 #### New `tsuku cache cleanup`
