@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-17T09:21:39Z",
+  "updated_at": "2026-04-17T11:00:17Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 171,
-      "next_retry_at": "1734-01-06T07:49:15.177749612Z"
+      "failure_count": 172,
+      "next_retry_at": "1734-01-06T11:13:00.523497272Z"
     },
     {
       "name": "azqr",
@@ -25116,11 +25116,11 @@
       "name": "less",
       "source": "rubygems:less",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-04-14T09:06:12.236810674Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-04-24T11:00:17.37827308Z"
     },
     {
       "name": "lesspipe",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 286,
-      "next_retry_at": "1734-01-05T23:31:45.888693993Z"
+      "failure_count": 287,
+      "next_retry_at": "1734-01-06T11:13:00.523497272Z"
     },
     {
       "name": "libaacs",
