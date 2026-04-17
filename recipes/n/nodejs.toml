@@ -1,0 +1,56 @@
+[metadata]
+name = "nodejs"
+description = "JavaScript runtime built on Chrome's V8 JavaScript engine"
+homepage = "https://nodejs.org"
+version_format = "semver"
+curated = true
+supported_libc = ["glibc"]
+runtime_dependencies = ["gcc-libs"]
+
+[version]
+github_repo = "nodejs/node"
+tag_prefix = "v"
+
+[[steps]]
+action = "download"
+url = "https://nodejs.org/dist/v{version}/node-v{version}-{os}-{arch}.tar.gz"
+checksum_url = "https://nodejs.org/dist/v{version}/SHASUMS256.txt"
+arch_mapping = { amd64 = "x64", arm64 = "arm64" }
+
+[[steps]]
+action = "extract"
+archive = "node-v{version}-{os}-{arch}.tar.gz"
+format = "tar.gz"
+strip_dirs = 1
+arch_mapping = { amd64 = "x64", arm64 = "arm64" }
+
+[[steps]]
+action = "link_dependencies"
+library = "gcc-libs"
+dependencies = ["gcc-libs"]
+when = { os = ["linux"] }
+
+[[steps]]
+action = "run_command"
+command = '''
+mv bin/node bin/node.real
+cat > bin/node << 'WRAPPER'
+#!/bin/sh
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+INSTALL_DIR="$(dirname "$SCRIPT_DIR")"
+export LD_LIBRARY_PATH="$INSTALL_DIR/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+exec "$INSTALL_DIR/bin/node.real" "$@"
+WRAPPER
+chmod +x bin/node
+'''
+description = "Creating LD_LIBRARY_PATH wrapper for node binary"
+when = { os = ["linux"] }
+
+[[steps]]
+action = "install_binaries"
+binaries = ["bin/node", "bin/npm", "bin/npx"]
+install_mode = "directory"
+
+[verify]
+command = "node --version"
+pattern = "{version}"
