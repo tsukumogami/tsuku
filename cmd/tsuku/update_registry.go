@@ -18,7 +18,6 @@ import (
 var (
 	registryDryRun     bool
 	registryRecipeName string
-	registryRefreshAll bool
 )
 
 var updateRegistryCmd = &cobra.Command{
@@ -26,8 +25,7 @@ var updateRegistryCmd = &cobra.Command{
 	Short: "Refresh the recipe cache",
 	Long: `Refresh cached recipes from the registry.
 
-By default, refreshes all expired cached recipes. Use --all to force refresh
-of all cached recipes regardless of freshness.
+Refreshes all cached recipes regardless of freshness.
 
 Use --recipe to refresh a specific recipe only.
 Use --dry-run to see what would be refreshed without making network requests.`,
@@ -78,7 +76,6 @@ Use --dry-run to see what would be refreshed without making network requests.`,
 func init() {
 	updateRegistryCmd.Flags().BoolVar(&registryDryRun, "dry-run", false, "Show what would be refreshed without fetching")
 	updateRegistryCmd.Flags().StringVar(&registryRecipeName, "recipe", "", "Refresh a specific recipe only")
-	updateRegistryCmd.Flags().BoolVar(&registryRefreshAll, "all", false, "Refresh all cached recipes regardless of freshness")
 }
 
 // runRegistryDryRun shows what would be refreshed without making network requests.
@@ -110,6 +107,9 @@ func runRegistryDryRun(cachedReg *registry.CachedRegistry) {
 			continue
 		}
 
+		// Dry-run reports TTL-expiry status to show which recipes are stale.
+		// The actual update-registry run force-fetches all recipes regardless of TTL;
+		// "already fresh" here does not mean a recipe would be skipped by the real command.
 		if status.Status == "expired" {
 			fmt.Printf("  %s: would refresh (cached %s ago)\n", name, formatAgeDuration(status.Age))
 			expiredCount++
@@ -143,7 +143,7 @@ func runSingleRecipeRefresh(ctx context.Context, cachedReg *registry.CachedRegis
 	}
 }
 
-// runRegistryRefreshAll refreshes all cached recipes.
+// runRegistryRefreshAll refreshes all cached recipes unconditionally, regardless of TTL.
 func runRegistryRefreshAll(ctx context.Context, cachedReg *registry.CachedRegistry) {
 	cached, err := cachedReg.Registry().ListCached()
 	if err != nil {
@@ -158,18 +158,29 @@ func runRegistryRefreshAll(ctx context.Context, cachedReg *registry.CachedRegist
 
 	printInfo("Refreshing recipe cache...")
 
-	var stats *registry.RefreshStats
+	stats := &registry.RefreshStats{
+		Total:   len(cached),
+		Details: make([]registry.RefreshDetail, 0, len(cached)),
+	}
 
-	if registryRefreshAll {
-		// Force refresh all, including fresh ones
-		stats = forceRegistryRefreshAll(ctx, cachedReg, cached)
-	} else {
-		// Normal refresh (only expired)
-		stats, err = cachedReg.RefreshAll(ctx)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to refresh cache: %v\n", err)
-			exitWithCode(ExitGeneral)
+	for _, name := range cached {
+		detail, refreshErr := cachedReg.Refresh(ctx, name)
+		if refreshErr != nil {
+			stats.Errors++
+			if detail != nil {
+				stats.Details = append(stats.Details, *detail)
+			} else {
+				stats.Details = append(stats.Details, registry.RefreshDetail{
+					Name:   name,
+					Status: "error",
+					Error:  refreshErr,
+				})
+			}
+			continue
 		}
+
+		stats.Refreshed++
+		stats.Details = append(stats.Details, *detail)
 	}
 
 	// Sort details by name for consistent output
@@ -186,8 +197,6 @@ func runRegistryRefreshAll(ctx context.Context, cachedReg *registry.CachedRegist
 			} else {
 				fmt.Printf("  %s: refreshed\n", detail.Name)
 			}
-		case "already fresh":
-			fmt.Printf("  %s: already fresh\n", detail.Name)
 		case "error":
 			fmt.Fprintf(os.Stderr, "  %s: error (%v)\n", detail.Name, detail.Error)
 		}
@@ -195,47 +204,18 @@ func runRegistryRefreshAll(ctx context.Context, cachedReg *registry.CachedRegist
 
 	// Print summary
 	fmt.Println()
-	if stats.Errors > 0 {
+	if stats.Errors == 1 {
+		printInfo(fmt.Sprintf("Refreshed %d of %d cached recipes (1 error).",
+			stats.Refreshed, stats.Total))
+	} else if stats.Errors > 1 {
 		printInfo(fmt.Sprintf("Refreshed %d of %d cached recipes (%d errors).",
 			stats.Refreshed, stats.Total, stats.Errors))
-	} else if stats.Refreshed > 0 {
-		printInfo(fmt.Sprintf("Refreshed %d of %d cached recipes.", stats.Refreshed, stats.Total))
 	} else {
-		printInfo("All cached recipes are already fresh.")
+		printInfo(fmt.Sprintf("Refreshed %d of %d cached recipes.", stats.Refreshed, stats.Total))
 	}
 
 	// Clear in-memory cache
 	loader.ClearCache()
-}
-
-// forceRegistryRefreshAll refreshes all recipes regardless of freshness.
-func forceRegistryRefreshAll(ctx context.Context, cachedReg *registry.CachedRegistry, cached []string) *registry.RefreshStats {
-	stats := &registry.RefreshStats{
-		Total:   len(cached),
-		Details: make([]registry.RefreshDetail, 0, len(cached)),
-	}
-
-	for _, name := range cached {
-		detail, err := cachedReg.Refresh(ctx, name)
-		if err != nil {
-			stats.Errors++
-			if detail != nil {
-				stats.Details = append(stats.Details, *detail)
-			} else {
-				stats.Details = append(stats.Details, registry.RefreshDetail{
-					Name:   name,
-					Status: "error",
-					Error:  err,
-				})
-			}
-			continue
-		}
-
-		stats.Refreshed++
-		stats.Details = append(stats.Details, *detail)
-	}
-
-	return stats
 }
 
 // refreshManifest fetches the registry manifest and caches it locally.

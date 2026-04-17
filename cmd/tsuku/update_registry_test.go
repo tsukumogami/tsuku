@@ -4,11 +4,15 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/registry"
 )
 
 // mockRefreshableProvider implements RecipeProvider and RefreshableProvider for testing.
@@ -247,5 +251,235 @@ func TestRefreshDistributedSources_SkipsNonRefreshable(t *testing.T) {
 	// Summary should show 1 refreshed, not 2
 	if !strings.Contains(output, "Refreshed 1 distributed source(s)") {
 		t.Errorf("expected summary with 1 refreshed, got %q", output)
+	}
+}
+
+func TestRunRegistryRefreshAll_EmptyCache(t *testing.T) {
+	origLoader := loader
+	origQuiet := quietFlag
+	defer func() {
+		loader = origLoader
+		quietFlag = origQuiet
+	}()
+	quietFlag = false
+	t.Setenv(registry.EnvRegistryURL, "")
+
+	cacheDir := t.TempDir()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Errorf("unexpected network request to %s", r.URL.Path)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	reg := registry.New(cacheDir)
+	reg.BaseURL = server.URL
+	cachedReg := registry.NewCachedRegistry(reg, time.Hour)
+
+	// Pre-populate the in-memory loader as a sentinel: if ClearCache() were called,
+	// loader.Count() would drop to zero. It is unrelated to the disk cache refresh path.
+	loader = recipe.NewLoader()
+	loader.CacheRecipe("my-tool", &recipe.Recipe{})
+
+	oldOut := os.Stdout
+	rOut, wOut, _ := os.Pipe()
+	os.Stdout = wOut
+
+	ctx := context.Background()
+	runRegistryRefreshAll(ctx, cachedReg)
+
+	wOut.Close()
+	os.Stdout = oldOut
+
+	var buf bytes.Buffer
+	_, _ = buf.ReadFrom(rOut)
+	stdout := buf.String()
+
+	if !strings.Contains(stdout, "No cached recipes to refresh.") {
+		t.Errorf("expected 'No cached recipes to refresh.' in stdout, got %q", stdout)
+	}
+	if loader.Count() != 1 {
+		t.Errorf("expected loader.Count() == 1 (ClearCache not called), got %d", loader.Count())
+	}
+}
+
+func TestRunRegistryRefreshAll_AllSuccess(t *testing.T) {
+	origLoader := loader
+	origQuiet := quietFlag
+	defer func() {
+		loader = origLoader
+		quietFlag = origQuiet
+	}()
+	quietFlag = false
+	t.Setenv(registry.EnvRegistryURL, "")
+
+	cacheDir := t.TempDir()
+
+	updatedContent := []byte("[metadata]\nname = \"updated\"\nversion = \"2.0\"\n")
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(updatedContent)
+	}))
+	defer server.Close()
+
+	reg := registry.New(cacheDir)
+	reg.BaseURL = server.URL
+	cachedReg := registry.NewCachedRegistry(reg, time.Hour)
+
+	initialContent := []byte("[metadata]\nname = \"v1\"\n")
+	if err := reg.CacheRecipe("tool-a", initialContent); err != nil {
+		t.Fatalf("CacheRecipe tool-a: %v", err)
+	}
+	if err := reg.CacheRecipe("tool-b", initialContent); err != nil {
+		t.Fatalf("CacheRecipe tool-b: %v", err)
+	}
+
+	loader = recipe.NewLoader()
+
+	oldOut := os.Stdout
+	rOut, wOut, _ := os.Pipe()
+	os.Stdout = wOut
+
+	ctx := context.Background()
+	runRegistryRefreshAll(ctx, cachedReg)
+
+	wOut.Close()
+	os.Stdout = oldOut
+
+	var buf bytes.Buffer
+	_, _ = buf.ReadFrom(rOut)
+	stdout := buf.String()
+
+	if !strings.Contains(stdout, "tool-a: refreshed") {
+		t.Errorf("expected 'tool-a: refreshed' in stdout, got %q", stdout)
+	}
+	if !strings.Contains(stdout, "tool-b: refreshed") {
+		t.Errorf("expected 'tool-b: refreshed' in stdout, got %q", stdout)
+	}
+	if !strings.Contains(stdout, "Refreshed 2 of 2 cached recipes.") {
+		t.Errorf("expected summary 'Refreshed 2 of 2 cached recipes.' in stdout, got %q", stdout)
+	}
+}
+
+func TestRunRegistryRefreshAll_PartialError(t *testing.T) {
+	origLoader := loader
+	origQuiet := quietFlag
+	defer func() {
+		loader = origLoader
+		quietFlag = origQuiet
+	}()
+	quietFlag = false
+	t.Setenv(registry.EnvRegistryURL, "")
+
+	cacheDir := t.TempDir()
+
+	updatedContent := []byte("[metadata]\nname = \"updated\"\n")
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.URL.Path, "tool-fail") {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(updatedContent)
+	}))
+	defer server.Close()
+
+	reg := registry.New(cacheDir)
+	reg.BaseURL = server.URL
+	cachedReg := registry.NewCachedRegistry(reg, time.Hour)
+
+	initialContent := []byte("[metadata]\nname = \"v1\"\n")
+	for _, name := range []string{"tool-fail", "tool-ok1", "tool-ok2"} {
+		if err := reg.CacheRecipe(name, initialContent); err != nil {
+			t.Fatalf("CacheRecipe %s: %v", name, err)
+		}
+	}
+
+	loader = recipe.NewLoader()
+
+	oldOut := os.Stdout
+	oldErr := os.Stderr
+	rOut, wOut, _ := os.Pipe()
+	rErr, wErr, _ := os.Pipe()
+	os.Stdout = wOut
+	os.Stderr = wErr
+
+	ctx := context.Background()
+	runRegistryRefreshAll(ctx, cachedReg)
+
+	wOut.Close()
+	wErr.Close()
+	os.Stdout = oldOut
+	os.Stderr = oldErr
+
+	var bufOut, bufErr bytes.Buffer
+	_, _ = bufOut.ReadFrom(rOut)
+	_, _ = bufErr.ReadFrom(rErr)
+	stdout := bufOut.String()
+	stderr := bufErr.String()
+
+	if !strings.Contains(stdout, "tool-ok1: refreshed") {
+		t.Errorf("expected 'tool-ok1: refreshed' in stdout, got %q", stdout)
+	}
+	if !strings.Contains(stdout, "tool-ok2: refreshed") {
+		t.Errorf("expected 'tool-ok2: refreshed' in stdout, got %q", stdout)
+	}
+	if !strings.Contains(stderr, "tool-fail") {
+		t.Errorf("expected tool-fail error in stderr, got %q", stderr)
+	}
+	if !strings.Contains(stdout, "Refreshed 2 of 3 cached recipes (1 error).") {
+		t.Errorf("expected error summary 'Refreshed 2 of 3 cached recipes (1 error).' in stdout, got %q", stdout)
+	}
+}
+
+func TestRunRegistryRefreshAll_ClearCacheSideEffect(t *testing.T) {
+	origLoader := loader
+	origQuiet := quietFlag
+	defer func() {
+		loader = origLoader
+		quietFlag = origQuiet
+	}()
+	quietFlag = false
+	t.Setenv(registry.EnvRegistryURL, "")
+
+	cacheDir := t.TempDir()
+
+	updatedContent := []byte("[metadata]\nname = \"updated\"\n")
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(updatedContent)
+	}))
+	defer server.Close()
+
+	reg := registry.New(cacheDir)
+	reg.BaseURL = server.URL
+	cachedReg := registry.NewCachedRegistry(reg, time.Hour)
+
+	initialContent := []byte("[metadata]\nname = \"v1\"\n")
+	if err := reg.CacheRecipe("my-tool", initialContent); err != nil {
+		t.Fatalf("CacheRecipe: %v", err)
+	}
+
+	loader = recipe.NewLoader()
+	loader.CacheRecipe("my-tool", &recipe.Recipe{})
+	if loader.Count() != 1 {
+		t.Fatal("expected 1 in-memory recipe before call")
+	}
+
+	oldOut := os.Stdout
+	rOut, wOut, _ := os.Pipe()
+	os.Stdout = wOut
+
+	ctx := context.Background()
+	runRegistryRefreshAll(ctx, cachedReg)
+
+	wOut.Close()
+	os.Stdout = oldOut
+
+	var buf bytes.Buffer
+	_, _ = buf.ReadFrom(rOut)
+
+	if loader.Count() != 0 {
+		t.Errorf("expected loader.Count() == 0 after ClearCache, got %d", loader.Count())
 	}
 }
