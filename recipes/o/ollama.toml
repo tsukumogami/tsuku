@@ -4,29 +4,25 @@ description = "Get up and running with large language models"
 homepage = "https://ollama.com"
 version_format = "semver"
 curated = true
+supported_libc = ["glibc"]
 
 [version]
 github_repo = "ollama/ollama"
 tag_prefix = "v"
 
-# Linux: tar.zst archives with bin/ollama binary and lib/ollama/ GPU libraries
 [[steps]]
-action = "github_archive"
+action = "github_file"
 when = { os = ["linux"], arch = "amd64" }
 repo = "ollama/ollama"
-asset_pattern = "ollama-linux-amd64.tar.zst"
-strip_dirs = 0
-binaries = ["bin/ollama"]
-install_mode = "directory"
+asset_pattern = "ollama-linux-amd64"
+binary = "ollama"
 
 [[steps]]
-action = "github_archive"
+action = "github_file"
 when = { os = ["linux"], arch = "arm64" }
 repo = "ollama/ollama"
-asset_pattern = "ollama-linux-arm64.tar.zst"
-strip_dirs = 0
-binaries = ["bin/ollama"]
-install_mode = "directory"
+asset_pattern = "ollama-linux-arm64"
+binary = "ollama"
 
 # macOS: universal binary tarball
 [[steps]]
