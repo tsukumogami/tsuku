@@ -32,7 +32,7 @@ jobs:
       - name: Discover recipes with curated = true
         id: discover
         run: |
-          RECIPES=$(grep -rl 'curated = true' recipes/ | sort | jq -R . | jq -sc .)
+          RECIPES=$(grep -rl 'curated = true' recipes/ internal/recipe/recipes/ | sort | jq -R . | jq -sc .)
           COUNT=$(echo "$RECIPES" | jq 'length')
           echo "curated_recipes=$RECIPES" >> "$GITHUB_OUTPUT"
 
