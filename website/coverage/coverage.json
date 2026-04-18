@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-04-18T00:10:06Z",
-  "total_recipes": 1411,
+  "generated_at": "2026-04-18T02:19:28Z",
+  "total_recipes": 1412,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 846,
-        "total": 1411,
-        "pct": 59.957476966690294
+        "supported": 847,
+        "total": 1412,
+        "pct": 59.98583569405099
       },
       "glibc": {
-        "supported": 1376,
-        "total": 1411,
-        "pct": 97.51948972360029
+        "supported": 1377,
+        "total": 1412,
+        "pct": 97.52124645892351
       },
       "musl": {
-        "supported": 1232,
-        "total": 1411,
-        "pct": 87.31396172927002
+        "supported": 1233,
+        "total": 1412,
+        "pct": 87.3229461756374
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1259,
-        "musl_support": 1082,
-        "glibc_support": 1226
+        "total": 1260,
+        "musl_support": 1083,
+        "glibc_support": 1227
       }
     }
   },
@@ -1021,6 +1021,18 @@
       "warnings": [
         "recipe 'aws-vault' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "awscli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "azcopy",
