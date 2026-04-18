@@ -57,6 +57,5 @@ install_mode = "directory"
 when = { os = ["linux"] }
 
 [verify]
-command = "aws --version"
-mode = "output"
-reason = "aws --version prints to stderr and includes Python/OS info, not a bare semver"
+command = "aws --version 2>&1"
+pattern = "aws-cli/{version}"
