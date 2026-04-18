@@ -4,6 +4,7 @@ description = "A syntax-highlighting pager for git and diff output"
 homepage = "https://github.com/dandavison/delta"
 version_format = "semver"
 curated = true
+unsupported_platforms = ["darwin/amd64"]
 
 # Linux: pre-built binaries for glibc and musl
 [[steps]]

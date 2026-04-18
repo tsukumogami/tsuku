@@ -4,6 +4,7 @@ description = "Modern, maintained replacement for ls"
 homepage = "https://github.com/eza-community/eza"
 version_format = "semver"
 curated = true
+unsupported_platforms = ["darwin/amd64", "darwin/arm64"]
 
 [version]
 github_repo = "eza-community/eza"
@@ -25,13 +26,6 @@ repo = "eza-community/eza"
 asset_pattern = "eza_aarch64-unknown-linux-gnu.tar.gz"
 strip_dirs = 0
 binaries = ["eza"]
-
-# macOS: Homebrew (no GitHub release binaries published for macOS)
-[[steps]]
-action = "homebrew"
-when = { os = ["darwin"] }
-formula = "eza"
-binaries = ["bin/eza"]
 
 [verify]
 command = "eza --version"
