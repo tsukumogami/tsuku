@@ -38,21 +38,6 @@ archive = "awscli-exe-linux-aarch64-{version}.zip"
 format = "zip"
 when = { os = ["linux"], arch = "arm64" }
 
-# macOS: bundled Python installer zip with PGP signature verification
-[[steps]]
-action = "download"
-url = "https://awscli.amazonaws.com/awscli-exe-macos-{version}.zip"
-signature_url = "https://awscli.amazonaws.com/awscli-exe-macos-{version}.zip.sig"
-signature_key_url = "https://awscli.amazonaws.com/awscli.pub"
-signature_key_fingerprint = "FB5DB77FD5C118B80511ADA8A6179B9A2BDEC510"
-when = { os = ["darwin"] }
-
-[[steps]]
-action = "extract"
-archive = "awscli-exe-macos-{version}.zip"
-format = "zip"
-when = { os = ["darwin"] }
-
 # The zip extracts to aws/dist/ which is a PyInstaller onedir bundle.
 # Moving dist/ contents to the tool root lets the binary's RPATH ($ORIGIN/lib)
 # find the bundled Python libraries without running the installer script.
@@ -63,11 +48,13 @@ mv aws/dist/* .
 rm -rf aws
 '''
 description = "Flatten PyInstaller bundle to tool root"
+when = { os = ["linux"] }
 
 [[steps]]
 action = "install_binaries"
 binaries = ["aws", "aws_completer"]
 install_mode = "directory"
+when = { os = ["linux"] }
 
 [verify]
 command = "aws --version"
