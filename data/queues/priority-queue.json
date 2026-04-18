@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-18T14:08:11Z",
+  "updated_at": "2026-04-18T15:43:03Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 180,
-      "next_retry_at": "1734-01-07T13:16:46.974485434Z"
+      "failure_count": 181,
+      "next_retry_at": "1734-01-07T15:55:46.246704264Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 298,
-      "next_retry_at": "1734-01-07T13:16:46.974485434Z"
+      "failure_count": 300,
+      "next_retry_at": "1734-01-07T15:55:46.246704264Z"
     },
     {
       "name": "libaacs",
@@ -33386,11 +33386,11 @@
       "name": "ocp",
       "source": "rubygems:ocp",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-04-10T01:12:15.718276211Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-04-19T07:43:03.101480072Z"
     },
     {
       "name": "ocrmypdf",
