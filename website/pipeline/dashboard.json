@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-04-18T02:13:21Z",
+  "generated_at": "2026-04-18T02:21:04Z",
   "queue": {
     "total": 5305,
     "by_status": {
-      "blocked": 26,
+      "blocked": 25,
       "excluded": 6,
-      "failed": 52,
-      "pending": 3874,
-      "success": 1347
+      "failed": 50,
+      "pending": 3876,
+      "success": 1348
     },
     "by_tier": {
       "1": {
@@ -16,15 +16,15 @@
         "success": 7
       },
       "2": {
-        "blocked": 6,
+        "blocked": 5,
         "pending": 13,
-        "success": 8
+        "success": 9
       },
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 52,
-        "pending": 3852,
+        "failed": 50,
+        "pending": 3854,
         "success": 1332
       }
     },
@@ -54,9 +54,9 @@
         "total": 8
       },
       "homebrew": {
-        "blocked": 26,
+        "blocked": 25,
         "pending": 3744,
-        "success": 1113,
+        "success": 1114,
         "total": 4883
       },
       "manual": {
@@ -68,13 +68,14 @@
         "total": 1
       },
       "npm": {
-        "failed": 6,
-        "pending": 14,
+        "failed": 5,
+        "pending": 15,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -113,17 +114,6 @@
             "python@3.14"
           ],
           "failure_count": 4
-        },
-        {
-          "id": "homebrew:awscli",
-          "name": "awscli",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "missing_dep",
-          "blocked_by": [
-            "python@3.13"
-          ],
-          "failure_count": 2
         },
         {
           "id": "homebrew:gemini-cli",
@@ -476,15 +466,6 @@
           "next_retry_at": "2026-04-24T02:22:15Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 177,
-          "next_retry_at": "1734-01-07T02:25:31Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -807,15 +788,6 @@
           "category": "install_failed",
           "failure_count": 10,
           "next_retry_at": "2026-04-24T11:00:17Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 293,
-          "next_retry_at": "1734-01-07T02:25:31Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -2808,6 +2780,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 177,
+          "next_retry_at": "1734-01-07T02:25:31Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -13190,6 +13171,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 293,
+          "next_retry_at": "1734-01-07T02:25:31Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -28320,6 +28310,14 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:awscli",
+          "name": "awscli",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "missing_dep",
+          "failure_count": 2
+        },
+        {
           "id": "homebrew:coreutils",
           "name": "coreutils",
           "ecosystem": "homebrew",
@@ -40115,6 +40113,11 @@
     {
       "name": "task",
       "source": "homebrew:go-task",
+      "validation_status": "valid"
+    },
+    {
+      "name": "awscli",
+      "source": "homebrew:awscli",
       "validation_status": "valid"
     },
     {
