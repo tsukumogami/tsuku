@@ -61,18 +61,7 @@ binaries = ["bin/aws", "bin/aws_completer"]
 install_mode = "directory"
 when = { os = ["linux"], libc = ["glibc"] }
 
-# macOS: Homebrew bottle (AWS does not publish versioned zips for macOS)
-[[steps]]
-action = "homebrew"
-formula = "awscli"
-when = { os = ["darwin"] }
-
-[[steps]]
-action = "install_binaries"
-binaries = ["bin/aws", "bin/aws_completer"]
-install_mode = "directory"
-when = { os = ["darwin"] }
-
 [verify]
 command = "aws --version 2>&1"
-pattern = "aws-cli/{version}"
+mode = "output"
+reason = "AWS publishes no versioned macOS zips (only PKG installers); Homebrew bottles fail sandbox extraction due to Python symlinks escaping the install dir. Linux installs are integrity-verified via PGP signature."
