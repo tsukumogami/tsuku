@@ -15,13 +15,13 @@ url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-{version}.zip"
 signature_url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-{version}.zip.sig"
 signature_key_url = "https://awscli.amazonaws.com/awscli.pub"
 signature_key_fingerprint = "FB5DB77FD5C118B80511ADA8A6179B9A2BDEC510"
-when = { os = ["linux"], arch = "amd64" }
+when = { os = ["linux"], arch = "amd64", libc = ["glibc"] }
 
 [[steps]]
 action = "extract"
 archive = "awscli-exe-linux-x86_64-{version}.zip"
 format = "zip"
-when = { os = ["linux"], arch = "amd64" }
+when = { os = ["linux"], arch = "amd64", libc = ["glibc"] }
 
 # Linux arm64: bundled Python installer zip with PGP signature verification
 [[steps]]
@@ -30,31 +30,36 @@ url = "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-{version}.zip"
 signature_url = "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-{version}.zip.sig"
 signature_key_url = "https://awscli.amazonaws.com/awscli.pub"
 signature_key_fingerprint = "FB5DB77FD5C118B80511ADA8A6179B9A2BDEC510"
-when = { os = ["linux"], arch = "arm64" }
+when = { os = ["linux"], arch = "arm64", libc = ["glibc"] }
 
 [[steps]]
 action = "extract"
 archive = "awscli-exe-linux-aarch64-{version}.zip"
 format = "zip"
-when = { os = ["linux"], arch = "arm64" }
+when = { os = ["linux"], arch = "arm64", libc = ["glibc"] }
 
 # The zip extracts to aws/dist/ which is a PyInstaller onedir bundle.
 # Moving dist/ contents to the tool root lets the binary's RPATH ($ORIGIN/lib)
-# find the bundled Python libraries without running the installer script.
+# find the bundled Python libraries. bin/ symlinks preserve that layout after
+# install_mode = "directory" copies the tree.
 [[steps]]
 action = "run_command"
 command = '''
-mv aws/dist/* .
-rm -rf aws
+mv aws aws_installer
+mv aws_installer/dist/* .
+rm -rf aws_installer
+mkdir -p bin
+ln -s ../aws bin/aws
+ln -s ../aws_completer bin/aws_completer
 '''
-description = "Flatten PyInstaller bundle to tool root"
-when = { os = ["linux"] }
+description = "Flatten PyInstaller bundle and create bin symlinks"
+when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
 action = "install_binaries"
-binaries = ["aws", "aws_completer"]
+binaries = ["bin/aws", "bin/aws_completer"]
 install_mode = "directory"
-when = { os = ["linux"] }
+when = { os = ["linux"], libc = ["glibc"] }
 
 [verify]
 command = "aws --version 2>&1"
