@@ -4,6 +4,7 @@ description = "AI pair programming in your terminal"
 homepage = "https://aider.chat"
 version_format = "semver"
 curated = true
+supported_libc = ["glibc"]
 
 [[steps]]
 action = "pipx_install"

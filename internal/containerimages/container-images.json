@@ -34,7 +34,7 @@
   "suse": {
     "image": "docker.io/opensuse/leap:15.6@sha256:045fc29f76266cd8176906ab1d63fcd0f505fe1182c06398631effa8f55e10d0",
     "infra_packages": {
-      "core": ["tar", "gzip"],
+      "core": ["tar", "gzip", "zstd"],
       "network": ["ca-certificates", "curl"],
       "build": ["gcc", "gcc-c++", "make"]
     }

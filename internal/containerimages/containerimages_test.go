@@ -125,7 +125,7 @@ func TestInfraPackages_KnownCategory(t *testing.T) {
 	t.Parallel()
 
 	pkgs := InfraPackages("suse", "core")
-	expected := []string{"tar", "gzip"}
+	expected := []string{"tar", "gzip", "zstd"}
 	if len(pkgs) != len(expected) {
 		t.Fatalf("InfraPackages(suse, core) = %v, want %v", pkgs, expected)
 	}
