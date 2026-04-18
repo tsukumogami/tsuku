@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-18T15:43:03Z",
+  "updated_at": "2026-04-18T17:41:22Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 181,
@@ -23566,11 +23566,11 @@
       "name": "kew",
       "source": "npm:kew",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-11T14:37:22.173441192Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-25T17:41:22.516253638Z"
     },
     {
       "name": "keychain",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 300,
@@ -35596,11 +35596,11 @@
       "name": "parallel",
       "source": "rubygems:parallel",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-04-09T23:09:32.272529265Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-04-19T01:41:22.516253638Z"
     },
     {
       "name": "pari",
