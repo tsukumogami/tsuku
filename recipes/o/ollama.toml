@@ -11,18 +11,20 @@ github_repo = "ollama/ollama"
 tag_prefix = "v"
 
 [[steps]]
-action = "github_file"
+action = "github_archive"
 when = { os = ["linux"], arch = "amd64" }
 repo = "ollama/ollama"
-asset_pattern = "ollama-linux-amd64"
-binary = "ollama"
+asset_pattern = "ollama-linux-amd64.tar.zst"
+strip_dirs = 0
+binaries = ["ollama"]
 
 [[steps]]
-action = "github_file"
+action = "github_archive"
 when = { os = ["linux"], arch = "arm64" }
 repo = "ollama/ollama"
-asset_pattern = "ollama-linux-arm64"
-binary = "ollama"
+asset_pattern = "ollama-linux-arm64.tar.zst"
+strip_dirs = 0
+binaries = ["ollama"]
 
 # macOS: universal binary tarball
 [[steps]]
