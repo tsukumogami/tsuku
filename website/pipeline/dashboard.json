@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-18T14:07:39Z",
+  "generated_at": "2026-04-18T14:08:42Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -74,14 +74,15 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 45,
-        "pending": 30,
+        "failed": 46,
+        "pending": 29,
         "success": 13,
         "total": 89
       }
@@ -465,15 +466,6 @@
           "next_retry_at": "2026-04-24T02:22:15Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 180,
-          "next_retry_at": "1734-01-07T13:16:46Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -717,6 +709,15 @@
           "next_retry_at": "2026-04-24T07:36:32Z"
         },
         {
+          "id": "npm:hasura-cli",
+          "name": "hasura-cli",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-25T14:08:11Z"
+        },
+        {
           "id": "rubygems:hercules",
           "name": "hercules",
           "ecosystem": "rubygems",
@@ -814,15 +815,6 @@
           "category": "install_failed",
           "failure_count": 10,
           "next_retry_at": "2026-04-24T11:00:17Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 298,
-          "next_retry_at": "1734-01-07T13:16:46Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -949,6 +941,15 @@
           "category": "install_failed",
           "failure_count": 6,
           "next_retry_at": "2026-04-19T21:04:03Z"
+        },
+        {
+          "id": "rubygems:nyan",
+          "name": "nyan",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-04-21T06:08:11Z"
         },
         {
           "id": "pypi:tctl",
@@ -2860,6 +2861,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 180,
+          "next_retry_at": "1734-01-07T13:16:46Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -10705,15 +10715,6 @@
           "failure_count": 0
         },
         {
-          "id": "npm:hasura-cli",
-          "name": "hasura-cli",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-11T14:37:22Z"
-        },
-        {
           "id": "homebrew:hatch",
           "name": "hatch",
           "ecosystem": "homebrew",
@@ -13224,6 +13225,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 298,
+          "next_retry_at": "1734-01-07T13:16:46Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -17266,15 +17276,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:nyan",
-          "name": "nyan",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-04-11T03:09:32Z"
         },
         {
           "id": "homebrew:nyancat",
