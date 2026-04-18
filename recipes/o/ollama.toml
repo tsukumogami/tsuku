@@ -17,6 +17,7 @@ tag_prefix = "v"
 action = "download"
 when = { os = ["linux"], arch = "amd64" }
 url = "https://github.com/ollama/ollama/releases/download/v{version}/ollama-linux-amd64.tar.zst"
+checksum_url = "https://github.com/ollama/ollama/releases/download/v{version}/sha256sum.txt"
 
 [[steps]]
 action = "extract"
@@ -31,6 +32,7 @@ files = ["ollama"]
 action = "download"
 when = { os = ["linux"], arch = "arm64" }
 url = "https://github.com/ollama/ollama/releases/download/v{version}/ollama-linux-arm64.tar.zst"
+checksum_url = "https://github.com/ollama/ollama/releases/download/v{version}/sha256sum.txt"
 
 [[steps]]
 action = "extract"
