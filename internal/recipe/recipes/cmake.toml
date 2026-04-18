@@ -1,46 +1,50 @@
 [metadata]
 name = "cmake"
-description = "Cross-platform build system generator"
-homepage = "https://cmake.org/"
+description = "Cross-platform build system"
+homepage = "https://cmake.org"
+version_format = "semver"
+curated = true
+
+[version]
+github_repo = "Kitware/CMake"
+tag_prefix = "v"
+
+# Linux: platform-specific tarballs with SHA-256 verification
+[[steps]]
+action = "download"
+url = "https://github.com/Kitware/CMake/releases/download/v{version}/cmake-{version}-linux-{arch}.tar.gz"
+checksum_url = "https://github.com/Kitware/CMake/releases/download/v{version}/cmake-{version}-SHA-256.txt"
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+when = { os = ["linux"] }
+
+[[steps]]
+action = "extract"
+archive = "cmake-{version}-linux-{arch}.tar.gz"
+format = "tar.gz"
+strip_dirs = 1
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+when = { os = ["linux"] }
+
+# macOS: universal binary (Intel + Apple Silicon) with SHA-256 verification
+[[steps]]
+action = "download"
+url = "https://github.com/Kitware/CMake/releases/download/v{version}/cmake-{version}-macos-universal.tar.gz"
+checksum_url = "https://github.com/Kitware/CMake/releases/download/v{version}/cmake-{version}-SHA-256.txt"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "extract"
+archive = "cmake-{version}-macos-universal.tar.gz"
+format = "tar.gz"
+strip_dirs = 1
+when = { os = ["darwin"] }
+
+# macOS release tarballs include bin/ -> CMake.app/Contents/bin/ symlinks
+[[steps]]
+action = "install_binaries"
 binaries = ["bin/cmake", "bin/ctest", "bin/cpack"]
-
-# glibc Linux: Homebrew bottles with step-level dependencies
-[[steps]]
-action = "homebrew"
-formula = "cmake"
-when = { os = ["linux"], libc = ["glibc"] }
-dependencies = ["openssl", "patchelf"]
-
-[[steps]]
-action = "set_rpath"
-binaries = ["bin/cmake", "bin/ctest", "bin/cpack", "bin/ccmake"]
-rpath = "$ORIGIN/../lib:{libs_dir}/openssl-{deps.openssl.version}/lib"
-when = { os = ["linux"], libc = ["glibc"] }
-
-[[steps]]
-action = "install_binaries"
 install_mode = "directory"
-outputs = ["bin/cmake", "bin/ctest", "bin/cpack", "bin/ccmake"]
-when = { os = ["linux"], libc = ["glibc"] }
-
-# musl Linux: System packages (apk handles transitive deps)
-[[steps]]
-action = "apk_install"
-packages = ["cmake"]
-when = { os = ["linux"], libc = ["musl"] }
-
-# macOS: Homebrew
-[[steps]]
-action = "homebrew"
-formula = "cmake"
-when = { os = ["darwin"] }
-
-[[steps]]
-action = "install_binaries"
-install_mode = "directory"
-outputs = ["bin/cmake", "bin/ctest", "bin/cpack", "bin/ccmake"]
-when = { os = ["darwin"] }
 
 [verify]
 command = "cmake --version"
-pattern = "cmake version {version}"
+pattern = "{version}"
