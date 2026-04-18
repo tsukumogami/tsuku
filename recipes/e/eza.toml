@@ -1,35 +1,38 @@
 [metadata]
-  name = "eza"
-  description = "Modern, maintained replacement for ls"
-  homepage = "https://github.com/eza-community/eza"
-  version_format = ""
-  requires_sudo = false
-  runtime_dependencies = ["libgit2"]
-  tier = 0
-  type = ""
-  llm_validation = "skipped"
+name = "eza"
+description = "Modern, maintained replacement for ls"
+homepage = "https://github.com/eza-community/eza"
+version_format = "semver"
+curated = true
 
 [version]
-  source = ""
-  github_repo = ""
-  tag_prefix = ""
-  module = ""
-  formula = ""
-  cask = ""
-  tap = ""
-  fossil_repo = ""
-  project_name = ""
-  version_separator = ""
-  timeline_tag = ""
+github_repo = "eza-community/eza"
+tag_prefix = "v"
+
+# Linux: pre-built binaries from GitHub releases (no macOS binaries published)
+[[steps]]
+action = "github_archive"
+when = { os = ["linux"], arch = "amd64" }
+repo = "eza-community/eza"
+asset_pattern = "eza_x86_64-unknown-linux-gnu.tar.gz"
+strip_dirs = 0
+binaries = ["eza"]
 
 [[steps]]
-  action = "homebrew"
-  formula = "eza"
+action = "github_archive"
+when = { os = ["linux"], arch = "arm64" }
+repo = "eza-community/eza"
+asset_pattern = "eza_aarch64-unknown-linux-gnu.tar.gz"
+strip_dirs = 0
+binaries = ["eza"]
 
+# macOS: Homebrew (no GitHub release binaries published for macOS)
 [[steps]]
-  action = "install_binaries"
-  binaries = ["bin/eza"]
+action = "homebrew"
+when = { os = ["darwin"] }
+formula = "eza"
+binaries = ["bin/eza"]
 
 [verify]
-  command = "eza --version"
-  pattern = ""
+command = "eza --version"
+pattern = "{version}"

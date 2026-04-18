@@ -1,22 +1,33 @@
 [metadata]
-  name = "fd"
-  description = "Simple, fast and user-friendly alternative to find"
-  homepage = "https://github.com/sharkdp/fd"
-  version_format = ""
-  requires_sudo = false
-  tier = 0
-  type = ""
-  llm_validation = "skipped"
-supported_libc = ["glibc"]
+name = "fd"
+description = "Simple, fast and user-friendly alternative to find"
+homepage = "https://github.com/sharkdp/fd"
+version_format = "semver"
+curated = true
 
-[[steps]]
-  action = "homebrew"
-  formula = "fd"
+[version]
+github_repo = "sharkdp/fd"
+tag_prefix = "v"
 
+# Linux: statically linked musl binaries work on glibc and musl systems
 [[steps]]
-  action = "install_binaries"
-  binaries = ["bin/fd"]
+action = "github_archive"
+when = { os = ["linux"] }
+repo = "sharkdp/fd"
+asset_pattern = "fd-v{version}-{arch}.tar.gz"
+strip_dirs = 1
+binaries = ["fd"]
+arch_mapping = { amd64 = "x86_64-unknown-linux-musl", arm64 = "aarch64-unknown-linux-musl" }
+
+# macOS: Apple Silicon binary (Intel Mac binaries not published)
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"], arch = "arm64" }
+repo = "sharkdp/fd"
+asset_pattern = "fd-v{version}-aarch64-apple-darwin.tar.gz"
+strip_dirs = 1
+binaries = ["fd"]
 
 [verify]
-  command = "fd --version"
-  pattern = ""
+command = "fd --version"
+pattern = "{version}"

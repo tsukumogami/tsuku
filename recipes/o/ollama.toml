@@ -1,36 +1,42 @@
 [metadata]
-  name = "ollama"
-  description = "Create, run, and share large language models (LLMs)"
-  homepage = "https://ollama.com/"
-  version_format = ""
-  requires_sudo = false
-  runtime_dependencies = ["mlx-c"]
-  tier = 0
-  type = ""
-  llm_validation = "skipped"
-unsupported_platforms = ["darwin/amd64"]
+name = "ollama"
+description = "Get up and running with large language models"
+homepage = "https://ollama.com"
+version_format = "semver"
+curated = true
 
 [version]
-  source = ""
-  github_repo = ""
-  tag_prefix = ""
-  module = ""
-  formula = ""
-  cask = ""
-  tap = ""
-  fossil_repo = ""
-  project_name = ""
-  version_separator = ""
-  timeline_tag = ""
+github_repo = "ollama/ollama"
+tag_prefix = "v"
+
+# Linux: tar.zst archives with bin/ollama binary and lib/ollama/ GPU libraries
+[[steps]]
+action = "github_archive"
+when = { os = ["linux"], arch = "amd64" }
+repo = "ollama/ollama"
+asset_pattern = "ollama-linux-amd64.tar.zst"
+strip_dirs = 0
+binaries = ["bin/ollama"]
+install_mode = "directory"
 
 [[steps]]
-  action = "homebrew"
-  formula = "ollama"
+action = "github_archive"
+when = { os = ["linux"], arch = "arm64" }
+repo = "ollama/ollama"
+asset_pattern = "ollama-linux-arm64.tar.zst"
+strip_dirs = 0
+binaries = ["bin/ollama"]
+install_mode = "directory"
 
+# macOS: universal binary tarball
 [[steps]]
-  action = "install_binaries"
-  binaries = ["bin/ollama"]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "ollama/ollama"
+asset_pattern = "ollama-darwin.tgz"
+strip_dirs = 0
+binaries = ["ollama"]
 
 [verify]
-  command = "ollama --version"
-  pattern = ""
+command = "ollama --version"
+pattern = "{version}"

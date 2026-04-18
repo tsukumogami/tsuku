@@ -1,0 +1,15 @@
+[metadata]
+name = "aider"
+description = "AI pair programming in your terminal"
+homepage = "https://aider.chat"
+version_format = "semver"
+curated = true
+
+[[steps]]
+action = "pipx_install"
+package = "aider-chat"
+executables = ["aider"]
+
+[verify]
+command = "aider --version"
+pattern = "{version}"
