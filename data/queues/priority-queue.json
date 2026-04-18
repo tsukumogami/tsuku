@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-17T23:08:56Z",
+  "updated_at": "2026-04-18T02:12:48Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 176,
-      "next_retry_at": "1734-01-06T22:56:39.635432517Z"
+      "failure_count": 177,
+      "next_retry_at": "1734-01-07T02:25:31.52714129Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 292,
-      "next_retry_at": "1734-01-06T22:56:39.635432517Z"
+      "failure_count": 293,
+      "next_retry_at": "1734-01-07T02:25:31.52714129Z"
     },
     {
       "name": "libaacs",
@@ -30426,11 +30426,11 @@
       "name": "mktorrent",
       "source": "rubygems:mktorrent",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-04-13T04:50:15.63602284Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-04-25T02:12:48.381917098Z"
     },
     {
       "name": "mkvtomp4",
