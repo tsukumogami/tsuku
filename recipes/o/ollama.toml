@@ -10,20 +10,44 @@ supported_libc = ["glibc"]
 github_repo = "ollama/ollama"
 tag_prefix = "v"
 
+# Linux amd64: extract only the ollama binary from the release tarball.
+# The full tarball includes GPU runners with absolute symlinks to system CUDA/ROCm
+# libraries which fail tsuku's security checks. Only the binary is needed.
 [[steps]]
-action = "github_archive"
+action = "download"
 when = { os = ["linux"], arch = "amd64" }
-repo = "ollama/ollama"
-asset_pattern = "ollama-linux-amd64.tar.zst"
-strip_dirs = 0
-binaries = ["ollama"]
+url = "https://github.com/ollama/ollama/releases/download/v{version}/ollama-linux-amd64.tar.zst"
 
 [[steps]]
-action = "github_archive"
-when = { os = ["linux"], arch = "arm64" }
-repo = "ollama/ollama"
-asset_pattern = "ollama-linux-arm64.tar.zst"
+action = "extract"
+when = { os = ["linux"], arch = "amd64" }
+archive = "ollama-linux-amd64.tar.zst"
+format = "tar.zst"
 strip_dirs = 0
+files = ["ollama"]
+
+# Linux arm64: same approach as amd64
+[[steps]]
+action = "download"
+when = { os = ["linux"], arch = "arm64" }
+url = "https://github.com/ollama/ollama/releases/download/v{version}/ollama-linux-arm64.tar.zst"
+
+[[steps]]
+action = "extract"
+when = { os = ["linux"], arch = "arm64" }
+archive = "ollama-linux-arm64.tar.zst"
+format = "tar.zst"
+strip_dirs = 0
+files = ["ollama"]
+
+[[steps]]
+action = "chmod"
+when = { os = ["linux"] }
+files = ["ollama"]
+
+[[steps]]
+action = "install_binaries"
+when = { os = ["linux"] }
 binaries = ["ollama"]
 
 # macOS: universal binary tarball
