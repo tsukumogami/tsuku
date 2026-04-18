@@ -24,7 +24,7 @@ action = "extract"
 when = { os = ["linux"], arch = "amd64" }
 archive = "ollama-linux-amd64.tar.zst"
 format = "tar.zst"
-strip_dirs = 0
+strip_dirs = 1
 files = ["ollama"]
 
 # Linux arm64: same approach as amd64
@@ -39,7 +39,7 @@ action = "extract"
 when = { os = ["linux"], arch = "arm64" }
 archive = "ollama-linux-arm64.tar.zst"
 format = "tar.zst"
-strip_dirs = 0
+strip_dirs = 1
 files = ["ollama"]
 
 [[steps]]
