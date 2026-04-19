@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-18T22:38:41Z",
+  "updated_at": "2026-04-19T02:34:03Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 183,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 304,
@@ -28556,11 +28556,11 @@
       "name": "mailhog",
       "source": "npm:mailhog",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-11T14:37:22.173441192Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-26T02:34:03.249700142Z"
     },
     {
       "name": "mailpit",
@@ -35596,7 +35596,7 @@
       "name": "parallel",
       "source": "rubygems:parallel",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -36726,11 +36726,11 @@
       "name": "pioneer",
       "source": "rubygems:pioneer",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-04-17T01:19:02.743469801Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-04-19T06:34:03.249700142Z"
     },
     {
       "name": "pioneers",
