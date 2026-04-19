@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-19T13:02:10Z",
+  "generated_at": "2026-04-19T13:03:14Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -74,14 +74,15 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 49,
-        "pending": 26,
+        "failed": 50,
+        "pending": 25,
         "success": 13,
         "total": 89
       }
@@ -465,15 +466,6 @@
           "next_retry_at": "2026-04-24T02:22:15Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 185,
-          "next_retry_at": "1734-01-08T10:56:30Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -843,15 +835,6 @@
           "next_retry_at": "2026-04-24T11:00:17Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 308,
-          "next_retry_at": "1734-01-08T10:56:30Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -942,6 +925,15 @@
           "next_retry_at": "2026-04-25T02:12:48Z"
         },
         {
+          "id": "npm:mongoose",
+          "name": "mongoose",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-26T13:02:43Z"
+        },
+        {
           "id": "rubygems:multimarkdown",
           "name": "multimarkdown",
           "ecosystem": "rubygems",
@@ -1030,6 +1022,15 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-04-20T00:57:59Z"
+        },
+        {
+          "id": "rubygems:pdftohtml",
+          "name": "pdftohtml",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-04-20T05:02:43Z"
         },
         {
           "id": "pypi:tctl",
@@ -2941,6 +2942,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 185,
+          "next_retry_at": "1734-01-08T10:56:30Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -13280,6 +13290,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 308,
+          "next_retry_at": "1734-01-08T10:56:30Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -16077,15 +16096,6 @@
           "failure_count": 1
         },
         {
-          "id": "npm:mongoose",
-          "name": "mongoose",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-11T14:37:22Z"
-        },
-        {
           "id": "homebrew:mongosh",
           "name": "mongosh",
           "ecosystem": "homebrew",
@@ -18874,15 +18884,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:pdftohtml",
-          "name": "pdftohtml",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-04-19T04:39:53Z"
         },
         {
           "id": "homebrew:pdm",
