@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-20T02:34:26Z",
+  "generated_at": "2026-04-20T02:35:41Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -68,21 +68,20 @@
         "total": 1
       },
       "npm": {
-        "failed": 16,
-        "pending": 4,
+        "failed": 17,
+        "pending": 3,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 50,
-        "pending": 25,
+        "failed": 48,
+        "pending": 27,
         "success": 13,
         "total": 89
       }
@@ -466,6 +465,15 @@
           "next_retry_at": "2026-04-24T02:22:15Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 189,
+          "next_retry_at": "1734-01-09T02:47:48Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -835,6 +843,15 @@
           "next_retry_at": "2026-04-24T11:00:17Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 316,
+          "next_retry_at": "1734-01-09T02:47:48Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -979,6 +996,15 @@
           "next_retry_at": "2026-04-23T23:45:58Z"
         },
         {
+          "id": "rubygems:nut",
+          "name": "nut",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-04-22T18:35:05Z"
+        },
+        {
           "id": "rubygems:nyan",
           "name": "nyan",
           "ecosystem": "rubygems",
@@ -997,15 +1023,6 @@
           "next_retry_at": "2026-04-20T18:43:47Z"
         },
         {
-          "id": "rubygems:pastel",
-          "name": "pastel",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-04-20T00:57:59Z"
-        },
-        {
           "id": "rubygems:pdftohtml",
           "name": "pdftohtml",
           "ecosystem": "rubygems",
@@ -1013,15 +1030,6 @@
           "category": "install_failed",
           "failure_count": 5,
           "next_retry_at": "2026-04-20T05:02:43Z"
-        },
-        {
-          "id": "rubygems:pioneer",
-          "name": "pioneer",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-04-19T23:43:22Z"
         },
         {
           "id": "npm:pocketbase",
@@ -1049,15 +1057,6 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-04-26T22:40:37Z"
-        },
-        {
-          "id": "rubygems:quickjs",
-          "name": "quickjs",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-04-19T23:40:37Z"
         },
         {
           "id": "pypi:tctl",
@@ -2969,15 +2968,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 188,
-          "next_retry_at": "1734-01-08T20:54:18Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -13317,15 +13307,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 314,
-          "next_retry_at": "1734-01-08T20:54:18Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -17313,15 +17294,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:nut",
-          "name": "nut",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-04-19T21:04:03Z"
-        },
-        {
           "id": "homebrew:nuxi",
           "name": "nuxi",
           "ecosystem": "homebrew",
@@ -18812,6 +18784,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:pastel",
+          "name": "pastel",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-04-20T00:57:59Z"
+        },
+        {
           "id": "homebrew:patchpal",
           "name": "patchpal",
           "ecosystem": "homebrew",
@@ -19302,6 +19283,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:pioneer",
+          "name": "pioneer",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-04-19T23:43:22Z"
         },
         {
           "id": "homebrew:pip-audit",
@@ -21072,6 +21062,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:quickjs",
+          "name": "quickjs",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-04-19T23:40:37Z"
         },
         {
           "id": "homebrew:quilt",
