@@ -106,3 +106,74 @@ func TestCheckAndSpawnLockHeld(t *testing.T) {
 	// Should detect lock is held and return without spawning
 	CheckAndSpawnUpdateCheck(cfg, userCfg)
 }
+
+func TestMaybeSpawnAutoApplyNilUserConfig(t *testing.T) {
+	dir := t.TempDir()
+	cfg := &config.Config{HomeDir: dir}
+
+	// Should return immediately without panicking
+	if err := MaybeSpawnAutoApply(cfg, nil); err != nil {
+		t.Errorf("expected nil error with nil userCfg, got %v", err)
+	}
+}
+
+func TestMaybeSpawnAutoApplyDisabled(t *testing.T) {
+	dir := t.TempDir()
+	cfg := &config.Config{HomeDir: dir}
+	userCfg := userconfig.DefaultConfig()
+	f := false
+	userCfg.Updates.AutoApply = &f
+
+	if err := MaybeSpawnAutoApply(cfg, userCfg); err != nil {
+		t.Errorf("expected nil error when auto-apply disabled, got %v", err)
+	}
+}
+
+func TestMaybeSpawnAutoApplyNoPendingEntries(t *testing.T) {
+	dir := t.TempDir()
+	cfg := &config.Config{HomeDir: dir}
+	t.Setenv("TSUKU_AUTO_UPDATE", "")
+	t.Setenv("CI", "")
+	userCfg := userconfig.DefaultConfig()
+
+	// Empty cache -- nothing to apply
+	if err := MaybeSpawnAutoApply(cfg, userCfg); err != nil {
+		t.Errorf("expected nil error with no pending entries, got %v", err)
+	}
+}
+
+func TestMaybeSpawnAutoApplyLockHeld(t *testing.T) {
+	dir := t.TempDir()
+	cacheDir := filepath.Join(dir, "cache", "updates")
+	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Write a pending entry so the function reaches the lock check
+	entry := &UpdateCheckEntry{
+		Tool:            "some-tool",
+		ActiveVersion:   "1.0.0",
+		LatestWithinPin: "1.1.0",
+	}
+	if err := WriteEntry(cacheDir, entry); err != nil {
+		t.Fatal(err)
+	}
+
+	// Hold the apply lock
+	lockPath := filepath.Join(cacheDir, ApplyLockFile)
+	lock := install.NewFileLock(lockPath)
+	if err := lock.LockExclusive(); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = lock.Unlock() }()
+
+	cfg := &config.Config{HomeDir: dir}
+	t.Setenv("TSUKU_AUTO_UPDATE", "")
+	t.Setenv("CI", "")
+	userCfg := userconfig.DefaultConfig()
+
+	// Should detect lock is held and return without spawning
+	if err := MaybeSpawnAutoApply(cfg, userCfg); err != nil {
+		t.Errorf("expected nil error when lock held, got %v", err)
+	}
+}

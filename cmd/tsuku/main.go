@@ -17,10 +17,8 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/distributed"
 	"github.com/tsukumogami/tsuku/internal/log"
-	"github.com/tsukumogami/tsuku/internal/project"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/registry"
-	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/updates"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
@@ -64,6 +62,7 @@ func init() {
 		// Skip update check for commands that have their own trigger or shouldn't check
 		skip := map[string]bool{
 			"check-updates": true,
+			"apply-updates": true,
 			"hook-env":      true,
 			"run":           true,
 			"help":          true,
@@ -75,12 +74,8 @@ func init() {
 			if cfg, err := config.DefaultConfig(); err == nil {
 				if userCfg, err := userconfig.Load(); err == nil {
 					updates.CheckAndSpawnUpdateCheck(cfg, userCfg)
-					tc := telemetry.NewClient()
-					projCfg, _ := project.LoadProjectConfig(".")
-					results := updates.MaybeAutoApply(cfg, userCfg, projCfg, func(toolName, version, constraint string) error {
-						return runInstallWithTelemetry(toolName, version, constraint, false, "", nil)
-					}, tc)
-					updates.DisplayNotifications(cfg, userCfg, quietFlag, results)
+					_ = updates.MaybeSpawnAutoApply(cfg, userCfg)
+					updates.DisplayNotifications(cfg, userCfg, quietFlag, nil)
 				}
 			}
 		}
