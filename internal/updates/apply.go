@@ -211,4 +211,3 @@ func IsPendingEntry(e *UpdateCheckEntry) bool {
 	}
 	return e.LatestWithinPin != "" && e.Error == "" && e.LatestWithinPin != e.ActiveVersion
 }
-
