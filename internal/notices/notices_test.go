@@ -1,8 +1,10 @@
 package notices
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -218,6 +220,58 @@ func TestWriteCreatesDirectory(t *testing.T) {
 	all, err := ReadAllNotices(dir)
 	if err != nil || len(all) != 1 {
 		t.Fatal("should read notice after directory creation")
+	}
+}
+
+func TestKindDeserializeMissing(t *testing.T) {
+	// A JSON object with no "kind" key should produce Kind == "" (KindUpdateResult).
+	data := `{"tool":"mytool","attempted_version":"1.0","error":"fail","timestamp":"2024-01-01T00:00:00Z","shown":false}`
+	var n Notice
+	if err := json.Unmarshal([]byte(data), &n); err != nil {
+		t.Fatalf("Unmarshal: %v", err)
+	}
+	if n.Kind != KindUpdateResult {
+		t.Errorf("Kind = %q, want %q (KindUpdateResult)", n.Kind, KindUpdateResult)
+	}
+}
+
+func TestKindRoundTrip(t *testing.T) {
+	// Marshal a Notice with Kind = KindAutoApplyResult, unmarshal, assert preserved.
+	n := Notice{
+		Tool:             "mytool",
+		AttemptedVersion: "1.0",
+		Error:            "fail",
+		Timestamp:        time.Now().Truncate(time.Second),
+		Kind:             KindAutoApplyResult,
+	}
+	data, err := json.Marshal(n)
+	if err != nil {
+		t.Fatalf("Marshal: %v", err)
+	}
+	var got Notice
+	if err := json.Unmarshal(data, &got); err != nil {
+		t.Fatalf("Unmarshal: %v", err)
+	}
+	if got.Kind != KindAutoApplyResult {
+		t.Errorf("Kind = %q, want %q", got.Kind, KindAutoApplyResult)
+	}
+}
+
+func TestKindOmitEmptyInJSON(t *testing.T) {
+	// Marshal a Notice with Kind == "" and assert the JSON does not contain "kind".
+	n := Notice{
+		Tool:             "mytool",
+		AttemptedVersion: "1.0",
+		Error:            "fail",
+		Timestamp:        time.Now().Truncate(time.Second),
+		Kind:             KindUpdateResult,
+	}
+	data, err := json.Marshal(n)
+	if err != nil {
+		t.Fatalf("Marshal: %v", err)
+	}
+	if strings.Contains(string(data), "kind") {
+		t.Errorf("JSON output should not contain \"kind\" when Kind is empty, got: %s", data)
 	}
 }
 

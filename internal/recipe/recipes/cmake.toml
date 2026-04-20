@@ -9,13 +9,13 @@ curated = true
 github_repo = "Kitware/CMake"
 tag_prefix = "v"
 
-# Linux: platform-specific tarballs with SHA-256 verification
+# Linux glibc: platform-specific tarballs with SHA-256 verification
 [[steps]]
 action = "download"
 url = "https://github.com/Kitware/CMake/releases/download/v{version}/cmake-{version}-linux-{arch}.tar.gz"
 checksum_url = "https://github.com/Kitware/CMake/releases/download/v{version}/cmake-{version}-SHA-256.txt"
 arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
-when = { os = ["linux"] }
+when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
 action = "extract"
@@ -23,7 +23,13 @@ archive = "cmake-{version}-linux-{arch}.tar.gz"
 format = "tar.gz"
 strip_dirs = 1
 arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
-when = { os = ["linux"] }
+when = { os = ["linux"], libc = ["glibc"] }
+
+# Linux musl: system package (prebuilt binaries are glibc-linked)
+[[steps]]
+action = "apk_install"
+packages = ["cmake", "cmake-extras"]
+when = { os = ["linux"], libc = ["musl"] }
 
 # macOS: universal binary (Intel + Apple Silicon) with SHA-256 verification
 [[steps]]

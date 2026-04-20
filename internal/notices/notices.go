@@ -10,6 +10,15 @@ import (
 	"time"
 )
 
+// Kind constants classify what produced a notice.
+// KindUpdateResult is the zero value and represents all notices written before
+// the Kind field was introduced. KindAutoApplyResult identifies notices written
+// by the background auto-apply subprocess.
+const (
+	KindUpdateResult    = ""
+	KindAutoApplyResult = "auto_apply_result"
+)
+
 // Notice represents a failed auto-update for a single tool.
 // Stored at $TSUKU_HOME/notices/<toolname>.json.
 type Notice struct {
@@ -22,6 +31,10 @@ type Notice struct {
 	// Notices with fewer than 3 consecutive failures are suppressed (Shown=true).
 	// Backward compatible: old files without this field default to 0.
 	ConsecutiveFailures int `json:"consecutive_failures,omitempty"`
+	// Kind classifies what produced this notice. Empty string (KindUpdateResult)
+	// is the zero value for backward compatibility: existing notice files on disk
+	// that have no "kind" key deserialize with Kind == "".
+	Kind string `json:"kind,omitempty"`
 }
 
 // ReadNotice reads a single tool's notice file. Exported for use by apply.go.

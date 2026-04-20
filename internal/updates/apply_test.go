@@ -174,13 +174,13 @@ func TestMaybeAutoApplyFailureWritesNotice(t *testing.T) {
 	if allNotices[0].Tool != "fail-tool" {
 		t.Errorf("notice tool = %q, want %q", allNotices[0].Tool, "fail-tool")
 	}
-	// First failure is suppressed (consecutive count = 1, below threshold of 3).
-	// Notice is marked Shown=true to suppress display.
-	if !allNotices[0].Shown {
-		t.Error("first failure should be marked shown (suppressed, count < 3)")
+	// Background apply notices are always pending display (Shown=false) so the
+	// result surfaces on the next command invocation.
+	if allNotices[0].Shown {
+		t.Error("background apply notice should have Shown=false (pending display)")
 	}
-	if allNotices[0].ConsecutiveFailures != 1 {
-		t.Errorf("consecutive failures = %d, want 1", allNotices[0].ConsecutiveFailures)
+	if allNotices[0].Kind != notices.KindAutoApplyResult {
+		t.Errorf("notice kind = %q, want %q", allNotices[0].Kind, notices.KindAutoApplyResult)
 	}
 
 	// Cache entry should be removed (prevents repeated attempts)

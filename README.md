@@ -100,8 +100,8 @@ In CI environments (`CI=true`), self-update is suppressed automatically. You can
 
 tsuku shows brief notifications on stderr when updates are relevant:
 
-- **Applied updates:** When auto-apply is enabled, you'll see `Updated <tool> 1.2.0 -> 1.3.0` for each tool updated in the background.
-- **Failed updates:** If a background update fails (and gets rolled back), tsuku tells you what happened and how to recover.
+- **Applied updates:** When auto-apply is enabled, tsuku spawns a detached background subprocess that installs pending updates without delaying your command. The result — success or failure — appears as a notice on the *next* invocation after the background apply completes.
+- **Failed updates:** If a background update fails (and gets rolled back), the next command shows what happened and how to recover.
 - **Self-update results:** After tsuku updates itself, the next invocation shows the new version.
 - **Available updates:** When auto-apply is off, tsuku shows `N updates available. Run 'tsuku update' to apply.` once per check cycle.
 
