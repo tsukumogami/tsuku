@@ -112,9 +112,7 @@ func TestMaybeSpawnAutoApplyNilUserConfig(t *testing.T) {
 	cfg := &config.Config{HomeDir: dir}
 
 	// Should return immediately without panicking
-	if err := MaybeSpawnAutoApply(cfg, nil); err != nil {
-		t.Errorf("expected nil error with nil userCfg, got %v", err)
-	}
+	MaybeSpawnAutoApply(cfg, nil)
 }
 
 func TestMaybeSpawnAutoApplyDisabled(t *testing.T) {
@@ -124,9 +122,7 @@ func TestMaybeSpawnAutoApplyDisabled(t *testing.T) {
 	f := false
 	userCfg.Updates.AutoApply = &f
 
-	if err := MaybeSpawnAutoApply(cfg, userCfg); err != nil {
-		t.Errorf("expected nil error when auto-apply disabled, got %v", err)
-	}
+	MaybeSpawnAutoApply(cfg, userCfg)
 }
 
 func TestMaybeSpawnAutoApplyNoPendingEntries(t *testing.T) {
@@ -137,9 +133,7 @@ func TestMaybeSpawnAutoApplyNoPendingEntries(t *testing.T) {
 	userCfg := userconfig.DefaultConfig()
 
 	// Empty cache -- nothing to apply
-	if err := MaybeSpawnAutoApply(cfg, userCfg); err != nil {
-		t.Errorf("expected nil error with no pending entries, got %v", err)
-	}
+	MaybeSpawnAutoApply(cfg, userCfg)
 }
 
 func TestMaybeSpawnAutoApplyLockHeld(t *testing.T) {
@@ -173,7 +167,5 @@ func TestMaybeSpawnAutoApplyLockHeld(t *testing.T) {
 	userCfg := userconfig.DefaultConfig()
 
 	// Should detect lock is held and return without spawning
-	if err := MaybeSpawnAutoApply(cfg, userCfg); err != nil {
-		t.Errorf("expected nil error when lock held, got %v", err)
-	}
+	MaybeSpawnAutoApply(cfg, userCfg)
 }

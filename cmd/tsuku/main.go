@@ -74,7 +74,7 @@ func init() {
 			if cfg, err := config.DefaultConfig(); err == nil {
 				if userCfg, err := userconfig.Load(); err == nil {
 					updates.CheckAndSpawnUpdateCheck(cfg, userCfg)
-					_ = updates.MaybeSpawnAutoApply(cfg, userCfg)
+					updates.MaybeSpawnAutoApply(cfg, userCfg)
 					updates.DisplayNotifications(cfg, userCfg, quietFlag, nil)
 				}
 			}

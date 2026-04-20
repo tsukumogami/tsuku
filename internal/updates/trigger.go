@@ -73,9 +73,9 @@ func spawnDetached(cmd *exec.Cmd) error {
 // MaybeSpawnAutoApply spawns a detached tsuku apply-updates process if auto-apply
 // is enabled and pending cache entries exist. All errors are logged at debug level
 // and swallowed -- trigger failures must never block command execution.
-func MaybeSpawnAutoApply(cfg *config.Config, userCfg *userconfig.Config) error {
+func MaybeSpawnAutoApply(cfg *config.Config, userCfg *userconfig.Config) {
 	if userCfg == nil || !userCfg.UpdatesAutoApplyEnabled() {
-		return nil
+		return
 	}
 
 	cacheDir := CacheDir(cfg.HomeDir)
@@ -84,7 +84,7 @@ func MaybeSpawnAutoApply(cfg *config.Config, userCfg *userconfig.Config) error {
 	entries, err := ReadAllEntries(cacheDir)
 	if err != nil {
 		log.Default().Debug("auto-apply trigger: read cache entries", "error", err)
-		return nil
+		return
 	}
 
 	var hasPending bool
@@ -95,13 +95,13 @@ func MaybeSpawnAutoApply(cfg *config.Config, userCfg *userconfig.Config) error {
 		}
 	}
 	if !hasPending {
-		return nil
+		return
 	}
 
 	// Use a dedicated probe lock to deduplicate spawns
 	if err := os.MkdirAll(cacheDir, 0755); err != nil {
 		log.Default().Debug("auto-apply trigger: create cache dir", "error", err)
-		return nil
+		return
 	}
 
 	lockPath := filepath.Join(cacheDir, ApplyLockFile)
@@ -109,11 +109,11 @@ func MaybeSpawnAutoApply(cfg *config.Config, userCfg *userconfig.Config) error {
 	acquired, err := lock.TryLockExclusive()
 	if err != nil {
 		log.Default().Debug("auto-apply trigger: try lock", "error", err)
-		return nil
+		return
 	}
 	if !acquired {
 		// Another spawn is already running or was recently spawned
-		return nil
+		return
 	}
 	// Release probe lock immediately -- the background process manages its own locking
 	_ = lock.Unlock()
@@ -121,14 +121,13 @@ func MaybeSpawnAutoApply(cfg *config.Config, userCfg *userconfig.Config) error {
 	binary, err := os.Executable()
 	if err != nil {
 		log.Default().Debug("auto-apply trigger: resolve binary path", "error", err)
-		return nil
+		return
 	}
 
 	cmd := exec.Command(binary, "apply-updates")
 	if err := spawnDetached(cmd); err != nil {
 		log.Default().Debug("auto-apply trigger: spawn apply-updates", "error", err)
 	}
-	return nil
 }
 
 // spawnChecker launches a detached tsuku check-updates process.
