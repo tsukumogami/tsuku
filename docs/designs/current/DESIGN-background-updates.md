@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   tsuku runs full tool installs synchronously in PersistentPreRun before the
   command the user asked for, blocking even fast read-only commands like `tsuku
