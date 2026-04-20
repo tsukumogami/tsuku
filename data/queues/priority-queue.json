@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-20T08:10:14Z",
+  "updated_at": "2026-04-20T10:52:13Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 190,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 318,
@@ -35986,11 +35986,11 @@
       "name": "pdftohtml",
       "source": "rubygems:pdftohtml",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-04-20T05:02:43.064130417Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-04-21T18:52:12.974632664Z"
     },
     {
       "name": "pdftoipe",
@@ -50766,11 +50766,11 @@
       "name": "wartremover",
       "source": "npm:wartremover",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-11T15:37:13.544448801Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-04-27T10:52:12.974632664Z"
     },
     {
       "name": "wasm-bindgen",
