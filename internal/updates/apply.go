@@ -135,17 +135,17 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, projectCfg *
 			previousVersion = ts.ActiveVersion
 		}
 
-		result := applyUpdate(entry, installFn)
+		applyErr := applyUpdate(entry, installFn)
 
 		ar := ApplyResult{
 			Tool:       entry.Tool,
 			OldVersion: entry.ActiveVersion,
 			NewVersion: entry.LatestWithinPin,
-			Err:        result.err,
+			Err:        applyErr,
 		}
 		results = append(results, ar)
 
-		if result.err == nil {
+		if applyErr == nil {
 			if tc != nil {
 				tc.SendUpdateOutcome(telemetry.NewUpdateOutcomeSuccessEvent(
 					entry.Tool, previousVersion, entry.LatestWithinPin, "auto"))
@@ -157,11 +157,11 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, projectCfg *
 			_ = GarbageCollectVersions(cfg.ToolsDir, entry.Tool, entry.LatestWithinPin, previousVersion, retention, time.Now())
 		}
 
-		if result.err != nil {
+		if applyErr != nil {
 			// Emit failure event
 			if tc != nil {
 				tc.SendUpdateOutcome(telemetry.NewUpdateOutcomeFailureEvent(
-					entry.Tool, entry.LatestWithinPin, telemetry.ClassifyError(result.err), "auto"))
+					entry.Tool, entry.LatestWithinPin, telemetry.ClassifyError(applyErr), "auto"))
 			}
 
 			// Auto-rollback: activate previous version
@@ -184,14 +184,14 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, projectCfg *
 			}
 
 			// Actionable errors bypass the suppression threshold
-			if isActionableError(result.err) {
+			if isActionableError(applyErr) {
 				consecutiveCount = FailureSuppressionThreshold
 			}
 
 			notice := &notices.Notice{
 				Tool:                entry.Tool,
 				AttemptedVersion:    entry.LatestWithinPin,
-				Error:               result.err.Error(),
+				Error:               applyErr.Error(),
 				Timestamp:           time.Now(),
 				Shown:               consecutiveCount < FailureSuppressionThreshold,
 				ConsecutiveFailures: consecutiveCount,
@@ -206,19 +206,12 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, projectCfg *
 	return results
 }
 
-// applyResult captures the internal outcome of a single update attempt.
-type applyResult struct {
-	err error
-}
-
 // applyUpdate attempts to install a single tool update via the callback.
-func applyUpdate(entry UpdateCheckEntry, installFn InstallFunc) applyResult {
+func applyUpdate(entry UpdateCheckEntry, installFn InstallFunc) error {
 	if err := installFn(entry.Tool, entry.LatestWithinPin, entry.Requested); err != nil {
-		return applyResult{
-			err: fmt.Errorf("install %s@%s: %w", entry.Tool, entry.LatestWithinPin, err),
-		}
+		return fmt.Errorf("install %s@%s: %w", entry.Tool, entry.LatestWithinPin, err)
 	}
-	return applyResult{}
+	return nil
 }
 
 // IsPendingEntry reports whether an update check entry should be processed by
