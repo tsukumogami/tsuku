@@ -89,10 +89,7 @@ func MaybeSpawnAutoApply(cfg *config.Config, userCfg *userconfig.Config) error {
 
 	var hasPending bool
 	for _, e := range entries {
-		if IsSelfUpdate(&e) {
-			continue
-		}
-		if e.LatestWithinPin != "" && e.Error == "" && e.LatestWithinPin != e.ActiveVersion {
+		if IsPendingEntry(&e) {
 			hasPending = true
 			break
 		}

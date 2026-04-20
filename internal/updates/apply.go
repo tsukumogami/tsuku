@@ -224,10 +224,8 @@ func applyUpdate(entry UpdateCheckEntry, installFn InstallFunc) applyResult {
 // IsPendingEntry reports whether an update check entry should be processed by
 // auto-apply: not a self-update, has a resolved candidate version, no check
 // error, and the candidate differs from the currently active version.
-//
-// This predicate is used in both MaybeAutoApply (inline loop) and the
-// apply-updates subcommand (cmd/tsuku/cmd_apply_updates.go). Keep both call
-// sites in sync: if you add or change a condition here, update the other.
+// All code paths that decide whether to act on a cache entry must call this
+// predicate so filter changes stay consistent across callers.
 func IsPendingEntry(e *UpdateCheckEntry) bool {
 	if IsSelfUpdate(e) {
 		return false
