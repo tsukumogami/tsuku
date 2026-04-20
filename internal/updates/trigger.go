@@ -53,6 +53,20 @@ func CheckAndSpawnUpdateCheck(cfg *config.Config, userCfg *userconfig.Config) {
 	spawnChecker()
 }
 
+// spawnDetached configures cmd for detached execution and starts it.
+// It sets process group isolation via setSysProcAttr (Unix only), redirects
+// all stdio to nil so the subprocess has no connection to the parent's
+// terminal, then starts the process. The error from cmd.Start() is returned
+// without swallowing -- callers decide how to handle it.
+// Do not call cmd.Wait() after spawnDetached; the process runs independently.
+func spawnDetached(cmd *exec.Cmd) error {
+	setSysProcAttr(cmd)
+	cmd.Stdin = nil
+	cmd.Stdout = nil
+	cmd.Stderr = nil
+	return cmd.Start()
+}
+
 // spawnChecker launches a detached tsuku check-updates process.
 // The process survives parent exit and runs independently.
 func spawnChecker() {
@@ -63,11 +77,7 @@ func spawnChecker() {
 	}
 
 	cmd := exec.Command(binary, "check-updates")
-	cmd.Stdin = nil
-	cmd.Stdout = nil
-	cmd.Stderr = nil
-
-	if err := cmd.Start(); err != nil {
+	if err := spawnDetached(cmd); err != nil {
 		log.Default().Debug("update check: spawn checker", "error", err)
 		return
 	}
