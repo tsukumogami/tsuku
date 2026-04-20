@@ -70,18 +70,44 @@ func TestCheckAndSpawnStaleSentinel(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Hold the dedup lock so spawning is attempted but blocked. Without this,
+	// os.Executable() returns the test binary and spawning it recursively
+	// creates a fork bomb in the test environment.
+	lockPath := filepath.Join(cacheDir, LockFile)
+	lock := install.NewFileLock(lockPath)
+	if err := lock.LockExclusive(); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = lock.Unlock() }()
+
 	cfg := &config.Config{HomeDir: dir}
 	userCfg := userconfig.DefaultConfig()
 
-	// Will try to spawn (and fail in test env), but shouldn't panic
+	// Detects stale sentinel and reaches the spawn path, blocked by held lock.
 	CheckAndSpawnUpdateCheck(cfg, userCfg)
 }
 
 func TestCheckAndSpawnMissingSentinel(t *testing.T) {
 	dir := t.TempDir()
+	cacheDir := filepath.Join(dir, "cache", "updates")
+	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Hold the dedup lock so spawning is attempted but blocked. Without this,
+	// os.Executable() returns the test binary and spawning it recursively
+	// creates a fork bomb in the test environment.
+	lockPath := filepath.Join(cacheDir, LockFile)
+	lock := install.NewFileLock(lockPath)
+	if err := lock.LockExclusive(); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = lock.Unlock() }()
+
 	cfg := &config.Config{HomeDir: dir}
 	userCfg := userconfig.DefaultConfig()
 
+	// Detects missing sentinel and reaches the spawn path, blocked by held lock.
 	CheckAndSpawnUpdateCheck(cfg, userCfg)
 }
 

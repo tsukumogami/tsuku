@@ -3,7 +3,6 @@ package updates
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/config"
@@ -14,10 +13,6 @@ import (
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
-
-// FailureSuppressionThreshold is the number of consecutive failures before
-// a notice is shown to the user. Fewer than this = transient, suppressed.
-const FailureSuppressionThreshold = 3
 
 // InstallFunc is the callback type for the install flow.
 // Injected by cmd/tsuku/main.go wrapping runInstallWithTelemetry.
@@ -177,24 +172,15 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, projectCfg *
 				}
 			}
 
-			// Write failure notice with consecutive-failure tracking
-			consecutiveCount := 1
-			if existing, _ := notices.ReadNotice(noticesDir, entry.Tool); existing != nil {
-				consecutiveCount = existing.ConsecutiveFailures + 1
-			}
-
-			// Actionable errors bypass the suppression threshold
-			if isActionableError(applyErr) {
-				consecutiveCount = FailureSuppressionThreshold
-			}
-
+			// Write failure notice for display on the next command invocation.
+			// Shown=false ensures the notice surfaces on the next command.
 			notice := &notices.Notice{
-				Tool:                entry.Tool,
-				AttemptedVersion:    entry.LatestWithinPin,
-				Error:               applyErr.Error(),
-				Timestamp:           time.Now(),
-				Shown:               consecutiveCount < FailureSuppressionThreshold,
-				ConsecutiveFailures: consecutiveCount,
+				Tool:             entry.Tool,
+				AttemptedVersion: entry.LatestWithinPin,
+				Error:            applyErr.Error(),
+				Timestamp:        time.Now(),
+				Shown:            false,
+				Kind:             notices.KindAutoApplyResult,
 			}
 			_ = notices.WriteNotice(noticesDir, notice)
 		}
@@ -226,17 +212,3 @@ func IsPendingEntry(e *UpdateCheckEntry) bool {
 	return e.LatestWithinPin != "" && e.Error == "" && e.LatestWithinPin != e.ActiveVersion
 }
 
-// isActionableError returns true for errors that should bypass the consecutive-
-// failure suppression threshold and always produce a visible notice.
-func isActionableError(err error) bool {
-	if err == nil {
-		return false
-	}
-	msg := strings.ToLower(err.Error())
-	for _, pattern := range []string{"checksum", "disk full", "no space", "recipe"} {
-		if strings.Contains(msg, pattern) {
-			return true
-		}
-	}
-	return false
-}
