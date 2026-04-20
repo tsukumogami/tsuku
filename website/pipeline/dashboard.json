@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-20T10:51:37Z",
+  "generated_at": "2026-04-20T10:52:45Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -74,14 +74,15 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 49,
-        "pending": 26,
+        "failed": 50,
+        "pending": 25,
         "success": 13,
         "total": 89
       }
@@ -465,15 +466,6 @@
           "next_retry_at": "2026-04-24T02:22:15Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 190,
-          "next_retry_at": "1734-01-09T08:22:57Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -843,15 +835,6 @@
           "next_retry_at": "2026-04-24T11:00:17Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 318,
-          "next_retry_at": "1734-01-09T08:22:57Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -1041,6 +1024,15 @@
           "next_retry_at": "2026-04-21T16:10:13Z"
         },
         {
+          "id": "rubygems:pdftohtml",
+          "name": "pdftohtml",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-04-21T18:52:12Z"
+        },
+        {
           "id": "npm:pocketbase",
           "name": "pocketbase",
           "ecosystem": "npm",
@@ -1093,6 +1085,15 @@
           "category": "install_failed",
           "failure_count": 12,
           "next_retry_at": "2026-04-24T16:11:06Z"
+        },
+        {
+          "id": "npm:wartremover",
+          "name": "wartremover",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-27T10:52:12Z"
         }
       ],
       "pending": [
@@ -2986,6 +2987,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 190,
+          "next_retry_at": "1734-01-09T08:22:57Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -13325,6 +13335,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 318,
+          "next_retry_at": "1734-01-09T08:22:57Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -18910,15 +18929,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:pdftohtml",
-          "name": "pdftohtml",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-04-20T05:02:43Z"
         },
         {
           "id": "homebrew:pdm",
@@ -27025,15 +27035,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:wartremover",
-          "name": "wartremover",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-11T15:37:13Z"
         },
         {
           "id": "crates.io:wasm-bindgen",
