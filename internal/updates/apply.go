@@ -75,10 +75,7 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, projectCfg *
 	// Filter for actionable entries
 	var pending []UpdateCheckEntry
 	for _, e := range entries {
-		if IsSelfUpdate(&e) {
-			continue
-		}
-		if e.LatestWithinPin != "" && e.Error == "" && e.LatestWithinPin != e.ActiveVersion {
+		if IsPendingEntry(&e) {
 			pending = append(pending, e)
 		}
 	}
@@ -222,6 +219,20 @@ func applyUpdate(entry UpdateCheckEntry, installFn InstallFunc) applyResult {
 		}
 	}
 	return applyResult{}
+}
+
+// IsPendingEntry reports whether an update check entry should be processed by
+// auto-apply: not a self-update, has a resolved candidate version, no check
+// error, and the candidate differs from the currently active version.
+//
+// This predicate is used in both MaybeAutoApply (inline loop) and the
+// apply-updates subcommand (cmd/tsuku/cmd_apply_updates.go). Keep both call
+// sites in sync: if you add or change a condition here, update the other.
+func IsPendingEntry(e *UpdateCheckEntry) bool {
+	if IsSelfUpdate(e) {
+		return false
+	}
+	return e.LatestWithinPin != "" && e.Error == "" && e.LatestWithinPin != e.ActiveVersion
 }
 
 // isActionableError returns true for errors that should bypass the consecutive-

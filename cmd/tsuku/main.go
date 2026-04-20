@@ -85,6 +85,7 @@ func init() {
 	rootCmd.PersistentPostRun = func(cmd *cobra.Command, args []string) {
 		skip := map[string]bool{
 			"check-updates": true,
+			"apply-updates": true,
 			"hook-env":      true,
 			"run":           true,
 			"help":          true,

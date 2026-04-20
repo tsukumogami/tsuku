@@ -57,13 +57,10 @@ var applyUpdatesCmd = &cobra.Command{
 			return nil
 		}
 
-		// Filter for actionable entries (same logic as MaybeAutoApply)
+		// Filter for actionable entries via the shared predicate in internal/updates.
 		var pending []updates.UpdateCheckEntry
 		for _, e := range entries {
-			if updates.IsSelfUpdate(&e) {
-				continue
-			}
-			if e.LatestWithinPin != "" && e.Error == "" && e.LatestWithinPin != e.ActiveVersion {
+			if updates.IsPendingEntry(&e) {
 				pending = append(pending, e)
 			}
 		}
