@@ -1,0 +1,34 @@
+{
+  "topic": "background-updates",
+  "decisions": [
+    {
+      "id": 1,
+      "question": "How should auto-apply be decoupled from the foreground command lifecycle, and how does the concurrency model between background auto-apply and foreground explicit installs work?",
+      "status": "complete",
+      "complexity": "standard",
+      "chosen": "Option A — Spawn a separate apply subprocess from PersistentPreRun",
+      "confidence": "high",
+      "report_file": "wip/design_background-updates_decision_1_report.md"
+    },
+    {
+      "id": 2,
+      "question": "How should the Notice schema be extended to carry background activity results without breaking existing notice files on user machines?",
+      "status": "complete",
+      "complexity": "standard",
+      "chosen": "Option A — Add Kind field with backward-compatible JSON unmarshaling",
+      "confidence": "high",
+      "report_file": "wip/design_background-updates_decision_2_report.md"
+    },
+    {
+      "id": 3,
+      "question": "How should distributed registry initialization in main.go init() be protected against unbounded startup hangs?",
+      "status": "complete",
+      "complexity": "standard",
+      "chosen": "Option A — Add context timeout; skip source on timeout (best-effort)",
+      "confidence": "high",
+      "report_file": "wip/design_background-updates_decision_3_report.md"
+    }
+  ],
+  "cross_validation": "passed",
+  "round": 1
+}

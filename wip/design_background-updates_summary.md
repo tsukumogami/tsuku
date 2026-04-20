@@ -10,6 +10,12 @@ blocking path exists in distributed registry initialization at startup (no timeo
 pattern in `trigger.go`; notice schema changes must be backward-compatible; Linux
 and macOS only.
 
+## Security Review (Phase 5)
+**Outcome:** Option 2 — Document considerations
+**Summary:** No new privilege escalation or injection vectors. Two items incorporated
+into design: 5-minute top-level deadline on apply-updates subprocess, dedicated probe
+lock for spawn deduplication in MaybeSpawnAutoApply.
+
 ## Current Status
-**Phase:** 0 - Setup (Explore Handoff)
+**Phase:** 5 - Security complete, proceeding to Phase 6
 **Last Updated:** 2026-04-20
