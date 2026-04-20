@@ -26,7 +26,7 @@ rationale: |
 
 ## Status
 
-Planned
+Current
 
 ## Context and Problem Statement
 
@@ -498,21 +498,6 @@ in telemetry payloads.
 - 3-second startup cap: documented behavior. Users who want zero startup latency can
   remove their distributed registry sources or set `updates.enabled = false`.
 
-## Implementation Issues
+## Implementation
 
-Plan: [docs/plans/PLAN-background-updates.md](../plans/PLAN-background-updates.md)
-
-| Issue | Dependencies | Tier |
-|-------|--------------|------|
-| [#2278: feat(updates): background auto-apply and related improvements](https://github.com/tsukumogami/tsuku/pull/2278) | None | testable |
-| _Implements background auto-apply via detached subprocess, adds Kind field to Notice struct, adds spawnDetached helper with process-group isolation, bounds registry init to 3-second timeout, and adds e2e functional tests._ | | |
-
-```mermaid
-graph TD
-    I2278["#2278: feat(updates): background auto-apply"]
-
-    classDef ready fill:#bbdefb,stroke:#1565c0
-    class I2278 ready
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
+Implemented in [PR #2278](https://github.com/tsukumogami/tsuku/pull/2278).
