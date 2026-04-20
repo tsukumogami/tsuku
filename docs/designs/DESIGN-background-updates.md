@@ -497,3 +497,19 @@ in telemetry payloads.
   prior version remains active until the new one is fully staged and renamed.
 - 3-second startup cap: documented behavior. Users who want zero startup latency can
   remove their distributed registry sources or set `updates.enabled = false`.
+
+## Implementation Issues
+
+Plan: [docs/plans/PLAN-background-updates.md](../plans/PLAN-background-updates.md)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#2278: feat(updates): background auto-apply and related improvements](https://github.com/tsukumogami/tsuku/pull/2278) | None | testable |
+
+```mermaid
+graph TD
+    I2278["#2278: feat(updates): background auto-apply"]
+
+    classDef ready fill:#c8e6c9,stroke:#2e7d32
+    class I2278 ready
+```
