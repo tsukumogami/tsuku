@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/actions"
@@ -135,7 +136,8 @@ func init() {
 		cache := distributed.NewCacheManager(cacheDir, distributed.DefaultCacheTTL)
 		ghClient := distributed.NewGitHubClient(cache)
 
-		initCtx := context.Background()
+		initCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
 		for source := range userCfg.Registries {
 			parts := strings.SplitN(source, "/", 2)
 			if len(parts) == 2 {
