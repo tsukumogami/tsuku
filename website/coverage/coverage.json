@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-21T03:19:04Z",
+  "generated_at": "2026-04-21T18:31:28Z",
   "total_recipes": 1414,
   "summary": {
     "by_platform": {
@@ -7612,9 +7612,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'grype' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "gsmartcontrol",
@@ -18460,9 +18458,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'syft' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "symfony-cli",
@@ -19013,9 +19009,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'tflint' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "tfsec",
