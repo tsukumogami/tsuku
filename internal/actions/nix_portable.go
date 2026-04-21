@@ -70,7 +70,7 @@ func ResolveNixPortable() string {
 //
 // Deprecated: Use EnsureNixPortableWithContext for cancellation support.
 func EnsureNixPortable() (string, error) {
-	return EnsureNixPortableWithContext(context.Background())
+	return EnsureNixPortableWithContext(context.Background(), progress.NoopReporter{})
 }
 
 // EnsureNixPortableWithContext ensures nix-portable is available in the internal directory.
@@ -78,12 +78,13 @@ func EnsureNixPortable() (string, error) {
 // Uses file locking to prevent race conditions from concurrent tsuku processes.
 // Returns the path to the nix-portable binary.
 // The context parameter enables cancellation of the download operation.
+// The reporter receives log and progress output during the download.
 //
 // Security:
 //   - Only supports Linux (nix-portable limitation)
 //   - Uses hardcoded SHA256 checksums for supply chain security
 //   - Uses file locking to prevent TOCTOU race conditions
-func EnsureNixPortableWithContext(ctx context.Context) (string, error) {
+func EnsureNixPortableWithContext(ctx context.Context, reporter progress.Reporter) (string, error) {
 	// Check platform - nix-portable only supports Linux
 	if runtime.GOOS != "linux" {
 		return "", fmt.Errorf("nix_install action only supports Linux (nix-portable does not support %s)", runtime.GOOS)
@@ -136,31 +137,30 @@ func EnsureNixPortableWithContext(ctx context.Context) (string, error) {
 				return path, nil
 			}
 			// Version mismatch - need to re-download
-			fmt.Printf("   Upgrading nix-portable from %s to %s\n", string(versionData), nixPortableVersion)
+			reporter.Log("Upgrading nix-portable from %s to %s", string(versionData), nixPortableVersion)
 		}
 	}
 
 	// Check for existing /nix/store (potential conflicts with system Nix)
 	if _, err := os.Stat("/nix/store"); err == nil {
-		fmt.Println("   Warning: /nix/store exists. nix-portable may have conflicts with system Nix.")
+		reporter.Warn("/nix/store exists. nix-portable may have conflicts with system Nix.")
 	}
 
 	// Download nix-portable
 	url := fmt.Sprintf("https://github.com/DavHau/nix-portable/releases/download/%s/nix-portable-%s",
 		nixPortableVersion, archName)
 
-	fmt.Printf("   Downloading nix-portable %s for %s...\n", nixPortableVersion, archName)
-	fmt.Printf("   URL: %s\n", url)
+	reporter.Log("Downloading nix-portable %s for %s", nixPortableVersion, archName)
 
 	// Download to temporary file first with context for cancellation
 	tmpPath := nixPortablePath + ".tmp"
-	if err := downloadFileWithContext(ctx, url, tmpPath); err != nil {
+	if err := downloadFileWithContext(ctx, url, tmpPath, reporter); err != nil {
 		os.Remove(tmpPath)
 		return "", fmt.Errorf("failed to download nix-portable: %w", err)
 	}
 
 	// Verify checksum
-	fmt.Printf("   Verifying checksum...\n")
+	reporter.Log("Verifying checksum")
 	if err := VerifyChecksum(tmpPath, expectedChecksum, "sha256"); err != nil {
 		os.Remove(tmpPath)
 		return "", fmt.Errorf("nix-portable checksum verification failed: %w", err)
@@ -182,15 +182,16 @@ func EnsureNixPortableWithContext(ctx context.Context) (string, error) {
 	versionPath := filepath.Join(internalDir, "version")
 	if err := os.WriteFile(versionPath, []byte(nixPortableVersion), 0644); err != nil {
 		// Non-fatal - version file is for upgrade detection
-		fmt.Printf("   Warning: failed to write version file: %v\n", err)
+		reporter.Warn("failed to write version file: %v", err)
 	}
 
-	fmt.Printf("   nix-portable %s installed successfully\n", nixPortableVersion)
+	reporter.Log("nix-portable %s installed successfully", nixPortableVersion)
 	return nixPortablePath, nil
 }
 
-// downloadFileWithContext downloads a file from URL to the specified path with context for cancellation
-func downloadFileWithContext(ctx context.Context, url, destPath string) error {
+// downloadFileWithContext downloads a file from URL to the specified path with context for cancellation.
+// Progress and log output are emitted via reporter.
+func downloadFileWithContext(ctx context.Context, url, destPath string, reporter progress.Reporter) error {
 	// Create the file
 	out, err := os.Create(destPath)
 	if err != nil {
@@ -214,29 +215,13 @@ func downloadFileWithContext(ctx context.Context, url, destPath string) error {
 		return fmt.Errorf("HTTP %d: %s", resp.StatusCode, resp.Status)
 	}
 
-	// Copy response body to file with byte-level progress when on a TTY.
+	// Copy response body to file with byte-level progress via the reporter.
+	// makeDownloadCallback drives reporter.Status, which is TTY-aware: on non-TTY
+	// it is a no-op, so no manual ShouldShowProgress guard is needed here.
 	name := downloadDisplayName(url)
-	callback := makeDownloadCallback(progress.NoopReporter{}, name)
-	if progress.ShouldShowProgress() {
-		callback = func(written, total int64) {
-			var msg string
-			if total > 0 {
-				pct := float64(written) / float64(total) * 100
-				if pct > 100 {
-					pct = 100
-				}
-				msg = fmt.Sprintf("Downloading %s (%s / %s, %.0f%%)", name, formatBytes(written), formatBytes(total), pct)
-			} else {
-				msg = fmt.Sprintf("Downloading %s (%s...)", name, formatBytes(written))
-			}
-			fmt.Printf("\r\033[K%s", msg)
-		}
-	}
+	callback := makeDownloadCallback(reporter, name)
 	pw := progress.NewProgressWriter(out, resp.ContentLength, callback)
 	_, err = io.Copy(pw, resp.Body)
-	if progress.ShouldShowProgress() {
-		fmt.Printf("\r\033[K") // clear progress line
-	}
 	return err
 }
 

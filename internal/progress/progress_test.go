@@ -2,7 +2,6 @@ package progress
 
 import (
 	"bytes"
-	"strings"
 	"testing"
 )
 
@@ -60,28 +59,27 @@ func TestProgressWriterFormatWithTotal(t *testing.T) {
 	t.Parallel()
 	var buf bytes.Buffer
 	total := int64(200 * 1024) // 200 KiB, above small-file threshold
-	var msgs []string
+	var callWritten, callTotal int64
+	called := false
 
 	pw := NewProgressWriter(&buf, total, func(written, tot int64) {
-		pct := float64(written) / float64(tot) * 100
-		if pct > 100 {
-			pct = 100
-		}
-		// Simulate what the action callback builds: "<bytes> / <total>, <pct>%"
-		msg := formatProgressBytes(written) + " / " + formatProgressBytes(tot)
-		msgs = append(msgs, msg)
+		callWritten = written
+		callTotal = tot
+		called = true
 	})
 
 	if _, err := pw.Write(make([]byte, 100*1024)); err != nil {
 		t.Fatal(err)
 	}
 
-	if len(msgs) == 0 {
+	if !called {
 		t.Fatal("callback was not called for large file with total")
 	}
-	// The message should contain "/" (separator between transferred and total)
-	if !strings.Contains(msgs[0], "/") {
-		t.Errorf("expected '/' in progress message, got %q", msgs[0])
+	if callWritten != 100*1024 {
+		t.Errorf("callback written = %d, want %d", callWritten, 100*1024)
+	}
+	if callTotal != total {
+		t.Errorf("callback total = %d, want %d", callTotal, total)
 	}
 }
 

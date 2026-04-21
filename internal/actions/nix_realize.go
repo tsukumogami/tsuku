@@ -138,7 +138,7 @@ func (a *NixRealizeAction) Execute(ctx *ExecutionContext, params map[string]inte
 	}
 
 	// Ensure nix-portable is available
-	nixPortablePath, err := EnsureNixPortableWithContext(ctx.Context)
+	nixPortablePath, err := EnsureNixPortableWithContext(ctx.Context, ctx.GetReporter())
 	if err != nil {
 		return fmt.Errorf("failed to ensure nix-portable: %w", err)
 	}

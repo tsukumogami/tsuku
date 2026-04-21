@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/tsukumogami/tsuku/internal/progress"
 )
 
 // NixInstallAction installs packages from Nixpkgs using an isolated internal Nix store.
@@ -98,7 +100,7 @@ func (a *NixInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 	}
 
 	// Ensure nix-portable is available (with context for cancellation)
-	nixPortablePath, err := EnsureNixPortableWithContext(ctx.Context)
+	nixPortablePath, err := EnsureNixPortableWithContext(ctx.Context, ctx.GetReporter())
 	if err != nil {
 		return fmt.Errorf("failed to ensure nix-portable: %w", err)
 	}
@@ -316,7 +318,7 @@ func (a *NixInstallAction) Decompose(ctx *EvalContext, params map[string]interfa
 	// Ensure nix-portable is available for metadata retrieval
 	if ResolveNixPortable() == "" {
 		// nix-portable not yet bootstrapped - we need it for metadata
-		_, err := EnsureNixPortableWithContext(ctx.Context)
+		_, err := EnsureNixPortableWithContext(ctx.Context, progress.NoopReporter{})
 		if err != nil {
 			return nil, fmt.Errorf("failed to ensure nix-portable for metadata: %w", err)
 		}

@@ -1,7 +1,6 @@
 package progress
 
 import (
-	"fmt"
 	"io"
 	"os"
 
@@ -66,21 +65,3 @@ func (pw *ProgressWriter) Reset() {
 	pw.written = 0
 }
 
-// formatProgressBytes returns a human-readable byte count string.
-func formatProgressBytes(b int64) string {
-	const (
-		kib = int64(1024)
-		mib = kib * 1024
-		gib = mib * 1024
-	)
-	switch {
-	case b >= gib:
-		return fmt.Sprintf("%.1f GiB", float64(b)/float64(gib))
-	case b >= mib:
-		return fmt.Sprintf("%.1f MiB", float64(b)/float64(mib))
-	case b >= kib:
-		return fmt.Sprintf("%.1f KiB", float64(b)/float64(kib))
-	default:
-		return fmt.Sprintf("%d B", b)
-	}
-}
