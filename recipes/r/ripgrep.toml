@@ -5,15 +5,23 @@ homepage = "https://github.com/BurntSushi/ripgrep"
 version_format = "semver"
 curated = true
 
-# Linux: statically linked musl binaries work on glibc and musl systems
+# Linux amd64: statically linked musl binary (works on glibc and musl)
 [[steps]]
 action = "github_archive"
-when = { os = ["linux"] }
+when = { os = ["linux"], arch = "amd64", libc = ["glibc", "musl"] }
 repo = "BurntSushi/ripgrep"
-asset_pattern = "ripgrep-{version}-{arch}.tar.gz"
+asset_pattern = "ripgrep-{version}-x86_64-unknown-linux-musl.tar.gz"
 strip_dirs = 1
 binaries = ["rg"]
-arch_mapping = { amd64 = "x86_64-unknown-linux-musl", arm64 = "aarch64-unknown-linux-gnu" }
+
+# Linux arm64: upstream publishes only a glibc build; musl arm64 is unsupported
+[[steps]]
+action = "github_archive"
+when = { os = ["linux"], arch = "arm64", libc = ["glibc"] }
+repo = "BurntSushi/ripgrep"
+asset_pattern = "ripgrep-{version}-aarch64-unknown-linux-gnu.tar.gz"
+strip_dirs = 1
+binaries = ["rg"]
 
 # macOS: Intel and Apple Silicon binaries
 [[steps]]

@@ -10,18 +10,28 @@ unsupported_platforms = ["darwin/amd64", "darwin/arm64"]
 github_repo = "eza-community/eza"
 tag_prefix = "v"
 
-# Linux: pre-built binaries from GitHub releases (no macOS binaries published)
+# Linux amd64 glibc: pre-built binary
 [[steps]]
 action = "github_archive"
-when = { os = ["linux"], arch = "amd64" }
+when = { os = ["linux"], arch = "amd64", libc = ["glibc"] }
 repo = "eza-community/eza"
 asset_pattern = "eza_x86_64-unknown-linux-gnu.tar.gz"
 strip_dirs = 0
 binaries = ["eza"]
 
+# Linux amd64 musl: pre-built binary for Alpine and other musl systems
 [[steps]]
 action = "github_archive"
-when = { os = ["linux"], arch = "arm64" }
+when = { os = ["linux"], arch = "amd64", libc = ["musl"] }
+repo = "eza-community/eza"
+asset_pattern = "eza_x86_64-unknown-linux-musl.tar.gz"
+strip_dirs = 0
+binaries = ["eza"]
+
+# Linux arm64 glibc: pre-built binary (upstream publishes no arm64 musl build)
+[[steps]]
+action = "github_archive"
+when = { os = ["linux"], arch = "arm64", libc = ["glibc"] }
 repo = "eza-community/eza"
 asset_pattern = "eza_aarch64-unknown-linux-gnu.tar.gz"
 strip_dirs = 0
