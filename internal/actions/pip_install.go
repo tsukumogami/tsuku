@@ -150,7 +150,7 @@ func (a *PipInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 	// Show output if debugging
 	outputStr := strings.TrimSpace(string(output))
 	if outputStr != "" && os.Getenv("TSUKU_DEBUG") != "" {
-		ctx.Log().Debug("pip_install: pip output", "output", outputStr)
+		reporter.Log("   pip output:\n%s", outputStr) // TSUKU_DEBUG: verbose pip output
 	}
 
 	reporter.Log("   pip install completed successfully")
