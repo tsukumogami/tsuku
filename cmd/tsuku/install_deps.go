@@ -259,7 +259,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 
 	// Check if this is a library recipe
 	if r.IsLibrary() {
-		return installLibrary(toolName, reqVersion, parent, mgr, telemetryClient, reporter)
+		return installLibrary(toolName, reqVersion, mgr, telemetryClient, reporter)
 	}
 
 	// Check and display system dependency instructions (for explicit installs only)
