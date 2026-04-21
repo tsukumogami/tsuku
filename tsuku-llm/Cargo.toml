@@ -1,6 +1,6 @@
 [package]
 name = "tsuku-llm"
-version = "0.9.2-dev"
+version = "0.10.0"
 edition = "2021"
 description = "Local LLM inference addon for tsuku"
 license = "MIT"
