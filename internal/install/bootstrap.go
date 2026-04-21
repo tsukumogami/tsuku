@@ -21,6 +21,5 @@ func CheckAndExposeHidden(mgr *Manager, toolName string) (bool, error) {
 		return false, fmt.Errorf("failed to expose hidden tool: %w", err)
 	}
 
-	fmt.Printf("Exposed %s - now available\n", toolName)
 	return true, nil
 }

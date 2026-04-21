@@ -12,12 +12,29 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/progress"
 )
 
 // Manager handles tool installation to ~/.tsuku
 type Manager struct {
-	config *config.Config
-	state  *StateManager
+	config   *config.Config
+	state    *StateManager
+	reporter progress.Reporter
+}
+
+// SetReporter sets the progress reporter used for status and log output during
+// installation. If not called, Manager silently discards all output.
+func (m *Manager) SetReporter(r progress.Reporter) {
+	m.reporter = r
+}
+
+// getReporter returns the stored reporter, falling back to NoopReporter when
+// none has been set.
+func (m *Manager) getReporter() progress.Reporter {
+	if m.reporter != nil {
+		return m.reporter
+	}
+	return progress.NoopReporter{}
 }
 
 // New creates a new install manager
@@ -120,25 +137,9 @@ func (m *Manager) InstallWithOptions(name, version, workDir string, opts Install
 		if len(opts.RuntimeDependencies) > 0 {
 			// Tool has runtime deps - create wrapper scripts
 			symlinkErr = m.createWrappersForBinaries(name, version, opts.Binaries, opts.RuntimeDependencies)
-			if symlinkErr == nil {
-				fmt.Printf("📍 Installed to: %s\n", toolDir)
-				if len(opts.Binaries) > 0 {
-					fmt.Printf("🔗 Wrapped %d binaries: %v\n", len(opts.Binaries), opts.Binaries)
-				} else {
-					fmt.Printf("🔗 Wrapped: %s\n", m.config.CurrentSymlink(name))
-				}
-			}
 		} else {
 			// No runtime deps - use symlinks (faster)
 			symlinkErr = m.createSymlinksForBinaries(name, version, opts.Binaries)
-			if symlinkErr == nil {
-				fmt.Printf("📍 Installed to: %s\n", toolDir)
-				if len(opts.Binaries) > 0 {
-					fmt.Printf("🔗 Symlinked %d binaries: %v\n", len(opts.Binaries), opts.Binaries)
-				} else {
-					fmt.Printf("🔗 Symlinked: %s -> %s\n", m.config.CurrentSymlink(name), filepath.Join(toolDir, "bin", name))
-				}
-			}
 		}
 
 		// If symlink/wrapper creation failed, rollback the installation
@@ -149,8 +150,6 @@ func (m *Manager) InstallWithOptions(name, version, workDir string, opts Install
 			}
 			return fmt.Errorf("failed to create symlinks: %w", symlinkErr)
 		}
-	} else {
-		fmt.Printf("📍 Installed to: %s (hidden)\n", toolDir)
 	}
 
 	// Compute binary checksums for integrity verification (Layer 3)
@@ -160,7 +159,7 @@ func (m *Manager) InstallWithOptions(name, version, workDir string, opts Install
 		binaryChecksums, checksumErr = ComputeBinaryChecksums(toolDir, opts.Binaries)
 		if checksumErr != nil {
 			// Log warning but don't fail installation - checksums are for verification, not blocking
-			fmt.Printf("⚠️  Could not compute binary checksums: %v\n", checksumErr)
+			m.getReporter().Warn("could not compute binary checksums: %v", checksumErr)
 		}
 	}
 

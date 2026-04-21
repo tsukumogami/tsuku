@@ -137,16 +137,19 @@ func getOrGeneratePlanWith(
 }
 
 func runInstallWithTelemetry(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client) error {
-	return installWithDependencies(toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client)
+	reporter := progress.NewTTYReporter(os.Stderr)
+	defer reporter.Stop()
+	return installWithDependencies(toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client, reporter)
 }
 
-func installWithDependencies(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, visited map[string]bool, telemetryClient *telemetry.Client) error {
+func installWithDependencies(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, visited map[string]bool, telemetryClient *telemetry.Client, reporter progress.Reporter) error {
 	// Initialize manager for state updates
 	cfg, err := config.DefaultConfig()
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 	mgr := install.New(cfg)
+	mgr.SetReporter(reporter)
 
 	// If explicit install, check if tool is hidden and just expose it
 	if isExplicit && parent == "" {
@@ -256,7 +259,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 
 	// Check if this is a library recipe
 	if r.IsLibrary() {
-		return installLibrary(toolName, reqVersion, parent, mgr, telemetryClient)
+		return installLibrary(toolName, reqVersion, parent, mgr, telemetryClient, reporter)
 	}
 
 	// Check and display system dependency instructions (for explicit installs only)
@@ -295,7 +298,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 			printInfof("  Resolving dependency '%s'...\n", dep)
 			// Install dependency (not explicit, parent is current tool)
 			// Dependencies don't have version constraints and are tracked for telemetry
-			if err := installWithDependencies(dep, "", "", false, toolName, visited, telemetryClient); err != nil {
+			if err := installWithDependencies(dep, "", "", false, toolName, visited, telemetryClient, reporter); err != nil {
 				return fmt.Errorf("failed to install dependency '%s': %w", dep, err)
 			}
 		}
@@ -310,7 +313,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 			printInfof("  Resolving runtime dependency '%s'...\n", dep)
 			// Install runtime dependency as explicit (exposed, not hidden)
 			// No parent - these are top-level explicit installs
-			if err := installWithDependencies(dep, "", "", true, "", visited, telemetryClient); err != nil {
+			if err := installWithDependencies(dep, "", "", true, "", visited, telemetryClient, reporter); err != nil {
 				return fmt.Errorf("failed to install runtime dependency '%s': %w", dep, err)
 			}
 		}
@@ -352,9 +355,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	// Pass through --no-shell-init flag
 	exec.SetNoShellInit(installNoShellInit)
 
-	// Create progress reporter and propagate it to all execution contexts
-	reporter := progress.NewTTYReporter(os.Stderr)
-	defer reporter.Stop()
+	// Propagate the shared reporter to all execution contexts
 	exec.SetReporter(reporter)
 
 	// Look up resolved dependency versions for variable expansion

@@ -39,13 +39,11 @@ func (m *Manager) InstallLibrary(name, version, workDir string, opts LibraryInst
 		return fmt.Errorf("failed to copy library installation: %w", err)
 	}
 
-	fmt.Printf("   Installed library to: %s\n", libDir)
-
 	// Compute checksums for integrity verification (before state update)
 	// Errors are logged as warnings but do not fail installation (matching tool behavior)
 	checksums, checksumErr := ComputeLibraryChecksums(libDir)
 	if checksumErr != nil {
-		fmt.Printf("   Warning: failed to compute library checksums: %v\n", checksumErr)
+		m.getReporter().Warn("failed to compute library checksums: %v", checksumErr)
 	}
 
 	// Always record library in state (even if not used by any tool yet)

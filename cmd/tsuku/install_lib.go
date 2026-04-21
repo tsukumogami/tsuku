@@ -8,6 +8,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/validate"
@@ -17,7 +18,8 @@ import (
 // installLibrary handles installation of library recipes
 // Libraries are installed to $TSUKU_HOME/libs/{name}-{version}/ and track used_by
 // Note: used_by tracking is handled by the caller after tool installation completes
-func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, telemetryClient *telemetry.Client) error {
+func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, telemetryClient *telemetry.Client, reporter progress.Reporter) error {
+	mgr.SetReporter(reporter)
 	// Load recipe
 	r, err := loader.Get(libName, recipe.LoaderOptions{})
 	if err != nil {
@@ -42,7 +44,7 @@ func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, te
 		for _, dep := range r.Metadata.Dependencies {
 			printInfof("  Resolving dependency '%s'...\n", dep)
 			// Install dependency (not explicit, parent is current library)
-			if err := installWithDependencies(dep, "", "", false, libName, visited, telemetryClient); err != nil {
+			if err := installWithDependencies(dep, "", "", false, libName, visited, telemetryClient, reporter); err != nil {
 				return fmt.Errorf("failed to install dependency '%s': %w", dep, err)
 			}
 		}
@@ -59,6 +61,7 @@ func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, te
 		return fmt.Errorf("failed to create executor for library: %w", err)
 	}
 	defer exec.Cleanup()
+	exec.SetReporter(reporter)
 
 	// Set tools directory for finding other installed tools
 	cfg, _ := config.DefaultConfig()
@@ -152,10 +155,10 @@ func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, te
 	libDir := mgr.LibDir(libName, version)
 	sonames, sonameErr := verify.ExtractSonames(libDir)
 	if sonameErr != nil {
-		fmt.Printf("   Warning: failed to extract sonames: %v\n", sonameErr)
+		reporter.Warn("failed to extract sonames: %v", sonameErr)
 	} else if len(sonames) > 0 {
 		if err := mgr.GetState().SetLibrarySonames(libName, version, sonames); err != nil {
-			fmt.Printf("   Warning: failed to store sonames: %v\n", err)
+			reporter.Warn("failed to store sonames: %v", err)
 		}
 	}
 
