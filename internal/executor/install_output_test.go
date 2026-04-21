@@ -354,10 +354,7 @@ func createTestTarGz(dest string) error {
 	defer f.Close()
 
 	gw := gzip.NewWriter(f)
-	defer gw.Close()
-
 	tw := tar.NewWriter(gw)
-	defer tw.Close()
 
 	content := []byte("hello")
 	hdr := &tar.Header{
@@ -368,8 +365,13 @@ func createTestTarGz(dest string) error {
 	if err := tw.WriteHeader(hdr); err != nil {
 		return err
 	}
-	_, err = tw.Write(content)
-	return err
+	if _, err = tw.Write(content); err != nil {
+		return err
+	}
+	if err := tw.Close(); err != nil {
+		return err
+	}
+	return gw.Close()
 }
 
 // --- scenario-17: extract action reporter classification ---
