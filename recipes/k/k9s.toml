@@ -3,14 +3,25 @@ name = "k9s"
 description = "Kubernetes CLI and TUI"
 homepage = "https://k9scli.io/"
 version_format = "semver"
+curated = true
 
+# Linux: statically linked Go binary works on glibc and musl
 [[steps]]
 action = "github_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 repo = "derailed/k9s"
-asset_pattern = "k9s_{os}_{arch}.tar.gz"
+asset_pattern = "k9s_Linux_{arch}.tar.gz"
 strip_dirs = 0
 binaries = ["k9s"]
-os_mapping = { linux = "Linux", darwin = "Darwin" }
+
+# macOS: Intel and Apple Silicon binaries
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "derailed/k9s"
+asset_pattern = "k9s_Darwin_{arch}.tar.gz"
+strip_dirs = 0
+binaries = ["k9s"]
 
 [verify]
 command = "k9s version"

@@ -3,14 +3,26 @@ name = "kubectx"
 description = "Switch between kubectl contexts (clusters)"
 homepage = "https://github.com/ahmetb/kubectx"
 version_format = "semver"
+curated = true
 
+# Linux: statically linked Go binary works on glibc and musl
 [[steps]]
 action = "github_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 repo = "ahmetb/kubectx"
-asset_pattern = "kubectx_v{version}_{os}_{arch}.tar.gz"
+asset_pattern = "kubectx_v{version}_linux_{arch}.tar.gz"
 strip_dirs = 0
 binaries = ["kubectx"]
-os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+
+# macOS: Intel and Apple Silicon binaries
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "ahmetb/kubectx"
+asset_pattern = "kubectx_v{version}_darwin_{arch}.tar.gz"
+strip_dirs = 0
+binaries = ["kubectx"]
 arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
 
 [verify]
