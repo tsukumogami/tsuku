@@ -9,6 +9,8 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+
+	"github.com/tsukumogami/tsuku/internal/progress"
 )
 
 // SetRpathAction implements RPATH modification for relocatable library loading
@@ -29,6 +31,8 @@ func (a *SetRpathAction) Name() string {
 //   - rpath (optional): RPATH value to set (default: "$ORIGIN/../lib")
 //   - create_wrapper (optional): Create wrapper script on failure (default: true)
 func (a *SetRpathAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
+	reporter := ctx.GetReporter()
+
 	// Get binaries list (required)
 	binaries, ok := GetStringSlice(params, "binaries")
 	if !ok || len(binaries) == 0 {
@@ -63,7 +67,7 @@ func (a *SetRpathAction) Execute(ctx *ExecutionContext, params map[string]interf
 		createWrapper = val
 	}
 
-	fmt.Printf("   Setting RPATH: %s\n", rpath)
+	reporter.Log("   Setting RPATH: %s", rpath)
 
 	for _, binary := range binaries {
 		binary = ExpandVars(binary, vars)
@@ -88,16 +92,16 @@ func (a *SetRpathAction) Execute(ctx *ExecutionContext, params map[string]interf
 		var setErr error
 		switch format {
 		case "elf":
-			setErr = setRpathLinux(ctx, binaryPath, rpath)
+			setErr = setRpathLinux(ctx, binaryPath, rpath, reporter)
 		case "macho":
-			setErr = setRpathMacOS(binaryPath, rpath)
+			setErr = setRpathMacOS(binaryPath, rpath, reporter)
 		default:
 			return fmt.Errorf("unsupported binary format for %s: %s", binary, format)
 		}
 
 		if setErr != nil {
 			if createWrapper {
-				fmt.Printf("   Warning: RPATH modification failed for %s, creating wrapper script\n", binary)
+				reporter.Warn("   Warning: RPATH modification failed for %s, creating wrapper script", binary)
 				if wrapErr := createLibraryWrapper(binaryPath, rpath); wrapErr != nil {
 					return fmt.Errorf("failed to create wrapper for %s: %w (original error: %v)", binary, wrapErr, setErr)
 				}
@@ -106,10 +110,10 @@ func (a *SetRpathAction) Execute(ctx *ExecutionContext, params map[string]interf
 			return fmt.Errorf("failed to set RPATH for %s: %w", binary, setErr)
 		}
 
-		fmt.Printf("   Set RPATH for %s\n", binary)
+		reporter.Log("   Set RPATH for %s", binary)
 	}
 
-	fmt.Printf("   RPATH modification complete\n")
+	reporter.Log("   RPATH modification complete")
 	return nil
 }
 
@@ -148,7 +152,7 @@ func detectBinaryFormat(path string) (string, error) {
 }
 
 // setRpathLinux uses patchelf to modify RPATH on Linux binaries
-func setRpathLinux(ctx *ExecutionContext, binaryPath, rpath string) error {
+func setRpathLinux(ctx *ExecutionContext, binaryPath, rpath string, reporter progress.Reporter) error {
 	// Find patchelf - check ExecPaths first (for installed dependencies), then fall back to PATH
 	patchelfPath := ""
 	for _, p := range ctx.ExecPaths {
@@ -188,7 +192,7 @@ func setRpathLinux(ctx *ExecutionContext, binaryPath, rpath string) error {
 		// Some binaries don't have RPATH, which is fine
 		if !strings.Contains(string(output), "cannot find") {
 			// Log but continue - binary might not have RPATH
-			fmt.Printf("   Note: Could not remove existing RPATH: %s\n", strings.TrimSpace(string(output)))
+			reporter.Log("   Note: Could not remove existing RPATH: %s", strings.TrimSpace(string(output)))
 		}
 	}
 
@@ -204,7 +208,7 @@ func setRpathLinux(ctx *ExecutionContext, binaryPath, rpath string) error {
 }
 
 // setRpathMacOS uses install_name_tool to modify RPATH on macOS binaries
-func setRpathMacOS(binaryPath, rpath string) error {
+func setRpathMacOS(binaryPath, rpath string, reporter progress.Reporter) error {
 	// Convert $ORIGIN to @executable_path for macOS
 	macRpath := strings.ReplaceAll(rpath, "$ORIGIN", "@executable_path")
 
@@ -233,7 +237,7 @@ func setRpathMacOS(binaryPath, rpath string) error {
 		deleteCmd := exec.Command(installNameTool, "-delete_rpath", oldRpath, binaryPath)
 		if err := deleteCmd.Run(); err != nil {
 			// Ignore errors - rpath might not exist
-			fmt.Printf("   Note: Could not delete rpath %s\n", oldRpath)
+			reporter.Log("   Note: Could not delete rpath %s", oldRpath)
 		}
 	}
 

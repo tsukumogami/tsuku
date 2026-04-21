@@ -152,14 +152,15 @@ func (a *GoBuildAction) Execute(ctx *ExecutionContext, params map[string]interfa
 		}
 	}
 
-	fmt.Printf("   Module: %s@%s\n", module, version)
-	fmt.Printf("   Executables: %v\n", executables)
+	reporter := ctx.GetReporter()
+	reporter.Log("   Module: %s@%s", module, version)
+	reporter.Log("   Executables: %v", executables)
 	if hasGoVersion && requiredGoVersion != "" {
-		fmt.Printf("   Go version: %s (locked)\n", requiredGoVersion)
+		reporter.Log("   Go version: %s (locked)", requiredGoVersion)
 	}
-	fmt.Printf("   Using go: %s\n", goPath)
-	fmt.Printf("   CGO enabled: %v\n", cgoEnabled)
-	fmt.Printf("   Build flags: %v\n", buildFlags)
+	reporter.Log("   Using go: %s", goPath)
+	reporter.Log("   CGO enabled: %v", cgoEnabled)
+	reporter.Log("   Build flags: %v", buildFlags)
 
 	// Get home directory for paths
 	homeDir, err := os.UserHomeDir()
@@ -206,7 +207,7 @@ func (a *GoBuildAction) Execute(ctx *ExecutionContext, params map[string]interfa
 	downloadCmd.Dir = tempDir
 	downloadCmd.Env = downloadEnv
 
-	fmt.Printf("   Downloading modules...\n")
+	reporter.Log("   Downloading modules...")
 	if output, err := downloadCmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("go mod download failed: %w\nOutput: %s", err, string(output))
 	}
@@ -233,7 +234,7 @@ func (a *GoBuildAction) Execute(ctx *ExecutionContext, params map[string]interfa
 	installArgs = append(installArgs, buildFlags...)
 	installArgs = append(installArgs, target)
 
-	fmt.Printf("   Installing: go %s\n", strings.Join(installArgs, " "))
+	reporter.Log("   Installing: go %s", strings.Join(installArgs, " "))
 
 	// Use online mode for install since go install module@version requires network
 	// even when modules are cached. Checksums are already verified by go mod verify.
@@ -246,10 +247,10 @@ func (a *GoBuildAction) Execute(ctx *ExecutionContext, params map[string]interfa
 		return fmt.Errorf("go install failed: %w\nOutput: %s", err, string(output))
 	}
 
-	// Show output if debugging
+	// Show output if debugging (TSUKU_DEBUG env var)
 	outputStr := strings.TrimSpace(string(output))
 	if outputStr != "" && os.Getenv("TSUKU_DEBUG") != "" {
-		fmt.Printf("   go output:\n%s\n", outputStr)
+		reporter.Log("   go output:\n%s", outputStr)
 	}
 
 	// Verify executables exist
@@ -260,8 +261,8 @@ func (a *GoBuildAction) Execute(ctx *ExecutionContext, params map[string]interfa
 		}
 	}
 
-	fmt.Printf("   Module built successfully with locked dependencies\n")
-	fmt.Printf("   Verified %d executable(s)\n", len(executables))
+	reporter.Log("   Module built successfully with locked dependencies")
+	reporter.Log("   Verified %d executable(s)", len(executables))
 
 	return nil
 }

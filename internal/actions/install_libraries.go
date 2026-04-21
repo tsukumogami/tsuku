@@ -72,7 +72,8 @@ func (a *InstallLibrariesAction) Execute(ctx *ExecutionContext, params map[strin
 	}
 
 	// Copy each matched file, preserving symlinks
-	fmt.Printf("   Installing %d library file(s)\n", len(matches))
+	reporter := ctx.GetReporter()
+	reporter.Log("   Installing %d library file(s)", len(matches))
 
 	for _, srcPath := range matches {
 		// Calculate relative path from WorkDir
@@ -104,14 +105,14 @@ func (a *InstallLibrariesAction) Execute(ctx *ExecutionContext, params map[strin
 			if err := CopySymlink(srcPath, destPath); err != nil {
 				return fmt.Errorf("failed to copy symlink %s: %w", relPath, err)
 			}
-			fmt.Printf("   ✓ Installed symlink: %s\n", relPath)
+			reporter.Log("   Installed symlink: %s", relPath)
 		} else {
 			// Copy as regular file, masking dangerous permission bits
 			safePerm := info.Mode() &^ (os.ModeSetuid | os.ModeSetgid | os.ModeSticky)
 			if err := CopyFile(srcPath, destPath, safePerm); err != nil {
 				return fmt.Errorf("failed to copy file %s: %w", relPath, err)
 			}
-			fmt.Printf("   ✓ Installed: %s\n", relPath)
+			reporter.Log("   Installed: %s", relPath)
 		}
 	}
 

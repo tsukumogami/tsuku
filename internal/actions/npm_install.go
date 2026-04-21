@@ -55,6 +55,8 @@ func (a *NpmInstallAction) Preflight(params map[string]interface{}) *PreflightRe
 // This action uses npm install -g --prefix for isolation.
 // Note: Ensure npm is available before executing this action.
 func (a *NpmInstallAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
+	reporter := ctx.GetReporter()
+
 	// Get package name (required)
 	packageName, ok := GetString(params, "package")
 	if !ok {
@@ -73,15 +75,15 @@ func (a *NpmInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 		npmPath = "npm"
 	}
 
-	fmt.Printf("   Package: %s@%s\n", packageName, ctx.Version)
-	fmt.Printf("   Executables: %v\n", executables)
-	fmt.Printf("   Using npm: %s\n", npmPath)
+	reporter.Log("   Package: %s@%s", packageName, ctx.Version)
+	reporter.Log("   Executables: %v", executables)
+	reporter.Log("   Using npm: %s", npmPath)
 
 	// Install package with --prefix for isolation
 	installDir := ctx.InstallDir
 	packageSpec := fmt.Sprintf("%s@%s", packageName, ctx.Version)
 
-	fmt.Printf("   Installing: npm install -g --prefix=%s %s\n", installDir, packageSpec)
+	reporter.Log("   Installing: npm install -g --prefix=%s %s", installDir, packageSpec)
 
 	// Use CommandContext for cancellation support
 	cmd := exec.CommandContext(ctx.Context, npmPath, "install", "-g", fmt.Sprintf("--prefix=%s", installDir), packageSpec)
@@ -99,10 +101,10 @@ func (a *NpmInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 		return fmt.Errorf("npm install failed: %w\nOutput: %s", err, string(output))
 	}
 
-	// npm is verbose, only show output on error or if debugging
+	// Show output if debugging (TSUKU_DEBUG env var)
 	outputStr := strings.TrimSpace(string(output))
 	if outputStr != "" && os.Getenv("TSUKU_DEBUG") != "" {
-		fmt.Printf("   npm output:\n%s\n", outputStr)
+		reporter.Log("   npm output:\n%s", outputStr)
 	}
 
 	// Verify executables exist
@@ -114,8 +116,8 @@ func (a *NpmInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 		}
 	}
 
-	fmt.Printf("   ✓ Package installed successfully\n")
-	fmt.Printf("   ✓ Verified %d executable(s)\n", len(executables))
+	reporter.Log("   Package installed successfully")
+	reporter.Log("   Verified %d executable(s)", len(executables))
 
 	return nil
 }

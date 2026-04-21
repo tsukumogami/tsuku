@@ -64,7 +64,7 @@ func (a *PacmanInstallAction) Execute(ctx *ExecutionContext, params map[string]i
 		}
 	}
 
-	fmt.Printf("   System packages verified: %v\n", packages)
+	ctx.GetReporter().Log("   System packages verified: %v", packages)
 	return nil
 }
 
@@ -131,7 +131,7 @@ func (a *ApkInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 		}
 	}
 
-	fmt.Printf("   System packages verified: %v\n", packages)
+	ctx.GetReporter().Log("   System packages verified: %v", packages)
 	return nil
 }
 
@@ -199,7 +199,7 @@ func (a *ZypperInstallAction) Execute(ctx *ExecutionContext, params map[string]i
 		}
 	}
 
-	fmt.Printf("   System packages verified: %v\n", packages)
+	ctx.GetReporter().Log("   System packages verified: %v", packages)
 	return nil
 }
 

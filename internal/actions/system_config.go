@@ -48,8 +48,9 @@ func (a *GroupAddAction) Execute(ctx *ExecutionContext, params map[string]interf
 		return fmt.Errorf("group_add action requires 'group' parameter")
 	}
 
-	fmt.Printf("   Would add user to group: %s\n", group)
-	fmt.Printf("   (Skipped - requires sudo and system modification)\n")
+	reporter := ctx.GetReporter()
+	reporter.Log("   Would add user to group: %s", group)
+	reporter.Log("   (Skipped - requires sudo and system modification)")
 	return nil
 }
 
@@ -120,8 +121,9 @@ func (a *ServiceEnableAction) Execute(ctx *ExecutionContext, params map[string]i
 		return fmt.Errorf("service_enable action requires 'service' parameter")
 	}
 
-	fmt.Printf("   Would enable service: %s\n", service)
-	fmt.Printf("   (Skipped - requires sudo and system modification)\n")
+	reporter := ctx.GetReporter()
+	reporter.Log("   Would enable service: %s", service)
+	reporter.Log("   (Skipped - requires sudo and system modification)")
 	return nil
 }
 
@@ -192,8 +194,9 @@ func (a *ServiceStartAction) Execute(ctx *ExecutionContext, params map[string]in
 		return fmt.Errorf("service_start action requires 'service' parameter")
 	}
 
-	fmt.Printf("   Would start service: %s\n", service)
-	fmt.Printf("   (Skipped - requires sudo and system modification)\n")
+	reporter := ctx.GetReporter()
+	reporter.Log("   Would start service: %s", service)
+	reporter.Log("   (Skipped - requires sudo and system modification)")
 	return nil
 }
 
@@ -290,7 +293,8 @@ func (a *RequireCommandAction) Execute(ctx *ExecutionContext, params map[string]
 		return fmt.Errorf("command '%s' not found in PATH", command)
 	}
 
-	fmt.Printf("   Found command: %s (%s)\n", command, path)
+	reporter := ctx.GetReporter()
+	reporter.Log("   Found command: %s (%s)", command, path)
 
 	// Check version if min_version is specified
 	minVersion, hasMinVersion := GetString(params, "min_version")
@@ -321,7 +325,7 @@ func (a *RequireCommandAction) Execute(ctx *ExecutionContext, params map[string]
 		}
 
 		detectedVersion := matches[1]
-		fmt.Printf("   Detected version: %s (minimum: %s)\n", detectedVersion, minVersion)
+		reporter.Log("   Detected version: %s (minimum: %s)", detectedVersion, minVersion)
 
 		// Simple version comparison (could be enhanced for semver)
 		if !versionMeetsMinimum(detectedVersion, minVersion) {
@@ -329,7 +333,7 @@ func (a *RequireCommandAction) Execute(ctx *ExecutionContext, params map[string]
 		}
 	}
 
-	fmt.Printf("   ✓ Command '%s' verified\n", command)
+	reporter.Log("   Command '%s' verified", command)
 	return nil
 }
 
@@ -397,11 +401,12 @@ func (a *ManualAction) Execute(ctx *ExecutionContext, params map[string]interfac
 		return fmt.Errorf("manual action requires 'text' parameter")
 	}
 
-	fmt.Printf("\n   ╭─ Manual Installation Required ─────────────────────────────╮\n")
+	reporter := ctx.GetReporter()
+	reporter.Log("   ╭─ Manual Installation Required ─────────────────────────────╮")
 	for _, line := range strings.Split(text, "\n") {
-		fmt.Printf("   │ %s\n", line)
+		reporter.Log("   │ %s", line)
 	}
-	fmt.Printf("   ╰───────────────────────────────────────────────────────────╯\n\n")
+	reporter.Log("   ╰───────────────────────────────────────────────────────────╯")
 
 	return nil
 }

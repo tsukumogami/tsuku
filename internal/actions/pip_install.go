@@ -49,6 +49,8 @@ func (a *PipInstallAction) Name() string {
 //   - --only-binary :all:: Only install wheels (no sdist compilation)
 //   - --no-deps: Don't install dependencies (assumes requirements.txt is complete)
 func (a *PipInstallAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
+	reporter := ctx.GetReporter()
+
 	// Get python version (required)
 	pythonVersion, ok := GetString(params, "python_version")
 	if !ok {
@@ -99,18 +101,18 @@ func (a *PipInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 	}
 
 	// Display configuration to user
-	fmt.Printf("   Python version: %s\n", pythonVersion)
-	fmt.Printf("   Use hashes: %v\n", useHashes)
-	fmt.Printf("   Output directory: %s\n", outputDir)
+	reporter.Log("   Python version: %s", pythonVersion)
+	reporter.Log("   Use hashes: %v", useHashes)
+	reporter.Log("   Output directory: %s", outputDir)
 	if requirements != "" {
-		fmt.Printf("   Requirements: %s\n", requirements)
+		reporter.Log("   Requirements: %s", requirements)
 	}
 	if sourceDir != "" {
-		fmt.Printf("   Source directory: %s\n", sourceDir)
+		reporter.Log("   Source directory: %s", sourceDir)
 	}
 
 	// Step 1: Create virtual environment
-	fmt.Printf("   Creating virtual environment...\n")
+	reporter.Log("   Creating virtual environment...")
 	if err := createVirtualEnv(pythonPath, outputDir); err != nil {
 		return fmt.Errorf("failed to create virtual environment: %w", err)
 	}
@@ -119,7 +121,7 @@ func (a *PipInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 	pipPath := filepath.Join(outputDir, "bin", "pip")
 	args := buildPipInstallArgs(sourceDir, requirements, constraints, useHashes)
 
-	fmt.Printf("   Installing packages: pip %s\n", strings.Join(args, " "))
+	reporter.Log("   Installing packages: pip %s", strings.Join(args, " "))
 
 	cmd := exec.CommandContext(ctx.Context, pipPath, args...)
 	cmd.Dir = ctx.WorkDir
@@ -151,7 +153,7 @@ func (a *PipInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 		ctx.Log().Debug("pip_install: pip output", "output", outputStr)
 	}
 
-	fmt.Printf("   pip install completed successfully\n")
+	reporter.Log("   pip install completed successfully")
 
 	return nil
 }

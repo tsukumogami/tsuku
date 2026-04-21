@@ -62,6 +62,8 @@ func (a *CargoInstallAction) Preflight(params map[string]interface{}) *Preflight
 //	  .crates.toml         - Cargo metadata
 //	  .crates2.json        - Cargo metadata
 func (a *CargoInstallAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
+	reporter := ctx.GetReporter()
+
 	// Get crate name (required)
 	crateName, ok := GetString(params, "crate")
 	if !ok {
@@ -103,15 +105,15 @@ func (a *CargoInstallAction) Execute(ctx *ExecutionContext, params map[string]in
 		}
 	}
 
-	fmt.Printf("   Crate: %s@%s\n", crateName, ctx.Version)
-	fmt.Printf("   Executables: %v\n", executables)
-	fmt.Printf("   Using cargo: %s\n", cargoPath)
+	reporter.Log("   Crate: %s@%s", crateName, ctx.Version)
+	reporter.Log("   Executables: %v", executables)
+	reporter.Log("   Using cargo: %s", cargoPath)
 
 	// Install crate with --root for isolation
 	installDir := ctx.InstallDir
 	crateSpec := fmt.Sprintf("%s@%s", crateName, ctx.Version)
 
-	fmt.Printf("   Installing: cargo install --root=%s %s\n", installDir, crateSpec)
+	reporter.Log("   Installing: cargo install --root=%s %s", installDir, crateSpec)
 
 	// Use CommandContext for cancellation support
 	cmd := exec.CommandContext(ctx.Context, cargoPath, "install", "--root", installDir, crateSpec)
@@ -128,7 +130,7 @@ func (a *CargoInstallAction) Execute(ctx *ExecutionContext, params map[string]in
 	if !hasSystemCompiler() {
 		if newEnv, found := SetupCCompilerEnv(env); found {
 			env = newEnv
-			fmt.Printf("   Using zig as C compiler for native dependencies\n")
+			reporter.Log("   Using zig as C compiler for native dependencies")
 		}
 	}
 	cmd.Env = env
@@ -138,10 +140,10 @@ func (a *CargoInstallAction) Execute(ctx *ExecutionContext, params map[string]in
 		return fmt.Errorf("cargo install failed: %w\nOutput: %s", err, string(output))
 	}
 
-	// cargo is verbose, only show output if debugging
+	// Show output if debugging (TSUKU_DEBUG env var)
 	outputStr := strings.TrimSpace(string(output))
 	if outputStr != "" && os.Getenv("TSUKU_DEBUG") != "" {
-		fmt.Printf("   cargo output:\n%s\n", outputStr)
+		reporter.Log("   cargo output:\n%s", outputStr)
 	}
 
 	// Verify executables exist
@@ -153,8 +155,8 @@ func (a *CargoInstallAction) Execute(ctx *ExecutionContext, params map[string]in
 		}
 	}
 
-	fmt.Printf("   ✓ Crate installed successfully\n")
-	fmt.Printf("   ✓ Verified %d executable(s)\n", len(executables))
+	reporter.Log("   Crate installed successfully")
+	reporter.Log("   Verified %d executable(s)", len(executables))
 
 	return nil
 }

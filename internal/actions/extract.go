@@ -142,10 +142,11 @@ func (a *ExtractAction) Execute(ctx *ExecutionContext, params map[string]interfa
 		"destPath", destPath,
 		"stripDirs", stripDirs)
 
-	fmt.Printf("   Extracting: %s\n", archiveName)
-	fmt.Printf("   Format: %s\n", format)
+	reporter := ctx.GetReporter()
+	reporter.Log("   Extracting: %s", archiveName)
+	reporter.Log("   Format: %s", format)
 	if stripDirs > 0 {
-		fmt.Printf("   Strip dirs: %d\n", stripDirs)
+		reporter.Log("   Strip dirs: %d", stripDirs)
 	}
 
 	// Extract based on format

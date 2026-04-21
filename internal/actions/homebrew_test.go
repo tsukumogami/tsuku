@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
@@ -158,7 +159,7 @@ func TestHomebrewRelocateAction_RelocatePlaceholders_TextFile(t *testing.T) {
 		WorkDir:   tmpDir,
 		ExecPaths: []string{},
 	}
-	if err := action.relocatePlaceholders(ctx, installPath, installPath, "test"); err != nil {
+	if err := action.relocatePlaceholders(ctx, installPath, installPath, "test", progress.NoopReporter{}); err != nil {
 		t.Fatalf("relocatePlaceholders failed: %v", err)
 	}
 
@@ -193,7 +194,7 @@ func TestHomebrewRelocateAction_RelocatePlaceholders_BinaryFile(t *testing.T) {
 		WorkDir:   tmpDir,
 		ExecPaths: []string{},
 	}
-	if err := action.relocatePlaceholders(ctx, installPath, installPath, "test"); err != nil {
+	if err := action.relocatePlaceholders(ctx, installPath, installPath, "test", progress.NoopReporter{}); err != nil {
 		t.Fatalf("relocatePlaceholders failed: %v", err)
 	}
 
@@ -234,7 +235,7 @@ func TestHomebrewRelocateAction_RelocatePlaceholders_SkipsSymlinks(t *testing.T)
 		WorkDir:   tmpDir,
 		ExecPaths: []string{},
 	}
-	if err := action.relocatePlaceholders(ctx, "/opt", "/opt", "test"); err != nil {
+	if err := action.relocatePlaceholders(ctx, "/opt", "/opt", "test", progress.NoopReporter{}); err != nil {
 		t.Fatalf("relocatePlaceholders failed: %v", err)
 	}
 }
@@ -256,7 +257,7 @@ func TestHomebrewRelocateAction_RelocatePlaceholders_NoPlaceholder(t *testing.T)
 		WorkDir:   tmpDir,
 		ExecPaths: []string{},
 	}
-	if err := action.relocatePlaceholders(ctx, "/opt", "/opt", "test"); err != nil {
+	if err := action.relocatePlaceholders(ctx, "/opt", "/opt", "test", progress.NoopReporter{}); err != nil {
 		t.Fatalf("relocatePlaceholders failed: %v", err)
 	}
 
@@ -378,7 +379,7 @@ func TestHomebrewRelocateAction_FixBinaryRpath_UnrecognizedFormat(t *testing.T) 
 
 	// Should return nil (skip silently) for unrecognized format
 	ctx := &ExecutionContext{ExecPaths: []string{}}
-	err := action.fixBinaryRpath(ctx, testFile, "/opt/test")
+	err := action.fixBinaryRpath(ctx, testFile, "/opt/test", progress.NoopReporter{})
 	if err != nil {
 		t.Errorf("fixBinaryRpath should skip unrecognized format, got error: %v", err)
 	}
@@ -391,7 +392,7 @@ func TestHomebrewRelocateAction_FixBinaryRpath_NonexistentFile(t *testing.T) {
 
 	// Try to fix RPATH on non-existent file
 	ctx := &ExecutionContext{ExecPaths: []string{}}
-	err := action.fixBinaryRpath(ctx, filepath.Join(tmpDir, "nonexistent"), "/opt/test")
+	err := action.fixBinaryRpath(ctx, filepath.Join(tmpDir, "nonexistent"), "/opt/test", progress.NoopReporter{})
 	if err == nil {
 		t.Error("fixBinaryRpath should fail for nonexistent file")
 	}
@@ -410,7 +411,7 @@ func TestHomebrewRelocateAction_FixBinaryRpath_EmptyFile(t *testing.T) {
 
 	// Should return error for empty file (EOF when reading magic)
 	ctx := &ExecutionContext{ExecPaths: []string{}}
-	err := action.fixBinaryRpath(ctx, testFile, "/opt/test")
+	err := action.fixBinaryRpath(ctx, testFile, "/opt/test", progress.NoopReporter{})
 	if err == nil {
 		t.Error("fixBinaryRpath should fail for empty file")
 	}
@@ -434,7 +435,7 @@ func TestHomebrewRelocateAction_RelocatePlaceholders_ReadOnlyTextFile(t *testing
 		WorkDir:   tmpDir,
 		ExecPaths: []string{},
 	}
-	if err := action.relocatePlaceholders(ctx, installPath, installPath, "test"); err != nil {
+	if err := action.relocatePlaceholders(ctx, installPath, installPath, "test", progress.NoopReporter{}); err != nil {
 		t.Fatalf("relocatePlaceholders failed: %v", err)
 	}
 
@@ -474,7 +475,7 @@ func TestHomebrewRelocateAction_RelocatePlaceholders_MultipleFiles(t *testing.T)
 		WorkDir:   tmpDir,
 		ExecPaths: []string{},
 	}
-	if err := action.relocatePlaceholders(ctx, installPath, installPath, "test"); err != nil {
+	if err := action.relocatePlaceholders(ctx, installPath, installPath, "test", progress.NoopReporter{}); err != nil {
 		t.Fatalf("relocatePlaceholders failed: %v", err)
 	}
 
@@ -520,7 +521,7 @@ func TestHomebrewRelocateAction_RelocatePlaceholders_NestedDirectories(t *testin
 		WorkDir:   tmpDir,
 		ExecPaths: []string{},
 	}
-	if err := action.relocatePlaceholders(ctx, installPath, installPath, "test"); err != nil {
+	if err := action.relocatePlaceholders(ctx, installPath, installPath, "test", progress.NoopReporter{}); err != nil {
 		t.Fatalf("relocatePlaceholders failed: %v", err)
 	}
 
@@ -613,7 +614,7 @@ func TestHomebrewRelocateAction_FixBinaryRpath_ELFMagic(t *testing.T) {
 	// - Use patchelf if available (CI has it), or
 	// - Print warning and return nil if patchelf not found
 	ctx := &ExecutionContext{ExecPaths: []string{}}
-	err := action.fixBinaryRpath(ctx, testFile, "/opt/test")
+	err := action.fixBinaryRpath(ctx, testFile, "/opt/test", progress.NoopReporter{})
 	if err != nil {
 		// patchelf may fail on invalid ELF, but that's still a valid test
 		t.Logf("fixBinaryRpath returned error (may be expected): %v", err)
@@ -649,7 +650,7 @@ func TestHomebrewRelocateAction_FixBinaryRpath_MachOMagic(t *testing.T) {
 			// - Use install_name_tool if available (macOS), or
 			// - Print warning and return nil if not found (Linux)
 			ctx := &ExecutionContext{ExecPaths: []string{}}
-			err := action.fixBinaryRpath(ctx, testFile, "/opt/test")
+			err := action.fixBinaryRpath(ctx, testFile, "/opt/test", progress.NoopReporter{})
 			if err != nil {
 				// May fail on invalid binary, but still valid test
 				t.Logf("fixBinaryRpath returned error (may be expected): %v", err)
@@ -672,7 +673,7 @@ func TestHomebrewRelocateAction_FixBinaryRpath_ReadOnlyELF(t *testing.T) {
 
 	// This exercises the chmod code path in fixElfRpath
 	ctx := &ExecutionContext{ExecPaths: []string{}}
-	err := action.fixBinaryRpath(ctx, testFile, "/opt/test")
+	err := action.fixBinaryRpath(ctx, testFile, "/opt/test", progress.NoopReporter{})
 	if err != nil {
 		t.Logf("fixBinaryRpath returned error (may be expected): %v", err)
 	}
@@ -699,7 +700,7 @@ func TestHomebrewRelocateAction_RelocatePlaceholders_BinaryWithELFMagic(t *testi
 		WorkDir:   tmpDir,
 		ExecPaths: []string{},
 	}
-	err := action.relocatePlaceholders(ctx, "/opt/test", "/opt/test", "test")
+	err := action.relocatePlaceholders(ctx, "/opt/test", "/opt/test", "test", progress.NoopReporter{})
 	if err != nil {
 		t.Logf("relocatePlaceholders returned error (may be expected if patchelf not found): %v", err)
 	}
@@ -721,7 +722,7 @@ func TestHomebrewRelocateAction_RelocatePlaceholders_BothPlaceholders(t *testing
 		WorkDir:   tmpDir,
 		ExecPaths: []string{},
 	}
-	if err := action.relocatePlaceholders(ctx, "/opt/test", "/opt/test", "test"); err != nil {
+	if err := action.relocatePlaceholders(ctx, "/opt/test", "/opt/test", "test", progress.NoopReporter{}); err != nil {
 		t.Fatalf("relocatePlaceholders failed: %v", err)
 	}
 

@@ -60,7 +60,7 @@ func (a *DnfInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 		}
 	}
 
-	fmt.Printf("   System packages verified: %v\n", packages)
+	ctx.GetReporter().Log("   System packages verified: %v", packages)
 	return nil
 }
 
@@ -143,8 +143,9 @@ func (a *DnfRepoAction) ImplicitConstraint() *Constraint {
 // Execute logs what would be configured (stub implementation).
 func (a *DnfRepoAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
 	url := params["url"].(string)
-	fmt.Printf("   Would add DNF repository: %s\n", url)
-	fmt.Printf("   (Skipped - requires sudo and system modification)\n")
+	reporter := ctx.GetReporter()
+	reporter.Log("   Would add DNF repository: %s", url)
+	reporter.Log("   (Skipped - requires sudo and system modification)")
 	return nil
 }
 

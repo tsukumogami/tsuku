@@ -67,8 +67,9 @@ type AppBundleResult struct {
 //   - symlink_applications (optional): Create ~/Applications symlink (default: true)
 func (a *AppBundleAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
 	// Only run on macOS
+	reporter := ctx.GetReporter()
 	if ctx.OS != "darwin" {
-		fmt.Printf("   Skipping app_bundle: macOS only\n")
+		reporter.Log("   Skipping app_bundle: macOS only")
 		return nil
 	}
 
@@ -116,7 +117,7 @@ func (a *AppBundleAction) Execute(ctx *ExecutionContext, params map[string]inter
 	}
 
 	// Download the archive
-	fmt.Printf("   Downloading: %s\n", url)
+	reporter.Log("   Downloading: %s", url)
 	archiveName := filepath.Base(url)
 	archivePath := filepath.Join(ctx.WorkDir, archiveName)
 
@@ -125,7 +126,7 @@ func (a *AppBundleAction) Execute(ctx *ExecutionContext, params map[string]inter
 	}
 
 	// Extract based on archive format
-	fmt.Printf("   Extracting: %s\n", archiveName)
+	reporter.Log("   Extracting: %s", archiveName)
 	extractDir := filepath.Join(ctx.WorkDir, "extracted")
 
 	var extractErr error
@@ -158,12 +159,12 @@ func (a *AppBundleAction) Execute(ctx *ExecutionContext, params map[string]inter
 	destPath := filepath.Join(ctx.AppsDir, destName)
 
 	// Copy .app bundle to apps directory
-	fmt.Printf("   Installing: %s -> %s\n", appName, destPath)
+	reporter.Log("   Installing: %s -> %s", appName, destPath)
 	if err := copyDir(appPath, destPath); err != nil {
 		return fmt.Errorf("failed to copy .app bundle: %w", err)
 	}
 
-	fmt.Printf("   Installed: %s\n", destPath)
+	reporter.Log("   Installed: %s", destPath)
 
 	// Initialize result for state tracking
 	result := &AppBundleResult{
@@ -186,7 +187,7 @@ func (a *AppBundleAction) Execute(ctx *ExecutionContext, params map[string]inter
 
 				// Verify the binary exists in the .app bundle
 				if _, err := os.Stat(targetPath); os.IsNotExist(err) {
-					fmt.Printf("   Warning: binary not found in app bundle: %s\n", binaryPath)
+					reporter.Warn("   binary not found in app bundle: %s", binaryPath)
 					continue
 				}
 
@@ -195,7 +196,7 @@ func (a *AppBundleAction) Execute(ctx *ExecutionContext, params map[string]inter
 					return fmt.Errorf("failed to create symlink for %s: %w", binaryName, err)
 				}
 
-				fmt.Printf("   Symlinked: %s -> %s\n", symlinkPath, targetPath)
+				reporter.Log("   Symlinked: %s -> %s", symlinkPath, targetPath)
 				result.Binaries = append(result.Binaries, binaryName)
 			}
 		}
@@ -208,16 +209,16 @@ func (a *AppBundleAction) Execute(ctx *ExecutionContext, params map[string]inter
 			applicationsDir := filepath.Join(homeDir, "Applications")
 			// Ensure ~/Applications exists
 			if err := os.MkdirAll(applicationsDir, 0755); err != nil {
-				fmt.Printf("   Warning: could not create ~/Applications: %v\n", err)
+				reporter.Warn("   could not create ~/Applications: %v", err)
 			} else {
 				// Use app_name for the symlink (e.g., "Visual Studio Code.app")
 				applicationSymlink := filepath.Join(applicationsDir, appName)
 
 				// Create symlink atomically
 				if err := atomicSymlink(destPath, applicationSymlink); err != nil {
-					fmt.Printf("   Warning: could not create ~/Applications symlink: %v\n", err)
+					reporter.Warn("   could not create ~/Applications symlink: %v", err)
 				} else {
-					fmt.Printf("   Symlinked: %s -> %s\n", applicationSymlink, destPath)
+					reporter.Log("   Symlinked: %s -> %s", applicationSymlink, destPath)
 					result.ApplicationSymlink = applicationSymlink
 				}
 			}

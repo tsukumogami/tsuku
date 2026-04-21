@@ -144,7 +144,7 @@ func (a *InstallCompletionsAction) executeSourceFile(ctx *ExecutionContext, sour
 			return fmt.Errorf("install_completions: failed to read back %s for hashing: %w", destPath, err)
 		}
 		hash := contentHash(written)
-		fmt.Printf("   Installed completion: %s\n", destPath)
+		ctx.GetReporter().Log("   Installed completion: %s", destPath)
 		recordCompletionCleanup(ctx, target, shell, hash)
 	}
 
@@ -181,18 +181,19 @@ func (a *InstallCompletionsAction) executeSourceCommand(ctx *ExecutionContext, s
 		c.Stderr = &stderr
 
 		err := c.Run()
+		completionReporter := ctx.GetReporter()
 		if stderr.Len() > 0 {
-			fmt.Printf("   [completions stderr] %s\n", stderr.String())
+			completionReporter.Log("   [completions stderr] %s", stderr.String())
 		}
 
 		if err != nil {
-			fmt.Printf("   Warning: source_command failed for shell %q: %v (skipping)\n", shell, err)
+			completionReporter.Warn("   Warning: source_command failed for shell %q: %v (skipping)", shell, err)
 			continue
 		}
 
 		output := stdout.Bytes()
 		if len(output) == 0 {
-			fmt.Printf("   Warning: source_command produced empty output for shell %q (skipping)\n", shell)
+			completionReporter.Warn("   Warning: source_command produced empty output for shell %q (skipping)", shell)
 			continue
 		}
 
@@ -202,7 +203,7 @@ func (a *InstallCompletionsAction) executeSourceCommand(ctx *ExecutionContext, s
 			return fmt.Errorf("install_completions: failed to write %s: %w", destPath, err)
 		}
 		hash := contentHash(output)
-		fmt.Printf("   Installed completion: %s\n", destPath)
+		completionReporter.Log("   Installed completion: %s", destPath)
 		recordCompletionCleanup(ctx, target, shell, hash)
 	}
 

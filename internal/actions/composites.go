@@ -232,8 +232,9 @@ func (a *DownloadArchiveAction) Execute(ctx *ExecutionContext, params map[string
 
 	binDir := filepath.Join(ctx.InstallDir, "bin")
 
-	fmt.Printf("   ✓ Installed complete directory structure\n")
-	fmt.Printf("   ✓ Verified %d executable(s) in %s\n", len(chmodFiles), binDir)
+	reporter := ctx.GetReporter()
+	reporter.Log("   Installed complete directory structure")
+	reporter.Log("   Verified %d executable(s) in %s", len(chmodFiles), binDir)
 
 	return nil
 }
@@ -463,7 +464,7 @@ func (a *GitHubArchiveAction) Execute(ctx *ExecutionContext, params map[string]i
 		}
 
 		assetName = matchedAsset
-		fmt.Printf("   → Resolved wildcard pattern to: %s\n", assetName)
+		ctx.GetReporter().Log("   Resolved wildcard pattern to: %s", assetName)
 	}
 
 	url := fmt.Sprintf("https://github.com/%s/releases/download/%s/%s", repo, ctx.VersionTag, assetName)
@@ -791,7 +792,7 @@ func (a *GitHubFileAction) Execute(ctx *ExecutionContext, params map[string]inte
 		}
 
 		assetName = matchedAsset
-		fmt.Printf("   → Resolved wildcard pattern to: %s\n", assetName)
+		ctx.GetReporter().Log("   Resolved wildcard pattern to: %s", assetName)
 	}
 
 	url := fmt.Sprintf("https://github.com/%s/releases/download/%s/%s", repo, ctx.VersionTag, assetName)

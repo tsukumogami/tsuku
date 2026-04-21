@@ -100,11 +100,12 @@ func (a *PipExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 		return fmt.Errorf("python not found: install python-standalone first (tsuku install python-standalone)")
 	}
 
-	fmt.Printf("   Package: %s@%s\n", packageName, version)
-	fmt.Printf("   Executables: %v\n", executables)
-	fmt.Printf("   Using python: %s\n", pythonPath)
+	reporter := ctx.GetReporter()
+	reporter.Log("   Package: %s@%s", packageName, version)
+	reporter.Log("   Executables: %v", executables)
+	reporter.Log("   Using python: %s", pythonPath)
 	if hasNativeAddons {
-		fmt.Printf("   Warning: Package contains native addons (may have platform-specific behavior)\n")
+		reporter.Warn("   Package contains native addons (may have platform-specific behavior)")
 	}
 
 	// Step 1: Verify Python version if specified
@@ -114,14 +115,14 @@ func (a *PipExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 			return fmt.Errorf("failed to get Python version: %w", err)
 		}
 		if !strings.HasPrefix(actualVersion, expectedPythonVersion) {
-			fmt.Printf("   Warning: Python version mismatch - expected %s, got %s\n",
+			reporter.Warn("   Python version mismatch - expected %s, got %s",
 				expectedPythonVersion, actualVersion)
 		}
 	}
 
 	// Step 2: Create isolated venv
 	venvDir := filepath.Join(ctx.InstallDir, "venvs", packageName)
-	fmt.Printf("   Creating venv: %s\n", venvDir)
+	reporter.Log("   Creating venv: %s", venvDir)
 
 	if err := os.MkdirAll(filepath.Dir(venvDir), 0755); err != nil {
 		return fmt.Errorf("failed to create venvs directory: %w", err)
@@ -140,7 +141,7 @@ func (a *PipExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 
 	// Count packages for progress reporting
 	packageCount := countRequirementsPackages(lockedRequirements)
-	fmt.Printf("   Installing %d packages with hash verification\n", packageCount)
+	reporter.Log("   Installing %d packages with hash verification", packageCount)
 
 	// Step 4: Install with safety flags
 	pipBin := filepath.Join(venvDir, "bin", "pip")
@@ -275,8 +276,8 @@ exec "$VENV_DIR/bin/%s" "$@"
 		}
 	}
 
-	fmt.Printf("   Package installed successfully\n")
-	fmt.Printf("   Verified %d executable(s)\n", len(executables))
+	reporter.Log("   Package installed successfully")
+	reporter.Log("   Verified %d executable(s)", len(executables))
 
 	return nil
 }

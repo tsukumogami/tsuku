@@ -47,7 +47,8 @@ func (a *InstallGemDirectAction) Execute(ctx *ExecutionContext, params map[strin
 		return fmt.Errorf("install_gem_direct requires 'executables' parameter with at least one executable")
 	}
 
-	fmt.Printf("   Installing %s@%s via gem install\n", gemName, version)
+	reporter := ctx.GetReporter()
+	reporter.Log("   Installing %s@%s via gem install", gemName, version)
 
 	// Find gem command (prefer tsuku's ruby, fall back to system)
 	gemPath := ResolveGem()
@@ -76,7 +77,7 @@ func (a *InstallGemDirectAction) Execute(ctx *ExecutionContext, params map[strin
 		"GEM_PATH="+installDir,
 	)
 
-	fmt.Printf("   Running: gem install %s --version %s --install-dir %s\n", gemName, version, installDir)
+	reporter.Log("   Running: gem install %s --version %s --install-dir %s", gemName, version, installDir)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("gem install failed: %w\nOutput: %s", err, string(output))
@@ -96,7 +97,7 @@ func (a *InstallGemDirectAction) Execute(ctx *ExecutionContext, params map[strin
 		}
 	}
 
-	fmt.Printf("   Installed %s@%s with %d executable(s)\n", gemName, version, len(executables))
+	reporter.Log("   Installed %s@%s with %d executable(s)", gemName, version, len(executables))
 	return nil
 }
 

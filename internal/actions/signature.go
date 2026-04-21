@@ -70,7 +70,7 @@ func (c *PGPKeyCache) Get(ctx context.Context, fingerprint, keyURL string) (*cry
 	// Save to cache
 	if err := c.saveToCache(fingerprint, armoredKey); err != nil {
 		// Log warning but don't fail - key is still usable
-		fmt.Printf("   Warning: failed to cache key: %v\n", err)
+		fmt.Fprintf(os.Stderr, "   Warning: failed to cache key: %v\n", err)
 	}
 
 	return key, nil
