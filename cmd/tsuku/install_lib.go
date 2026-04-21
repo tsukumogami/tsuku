@@ -184,6 +184,6 @@ func installLibrary(libName, reqVersion string, mgr *install.Manager, telemetryC
 		telemetryClient.Send(event)
 	}
 
-	reporter.Log("Library %s@%s installed successfully", libName, version)
+	reporter.Log("✅ %s@%s", libName, version)
 	return nil
 }

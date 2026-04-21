@@ -634,6 +634,7 @@ func (e *Executor) installDependencies(ctx context.Context, deps []DependencyPla
 
 		// Then install this dependency
 		if err := e.installSingleDependency(ctx, &dep, platform); err != nil {
+			e.getReporter().Log("❌ %s@%s", dep.Tool, dep.Version)
 			return fmt.Errorf("failed to install dependency %s: %w", dep.Tool, err)
 		}
 	}
@@ -669,7 +670,7 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		return nil
 	}
 
-	e.getReporter().Log("Installing dependency: %s@%s", dep.Tool, dep.Version)
+	e.getReporter().Status(fmt.Sprintf("Installing %s@%s", dep.Tool, dep.Version))
 
 	// Create temporary work directory for this dependency
 	depWorkDir, err := os.MkdirTemp("", fmt.Sprintf("dep-%s-*", dep.Tool))
@@ -782,7 +783,7 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		}
 	}
 
-	e.getReporter().Log("Installed %s@%s", dep.Tool, dep.Version)
+	e.getReporter().Log("✅ %s@%s", dep.Tool, dep.Version)
 	return nil
 }
 

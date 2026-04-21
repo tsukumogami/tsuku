@@ -433,10 +433,11 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	}
 
 	// Emit the install-start line now that the version is resolved from the plan.
-	reporter.Log("Installing %s@%s", toolName, planVersion)
+	reporter.Status(fmt.Sprintf("Installing %s@%s", toolName, planVersion))
 
 	// Execute the plan
 	if err := exec.ExecutePlan(globalCtx, plan); err != nil {
+		reporter.Log("❌ %s@%s", toolName, planVersion)
 		// Handle ChecksumMismatchError specially - it has a user-friendly message
 		var checksumErr *executor.ChecksumMismatchError
 		if errors.As(err, &checksumErr) {
@@ -572,7 +573,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	// Skip verification for system dependencies (require_system only recipes)
 	if !isSystemDep {
 		if r.Verify != nil && r.Verify.Command != "" {
-			reporter.Log("Verifying %s@%s", toolName, version)
+			reporter.Status(fmt.Sprintf("Verifying %s@%s", toolName, version))
 
 			// Get the tool state for verification
 			toolState, err := mgr.GetState().GetToolState(toolName)
@@ -608,7 +609,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		reporter.Log("%s is available on your system", toolName)
 		reporter.Log("Note: tsuku doesn't manage this dependency. It validated that it's installed.")
 	} else {
-		reporter.Log("%s@%s installed", toolName, version)
+		reporter.Log("✅ %s@%s", toolName, version)
 		if isExplicit && parent == "" {
 			reporter.DeferWarn("To use the installed tool, add this to your shell profile:\n  export PATH=\"%s:$PATH\"", cfg.CurrentDir)
 		}

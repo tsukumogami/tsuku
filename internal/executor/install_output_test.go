@@ -221,11 +221,11 @@ func TestNonTTYInstallLogLines(t *testing.T) {
 		t.Fatalf("ExecutePlan failed: %v", err)
 	}
 
-	if !reporter.hasLog("Installing dependency: dep-tool@0.1.0") {
-		t.Errorf("Logs does not contain 'Installing dependency: dep-tool@0.1.0'; got: %v", reporter.Logs)
+	if !reporter.hasStatus("Installing dep-tool@0.1.0") {
+		t.Errorf("Statuses does not contain 'Installing dep-tool@0.1.0'; got: %v", reporter.Statuses)
 	}
-	if !reporter.hasLog("Installed dep-tool@0.1.0") {
-		t.Errorf("Logs does not contain 'Installed dep-tool@0.1.0'; got: %v", reporter.Logs)
+	if !reporter.hasLog("✅ dep-tool@0.1.0") {
+		t.Errorf("Logs does not contain '✅ dep-tool@0.1.0'; got: %v", reporter.Logs)
 	}
 
 	// Status-only messages must not appear in Logs.
@@ -539,9 +539,9 @@ func TestInstallBinariesReporterClassification(t *testing.T) {
 		t.Fatalf("ExecutePlan() unexpected error = %v", err)
 	}
 
-	// Should have a bulk count log line.
-	if !reporter.hasLog("Installing 1 file(s)") {
-		t.Errorf("Logs should contain 'Installing 1 file(s)'; got: %v", reporter.Logs)
+	// Should have a bulk count status line (ephemeral).
+	if !reporter.hasStatus("Installing 1 file(s)") {
+		t.Errorf("Statuses should contain 'Installing 1 file(s)'; got: %v", reporter.Statuses)
 	}
 	// Should not have per-file "Installed" lines.
 	for _, l := range reporter.Logs {
@@ -612,9 +612,9 @@ func TestLinkDependenciesReporterClassification(t *testing.T) {
 		t.Fatalf("ExecutePlan() unexpected error = %v", err)
 	}
 
-	// Should have a bulk count log line.
-	if !reporter.hasLog("Linking 1 library file(s)") {
-		t.Errorf("Logs should contain 'Linking 1 library file(s)'; got: %v", reporter.Logs)
+	// Should have a bulk count status line (ephemeral).
+	if !reporter.hasStatus("Linking 1 library file(s)") {
+		t.Errorf("Statuses should contain 'Linking 1 library file(s)'; got: %v", reporter.Statuses)
 	}
 	// No per-file "Linked:" lines — regression guard for strings removed by Issue #4.
 	// link_dependencies previously emitted "Linked:", "Linked (symlink):", "Already linked:" per file.
@@ -672,9 +672,9 @@ func TestInstallLibrariesReporterClassification(t *testing.T) {
 		t.Fatalf("ExecutePlan() unexpected error = %v", err)
 	}
 
-	// Should have a bulk count log line.
-	if !reporter.hasLog("Installing 1 library file(s)") {
-		t.Errorf("Logs should contain 'Installing 1 library file(s)'; got: %v", reporter.Logs)
+	// Should have a bulk count status line (ephemeral).
+	if !reporter.hasStatus("Installing 1 library file(s)") {
+		t.Errorf("Statuses should contain 'Installing 1 library file(s)'; got: %v", reporter.Statuses)
 	}
 	// Should not have per-file installation lines.
 	for _, l := range reporter.Logs {
