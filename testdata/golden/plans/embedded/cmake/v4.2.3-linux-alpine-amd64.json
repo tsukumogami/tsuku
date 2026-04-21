@@ -13,15 +13,29 @@
       "action": "apk_install",
       "params": {
         "packages": [
-          "cmake"
+          "cmake",
+          "cmake-extras"
         ]
       },
       "evaluable": false,
       "deterministic": false
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "bin/cmake",
+          "bin/ctest",
+          "bin/cpack"
+        ],
+        "install_mode": "directory"
+      },
+      "evaluable": true,
+      "deterministic": true
     }
   ],
   "verify": {
     "command": "cmake --version",
-    "pattern": "cmake version {version}"
+    "pattern": "{version}"
   }
 }
