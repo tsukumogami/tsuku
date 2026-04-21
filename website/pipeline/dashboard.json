@@ -1,19 +1,19 @@
 {
-  "generated_at": "2026-04-21T02:33:29Z",
+  "generated_at": "2026-04-21T03:20:43Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 25,
       "excluded": 6,
-      "failed": 75,
-      "pending": 3851,
-      "success": 1348
+      "failed": 77,
+      "pending": 3847,
+      "success": 1350
     },
     "by_tier": {
       "1": {
         "blocked": 2,
-        "pending": 9,
-        "success": 7
+        "pending": 8,
+        "success": 8
       },
       "2": {
         "blocked": 5,
@@ -23,9 +23,9 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 75,
-        "pending": 3829,
-        "success": 1332
+        "failed": 77,
+        "pending": 3826,
+        "success": 1333
       }
     },
     "by_ecosystem": {
@@ -45,8 +45,8 @@
         "total": 105
       },
       "github": {
-        "pending": 7,
-        "success": 104,
+        "pending": 6,
+        "success": 105,
         "total": 111
       },
       "go": {
@@ -55,8 +55,8 @@
       },
       "homebrew": {
         "blocked": 25,
-        "pending": 3744,
-        "success": 1114,
+        "pending": 3743,
+        "success": 1115,
         "total": 4883
       },
       "manual": {
@@ -68,14 +68,12 @@
         "total": 1
       },
       "npm": {
-        "failed": 19,
-        "pending": 1,
+        "failed": 20,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -466,6 +464,15 @@
           "next_retry_at": "2026-04-24T02:22:15Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 197,
+          "next_retry_at": "1734-01-10T03:32:10Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -835,6 +842,15 @@
           "next_retry_at": "2026-04-24T11:00:17Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 327,
+          "next_retry_at": "1734-01-10T03:32:10Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -1115,15 +1131,6 @@
         }
       ],
       "pending": [
-        {
-          "id": "github:dandavison/delta",
-          "name": "delta",
-          "ecosystem": "github",
-          "priority": 1,
-          "category": "generation_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-02-24T06:13:32Z"
-        },
         {
           "id": "github:wagoodman/dive",
           "name": "dive",
@@ -1601,15 +1608,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:aider",
-          "name": "aider",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-02-22T07:20:49Z"
         },
         {
           "id": "homebrew:airbytehq/tap/abctl",
@@ -3005,15 +3003,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 196,
-          "next_retry_at": "1734-01-09T23:00:46Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -13351,15 +13340,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 326,
-          "next_retry_at": "1734-01-09T23:00:46Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -28265,6 +28245,15 @@
           "next_retry_at": "2026-02-24T06:13:30Z"
         },
         {
+          "id": "github:dandavison/delta",
+          "name": "delta",
+          "ecosystem": "github",
+          "priority": 1,
+          "category": "generation_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-02-24T06:13:32Z"
+        },
+        {
           "id": "homebrew:eza",
           "name": "eza",
           "ecosystem": "homebrew",
@@ -28511,6 +28500,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:aider",
+          "name": "aider",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-02-22T07:20:49Z"
         },
         {
           "id": "github:cosmtrek/air",
@@ -40107,6 +40105,11 @@
     {
       "name": "age",
       "source": "github:FiloSottile/age",
+      "validation_status": "valid"
+    },
+    {
+      "name": "aider",
+      "source": "homebrew:aider",
       "validation_status": "valid"
     },
     {
