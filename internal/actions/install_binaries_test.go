@@ -949,7 +949,6 @@ func TestDetermineExecutables_ExplicitOverride(t *testing.T) {
 	}
 }
 
-
 // -- install_binaries.go: Preflight with binary param --
 
 func TestInstallBinariesAction_Preflight_BinaryParam(t *testing.T) {

@@ -345,4 +345,3 @@ func (a *InstallBinariesAction) installDirectoryWithSymlinks(ctx *ExecutionConte
 
 	return nil
 }
-
