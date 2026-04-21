@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-21T02:32:25Z",
+  "updated_at": "2026-04-21T03:19:27Z",
   "entries": [
     {
       "name": "node",
@@ -26,7 +26,7 @@
       "name": "delta",
       "source": "github:dandavison/delta",
       "priority": 1,
-      "status": "pending",
+      "status": "success",
       "confidence": "curated",
       "disambiguated_at": null,
       "failure_count": 3,
@@ -1556,8 +1556,8 @@
       "name": "aider",
       "source": "homebrew:aider",
       "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
+      "status": "success",
+      "confidence": "curated",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
       "next_retry_at": "2026-02-22T07:20:49.925436946Z"
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 196,
-      "next_retry_at": "1734-01-09T23:00:46.684756074Z"
+      "failure_count": 197,
+      "next_retry_at": "1734-01-10T03:32:10.069880181Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 326,
-      "next_retry_at": "1734-01-09T23:00:46.684756074Z"
+      "failure_count": 327,
+      "next_retry_at": "1734-01-10T03:32:10.069880181Z"
     },
     {
       "name": "libaacs",
