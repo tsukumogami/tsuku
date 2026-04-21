@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Planned
 problem: |
   tsuku install produces 40+ sequential lines instead of a single updating status
   line. The Reporter/TTYReporter wired in PR #2280 only reached the action
@@ -27,7 +27,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Planned
 
 ## Context and Problem Statement
 

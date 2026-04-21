@@ -1,0 +1,42 @@
+[
+  {
+    "issue_id": "1",
+    "title": "refactor(install): add Reporter to Manager and thread through install call chain",
+    "complexity": "testable",
+    "file": "wip/plan_install-ux-v2_issue_1_body.md",
+    "status": "PASS",
+    "dependencies": []
+  },
+  {
+    "issue_id": "2",
+    "title": "refactor(install): reclassify orchestration output to Reporter channels",
+    "complexity": "testable",
+    "file": "wip/plan_install-ux-v2_issue_2_body.md",
+    "status": "PASS",
+    "dependencies": ["1"]
+  },
+  {
+    "issue_id": "3",
+    "title": "refactor(install): suppress verify sub-steps during post-install check",
+    "complexity": "simple",
+    "file": "wip/plan_install-ux-v2_issue_3_body.md",
+    "status": "PASS",
+    "dependencies": ["1"]
+  },
+  {
+    "issue_id": "4",
+    "title": "refactor(actions): reclassify sub-step Log calls to Status or silence",
+    "complexity": "testable",
+    "file": "wip/plan_install-ux-v2_issue_4_body.md",
+    "status": "PASS",
+    "dependencies": []
+  },
+  {
+    "issue_id": "5",
+    "title": "test(install): verify Reporter output classification and single-spinner invariant",
+    "complexity": "testable",
+    "file": "wip/plan_install-ux-v2_issue_5_body.md",
+    "status": "PASS",
+    "dependencies": ["1", "2", "3", "4"]
+  }
+]
