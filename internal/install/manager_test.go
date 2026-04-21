@@ -1924,7 +1924,7 @@ func TestManagerGetReporter_NilReturnsNoop(t *testing.T) {
 // does not write any bytes to os.Stdout and that the reporter records no Log
 // entries during a successful install with CreateSymlinks disabled.
 func TestManagerInstallWithOptions_NoStdoutEscape(t *testing.T) {
-	t.Parallel()
+	// No t.Parallel(): this test redirects os.Stdout, a process-wide descriptor.
 
 	cfg, cleanup := testutil.NewTestConfig(t)
 	defer cleanup()

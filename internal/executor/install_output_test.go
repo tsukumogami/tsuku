@@ -614,10 +614,8 @@ func TestLinkDependenciesReporterClassification(t *testing.T) {
 	if !reporter.hasLog("Linking 1 library file(s)") {
 		t.Errorf("Logs should contain 'Linking 1 library file(s)'; got: %v", reporter.Logs)
 	}
-	// Should not have per-file "Linked:" lines.
-	for _, l := range reporter.Logs {
-		if strings.Contains(l, "Linked:") {
-			t.Errorf("Logs should not contain per-file 'Linked:' line; got: %q", l)
-		}
+	// Exactly 1 Log line: the bulk count. Anything more means per-file lines leaked back.
+	if len(reporter.Logs) != 1 {
+		t.Errorf("expected exactly 1 Log line (bulk count), got %d: %v", len(reporter.Logs), reporter.Logs)
 	}
 }
