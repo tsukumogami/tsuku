@@ -3,15 +3,25 @@ name = "eksctl"
 description = "CLI for Amazon EKS"
 homepage = "https://github.com/eksctl-io/eksctl"
 version_format = "semver"
+curated = true
 
+# Linux: statically linked Go binary works on glibc and musl
 [[steps]]
 action = "github_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 repo = "eksctl-io/eksctl"
-asset_pattern = "eksctl_{os}_{arch}.tar.gz"
+asset_pattern = "eksctl_Linux_{arch}.tar.gz"
 strip_dirs = 0
 binaries = ["eksctl"]
-os_mapping = { darwin = "Darwin", linux = "Linux" }
-arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+# macOS: Intel and Apple Silicon binaries
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "eksctl-io/eksctl"
+asset_pattern = "eksctl_Darwin_{arch}.tar.gz"
+strip_dirs = 0
+binaries = ["eksctl"]
 
 [verify]
 command = "eksctl version"
