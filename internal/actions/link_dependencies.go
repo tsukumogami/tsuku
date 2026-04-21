@@ -264,10 +264,6 @@ func (a *LinkDependenciesAction) discoverLibraryVersion(toolsDir, library string
 		return "", fmt.Errorf("library %s is not installed (no %s* directory found in %s)", library, prefix, libsDir)
 	}
 
-	if matchCount > 1 {
-		// Multiple versions installed - use the last one found
-		// In the future, we might want to use the state.json to determine the correct version
-	}
-
+	// Multiple versions: use the last found; state-based selection is a future improvement.
 	return matchedVersion, nil
 }
