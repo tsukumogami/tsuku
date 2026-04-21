@@ -280,7 +280,7 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 			reporter.Warn("cache check failed: %v", err)
 		} else if found {
 			logger.Debug("cache hit", "dest", dest)
-			reporter.Log("Using cached: %s", dest)
+			reporter.Status(fmt.Sprintf("Using cached: %s", dest))
 			// For cached files, verify checksum via URL if available
 			checksumURL, hasChecksumURL := GetString(params, "checksum_url")
 			if hasChecksumURL {

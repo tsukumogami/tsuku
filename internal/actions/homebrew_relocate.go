@@ -74,14 +74,14 @@ func (a *HomebrewRelocateAction) Execute(ctx *ExecutionContext, params map[strin
 		// The actual installation goes to libs/recipename-version
 		recipeName := ctx.Recipe.Metadata.Name
 		installPath = filepath.Join(libsDir, recipeName+"-"+ctx.Version)
-		reporter.Log("   Relocating placeholders: %s (library, recipe: %s)", formula, recipeName)
+		reporter.Status(fmt.Sprintf("   Relocating placeholders: %s (library, recipe: %s)", formula, recipeName))
 	} else {
 		// Tool: use ToolInstallDir or InstallDir
 		installPath = ctx.ToolInstallDir
 		if installPath == "" {
 			installPath = ctx.InstallDir
 		}
-		reporter.Log("   Relocating placeholders: %s", formula)
+		reporter.Status(fmt.Sprintf("   Relocating placeholders: %s", formula))
 	}
 
 	// For libraries, we need to handle @@HOMEBREW_CELLAR@@ and @@HOMEBREW_PREFIX@@ differently:
@@ -106,7 +106,7 @@ func (a *HomebrewRelocateAction) Execute(ctx *ExecutionContext, params map[strin
 		}
 	}
 
-	reporter.Log("   Relocation complete: %s", formula)
+	reporter.Status(fmt.Sprintf("   Relocation complete: %s", formula))
 
 	return nil
 }

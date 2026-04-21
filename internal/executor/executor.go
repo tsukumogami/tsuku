@@ -656,7 +656,7 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 
 	// Skip if already installed (deduplication)
 	if _, err := os.Stat(finalDir); err == nil {
-		e.getReporter().Log("Skipping dependency: %s@%s (already installed)", dep.Tool, dep.Version)
+		e.getReporter().Status(fmt.Sprintf("Skipping dependency: %s@%s (already installed)", dep.Tool, dep.Version))
 
 		// Still add bin directory to exec paths for tools (needed for subsequent steps)
 		if dep.RecipeType != "library" {

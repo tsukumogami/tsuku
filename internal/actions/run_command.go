@@ -88,7 +88,9 @@ func (a *RunCommandAction) Execute(ctx *ExecutionContext, params map[string]inte
 	command := ExpandVars(cmdPattern, vars)
 	workingDir = ExpandVars(workingDir, vars)
 
-	reporter.Status(fmt.Sprintf("   Running: %s", command))
+	// Use only the first line of multi-line scripts to avoid TTY line-overwrite issues.
+	cmdSummary := strings.SplitN(command, "\n", 2)[0]
+	reporter.Status(fmt.Sprintf("   Running: %s", cmdSummary))
 
 	// Execute command with context for cancellation support
 	cmd := exec.CommandContext(ctx.Context, "sh", "-c", command)
