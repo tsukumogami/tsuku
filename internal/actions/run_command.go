@@ -102,6 +102,7 @@ func (a *RunCommandAction) Execute(ctx *ExecutionContext, params map[string]inte
 
 	outputStr := strings.TrimSpace(string(output))
 	if outputStr != "" {
+		// Output is permanent (Log, not Status): it may contain diagnostics useful after completion.
 		reporter.Log("   Output: %s", outputStr)
 	}
 

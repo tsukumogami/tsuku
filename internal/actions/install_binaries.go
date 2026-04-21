@@ -333,12 +333,11 @@ func (a *InstallBinariesAction) installDirectoryWithSymlinks(ctx *ExecutionConte
 		"outputCount", len(outputs))
 
 	reporter := ctx.GetReporter()
-	reporter.Status(fmt.Sprintf("   Installing directory tree to: %s", ctx.InstallDir))
+	reporter.Status(fmt.Sprintf("   Copying directory tree to: %s", ctx.InstallDir))
 
 	// Copy entire WorkDir to InstallDir (.install/), excluding the .install subdirectory
 	// to prevent recursive copy (since InstallDir is workDir/.install)
 	// The install manager expects to find the full tree in workDir/.install
-	reporter.Status("   Copying directory tree...")
 	if err := CopyDirectoryExcluding(ctx.WorkDir, ctx.InstallDir, ".install"); err != nil {
 		return fmt.Errorf("failed to copy directory tree: %w", err)
 	}
