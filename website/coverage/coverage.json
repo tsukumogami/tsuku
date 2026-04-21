@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-21T19:14:13Z",
+  "generated_at": "2026-04-21T20:08:51Z",
   "total_recipes": 1414,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 848,
+        "supported": 849,
         "total": 1414,
-        "pct": 59.971711456859964
+        "pct": 60.04243281471005
       },
       "glibc": {
         "supported": 1379,
@@ -2661,9 +2661,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'cilium-cli' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "cjson",
@@ -4687,9 +4685,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'eksctl' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "emscripten",
@@ -8888,17 +8884,13 @@
       "name": "istioctl",
       "type": "tool",
       "platforms": {
-        "darwin": false,
+        "darwin": true,
         "glibc": true,
         "musl": true
       },
-      "gaps": [
-        "darwin"
-      ],
+      "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'istioctl' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "iterm2",
@@ -20045,9 +20037,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'velero' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "vercel",
