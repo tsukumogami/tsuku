@@ -1,0 +1,42 @@
+[metadata]
+name = "vagrant"
+description = "Development environments made easy"
+homepage = "https://www.vagrantup.com/"
+version_format = "semver"
+curated = true
+
+[version]
+github_repo = "hashicorp/vagrant"
+
+# Linux amd64: statically linked Go launcher works on glibc and musl.
+# Upstream coverage gaps (releases.hashicorp.com as of 2026-04):
+#   - linux arm64:   no vagrant_*_linux_arm64.zip published
+#   - darwin amd64:  ships as vagrant_*_darwin_amd64.dmg installer only
+#   - darwin arm64:  ships as vagrant_*_darwin_arm64.dmg installer only
+# tsuku cannot extract .dmg installers, so macOS and linux/arm64 are
+# unavailable until HashiCorp publishes raw archives for them.
+[[steps]]
+action = "download"
+url = "https://releases.hashicorp.com/vagrant/{version}/vagrant_{version}_linux_amd64.zip"
+checksum_url = "https://releases.hashicorp.com/vagrant/{version}/vagrant_{version}_SHA256SUMS"
+when = { os = ["linux"], arch = "amd64", libc = ["glibc", "musl"] }
+
+[[steps]]
+action = "extract"
+archive = "vagrant_{version}_linux_amd64.zip"
+format = "zip"
+when = { os = ["linux"], arch = "amd64", libc = ["glibc", "musl"] }
+
+[[steps]]
+action = "chmod"
+files = ["vagrant"]
+when = { os = ["linux"], arch = "amd64", libc = ["glibc", "musl"] }
+
+[[steps]]
+action = "install_binaries"
+binaries = ["vagrant"]
+when = { os = ["linux"], arch = "amd64", libc = ["glibc", "musl"] }
+
+[verify]
+command = "vagrant --version"
+pattern = "{version}"

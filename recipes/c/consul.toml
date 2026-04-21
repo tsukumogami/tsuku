@@ -1,59 +1,59 @@
 [metadata]
-name = "terraform"
-description = "Infrastructure as Code tool"
-homepage = "https://www.terraform.io/"
+name = "consul"
+description = "Service networking and service mesh"
+homepage = "https://www.consul.io/"
 version_format = "semver"
 curated = true
 
 [version]
-github_repo = "hashicorp/terraform"
+github_repo = "hashicorp/consul"
 
 # Linux: statically linked Go binary works on glibc and musl
 [[steps]]
 action = "download"
-url = "https://releases.hashicorp.com/terraform/{version}/terraform_{version}_linux_{arch}.zip"
-checksum_url = "https://releases.hashicorp.com/terraform/{version}/terraform_{version}_SHA256SUMS"
+url = "https://releases.hashicorp.com/consul/{version}/consul_{version}_linux_{arch}.zip"
+checksum_url = "https://releases.hashicorp.com/consul/{version}/consul_{version}_SHA256SUMS"
 when = { os = ["linux"], libc = ["glibc", "musl"] }
 
 [[steps]]
 action = "extract"
-archive = "terraform_{version}_linux_{arch}.zip"
+archive = "consul_{version}_linux_{arch}.zip"
 format = "zip"
 when = { os = ["linux"], libc = ["glibc", "musl"] }
 
 [[steps]]
 action = "chmod"
-files = ["terraform"]
+files = ["consul"]
 when = { os = ["linux"], libc = ["glibc", "musl"] }
 
 [[steps]]
 action = "install_binaries"
-binaries = ["terraform"]
+binaries = ["consul"]
 when = { os = ["linux"], libc = ["glibc", "musl"] }
 
 # macOS: Intel and Apple Silicon binaries
 [[steps]]
 action = "download"
-url = "https://releases.hashicorp.com/terraform/{version}/terraform_{version}_darwin_{arch}.zip"
-checksum_url = "https://releases.hashicorp.com/terraform/{version}/terraform_{version}_SHA256SUMS"
+url = "https://releases.hashicorp.com/consul/{version}/consul_{version}_darwin_{arch}.zip"
+checksum_url = "https://releases.hashicorp.com/consul/{version}/consul_{version}_SHA256SUMS"
 when = { os = ["darwin"] }
 
 [[steps]]
 action = "extract"
-archive = "terraform_{version}_darwin_{arch}.zip"
+archive = "consul_{version}_darwin_{arch}.zip"
 format = "zip"
 when = { os = ["darwin"] }
 
 [[steps]]
 action = "chmod"
-files = ["terraform"]
+files = ["consul"]
 when = { os = ["darwin"] }
 
 [[steps]]
 action = "install_binaries"
-binaries = ["terraform"]
+binaries = ["consul"]
 when = { os = ["darwin"] }
 
 [verify]
-command = "terraform version"
+command = "consul version"
 pattern = "{version}"

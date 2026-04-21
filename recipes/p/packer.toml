@@ -3,27 +3,56 @@ name = "packer"
 description = "Build automated machine images"
 homepage = "https://www.packer.io/"
 version_format = "semver"
+curated = true
 
 [version]
 github_repo = "hashicorp/packer"
 
+# Linux: statically linked Go binary works on glibc and musl
 [[steps]]
 action = "download"
-url = "https://releases.hashicorp.com/packer/{version}/packer_{version}_{os}_{arch}.zip"
+url = "https://releases.hashicorp.com/packer/{version}/packer_{version}_linux_{arch}.zip"
 checksum_url = "https://releases.hashicorp.com/packer/{version}/packer_{version}_SHA256SUMS"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 
 [[steps]]
 action = "extract"
-archive = "packer_{version}_{os}_{arch}.zip"
+archive = "packer_{version}_linux_{arch}.zip"
 format = "zip"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 
 [[steps]]
 action = "chmod"
 files = ["packer"]
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 
 [[steps]]
 action = "install_binaries"
-outputs = ["packer"]
+binaries = ["packer"]
+when = { os = ["linux"], libc = ["glibc", "musl"] }
+
+# macOS: Intel and Apple Silicon binaries
+[[steps]]
+action = "download"
+url = "https://releases.hashicorp.com/packer/{version}/packer_{version}_darwin_{arch}.zip"
+checksum_url = "https://releases.hashicorp.com/packer/{version}/packer_{version}_SHA256SUMS"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "extract"
+archive = "packer_{version}_darwin_{arch}.zip"
+format = "zip"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "chmod"
+files = ["packer"]
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+binaries = ["packer"]
+when = { os = ["darwin"] }
 
 [verify]
 command = "packer version"
