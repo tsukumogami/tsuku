@@ -18,10 +18,10 @@ import (
 // testReporter implements progress.Reporter and records all calls for assertion.
 // It is safe for concurrent use.
 type testReporter struct {
-	mu          sync.Mutex
-	Logs        []string // Permanent lines written by Log() and Warn()
-	Statuses    []string // Transient status messages from Status()
-	StopCalled  bool
+	mu         sync.Mutex
+	Logs       []string // Permanent lines written by Log() and Warn()
+	Statuses   []string // Transient status messages from Status()
+	StopCalled bool
 }
 
 func (r *testReporter) Log(format string, args ...any) {
@@ -342,4 +342,3 @@ func TestProgressWriterRetryNoExceed100(t *testing.T) {
 		}
 	}
 }
-
