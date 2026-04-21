@@ -1,6 +1,8 @@
 package install
 
 import (
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -8,8 +10,26 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/testutil"
 )
+
+// installTestReporter records Log/Status calls for assertion in install package tests.
+type installTestReporter struct {
+	Logs     []string
+	Statuses []string
+}
+
+func (r *installTestReporter) Log(format string, args ...any) {
+	r.Logs = append(r.Logs, fmt.Sprintf(format, args...))
+}
+func (r *installTestReporter) Warn(format string, args ...any) {
+	r.Logs = append(r.Logs, "warn: "+fmt.Sprintf(format, args...))
+}
+func (r *installTestReporter) Status(msg string)                    { r.Statuses = append(r.Statuses, msg) }
+func (r *installTestReporter) DeferWarn(format string, args ...any) {}
+func (r *installTestReporter) FlushDeferred()                       {}
+func (r *installTestReporter) Stop()                                {}
 
 func TestGenerateWrapperScript_NoPathAdditions(t *testing.T) {
 	content := generateWrapperScript("/home/user/.tsuku/tools/mytool-1.0.0/bin/mytool", nil, nil)
@@ -1881,5 +1901,80 @@ func TestStagingDir(t *testing.T) {
 
 	if stagingDir != expected {
 		t.Errorf("stagingDir() = %q, want %q", stagingDir, expected)
+	}
+}
+
+// TestManagerGetReporter_NilReturnsNoop verifies that getReporter() returns
+// progress.NoopReporter{} when no reporter has been set on the Manager.
+func TestManagerGetReporter_NilReturnsNoop(t *testing.T) {
+	t.Parallel()
+
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	got := mgr.getReporter()
+	if _, ok := got.(progress.NoopReporter); !ok {
+		t.Errorf("getReporter() = %T, want progress.NoopReporter", got)
+	}
+}
+
+// TestManagerInstallWithOptions_NoStdoutEscape verifies that InstallWithOptions
+// does not write any bytes to os.Stdout and that the reporter records no Log
+// entries during a successful install with CreateSymlinks disabled.
+func TestManagerInstallWithOptions_NoStdoutEscape(t *testing.T) {
+	t.Parallel()
+
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+	reporter := &installTestReporter{}
+	mgr.SetReporter(reporter)
+
+	// Create work directory with the .install/bin/mytool structure.
+	workDir, workCleanup := testutil.TempDir(t)
+	defer workCleanup()
+
+	installBinDir := filepath.Join(workDir, ".install", "bin")
+	if err := os.MkdirAll(installBinDir, 0755); err != nil {
+		t.Fatalf("failed to create .install/bin: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(installBinDir, "mytool"), []byte("#!/bin/sh\necho hi"), 0755); err != nil {
+		t.Fatalf("failed to create binary: %v", err)
+	}
+
+	// Redirect os.Stdout to a pipe to capture any rogue output.
+	origStdout := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("failed to create pipe: %v", err)
+	}
+	os.Stdout = w
+
+	defer func() {
+		os.Stdout = origStdout
+	}()
+
+	installErr := mgr.InstallWithOptions("mytool", "1.0.0", workDir, InstallOptions{
+		CreateSymlinks: false,
+		Binaries:       []string{"bin/mytool"},
+	})
+
+	// Close write end before reading to avoid blocking.
+	w.Close()
+
+	buf, _ := io.ReadAll(r)
+	r.Close()
+
+	if installErr != nil {
+		t.Fatalf("InstallWithOptions() unexpected error = %v", installErr)
+	}
+	if len(buf) > 0 {
+		t.Errorf("unexpected bytes written to os.Stdout (%d bytes): %q", len(buf), buf)
+	}
+	if len(reporter.Logs) > 0 {
+		t.Errorf("reporter.Logs should be empty after install, got: %v", reporter.Logs)
 	}
 }

@@ -3,10 +3,15 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/actions"
+	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/progress"
@@ -467,5 +472,120 @@ func TestAlreadyInstalledShortCircuit(t *testing.T) {
 	// Empty plan version falls back to "dev" -- not installed as dev
 	if mgr.IsVersionInstalled("gh", "dev") {
 		t.Error("IsVersionInstalled(gh, dev) = true, want false (dev fallback should not match real version)")
+	}
+}
+
+// countingReporter counts Stop() calls and records Log messages.
+type countingReporter struct {
+	StopCount int
+	Logs      []string
+}
+
+func (r *countingReporter) Log(format string, args ...any) {
+	r.Logs = append(r.Logs, fmt.Sprintf(format, args...))
+}
+func (r *countingReporter) Warn(format string, args ...any)      {}
+func (r *countingReporter) Status(msg string)                    {}
+func (r *countingReporter) DeferWarn(format string, args ...any) {}
+func (r *countingReporter) FlushDeferred()                       {}
+func (r *countingReporter) Stop()                                { r.StopCount++ }
+
+// setupGhInstalled creates a tmpDir, sets TSUKU_HOME, creates the tool directory
+// structure, and writes state for gh@2.40.0. Returns the tmpDir.
+func setupGhInstalled(t *testing.T) string {
+	t.Helper()
+
+	tmpDir := t.TempDir()
+	t.Setenv("TSUKU_HOME", tmpDir)
+
+	// Create required directories.
+	toolsDir := filepath.Join(tmpDir, "tools")
+	if err := os.MkdirAll(toolsDir, 0755); err != nil {
+		t.Fatalf("failed to create tools dir: %v", err)
+	}
+	toolBinDir := filepath.Join(toolsDir, "gh-2.40.0", "bin")
+	if err := os.MkdirAll(toolBinDir, 0755); err != nil {
+		t.Fatalf("failed to create tool bin dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(toolBinDir, "gh"), []byte("#!/bin/sh"), 0755); err != nil {
+		t.Fatalf("failed to create gh binary: %v", err)
+	}
+
+	// Write state so the manager considers gh installed.
+	cfg, err := config.DefaultConfig()
+	if err != nil {
+		t.Fatalf("config.DefaultConfig() error = %v", err)
+	}
+	mgr := install.New(cfg)
+	if err := mgr.GetState().UpdateTool("gh", func(ts *install.ToolState) {
+		ts.Version = "2.40.0"
+		ts.ActiveVersion = "2.40.0"
+		ts.Versions = map[string]install.VersionState{
+			"2.40.0": {Binaries: []string{"bin/gh"}},
+		}
+	}); err != nil {
+		t.Fatalf("failed to write tool state: %v", err)
+	}
+
+	return tmpDir
+}
+
+// TestInstallWithDependencies_SingleReporterStop verifies that calling
+// installWithDependencies for an already-installed tool (short-circuit path)
+// does not call reporter.Stop().
+func TestInstallWithDependencies_SingleReporterStop(t *testing.T) {
+	// t.Parallel() is intentionally omitted: setupGhInstalled uses t.Setenv,
+	// which is incompatible with t.Parallel() per the Go testing framework.
+
+	setupGhInstalled(t)
+
+	reporter := &countingReporter{}
+	visited := make(map[string]bool)
+
+	// isExplicit=false, reqVersion="" triggers the short-circuit for installed tools.
+	err := installWithDependencies("gh", "", "", false, "parent-tool", visited, nil, reporter)
+	if err != nil {
+		t.Fatalf("installWithDependencies() unexpected error = %v", err)
+	}
+	if reporter.StopCount != 0 {
+		t.Errorf("reporter.StopCount = %d, want 0 (Stop must not be called on a borrowed reporter)", reporter.StopCount)
+	}
+}
+
+// TestInstallWithDependencies_NoStdoutEscape verifies that calling
+// installWithDependencies for an already-installed tool (short-circuit path)
+// does not write any bytes to os.Stdout.
+func TestInstallWithDependencies_NoStdoutEscape(t *testing.T) {
+	// t.Parallel() is intentionally omitted: setupGhInstalled uses t.Setenv,
+	// which is incompatible with t.Parallel() per the Go testing framework.
+
+	setupGhInstalled(t)
+
+	// Redirect os.Stdout to a pipe.
+	origStdout := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("failed to create pipe: %v", err)
+	}
+	os.Stdout = w
+
+	defer func() {
+		os.Stdout = origStdout
+	}()
+
+	reporter := &countingReporter{}
+	visited := make(map[string]bool)
+
+	callErr := installWithDependencies("gh", "", "", false, "parent-tool", visited, nil, reporter)
+
+	w.Close()
+	buf, _ := io.ReadAll(r)
+	r.Close()
+
+	if callErr != nil {
+		t.Fatalf("installWithDependencies() unexpected error = %v", callErr)
+	}
+	if len(buf) > 0 {
+		t.Errorf("unexpected bytes written to os.Stdout (%d bytes): %q", len(buf), buf)
 	}
 }

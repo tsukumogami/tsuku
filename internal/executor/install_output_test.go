@@ -1,6 +1,8 @@
 package executor
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"io"
@@ -339,6 +341,283 @@ func TestProgressWriterRetryNoExceed100(t *testing.T) {
 			if pct > 100.0 {
 				t.Errorf("percentage %q exceeds 100%%", s)
 			}
+		}
+	}
+}
+
+// createTestTarGz creates a minimal tar.gz archive at dest containing one file.
+func createTestTarGz(dest string) error {
+	f, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	gw := gzip.NewWriter(f)
+	defer gw.Close()
+
+	tw := tar.NewWriter(gw)
+	defer tw.Close()
+
+	content := []byte("hello")
+	hdr := &tar.Header{
+		Name: "hello.txt",
+		Mode: 0644,
+		Size: int64(len(content)),
+	}
+	if err := tw.WriteHeader(hdr); err != nil {
+		return err
+	}
+	_, err = tw.Write(content)
+	return err
+}
+
+// --- scenario-17: extract action reporter classification ---
+
+// TestExtractActionReporterClassification verifies that the extract action routes
+// its status output through Status() and does not emit internal parameter details
+// (format, strip_dirs) through Log().
+func TestExtractActionReporterClassification(t *testing.T) {
+	t.Parallel()
+
+	rec := newMinimalRecipe("test-tool")
+	exec, err := New(rec)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	// Create a minimal tar.gz archive in the work directory.
+	archivePath := filepath.Join(exec.WorkDir(), "test.tar.gz")
+	if err := createTestTarGz(archivePath); err != nil {
+		t.Fatalf("failed to create test archive: %v", err)
+	}
+
+	reporter := &testReporter{}
+	exec.SetReporter(reporter)
+
+	plan := &InstallationPlan{
+		FormatVersion: PlanFormatVersion,
+		Tool:          "test-tool",
+		Version:       "1.0.0",
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
+		Steps: []ResolvedStep{
+			{
+				Action:    "extract",
+				Evaluable: true,
+				Params: map[string]interface{}{
+					"archive": "test.tar.gz",
+					"format":  "tar.gz",
+				},
+			},
+		},
+	}
+
+	ctx := context.Background()
+	if err := exec.ExecutePlan(ctx, plan); err != nil {
+		t.Fatalf("ExecutePlan() unexpected error = %v", err)
+	}
+
+	if !reporter.hasStatus("Extracting:") {
+		t.Errorf("Statuses should contain 'Extracting:'; got: %v", reporter.Statuses)
+	}
+	if reporter.hasLog("Extracting:") {
+		t.Errorf("Logs should not contain 'Extracting:'; got: %v", reporter.Logs)
+	}
+	if reporter.hasLog("Format:") {
+		t.Errorf("Logs should not contain 'Format:'; got: %v", reporter.Logs)
+	}
+	if reporter.hasLog("Strip dirs:") {
+		t.Errorf("Logs should not contain 'Strip dirs:'; got: %v", reporter.Logs)
+	}
+}
+
+// --- scenario-18: run_command action reporter classification ---
+
+// TestRunCommandReporterClassification verifies that run_command routes the
+// running status through Status() and command output through Log(), while
+// internal success messages do not appear in Logs.
+func TestRunCommandReporterClassification(t *testing.T) {
+	t.Parallel()
+
+	rec := newMinimalRecipe("test-tool")
+	exec, err := New(rec)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	reporter := &testReporter{}
+	exec.SetReporter(reporter)
+
+	plan := &InstallationPlan{
+		FormatVersion: PlanFormatVersion,
+		Tool:          "test-tool",
+		Version:       "1.0.0",
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
+		Steps: []ResolvedStep{
+			{
+				Action:    "run_command",
+				Evaluable: true,
+				Params: map[string]interface{}{
+					"command": "echo hello",
+				},
+			},
+		},
+	}
+
+	ctx := context.Background()
+	if err := exec.ExecutePlan(ctx, plan); err != nil {
+		t.Fatalf("ExecutePlan() unexpected error = %v", err)
+	}
+
+	if !reporter.hasStatus("Running:") {
+		t.Errorf("Statuses should contain 'Running:'; got: %v", reporter.Statuses)
+	}
+	if reporter.hasLog("Running:") {
+		t.Errorf("Logs should not contain 'Running:'; got: %v", reporter.Logs)
+	}
+	if reporter.hasLog("Description:") {
+		t.Errorf("Logs should not contain 'Description:'; got: %v", reporter.Logs)
+	}
+	if reporter.hasLog("Command executed successfully") {
+		t.Errorf("Logs should not contain 'Command executed successfully'; got: %v", reporter.Logs)
+	}
+	if !reporter.hasLog("Output:") {
+		t.Errorf("Logs should contain 'Output:' for a command that produces output; got: %v", reporter.Logs)
+	}
+}
+
+// --- scenario-19: install_binaries action reporter classification ---
+
+// TestInstallBinariesReporterClassification verifies that install_binaries emits
+// a single bulk count through Log() and does not emit per-file "Installed" lines.
+func TestInstallBinariesReporterClassification(t *testing.T) {
+	t.Parallel()
+
+	rec := newMinimalRecipe("test-tool")
+	exec, err := New(rec)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	// Create the source file in the work directory.
+	testbinPath := filepath.Join(exec.WorkDir(), "testbin")
+	if err := os.WriteFile(testbinPath, []byte("#!/bin/sh\necho test"), 0755); err != nil {
+		t.Fatalf("failed to create testbin: %v", err)
+	}
+
+	reporter := &testReporter{}
+	exec.SetReporter(reporter)
+
+	plan := &InstallationPlan{
+		FormatVersion: PlanFormatVersion,
+		Tool:          "test-tool",
+		Version:       "1.0.0",
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
+		Steps: []ResolvedStep{
+			{
+				Action:    "install_binaries",
+				Evaluable: true,
+				Params: map[string]interface{}{
+					"outputs": []interface{}{
+						map[string]interface{}{
+							"src":  "testbin",
+							"dest": "bin/testbin",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	ctx := context.Background()
+	if err := exec.ExecutePlan(ctx, plan); err != nil {
+		t.Fatalf("ExecutePlan() unexpected error = %v", err)
+	}
+
+	// Should have a bulk count log line.
+	if !reporter.hasLog("Installing 1 file(s)") {
+		t.Errorf("Logs should contain 'Installing 1 file(s)'; got: %v", reporter.Logs)
+	}
+	// Should not have per-file "Installed" lines.
+	for _, l := range reporter.Logs {
+		if strings.HasPrefix(strings.TrimSpace(l), "Installed ") {
+			t.Errorf("Logs should not contain per-file 'Installed' line; got: %q", l)
+		}
+	}
+}
+
+// --- scenario-20: link_dependencies action reporter classification ---
+
+// TestLinkDependenciesReporterClassification verifies that link_dependencies emits
+// a single bulk count through Log() and does not emit per-file "Linked:" lines.
+func TestLinkDependenciesReporterClassification(t *testing.T) {
+	t.Parallel()
+
+	rec := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "test-tool",
+		},
+	}
+	exec, err := New(rec)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	// Set up a temporary $TSUKU_HOME structure so link_dependencies can find the library.
+	// link_dependencies uses filepath.Dir(ctx.ToolsDir) as $TSUKU_HOME.
+	tmpHome := t.TempDir()
+	toolsDir := filepath.Join(tmpHome, "tools")
+	if err := os.MkdirAll(toolsDir, 0755); err != nil {
+		t.Fatalf("failed to create tools dir: %v", err)
+	}
+	exec.SetToolsDir(toolsDir)
+
+	// Create the library source: $TSUKU_HOME/libs/testlib-1.0.0/lib/libtestlib.so
+	libDir := filepath.Join(tmpHome, "libs", "testlib-1.0.0", "lib")
+	if err := os.MkdirAll(libDir, 0755); err != nil {
+		t.Fatalf("failed to create lib dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(libDir, "libtestlib.so"), []byte("ELF"), 0644); err != nil {
+		t.Fatalf("failed to create fake library: %v", err)
+	}
+
+	reporter := &testReporter{}
+	exec.SetReporter(reporter)
+
+	plan := &InstallationPlan{
+		FormatVersion: PlanFormatVersion,
+		Tool:          "test-tool",
+		Version:       "1.0.0",
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
+		Steps: []ResolvedStep{
+			{
+				Action:    "link_dependencies",
+				Evaluable: true,
+				Params: map[string]interface{}{
+					"library": "testlib",
+					"version": "1.0.0",
+				},
+			},
+		},
+	}
+
+	ctx := context.Background()
+	if err := exec.ExecutePlan(ctx, plan); err != nil {
+		t.Fatalf("ExecutePlan() unexpected error = %v", err)
+	}
+
+	// Should have a bulk count log line.
+	if !reporter.hasLog("Linking 1 library file(s)") {
+		t.Errorf("Logs should contain 'Linking 1 library file(s)'; got: %v", reporter.Logs)
+	}
+	// Should not have per-file "Linked:" lines.
+	for _, l := range reporter.Logs {
+		if strings.Contains(l, "Linked:") {
+			t.Errorf("Logs should not contain per-file 'Linked:' line; got: %q", l)
 		}
 	}
 }
