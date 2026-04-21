@@ -530,10 +530,11 @@ func setupGhInstalled(t *testing.T) string {
 	return tmpDir
 }
 
-// TestInstallWithDependencies_SingleReporterStop verifies that calling
-// installWithDependencies for an already-installed tool (short-circuit path)
-// does not call reporter.Stop().
-func TestInstallWithDependencies_SingleReporterStop(t *testing.T) {
+// TestInstallWithDependencies_BorrowedReporter_NoStop verifies that calling
+// installWithDependencies does not call reporter.Stop(). Stop is the caller's
+// responsibility (runInstallWithTelemetry owns the defer); recursive calls
+// must not close the reporter prematurely.
+func TestInstallWithDependencies_BorrowedReporter_NoStop(t *testing.T) {
 	// t.Parallel() is intentionally omitted: setupGhInstalled uses t.Setenv,
 	// which is incompatible with t.Parallel() per the Go testing framework.
 
