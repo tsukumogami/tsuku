@@ -11,10 +11,10 @@ Popularity rankings are based on Homebrew download analytics, GitHub star counts
 ## Action Summary
 
 ### No action needed (handcrafted — full platform support)
-git, docker, terraform, gh, golang, fzf, btop, curl, httpie, lazygit, k9s, stern, kubectx, direnv, mise, eksctl, flux, skaffold, kustomize, velero, vault, packer, bun, claude, gemini, trivy, grype, cosign, syft, actionlint, golangci-lint, ruff, black, tflint, pulumi, caddy, age, consul, vagrant, lazydocker
+git, docker, terraform, gh, golang, fzf, btop, curl, httpie, lazygit, k9s, stern, kubectx, direnv, mise, eksctl, flux, skaffold, kustomize, velero, vault, packer, bun, claude, gemini, trivy, grype, cosign, syft, actionlint, golangci-lint, ruff, black, tflint, pulumi, caddy, age, consul, vagrant, lazydocker, jq
 
 ### Review coverage (batch — may need platform expansion or full handcrafting)
-helm, jq, ripgrep, fd, eza, zoxide, wget, htop, asdf, cilium-cli, istioctl, bazel, yarn, ollama, act, earthly, goreleaser, shellcheck, shfmt, prettier, infracost, terragrunt, mkcert
+helm, ripgrep, fd, eza, zoxide, wget, htop, asdf, cilium-cli, istioctl, bazel, yarn, ollama, act, earthly, goreleaser, shellcheck, shfmt, prettier, infracost, terragrunt, mkcert
 
 ### Author recipe (missing or discovery-only — needs a recipe)
 node, python, kubectl, aws-cli, rust, bat, starship, neovim, tmux, delta, pyenv, nvm, rbenv, gcloud, azure-cli, argocd, ansible, cmake, ninja-build, meson, make, gradle, maven, sbt, deno, pnpm, aider, copilot, ko, dive, hadolint, pre-commit, lefthook, checkov, sops, step, eslint
@@ -34,7 +34,7 @@ node, python, kubectl, aws-cli, rust, bat, starship, neovim, tmux, delta, pyenv,
 | 9 | gh | handcrafted | no action needed |
 | 10 | golang | handcrafted | no action needed |
 | 11 | rust | discovery-only | author recipe |
-| 12 | jq | batch | review coverage |
+| 12 | jq | handcrafted | no action needed |
 | 13 | ripgrep | batch | review coverage |
 | 14 | fd | batch | review coverage |
 | 15 | fzf | handcrafted | no action needed |
