@@ -105,14 +105,12 @@ func (a *InstallLibrariesAction) Execute(ctx *ExecutionContext, params map[strin
 			if err := CopySymlink(srcPath, destPath); err != nil {
 				return fmt.Errorf("failed to copy symlink %s: %w", relPath, err)
 			}
-			reporter.Log("   Installed symlink: %s", relPath)
 		} else {
 			// Copy as regular file, masking dangerous permission bits
 			safePerm := info.Mode() &^ (os.ModeSetuid | os.ModeSetgid | os.ModeSticky)
 			if err := CopyFile(srcPath, destPath, safePerm); err != nil {
 				return fmt.Errorf("failed to copy file %s: %w", relPath, err)
 			}
-			reporter.Log("   Installed: %s", relPath)
 		}
 	}
 

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/testutil"
 )
@@ -495,7 +496,7 @@ func TestResolveRuntimeDeps(t *testing.T) {
 				},
 			}
 
-			result := resolveRuntimeDeps(r, mgr)
+			result := resolveRuntimeDeps(r, mgr, progress.NoopReporter{})
 
 			if tt.wantNil {
 				if result != nil {

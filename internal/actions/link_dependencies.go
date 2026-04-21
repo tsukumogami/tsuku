@@ -143,7 +143,6 @@ func (a *LinkDependenciesAction) Execute(ctx *ExecutionContext, params map[strin
 				existingTarget, readErr := os.Readlink(destFile)
 				if readErr == nil && existingTarget == symlinkTarget {
 					// Already linked correctly, skip
-					reporter.Log("   - Already linked: %s", entry.Name())
 					continue
 				}
 			}
@@ -174,13 +173,11 @@ func (a *LinkDependenciesAction) Execute(ctx *ExecutionContext, params map[strin
 			if err := os.Symlink(srcTarget, destFile); err != nil {
 				return fmt.Errorf("failed to create symlink %s: %w", entry.Name(), err)
 			}
-			reporter.Log("   + Linked (symlink): %s -> %s", entry.Name(), srcTarget)
 		} else {
 			// Source is a regular file - create symlink to it
 			if err := os.Symlink(symlinkTarget, destFile); err != nil {
 				return fmt.Errorf("failed to create symlink %s: %w", entry.Name(), err)
 			}
-			reporter.Log("   + Linked: %s", entry.Name())
 		}
 	}
 

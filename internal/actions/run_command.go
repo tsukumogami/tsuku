@@ -62,9 +62,6 @@ func (a *RunCommandAction) Execute(ctx *ExecutionContext, params map[string]inte
 		return fmt.Errorf("run_command action requires 'command' parameter")
 	}
 
-	// Get description (optional)
-	description, _ := GetString(params, "description")
-
 	// Get working_dir (optional)
 	workingDir, _ := GetString(params, "working_dir")
 	if workingDir == "" {
@@ -75,9 +72,6 @@ func (a *RunCommandAction) Execute(ctx *ExecutionContext, params map[string]inte
 	requiresSudo, _ := GetBool(params, "requires_sudo")
 	if requiresSudo {
 		reporter.Log("   Skipping (requires sudo): %s", cmdPattern)
-		if description != "" {
-			reporter.Log("   Description: %s", description)
-		}
 		return nil
 	}
 
@@ -94,13 +88,7 @@ func (a *RunCommandAction) Execute(ctx *ExecutionContext, params map[string]inte
 	command := ExpandVars(cmdPattern, vars)
 	workingDir = ExpandVars(workingDir, vars)
 
-	if description != "" {
-		reporter.Log("   Description: %s", description)
-	}
-	reporter.Log("   Running: %s", command)
-	if workingDir != ctx.WorkDir {
-		reporter.Log("   Working dir: %s", workingDir)
-	}
+	reporter.Status(fmt.Sprintf("   Running: %s", command))
 
 	// Execute command with context for cancellation support
 	cmd := exec.CommandContext(ctx.Context, "sh", "-c", command)
@@ -117,6 +105,5 @@ func (a *RunCommandAction) Execute(ctx *ExecutionContext, params map[string]inte
 		reporter.Log("   Output: %s", outputStr)
 	}
 
-	reporter.Log("   Command executed successfully")
 	return nil
 }

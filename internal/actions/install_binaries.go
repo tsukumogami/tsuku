@@ -194,10 +194,8 @@ func (a *InstallBinariesAction) installBinariesMode(ctx *ExecutionContext, outpu
 				return fmt.Errorf("failed to chmod %s: %w", dest, err)
 			}
 			logger.Debug("file installed as executable", "dest", destPath)
-			reporter.Log("   Installed (executable): %s -> %s", src, dest)
 		} else {
 			logger.Debug("file installed", "dest", destPath)
-			reporter.Log("   Installed: %s -> %s", src, dest)
 		}
 	}
 
@@ -335,18 +333,15 @@ func (a *InstallBinariesAction) installDirectoryWithSymlinks(ctx *ExecutionConte
 		"outputCount", len(outputs))
 
 	reporter := ctx.GetReporter()
-	reporter.Log("   Installing directory tree to: %s", ctx.InstallDir)
+	reporter.Status(fmt.Sprintf("   Installing directory tree to: %s", ctx.InstallDir))
 
 	// Copy entire WorkDir to InstallDir (.install/), excluding the .install subdirectory
 	// to prevent recursive copy (since InstallDir is workDir/.install)
 	// The install manager expects to find the full tree in workDir/.install
-	reporter.Log("   Copying directory tree...")
+	reporter.Status("   Copying directory tree...")
 	if err := CopyDirectoryExcluding(ctx.WorkDir, ctx.InstallDir, ".install"); err != nil {
 		return fmt.Errorf("failed to copy directory tree: %w", err)
 	}
-
-	reporter.Log("   Directory tree copied to %s", ctx.InstallDir)
-	reporter.Log("   %d output(s) will be symlinked: %v", len(outputs), extractOutputNames(outputs))
 
 	return nil
 }
