@@ -3,15 +3,27 @@ name = "lazygit"
 description = "Simple terminal UI for git"
 homepage = "https://github.com/jesseduffield/lazygit"
 version_format = "semver"
+curated = true
 
+# Linux: statically linked Go binary works on glibc and musl
 [[steps]]
 action = "github_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 repo = "jesseduffield/lazygit"
-asset_pattern = "lazygit_{version}_{os}_{arch}.tar.gz"
+asset_pattern = "lazygit_{version}_linux_{arch}.tar.gz"
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
 strip_dirs = 0
 binaries = ["lazygit"]
-os_mapping = { linux = "linux", darwin = "darwin" }
+
+# macOS: Intel and Apple Silicon binaries
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "jesseduffield/lazygit"
+asset_pattern = "lazygit_{version}_darwin_{arch}.tar.gz"
 arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+strip_dirs = 0
+binaries = ["lazygit"]
 
 [verify]
 command = "lazygit --version"
