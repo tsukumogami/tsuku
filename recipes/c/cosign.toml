@@ -3,6 +3,7 @@ name = "cosign"
 description = "Container signing and verification"
 homepage = "https://github.com/sigstore/cosign"
 version_format = "semver"
+curated = true
 
 [[steps]]
 action = "github_file"

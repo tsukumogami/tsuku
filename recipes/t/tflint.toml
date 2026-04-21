@@ -3,15 +3,25 @@ name = "tflint"
 description = "Terraform linter"
 homepage = "https://github.com/terraform-linters/tflint"
 version_format = "semver"
+curated = true
 
+# Linux: statically linked Go binary works on glibc and musl
 [[steps]]
 action = "github_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 repo = "terraform-linters/tflint"
-asset_pattern = "tflint_{os}_{arch}.zip"
+asset_pattern = "tflint_linux_{arch}.zip"
 strip_dirs = 0
 binaries = ["tflint"]
-os_mapping = { darwin = "darwin", linux = "linux" }
-arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+# macOS: Intel and Apple Silicon binaries
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "terraform-linters/tflint"
+asset_pattern = "tflint_darwin_{arch}.zip"
+strip_dirs = 0
+binaries = ["tflint"]
 
 [verify]
 command = "tflint --version"
