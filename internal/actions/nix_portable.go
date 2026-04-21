@@ -214,13 +214,28 @@ func downloadFileWithContext(ctx context.Context, url, destPath string) error {
 		return fmt.Errorf("HTTP %d: %s", resp.StatusCode, resp.Status)
 	}
 
-	// Copy response body to file with progress display
-	if progress.ShouldShowProgress() && resp.ContentLength > 0 {
-		pw := progress.NewWriter(out, resp.ContentLength, os.Stdout)
-		defer pw.Finish()
-		_, err = io.Copy(pw, resp.Body)
-	} else {
-		_, err = io.Copy(out, resp.Body)
+	// Copy response body to file with byte-level progress when on a TTY.
+	name := downloadDisplayName(url)
+	callback := makeDownloadCallback(progress.NoopReporter{}, name)
+	if progress.ShouldShowProgress() {
+		callback = func(written, total int64) {
+			var msg string
+			if total > 0 {
+				pct := float64(written) / float64(total) * 100
+				if pct > 100 {
+					pct = 100
+				}
+				msg = fmt.Sprintf("Downloading %s (%s / %s, %.0f%%)", name, formatBytes(written), formatBytes(total), pct)
+			} else {
+				msg = fmt.Sprintf("Downloading %s (%s...)", name, formatBytes(written))
+			}
+			fmt.Printf("\r\033[K%s", msg)
+		}
+	}
+	pw := progress.NewProgressWriter(out, resp.ContentLength, callback)
+	_, err = io.Copy(pw, resp.Body)
+	if progress.ShouldShowProgress() {
+		fmt.Printf("\r\033[K") // clear progress line
 	}
 	return err
 }

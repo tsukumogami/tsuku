@@ -264,6 +264,8 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 		checksumAlgo = "sha256"
 	}
 
+	reporter := ctx.GetReporter()
+
 	// Check download cache if available
 	var cache *DownloadCache
 	if ctx.DownloadCacheDir != "" {
@@ -275,25 +277,23 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 		if err != nil {
 			// Log warning but continue with download
 			logger.Warn("cache check failed", "error", err)
-			fmt.Printf("   Warning: cache check failed: %v\n", err)
+			reporter.Warn("cache check failed: %v", err)
 		} else if found {
 			logger.Debug("cache hit", "dest", dest)
-			fmt.Printf("   Using cached: %s\n", dest)
+			reporter.Log("Using cached: %s", dest)
 			// For cached files, verify checksum via URL if available
 			checksumURL, hasChecksumURL := GetString(params, "checksum_url")
 			if hasChecksumURL {
 				if err := a.verifyChecksumFromURL(ctx.Context, ctx, checksumURL, destPath, checksumAlgo, vars); err != nil {
 					// Cache may be stale, invalidate and re-download
 					logger.Debug("cache checksum mismatch, will re-download")
-					fmt.Printf("   Cache checksum mismatch, re-downloading...\n")
+					reporter.Log("Cache checksum mismatch, re-downloading...")
 				} else {
 					logger.Debug("restored from cache with valid checksum")
-					fmt.Printf("   ✓ Restored from cache\n")
 					return nil
 				}
 			} else {
 				logger.Debug("restored from cache (no checksum URL)")
-				fmt.Printf("   ✓ Restored from cache\n")
 				return nil
 			}
 		} else {
@@ -301,11 +301,8 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 		}
 	}
 
-	fmt.Printf("   Downloading: %s\n", url)
-	fmt.Printf("   Destination: %s\n", dest)
-
 	// Download file with context for cancellation support
-	if err := a.downloadFile(ctx.Context, url, destPath); err != nil {
+	if err := a.downloadFile(ctx.Context, url, destPath, reporter); err != nil {
 		return fmt.Errorf("download failed: %w", err)
 	}
 
@@ -325,14 +322,13 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 		if err := cache.Save(url, destPath, ""); err != nil {
 			// Log warning but don't fail the download
 			logger.Warn("failed to cache download", "error", err)
-			fmt.Printf("   Warning: failed to cache download: %v\n", err)
+			reporter.Warn("failed to cache download: %v", err)
 		} else {
 			logger.Debug("saved to download cache")
 		}
 	}
 
 	logger.Debug("download completed successfully", "dest", dest)
-	fmt.Printf("   ✓ Downloaded successfully\n")
 	return nil
 }
 
@@ -347,7 +343,7 @@ func newDownloadHTTPClient() *http.Client {
 // downloadFile performs the actual HTTP download with context for cancellation.
 // Implements retry logic with exponential backoff for transient errors (403, 429, 5xx).
 // SECURITY: Enforces HTTPS for all downloads to prevent MITM attacks
-func (a *DownloadAction) downloadFile(ctx context.Context, url, destPath string) error {
+func (a *DownloadAction) downloadFile(ctx context.Context, url, destPath string, reporter progress.Reporter) error {
 	// SECURITY: Enforce HTTPS for all downloads
 	if !strings.HasPrefix(url, "https://") {
 		return fmt.Errorf("download URL must use HTTPS for security, got: %s", url)
@@ -356,20 +352,32 @@ func (a *DownloadAction) downloadFile(ctx context.Context, url, destPath string)
 	const maxRetries = 3
 	baseDelay := time.Second
 
+	name := downloadDisplayName(url)
+	callback := makeDownloadCallback(reporter, name)
+
+	var pw *progress.ProgressWriter
 	var lastErr error
 	for attempt := 0; attempt <= maxRetries; attempt++ {
 		if attempt > 0 {
 			// Exponential backoff: 1s, 2s, 4s
 			delay := baseDelay * time.Duration(1<<(attempt-1))
-			fmt.Printf("   Retry %d/%d after %v...\n", attempt, maxRetries, delay)
+			reporter.Log("Retry %d/%d after %v...", attempt, maxRetries, delay)
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
 			case <-time.After(delay):
 			}
+			if pw != nil {
+				pw.Reset()
+			}
+		} else {
+			// Non-TTY: log once at the start of the first attempt
+			if !progress.ShouldShowProgress() {
+				reporter.Log("Downloading %s", name)
+			}
 		}
 
-		err := a.doDownloadFile(ctx, url, destPath)
+		err := a.doDownloadFile(ctx, url, destPath, callback, &pw)
 		if err == nil {
 			return nil
 		}
@@ -396,8 +404,10 @@ func (a *DownloadAction) downloadFile(ctx context.Context, url, destPath string)
 	return fmt.Errorf("download failed after %d retries: %w", maxRetries, lastErr)
 }
 
-// doDownloadFile performs a single HTTP download attempt
-func (a *DownloadAction) doDownloadFile(ctx context.Context, url, destPath string) error {
+// doDownloadFile performs a single HTTP download attempt. It creates a
+// ProgressWriter backed by the supplied callback and writes the address of that
+// writer to pwOut so the retry loop can call Reset() before the next attempt.
+func (a *DownloadAction) doDownloadFile(ctx context.Context, url, destPath string, callback func(written, total int64), pwOut **progress.ProgressWriter) error {
 	// Create secure HTTP client with decompression bomb and SSRF protection
 	client := newDownloadHTTPClient()
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
@@ -434,17 +444,12 @@ func (a *DownloadAction) doDownloadFile(ctx context.Context, url, destPath strin
 	}
 	defer out.Close()
 
-	// Copy response body to file with progress display
-	if progress.ShouldShowProgress() && resp.ContentLength > 0 {
-		pw := progress.NewWriter(out, resp.ContentLength, os.Stdout)
-		defer pw.Finish()
-		if _, err := io.Copy(pw, resp.Body); err != nil {
-			return fmt.Errorf("failed to write file: %w", err)
-		}
-	} else {
-		if _, err := io.Copy(out, resp.Body); err != nil {
-			return fmt.Errorf("failed to write file: %w", err)
-		}
+	// Wrap the destination file with a ProgressWriter for byte-level progress.
+	// The ProgressWriter suppresses the callback for small files automatically.
+	pw := progress.NewProgressWriter(out, resp.ContentLength, callback)
+	*pwOut = pw
+	if _, err := io.Copy(pw, resp.Body); err != nil {
+		return fmt.Errorf("failed to write file: %w", err)
 	}
 
 	return nil
@@ -470,8 +475,8 @@ func (a *DownloadAction) verifyChecksum(ctx context.Context, execCtx *ExecutionC
 	checksumURL = ExpandVars(checksumURL, vars)
 	checksumPath := filepath.Join(execCtx.WorkDir, "checksum.tmp")
 
-	fmt.Printf("   Downloading checksum: %s\n", checksumURL)
-	if err := a.downloadFile(ctx, checksumURL, checksumPath); err != nil {
+	reporter := execCtx.GetReporter()
+	if err := a.downloadFile(ctx, checksumURL, checksumPath, reporter); err != nil {
 		return fmt.Errorf("failed to download checksum: %w", err)
 	}
 
@@ -486,12 +491,10 @@ func (a *DownloadAction) verifyChecksum(ctx context.Context, execCtx *ExecutionC
 	os.Remove(checksumPath)
 
 	// Verify checksum
-	fmt.Printf("   Verifying %s checksum...\n", algo)
 	if err := VerifyChecksum(filePath, expectedChecksum, algo); err != nil {
 		return err
 	}
 
-	fmt.Printf("   ✓ Checksum verified\n")
 	return nil
 }
 
@@ -501,7 +504,8 @@ func (a *DownloadAction) verifyChecksumFromURL(ctx context.Context, execCtx *Exe
 	checksumURL = ExpandVars(checksumURL, vars)
 	checksumPath := filepath.Join(execCtx.WorkDir, "checksum.tmp")
 
-	if err := a.downloadFile(ctx, checksumURL, checksumPath); err != nil {
+	reporter := execCtx.GetReporter()
+	if err := a.downloadFile(ctx, checksumURL, checksumPath, reporter); err != nil {
 		return fmt.Errorf("failed to download checksum: %w", err)
 	}
 
@@ -549,10 +553,8 @@ func (a *DownloadAction) verifySignature(ctx context.Context, execCtx *Execution
 	signatureURL := ExpandVars(signatureURLPattern, vars)
 	keyURL := ExpandVars(keyURLPattern, vars)
 
-	fmt.Printf("   Verifying PGP signature...\n")
-	fmt.Printf("   Signature: %s\n", signatureURL)
-	fmt.Printf("   Key: %s\n", keyURL)
-	fmt.Printf("   Fingerprint: %s\n", FormatFingerprint(fingerprint))
+	reporter := execCtx.GetReporter()
+	reporter.Log("Verifying PGP signature...")
 
 	// Fetch signature
 	signatureData, err := FetchSignature(ctx, signatureURL)
@@ -578,6 +580,6 @@ func (a *DownloadAction) verifySignature(ctx context.Context, execCtx *Execution
 		return err
 	}
 
-	fmt.Printf("   ✓ PGP signature verified\n")
+	reporter.Log("PGP signature verified")
 	return nil
 }
