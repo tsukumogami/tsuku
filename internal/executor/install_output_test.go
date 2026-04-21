@@ -215,19 +215,15 @@ func TestNonTTYInstallLogLines(t *testing.T) {
 
 	ctx := context.Background()
 	err = exec.ExecutePlan(ctx, plan)
-	// chmod on "." should succeed (it's a directory chmod).
-	// If it fails, we still check the log lines that were emitted before the error.
+	if err != nil {
+		t.Fatalf("ExecutePlan failed: %v", err)
+	}
 
-	// The executor calls reporter.Log("Installing dependency: dep-tool@0.1.0") before steps.
 	if !reporter.hasLog("Installing dependency: dep-tool@0.1.0") {
 		t.Errorf("Logs does not contain 'Installing dependency: dep-tool@0.1.0'; got: %v", reporter.Logs)
 	}
-
-	if err == nil {
-		// Success path: "Installed dep-tool@0.1.0" should also be logged.
-		if !reporter.hasLog("Installed dep-tool@0.1.0") {
-			t.Errorf("Logs does not contain 'Installed dep-tool@0.1.0'; got: %v", reporter.Logs)
-		}
+	if !reporter.hasLog("Installed dep-tool@0.1.0") {
+		t.Errorf("Logs does not contain 'Installed dep-tool@0.1.0'; got: %v", reporter.Logs)
 	}
 
 	// Status-only messages must not appear in Logs.
