@@ -3,15 +3,25 @@ name = "grype"
 description = "Vulnerability scanner for container images"
 homepage = "https://github.com/anchore/grype"
 version_format = "semver"
+curated = true
 
+# Linux: statically linked Go binary works on glibc and musl
 [[steps]]
 action = "github_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 repo = "anchore/grype"
-asset_pattern = "grype_{version}_{os}_{arch}.tar.gz"
+asset_pattern = "grype_{version}_linux_{arch}.tar.gz"
 strip_dirs = 0
 binaries = ["grype"]
-os_mapping = { darwin = "darwin", linux = "linux" }
-arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+# macOS: Intel and Apple Silicon binaries
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "anchore/grype"
+asset_pattern = "grype_{version}_darwin_{arch}.tar.gz"
+strip_dirs = 0
+binaries = ["grype"]
 
 [verify]
 command = "grype version"

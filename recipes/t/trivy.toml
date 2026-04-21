@@ -3,14 +3,28 @@ name = "trivy"
 description = "Vulnerability scanner for containers"
 homepage = "https://github.com/aquasecurity/trivy"
 version_format = "semver"
+curated = true
 
+# Linux: statically linked Go binary works on glibc and musl
 [[steps]]
 action = "github_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 repo = "aquasecurity/trivy"
-asset_pattern = "trivy_{version}_{os}-{arch}.tar.gz"
+asset_pattern = "trivy_{version}_Linux-{arch}.tar.gz"
+checksum_url = "https://github.com/aquasecurity/trivy/releases/download/v{version}/trivy_{version}_checksums.txt"
 strip_dirs = 0
 binaries = ["trivy"]
-os_mapping = { darwin = "macOS", linux = "Linux" }
+arch_mapping = { amd64 = "64bit", arm64 = "ARM64" }
+
+# macOS: Intel and Apple Silicon binaries
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "aquasecurity/trivy"
+asset_pattern = "trivy_{version}_macOS-{arch}.tar.gz"
+checksum_url = "https://github.com/aquasecurity/trivy/releases/download/v{version}/trivy_{version}_checksums.txt"
+strip_dirs = 0
+binaries = ["trivy"]
 arch_mapping = { amd64 = "64bit", arm64 = "ARM64" }
 
 [verify]
