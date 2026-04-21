@@ -486,6 +486,18 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 			return fmt.Errorf("unknown action: %s", step.Action)
 		}
 
+		// Resolve a human-readable status message for the progress reporter.
+		// Type-assert to ActionDescriber; fall back to the action name when
+		// the interface is not implemented or StatusMessage returns "".
+		var actionMsg string
+		if d, ok := action.(actions.ActionDescriber); ok {
+			actionMsg = d.StatusMessage(step.Params)
+		}
+		if actionMsg == "" {
+			actionMsg = step.Action
+		}
+		execCtx.GetReporter().Status(actionMsg)
+
 		// For download steps with checksums, verify after download
 		if step.Action == "download" && step.Checksum != "" {
 			if err := e.executeDownloadWithVerification(ctx, execCtx, step, plan); err != nil {
@@ -565,6 +577,15 @@ func (e *Executor) ExecutePhase(ctx context.Context, plan *InstallationPlan, pha
 		if action == nil {
 			return fmt.Errorf("unknown action: %s", step.Action)
 		}
+
+		var actionMsg string
+		if d, ok := action.(actions.ActionDescriber); ok {
+			actionMsg = d.StatusMessage(step.Params)
+		}
+		if actionMsg == "" {
+			actionMsg = step.Action
+		}
+		e.ctx.GetReporter().Status(actionMsg)
 
 		if err := action.Execute(e.ctx, step.Params); err != nil {
 			return fmt.Errorf("phase %q step %d (%s) failed: %w", phase, i+1, step.Action, err)
@@ -798,6 +819,15 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		if action == nil {
 			return fmt.Errorf("unknown action: %s", step.Action)
 		}
+
+		var actionMsg string
+		if d, ok := action.(actions.ActionDescriber); ok {
+			actionMsg = d.StatusMessage(step.Params)
+		}
+		if actionMsg == "" {
+			actionMsg = step.Action
+		}
+		execCtx.GetReporter().Status(actionMsg)
 
 		// Execute (validation already done upfront)
 		if err := action.Execute(execCtx, step.Params); err != nil {
