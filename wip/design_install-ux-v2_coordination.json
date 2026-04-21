@@ -1,0 +1,39 @@
+{
+  "topic": "install-ux-v2",
+  "decisions": [
+    {
+      "id": 1,
+      "question": "How should the Reporter be injected into internal/install/ (Manager, library, bootstrap)?",
+      "status": "complete",
+      "complexity": "critical",
+      "chosen": "Struct field + SetReporter() on Manager, mirroring the executor pattern",
+      "report_file": "wip/research/design_install-ux-v2_decision_1_report.md"
+    },
+    {
+      "id": 2,
+      "question": "Output classification per category (Status vs Log vs DeferWarn vs silence)?",
+      "status": "complete",
+      "complexity": "standard",
+      "chosen": "Orchestration labels/action sub-steps → Status(); verify top-level → Log(); completions/library notices → silence; PATH guidance → DeferWarn()",
+      "report_file": "wip/research/design_install-ux-v2_decision_2_report.md"
+    },
+    {
+      "id": 3,
+      "question": "Verify output during install: show all sub-steps, suppress, or failure-only?",
+      "status": "complete",
+      "complexity": "standard",
+      "chosen": "Suppress sub-steps via Verbose:false; failure detail already self-contained in error chain",
+      "report_file": "wip/research/design_install-ux-v2_decision_3_report.md"
+    },
+    {
+      "id": 4,
+      "question": "Which action reporter.Log() calls become Status() or silence?",
+      "status": "complete",
+      "complexity": "standard",
+      "chosen": "Per-file loop lines removed; extraction/command-in-progress → Status(); milestones/cache/retry/command-output → Log()",
+      "report_file": "wip/research/design_install-ux-v2_decision_4_report.md"
+    }
+  ],
+  "cross_validation": "pending",
+  "round": 0
+}
