@@ -586,6 +586,8 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 				return fmt.Errorf("failed to load state for verification: %w", err)
 			}
 
+			// Verbose: false — post-install; sub-step output is noise during install flow.
+			// The tsuku verify command passes Verbose: true to show full detail.
 			opts := ToolVerifyOptions{Verbose: false, SkipPATHChecks: true, SkipDependencyValidation: true}
 			if err := RunToolVerification(r, toolName, toolState, cfg, state, opts); err != nil {
 				return fmt.Errorf("installation verification failed: %w", err)
