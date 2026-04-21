@@ -3,15 +3,25 @@ name = "flux"
 description = "GitOps toolkit for Kubernetes"
 homepage = "https://github.com/fluxcd/flux2"
 version_format = "semver"
+curated = true
 
+# Linux: statically linked Go binary works on glibc and musl
 [[steps]]
 action = "github_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 repo = "fluxcd/flux2"
-asset_pattern = "flux_{version}_{os}_{arch}.tar.gz"
+asset_pattern = "flux_{version}_linux_{arch}.tar.gz"
 strip_dirs = 0
 binaries = ["flux"]
-os_mapping = { darwin = "darwin", linux = "linux" }
-arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+# macOS: Intel and Apple Silicon binaries
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "fluxcd/flux2"
+asset_pattern = "flux_{version}_darwin_{arch}.tar.gz"
+strip_dirs = 0
+binaries = ["flux"]
 
 [verify]
 command = "flux version --client"

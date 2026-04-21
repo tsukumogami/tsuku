@@ -3,15 +3,32 @@ name = "kustomize"
 description = "Kubernetes native configuration management"
 homepage = "https://github.com/kubernetes-sigs/kustomize"
 version_format = "semver"
+curated = true
 
+# kubernetes-sigs/kustomize is a monorepo with multiple products (api, kyaml,
+# cmd/config, kustomize). The tag_prefix filters releases to the kustomize
+# product tags (kustomize/v*), otherwise version resolution may pick up a
+# sibling product's release.
+[version]
+tag_prefix = "kustomize/v"
+
+# Linux: statically linked Go binary works on glibc and musl
 [[steps]]
 action = "github_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 repo = "kubernetes-sigs/kustomize"
-asset_pattern = "kustomize_v{version}_{os}_{arch}.tar.gz"
+asset_pattern = "kustomize_v{version}_linux_{arch}.tar.gz"
 strip_dirs = 0
 binaries = ["kustomize"]
-os_mapping = { darwin = "darwin", linux = "linux" }
-arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+# macOS: Intel and Apple Silicon binaries
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "kubernetes-sigs/kustomize"
+asset_pattern = "kustomize_v{version}_darwin_{arch}.tar.gz"
+strip_dirs = 0
+binaries = ["kustomize"]
 
 [verify]
 command = "kustomize version"

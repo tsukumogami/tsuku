@@ -3,15 +3,25 @@ name = "stern"
 description = "Multi-pod log tailing for Kubernetes"
 homepage = "https://github.com/stern/stern"
 version_format = "semver"
+curated = true
 
+# Linux: statically linked Go binary works on glibc and musl
 [[steps]]
 action = "github_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 repo = "stern/stern"
-asset_pattern = "stern_{version}_{os}_{arch}.tar.gz"
+asset_pattern = "stern_{version}_linux_{arch}.tar.gz"
 strip_dirs = 0
 binaries = ["stern"]
-os_mapping = { darwin = "darwin", linux = "linux" }
-arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+# macOS: Intel and Apple Silicon binaries
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "stern/stern"
+asset_pattern = "stern_{version}_darwin_{arch}.tar.gz"
+strip_dirs = 0
+binaries = ["stern"]
 
 [verify]
 command = "stern --version"
