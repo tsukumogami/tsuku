@@ -346,11 +346,3 @@ func (a *InstallBinariesAction) installDirectoryWithSymlinks(ctx *ExecutionConte
 	return nil
 }
 
-// extractOutputNames extracts just the output names from BinaryMapping for display
-func extractOutputNames(outputs []recipe.BinaryMapping) []string {
-	names := make([]string, len(outputs))
-	for i, o := range outputs {
-		names[i] = filepath.Base(o.Src)
-	}
-	return names
-}
