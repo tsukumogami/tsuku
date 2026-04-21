@@ -142,6 +142,7 @@ func runInstallWithTelemetry(toolName, reqVersion, versionConstraint string, isE
 	return installWithDependencies(toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client, reporter)
 }
 
+// TODO(#2): migrate remaining printInfof calls to reporter; new output should use reporter
 func installWithDependencies(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, visited map[string]bool, telemetryClient *telemetry.Client, reporter progress.Reporter) error {
 	// Initialize manager for state updates
 	cfg, err := config.DefaultConfig()

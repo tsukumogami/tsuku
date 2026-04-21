@@ -19,7 +19,6 @@ import (
 // Libraries are installed to $TSUKU_HOME/libs/{name}-{version}/ and track used_by
 // Note: used_by tracking is handled by the caller after tool installation completes
 func installLibrary(libName, reqVersion string, mgr *install.Manager, telemetryClient *telemetry.Client, reporter progress.Reporter) error {
-	mgr.SetReporter(reporter)
 	// Load recipe
 	r, err := loader.Get(libName, recipe.LoaderOptions{})
 	if err != nil {
