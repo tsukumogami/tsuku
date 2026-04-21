@@ -11,6 +11,10 @@ through a single channel.
 pattern is the adopted reference; no separate progress bar widget; step names eliminated from
 happy-path output; ~384 fmt.Printf call sites must migrate.
 
+## Security Review (Phase 5)
+**Outcome:** Option 2 - Document considerations
+**Summary:** Terminal injection (ANSI) is the primary risk — incomplete mitigation in initial draft upgraded to full CSI/OSC stripping at TTYReporter boundary. Secret leakage during 396-call migration requires per-call review. No new network, filesystem, or privilege risks.
+
 ## Current Status
-**Phase:** 0 - Setup (Explore Handoff)
+**Phase:** 6 - Final Review
 **Last Updated:** 2026-04-20
