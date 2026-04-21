@@ -9,6 +9,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/testutil"
 )
 
@@ -71,7 +72,7 @@ func TestGetOrGeneratePlanWith_CacheHit(t *testing.T) {
 		Arch: "amd64",
 	}
 
-	result, err := getOrGeneratePlanWith(ctx, resolver, generator, cacheReader, cfg)
+	result, err := getOrGeneratePlanWith(ctx, resolver, generator, cacheReader, cfg, progress.NoopReporter{})
 	if err != nil {
 		t.Fatalf("getOrGeneratePlanWith() error = %v, want nil", err)
 	}
@@ -116,7 +117,7 @@ func TestGetOrGeneratePlanWith_CacheMiss(t *testing.T) {
 		Arch: "amd64",
 	}
 
-	result, err := getOrGeneratePlanWith(ctx, resolver, generator, cacheReader, cfg)
+	result, err := getOrGeneratePlanWith(ctx, resolver, generator, cacheReader, cfg, progress.NoopReporter{})
 	if err != nil {
 		t.Fatalf("getOrGeneratePlanWith() error = %v, want nil", err)
 	}
@@ -170,7 +171,7 @@ func TestGetOrGeneratePlanWith_FreshFlag(t *testing.T) {
 		Fresh: true, // Fresh flag bypasses cache
 	}
 
-	result, err := getOrGeneratePlanWith(ctx, resolver, generator, cacheReader, cfg)
+	result, err := getOrGeneratePlanWith(ctx, resolver, generator, cacheReader, cfg, progress.NoopReporter{})
 	if err != nil {
 		t.Fatalf("getOrGeneratePlanWith() error = %v, want nil", err)
 	}
@@ -216,7 +217,7 @@ func TestGetOrGeneratePlanWith_InvalidCachedPlan_FormatVersion(t *testing.T) {
 		Arch: "amd64",
 	}
 
-	result, err := getOrGeneratePlanWith(ctx, resolver, generator, cacheReader, cfg)
+	result, err := getOrGeneratePlanWith(ctx, resolver, generator, cacheReader, cfg, progress.NoopReporter{})
 	if err != nil {
 		t.Fatalf("getOrGeneratePlanWith() error = %v, want nil", err)
 	}
@@ -252,7 +253,7 @@ func TestGetOrGeneratePlanWith_VersionResolutionFallback(t *testing.T) {
 		Arch: "amd64",
 	}
 
-	result, err := getOrGeneratePlanWith(ctx, resolver, generator, cacheReader, cfg)
+	result, err := getOrGeneratePlanWith(ctx, resolver, generator, cacheReader, cfg, progress.NoopReporter{})
 	if err != nil {
 		t.Fatalf("getOrGeneratePlanWith() error = %v, want nil (fallback to 'dev')", err)
 	}
@@ -278,7 +279,7 @@ func TestGetOrGeneratePlanWith_VersionResolutionError_WithConstraint(t *testing.
 		Arch:              "amd64",
 	}
 
-	result, err := getOrGeneratePlanWith(ctx, resolver, generator, cacheReader, cfg)
+	result, err := getOrGeneratePlanWith(ctx, resolver, generator, cacheReader, cfg, progress.NoopReporter{})
 	if err == nil {
 		t.Fatal("getOrGeneratePlanWith() should return error when version constraint fails")
 	}
@@ -311,7 +312,7 @@ func TestGetOrGeneratePlanWith_DefaultOSArch(t *testing.T) {
 		// OS and Arch not set - should use runtime defaults
 	}
 
-	result, err := getOrGeneratePlanWith(ctx, resolver, generator, cacheReader, cfg)
+	result, err := getOrGeneratePlanWith(ctx, resolver, generator, cacheReader, cfg, progress.NoopReporter{})
 	if err != nil {
 		t.Fatalf("getOrGeneratePlanWith() error = %v, want nil", err)
 	}

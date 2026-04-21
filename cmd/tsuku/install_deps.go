@@ -53,8 +53,9 @@ func getOrGeneratePlan(
 	exec *executor.Executor,
 	stateMgr *install.StateManager,
 	cfg planRetrievalConfig,
+	reporter progress.Reporter,
 ) (*executor.InstallationPlan, error) {
-	return getOrGeneratePlanWith(ctx, exec, exec, stateMgr, cfg)
+	return getOrGeneratePlanWith(ctx, exec, exec, stateMgr, cfg, reporter)
 }
 
 // getOrGeneratePlanWith is the testable implementation that accepts interfaces.
@@ -64,6 +65,7 @@ func getOrGeneratePlanWith(
 	generator planGenerator,
 	cacheReader planCacheReader,
 	cfg planRetrievalConfig,
+	reporter progress.Reporter,
 ) (*executor.InstallationPlan, error) {
 	// Apply defaults
 	targetOS := cfg.OS
@@ -84,7 +86,7 @@ func getOrGeneratePlanWith(
 		}
 		// Fall back to "dev" version for recipes without proper version sources
 		// This matches the behavior in executor.Execute() for backward compatibility
-		printInfof("Warning: version resolution failed: %v, using 'dev'\n", err)
+		reporter.Warn("version resolution failed: %v, using 'dev'", err)
 		resolvedVersion = "dev"
 	}
 
@@ -99,16 +101,16 @@ func getOrGeneratePlanWith(
 			execPlan := executor.FromStoragePlan(cachedPlan)
 			if execPlan != nil {
 				if err := executor.ValidateCachedPlan(execPlan, cacheKey); err == nil {
-					printInfof("Using cached plan for %s@%s\n", cfg.Tool, resolvedVersion)
+					reporter.Status(fmt.Sprintf("Using cached plan for %s@%s", cfg.Tool, resolvedVersion))
 					return execPlan, nil
 				}
-				printInfof("Cached plan invalid, regenerating...\n")
+				reporter.Status("Cached plan invalid, regenerating...")
 			}
 		}
 	}
 
 	// Generate fresh plan
-	printInfof("Generating plan for %s@%s\n", cfg.Tool, resolvedVersion)
+	reporter.Status(fmt.Sprintf("Generating plan for %s@%s", cfg.Tool, resolvedVersion))
 
 	// Create downloader and cache for plan generation
 	// Downloader enables Decompose to download files (e.g., GHCR bottles with auth)
@@ -138,11 +140,13 @@ func getOrGeneratePlanWith(
 
 func runInstallWithTelemetry(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client) error {
 	reporter := progress.NewTTYReporter(os.Stderr)
-	defer reporter.Stop()
+	defer func() {
+		reporter.Stop()
+		reporter.FlushDeferred()
+	}()
 	return installWithDependencies(toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client, reporter)
 }
 
-// TODO(#2): migrate remaining printInfof calls to reporter; new output should use reporter
 func installWithDependencies(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, visited map[string]bool, telemetryClient *telemetry.Client, reporter progress.Reporter) error {
 	// Initialize manager for state updates
 	cfg, err := config.DefaultConfig()
@@ -156,7 +160,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	if isExplicit && parent == "" {
 		wasHidden, err := install.CheckAndExposeHidden(mgr, toolName)
 		if err != nil {
-			printInfof("Warning: failed to check hidden status: %v\n", err)
+			reporter.Warn("failed to check hidden status: %v", err)
 		}
 		if wasHidden {
 			// Tool was hidden and is now exposed, we're done
@@ -196,7 +200,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 			}
 		})
 		if err != nil {
-			printInfof("Warning: failed to update state for %s: %v\n", toolName, err)
+			reporter.Warn("failed to update state for %s: %v", toolName, err)
 		}
 
 		// If explicit update requested, we might want to proceed with re-installation
@@ -251,11 +255,8 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	}
 
 	// Show warnings (non-fatal)
-	if len(validationResult.Warnings) > 0 {
-		printInfof("Warnings for %s:\n", toolName)
-		for _, w := range validationResult.Warnings {
-			printInfof("  - %s\n", w)
-		}
+	for _, w := range validationResult.Warnings {
+		reporter.Warn("%s: %s", toolName, w)
 	}
 
 	// Check if this is a library recipe
@@ -293,10 +294,10 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 
 	// Check and install dependencies
 	if len(r.Metadata.Dependencies) > 0 {
-		printInfof("Checking dependencies for %s...\n", toolName)
+		reporter.Status(fmt.Sprintf("Checking dependencies for %s...", toolName))
 
 		for _, dep := range r.Metadata.Dependencies {
-			printInfof("  Resolving dependency '%s'...\n", dep)
+			reporter.Status(fmt.Sprintf("Resolving dependency '%s'...", dep))
 			// Install dependency (not explicit, parent is current tool)
 			// Dependencies don't have version constraints and are tracked for telemetry
 			if err := installWithDependencies(dep, "", "", false, toolName, visited, telemetryClient, reporter); err != nil {
@@ -308,10 +309,10 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	// Check and install runtime dependencies (these must be exposed, not hidden)
 	// This happens AFTER package manager bootstrap so CheckAndExposeHidden can work
 	if len(r.Metadata.RuntimeDependencies) > 0 {
-		printInfof("Checking runtime dependencies for %s...\n", toolName)
+		reporter.Status(fmt.Sprintf("Checking runtime dependencies for %s...", toolName))
 
 		for _, dep := range r.Metadata.RuntimeDependencies {
-			printInfof("  Resolving runtime dependency '%s'...\n", dep)
+			reporter.Status(fmt.Sprintf("Resolving runtime dependency '%s'...", dep))
 			// Install runtime dependency as explicit (exposed, not hidden)
 			// No parent - these are top-level explicit installs
 			if err := installWithDependencies(dep, "", "", true, "", visited, telemetryClient, reporter); err != nil {
@@ -392,7 +393,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		RecipeLoader:      loader,
 		RequireEmbedded:   installRequireEmbedded,
 	}
-	plan, err := getOrGeneratePlan(globalCtx, exec, mgr.GetState(), planCfg)
+	plan, err := getOrGeneratePlan(globalCtx, exec, mgr.GetState(), planCfg, reporter)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to generate plan: %v\n", err)
 		return err
@@ -406,7 +407,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		planVersion = "dev"
 	}
 	if mgr.IsVersionInstalled(toolName, planVersion) {
-		printInfof("%s@%s is already installed\n", toolName, planVersion)
+		reporter.Status(fmt.Sprintf("%s@%s is already installed", toolName, planVersion))
 		err = mgr.GetState().UpdateTool(toolName, func(ts *install.ToolState) {
 			if isExplicit {
 				ts.IsExplicit = true
@@ -425,11 +426,14 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 			}
 		})
 		if err != nil {
-			printInfof("Warning: failed to update state: %v\n", err)
+			reporter.Warn("failed to update state: %v", err)
 		}
 		setInstalledInIndex(toolName, true)
 		return nil
 	}
+
+	// Emit the install-start line now that the version is resolved from the plan.
+	reporter.Log("Installing %s@%s", toolName, planVersion)
 
 	// Execute the plan
 	if err := exec.ExecutePlan(globalCtx, plan); err != nil {
@@ -472,10 +476,10 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		resolvedDeps := actions.ResolveDependencies(r)
 
 		// Resolve runtime dependencies for wrapper generation (with versions)
-		runtimeDeps := resolveRuntimeDeps(r, mgr)
+		runtimeDeps := resolveRuntimeDeps(r, mgr, reporter)
 		if len(runtimeDeps) > 0 {
 			installOpts.RuntimeDependencies = runtimeDeps
-			printInfof("Runtime dependencies: %v\n", mapKeys(runtimeDeps))
+			reporter.Status(fmt.Sprintf("Runtime dependencies: %v", mapKeys(runtimeDeps)))
 		}
 
 		if err := mgr.InstallWithOptions(toolName, version, exec.WorkDir(), installOpts); err != nil {
@@ -490,7 +494,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		exec.SetToolInstallDir(cfg.ToolDir(toolName, version))
 		if err := exec.ExecutePhase(globalCtx, plan, "post-install"); err != nil {
 			// Post-install failures warn but don't block installation
-			printInfof("Warning: post-install phase failed: %v\n", err)
+			reporter.Warn("post-install phase failed: %v", err)
 		}
 
 		// Collect cleanup actions recorded by post-install actions and
@@ -505,7 +509,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 			}
 			for shell := range affectedShells {
 				if err := shellenv.RebuildShellCache(cfg.HomeDir, shell); err != nil {
-					printInfof("Warning: failed to rebuild shell cache for %s: %v\n", shell, err)
+					reporter.Warn("failed to rebuild shell cache for %s: %v", shell, err)
 				}
 			}
 		}
@@ -541,7 +545,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 			}
 		})
 		if err != nil {
-			printInfof("Warning: failed to update state: %v\n", err)
+			reporter.Warn("failed to update state: %v", err)
 		}
 	}
 
@@ -558,7 +562,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 			libVersion := mgr.GetInstalledLibraryVersion(dep)
 			if libVersion != "" {
 				if err := mgr.AddLibraryUsedBy(dep, libVersion, toolNameVersion); err != nil {
-					printInfof("Warning: failed to update library state for %s: %v\n", dep, err)
+					reporter.Warn("failed to update library state for %s: %v", dep, err)
 				}
 			}
 		}
@@ -600,13 +604,10 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 
 	if isSystemDep {
 		reporter.Log("%s is available on your system", toolName)
-		printInfo()
-		printInfo("Note: tsuku doesn't manage this dependency. It validated that it's installed.")
+		reporter.Log("Note: tsuku doesn't manage this dependency. It validated that it's installed.")
 	} else {
 		reporter.Log("%s@%s installed", toolName, version)
-		printInfo()
-		printInfo("To use the installed tool, add this to your shell profile:")
-		printInfof("  export PATH=\"%s:$PATH\"\n", cfg.CurrentDir)
+		reporter.DeferWarn("To use the installed tool, add this to your shell profile:\n  export PATH=\"%s:$PATH\"", cfg.CurrentDir)
 	}
 
 	return nil
@@ -615,7 +616,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 // resolveRuntimeDeps uses the new dependency resolution to get runtime dependencies
 // and looks up their installed versions from state.
 // Returns a map of dep name -> version for use in wrapper scripts.
-func resolveRuntimeDeps(r *recipe.Recipe, mgr *install.Manager) map[string]string {
+func resolveRuntimeDeps(r *recipe.Recipe, mgr *install.Manager, reporter progress.Reporter) map[string]string {
 	// Use the new dependency resolution algorithm
 	deps := actions.ResolveDependencies(r)
 
@@ -635,7 +636,7 @@ func resolveRuntimeDeps(r *recipe.Recipe, mgr *install.Manager) map[string]strin
 		toolState, err := mgr.GetState().GetToolState(depName)
 		if err != nil || toolState == nil {
 			// Dependency not installed - skip (shouldn't happen if install order is correct)
-			printInfof("Warning: runtime dependency %s not found in state\n", depName)
+			reporter.Warn("runtime dependency %s not found in state", depName)
 			continue
 		}
 		result[depName] = toolState.Version

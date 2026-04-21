@@ -29,19 +29,19 @@ func installLibrary(libName, reqVersion string, mgr *install.Manager, telemetryC
 	// For now, just check if any version is installed
 	existingVersion := mgr.GetInstalledLibraryVersion(libName)
 	if existingVersion != "" && reqVersion == "" {
-		printInfof("Library %s@%s already installed, reusing\n", libName, existingVersion)
+		reporter.Status(fmt.Sprintf("Library %s@%s already installed, reusing", libName, existingVersion))
 		return nil
 	}
 
 	// Check and install dependencies
 	if len(r.Metadata.Dependencies) > 0 {
-		printInfof("Checking dependencies for %s...\n", libName)
+		reporter.Status(fmt.Sprintf("Checking dependencies for %s...", libName))
 
 		// Create a visited map for dependency resolution
 		visited := make(map[string]bool)
 
 		for _, dep := range r.Metadata.Dependencies {
-			printInfof("  Resolving dependency '%s'...\n", dep)
+			reporter.Status(fmt.Sprintf("Resolving dependency '%s'...", dep))
 			// Install dependency (not explicit, parent is current library)
 			if err := installWithDependencies(dep, "", "", false, libName, visited, telemetryClient, reporter); err != nil {
 				return fmt.Errorf("failed to install dependency '%s': %w", dep, err)
@@ -136,7 +136,7 @@ func installLibrary(libName, reqVersion string, mgr *install.Manager, telemetryC
 
 	// Check if this specific version is already installed
 	if mgr.IsLibraryInstalled(libName, version) {
-		printInfof("Library %s@%s already installed\n", libName, version)
+		reporter.Status(fmt.Sprintf("Library %s@%s already installed", libName, version))
 		return nil
 	}
 
@@ -162,8 +162,7 @@ func installLibrary(libName, reqVersion string, mgr *install.Manager, telemetryC
 	}
 
 	// Verify library installation (Tiers 1-3, skip Tier 4 integrity)
-	printInfo()
-	printInfo("Verifying library...")
+	reporter.Status("Verifying library...")
 
 	state, err := mgr.GetState().Load()
 	if err != nil {
@@ -185,6 +184,6 @@ func installLibrary(libName, reqVersion string, mgr *install.Manager, telemetryC
 		telemetryClient.Send(event)
 	}
 
-	printInfof("Library %s@%s installed successfully\n", libName, version)
+	reporter.Log("Library %s@%s installed successfully", libName, version)
 	return nil
 }
