@@ -64,4 +64,3 @@ func (pw *ProgressWriter) Write(p []byte) (int, error) {
 func (pw *ProgressWriter) Reset() {
 	pw.written = 0
 }
-
