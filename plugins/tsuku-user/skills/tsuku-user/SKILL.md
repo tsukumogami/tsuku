@@ -67,7 +67,7 @@ tsuku finds `.tsuku.toml` by walking up from the current directory, stopping at 
 | `tsuku list` | List installed tools | `--json`, `--all` |
 | `tsuku outdated` | Show tools with available updates | `--json` |
 
-**Install output**: In a terminal, `tsuku install` shows a single in-place status line that updates as each phase progresses (Downloading, Extracting, Installing, etc.), then replaces with a final success line. In CI or piped output (non-TTY), it prints one plain-text line per phase transition — typically 3–5 lines for a binary tool, more for source builds — plus the final success line. `--quiet` suppresses all non-error output in both modes.
+**Install output**: In a terminal, `tsuku install` shows a single in-place status line that updates throughout the full install — including dependency resolution, action execution, and verification — then replaces with a permanent success line when done. In CI or piped output (non-TTY), it prints one line when a tool starts installing, one line per verification step, and one line on completion. A binary tool with one dependency produces 4 permanent lines; tools with no dependencies produce 3. Errors, retries, and command output also appear as permanent lines. `--quiet` suppresses all non-error output in both modes.
 
 ### Discover
 
