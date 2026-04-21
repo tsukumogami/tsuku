@@ -285,7 +285,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		case recipe.ChecksumDynamic:
 			// Downloads without static checksums — inform but don't block.
 			// The plan generator computes checksums at install time.
-			fmt.Fprintf(os.Stderr, "Note: Checksums for '%s' will be computed during installation.\n", toolName)
+			reporter.Log("Note: Checksums for '%s' will be computed during installation.", toolName)
 
 		case recipe.ChecksumEcosystem, recipe.ChecksumStatic:
 			// Ecosystem verification or static checksums — silent.
@@ -607,7 +607,9 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		reporter.Log("Note: tsuku doesn't manage this dependency. It validated that it's installed.")
 	} else {
 		reporter.Log("%s@%s installed", toolName, version)
-		reporter.DeferWarn("To use the installed tool, add this to your shell profile:\n  export PATH=\"%s:$PATH\"", cfg.CurrentDir)
+		if isExplicit && parent == "" {
+			reporter.DeferWarn("To use the installed tool, add this to your shell profile:\n  export PATH=\"%s:$PATH\"", cfg.CurrentDir)
+		}
 	}
 
 	return nil
