@@ -1,35 +1,38 @@
 [metadata]
-  name = "ripgrep"
-  description = "Search tool like grep and The Silver Searcher"
-  homepage = "https://github.com/BurntSushi/ripgrep"
-  version_format = ""
-  requires_sudo = false
-  runtime_dependencies = ["pcre2"]
-  tier = 0
-  type = ""
-  llm_validation = "skipped"
+name = "ripgrep"
+description = "Recursively search directories for a regex pattern"
+homepage = "https://github.com/BurntSushi/ripgrep"
+version_format = "semver"
+curated = true
 
-[version]
-  source = ""
-  github_repo = ""
-  tag_prefix = ""
-  module = ""
-  formula = ""
-  cask = ""
-  tap = ""
-  fossil_repo = ""
-  project_name = ""
-  version_separator = ""
-  timeline_tag = ""
-
+# Linux amd64: statically linked musl binary (works on glibc and musl)
 [[steps]]
-  action = "homebrew"
-  formula = "ripgrep"
+action = "github_archive"
+when = { os = ["linux"], arch = "amd64", libc = ["glibc", "musl"] }
+repo = "BurntSushi/ripgrep"
+asset_pattern = "ripgrep-{version}-x86_64-unknown-linux-musl.tar.gz"
+strip_dirs = 1
+binaries = ["rg"]
 
+# Linux arm64: upstream publishes only a glibc build; musl arm64 is unsupported
 [[steps]]
-  action = "install_binaries"
-  binaries = ["bin/rg"]
+action = "github_archive"
+when = { os = ["linux"], arch = "arm64", libc = ["glibc"] }
+repo = "BurntSushi/ripgrep"
+asset_pattern = "ripgrep-{version}-aarch64-unknown-linux-gnu.tar.gz"
+strip_dirs = 1
+binaries = ["rg"]
+
+# macOS: Intel and Apple Silicon binaries
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "BurntSushi/ripgrep"
+asset_pattern = "ripgrep-{version}-{arch}.tar.gz"
+strip_dirs = 1
+binaries = ["rg"]
+arch_mapping = { amd64 = "x86_64-apple-darwin", arm64 = "aarch64-apple-darwin" }
 
 [verify]
-  command = "rg --version"
-  pattern = ""
+command = "rg --version"
+pattern = "{version}"

@@ -641,8 +641,8 @@ Plan: [docs/plans/PLAN-curated-recipes.md](../plans/PLAN-curated-recipes.md)
 | ~~_Adds `recipes/n/node.toml` using direct download from nodejs.org with platform-specific tarballs for Linux (glibc and musl) and macOS._~~ | | |
 | ~~[#2266: feat(recipes): backfill curated recipes — cloud CLIs and build tools](https://github.com/tsukumogami/tsuku/issues/2266)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260)~~ | ~~testable~~ |
 | ~~_Ships `recipes/a/awscli.toml` using download+PGP-verify from awscli.amazonaws.com and `recipes/c/cmake.toml` using download+extract with SHA-256.txt checksum from Kitware's GitHub releases._~~ | | |
-| [#2267: feat(recipes): backfill curated recipes — modern CLI tools and AI assistants](https://github.com/tsukumogami/tsuku/issues/2267) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260) | testable |
-| _Replaces batch-generated recipes for ripgrep, fd, eza, zoxide, and delta with handcrafted versions, and adds missing AI tool recipes (aider, ollama)._ | | |
+| ~~[#2267: feat(recipes): backfill curated recipes — modern CLI tools and AI assistants](https://github.com/tsukumogami/tsuku/issues/2267)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260)~~ | ~~testable~~ |
+| ~~_Replaces batch-generated recipes for ripgrep, fd, eza, zoxide, and delta with handcrafted versions, and adds missing AI tool recipes (aider, ollama)._~~ | | |
 | [#2268: feat(recipes): backfill curated recipes — remaining top-100 gaps](https://github.com/tsukumogami/tsuku/issues/2268) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260), [#2266](https://github.com/tsukumogami/tsuku/issues/2266), [#2267](https://github.com/tsukumogami/tsuku/issues/2267) | testable |
 | _Authors handcrafted recipes for all remaining top-100 tools not covered by earlier issues, reaching full curated coverage of the priority list._ | | |
 
@@ -677,9 +677,8 @@ graph TD
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
 
-    class I2259,I2260,I2261,I2262,I2263,I2264,I2265,I2266 done
-    class I2267 ready
-    class I2268 blocked
+    class I2259,I2260,I2261,I2262,I2263,I2264,I2265,I2266,I2267 done
+    class I2268 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design.

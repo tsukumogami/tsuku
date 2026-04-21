@@ -1,0 +1,30 @@
+[metadata]
+name = "delta"
+description = "A syntax-highlighting pager for git and diff output"
+homepage = "https://github.com/dandavison/delta"
+version_format = "semver"
+curated = true
+unsupported_platforms = ["darwin/amd64"]
+
+# Linux: pre-built binaries for glibc and musl
+[[steps]]
+action = "github_archive"
+when = { os = ["linux"] }
+repo = "dandavison/delta"
+asset_pattern = "delta-{version}-{arch}.tar.gz"
+strip_dirs = 1
+binaries = ["delta"]
+arch_mapping = { amd64 = "x86_64-unknown-linux-musl", arm64 = "aarch64-unknown-linux-gnu" }
+
+# macOS: Apple Silicon binary (Intel Mac binaries not published)
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"], arch = "arm64" }
+repo = "dandavison/delta"
+asset_pattern = "delta-{version}-aarch64-apple-darwin.tar.gz"
+strip_dirs = 1
+binaries = ["delta"]
+
+[verify]
+command = "delta --version"
+pattern = "{version}"

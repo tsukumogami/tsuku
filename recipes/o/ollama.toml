@@ -1,36 +1,66 @@
 [metadata]
-  name = "ollama"
-  description = "Create, run, and share large language models (LLMs)"
-  homepage = "https://ollama.com/"
-  version_format = ""
-  requires_sudo = false
-  runtime_dependencies = ["mlx-c"]
-  tier = 0
-  type = ""
-  llm_validation = "skipped"
-unsupported_platforms = ["darwin/amd64"]
+name = "ollama"
+description = "Get up and running with large language models"
+homepage = "https://ollama.com"
+version_format = "semver"
+curated = true
+supported_libc = ["glibc"]
 
 [version]
-  source = ""
-  github_repo = ""
-  tag_prefix = ""
-  module = ""
-  formula = ""
-  cask = ""
-  tap = ""
-  fossil_repo = ""
-  project_name = ""
-  version_separator = ""
-  timeline_tag = ""
+github_repo = "ollama/ollama"
+tag_prefix = "v"
+
+# Linux amd64: extract only the ollama binary from the release tarball.
+# The full tarball includes GPU runners with absolute symlinks to system CUDA/ROCm
+# libraries which fail tsuku's security checks. Only the binary is needed.
+[[steps]]
+action = "download"
+when = { os = ["linux"], arch = "amd64" }
+url = "https://github.com/ollama/ollama/releases/download/v{version}/ollama-linux-amd64.tar.zst"
+checksum_url = "https://github.com/ollama/ollama/releases/download/v{version}/sha256sum.txt"
 
 [[steps]]
-  action = "homebrew"
-  formula = "ollama"
+action = "extract"
+when = { os = ["linux"], arch = "amd64" }
+archive = "ollama-linux-amd64.tar.zst"
+format = "tar.zst"
+strip_dirs = 1
+files = ["ollama"]
+
+# Linux arm64: same approach as amd64
+[[steps]]
+action = "download"
+when = { os = ["linux"], arch = "arm64" }
+url = "https://github.com/ollama/ollama/releases/download/v{version}/ollama-linux-arm64.tar.zst"
+checksum_url = "https://github.com/ollama/ollama/releases/download/v{version}/sha256sum.txt"
 
 [[steps]]
-  action = "install_binaries"
-  binaries = ["bin/ollama"]
+action = "extract"
+when = { os = ["linux"], arch = "arm64" }
+archive = "ollama-linux-arm64.tar.zst"
+format = "tar.zst"
+strip_dirs = 1
+files = ["ollama"]
+
+[[steps]]
+action = "chmod"
+when = { os = ["linux"] }
+files = ["ollama"]
+
+[[steps]]
+action = "install_binaries"
+when = { os = ["linux"] }
+binaries = ["ollama"]
+
+# macOS: universal binary tarball
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "ollama/ollama"
+asset_pattern = "ollama-darwin.tgz"
+strip_dirs = 0
+binaries = ["ollama"]
 
 [verify]
-  command = "ollama --version"
-  pattern = ""
+command = "ollama --version"
+pattern = "{version}"
