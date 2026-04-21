@@ -43,8 +43,8 @@ Introduce a `curated = true` flag for handcrafted recipes, nightly cross-platfor
 | ~~_Ships `recipes/a/awscli.toml` (PGP-verified zip download with PyInstaller bundle install) and `recipes/c/cmake.toml` (download+extract with SHA-256.txt from GitHub)._~~ | | |
 | ~~[#2267: feat(recipes): backfill curated recipes — modern CLI tools and AI assistants](https://github.com/tsukumogami/tsuku/issues/2267)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260)~~ | ~~testable~~ |
 | ~~_Replaces batch-generated recipes for ripgrep, fd, eza, zoxide, and delta with handcrafted `github_archive` versions, and adds missing AI tool recipes (aider, ollama) identified in the priority list._~~ | | |
-| ~~[#2268: feat(recipes): backfill curated recipes — remaining top-100 gaps](https://github.com/tsukumogami/tsuku/issues/2268)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260), [#2266](https://github.com/tsukumogami/tsuku/issues/2266), [#2267](https://github.com/tsukumogami/tsuku/issues/2267)~~ | ~~superseded~~ |
-| _Superseded by #2281–#2297, which decompose the remaining top-100 gap into 17 category-sized batches so each PR has a reviewable surface._ | | |
+| ~~[#2268: feat(recipes): backfill curated recipes — remaining top-100 gaps](https://github.com/tsukumogami/tsuku/issues/2268)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260), [#2266](https://github.com/tsukumogami/tsuku/issues/2266), [#2267](https://github.com/tsukumogami/tsuku/issues/2267)~~ | ~~testable~~ |
+| ~~_Superseded by #2281–#2297, which decompose the remaining top-100 gap into 17 category-sized batches so each PR has a reviewable surface._~~ | | |
 | [#2281: feat(recipes): backfill curated recipes — security scanners](https://github.com/tsukumogami/tsuku/issues/2281) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260) | testable |
 | _Adds `curated = true` to the existing handcrafted recipes for trivy, grype, cosign, syft, and tflint after verifying each against its latest upstream release._ | | |
 | [#2282: feat(recipes): backfill curated recipes — Kubernetes core CLIs](https://github.com/tsukumogami/tsuku/issues/2282) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260) | testable |
@@ -158,7 +158,6 @@ graph TD
 
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
-    classDef superseded fill:#e0e0e0,stroke:#9e9e9e,color:#616161
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
     classDef needsPrd fill:#b3e5fc
@@ -167,12 +166,11 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2259,I2260,I2261,I2262,I2263,I2264,I2265,I2266,I2267 done
-    class I2268 superseded
+    class I2259,I2260,I2261,I2262,I2263,I2264,I2265,I2266,I2267,I2268 done
     class I2281,I2282,I2283,I2284,I2285,I2286,I2287,I2288,I2289,I2290,I2291,I2292,I2293,I2294,I2295,I2296,I2297 ready
 ```
 
-**Legend**: Green = done, Blue = ready, Grey = superseded, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan
 
 ## Implementation Sequence
 
