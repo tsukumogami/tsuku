@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-21T18:05:32Z",
+  "generated_at": "2026-04-21T18:32:24Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 25,
       "excluded": 6,
-      "failed": 76,
-      "pending": 3848,
+      "failed": 78,
+      "pending": 3846,
       "success": 1350
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 76,
-        "pending": 3827,
+        "failed": 78,
+        "pending": 3825,
         "success": 1333
       }
     },
@@ -68,14 +68,12 @@
         "total": 1
       },
       "npm": {
-        "failed": 19,
-        "pending": 1,
+        "failed": 20,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -466,6 +464,15 @@
           "next_retry_at": "2026-04-24T02:22:15Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 204,
+          "next_retry_at": "1734-01-10T18:44:33Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -833,6 +840,15 @@
           "category": "install_failed",
           "failure_count": 10,
           "next_retry_at": "2026-04-24T11:00:17Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 334,
+          "next_retry_at": "1734-01-10T18:44:33Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -2996,15 +3012,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 203,
-          "next_retry_at": "1734-01-10T15:30:54Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -13342,15 +13349,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 333,
-          "next_retry_at": "1734-01-10T15:30:54Z"
         },
         {
           "id": "homebrew:libaacs",
