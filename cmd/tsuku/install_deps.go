@@ -566,8 +566,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	// Skip verification for system dependencies (require_system only recipes)
 	if !isSystemDep {
 		if r.Verify != nil && r.Verify.Command != "" {
-			printInfo()
-			printInfo("Verifying installation...")
+			reporter.Log("Verifying %s@%s", toolName, version)
 
 			// Get the tool state for verification
 			toolState, err := mgr.GetState().GetToolState(toolName)
@@ -586,8 +585,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 				return fmt.Errorf("installation verification failed: %w", err)
 			}
 		} else {
-			printInfo()
-			printInfo("Note: Recipe has no verify command, skipping verification")
+			reporter.Log("Note: Recipe has no verify command, skipping verification")
 		}
 	}
 
@@ -598,13 +596,12 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		telemetryClient.Send(event)
 	}
 
-	printInfo()
 	if isSystemDep {
-		printInfof("✓ %s is available on your system\n", toolName)
+		reporter.Log("%s is available on your system", toolName)
 		printInfo()
 		printInfo("Note: tsuku doesn't manage this dependency. It validated that it's installed.")
 	} else {
-		printInfo("Installation successful!")
+		reporter.Log("%s@%s installed", toolName, version)
 		printInfo()
 		printInfo("To use the installed tool, add this to your shell profile:")
 		printInfof("  export PATH=\"%s:$PATH\"\n", cfg.CurrentDir)
