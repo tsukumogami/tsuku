@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-04-21T22:24:48Z",
-  "total_recipes": 1414,
+  "generated_at": "2026-04-21T22:26:25Z",
+  "total_recipes": 1416,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 849,
-        "total": 1414,
-        "pct": 60.04243281471005
+        "supported": 850,
+        "total": 1416,
+        "pct": 60.02824858757062
       },
       "glibc": {
-        "supported": 1379,
-        "total": 1414,
-        "pct": 97.52475247524752
+        "supported": 1381,
+        "total": 1416,
+        "pct": 97.52824858757062
       },
       "musl": {
-        "supported": 1235,
-        "total": 1414,
-        "pct": 87.34087694483735
+        "supported": 1237,
+        "total": 1416,
+        "pct": 87.35875706214689
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1262,
-        "musl_support": 1085,
-        "glibc_support": 1229
+        "total": 1264,
+        "musl_support": 1087,
+        "glibc_support": 1231
       }
     }
   },
@@ -3201,6 +3201,18 @@
       "warnings": [
         "recipe 'console-bridge' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "consul",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "consul-template",
@@ -15061,9 +15073,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'packer' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "packetbeat",
@@ -16269,9 +16279,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'pulumi' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "pvetui",
@@ -18774,9 +18782,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'terraform' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "terraform-docs",
@@ -19920,6 +19926,20 @@
       ]
     },
     {
+      "name": "vagrant",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "vale",
       "type": "tool",
       "platforms": {
@@ -19975,9 +19995,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'vault' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "vcftools",
