@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-04-20T23:52:15Z",
-  "total_recipes": 1412,
+  "generated_at": "2026-04-21T03:19:04Z",
+  "total_recipes": 1414,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 847,
-        "total": 1412,
-        "pct": 59.98583569405099
+        "supported": 848,
+        "total": 1414,
+        "pct": 59.971711456859964
       },
       "glibc": {
-        "supported": 1377,
-        "total": 1412,
-        "pct": 97.52124645892351
+        "supported": 1379,
+        "total": 1414,
+        "pct": 97.52475247524752
       },
       "musl": {
-        "supported": 1233,
-        "total": 1412,
-        "pct": 87.3229461756374
+        "supported": 1235,
+        "total": 1414,
+        "pct": 87.34087694483735
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1260,
-        "musl_support": 1083,
-        "glibc_support": 1227
+        "total": 1262,
+        "musl_support": 1085,
+        "glibc_support": 1229
       }
     }
   },
@@ -321,6 +321,20 @@
       "warnings": [
         "recipe 'aichat' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "aider",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": false
+      },
+      "gaps": [
+        "musl"
+      ],
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "air",
@@ -3752,6 +3766,20 @@
       ]
     },
     {
+      "name": "delta",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'delta' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
       "name": "dependabot",
       "type": "tool",
       "platforms": {
@@ -4954,15 +4982,15 @@
       "name": "eza",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
-      "warnings": [
-        "recipe 'eza' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "faac",
@@ -5155,11 +5183,9 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": false
+        "musl": true
       },
-      "gaps": [
-        "musl"
-      ],
+      "gaps": null,
       "errors": null,
       "warnings": [
         "recipe 'fd' has platform-specific actions without libc when clauses and no musl fallback"
@@ -14615,9 +14641,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": [
         "recipe 'ollama' has platform-specific actions without libc when clauses and no musl fallback"
@@ -16754,9 +16782,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'ripgrep' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "riscv64-elf-binutils",
@@ -21163,11 +21189,9 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": false
+        "musl": true
       },
-      "gaps": [
-        "musl"
-      ],
+      "gaps": null,
       "errors": null,
       "warnings": [
         "recipe 'zoxide' has platform-specific actions without libc when clauses and no musl fallback"
