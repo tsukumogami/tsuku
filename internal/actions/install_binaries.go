@@ -163,7 +163,7 @@ func (a *InstallBinariesAction) installBinariesMode(ctx *ExecutionContext, outpu
 		"installDir", ctx.InstallDir)
 
 	reporter := ctx.GetReporter()
-	reporter.Log("   Installing %d file(s)", len(outputs))
+	reporter.Status(fmt.Sprintf("   Installing %d file(s)", len(outputs)))
 
 	for _, output := range outputs {
 		src := ExpandVars(output.Src, vars)

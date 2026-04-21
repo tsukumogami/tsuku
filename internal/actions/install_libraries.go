@@ -73,7 +73,7 @@ func (a *InstallLibrariesAction) Execute(ctx *ExecutionContext, params map[strin
 
 	// Copy each matched file, preserving symlinks
 	reporter := ctx.GetReporter()
-	reporter.Log("   Installing %d library file(s)", len(matches))
+	reporter.Status(fmt.Sprintf("   Installing %d library file(s)", len(matches)))
 
 	for _, srcPath := range matches {
 		// Calculate relative path from WorkDir

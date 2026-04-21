@@ -129,7 +129,7 @@ func (a *LinkDependenciesAction) Execute(ctx *ExecutionContext, params map[strin
 	}
 
 	reporter := ctx.GetReporter()
-	reporter.Log("   Linking %d library file(s) from %s", len(entries), libVersionDir)
+	reporter.Status(fmt.Sprintf("   Linking %d library file(s) from %s", len(entries), libVersionDir))
 
 	for _, entry := range entries {
 		srcFile := filepath.Join(srcLibDir, entry.Name())

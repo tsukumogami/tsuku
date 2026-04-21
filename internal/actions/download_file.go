@@ -95,7 +95,7 @@ func (a *DownloadFileAction) Execute(ctx *ExecutionContext, params map[string]in
 			reporter.Warn("cache check failed: %v", err)
 		} else if found {
 			logger.Debug("cache hit", "dest", dest)
-			reporter.Log("Using cached: %s", dest)
+			reporter.Status(fmt.Sprintf("Using cached: %s", dest))
 			return nil
 		} else {
 			logger.Debug("cache miss")
