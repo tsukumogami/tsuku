@@ -3,15 +3,25 @@ name = "fzf"
 description = "Command-line fuzzy finder"
 homepage = "https://github.com/junegunn/fzf"
 version_format = "semver"
+curated = true
 
+# Linux: statically linked Go binary works on glibc and musl
 [[steps]]
 action = "github_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 repo = "junegunn/fzf"
-asset_pattern = "fzf-{version}-{os}_{arch}.tar.gz"
+asset_pattern = "fzf-{version}-linux_{arch}.tar.gz"
 strip_dirs = 0
 binaries = ["fzf"]
-os_mapping = { darwin = "darwin", linux = "linux" }
-arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+# macOS: Intel and Apple Silicon binaries
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "junegunn/fzf"
+asset_pattern = "fzf-{version}-darwin_{arch}.tar.gz"
+strip_dirs = 0
+binaries = ["fzf"]
 
 [verify]
 command = "fzf --version"

@@ -3,17 +3,22 @@ name = "btop"
 description = "Resource monitor that shows usage and stats"
 homepage = "https://github.com/aristocratos/btop"
 version_format = "semver"
+curated = true
+# Upstream publishes only linux-musl binaries (statically linked, runs on
+# both glibc and musl). No darwin binaries are published; macOS users
+# typically install via Homebrew or source build.
 supported_os = ["linux"]
 
+# Linux: statically linked musl binary works on glibc and musl
 [[steps]]
 action = "github_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 repo = "aristocratos/btop"
-asset_pattern = "btop-{arch}-unknown-{os}-musl.tbz"
+asset_pattern = "btop-{arch}-unknown-linux-musl.tbz"
 archive_format = "tbz"
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
 strip_dirs = 0
 binaries = ["btop/bin/btop"]
-os_mapping = { linux = "linux" }
-arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
 
 [verify]
 command = "btop --version"

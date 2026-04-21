@@ -1,34 +1,30 @@
 [metadata]
-  name = "lazydocker"
-  description = "Lazier way to manage everything docker"
-  homepage = "https://github.com/jesseduffield/lazydocker"
-  version_format = ""
-  requires_sudo = false
-  tier = 0
-  type = ""
-  llm_validation = "skipped"
+name = "lazydocker"
+description = "Lazier way to manage everything docker"
+homepage = "https://github.com/jesseduffield/lazydocker"
+version_format = "semver"
+curated = true
 
-[version]
-  source = ""
-  github_repo = ""
-  tag_prefix = ""
-  module = ""
-  formula = ""
-  cask = ""
-  tap = ""
-  fossil_repo = ""
-  project_name = ""
-  version_separator = ""
-  timeline_tag = ""
-
+# Linux: statically linked Go binary works on glibc and musl
 [[steps]]
-  action = "homebrew"
-  formula = "lazydocker"
+action = "github_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
+repo = "jesseduffield/lazydocker"
+asset_pattern = "lazydocker_{version}_Linux_{arch}.tar.gz"
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+strip_dirs = 0
+binaries = ["lazydocker"]
 
+# macOS: Intel and Apple Silicon binaries
 [[steps]]
-  action = "install_binaries"
-  binaries = ["bin/lazydocker"]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "jesseduffield/lazydocker"
+asset_pattern = "lazydocker_{version}_Darwin_{arch}.tar.gz"
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+strip_dirs = 0
+binaries = ["lazydocker"]
 
 [verify]
-  command = "lazydocker --version"
-  pattern = ""
+command = "lazydocker --version"
+pattern = "{version}"

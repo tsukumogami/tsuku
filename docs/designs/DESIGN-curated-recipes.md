@@ -653,8 +653,8 @@ Plan: [docs/plans/PLAN-curated-recipes.md](../plans/PLAN-curated-recipes.md)
 | ~~_Curates eksctl, skaffold, and velero, and replaces the batch-generated recipes for cilium-cli and istioctl with handcrafted `github_archive` versions._~~ | | |
 | ~~[#2284: feat(recipes): backfill curated recipes — HashiCorp and infra tools](https://github.com/tsukumogami/tsuku/issues/2284)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260)~~ | ~~testable~~ |
 | ~~_Curates terraform, vault, packer, and pulumi, and adds new handcrafted recipes for consul and vagrant using the HashiCorp releases pattern._~~ | | |
-| [#2285: feat(recipes): backfill curated recipes — terminal UI and TUI tools](https://github.com/tsukumogami/tsuku/issues/2285) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260) | testable |
-| _Curates fzf, lazygit, and btop, and replaces the batch-generated recipes for lazydocker and htop with handcrafted cross-platform versions._ | | |
+| ~~[#2285: feat(recipes): backfill curated recipes — terminal UI and TUI tools](https://github.com/tsukumogami/tsuku/issues/2285)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260)~~ | ~~testable~~ |
+| ~~_Curates fzf, lazygit, and btop, and replaces the batch-generated recipes for lazydocker and htop with handcrafted cross-platform versions._~~ | | |
 | [#2286: feat(recipes): backfill curated recipes — shell utilities](https://github.com/tsukumogami/tsuku/issues/2286) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260) | testable |
 | _Curates git, curl, and httpie; rewrites the batch recipes for wget and jq; and authors a new recipe for tmux._ | | |
 | [#2287: feat(recipes): backfill curated recipes — environment and version managers](https://github.com/tsukumogami/tsuku/issues/2287) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260) | testable |
@@ -758,8 +758,8 @@ graph TD
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
 
-    class I2259,I2260,I2261,I2262,I2263,I2264,I2265,I2266,I2267,I2268,I2281,I2282,I2283,I2284 done
-    class I2285,I2286,I2287,I2288,I2289,I2290,I2291,I2292,I2293,I2294,I2295,I2296,I2297 ready
+    class I2259,I2260,I2261,I2262,I2263,I2264,I2265,I2266,I2267,I2268,I2281,I2282,I2283,I2284,I2285 done
+    class I2286,I2287,I2288,I2289,I2290,I2291,I2292,I2293,I2294,I2295,I2296,I2297 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design.
