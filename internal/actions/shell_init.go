@@ -171,7 +171,7 @@ func (a *InstallShellInitAction) executeSourceFile(ctx *ExecutionContext, source
 			return fmt.Errorf("install_shell_init: failed to read back %s for hashing: %w", destPath, err)
 		}
 		hash := contentHash(written)
-		ctx.GetReporter().Log("   Installed shell init: %s", destPath)
+		ctx.GetReporter().Status(fmt.Sprintf("   Installed shell init: %s", destPath))
 		recordCleanup(ctx, target, shell, hash)
 	}
 
@@ -228,7 +228,7 @@ func (a *InstallShellInitAction) executeSourceCommand(ctx *ExecutionContext, sou
 			return fmt.Errorf("install_shell_init: failed to write %s: %w", destPath, err)
 		}
 		hash := contentHash(output)
-		shellReporter.Log("   Installed shell init: %s", destPath)
+		shellReporter.Status(fmt.Sprintf("   Installed shell init: %s", destPath))
 		recordCleanup(ctx, target, shell, hash)
 	}
 

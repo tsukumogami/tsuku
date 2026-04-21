@@ -71,7 +71,7 @@ func (a *ChmodAction) Execute(ctx *ExecutionContext, params map[string]interface
 	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir, ctx.LibsDir)
 
 	reporter := ctx.GetReporter()
-	reporter.Log("   Making executable: %v", files)
+	reporter.Status(fmt.Sprintf("   Making executable: %v", files))
 
 	for _, file := range files {
 		file = ExpandVars(file, vars)
@@ -82,6 +82,6 @@ func (a *ChmodAction) Execute(ctx *ExecutionContext, params map[string]interface
 		}
 	}
 
-	reporter.Log("   Made %d file(s) executable", len(files))
+	reporter.Status(fmt.Sprintf("   Made %d file(s) executable", len(files)))
 	return nil
 }
