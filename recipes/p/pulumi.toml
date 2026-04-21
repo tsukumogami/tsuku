@@ -3,15 +3,27 @@ name = "pulumi"
 description = "Modern Infrastructure as Code"
 homepage = "https://github.com/pulumi/pulumi"
 version_format = "semver"
+curated = true
 
+# Linux: statically linked Go binary works on glibc and musl
 [[steps]]
 action = "github_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 repo = "pulumi/pulumi"
-asset_pattern = "pulumi-v{version}-{os}-{arch}.tar.gz"
+asset_pattern = "pulumi-v{version}-linux-{arch}.tar.gz"
+arch_mapping = { amd64 = "x64", arm64 = "arm64" }
 strip_dirs = 1
 binaries = ["pulumi"]
-os_mapping = { darwin = "darwin", linux = "linux" }
+
+# macOS: Intel and Apple Silicon binaries
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "pulumi/pulumi"
+asset_pattern = "pulumi-v{version}-darwin-{arch}.tar.gz"
 arch_mapping = { amd64 = "x64", arm64 = "arm64" }
+strip_dirs = 1
+binaries = ["pulumi"]
 
 [verify]
 command = "pulumi version"
