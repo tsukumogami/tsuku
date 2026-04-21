@@ -51,8 +51,9 @@ func (a *BrewInstallAction) Execute(ctx *ExecutionContext, params map[string]int
 		return fmt.Errorf("brew_install action requires 'packages' parameter")
 	}
 
-	fmt.Printf("   Would install via brew: %v\n", packages)
-	fmt.Printf("   (Skipped - requires system Homebrew)\n")
+	reporter := ctx.GetReporter()
+	reporter.Log("   Would install via brew: %v", packages)
+	reporter.Log("   (Skipped - requires system Homebrew)")
 	return nil
 }
 
@@ -111,8 +112,9 @@ func (a *BrewCaskAction) Execute(ctx *ExecutionContext, params map[string]interf
 		return fmt.Errorf("brew_cask action requires 'packages' parameter")
 	}
 
-	fmt.Printf("   Would install via brew cask: %v\n", packages)
-	fmt.Printf("   (Skipped - requires system Homebrew)\n")
+	reporter := ctx.GetReporter()
+	reporter.Log("   Would install via brew cask: %v", packages)
+	reporter.Log("   (Skipped - requires system Homebrew)")
 	return nil
 }
 

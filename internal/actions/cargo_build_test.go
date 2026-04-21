@@ -2,13 +2,25 @@ package actions
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
+
+// logRecorder is a test reporter that captures Log calls for assertion.
+type logRecorder struct {
+	progress.NoopReporter
+	logs []string
+}
+
+func (r *logRecorder) Log(format string, args ...any) {
+	r.logs = append(r.logs, fmt.Sprintf(format, args...))
+}
 
 func TestCargoBuildAction_Name(t *testing.T) {
 	t.Parallel()
@@ -490,9 +502,8 @@ func TestCargoBuildAction_Execute_RelativeSourceDir(t *testing.T) {
 
 func TestCargoBuildAction_Execute_LockedDefault(t *testing.T) {
 	t.Parallel()
-	// This test verifies that locked defaults to true
-	// We can't easily test the actual cargo invocation without cargo installed,
-	// but we can verify the parameter handling
+	// This test verifies that locked defaults to true by asserting the reporter
+	// receives "Locked: true" before cargo is invoked.
 	action := &CargoBuildAction{}
 
 	workDir := t.TempDir()
@@ -505,10 +516,12 @@ func TestCargoBuildAction_Execute_LockedDefault(t *testing.T) {
 		t.Fatalf("Failed to create Cargo.lock: %v", err)
 	}
 
+	recorder := &logRecorder{}
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
 		InstallDir: t.TempDir(),
 		WorkDir:    workDir,
+		Reporter:   recorder,
 	}
 
 	// Don't specify locked - should default to true
@@ -517,10 +530,19 @@ func TestCargoBuildAction_Execute_LockedDefault(t *testing.T) {
 		"executables": []interface{}{"myapp"},
 	}
 
-	// The test will fail because cargo is not installed, but the output
-	// should show "Locked: true" and it should pass the Cargo.lock check
+	// Discard error - cargo is not installed, but reporter.Log calls happen before invocation
 	_ = action.Execute(ctx, params)
-	// We can't easily capture stdout here, but the code path is exercised
+
+	found := false
+	for _, line := range recorder.logs {
+		if strings.Contains(line, "Locked: true") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("expected reporter to log 'Locked: true' for default locked parameter")
+	}
 }
 
 func TestCargoBuildIsPrimitive(t *testing.T) {
@@ -545,7 +567,8 @@ func TestCargoBuildIsRegistered(t *testing.T) {
 
 func TestCargoBuildAction_Execute_OfflineDefault(t *testing.T) {
 	t.Parallel()
-	// This test verifies that offline defaults to true for security
+	// This test verifies that offline defaults to true by asserting the reporter
+	// receives "Offline: true" before cargo is invoked.
 	action := &CargoBuildAction{}
 
 	workDir := t.TempDir()
@@ -558,10 +581,12 @@ func TestCargoBuildAction_Execute_OfflineDefault(t *testing.T) {
 		t.Fatalf("Failed to create Cargo.lock: %v", err)
 	}
 
+	recorder := &logRecorder{}
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
 		InstallDir: t.TempDir(),
 		WorkDir:    workDir,
+		Reporter:   recorder,
 	}
 
 	// Don't specify offline - should default to true
@@ -570,10 +595,19 @@ func TestCargoBuildAction_Execute_OfflineDefault(t *testing.T) {
 		"executables": []interface{}{"myapp"},
 	}
 
-	// The test will fail because cargo is not installed, but the output
-	// should show "Offline: true" demonstrating the default value
+	// Discard error - cargo is not installed, but reporter.Log calls happen before invocation
 	_ = action.Execute(ctx, params)
-	// Code path is exercised even if cargo fails
+
+	found := false
+	for _, line := range recorder.logs {
+		if strings.Contains(line, "Offline: true") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("expected reporter to log 'Offline: true' for default offline parameter")
+	}
 }
 
 func TestCargoBuildAction_Execute_NoDefaultFeatures(t *testing.T) {

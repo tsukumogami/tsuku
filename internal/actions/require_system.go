@@ -78,7 +78,8 @@ func (a *RequireSystemAction) Execute(ctx *ExecutionContext, params map[string]i
 	versionRegex, _ := GetString(params, "version_regex")
 	minVersion, _ := GetString(params, "min_version")
 
-	fmt.Printf("   Checking system dependency: %s\n", command)
+	reporter := ctx.GetReporter()
+	reporter.Log("   Checking system dependency: %s", command)
 
 	// Step 1: Check if command exists
 	cmdPath, err := exec.LookPath(command)
@@ -89,7 +90,7 @@ func (a *RequireSystemAction) Execute(ctx *ExecutionContext, params map[string]i
 		}
 	}
 
-	fmt.Printf("   Found %s at: %s\n", command, cmdPath)
+	reporter.Log("   Found %s at: %s", command, cmdPath)
 
 	// Step 2: Check version if version_flag and version_regex provided
 	if versionFlag != "" && versionRegex != "" {
@@ -98,7 +99,7 @@ func (a *RequireSystemAction) Execute(ctx *ExecutionContext, params map[string]i
 			return fmt.Errorf("failed to detect version for %s: %w", command, err)
 		}
 
-		fmt.Printf("   Detected version: %s\n", versionStr)
+		reporter.Log("   Detected version: %s", versionStr)
 
 		// Step 3: Validate minimum version if specified
 		if minVersion != "" {
@@ -109,11 +110,11 @@ func (a *RequireSystemAction) Execute(ctx *ExecutionContext, params map[string]i
 					Required: minVersion,
 				}
 			}
-			fmt.Printf("   Version %s satisfies minimum %s\n", versionStr, minVersion)
+			reporter.Log("   Version %s satisfies minimum %s", versionStr, minVersion)
 		}
 	}
 
-	fmt.Printf("   System dependency satisfied: %s\n", command)
+	reporter.Log("   System dependency satisfied: %s", command)
 	return nil
 }
 

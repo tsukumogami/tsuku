@@ -949,20 +949,6 @@ func TestDetermineExecutables_ExplicitOverride(t *testing.T) {
 	}
 }
 
-// -- install_binaries.go: extractOutputNames --
-
-func TestExtractOutputNames_Direct(t *testing.T) {
-	t.Parallel()
-	outputs := []recipe.BinaryMapping{
-		{Src: "dist/tool", Dest: "bin/tool"},
-		{Src: "build/lib.so", Dest: "lib/lib.so"},
-	}
-	names := extractOutputNames(outputs)
-	if len(names) != 2 || names[0] != "tool" || names[1] != "lib.so" {
-		t.Errorf("extractOutputNames() = %v, want [tool lib.so]", names)
-	}
-}
-
 // -- install_binaries.go: Preflight with binary param --
 
 func TestInstallBinariesAction_Preflight_BinaryParam(t *testing.T) {

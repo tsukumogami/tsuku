@@ -28,6 +28,7 @@ type LibraryVerifyOptions struct {
 	CheckIntegrity           bool // Enable Level 4: checksum verification
 	SkipDlopen               bool // Disable Level 3: dlopen load testing
 	SkipDependencyValidation bool // Disable Level 2: dependency validation
+	Verbose                  bool // Print per-step verification output (default false = silent)
 }
 
 func init() {
@@ -601,30 +602,34 @@ func verifyTsukuManagedLibrary(name string, libVersions map[string]install.Libra
 
 	libDir := cfg.LibDir(name, version)
 
-	printInfof("Verifying library %s (version %s)...\n", name, version)
+	if opts.Verbose {
+		printInfof("Verifying library %s (version %s)...\n", name, version)
+	}
 
 	// Verify directory exists
 	if _, err := os.Stat(libDir); os.IsNotExist(err) {
 		return fmt.Errorf("library directory not found: %s", libDir)
 	}
 
-	printInfo("  Directory: exists\n")
-
-	// Tier 1: Header validation - validate all shared library files
-	printInfo("  Tier 1: Header validation...\n")
+	if opts.Verbose {
+		printInfo("  Directory: exists\n")
+		printInfo("  Tier 1: Header validation...\n")
+	}
 
 	libFiles, err := findLibraryFiles(libDir)
 	if err != nil {
 		return fmt.Errorf("failed to scan library directory: %w", err)
 	}
 
-	if err := runTier1Validation(libFiles, libDir); err != nil {
+	if err := runTier1Validation(libFiles, libDir, opts.Verbose); err != nil {
 		return err
 	}
 
 	// Tier 2: Dependency validation
 	if opts.SkipDependencyValidation {
-		printInfo("  Tier 2: Skipping dependency validation (post-install verification)\n")
+		if opts.Verbose {
+			printInfo("  Tier 2: Skipping dependency validation (post-install verification)\n")
+		}
 	} else {
 		if err := runTier2Validation(libFiles, state, cfg); err != nil {
 			return err
@@ -668,18 +673,22 @@ func verifyTsukuManagedLibrary(name string, libVersions map[string]install.Libra
 
 // verifyExternalLibrary verifies a library installed via system package manager.
 func verifyExternalLibrary(name string, extInfo *verify.ExternalLibraryInfo, state *install.State, cfg *config.Config, opts LibraryVerifyOptions) error {
-	printInfof("Verifying library %s (external: %s packages %v)...\n", name, extInfo.Family, extInfo.Packages)
-	printInfo("  Source: system package manager\n")
+	if opts.Verbose {
+		printInfof("Verifying library %s (external: %s packages %v)...\n", name, extInfo.Family, extInfo.Packages)
+		printInfo("  Source: system package manager\n")
+	}
 
 	libFiles := extInfo.LibraryFiles
 
 	if len(libFiles) == 0 {
-		printInfo("  No shared library files found in packages\n")
+		if opts.Verbose {
+			printInfo("  No shared library files found in packages\n")
+		}
 		return nil
 	}
 
 	// Tier 1: Header validation
-	if err := runTier1Validation(libFiles, ""); err != nil {
+	if err := runTier1Validation(libFiles, "", opts.Verbose); err != nil {
 		return err
 	}
 
@@ -704,11 +713,15 @@ func verifyExternalLibrary(name string, extInfo *verify.ExternalLibraryInfo, sta
 }
 
 // runTier1Validation performs header validation on library files.
-func runTier1Validation(libFiles []string, baseDir string) error {
-	printInfo("  Tier 1: Header validation...\n")
+func runTier1Validation(libFiles []string, baseDir string, verbose bool) error {
+	if verbose {
+		printInfo("  Tier 1: Header validation...\n")
+	}
 
 	if len(libFiles) == 0 {
-		printInfo("    No shared library files found (may be header-only)\n")
+		if verbose {
+			printInfo("    No shared library files found (may be header-only)\n")
+		}
 		return nil
 	}
 
@@ -728,21 +741,27 @@ func runTier1Validation(libFiles []string, baseDir string) error {
 			// Check if it's a wrong architecture error - this is acceptable for cross-platform recipes
 			if verr, ok := err.(*verify.ValidationError); ok {
 				if verr.Category == verify.ErrWrongArch {
-					printInfof("    %s: SKIPPED (%s)\n", displayPath, verr.Message)
+					if verbose {
+						printInfof("    %s: SKIPPED (%s)\n", displayPath, verr.Message)
+					}
 					skipped++
 					continue
 				}
 			}
 			return fmt.Errorf("header validation failed for %s: %w", displayPath, err)
 		}
-		printInfof("    %s: OK (%s %s, %s)\n", displayPath, info.Format, info.Type, info.Architecture)
+		if verbose {
+			printInfof("    %s: OK (%s %s, %s)\n", displayPath, info.Format, info.Type, info.Architecture)
+		}
 		validated++
 	}
-	printInfof("  Tier 1: %d validated", validated)
-	if skipped > 0 {
-		printInfof(", %d skipped (wrong arch)", skipped)
+	if verbose {
+		printInfof("  Tier 1: %d validated", validated)
+		if skipped > 0 {
+			printInfof(", %d skipped (wrong arch)", skipped)
+		}
+		printInfo("\n")
 	}
-	printInfo("\n")
 
 	return nil
 }
@@ -1026,6 +1045,7 @@ installed before this feature will show "Integrity: SKIPPED".`,
 			opts := LibraryVerifyOptions{
 				CheckIntegrity: verifyIntegrityFlag,
 				SkipDlopen:     verifySkipDlopenFlag,
+				Verbose:        true,
 			}
 			if err := verifyLibrary(name, state, cfg, opts); err != nil {
 				fmt.Fprintf(os.Stderr, "Library verification failed: %v\n", err)

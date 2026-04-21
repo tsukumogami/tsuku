@@ -14,6 +14,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/platform"
+	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/version"
 )
@@ -36,6 +37,7 @@ type Executor struct {
 	currentDir              string               // Current symlinks directory (~/.tsuku/tools/current/) for binary symlinks
 	resolvedDeps            actions.ResolvedDeps // Pre-resolved dependencies (from state manager)
 	noShellInit             bool                 // Skip install_shell_init in post-install phase
+	reporter                progress.Reporter    // Progress reporter propagated to all execution contexts
 }
 
 // New creates a new executor
@@ -205,6 +207,22 @@ func (e *Executor) SetNoShellInit(skip bool) {
 	e.noShellInit = skip
 }
 
+// SetReporter sets the progress reporter used for all execution contexts created
+// by this executor, including dependency installation. The reporter is propagated
+// to installSingleDependency so all steps share a single reporter instance.
+func (e *Executor) SetReporter(r progress.Reporter) {
+	e.reporter = r
+}
+
+// getReporter returns the executor's progress reporter, falling back to NoopReporter
+// when none has been set.
+func (e *Executor) getReporter() progress.Reporter {
+	if e.reporter != nil {
+		return e.reporter
+	}
+	return progress.NoopReporter{}
+}
+
 // SetToolInstallDir sets the ToolInstallDir on the execution context.
 // This must be called after ExecutePlan and before ExecutePhase("post-install")
 // so that post-install actions can find the installed tool's binary.
@@ -260,9 +278,6 @@ func (e *Executor) DryRun(ctx context.Context) error {
 	// Print actions
 	fmt.Printf("  Actions:\n")
 
-	// Build variable map for expansion
-	vars := actions.GetStandardVars(versionInfo.Version, "", "", "")
-
 	stepNum := 0
 	for _, step := range e.recipe.Steps {
 		// Check conditional execution
@@ -271,8 +286,18 @@ func (e *Executor) DryRun(ctx context.Context) error {
 		}
 
 		stepNum++
-		actionDesc := formatActionDescription(step.Action, step.Params, vars)
-		fmt.Printf("    %d. %s: %s\n", stepNum, step.Action, actionDesc)
+		action := actions.Get(step.Action)
+		var actionDesc string
+		if action != nil {
+			if d, ok := action.(actions.ActionDescriber); ok {
+				actionDesc = d.StatusMessage(step.Params)
+			}
+		}
+		if actionDesc != "" {
+			fmt.Printf("    %d. %s: %s\n", stepNum, step.Action, actionDesc)
+		} else {
+			fmt.Printf("    %d. %s\n", stepNum, step.Action)
+		}
 	}
 
 	// Print verification command
@@ -281,55 +306,6 @@ func (e *Executor) DryRun(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-// formatActionDescription formats action parameters for dry-run display
-func formatActionDescription(action string, params map[string]interface{}, vars map[string]string) string {
-	switch action {
-	case "download":
-		if url, ok := params["url"].(string); ok {
-			return actions.ExpandVars(url, vars)
-		}
-	case "extract":
-		if src, ok := params["src"].(string); ok {
-			return actions.ExpandVars(src, vars)
-		}
-	case "install_binaries":
-		if bins, ok := params["binaries"].([]interface{}); ok {
-			names := make([]string, len(bins))
-			for i, b := range bins {
-				if name, ok := b.(string); ok {
-					names[i] = name
-				} else if m, ok := b.(map[string]interface{}); ok {
-					if name, ok := m["name"].(string); ok {
-						names[i] = name
-					}
-				}
-			}
-			return strings.Join(names, ", ")
-		}
-	case "chmod":
-		if file, ok := params["file"].(string); ok {
-			mode := "755"
-			if m, ok := params["mode"].(string); ok {
-				mode = m
-			}
-			return fmt.Sprintf("%s (mode %s)", actions.ExpandVars(file, vars), mode)
-		}
-	case "cargo_install", "npm_install", "pipx_install", "gem_install":
-		if pkg, ok := params["package"].(string); ok {
-			return pkg
-		}
-	case "run_command":
-		if cmd, ok := params["command"].(string); ok {
-			expanded := actions.ExpandVars(cmd, vars)
-			if len(expanded) > 60 {
-				return expanded[:57] + "..."
-			}
-			return expanded
-		}
-	}
-	return ""
 }
 
 // ExecutePlan executes an installation plan, verifying checksums for download steps.
@@ -351,14 +327,6 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 	if err := validateResourceLimits(plan); err != nil {
 		return fmt.Errorf("resource limits exceeded: %w", err)
 	}
-
-	fmt.Printf("Executing plan: %s@%s\n", plan.Tool, plan.Version)
-	fmt.Printf("   Work directory: %s\n", e.workDir)
-
-	// Count total steps including dependencies
-	totalDepSteps := countDependencySteps(plan.Dependencies)
-	fmt.Printf("   Total steps: %d (including %d from dependencies)\n",
-		len(plan.Steps)+totalDepSteps, totalDepSteps)
 
 	// Install dependencies first (depth-first, each in its own work directory)
 	if err := e.installDependencies(ctx, plan.Dependencies, plan.Platform); err != nil {
@@ -429,10 +397,9 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 		Logger:                  log.Default(),
 		Dependencies:            resolvedDeps,
 		NoShellInit:             e.noShellInit,
+		Reporter:                e.getReporter(),
 	}
 	e.ctx = execCtx
-
-	fmt.Println()
 
 	// Validate all steps before execution (fail fast)
 	for i, step := range allSteps {
@@ -459,13 +426,23 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 			continue
 		}
 
-		fmt.Printf("Step %d/%d: %s\n", i+1, len(allSteps), step.Action)
-
 		// Get action
 		action := actions.Get(step.Action)
 		if action == nil {
 			return fmt.Errorf("unknown action: %s", step.Action)
 		}
+
+		// Resolve a human-readable status message for the progress reporter.
+		// Type-assert to ActionDescriber; fall back to the action name when
+		// the interface is not implemented or StatusMessage returns "".
+		var actionMsg string
+		if d, ok := action.(actions.ActionDescriber); ok {
+			actionMsg = d.StatusMessage(step.Params)
+		}
+		if actionMsg == "" {
+			actionMsg = step.Action
+		}
+		execCtx.GetReporter().Status(actionMsg)
 
 		// For download steps with checksums, verify after download
 		if step.Action == "download" && step.Checksum != "" {
@@ -483,22 +460,12 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 		// so subsequent steps (like npm_exec) can find the installed binaries
 		if step.Action == "install_binaries" {
 			binDir := filepath.Join(execCtx.InstallDir, "bin")
-			if _, err := os.Stat(binDir); err == nil {
-				execCtx.ExecPaths = append(execCtx.ExecPaths, binDir)
-				fmt.Printf("   Added %s to ExecPaths\n", binDir)
-				// Debug: list files in bin directory
-				if entries, err := os.ReadDir(binDir); err == nil {
-					fmt.Printf("   Contents of %s:\n", binDir)
-					for _, e := range entries {
-						fmt.Printf("      - %s\n", e.Name())
-					}
-				}
+			if _, err := os.Stat(binDir); err != nil {
+				e.getReporter().Warn("bin dir %s does not exist: %v", binDir, err)
 			} else {
-				fmt.Printf("   Warning: bin dir %s does not exist: %v\n", binDir, err)
+				execCtx.ExecPaths = append(execCtx.ExecPaths, binDir)
 			}
 		}
-
-		fmt.Println()
 	}
 
 	return nil
@@ -533,19 +500,24 @@ func (e *Executor) ExecutePhase(ctx context.Context, plan *InstallationPlan, pha
 		return nil
 	}
 
-	fmt.Printf("Executing phase %q: %d steps\n", phase, len(phaseSteps))
-
 	for i, step := range phaseSteps {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
 
-		fmt.Printf("  Phase %q step %d/%d: %s\n", phase, i+1, len(phaseSteps), step.Action)
-
 		action := actions.Get(step.Action)
 		if action == nil {
 			return fmt.Errorf("unknown action: %s", step.Action)
 		}
+
+		var actionMsg string
+		if d, ok := action.(actions.ActionDescriber); ok {
+			actionMsg = d.StatusMessage(step.Params)
+		}
+		if actionMsg == "" {
+			actionMsg = step.Action
+		}
+		e.ctx.GetReporter().Status(actionMsg)
 
 		if err := action.Execute(e.ctx, step.Params); err != nil {
 			return fmt.Errorf("phase %q step %d (%s) failed: %w", phase, i+1, step.Action, err)
@@ -593,7 +565,6 @@ func (e *Executor) executeDownloadWithVerification(
 		}
 	}
 
-	fmt.Printf("   Checksum verified\n")
 	return nil
 }
 
@@ -663,6 +634,7 @@ func (e *Executor) installDependencies(ctx context.Context, deps []DependencyPla
 
 		// Then install this dependency
 		if err := e.installSingleDependency(ctx, &dep, platform); err != nil {
+			e.getReporter().Log("❌ %s@%s", dep.Tool, dep.Version)
 			return fmt.Errorf("failed to install dependency %s: %w", dep.Tool, err)
 		}
 	}
@@ -685,7 +657,7 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 
 	// Skip if already installed (deduplication)
 	if _, err := os.Stat(finalDir); err == nil {
-		fmt.Printf("\nSkipping dependency: %s@%s (already installed)\n", dep.Tool, dep.Version)
+		e.getReporter().Status(fmt.Sprintf("Skipping dependency: %s@%s (already installed)", dep.Tool, dep.Version))
 
 		// Still add bin directory to exec paths for tools (needed for subsequent steps)
 		if dep.RecipeType != "library" {
@@ -698,7 +670,7 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		return nil
 	}
 
-	fmt.Printf("\nInstalling dependency: %s@%s\n", dep.Tool, dep.Version)
+	e.getReporter().Status(fmt.Sprintf("Installing %s@%s", dep.Tool, dep.Version))
 
 	// Create temporary work directory for this dependency
 	depWorkDir, err := os.MkdirTemp("", fmt.Sprintf("dep-%s-*", dep.Tool))
@@ -753,6 +725,7 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		ExecPaths:               e.execPaths,
 		Logger:                  log.Default(),
 		Dependencies:            depResolvedDeps,
+		Reporter:                e.getReporter(),
 	}
 
 	// Validate all steps before execution (fail fast)
@@ -772,12 +745,19 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 			return err
 		}
 
-		fmt.Printf("   Step %d/%d: %s\n", i+1, len(dep.Steps), step.Action)
-
 		action := actions.Get(step.Action)
 		if action == nil {
 			return fmt.Errorf("unknown action: %s", step.Action)
 		}
+
+		var actionMsg string
+		if d, ok := action.(actions.ActionDescriber); ok {
+			actionMsg = d.StatusMessage(step.Params)
+		}
+		if actionMsg == "" {
+			actionMsg = step.Action
+		}
+		execCtx.GetReporter().Status(actionMsg)
 
 		// Execute (validation already done upfront)
 		if err := action.Execute(execCtx, step.Params); err != nil {
@@ -791,7 +771,6 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 	}
 
 	// Copy contents from install directory to final location
-	fmt.Printf("   Installing to: %s\n", finalDir)
 	if err := copyDir(depInstallDir, finalDir); err != nil {
 		return fmt.Errorf("failed to copy to final location: %w", err)
 	}
@@ -804,7 +783,7 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		}
 	}
 
-	fmt.Printf("   ✓ Installed %s@%s\n", dep.Tool, dep.Version)
+	e.getReporter().Log("✅ %s@%s", dep.Tool, dep.Version)
 	return nil
 }
 

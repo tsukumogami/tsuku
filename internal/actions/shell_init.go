@@ -82,8 +82,9 @@ func (a *InstallShellInitAction) Preflight(params map[string]interface{}) *Prefl
 func (a *InstallShellInitAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
 	// When --no-shell-init is set, skip shell init entirely.
 	// No files are written and no CleanupActions are recorded.
+	reporter := ctx.GetReporter()
 	if ctx.NoShellInit {
-		fmt.Printf("   Skipping shell init (--no-shell-init)\n")
+		reporter.Log("   Skipping shell init (--no-shell-init)")
 		return nil
 	}
 
@@ -170,7 +171,7 @@ func (a *InstallShellInitAction) executeSourceFile(ctx *ExecutionContext, source
 			return fmt.Errorf("install_shell_init: failed to read back %s for hashing: %w", destPath, err)
 		}
 		hash := contentHash(written)
-		fmt.Printf("   Installed shell init: %s\n", destPath)
+		ctx.GetReporter().Status(fmt.Sprintf("   Installed shell init: %s", destPath))
 		recordCleanup(ctx, target, shell, hash)
 	}
 
@@ -204,20 +205,21 @@ func (a *InstallShellInitAction) executeSourceCommand(ctx *ExecutionContext, sou
 		c.Stderr = &stderr
 
 		err := c.Run()
+		shellReporter := ctx.GetReporter()
 		if stderr.Len() > 0 {
-			fmt.Printf("   [shell_init stderr] %s\n", stderr.String())
+			shellReporter.Log("   [shell_init stderr] %s", stderr.String())
 		}
 
 		if err != nil {
 			// Non-zero exit: log warning and skip this shell
-			fmt.Printf("   Warning: source_command failed for shell %q: %v (skipping)\n", shell, err)
+			shellReporter.Warn("   Warning: source_command failed for shell %q: %v (skipping)", shell, err)
 			continue
 		}
 
 		// Empty output: skip file creation
 		output := stdout.Bytes()
 		if len(output) == 0 {
-			fmt.Printf("   Warning: source_command produced empty output for shell %q (skipping)\n", shell)
+			shellReporter.Warn("   Warning: source_command produced empty output for shell %q (skipping)", shell)
 			continue
 		}
 
@@ -226,7 +228,7 @@ func (a *InstallShellInitAction) executeSourceCommand(ctx *ExecutionContext, sou
 			return fmt.Errorf("install_shell_init: failed to write %s: %w", destPath, err)
 		}
 		hash := contentHash(output)
-		fmt.Printf("   Installed shell init: %s\n", destPath)
+		shellReporter.Status(fmt.Sprintf("   Installed shell init: %s", destPath))
 		recordCleanup(ctx, target, shell, hash)
 	}
 

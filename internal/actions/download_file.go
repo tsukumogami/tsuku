@@ -80,6 +80,8 @@ func (a *DownloadFileAction) Execute(ctx *ExecutionContext, params map[string]in
 		checksumAlgo = "sha256"
 	}
 
+	reporter := ctx.GetReporter()
+
 	// Check download cache if available
 	var cache *DownloadCache
 	if ctx.DownloadCacheDir != "" {
@@ -90,27 +92,22 @@ func (a *DownloadFileAction) Execute(ctx *ExecutionContext, params map[string]in
 		if err != nil {
 			// Log warning but continue with download
 			logger.Warn("cache check failed", "error", err)
-			fmt.Printf("   Warning: cache check failed: %v\n", err)
+			reporter.Warn("cache check failed: %v", err)
 		} else if found {
 			logger.Debug("cache hit", "dest", dest)
-			fmt.Printf("   Using cached: %s\n", dest)
-			fmt.Printf("   ✓ Restored from cache\n")
+			reporter.Status(fmt.Sprintf("Using cached: %s", dest))
 			return nil
 		} else {
 			logger.Debug("cache miss")
 		}
 	}
 
-	fmt.Printf("   Downloading: %s\n", url)
-	fmt.Printf("   Destination: %s\n", dest)
-
 	// Download file with context for cancellation support
-	if err := downloadFileHTTP(ctx.Context, url, destPath); err != nil {
+	if err := downloadFileHTTP(ctx.Context, url, destPath, reporter); err != nil {
 		return fmt.Errorf("download failed: %w", err)
 	}
 
 	// Verify checksum (required)
-	fmt.Printf("   Verifying %s checksum...\n", checksumAlgo)
 	if err := VerifyChecksum(destPath, checksum, checksumAlgo); err != nil {
 		return fmt.Errorf("checksum verification failed: %w", err)
 	}
@@ -121,14 +118,13 @@ func (a *DownloadFileAction) Execute(ctx *ExecutionContext, params map[string]in
 		if err := cache.Save(url, destPath, checksum); err != nil {
 			// Log warning but don't fail the download
 			logger.Warn("failed to cache download", "error", err)
-			fmt.Printf("   Warning: failed to cache download: %v\n", err)
+			reporter.Warn("failed to cache download: %v", err)
 		} else {
 			logger.Debug("saved to download cache")
 		}
 	}
 
 	logger.Debug("download_file completed successfully", "dest", dest)
-	fmt.Printf("   ✓ Downloaded successfully\n")
 	return nil
 }
 
@@ -143,10 +139,43 @@ func isRetryableStatusCode(statusCode int) bool {
 		statusCode >= 500
 }
 
+// makeDownloadCallback returns a progress callback that formats and emits
+// transient status messages via reporter.Status. The name parameter is the
+// display name (already sanitized). The callback is only invoked by
+// ProgressWriter when the file is large enough to warrant reporting.
+func makeDownloadCallback(reporter progress.Reporter, name string) func(written, total int64) {
+	return func(written, total int64) {
+		var msg string
+		if total > 0 {
+			pct := float64(written) / float64(total) * 100
+			if pct > 100 {
+				pct = 100
+			}
+			transferred := formatBytes(written)
+			totalStr := formatBytes(total)
+			msg = fmt.Sprintf("Downloading %s (%s / %s, %.0f%%)", name, transferred, totalStr, pct)
+		} else {
+			transferred := formatBytes(written)
+			msg = fmt.Sprintf("Downloading %s (%s...)", name, transferred)
+		}
+		reporter.Status(msg)
+	}
+}
+
+// downloadDisplayName derives a safe display name from a download URL.
+// It strips query parameters and sanitizes the result against ANSI injection.
+func downloadDisplayName(downloadURL string) string {
+	base := filepath.Base(downloadURL)
+	if idx := strings.Index(base, "?"); idx != -1 {
+		base = base[:idx]
+	}
+	return progress.SanitizeDisplayString(base)
+}
+
 // downloadFileHTTP performs the actual HTTP download with context for cancellation.
 // Implements retry logic with exponential backoff for transient errors (403, 429, 5xx).
 // SECURITY: Enforces HTTPS for all downloads to prevent MITM attacks
-func downloadFileHTTP(ctx context.Context, downloadURL, destPath string) error {
+func downloadFileHTTP(ctx context.Context, downloadURL, destPath string, reporter progress.Reporter) error {
 	// SECURITY: Enforce HTTPS for all downloads
 	if !strings.HasPrefix(downloadURL, "https://") {
 		return fmt.Errorf("download URL must use HTTPS for security, got: %s", downloadURL)
@@ -155,20 +184,32 @@ func downloadFileHTTP(ctx context.Context, downloadURL, destPath string) error {
 	const maxRetries = 3
 	baseDelay := time.Second
 
+	name := downloadDisplayName(downloadURL)
+	callback := makeDownloadCallback(reporter, name)
+
+	var pw *progress.ProgressWriter
 	var lastErr error
 	for attempt := 0; attempt <= maxRetries; attempt++ {
 		if attempt > 0 {
 			// Exponential backoff: 1s, 2s, 4s
 			delay := baseDelay * time.Duration(1<<(attempt-1))
-			fmt.Printf("   Retry %d/%d after %v...\n", attempt, maxRetries, delay)
+			reporter.Log("Retry %d/%d after %v...", attempt, maxRetries, delay)
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
 			case <-time.After(delay):
 			}
+			if pw != nil {
+				pw.Reset()
+			}
+		} else {
+			// Non-TTY: log once at the start of the first attempt
+			if !progress.ShouldShowProgress() {
+				reporter.Log("Downloading %s", name)
+			}
 		}
 
-		err := doDownloadFileHTTP(ctx, downloadURL, destPath)
+		err := doDownloadFileHTTP(ctx, downloadURL, destPath, callback, &pw)
 		if err == nil {
 			return nil
 		}
@@ -205,8 +246,10 @@ func (e *httpStatusError) Error() string {
 	return fmt.Sprintf("bad status: %s", e.Status)
 }
 
-// doDownloadFileHTTP performs a single HTTP download attempt
-func doDownloadFileHTTP(ctx context.Context, downloadURL, destPath string) error {
+// doDownloadFileHTTP performs a single HTTP download attempt. It creates a
+// ProgressWriter backed by the supplied callback and writes the address of that
+// writer to pwOut so the retry loop can call Reset() before the next attempt.
+func doDownloadFileHTTP(ctx context.Context, downloadURL, destPath string, callback func(written, total int64), pwOut **progress.ProgressWriter) error {
 	// Create secure HTTP client with decompression bomb and SSRF protection
 	client := newDownloadHTTPClient()
 	req, err := http.NewRequestWithContext(ctx, "GET", downloadURL, nil)
@@ -248,17 +291,12 @@ func doDownloadFileHTTP(ctx context.Context, downloadURL, destPath string) error
 	}
 	defer out.Close()
 
-	// Copy response body to file with progress display
-	if progress.ShouldShowProgress() && resp.ContentLength > 0 {
-		pw := progress.NewWriter(out, resp.ContentLength, os.Stdout)
-		defer pw.Finish()
-		if _, err := io.Copy(pw, resp.Body); err != nil {
-			return fmt.Errorf("failed to write file: %w", err)
-		}
-	} else {
-		if _, err := io.Copy(out, resp.Body); err != nil {
-			return fmt.Errorf("failed to write file: %w", err)
-		}
+	// Wrap the destination file with a ProgressWriter for byte-level progress.
+	// The ProgressWriter suppresses the callback for small files automatically.
+	pw := progress.NewProgressWriter(out, resp.ContentLength, callback)
+	*pwOut = pw
+	if _, err := io.Copy(pw, resp.Body); err != nil {
+		return fmt.Errorf("failed to write file: %w", err)
 	}
 
 	return nil

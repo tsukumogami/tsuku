@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/progress"
 )
 
 func TestDownloadFileWithContext_ContextCancellation(t *testing.T) {
@@ -19,7 +21,7 @@ func TestDownloadFileWithContext_ContextCancellation(t *testing.T) {
 	cancel() // Cancel immediately
 
 	// Try to download with canceled context - should fail
-	err := downloadFileWithContext(canceledCtx, "https://example.com/file.txt", destPath)
+	err := downloadFileWithContext(canceledCtx, "https://example.com/file.txt", destPath, progress.NoopReporter{})
 	if err == nil {
 		t.Error("downloadFileWithContext() should fail when context is canceled")
 	}
@@ -38,7 +40,7 @@ func TestDownloadFileWithContext_Success(t *testing.T) {
 
 	// Note: This test will fail because the test server uses a self-signed cert
 	// but it verifies that the code path works
-	err := downloadFileWithContext(context.Background(), ts.URL+"/file.txt", destPath)
+	err := downloadFileWithContext(context.Background(), ts.URL+"/file.txt", destPath, progress.NoopReporter{})
 	// Expected to fail due to self-signed cert in test environment
 	if err == nil {
 		// If it somehow succeeds, verify the file exists
@@ -61,7 +63,7 @@ func TestDownloadFileWithContext_BadStatus(t *testing.T) {
 
 	// HTTPS is required, so use https URL which will fail connection
 	// This tests the code path for http.NewRequestWithContext
-	err := downloadFileWithContext(context.Background(), "https://127.0.0.1:99999/file.txt", destPath)
+	err := downloadFileWithContext(context.Background(), "https://127.0.0.1:99999/file.txt", destPath, progress.NoopReporter{})
 	if err == nil {
 		t.Error("downloadFileWithContext() should fail for unreachable server")
 	}
@@ -256,7 +258,7 @@ func TestDownloadFileWithContext_InvalidURL(t *testing.T) {
 	destPath := filepath.Join(tmpDir, "test.txt")
 
 	// Test with invalid URL
-	err := downloadFileWithContext(context.Background(), "not-a-valid-url", destPath)
+	err := downloadFileWithContext(context.Background(), "not-a-valid-url", destPath, progress.NoopReporter{})
 	if err == nil {
 		t.Error("downloadFileWithContext() should fail for invalid URL")
 	}
@@ -268,7 +270,7 @@ func TestDownloadFileWithContext_EmptyURL(t *testing.T) {
 	destPath := filepath.Join(tmpDir, "test.txt")
 
 	// Test with empty URL
-	err := downloadFileWithContext(context.Background(), "", destPath)
+	err := downloadFileWithContext(context.Background(), "", destPath, progress.NoopReporter{})
 	if err == nil {
 		t.Error("downloadFileWithContext() should fail for empty URL")
 	}

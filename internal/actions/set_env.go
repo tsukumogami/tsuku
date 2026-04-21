@@ -39,7 +39,8 @@ func (a *SetEnvAction) Execute(ctx *ExecutionContext, params map[string]interfac
 	// Build standard vars for substitution
 	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir, ctx.LibsDir)
 
-	fmt.Printf("   Setting %d environment variable(s)\n", len(envVars))
+	reporter := ctx.GetReporter()
+	reporter.Log("   Setting %d environment variable(s)", len(envVars))
 
 	// Create env file
 	envFilePath := filepath.Join(ctx.InstallDir, "env.sh")
@@ -56,10 +57,10 @@ func (a *SetEnvAction) Execute(ctx *ExecutionContext, params map[string]interfac
 		// Write to env file
 		fmt.Fprintf(envFile, "export %s=%s\n", envVar.Name, value)
 
-		fmt.Printf("   ✓ %s=%s\n", envVar.Name, value)
+		reporter.Log("   %s=%s", envVar.Name, value)
 	}
 
-	fmt.Printf("   Environment file: %s\n", envFilePath)
+	reporter.Log("   Environment file: %s", envFilePath)
 	return nil
 }
 

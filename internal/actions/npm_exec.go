@@ -117,9 +117,10 @@ func (a *NpmExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 		}
 	}
 
-	fmt.Printf("   Source directory: %s\n", sourceDir)
-	fmt.Printf("   Command: npm %s\n", command)
-	fmt.Printf("   Use lockfile: %v\n", useLockfile)
+	reporter := ctx.GetReporter()
+	reporter.Log("   Source directory: %s", sourceDir)
+	reporter.Log("   Command: npm %s", command)
+	reporter.Log("   Use lockfile: %v", useLockfile)
 
 	// Set up environment for deterministic builds
 	env := os.Environ()
@@ -157,7 +158,7 @@ func (a *NpmExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 			return fmt.Errorf("use_lockfile is true but package-lock.json not found in %s", sourceDir)
 		}
 
-		fmt.Printf("   Installing dependencies: npm ci\n")
+		reporter.Log("   Installing dependencies: npm ci")
 
 		// Build npm ci command with security flags
 		ciArgs := []string{"ci", "--no-audit", "--no-fund", "--prefer-offline"}
@@ -174,7 +175,7 @@ func (a *NpmExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 			return fmt.Errorf("npm ci failed: %w\nOutput: %s", err, string(output))
 		}
 	} else {
-		fmt.Printf("   Installing dependencies: npm install\n")
+		reporter.Log("   Installing dependencies: npm install")
 
 		installArgs := []string{"install", "--no-audit", "--no-fund"}
 		if ignoreScripts {
@@ -192,7 +193,7 @@ func (a *NpmExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 	}
 
 	// Step 2: Run the build command
-	fmt.Printf("   Running: npm %s\n", command)
+	reporter.Log("   Running: npm %s", command)
 
 	// Parse command - it may be "build" or "run build"
 	cmdArgs := strings.Fields(command)
@@ -213,10 +214,10 @@ func (a *NpmExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 		if _, err := os.Stat(outputDir); err != nil {
 			return fmt.Errorf("expected output directory not found: %s", outputDir)
 		}
-		fmt.Printf("   Output directory verified: %s\n", outputDir)
+		reporter.Log("   Output directory verified: %s", outputDir)
 	}
 
-	fmt.Printf("   npm %s completed successfully\n", command)
+	reporter.Log("   npm %s completed successfully", command)
 
 	return nil
 }
@@ -234,8 +235,6 @@ func validateNodeVersion(constraint string, execPaths ...string) error {
 			break
 		}
 	}
-
-	fmt.Printf("   Validating node version using: %s\n", nodeBin)
 
 	// Build PATH with exec paths prepended for the wrapper script
 	env := os.Environ()
@@ -445,9 +444,10 @@ func (a *NpmExecAction) executePackageInstall(ctx *ExecutionContext, params map[
 		}
 	}
 
-	fmt.Printf("   Package: %s@%s\n", packageName, version)
-	fmt.Printf("   Executables: %v\n", executables)
-	fmt.Printf("   Using npm: %s\n", npmPath)
+	reporter := ctx.GetReporter()
+	reporter.Log("   Package: %s@%s", packageName, version)
+	reporter.Log("   Executables: %v", executables)
+	reporter.Log("   Using npm: %s", npmPath)
 
 	// Ensure install directory exists
 	if err := os.MkdirAll(ctx.InstallDir, 0755); err != nil {
@@ -509,7 +509,7 @@ func (a *NpmExecAction) executePackageInstall(ctx *ExecutionContext, params map[
 	}
 
 	// Run npm ci with security hardening flags
-	fmt.Printf("   Installing: npm ci in %s\n", ctx.InstallDir)
+	reporter.Log("   Installing: npm ci in %s", ctx.InstallDir)
 
 	ciArgs := []string{"ci", "--no-audit", "--no-fund", "--prefer-offline"}
 	if ignoreScripts {
@@ -550,8 +550,8 @@ func (a *NpmExecAction) executePackageInstall(ctx *ExecutionContext, params map[
 		}
 	}
 
-	fmt.Printf("   Package installed successfully\n")
-	fmt.Printf("   Verified %d executable(s)\n", len(executables))
+	reporter.Log("   Package installed successfully")
+	reporter.Log("   Verified %d executable(s)", len(executables))
 
 	return nil
 }

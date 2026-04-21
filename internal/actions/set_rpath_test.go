@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/progress"
 )
 
 func TestSetRpathAction_Name(t *testing.T) {
@@ -827,7 +829,7 @@ func TestSetRpathLinux_NoPatchelf(t *testing.T) {
 	ctx := &ExecutionContext{
 		ExecPaths: []string{}, // Empty ExecPaths to force PATH lookup
 	}
-	err := setRpathLinux(ctx, binaryPath, "$ORIGIN/../lib")
+	err := setRpathLinux(ctx, binaryPath, "$ORIGIN/../lib", progress.NoopReporter{})
 	if err == nil {
 		t.Error("expected error when patchelf not found")
 	}
@@ -847,7 +849,7 @@ func TestSetRpathMacOS_NoInstallNameTool(t *testing.T) {
 		t.Fatalf("failed to create test binary: %v", err)
 	}
 
-	err := setRpathMacOS(binaryPath, "$ORIGIN/../lib")
+	err := setRpathMacOS(binaryPath, "$ORIGIN/../lib", progress.NoopReporter{})
 	if err == nil {
 		t.Error("expected error when install_name_tool not found")
 	}

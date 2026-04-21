@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -26,7 +25,8 @@ func (a *SetupBuildEnvAction) Name() string {
 //
 // No parameters required - uses ctx.Dependencies automatically.
 func (a *SetupBuildEnvAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
-	fmt.Printf("   Configuring build environment from %d dependencies\n", len(ctx.Dependencies.InstallTime))
+	reporter := ctx.GetReporter()
+	reporter.Log("   Configuring build environment from %d dependencies", len(ctx.Dependencies.InstallTime))
 
 	// Build environment from dependencies and set it on the context
 	ctx.Env = buildAutotoolsEnv(ctx)
@@ -62,30 +62,30 @@ func (a *SetupBuildEnvAction) Execute(ctx *ExecutionContext, params map[string]i
 			}
 		}
 		if tsukuPathCount > 0 {
-			fmt.Printf("   PATH: %d dependency bin path(s) prepended\n", tsukuPathCount)
+			reporter.Log("   PATH: %d dependency bin path(s) prepended", tsukuPathCount)
 		}
 	}
 	if pkgConfigPath != "" {
 		pathCount := len(strings.Split(pkgConfigPath, ":"))
-		fmt.Printf("   PKG_CONFIG_PATH: %d path(s)\n", pathCount)
+		reporter.Log("   PKG_CONFIG_PATH: %d path(s)", pathCount)
 	}
 	if cppFlags != "" {
 		flagCount := len(strings.Fields(cppFlags))
-		fmt.Printf("   CPPFLAGS: %d flag(s)\n", flagCount)
+		reporter.Log("   CPPFLAGS: %d flag(s)", flagCount)
 	}
 	if ldFlags != "" {
 		flagCount := len(strings.Fields(ldFlags))
-		fmt.Printf("   LDFLAGS: %d flag(s)\n", flagCount)
+		reporter.Log("   LDFLAGS: %d flag(s)", flagCount)
 	}
 	if cc != "" {
-		fmt.Printf("   CC: %s\n", cc)
+		reporter.Log("   CC: %s", cc)
 	}
 	if cxx != "" {
-		fmt.Printf("   CXX: %s\n", cxx)
+		reporter.Log("   CXX: %s", cxx)
 	}
 
 	if len(ctx.Dependencies.InstallTime) == 0 {
-		fmt.Printf("   (No dependencies to configure)\n")
+		reporter.Log("   (No dependencies to configure)")
 	}
 
 	return nil

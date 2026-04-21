@@ -162,7 +162,8 @@ func (a *InstallBinariesAction) installBinariesMode(ctx *ExecutionContext, outpu
 		"executables", len(executables),
 		"installDir", ctx.InstallDir)
 
-	fmt.Printf("   Installing %d file(s)\n", len(outputs))
+	reporter := ctx.GetReporter()
+	reporter.Status(fmt.Sprintf("   Installing %d file(s)", len(outputs)))
 
 	for _, output := range outputs {
 		src := ExpandVars(output.Src, vars)
@@ -193,10 +194,8 @@ func (a *InstallBinariesAction) installBinariesMode(ctx *ExecutionContext, outpu
 				return fmt.Errorf("failed to chmod %s: %w", dest, err)
 			}
 			logger.Debug("file installed as executable", "dest", destPath)
-			fmt.Printf("   ✓ Installed (executable): %s → %s\n", src, dest)
 		} else {
 			logger.Debug("file installed", "dest", destPath)
-			fmt.Printf("   ✓ Installed: %s → %s\n", src, dest)
 		}
 	}
 
@@ -333,27 +332,15 @@ func (a *InstallBinariesAction) installDirectoryWithSymlinks(ctx *ExecutionConte
 		"installDir", ctx.InstallDir,
 		"outputCount", len(outputs))
 
-	fmt.Printf("   Installing directory tree to: %s\n", ctx.InstallDir)
+	reporter := ctx.GetReporter()
+	reporter.Status(fmt.Sprintf("   Copying directory tree to: %s", ctx.InstallDir))
 
 	// Copy entire WorkDir to InstallDir (.install/), excluding the .install subdirectory
 	// to prevent recursive copy (since InstallDir is workDir/.install)
 	// The install manager expects to find the full tree in workDir/.install
-	fmt.Printf("   → Copying directory tree...\n")
 	if err := CopyDirectoryExcluding(ctx.WorkDir, ctx.InstallDir, ".install"); err != nil {
 		return fmt.Errorf("failed to copy directory tree: %w", err)
 	}
 
-	fmt.Printf("   ✓ Directory tree copied to %s\n", ctx.InstallDir)
-	fmt.Printf("   ✓ %d output(s) will be symlinked: %v\n", len(outputs), extractOutputNames(outputs))
-
 	return nil
-}
-
-// extractOutputNames extracts just the output names from BinaryMapping for display
-func extractOutputNames(outputs []recipe.BinaryMapping) []string {
-	names := make([]string, len(outputs))
-	for i, o := range outputs {
-		names[i] = filepath.Base(o.Src)
-	}
-	return names
 }

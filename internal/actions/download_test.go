@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/httputil"
+	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
@@ -128,7 +129,7 @@ func TestDownloadAction_downloadFile_HTTPSRequired(t *testing.T) {
 	tmpDir := t.TempDir()
 	destPath := filepath.Join(tmpDir, "test.txt")
 
-	err := action.downloadFile(context.Background(), "http://example.com/file", destPath)
+	err := action.downloadFile(context.Background(), "http://example.com/file", destPath, progress.NoopReporter{})
 	if err == nil {
 		t.Error("downloadFile() should fail for non-HTTPS URL")
 	}
@@ -177,7 +178,7 @@ func TestDownloadAction_downloadFile_ContextCancellation(t *testing.T) {
 	cancel() // Cancel immediately
 
 	// Try to download with canceled context - should fail
-	err := action.downloadFile(canceledCtx, "https://example.com/file.txt", destPath)
+	err := action.downloadFile(canceledCtx, "https://example.com/file.txt", destPath, progress.NoopReporter{})
 	if err == nil {
 		t.Error("downloadFile() should fail when context is canceled")
 	}
@@ -252,7 +253,7 @@ func TestDownloadAction_RejectsCompressedResponse(t *testing.T) {
 	// Accept-Encoding: identity, our code should reject it
 	// This is tested by checking the error message pattern
 
-	err := action.downloadFile(context.Background(), ts.URL+"/file.txt", destPath)
+	err := action.downloadFile(context.Background(), ts.URL+"/file.txt", destPath, progress.NoopReporter{})
 	if err == nil {
 		// Clean up if somehow it succeeded
 		os.Remove(destPath)

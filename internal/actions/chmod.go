@@ -70,7 +70,8 @@ func (a *ChmodAction) Execute(ctx *ExecutionContext, params map[string]interface
 	// Build vars for variable substitution
 	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir, ctx.LibsDir)
 
-	fmt.Printf("   Making executable: %v\n", files)
+	reporter := ctx.GetReporter()
+	reporter.Status(fmt.Sprintf("   Making executable: %v", files))
 
 	for _, file := range files {
 		file = ExpandVars(file, vars)
@@ -81,6 +82,6 @@ func (a *ChmodAction) Execute(ctx *ExecutionContext, params map[string]interface
 		}
 	}
 
-	fmt.Printf("   ✓ Made %d file(s) executable\n", len(files))
+	reporter.Status(fmt.Sprintf("   Made %d file(s) executable", len(files)))
 	return nil
 }

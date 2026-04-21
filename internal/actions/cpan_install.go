@@ -186,19 +186,20 @@ func (a *CpanInstallAction) Execute(ctx *ExecutionContext, params map[string]int
 		}
 	}
 
-	fmt.Printf("   Distribution: %s@%s\n", distribution, ctx.Version)
-	fmt.Printf("   Executables: %v\n", executables)
+	reporter := ctx.GetReporter()
+	reporter.Log("   Distribution: %s@%s", distribution, ctx.Version)
+	reporter.Log("   Executables: %v", executables)
 	if mirror != "" {
-		fmt.Printf("   Mirror: %s\n", mirror)
+		reporter.Log("   Mirror: %s", mirror)
 	}
 	if mirrorOnly {
-		fmt.Printf("   Mirror only: true\n")
+		reporter.Log("   Mirror only: true")
 	}
 	if offline {
-		fmt.Printf("   Offline: true\n")
+		reporter.Log("   Offline: true")
 	}
-	fmt.Printf("   Using perl: %s\n", perlPath)
-	fmt.Printf("   Using cpanm: %s\n", cpanmPath)
+	reporter.Log("   Using perl: %s", perlPath)
+	reporter.Log("   Using cpanm: %s", cpanmPath)
 
 	installDir := ctx.InstallDir
 
@@ -238,10 +239,10 @@ func (a *CpanInstallAction) Execute(ctx *ExecutionContext, params map[string]int
 			return fmt.Errorf("cpanfile not found: %s", cpanfile)
 		}
 		args = append(args, "--installdeps", filepath.Dir(cpanfile))
-		fmt.Printf("   Installing dependencies from: %s\n", cpanfile)
+		reporter.Log("   Installing dependencies from: %s", cpanfile)
 	} else {
 		args = append(args, target)
-		fmt.Printf("   Installing: cpanm %s\n", strings.Join(args, " "))
+		reporter.Log("   Installing: cpanm %s", strings.Join(args, " "))
 	}
 
 	// Build command
@@ -260,10 +261,10 @@ func (a *CpanInstallAction) Execute(ctx *ExecutionContext, params map[string]int
 		return fmt.Errorf("cpanm install failed: %w\nOutput: %s", err, string(output))
 	}
 
-	// cpanm is verbose, only show output if debugging
+	// cpanm is verbose, only show output if debugging (TSUKU_DEBUG env var)
 	outputStr := strings.TrimSpace(string(output))
 	if outputStr != "" && os.Getenv("TSUKU_DEBUG") != "" {
-		fmt.Printf("   cpanm output:\n%s\n", outputStr)
+		reporter.Log("   cpanm output:\n%s", outputStr)
 	}
 
 	// Verify executables exist and create self-contained wrappers
@@ -307,14 +308,14 @@ exec perl "$SCRIPT_DIR/%s.cpanm" "$@"
 			return fmt.Errorf("failed to create wrapper script: %w", err)
 		}
 
-		// Log debug info if enabled
+		// Log debug info if enabled (TSUKU_DEBUG env var)
 		if os.Getenv("TSUKU_DEBUG") != "" {
-			fmt.Printf("   Created wrapper for %s (original at %s)\n", exe, cpanmWrapperPath)
+			reporter.Log("   Created wrapper for %s (original at %s)", exe, cpanmWrapperPath)
 		}
 	}
 
-	fmt.Printf("   Installed successfully\n")
-	fmt.Printf("   Created %d self-contained wrapper(s)\n", len(executables))
+	reporter.Log("   Installed successfully")
+	reporter.Log("   Created %d self-contained wrapper(s)", len(executables))
 
 	return nil
 }
@@ -502,7 +503,7 @@ func validatePerlVersion(ctx *ExecutionContext, perlPath, requiredVersion string
 			requiredVersion, installedVersion, requiredVersion)
 	}
 
-	fmt.Printf("   Perl version: %s (matches required %s)\n", installedVersion, requiredVersion)
+	ctx.GetReporter().Log("   Perl version: %s (matches required %s)", installedVersion, requiredVersion)
 	return nil
 }
 

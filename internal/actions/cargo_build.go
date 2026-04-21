@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/tsukumogami/tsuku/internal/progress"
 )
 
 // CargoBuildAction builds Rust crates with deterministic configuration.
@@ -129,23 +131,24 @@ func (a *CargoBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 		}
 	}
 
-	fmt.Printf("   Source: %s\n", sourceDir)
-	fmt.Printf("   Executables: %v\n", executables)
+	reporter := ctx.GetReporter()
+	reporter.Log("   Source: %s", sourceDir)
+	reporter.Log("   Executables: %v", executables)
 	if target != "" {
-		fmt.Printf("   Target: %s\n", target)
+		reporter.Log("   Target: %s", target)
 	}
 	if len(features) > 0 {
-		fmt.Printf("   Features: %v\n", features)
+		reporter.Log("   Features: %v", features)
 	}
 	if noDefaultFeatures {
-		fmt.Printf("   No default features: true\n")
+		reporter.Log("   No default features: true")
 	}
 	if allFeatures {
-		fmt.Printf("   All features: true\n")
+		reporter.Log("   All features: true")
 	}
-	fmt.Printf("   Locked: %v\n", locked)
-	fmt.Printf("   Offline: %v\n", offline)
-	fmt.Printf("   Using cargo: %s\n", cargoPath)
+	reporter.Log("   Locked: %v", locked)
+	reporter.Log("   Offline: %v", offline)
+	reporter.Log("   Using cargo: %s", cargoPath)
 
 	// Set up deterministic environment with isolated CARGO_HOME
 	env := buildDeterministicCargoEnv(cargoPath, ctx.WorkDir, ctx)
@@ -158,7 +161,7 @@ func (a *CargoBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 
 	// Validate Rust version if specified
 	if rustVersion != "" {
-		if err := validateRustVersion(ctx, cargoPath, rustVersion, env); err != nil {
+		if err := validateRustVersion(ctx, cargoPath, rustVersion, env, reporter); err != nil {
 			return err
 		}
 	}
@@ -186,7 +189,7 @@ func (a *CargoBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 	// Pre-fetch dependencies if offline build is requested
 	// This populates CARGO_HOME/registry with all required crates
 	if offline && locked {
-		fmt.Printf("   Pre-fetching dependencies...\n")
+		reporter.Log("   Pre-fetching dependencies...")
 		fetchArgs := []string{"fetch", "--locked", "--manifest-path", filepath.Join(sourceDir, "Cargo.toml")}
 		if target != "" {
 			fetchArgs = append(fetchArgs, "--target", target)
@@ -227,7 +230,7 @@ func (a *CargoBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 		args = append(args, "--features", feature)
 	}
 
-	fmt.Printf("   Building: cargo %s\n", strings.Join(args, " "))
+	reporter.Log("   Building: cargo %s", strings.Join(args, " "))
 
 	// Create bin directory in install dir
 	binDir := filepath.Join(ctx.InstallDir, "bin")
@@ -245,10 +248,10 @@ func (a *CargoBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 		return fmt.Errorf("cargo build failed: %w\nOutput: %s", err, string(output))
 	}
 
-	// Show output if debugging
+	// Show output if debugging (TSUKU_DEBUG env var)
 	outputStr := strings.TrimSpace(string(output))
 	if outputStr != "" && os.Getenv("TSUKU_DEBUG") != "" {
-		fmt.Printf("   cargo output:\n%s\n", outputStr)
+		reporter.Log("   cargo output:\n%s", outputStr)
 	}
 
 	// Determine target directory for built binaries
@@ -279,8 +282,8 @@ func (a *CargoBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 		}
 	}
 
-	fmt.Printf("   Crate built successfully\n")
-	fmt.Printf("   Installed %d executable(s)\n", len(executables))
+	reporter.Log("   Crate built successfully")
+	reporter.Log("   Installed %d executable(s)", len(executables))
 
 	return nil
 }
@@ -342,8 +345,9 @@ func (a *CargoBuildAction) executeLockDataMode(ctx *ExecutionContext, params map
 	// Get optional parameters
 	rustVersion, _ := GetString(params, "rust_version")
 
-	fmt.Printf("   Crate: %s@%s\n", crateName, version)
-	fmt.Printf("   Executables: %v\n", executables)
+	reporter := ctx.GetReporter()
+	reporter.Log("   Crate: %s@%s", crateName, version)
+	reporter.Log("   Executables: %v", executables)
 
 	// Get cargo path
 	cargoPath := ResolveCargo()
@@ -355,12 +359,12 @@ func (a *CargoBuildAction) executeLockDataMode(ctx *ExecutionContext, params map
 	if rustVersion != "" {
 		// Build temporary environment for version check
 		tempEnv := buildDeterministicCargoEnv(cargoPath, ctx.WorkDir, ctx)
-		if err := validateRustVersion(ctx, cargoPath, rustVersion, tempEnv); err != nil {
-			fmt.Printf("   Warning: Rust version validation failed: %v\n", err)
+		if err := validateRustVersion(ctx, cargoPath, rustVersion, tempEnv, reporter); err != nil {
+			reporter.Warn("   Rust version validation failed: %v", err)
 		}
 	}
 
-	fmt.Printf("   Using cargo: %s\n", cargoPath)
+	reporter.Log("   Using cargo: %s", cargoPath)
 
 	// Verify Cargo.lock checksum first
 	computedChecksum := fmt.Sprintf("%x", sha256.Sum256([]byte(lockData)))
@@ -369,7 +373,7 @@ func (a *CargoBuildAction) executeLockDataMode(ctx *ExecutionContext, params map
 			lockChecksum, computedChecksum)
 	}
 
-	fmt.Printf("   Building crate with lockfile enforcement\n")
+	reporter.Log("   Building crate with lockfile enforcement")
 
 	// Create temporary directory for downloading and building crate
 	tempDir, err := os.MkdirTemp("", "tsuku-cargo-build-*")
@@ -382,7 +386,7 @@ func (a *CargoBuildAction) executeLockDataMode(ctx *ExecutionContext, params map
 	crateURL := fmt.Sprintf("https://crates.io/api/v1/crates/%s/%s/download", crateName, version)
 	crateTarball := filepath.Join(tempDir, fmt.Sprintf("%s-%s.crate", crateName, version))
 
-	fmt.Printf("   Downloading crate from crates.io...\n")
+	reporter.Log("   Downloading crate from crates.io...")
 	// Use -f to fail on HTTP errors, -L to follow redirects, -S to show errors
 	// Add User-Agent to avoid rate limiting
 	downloadCmd := exec.CommandContext(ctx.Context, "curl", "-fsSL", "-A", "tsuku", "-o", crateTarball, crateURL)
@@ -406,7 +410,7 @@ func (a *CargoBuildAction) executeLockDataMode(ctx *ExecutionContext, params map
 		return fmt.Errorf("failed to create extraction directory: %w", err)
 	}
 
-	fmt.Printf("   Extracting crate...\n")
+	reporter.Log("   Extracting crate...")
 	tarCmd := exec.CommandContext(ctx.Context, "tar", "xzf", crateTarball, "-C", extractDir)
 	tarOutput, err := tarCmd.CombinedOutput()
 	if err != nil {
@@ -438,7 +442,7 @@ func (a *CargoBuildAction) executeLockDataMode(ctx *ExecutionContext, params map
 	}
 
 	// Pre-fetch dependencies to populate CARGO_HOME
-	fmt.Printf("   Pre-fetching dependencies...\n")
+	reporter.Log("   Pre-fetching dependencies...")
 	fetchArgs := []string{"fetch", "--locked", "--manifest-path", cargoTomlPath}
 	fetchCmd := exec.CommandContext(ctx.Context, cargoPath, fetchArgs...)
 	fetchCmd.Dir = crateDir
@@ -449,7 +453,7 @@ func (a *CargoBuildAction) executeLockDataMode(ctx *ExecutionContext, params map
 	}
 
 	// Build the crate with the lockfile
-	fmt.Printf("   Running: cargo build --release --locked --offline --manifest-path %s\n", cargoTomlPath)
+	reporter.Log("   Running: cargo build --release --locked --offline --manifest-path %s", cargoTomlPath)
 	buildArgs := []string{
 		"build",
 		"--release",
@@ -466,14 +470,14 @@ func (a *CargoBuildAction) executeLockDataMode(ctx *ExecutionContext, params map
 		return fmt.Errorf("cargo build failed: %w\nOutput: %s", err, string(buildOutput))
 	}
 
-	// Show output if debugging
+	// Show output if debugging (TSUKU_DEBUG env var)
 	outputStr := strings.TrimSpace(string(buildOutput))
 	if outputStr != "" && os.Getenv("TSUKU_DEBUG") != "" {
-		fmt.Printf("   cargo output:\n%s\n", outputStr)
+		reporter.Log("   cargo output:\n%s", outputStr)
 	}
 
 	// Copy executables from target/release/ to install bin/
-	fmt.Printf("   Installing executables...\n")
+	reporter.Log("   Installing executables...")
 	binDir := filepath.Join(ctx.InstallDir, "bin")
 	if err := os.MkdirAll(binDir, 0755); err != nil {
 		return fmt.Errorf("failed to create bin directory: %w", err)
@@ -500,8 +504,8 @@ func (a *CargoBuildAction) executeLockDataMode(ctx *ExecutionContext, params map
 		}
 	}
 
-	fmt.Printf("   Crate built successfully\n")
-	fmt.Printf("   Verified %d executable(s)\n", len(executables))
+	reporter.Log("   Crate built successfully")
+	reporter.Log("   Verified %d executable(s)", len(executables))
 
 	return nil
 }
@@ -734,7 +738,7 @@ func isValidFeatureName(feature string) bool {
 
 // validateRustVersion verifies the installed Rust compiler matches the required version.
 // Version format: major.minor.patch (e.g., "1.76.0")
-func validateRustVersion(ctx *ExecutionContext, cargoPath, requiredVersion string, env []string) error {
+func validateRustVersion(ctx *ExecutionContext, cargoPath, requiredVersion string, env []string, reporter progress.Reporter) error {
 	// Get rustc path from same directory as cargo
 	rustcPath := filepath.Join(filepath.Dir(cargoPath), "rustc")
 	if _, err := os.Stat(rustcPath); err != nil {
@@ -764,6 +768,6 @@ func validateRustVersion(ctx *ExecutionContext, cargoPath, requiredVersion strin
 			requiredVersion, installedVersion, requiredVersion, requiredVersion)
 	}
 
-	fmt.Printf("   Rust version: %s (matches required %s)\n", installedVersion, requiredVersion)
+	reporter.Log("   Rust version: %s (matches required %s)", installedVersion, requiredVersion)
 	return nil
 }

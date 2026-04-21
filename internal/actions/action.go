@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/tsukumogami/tsuku/internal/log"
+	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/version"
 )
@@ -35,6 +36,7 @@ type ExecutionContext struct {
 	AppResult               interface{}       // Result from app_bundle action for state tracking (stores *AppBundleResult)
 	CleanupActions          []CleanupAction   // Accumulated cleanup actions from post-install steps (e.g., shell.d files)
 	NoShellInit             bool              // When true, install_shell_init is skipped (--no-shell-init flag)
+	Reporter                progress.Reporter // Progress reporter for status and log output (optional, defaults to NoopReporter)
 }
 
 // CleanupAction describes a file-system cleanup operation to perform when
@@ -52,6 +54,15 @@ func (ctx *ExecutionContext) Log() log.Logger {
 		return ctx.Logger
 	}
 	return log.Default()
+}
+
+// GetReporter returns the progress reporter for this context.
+// If no reporter is set, it returns a NoopReporter so callers never need to nil-check.
+func (ctx *ExecutionContext) GetReporter() progress.Reporter {
+	if ctx.Reporter != nil {
+		return ctx.Reporter
+	}
+	return progress.NoopReporter{}
 }
 
 // ActionDeps defines what dependencies an action needs.

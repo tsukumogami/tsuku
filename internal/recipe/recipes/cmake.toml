@@ -38,14 +38,16 @@ url = "https://github.com/Kitware/CMake/releases/download/v{version}/cmake-{vers
 checksum_url = "https://github.com/Kitware/CMake/releases/download/v{version}/cmake-{version}-SHA-256.txt"
 when = { os = ["darwin"] }
 
+# macOS tarballs nest binaries three levels deep:
+# cmake-{version}-macos-universal/CMake.app/Contents/bin/cmake
+# strip_dirs=3 lands bin/ at the root of the work directory.
 [[steps]]
 action = "extract"
 archive = "cmake-{version}-macos-universal.tar.gz"
 format = "tar.gz"
-strip_dirs = 1
+strip_dirs = 3
 when = { os = ["darwin"] }
 
-# macOS release tarballs include bin/ -> CMake.app/Contents/bin/ symlinks
 [[steps]]
 action = "install_binaries"
 binaries = ["bin/cmake", "bin/ctest", "bin/cpack"]

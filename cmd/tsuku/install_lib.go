@@ -8,6 +8,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/validate"
@@ -17,7 +18,7 @@ import (
 // installLibrary handles installation of library recipes
 // Libraries are installed to $TSUKU_HOME/libs/{name}-{version}/ and track used_by
 // Note: used_by tracking is handled by the caller after tool installation completes
-func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, telemetryClient *telemetry.Client) error {
+func installLibrary(libName, reqVersion string, mgr *install.Manager, telemetryClient *telemetry.Client, reporter progress.Reporter) error {
 	// Load recipe
 	r, err := loader.Get(libName, recipe.LoaderOptions{})
 	if err != nil {
@@ -28,21 +29,21 @@ func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, te
 	// For now, just check if any version is installed
 	existingVersion := mgr.GetInstalledLibraryVersion(libName)
 	if existingVersion != "" && reqVersion == "" {
-		printInfof("Library %s@%s already installed, reusing\n", libName, existingVersion)
+		reporter.Status(fmt.Sprintf("Library %s@%s already installed, reusing", libName, existingVersion))
 		return nil
 	}
 
 	// Check and install dependencies
 	if len(r.Metadata.Dependencies) > 0 {
-		printInfof("Checking dependencies for %s...\n", libName)
+		reporter.Status(fmt.Sprintf("Checking dependencies for %s...", libName))
 
 		// Create a visited map for dependency resolution
 		visited := make(map[string]bool)
 
 		for _, dep := range r.Metadata.Dependencies {
-			printInfof("  Resolving dependency '%s'...\n", dep)
+			reporter.Status(fmt.Sprintf("Resolving dependency '%s'...", dep))
 			// Install dependency (not explicit, parent is current library)
-			if err := installWithDependencies(dep, "", "", false, libName, visited, telemetryClient); err != nil {
+			if err := installWithDependencies(dep, "", "", false, libName, visited, telemetryClient, reporter); err != nil {
 				return fmt.Errorf("failed to install dependency '%s': %w", dep, err)
 			}
 		}
@@ -59,6 +60,7 @@ func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, te
 		return fmt.Errorf("failed to create executor for library: %w", err)
 	}
 	defer exec.Cleanup()
+	exec.SetReporter(reporter)
 
 	// Set tools directory for finding other installed tools
 	cfg, _ := config.DefaultConfig()
@@ -134,7 +136,7 @@ func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, te
 
 	// Check if this specific version is already installed
 	if mgr.IsLibraryInstalled(libName, version) {
-		printInfof("Library %s@%s already installed\n", libName, version)
+		reporter.Status(fmt.Sprintf("Library %s@%s already installed", libName, version))
 		return nil
 	}
 
@@ -152,16 +154,15 @@ func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, te
 	libDir := mgr.LibDir(libName, version)
 	sonames, sonameErr := verify.ExtractSonames(libDir)
 	if sonameErr != nil {
-		fmt.Printf("   Warning: failed to extract sonames: %v\n", sonameErr)
+		reporter.Warn("failed to extract sonames: %v", sonameErr)
 	} else if len(sonames) > 0 {
 		if err := mgr.GetState().SetLibrarySonames(libName, version, sonames); err != nil {
-			fmt.Printf("   Warning: failed to store sonames: %v\n", err)
+			reporter.Warn("failed to store sonames: %v", err)
 		}
 	}
 
 	// Verify library installation (Tiers 1-3, skip Tier 4 integrity)
-	printInfo()
-	printInfo("Verifying library...")
+	reporter.Status("Verifying library...")
 
 	state, err := mgr.GetState().Load()
 	if err != nil {
@@ -183,6 +184,6 @@ func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, te
 		telemetryClient.Send(event)
 	}
 
-	printInfof("Library %s@%s installed successfully\n", libName, version)
+	reporter.Log("✅ %s@%s", libName, version)
 	return nil
 }

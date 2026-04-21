@@ -69,6 +69,8 @@ func (a *GemInstallAction) Preflight(params map[string]interface{}) *PreflightRe
 //	  specifications/            - Gemspecs
 //	  cache/                     - Downloaded .gem files
 func (a *GemInstallAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
+	reporter := ctx.GetReporter()
+
 	// Get gem name (required)
 	gemName, ok := GetString(params, "gem")
 	if !ok {
@@ -123,14 +125,14 @@ func (a *GemInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 		}
 	}
 
-	fmt.Printf("   Gem: %s@%s\n", gemName, ctx.Version)
-	fmt.Printf("   Executables: %v\n", executables)
-	fmt.Printf("   Using gem: %s\n", gemPath)
+	reporter.Log("   Gem: %s@%s", gemName, ctx.Version)
+	reporter.Log("   Executables: %v", executables)
+	reporter.Log("   Using gem: %s", gemPath)
 
 	// Install gem with --install-dir for isolation
 	installDir := ctx.InstallDir
 
-	fmt.Printf("   Installing: gem install %s --version %s --install-dir %s\n",
+	reporter.Log("   Installing: gem install %s --version %s --install-dir %s",
 		gemName, ctx.Version, installDir)
 
 	// Build command: gem install <gem> --version <version> --no-document --install-dir <dir>
@@ -163,7 +165,7 @@ func (a *GemInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 				pathValue = fmt.Sprintf("%s:%s", wrapperDir, pathValue)
 				env = append(env, fmt.Sprintf("CC=%s", filepath.Join(wrapperDir, "cc")))
 				env = append(env, fmt.Sprintf("CXX=%s", filepath.Join(wrapperDir, "c++")))
-				fmt.Printf("   Using zig as C compiler for native extensions\n")
+				reporter.Log("   Using zig as C compiler for native extensions")
 			}
 		}
 	}
@@ -184,10 +186,10 @@ func (a *GemInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 		return fmt.Errorf("gem install failed: %w\nOutput: %s", err, string(output))
 	}
 
-	// gem is verbose, only show output if debugging
+	// Show output if debugging (TSUKU_DEBUG env var)
 	outputStr := strings.TrimSpace(string(output))
 	if outputStr != "" && os.Getenv("TSUKU_DEBUG") != "" {
-		fmt.Printf("   gem output:\n%s\n", outputStr)
+		reporter.Log("   gem output:\n%s", outputStr)
 	}
 
 	// Verify executables exist and create self-contained wrappers.
@@ -206,8 +208,8 @@ func (a *GemInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 		}
 	}
 
-	fmt.Printf("   ✓ Gem installed successfully\n")
-	fmt.Printf("   ✓ Created %d self-contained wrapper(s)\n", len(executables))
+	reporter.Log("   Gem installed successfully")
+	reporter.Log("   Created %d self-contained wrapper(s)", len(executables))
 
 	return nil
 }

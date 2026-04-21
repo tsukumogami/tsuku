@@ -122,28 +122,29 @@ func (a *NixRealizeAction) Execute(ctx *ExecutionContext, params map[string]inte
 		effectiveRef = fmt.Sprintf("nixpkgs#%s", packageName)
 	}
 
-	fmt.Printf("   Flake ref: %s\n", effectiveRef)
-	fmt.Printf("   Executables: %v\n", executables)
+	reporter := ctx.GetReporter()
+	reporter.Log("   Flake ref: %s", effectiveRef)
+	reporter.Log("   Executables: %v", executables)
 	if lockedRef != "" {
-		fmt.Printf("   Locked ref: %s\n", lockedRef)
+		reporter.Log("   Locked ref: %s", lockedRef)
 	}
 	if systemType != "" {
-		fmt.Printf("   System: %s\n", systemType)
+		reporter.Log("   System: %s", systemType)
 	}
 	if nixVersion != "" {
-		fmt.Printf("   Nix version (eval): %s\n", nixVersion)
+		reporter.Log("   Nix version (eval): %s", nixVersion)
 	}
 	if derivationPath != "" {
-		fmt.Printf("   Derivation: %s\n", derivationPath)
+		reporter.Log("   Derivation: %s", derivationPath)
 	}
 
 	// Ensure nix-portable is available
-	nixPortablePath, err := EnsureNixPortableWithContext(ctx.Context)
+	nixPortablePath, err := EnsureNixPortableWithContext(ctx.Context, ctx.GetReporter())
 	if err != nil {
 		return fmt.Errorf("failed to ensure nix-portable: %w", err)
 	}
 
-	fmt.Printf("   Using nix-portable: %s\n", nixPortablePath)
+	reporter.Log("   Using nix-portable: %s", nixPortablePath)
 
 	// Get internal nix directory for NP_LOCATION
 	npLocation, err := GetNixInternalDir()
@@ -166,7 +167,7 @@ func (a *NixRealizeAction) Execute(ctx *ExecutionContext, params map[string]inte
 
 	// Try derivation path first if available (fastest path)
 	if derivationPath != "" {
-		fmt.Printf("   Realizing from derivation: %s\n", derivationPath)
+		reporter.Log("   Realizing from derivation: %s", derivationPath)
 		args = []string{"nix-store", "--realize", derivationPath}
 
 		cmd := exec.CommandContext(ctx.Context, nixPortablePath, args...)
@@ -179,7 +180,7 @@ func (a *NixRealizeAction) Execute(ctx *ExecutionContext, params map[string]inte
 		if err != nil {
 			// Derivation may not exist in this nix store (e.g., in sandbox)
 			// Fall back to building from locked reference
-			fmt.Printf("   Derivation not available in this nix store, using locked reference\n")
+			reporter.Log("   Derivation not available in this nix store, using locked reference")
 			derivationPath = "" // Clear to trigger fallback
 		}
 	}
@@ -206,7 +207,7 @@ func (a *NixRealizeAction) Execute(ctx *ExecutionContext, params map[string]inte
 			args = append(args, fmt.Sprintf("nixpkgs#%s", packageName))
 		}
 
-		fmt.Printf("   Installing: nix profile install %s\n", args[len(args)-1])
+		reporter.Log("   Installing: nix profile install %s", args[len(args)-1])
 
 		// Execute with isolation
 		cmd := exec.CommandContext(ctx.Context, nixPortablePath, args...)
@@ -221,26 +222,24 @@ func (a *NixRealizeAction) Execute(ctx *ExecutionContext, params map[string]inte
 		}
 	}
 
-	// Show output in debug mode
+	// Show output in debug mode (TSUKU_DEBUG env var)
 	outputStr := strings.TrimSpace(string(output))
 	if outputStr != "" && os.Getenv("TSUKU_DEBUG") != "" {
-		fmt.Printf("   nix output:\n%s\n", outputStr)
+		reporter.Log("   nix output:\n%s", outputStr)
 	}
 
 	// Verify output path if provided
 	if outputPath != "" {
 		// In nix-portable context, the store path is virtualized
 		// We verify by checking if the realization succeeded
-		fmt.Printf("   Expected output: %s\n", outputPath)
+		reporter.Log("   Expected output: %s", outputPath)
 	}
 
 	// Detect if proot is being used (performance warning)
 	if detectProotFallback(nixPortablePath, npLocation) {
-		fmt.Println("")
-		fmt.Println("   Warning: Using proot (user namespaces unavailable)")
-		fmt.Println("     Execution may be 10-100x slower than normal.")
-		fmt.Println("     Consider enabling user namespaces for better performance.")
-		fmt.Println("")
+		reporter.Warn("   Warning: Using proot (user namespaces unavailable)")
+		reporter.Warn("     Execution may be 10-100x slower than normal.")
+		reporter.Warn("     Consider enabling user namespaces for better performance.")
 	}
 
 	// Create wrapper scripts for each executable
@@ -259,8 +258,8 @@ func (a *NixRealizeAction) Execute(ctx *ExecutionContext, params map[string]inte
 		}
 	}
 
-	fmt.Printf("   Realized successfully with locked dependencies\n")
-	fmt.Printf("   Created %d wrapper(s)\n", len(executables))
+	reporter.Log("   Realized successfully with locked dependencies")
+	reporter.Log("   Created %d wrapper(s)", len(executables))
 
 	return nil
 }

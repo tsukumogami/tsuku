@@ -128,7 +128,8 @@ func (a *LinkDependenciesAction) Execute(ctx *ExecutionContext, params map[strin
 		return fmt.Errorf("library directory is empty: %s", srcLibDir)
 	}
 
-	fmt.Printf("   Linking %d library file(s) from %s\n", len(entries), libVersionDir)
+	reporter := ctx.GetReporter()
+	reporter.Status(fmt.Sprintf("   Linking %d library file(s) from %s", len(entries), libVersionDir))
 
 	for _, entry := range entries {
 		srcFile := filepath.Join(srcLibDir, entry.Name())
@@ -142,7 +143,6 @@ func (a *LinkDependenciesAction) Execute(ctx *ExecutionContext, params map[strin
 				existingTarget, readErr := os.Readlink(destFile)
 				if readErr == nil && existingTarget == symlinkTarget {
 					// Already linked correctly, skip
-					fmt.Printf("   - Already linked: %s\n", entry.Name())
 					continue
 				}
 			}
@@ -173,13 +173,11 @@ func (a *LinkDependenciesAction) Execute(ctx *ExecutionContext, params map[strin
 			if err := os.Symlink(srcTarget, destFile); err != nil {
 				return fmt.Errorf("failed to create symlink %s: %w", entry.Name(), err)
 			}
-			fmt.Printf("   + Linked (symlink): %s -> %s\n", entry.Name(), srcTarget)
 		} else {
 			// Source is a regular file - create symlink to it
 			if err := os.Symlink(symlinkTarget, destFile); err != nil {
 				return fmt.Errorf("failed to create symlink %s: %w", entry.Name(), err)
 			}
-			fmt.Printf("   + Linked: %s\n", entry.Name())
 		}
 	}
 
@@ -263,11 +261,6 @@ func (a *LinkDependenciesAction) discoverLibraryVersion(toolsDir, library string
 		return "", fmt.Errorf("library %s is not installed (no %s* directory found in %s)", library, prefix, libsDir)
 	}
 
-	if matchCount > 1 {
-		// Multiple versions installed - for now, we'll just use the last one found
-		// In the future, we might want to use the state.json to determine the correct version
-		fmt.Printf("   Warning: Multiple versions of %s found, using %s\n", library, matchedVersion)
-	}
-
+	// Multiple versions: use the last found; state-based selection is a future improvement.
 	return matchedVersion, nil
 }

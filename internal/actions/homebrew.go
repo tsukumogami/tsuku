@@ -82,7 +82,8 @@ func (a *HomebrewAction) Execute(ctx *ExecutionContext, params map[string]interf
 		return fmt.Errorf("unsupported platform: %w", err)
 	}
 
-	fmt.Printf("   Fetching Homebrew bottle: %s (%s)\n", formula, platformTag)
+	reporter := ctx.GetReporter()
+	reporter.Log("   Fetching Homebrew bottle: %s (%s)", formula, platformTag)
 
 	// Step 1: Get anonymous GHCR token
 	token, err := a.getGHCRToken(formula)
@@ -107,7 +108,7 @@ func (a *HomebrewAction) Execute(ctx *ExecutionContext, params map[string]interf
 		return fmt.Errorf("SHA256 verification failed: %w", err)
 	}
 
-	fmt.Printf("   SHA256 verified: %s\n", blobSHA[:16]+"...")
+	reporter.Log("   SHA256 verified: %s", blobSHA[:16]+"...")
 
 	// Step 4: Extract bottle
 	extractAction := &ExtractAction{}
@@ -131,7 +132,7 @@ func (a *HomebrewAction) Execute(ctx *ExecutionContext, params map[string]interf
 		return fmt.Errorf("failed to relocate placeholders: %w", err)
 	}
 
-	fmt.Printf("   Extracted and relocated: %s\n", formula)
+	reporter.Log("   Extracted and relocated: %s", formula)
 
 	return nil
 }

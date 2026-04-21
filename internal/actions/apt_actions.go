@@ -60,7 +60,7 @@ func (a *AptInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 		}
 	}
 
-	fmt.Printf("   System packages verified: %v\n", packages)
+	ctx.GetReporter().Log("   System packages verified: %v", packages)
 	return nil
 }
 
@@ -143,8 +143,9 @@ func (a *AptRepoAction) ImplicitConstraint() *Constraint {
 // Execute logs what would be configured (stub implementation).
 func (a *AptRepoAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
 	url := params["url"].(string)
-	fmt.Printf("   Would add APT repository: %s\n", url)
-	fmt.Printf("   (Skipped - requires sudo and system modification)\n")
+	reporter := ctx.GetReporter()
+	reporter.Log("   Would add APT repository: %s", url)
+	reporter.Log("   (Skipped - requires sudo and system modification)")
 	return nil
 }
 
@@ -211,8 +212,9 @@ func (a *AptPPAAction) ImplicitConstraint() *Constraint {
 // Execute logs what would be configured (stub implementation).
 func (a *AptPPAAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
 	ppa := params["ppa"].(string)
-	fmt.Printf("   Would add PPA: %s\n", ppa)
-	fmt.Printf("   (Skipped - requires sudo and system modification)\n")
+	reporter := ctx.GetReporter()
+	reporter.Log("   Would add PPA: %s", ppa)
+	reporter.Log("   (Skipped - requires sudo and system modification)")
 	return nil
 }
 

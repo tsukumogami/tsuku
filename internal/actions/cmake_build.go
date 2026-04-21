@@ -90,13 +90,14 @@ func (a *CMakeBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 	// Build directory
 	buildDir := filepath.Join(ctx.WorkDir, "build")
 
-	fmt.Printf("   Source: %s\n", sourceDir)
-	fmt.Printf("   Build: %s\n", buildDir)
-	fmt.Printf("   Install: %s\n", ctx.InstallDir)
-	fmt.Printf("   Build type: %s\n", buildType)
-	fmt.Printf("   Executables: %v\n", executables)
+	reporter := ctx.GetReporter()
+	reporter.Log("   Source: %s", sourceDir)
+	reporter.Log("   Build: %s", buildDir)
+	reporter.Log("   Install: %s", ctx.InstallDir)
+	reporter.Log("   Build type: %s", buildType)
+	reporter.Log("   Executables: %v", executables)
 	if len(cmakeArgs) > 0 {
-		fmt.Printf("   CMake args: %v\n", cmakeArgs)
+		reporter.Log("   CMake args: %v", cmakeArgs)
 	}
 
 	// Build environment - use shared environment from setup_build_env if available
@@ -124,7 +125,7 @@ func (a *CMakeBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 	}
 	configArgs = append(configArgs, cmakeArgs...)
 
-	fmt.Printf("   Running: cmake %s\n", strings.Join(configArgs, " "))
+	reporter.Log("   Running: cmake %s", strings.Join(configArgs, " "))
 
 	configCmd := exec.CommandContext(ctx.Context, cmakePath, configArgs...)
 	configCmd.Dir = ctx.WorkDir
@@ -138,7 +139,7 @@ func (a *CMakeBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 	// Step 2: Build
 	buildArgs := []string{"--build", buildDir, "--config", buildType}
 
-	fmt.Printf("   Running: cmake %s\n", strings.Join(buildArgs, " "))
+	reporter.Log("   Running: cmake %s", strings.Join(buildArgs, " "))
 
 	buildCmd := exec.CommandContext(ctx.Context, cmakePath, buildArgs...)
 	buildCmd.Dir = ctx.WorkDir
@@ -152,7 +153,7 @@ func (a *CMakeBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 	// Step 3: Install
 	installArgs := []string{"--install", buildDir}
 
-	fmt.Printf("   Running: cmake %s\n", strings.Join(installArgs, " "))
+	reporter.Log("   Running: cmake %s", strings.Join(installArgs, " "))
 
 	installCmd := exec.CommandContext(ctx.Context, cmakePath, installArgs...)
 	installCmd.Dir = ctx.WorkDir
@@ -172,8 +173,8 @@ func (a *CMakeBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 		}
 	}
 
-	fmt.Printf("   Build completed successfully\n")
-	fmt.Printf("   Installed %d executable(s)\n", len(executables))
+	reporter.Log("   Build completed successfully")
+	reporter.Log("   Installed %d executable(s)", len(executables))
 
 	return nil
 }

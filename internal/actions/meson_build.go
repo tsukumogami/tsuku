@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/tsukumogami/tsuku/internal/progress"
 )
 
 // MesonBuildAction builds software using Meson.
@@ -105,14 +107,15 @@ func (a *MesonBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 	// Build directory
 	buildDir := filepath.Join(ctx.WorkDir, "build")
 
-	fmt.Printf("   Source: %s\n", sourceDir)
-	fmt.Printf("   Build: %s\n", buildDir)
-	fmt.Printf("   Install: %s\n", ctx.InstallDir)
-	fmt.Printf("   Build type: %s\n", buildtype)
-	fmt.Printf("   Wrap mode: %s\n", wrapMode)
-	fmt.Printf("   Executables: %v\n", executables)
+	reporter := ctx.GetReporter()
+	reporter.Log("   Source: %s", sourceDir)
+	reporter.Log("   Build: %s", buildDir)
+	reporter.Log("   Install: %s", ctx.InstallDir)
+	reporter.Log("   Build type: %s", buildtype)
+	reporter.Log("   Wrap mode: %s", wrapMode)
+	reporter.Log("   Executables: %v", executables)
 	if len(mesonArgs) > 0 {
-		fmt.Printf("   Meson args: %v\n", mesonArgs)
+		reporter.Log("   Meson args: %v", mesonArgs)
 	}
 
 	// Build environment
@@ -132,7 +135,7 @@ func (a *MesonBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 	}
 	setupArgs = append(setupArgs, mesonArgs...)
 
-	fmt.Printf("   Running: meson %s\n", strings.Join(setupArgs, " "))
+	reporter.Log("   Running: meson %s", strings.Join(setupArgs, " "))
 
 	setupCmd := exec.CommandContext(ctx.Context, mesonPath, setupArgs...)
 	setupCmd.Dir = ctx.WorkDir
@@ -146,7 +149,7 @@ func (a *MesonBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 	// Step 2: Compile
 	compileArgs := []string{"compile", "-C", buildDir}
 
-	fmt.Printf("   Running: meson %s\n", strings.Join(compileArgs, " "))
+	reporter.Log("   Running: meson %s", strings.Join(compileArgs, " "))
 
 	compileCmd := exec.CommandContext(ctx.Context, mesonPath, compileArgs...)
 	compileCmd.Dir = ctx.WorkDir
@@ -160,7 +163,7 @@ func (a *MesonBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 	// Step 3: Install
 	installArgs := []string{"install", "-C", buildDir}
 
-	fmt.Printf("   Running: meson %s\n", strings.Join(installArgs, " "))
+	reporter.Log("   Running: meson %s", strings.Join(installArgs, " "))
 
 	installCmd := exec.CommandContext(ctx.Context, mesonPath, installArgs...)
 	installCmd.Dir = ctx.WorkDir
@@ -175,29 +178,28 @@ func (a *MesonBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 	// Meson builds often link executables to shared libraries in lib/
 	// The RPATH gets set to the absolute staging directory, which breaks after relocation
 	libDir := filepath.Join(ctx.InstallDir, "lib")
-	fmt.Printf("   Checking for lib directory: %s\n", libDir)
 	if stat, err := os.Stat(libDir); err == nil && stat.IsDir() {
-		fmt.Printf("   Found lib/ directory, fixing RPATH for shared library dependencies\n")
+		reporter.Log("   Found lib/ directory, fixing RPATH for shared library dependencies")
 
 		// Find where .so files are actually located (could be in subdirectories)
 		libPaths := findLibraryDirectories(libDir)
 		if len(libPaths) == 0 {
-			fmt.Printf("   No shared libraries found in lib/\n")
+			reporter.Log("   No shared libraries found in lib/")
 		} else {
-			fmt.Printf("   Found libraries in: %v\n", libPaths)
+			reporter.Log("   Found libraries in: %v", libPaths)
 		}
 
 		binDir := filepath.Join(ctx.InstallDir, "bin")
 		for _, exe := range executables {
 			exePath := filepath.Join(binDir, exe)
-			fmt.Printf("   Processing %s\n", exe)
+			reporter.Log("   Processing %s", exe)
 
 			// Detect binary format
 			format, err := detectBinaryFormat(exePath)
 			if err != nil {
 				return fmt.Errorf("failed to detect binary format for %s: %w", exe, err)
 			}
-			fmt.Printf("   Binary format: %s\n", format)
+			reporter.Log("   Binary format: %s", format)
 
 			// Build RPATH from found library directories
 			// Convert absolute paths to $ORIGIN-relative paths
@@ -206,34 +208,32 @@ func (a *MesonBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 				// Fallback to standard lib path
 				rpath = "$ORIGIN/../lib"
 			}
-			fmt.Printf("   RPATH: %s\n", rpath)
+			reporter.Log("   RPATH: %s", rpath)
 
 			// Set RPATH for relative library lookup
 			var rpathErr error
 			switch format {
 			case "elf":
-				fmt.Printf("   Setting RPATH with patchelf\n")
-				rpathErr = setRpathLinux(ctx, exePath, rpath)
+				reporter.Log("   Setting RPATH with patchelf")
+				rpathErr = setRpathLinux(ctx, exePath, rpath, reporter)
 			case "macho":
-				fmt.Printf("   Setting RPATH with install_name_tool\n")
-				rpathErr = setRpathMacOS(exePath, rpath)
+				reporter.Log("   Setting RPATH with install_name_tool")
+				rpathErr = setRpathMacOS(exePath, rpath, reporter)
 				if rpathErr == nil {
 					// Also fix library load commands to use @rpath
-					rpathErr = fixMachoLibraryPaths(exePath, ctx.InstallDir)
+					rpathErr = fixMachoLibraryPaths(exePath, ctx.InstallDir, reporter)
 				}
 			default:
 				// Unknown format, skip RPATH fix
-				fmt.Printf("   Skipping RPATH fix (unknown format)\n")
+				reporter.Log("   Skipping RPATH fix (unknown format)")
 				continue
 			}
 
 			if rpathErr != nil {
 				return fmt.Errorf("failed to set RPATH for %s: %w", exe, rpathErr)
 			}
-			fmt.Printf("   Successfully set RPATH for %s\n", exe)
+			reporter.Log("   Successfully set RPATH for %s", exe)
 		}
-	} else {
-		fmt.Printf("   No lib/ directory found or stat failed: %v\n", err)
 	}
 
 	// Step 5: Verify executables exist
@@ -245,8 +245,8 @@ func (a *MesonBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 		}
 	}
 
-	fmt.Printf("   Build completed successfully\n")
-	fmt.Printf("   Installed %d executable(s)\n", len(executables))
+	reporter.Log("   Build completed successfully")
+	reporter.Log("   Installed %d executable(s)", len(executables))
 
 	return nil
 }
@@ -323,7 +323,7 @@ func isValidBuildtype(buildtype string) bool {
 // fixMachoLibraryPaths fixes library load commands in macOS executables.
 // Meson builds on macOS link executables with absolute library paths that point
 // to the staging directory. This function changes those paths to use @rpath.
-func fixMachoLibraryPaths(binaryPath, installDir string) error {
+func fixMachoLibraryPaths(binaryPath, installDir string, reporter progress.Reporter) error {
 	// Check if install_name_tool and otool are available
 	installNameTool, err := exec.LookPath("install_name_tool")
 	if err != nil {
@@ -363,7 +363,7 @@ func fixMachoLibraryPaths(binaryPath, installDir string) error {
 			libBasename := filepath.Base(libPath)
 			newLibRef := "@rpath/" + libBasename
 
-			fmt.Printf("   Changing %s -> %s\n", libBasename, newLibRef)
+			reporter.Log("   Changing %s -> %s", libBasename, newLibRef)
 			changeCmd := exec.Command(installNameTool, "-change", libPath, newLibRef, binaryPath)
 			if output, err := changeCmd.CombinedOutput(); err != nil {
 				return fmt.Errorf("install_name_tool -change failed for %s: %s: %w",
@@ -378,7 +378,7 @@ func fixMachoLibraryPaths(binaryPath, installDir string) error {
 		if err == nil {
 			signCmd := exec.Command(codesign, "-f", "-s", "-", binaryPath)
 			if err := signCmd.Run(); err != nil {
-				fmt.Printf("   Warning: codesign failed for %s: %v\n", filepath.Base(binaryPath), err)
+				reporter.Warn("   codesign failed for %s: %v", filepath.Base(binaryPath), err)
 			}
 		}
 	}

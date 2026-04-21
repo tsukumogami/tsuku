@@ -142,11 +142,12 @@ func (a *GemExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 		return fmt.Errorf("bundler not found: install Ruby with bundler or ensure it's in PATH")
 	}
 
-	fmt.Printf("   Source dir: %s\n", sourceDir)
-	fmt.Printf("   Command: bundle %s\n", command)
-	fmt.Printf("   Using bundler: %s\n", bundlerPath)
+	reporter := ctx.GetReporter()
+	reporter.Log("   Source dir: %s", sourceDir)
+	reporter.Log("   Command: bundle %s", command)
+	reporter.Log("   Using bundler: %s", bundlerPath)
 	if useLockfile {
-		fmt.Printf("   Lockfile enforcement: enabled\n")
+		reporter.Log("   Lockfile enforcement: enabled")
 	}
 
 	// Build command arguments
@@ -174,20 +175,20 @@ func (a *GemExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 	cmd.Dir = sourceDir
 	cmd.Env = env
 
-	fmt.Printf("   Running: bundle %s\n", strings.Join(args, " "))
+	reporter.Log("   Running: bundle %s", strings.Join(args, " "))
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("bundle %s failed: %w\nOutput: %s", command, err, string(output))
 	}
 
-	// Show output if debugging
+	// Show output if debugging (TSUKU_DEBUG env var)
 	outputStr := strings.TrimSpace(string(output))
 	if outputStr != "" && os.Getenv("TSUKU_DEBUG") != "" {
-		fmt.Printf("   bundle output:\n%s\n", outputStr)
+		reporter.Log("   bundle output:\n%s", outputStr)
 	}
 
-	fmt.Printf("   ✓ bundle %s completed successfully\n", args[0])
+	reporter.Log("   bundle %s completed successfully", args[0])
 
 	// Verify executables exist after installation
 	if len(executables) > 0 {
@@ -197,7 +198,7 @@ func (a *GemExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 			if _, err := os.Stat(exePath); err != nil {
 				return fmt.Errorf("expected executable %q not found at %s", exe, exePath)
 			}
-			fmt.Printf("   ✓ verified executable: %s\n", exe)
+			reporter.Log("   verified executable: %s", exe)
 		}
 	}
 
@@ -373,13 +374,14 @@ func (a *GemExecAction) executeLockDataMode(ctx *ExecutionContext, params map[st
 	// Set up installation directory
 	installDir := ctx.InstallDir
 
-	fmt.Printf("   Gem: %s@%s\n", gemName, version)
-	fmt.Printf("   Executables: %v\n", executables)
+	reporter := ctx.GetReporter()
+	reporter.Log("   Gem: %s@%s", gemName, version)
+	reporter.Log("   Executables: %v", executables)
 
 	// Validate Ruby version if specified
 	if rubyVersion != "" {
 		if err := a.validateRubyVersion(rubyVersion); err != nil {
-			fmt.Printf("   Warning: Ruby version validation failed: %v\n", err)
+			reporter.Warn("   Ruby version validation failed: %v", err)
 		}
 	}
 
@@ -396,7 +398,7 @@ func (a *GemExecAction) executeLockDataMode(ctx *ExecutionContext, params map[st
 		return fmt.Errorf("gem_exec lock_data mode requires tsuku-managed ruby (found system bundler at %s)", bundlerPath)
 	}
 
-	fmt.Printf("   Using bundler: %s\n", bundlerPath)
+	reporter.Log("   Using bundler: %s", bundlerPath)
 
 	// Write Gemfile
 	gemfilePath := filepath.Join(installDir, "Gemfile")
@@ -413,7 +415,7 @@ func (a *GemExecAction) executeLockDataMode(ctx *ExecutionContext, params map[st
 
 	// Count gems in lockfile for progress reporting
 	gemCount := countLockfileGems(lockData)
-	fmt.Printf("   Installing %d gem(s) with lockfile enforcement\n", gemCount)
+	reporter.Log("   Installing %d gem(s) with lockfile enforcement", gemCount)
 
 	// Extract bundler version from lockfile to prevent auto-upgrade
 	bundlerVersion := extractBundlerVersion(lockData)
@@ -423,7 +425,7 @@ func (a *GemExecAction) executeLockDataMode(ctx *ExecutionContext, params map[st
 		}
 		// Set BUNDLER_VERSION to prevent bundler from auto-installing different version
 		environmentVars["BUNDLER_VERSION"] = bundlerVersion
-		fmt.Printf("   Lockfile bundler version: %s\n", bundlerVersion)
+		reporter.Log("   Lockfile bundler version: %s", bundlerVersion)
 	}
 
 	// Build environment
@@ -446,17 +448,17 @@ func (a *GemExecAction) executeLockDataMode(ctx *ExecutionContext, params map[st
 	cmd.Dir = installDir
 	cmd.Env = env
 
-	fmt.Printf("   Running: bundle config set --local path %s && bundle %s\n", installDir, strings.Join(args, " "))
+	reporter.Log("   Running: bundle config set --local path %s && bundle %s", installDir, strings.Join(args, " "))
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("bundle install failed: %w\nOutput: %s", err, string(output))
 	}
 
-	// Show output if debugging
+	// Show output if debugging (TSUKU_DEBUG env var)
 	outputStr := strings.TrimSpace(string(output))
 	if outputStr != "" && os.Getenv("TSUKU_DEBUG") != "" {
-		fmt.Printf("   bundle output:\n%s\n", outputStr)
+		reporter.Log("   bundle output:\n%s", outputStr)
 	}
 
 	// Verify executables exist
@@ -506,8 +508,8 @@ func (a *GemExecAction) executeLockDataMode(ctx *ExecutionContext, params map[st
 		}
 	}
 
-	fmt.Printf("   Gem installed successfully\n")
-	fmt.Printf("   Created %d self-contained wrapper(s)\n", len(executables))
+	reporter.Log("   Gem installed successfully")
+	reporter.Log("   Created %d self-contained wrapper(s)", len(executables))
 
 	return nil
 }

@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/tsukumogami/tsuku/internal/progress"
 )
 
 // NixInstallAction installs packages from Nixpkgs using an isolated internal Nix store.
@@ -86,24 +88,25 @@ func (a *NixInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 		}
 	}
 
-	fmt.Printf("   Package: nixpkgs#%s\n", packageName)
-	fmt.Printf("   Executables: %v\n", executables)
+	reporter := ctx.GetReporter()
+	reporter.Log("   Package: nixpkgs#%s", packageName)
+	reporter.Log("   Executables: %v", executables)
 
 	// Check if nix-portable needs to be bootstrapped
 	if ResolveNixPortable() == "" {
-		fmt.Printf("\n   First-time nix setup required:\n")
-		fmt.Printf("     - Download nix-portable (~75MB)\n")
-		fmt.Printf("     - Bootstrap nix store (~200MB on first package)\n")
-		fmt.Printf("   This is a one-time operation.\n\n")
+		reporter.Log("   First-time nix setup required:")
+		reporter.Log("     - Download nix-portable (~75MB)")
+		reporter.Log("     - Bootstrap nix store (~200MB on first package)")
+		reporter.Log("   This is a one-time operation.")
 	}
 
 	// Ensure nix-portable is available (with context for cancellation)
-	nixPortablePath, err := EnsureNixPortableWithContext(ctx.Context)
+	nixPortablePath, err := EnsureNixPortableWithContext(ctx.Context, ctx.GetReporter())
 	if err != nil {
 		return fmt.Errorf("failed to ensure nix-portable: %w", err)
 	}
 
-	fmt.Printf("   Using nix-portable: %s\n", nixPortablePath)
+	reporter.Log("   Using nix-portable: %s", nixPortablePath)
 
 	// Get internal nix directory for NP_LOCATION
 	npLocation, err := GetNixInternalDir()
@@ -122,7 +125,7 @@ func (a *NixInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 
 	// Build nix profile install command
 	// Using --profile to install to a specific profile location
-	fmt.Printf("   Installing: nix profile install nixpkgs#%s\n", packageName)
+	reporter.Log("   Installing: nix profile install nixpkgs#%s", packageName)
 
 	// Use CommandContext for cancellation support
 	cmd := exec.CommandContext(ctx.Context, nixPortablePath, "nix", "profile", "install",
@@ -138,20 +141,18 @@ func (a *NixInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 		return fmt.Errorf("nix profile install failed: %w\nOutput: %s", err, string(output))
 	}
 
-	// Show output in debug mode
+	// Show output in debug mode (TSUKU_DEBUG env var)
 	outputStr := strings.TrimSpace(string(output))
 	if outputStr != "" && os.Getenv("TSUKU_DEBUG") != "" {
-		fmt.Printf("   nix output:\n%s\n", outputStr)
+		reporter.Log("   nix output:\n%s", outputStr)
 	}
 
 	// Detect if proot is being used (performance warning)
 	// nix-portable falls back to proot when user namespaces are unavailable
 	if detectProotFallback(nixPortablePath, npLocation) {
-		fmt.Println("")
-		fmt.Println("   Warning: Using proot (user namespaces unavailable)")
-		fmt.Println("     Execution may be 10-100x slower than normal.")
-		fmt.Println("     Consider enabling user namespaces for better performance.")
-		fmt.Println("")
+		reporter.Warn("   Warning: Using proot (user namespaces unavailable)")
+		reporter.Warn("     Execution may be 10-100x slower than normal.")
+		reporter.Warn("     Consider enabling user namespaces for better performance.")
 	}
 
 	// Create wrapper scripts for each executable
@@ -169,8 +170,8 @@ func (a *NixInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 		}
 	}
 
-	fmt.Printf("   Installed successfully\n")
-	fmt.Printf("   Created %d wrapper(s)\n", len(executables))
+	reporter.Log("   Installed successfully")
+	reporter.Log("   Created %d wrapper(s)", len(executables))
 
 	return nil
 }
@@ -316,7 +317,7 @@ func (a *NixInstallAction) Decompose(ctx *EvalContext, params map[string]interfa
 	// Ensure nix-portable is available for metadata retrieval
 	if ResolveNixPortable() == "" {
 		// nix-portable not yet bootstrapped - we need it for metadata
-		_, err := EnsureNixPortableWithContext(ctx.Context)
+		_, err := EnsureNixPortableWithContext(ctx.Context, progress.NoopReporter{})
 		if err != nil {
 			return nil, fmt.Errorf("failed to ensure nix-portable for metadata: %w", err)
 		}

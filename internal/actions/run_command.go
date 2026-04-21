@@ -54,14 +54,13 @@ func (a *RunCommandAction) Preflight(params map[string]interface{}) *PreflightRe
 //   - working_dir (optional): Working directory (defaults to work_dir)
 //   - requires_sudo (optional): Whether command requires sudo (default: false) - for validation, we skip these
 func (a *RunCommandAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
+	reporter := ctx.GetReporter()
+
 	// Get command (required)
 	cmdPattern, ok := GetString(params, "command")
 	if !ok {
 		return fmt.Errorf("run_command action requires 'command' parameter")
 	}
-
-	// Get description (optional)
-	description, _ := GetString(params, "description")
 
 	// Get working_dir (optional)
 	workingDir, _ := GetString(params, "working_dir")
@@ -72,10 +71,7 @@ func (a *RunCommandAction) Execute(ctx *ExecutionContext, params map[string]inte
 	// Check if requires sudo
 	requiresSudo, _ := GetBool(params, "requires_sudo")
 	if requiresSudo {
-		fmt.Printf("   Skipping (requires sudo): %s\n", cmdPattern)
-		if description != "" {
-			fmt.Printf("   Description: %s\n", description)
-		}
+		reporter.Log("   Skipping (requires sudo): %s", cmdPattern)
 		return nil
 	}
 
@@ -92,13 +88,9 @@ func (a *RunCommandAction) Execute(ctx *ExecutionContext, params map[string]inte
 	command := ExpandVars(cmdPattern, vars)
 	workingDir = ExpandVars(workingDir, vars)
 
-	if description != "" {
-		fmt.Printf("   Description: %s\n", description)
-	}
-	fmt.Printf("   Running: %s\n", command)
-	if workingDir != ctx.WorkDir {
-		fmt.Printf("   Working dir: %s\n", workingDir)
-	}
+	// Use only the first line of multi-line scripts to avoid TTY line-overwrite issues.
+	cmdSummary := strings.SplitN(command, "\n", 2)[0]
+	reporter.Status(fmt.Sprintf("   Running: %s", cmdSummary))
 
 	// Execute command with context for cancellation support
 	cmd := exec.CommandContext(ctx.Context, "sh", "-c", command)
@@ -112,9 +104,9 @@ func (a *RunCommandAction) Execute(ctx *ExecutionContext, params map[string]inte
 
 	outputStr := strings.TrimSpace(string(output))
 	if outputStr != "" {
-		fmt.Printf("   Output: %s\n", outputStr)
+		// Output is permanent (Log, not Status): it may contain diagnostics useful after completion.
+		reporter.Log("   Output: %s", outputStr)
 	}
 
-	fmt.Printf("   ✓ Command executed successfully\n")
 	return nil
 }

@@ -114,9 +114,10 @@ func (a *GoInstallAction) Execute(ctx *ExecutionContext, params map[string]inter
 		return fmt.Errorf("go not found: install go first (tsuku install go)")
 	}
 
-	fmt.Printf("   Module: %s@%s\n", module, ctx.VersionTag)
-	fmt.Printf("   Executables: %v\n", executables)
-	fmt.Printf("   Using go: %s\n", goPath)
+	reporter := ctx.GetReporter()
+	reporter.Log("   Module: %s@%s", module, ctx.VersionTag)
+	reporter.Log("   Executables: %v", executables)
+	reporter.Log("   Using go: %s", goPath)
 
 	// Get home directory for GOMODCACHE
 	homeDir, err := os.UserHomeDir()
@@ -136,7 +137,7 @@ func (a *GoInstallAction) Execute(ctx *ExecutionContext, params map[string]inter
 		target = module + "@latest"
 	}
 
-	fmt.Printf("   Installing: go install %s\n", target)
+	reporter.Log("   Installing: go install %s", target)
 
 	// Create bin directory
 	if err := os.MkdirAll(binDir, 0755); err != nil {
@@ -189,10 +190,10 @@ func (a *GoInstallAction) Execute(ctx *ExecutionContext, params map[string]inter
 		return fmt.Errorf("go install failed: %w\nOutput: %s", err, string(output))
 	}
 
-	// go install is typically quiet, but show output if debugging
+	// Show output if debugging (TSUKU_DEBUG env var)
 	outputStr := strings.TrimSpace(string(output))
 	if outputStr != "" && os.Getenv("TSUKU_DEBUG") != "" {
-		fmt.Printf("   go output:\n%s\n", outputStr)
+		reporter.Log("   go output:\n%s", outputStr)
 	}
 
 	// Verify executables exist
@@ -203,8 +204,8 @@ func (a *GoInstallAction) Execute(ctx *ExecutionContext, params map[string]inter
 		}
 	}
 
-	fmt.Printf("   Module installed successfully\n")
-	fmt.Printf("   Verified %d executable(s)\n", len(executables))
+	reporter.Log("   Module installed successfully")
+	reporter.Log("   Verified %d executable(s)", len(executables))
 
 	return nil
 }

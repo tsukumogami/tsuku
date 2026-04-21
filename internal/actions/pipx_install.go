@@ -70,6 +70,8 @@ func (a *PipxInstallAction) Preflight(params map[string]interface{}) *PreflightR
 //	  venvs/<package>/           - Virtual environment
 //	  bin/<executable>           - Symlink to venv/bin/<executable>
 func (a *PipxInstallAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
+	reporter := ctx.GetReporter()
+
 	// Get package name (required)
 	packageName, ok := GetString(params, "package")
 	if !ok {
@@ -126,20 +128,20 @@ func (a *PipxInstallAction) Execute(ctx *ExecutionContext, params map[string]int
 			}
 		}
 		if pythonPath != "" {
-			fmt.Printf("   Using python-standalone: %s\n", pythonPath)
+			reporter.Log("   Using python-standalone: %s", pythonPath)
 		}
 		// If not found, let pipx use system Python (fallback)
 	}
 
-	fmt.Printf("   Package: %s==%s\n", packageName, ctx.Version)
-	fmt.Printf("   Executables: %v\n", executables)
-	fmt.Printf("   Using pipx: %s\n", pipxPath)
+	reporter.Log("   Package: %s==%s", packageName, ctx.Version)
+	reporter.Log("   Executables: %v", executables)
+	reporter.Log("   Using pipx: %s", pipxPath)
 
 	// Set up pipx environment variables for isolation
 	installDir := ctx.InstallDir
 	packageSpec := fmt.Sprintf("%s==%s", packageName, ctx.Version)
 
-	fmt.Printf("   Installing: pipx install %s\n", packageSpec)
+	reporter.Log("   Installing: pipx install %s", packageSpec)
 
 	// Build command: pipx install <package>==<version>
 	// Use CommandContext for cancellation support
@@ -161,10 +163,10 @@ func (a *PipxInstallAction) Execute(ctx *ExecutionContext, params map[string]int
 		return fmt.Errorf("pipx install failed: %w\nOutput: %s", err, string(output))
 	}
 
-	// pipx is verbose, only show output if debugging
+	// Show output if debugging (TSUKU_DEBUG env var)
 	outputStr := strings.TrimSpace(string(output))
 	if outputStr != "" && os.Getenv("TSUKU_DEBUG") != "" {
-		fmt.Printf("   pipx output:\n%s\n", outputStr)
+		reporter.Log("   pipx output:\n%s", outputStr)
 	}
 
 	// pipx creates symlinks with absolute paths to the temporary installDir
@@ -214,8 +216,8 @@ func (a *PipxInstallAction) Execute(ctx *ExecutionContext, params map[string]int
 		}
 	}
 
-	fmt.Printf("   ✓ Package installed successfully\n")
-	fmt.Printf("   ✓ Verified %d executable(s)\n", len(executables))
+	reporter.Log("   Package installed successfully")
+	reporter.Log("   Verified %d executable(s)", len(executables))
 
 	return nil
 }
