@@ -4,6 +4,10 @@ description = "Development environments made easy"
 homepage = "https://www.vagrantup.com/"
 version_format = "semver"
 curated = true
+# HashiCorp publishes a raw `vagrant_*_linux_amd64.zip` only; macOS ships
+# as .dmg installers and no linux_arm64 zip exists.
+supported_os = ["linux"]
+unsupported_platforms = ["linux/arm64"]
 
 [version]
 github_repo = "hashicorp/vagrant"
