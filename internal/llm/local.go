@@ -128,16 +128,16 @@ func (p *LocalProvider) Complete(ctx context.Context, req *CompletionRequest) (*
 	}
 
 	// Show spinner during inference
-	spinner := progress.NewSpinner(os.Stderr)
-	spinner.Start("Generating...")
+	reporter := progress.NewTTYReporter(os.Stderr)
+	defer reporter.Stop()
+	reporter.Status("Generating...")
 
 	resp, err := p.sendRequest(ctx, req)
 	if err != nil {
-		spinner.StopWithMessage("Generation failed.")
+		reporter.Log("Generation failed.")
 		return nil, err
 	}
 
-	spinner.Stop()
 	return resp, nil
 }
 
