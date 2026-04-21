@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   tsuku install and update emit 20–50+ lines per install via raw fmt.Printf() calls
   scattered across the executor and 30+ action implementations. Output bypasses --quiet
@@ -28,7 +28,7 @@ rationale: |
 
 ## Status
 
-Accepted
+Planned
 
 ## Context and Problem Statement
 
