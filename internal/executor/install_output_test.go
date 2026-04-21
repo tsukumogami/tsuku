@@ -624,3 +624,62 @@ func TestLinkDependenciesReporterClassification(t *testing.T) {
 		}
 	}
 }
+
+// --- scenario-11: install_libraries action reporter classification ---
+
+// TestInstallLibrariesReporterClassification verifies that install_libraries emits
+// a single bulk count through Log() and does not emit per-file lines.
+func TestInstallLibrariesReporterClassification(t *testing.T) {
+	t.Parallel()
+
+	rec := newMinimalRecipe("test-tool")
+	exec, err := New(rec)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	// Create a library file in the work directory under lib/.
+	libDir := filepath.Join(exec.WorkDir(), "lib")
+	if err := os.MkdirAll(libDir, 0755); err != nil {
+		t.Fatalf("failed to create lib dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(libDir, "libfoo.so"), []byte("ELF"), 0644); err != nil {
+		t.Fatalf("failed to create fake library: %v", err)
+	}
+
+	reporter := &testReporter{}
+	exec.SetReporter(reporter)
+
+	plan := &InstallationPlan{
+		FormatVersion: PlanFormatVersion,
+		Tool:          "test-tool",
+		Version:       "1.0.0",
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
+		Steps: []ResolvedStep{
+			{
+				Action:    "install_libraries",
+				Evaluable: true,
+				Params: map[string]interface{}{
+					"patterns": []interface{}{"lib/*.so"},
+				},
+			},
+		},
+	}
+
+	ctx := context.Background()
+	if err := exec.ExecutePlan(ctx, plan); err != nil {
+		t.Fatalf("ExecutePlan() unexpected error = %v", err)
+	}
+
+	// Should have a bulk count log line.
+	if !reporter.hasLog("Installing 1 library file(s)") {
+		t.Errorf("Logs should contain 'Installing 1 library file(s)'; got: %v", reporter.Logs)
+	}
+	// Should not have per-file installation lines.
+	for _, l := range reporter.Logs {
+		if strings.Contains(l, "lib/libfoo.so") {
+			t.Errorf("Logs should not contain per-file path; got: %q", l)
+		}
+	}
+}
