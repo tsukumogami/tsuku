@@ -3,15 +3,25 @@ name = "velero"
 description = "Kubernetes backup and restore"
 homepage = "https://github.com/vmware-tanzu/velero"
 version_format = "semver"
+curated = true
 
+# Linux: statically linked Go binary works on glibc and musl
 [[steps]]
 action = "github_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 repo = "vmware-tanzu/velero"
-asset_pattern = "velero-v{version}-{os}-{arch}.tar.gz"
+asset_pattern = "velero-v{version}-linux-{arch}.tar.gz"
 strip_dirs = 1
 binaries = ["velero"]
-os_mapping = { darwin = "darwin", linux = "linux" }
-arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+# macOS: Intel and Apple Silicon binaries
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "vmware-tanzu/velero"
+asset_pattern = "velero-v{version}-darwin-{arch}.tar.gz"
+strip_dirs = 1
+binaries = ["velero"]
 
 [verify]
 command = "velero version --client-only"

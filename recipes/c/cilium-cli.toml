@@ -1,34 +1,28 @@
 [metadata]
-  name = "cilium-cli"
-  description = "CLI to install, manage & troubleshoot Kubernetes clusters running Cilium"
-  homepage = "https://cilium.io"
-  version_format = ""
-  requires_sudo = false
-  tier = 0
-  type = ""
-  llm_validation = "skipped"
+name = "cilium-cli"
+description = "CLI to install, manage & troubleshoot Kubernetes clusters running Cilium"
+homepage = "https://cilium.io"
+version_format = "semver"
+curated = true
 
-[version]
-  source = ""
-  github_repo = ""
-  tag_prefix = ""
-  module = ""
-  formula = ""
-  cask = ""
-  tap = ""
-  fossil_repo = ""
-  project_name = ""
-  version_separator = ""
-  timeline_tag = ""
-
+# Linux: statically linked Go binary works on glibc and musl
 [[steps]]
-  action = "homebrew"
-  formula = "cilium-cli"
+action = "github_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
+repo = "cilium/cilium-cli"
+asset_pattern = "cilium-linux-{arch}.tar.gz"
+strip_dirs = 0
+binaries = ["cilium"]
 
+# macOS: Intel and Apple Silicon binaries
 [[steps]]
-  action = "install_binaries"
-  binaries = ["bin/cilium"]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "cilium/cilium-cli"
+asset_pattern = "cilium-darwin-{arch}.tar.gz"
+strip_dirs = 0
+binaries = ["cilium"]
 
 [verify]
-  command = "cilium version --client"
-  pattern = ""
+command = "cilium version --client"
+pattern = "cilium-cli: v{version}"

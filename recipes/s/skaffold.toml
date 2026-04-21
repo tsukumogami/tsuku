@@ -3,12 +3,13 @@ name = "skaffold"
 description = "Easy and repeatable Kubernetes development"
 homepage = "https://github.com/GoogleContainerTools/skaffold"
 version_format = "semver"
+curated = true
 
 [[steps]]
 action = "github_file"
 repo = "GoogleContainerTools/skaffold"
 asset_pattern = "skaffold-{os}-{arch}"
-binary = "skaffold"
+binaries = [{src = "skaffold-{os}-{arch}", dest = "bin/skaffold"}]
 
 [verify]
 command = "skaffold version"
