@@ -11,6 +11,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/shellenv"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
@@ -350,6 +351,11 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 
 	// Pass through --no-shell-init flag
 	exec.SetNoShellInit(installNoShellInit)
+
+	// Create progress reporter and propagate it to all execution contexts
+	reporter := progress.NewTTYReporter(os.Stderr)
+	defer reporter.Stop()
+	exec.SetReporter(reporter)
 
 	// Look up resolved dependency versions for variable expansion
 	// This mirrors the logic in installLibrary() for libraries

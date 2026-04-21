@@ -14,6 +14,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/platform"
+	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/version"
 )
@@ -36,6 +37,7 @@ type Executor struct {
 	currentDir              string               // Current symlinks directory (~/.tsuku/tools/current/) for binary symlinks
 	resolvedDeps            actions.ResolvedDeps // Pre-resolved dependencies (from state manager)
 	noShellInit             bool                 // Skip install_shell_init in post-install phase
+	reporter                progress.Reporter    // Progress reporter propagated to all execution contexts
 }
 
 // New creates a new executor
@@ -203,6 +205,22 @@ func (e *Executor) SetResolvedDeps(deps actions.ResolvedDeps) {
 // and no CleanupActions are recorded for shell init.
 func (e *Executor) SetNoShellInit(skip bool) {
 	e.noShellInit = skip
+}
+
+// SetReporter sets the progress reporter used for all execution contexts created
+// by this executor, including dependency installation. The reporter is propagated
+// to installSingleDependency so all steps share a single reporter instance.
+func (e *Executor) SetReporter(r progress.Reporter) {
+	e.reporter = r
+}
+
+// getReporter returns the executor's progress reporter, falling back to NoopReporter
+// when none has been set.
+func (e *Executor) getReporter() progress.Reporter {
+	if e.reporter != nil {
+		return e.reporter
+	}
+	return progress.NoopReporter{}
 }
 
 // SetToolInstallDir sets the ToolInstallDir on the execution context.
@@ -429,6 +447,7 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 		Logger:                  log.Default(),
 		Dependencies:            resolvedDeps,
 		NoShellInit:             e.noShellInit,
+		Reporter:                e.getReporter(),
 	}
 	e.ctx = execCtx
 
@@ -753,6 +772,7 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		ExecPaths:               e.execPaths,
 		Logger:                  log.Default(),
 		Dependencies:            depResolvedDeps,
+		Reporter:                e.getReporter(),
 	}
 
 	// Validate all steps before execution (fail fast)
