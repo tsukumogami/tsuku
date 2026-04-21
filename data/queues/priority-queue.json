@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-21T13:28:34Z",
+  "updated_at": "2026-04-21T15:18:11Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 201,
-      "next_retry_at": "1734-01-10T11:24:16.657527142Z"
+      "failure_count": 203,
+      "next_retry_at": "1734-01-10T15:30:54.420375123Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 331,
-      "next_retry_at": "1734-01-10T11:24:16.657527142Z"
+      "failure_count": 333,
+      "next_retry_at": "1734-01-10T15:30:54.420375123Z"
     },
     {
       "name": "libaacs",
@@ -35596,7 +35596,7 @@
       "name": "parallel",
       "source": "rubygems:parallel",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -37146,11 +37146,11 @@
       "name": "pngcheck",
       "source": "rubygems:pngcheck",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-04-21T00:14:12.465823162Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-04-22T07:18:11.275150931Z"
     },
     {
       "name": "pngcrush",
