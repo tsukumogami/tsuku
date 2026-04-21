@@ -2,6 +2,7 @@ package progress
 
 import (
 	"bytes"
+	"io"
 	"strings"
 	"sync"
 	"testing"
@@ -9,6 +10,12 @@ import (
 )
 
 // --- helpers ---
+
+// newTTYReporterWithFlag constructs a ttyReporter with an explicit isTTY flag.
+// Used by tests to force TTY or non-TTY mode without a real terminal.
+func newTTYReporterWithFlag(w io.Writer, isTTY bool) Reporter {
+	return &ttyReporter{w: w, isTTY: isTTY}
+}
 
 // newNonTTY returns a ttyReporter in non-TTY mode writing to buf.
 func newNonTTY(buf *bytes.Buffer) Reporter {

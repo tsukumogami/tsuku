@@ -94,12 +94,6 @@ func NewTTYReporter(w io.Writer) Reporter {
 	return &ttyReporter{w: w, isTTY: isTTY}
 }
 
-// newTTYReporterWithFlag constructs a ttyReporter with an explicit isTTY flag.
-// Used by tests to force TTY or non-TTY mode without a real terminal.
-func newTTYReporterWithFlag(w io.Writer, isTTY bool) Reporter {
-	return &ttyReporter{w: w, isTTY: isTTY}
-}
-
 // Status updates the current transient status message and starts the spinner
 // goroutine if not already running. On non-TTY output this is a no-op.
 func (r *ttyReporter) Status(msg string) {

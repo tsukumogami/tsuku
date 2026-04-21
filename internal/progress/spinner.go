@@ -15,6 +15,10 @@ var spinnerFrames = []string{"|", "/", "-", "\\"}
 // spinnerInterval is the time between spinner frame updates.
 const spinnerInterval = 100 * time.Millisecond
 
+// Deprecated: Spinner is superseded by Reporter and NewTTYReporter, which are
+// being introduced as part of the install-UX migration. Spinner will be removed
+// once the migration is complete.
+//
 // Spinner displays an animated spinner with a message during long operations.
 // In non-TTY environments, it prints the message once without animation.
 type Spinner struct {
@@ -27,6 +31,9 @@ type Spinner struct {
 	isTTY       bool
 }
 
+// Deprecated: NewSpinner is superseded by NewTTYReporter as part of the
+// install-UX migration. NewSpinner will be removed once the migration is complete.
+//
 // NewSpinner creates a new spinner that writes to the given output.
 // If output is nil, os.Stderr is used.
 func NewSpinner(output io.Writer) *Spinner {
