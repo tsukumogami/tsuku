@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-21T18:31:28Z",
+  "generated_at": "2026-04-21T19:14:13Z",
   "total_recipes": 1414,
   "summary": {
     "by_platform": {
@@ -5423,9 +5423,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'flux' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "fly",
@@ -9531,9 +9529,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'k9s' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "kafkactl",
@@ -10007,9 +10003,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'kubectx' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "kubefirst",
@@ -10273,9 +10267,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'kustomize' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "kustomize-cli",
@@ -18181,9 +18173,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'stern' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "stlink",
