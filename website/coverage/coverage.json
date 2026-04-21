@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-21T22:26:25Z",
+  "generated_at": "2026-04-21T22:49:16Z",
   "total_recipes": 1416,
   "summary": {
     "by_platform": {
@@ -1712,9 +1712,7 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": [
-        "recipe 'btop' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "buf",
@@ -5707,9 +5705,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'fzf' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "g-ls",
@@ -10421,9 +10417,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'lazydocker' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "lazygit",
@@ -10435,9 +10429,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'lazygit' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "lazyjournal",
