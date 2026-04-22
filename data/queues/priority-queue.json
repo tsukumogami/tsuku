@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-22T17:05:38Z",
+  "updated_at": "2026-04-22T19:33:42Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 214,
-      "next_retry_at": "1734-01-11T15:30:55.346341559Z"
+      "failure_count": 216,
+      "next_retry_at": "1734-01-11T19:46:25.29414791Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 344,
-      "next_retry_at": "1734-01-11T15:30:55.346341559Z"
+      "failure_count": 346,
+      "next_retry_at": "1734-01-11T19:46:25.29414791Z"
     },
     {
       "name": "libaacs",
@@ -33126,7 +33126,7 @@
       "name": "nut",
       "source": "rubygems:nut",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
@@ -36616,7 +36616,7 @@
       "name": "pidof",
       "source": "rubygems:pidof",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -39796,7 +39796,7 @@
       "name": "quickjs",
       "source": "rubygems:quickjs",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -40296,7 +40296,7 @@
       "name": "re2",
       "source": "rubygems:re2",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
@@ -40406,11 +40406,11 @@
       "name": "redis",
       "source": "rubygems:redis",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-04-22T08:36:09.332726731Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-04-22T21:33:42.148923718Z"
     },
     {
       "name": "redis@6.2",
