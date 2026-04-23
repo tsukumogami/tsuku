@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-23T13:30:25Z",
+  "generated_at": "2026-04-23T13:31:33Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -68,21 +68,19 @@
         "total": 1
       },
       "npm": {
-        "failed": 19,
-        "pending": 1,
+        "failed": 20,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 58,
-        "pending": 17,
+        "failed": 56,
+        "pending": 19,
         "success": 13,
         "total": 89
       }
@@ -466,6 +464,15 @@
           "next_retry_at": "2026-04-24T02:22:15Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 224,
+          "next_retry_at": "1734-01-12T13:43:37Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -835,6 +842,15 @@
           "next_retry_at": "2026-04-24T11:00:17Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 354,
+          "next_retry_at": "1734-01-12T13:43:37Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -934,15 +950,6 @@
           "next_retry_at": "2026-04-26T13:02:43Z"
         },
         {
-          "id": "rubygems:multimarkdown",
-          "name": "multimarkdown",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-04-23T13:26:01Z"
-        },
-        {
           "id": "rubygems:neo4j",
           "name": "neo4j",
           "ecosystem": "rubygems",
@@ -995,15 +1002,6 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-04-26T17:30:18Z"
-        },
-        {
-          "id": "rubygems:ocp",
-          "name": "ocp",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-04-23T12:50:01Z"
         },
         {
           "id": "rubygems:parallel",
@@ -1123,13 +1121,13 @@
           "next_retry_at": "2026-04-23T13:33:01Z"
         },
         {
-          "id": "rubygems:rename",
-          "name": "rename",
+          "id": "rubygems:rsync",
+          "name": "rsync",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 1,
-          "next_retry_at": "2026-04-23T12:13:04Z"
+          "next_retry_at": "2026-04-23T14:30:53Z"
         },
         {
           "id": "npm:sigstore",
@@ -3050,15 +3048,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 222,
-          "next_retry_at": "1734-01-12T09:45:44Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -13398,15 +13387,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 352,
-          "next_retry_at": "1734-01-12T09:45:44Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -16449,6 +16429,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:multimarkdown",
+          "name": "multimarkdown",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-04-23T13:26:01Z"
+        },
+        {
           "id": "homebrew:mupdf",
           "name": "mupdf",
           "ecosystem": "homebrew",
@@ -17511,6 +17500,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:ocp",
+          "name": "ocp",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-04-23T12:50:01Z"
         },
         {
           "id": "homebrew:ocrmypdf",
@@ -21502,6 +21500,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:rename",
+          "name": "rename",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-04-23T12:13:04Z"
+        },
+        {
           "id": "homebrew:renode/tap/renode",
           "name": "renode/tap/renode",
           "ecosystem": "homebrew",
@@ -21933,14 +21940,6 @@
           "name": "rswift",
           "ecosystem": "homebrew",
           "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "rubygems:rsync",
-          "name": "rsync",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
           "failure_count": 0
         },
         {
