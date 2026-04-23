@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-04-23T21:47:51Z",
+  "generated_at": "2026-04-23T22:23:36Z",
   "queue": {
     "total": 5305,
     "by_status": {
-      "blocked": 25,
+      "blocked": 24,
       "excluded": 6,
-      "failed": 80,
-      "pending": 3843,
-      "success": 1351
+      "failed": 79,
+      "pending": 3844,
+      "success": 1352
     },
     "by_tier": {
       "1": {
@@ -16,15 +16,15 @@
         "success": 9
       },
       "2": {
-        "blocked": 5,
+        "blocked": 4,
         "pending": 13,
-        "success": 9
+        "success": 10
       },
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 80,
-        "pending": 3823,
+        "failed": 79,
+        "pending": 3824,
         "success": 1333
       }
     },
@@ -54,9 +54,9 @@
         "total": 8
       },
       "homebrew": {
-        "blocked": 25,
+        "blocked": 24,
         "pending": 3742,
-        "success": 1116,
+        "success": 1117,
         "total": 4883
       },
       "manual": {
@@ -81,8 +81,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 56,
-        "pending": 19,
+        "failed": 55,
+        "pending": 20,
         "success": 13,
         "total": 89
       }
@@ -155,18 +155,6 @@
             "webp"
           ],
           "failure_count": 2
-        },
-        {
-          "id": "homebrew:pyenv",
-          "name": "pyenv",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "missing_dep",
-          "blocked_by": [
-            "autoconf"
-          ],
-          "failure_count": 5,
-          "next_retry_at": "2026-02-24T06:13:58Z"
         },
         {
           "id": "homebrew:yt-dlp",
@@ -1094,15 +1082,6 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-04-26T22:40:37Z"
-        },
-        {
-          "id": "rubygems:quickjs",
-          "name": "quickjs",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-04-23T21:36:50Z"
         },
         {
           "id": "rubygems:re2",
@@ -21084,6 +21063,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:quickjs",
+          "name": "quickjs",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-04-23T21:36:50Z"
+        },
+        {
           "id": "homebrew:quilt",
           "name": "quilt",
           "ecosystem": "homebrew",
@@ -28361,6 +28349,15 @@
           "ecosystem": "homebrew",
           "priority": 2,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:pyenv",
+          "name": "pyenv",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "missing_dep",
+          "failure_count": 5,
+          "next_retry_at": "2026-02-24T06:13:58Z"
         },
         {
           "id": "homebrew:ripgrep",
