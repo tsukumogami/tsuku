@@ -3,21 +3,42 @@ name = "bun"
 description = "Fast all-in-one JavaScript runtime"
 homepage = "https://bun.sh/"
 version_format = "semver"
-supported_os = ["linux"]
+curated = true
 
 [version]
+github_repo = "oven-sh/bun"
 tag_prefix = "bun-v"
 
+# glibc Linux
 [[steps]]
 action = "github_archive"
 repo = "oven-sh/bun"
-asset_pattern = "bun-{os}-{arch}.zip"
+when = { os = ["linux"], libc = ["glibc"] }
+asset_pattern = "bun-linux-{arch}.zip"
 strip_dirs = 1
 binaries = ["bun"]
-os_mapping = { linux = "linux" }
+arch_mapping = { amd64 = "x64", arm64 = "aarch64" }
+
+# musl Linux
+[[steps]]
+action = "github_archive"
+repo = "oven-sh/bun"
+when = { os = ["linux"], libc = ["musl"] }
+asset_pattern = "bun-linux-{arch}-musl.zip"
+strip_dirs = 1
+binaries = ["bun"]
+arch_mapping = { amd64 = "x64", arm64 = "aarch64" }
+
+# macOS
+[[steps]]
+action = "github_archive"
+repo = "oven-sh/bun"
+when = { os = ["darwin"] }
+asset_pattern = "bun-darwin-{arch}.zip"
+strip_dirs = 1
+binaries = ["bun"]
 arch_mapping = { amd64 = "x64", arm64 = "aarch64" }
 
 [verify]
 command = "bun --version"
 pattern = "{version}"
-version_format = "semver"

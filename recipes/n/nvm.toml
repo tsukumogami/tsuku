@@ -1,0 +1,46 @@
+[metadata]
+name = "nvm"
+description = "Node Version Manager — manage multiple active Node.js versions"
+homepage = "https://github.com/nvm-sh/nvm"
+version_format = "semver"
+curated = true
+# nvm is a shell function, not a compiled binary. The recipe downloads the source
+# archive, installs it to the tool directory, and wires it into shell init via
+# install_shell_init. Node.js versions managed by nvm are stored under NVM_DIR.
+
+[version]
+github_repo = "nvm-sh/nvm"
+tag_prefix = "v"
+
+# Linux (glibc and musl): nvm source archive is pure shell — works on both libc variants
+[[steps]]
+action = "download_archive"
+url = "https://github.com/nvm-sh/nvm/archive/refs/tags/v{version}.tar.gz"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
+strip_dirs = 1
+install_mode = "directory"
+binaries = []
+
+# macOS
+[[steps]]
+action = "download_archive"
+url = "https://github.com/nvm-sh/nvm/archive/refs/tags/v{version}.tar.gz"
+when = { os = ["darwin"] }
+strip_dirs = 1
+install_mode = "directory"
+binaries = []
+
+[[steps]]
+action = "set_env"
+vars = { NVM_DIR = "{install_dir}" }
+
+[[steps]]
+action = "install_shell_init"
+source_file = "{install_dir}/nvm.sh"
+target = "nvm"
+shells = ["bash", "zsh"]
+
+[verify]
+command = "nvm --version"
+mode = "output"
+reason = "nvm is a shell function sourced via shell init; requires an interactive shell session to invoke"
