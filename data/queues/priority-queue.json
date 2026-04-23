@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-23T21:04:30Z",
+  "updated_at": "2026-04-23T22:22:59Z",
   "entries": [
     {
       "name": "node",
@@ -396,7 +396,7 @@
       "name": "pyenv",
       "source": "homebrew:pyenv",
       "priority": 2,
-      "status": "blocked",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
@@ -39796,7 +39796,7 @@
       "name": "quickjs",
       "source": "rubygems:quickjs",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
