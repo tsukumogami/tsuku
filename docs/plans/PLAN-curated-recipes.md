@@ -79,10 +79,10 @@ Introduce a `curated = true` flag for handcrafted recipes, nightly cross-platfor
 | _Authors new recipes for gcloud, azure-cli, ansible, and argocd, and replaces the batch-generated recipe for bazel._ | | |
 | [#2297: feat(recipes): backfill curated recipes — IaC quality and policy tools](https://github.com/tsukumogami/tsuku/issues/2297) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260) | testable |
 | _Rewrites the batch recipes for terragrunt and infracost, and authors new recipes for pre-commit, lefthook, and checkov._ | | |
-| [#2312: feat(recipes): fix macOS library dependencies needed for curl, wget, and tmux](https://github.com/tsukumogami/tsuku/issues/2312) | None | testable |
-| _Adds the `nghttp3` recipe (needed by curl on macOS), fixes the macOS Homebrew path for `libevent` (needed by tmux), and rewrites the `utf8proc` recipe from batch garbage (needed by tmux). Unblocks macOS coverage for curl, wget, and tmux._ | | |
-| [#2313: feat(recipes): add macOS support to curl, wget, and tmux recipes](https://github.com/tsukumogami/tsuku/issues/2313) | [#2312](https://github.com/tsukumogami/tsuku/issues/2312) | testable |
-| _Removes the `supported_os = ["linux"]` restriction from curl, wget, and tmux by adding macOS Homebrew steps wired to the runtime dependencies fixed in #2312. All three recipes gain darwin/amd64 and darwin/arm64 coverage._ | | |
+| [#2312: feat(recipes): fix macOS library dependencies needed for curl, wget, tmux, and git](https://github.com/tsukumogami/tsuku/issues/2312) | None | testable |
+| _Adds the `nghttp3` recipe (curl), fixes the macOS path for `libevent` (tmux), rewrites `utf8proc` from batch garbage (tmux), and updates `pcre2` to install its dylib on macOS (git). Unblocks darwin coverage for all four tools._ | | |
+| [#2313: feat(recipes): add macOS support to curl, wget, tmux, and git recipes](https://github.com/tsukumogami/tsuku/issues/2313) | [#2312](https://github.com/tsukumogami/tsuku/issues/2312) | testable |
+| _Removes the `supported_os = ["linux"]` restriction from curl, wget, tmux, and git by adding macOS Homebrew steps wired to the runtime dependencies fixed in #2312. All four recipes gain darwin/amd64 and darwin/arm64 coverage._ | | |
 
 ## Dependency Graph
 
