@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-04-23T21:04:11Z",
-  "total_recipes": 1417,
+  "generated_at": "2026-04-23T22:22:30Z",
+  "total_recipes": 1418,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 848,
-        "total": 1417,
-        "pct": 59.84474241354975
+        "supported": 849,
+        "total": 1418,
+        "pct": 59.87306064880112
       },
       "glibc": {
-        "supported": 1382,
-        "total": 1417,
-        "pct": 97.52999294283698
+        "supported": 1383,
+        "total": 1418,
+        "pct": 97.53173483779972
       },
       "musl": {
-        "supported": 1238,
-        "total": 1417,
-        "pct": 87.36767819336627
+        "supported": 1239,
+        "total": 1418,
+        "pct": 87.37658674188998
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1265,
-        "musl_support": 1088,
-        "glibc_support": 1232
+        "total": 1266,
+        "musl_support": 1089,
+        "glibc_support": 1233
       }
     }
   },
@@ -778,9 +778,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'asdf' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "asnmap",
@@ -13396,15 +13394,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": false
+        "musl": true
       },
-      "gaps": [
-        "musl"
-      ],
+      "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'mise' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "mit-scheme",
@@ -16306,6 +16300,20 @@
         "musl": true
       },
       "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "pyenv",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": false
+      },
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
