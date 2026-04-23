@@ -3,7 +3,7 @@ name = "rbenv"
 description = "Manage your app's Ruby environment"
 homepage = "https://github.com/rbenv/rbenv"
 version_format = "semver"
-curated = true
+curated = false
 
 # glibc Linux: Homebrew bottle
 [[steps]]

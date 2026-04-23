@@ -11,10 +11,10 @@ Popularity rankings are based on Homebrew download analytics, GitHub star counts
 ## Action Summary
 
 ### No action needed (handcrafted — full platform support)
-git, docker, terraform, gh, golang, fzf, btop, curl, httpie, lazygit, k9s, stern, kubectx, direnv, mise, asdf, pyenv, rbenv, eksctl, flux, skaffold, kustomize, velero, vault, packer, bun, claude, gemini, trivy, grype, cosign, syft, actionlint, golangci-lint, ruff, black, tflint, pulumi, caddy, age, consul, vagrant, lazydocker, jq, wget, tmux
+git, docker, terraform, gh, golang, fzf, btop, curl, httpie, lazygit, k9s, stern, kubectx, direnv, mise, asdf, pyenv, eksctl, flux, skaffold, kustomize, velero, vault, packer, bun, claude, gemini, trivy, grype, cosign, syft, actionlint, golangci-lint, ruff, black, tflint, pulumi, caddy, age, consul, vagrant, lazydocker, jq, wget, tmux
 
 ### Review coverage (batch — may need platform expansion or full handcrafting)
-helm, ripgrep, fd, eza, zoxide, htop, cilium-cli, istioctl, bazel, yarn, ollama, act, earthly, goreleaser, shellcheck, shfmt, prettier, infracost, terragrunt, mkcert
+helm, ripgrep, fd, eza, zoxide, htop, cilium-cli, istioctl, bazel, yarn, ollama, act, earthly, goreleaser, shellcheck, shfmt, prettier, infracost, terragrunt, mkcert, rbenv
 
 ### Author recipe (missing or discovery-only — needs a recipe)
 node, python, kubectl, aws-cli, rust, bat, starship, neovim, delta, nvm, gcloud, azure-cli, argocd, ansible, cmake, ninja-build, meson, make, gradle, maven, sbt, deno, pnpm, aider, copilot, ko, dive, hadolint, pre-commit, lefthook, checkov, sops, step, eslint
@@ -60,7 +60,7 @@ node, python, kubectl, aws-cli, rust, bat, starship, neovim, delta, nvm, gcloud,
 | 35 | asdf | handcrafted | no action needed |
 | 36 | pyenv | handcrafted | no action needed |
 | 37 | nvm | discovery-only | author recipe |
-| 38 | rbenv | handcrafted | no action needed |
+| 38 | rbenv | batch | review coverage |
 | 39 | gcloud | missing | author recipe |
 | 40 | azure-cli | discovery-only | author recipe |
 | 41 | eksctl | handcrafted | no action needed |
