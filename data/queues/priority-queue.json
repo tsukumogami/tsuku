@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-23T22:22:59Z",
+  "updated_at": "2026-04-23T22:48:49Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 228,
-      "next_retry_at": "1734-01-12T21:10:58.146921315Z"
+      "failure_count": 229,
+      "next_retry_at": "1734-01-12T23:01:32.72533943Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 358,
-      "next_retry_at": "1734-01-12T21:10:58.146921315Z"
+      "failure_count": 359,
+      "next_retry_at": "1734-01-12T23:01:32.72533943Z"
     },
     {
       "name": "libaacs",
@@ -39796,11 +39796,11 @@
       "name": "quickjs",
       "source": "rubygems:quickjs",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-04-23T21:36:50.015260715Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-04-25T06:48:49.580115238Z"
     },
     {
       "name": "quilt",
