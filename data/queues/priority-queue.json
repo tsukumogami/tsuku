@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-22T22:51:44Z",
+  "updated_at": "2026-04-23T02:33:04Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 218,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 348,
@@ -36726,11 +36726,11 @@
       "name": "pioneer",
       "source": "rubygems:pioneer",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-04-22T21:28:34.562818528Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-04-25T18:33:03.834062131Z"
     },
     {
       "name": "pioneers",
