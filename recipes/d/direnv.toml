@@ -3,6 +3,7 @@ name = "direnv"
 description = "Environment switcher for the shell"
 homepage = "https://direnv.net/"
 version_format = "semver"
+curated = true
 
 [[steps]]
 action = "github_file"

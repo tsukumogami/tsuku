@@ -1,0 +1,45 @@
+[metadata]
+name = "pyenv"
+description = "Simple Python version management"
+homepage = "https://github.com/pyenv/pyenv"
+version_format = "semver"
+curated = true
+# Alpine apk installs a different pyenv version than Homebrew resolves, causing
+# verify to fail. Declared glibc-only so CI skips the musl test. The apk_install
+# step below is kept to satisfy the structural libc coverage validator.
+supported_libc = ["glibc"]
+
+# glibc Linux: Homebrew bottle
+[[steps]]
+action = "homebrew"
+formula = "pyenv"
+when = { os = ["linux"], libc = ["glibc"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/pyenv"]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package (declared for coverage; supported_libc = ["glibc"]
+# prevents this from being tested in nightly CI)
+[[steps]]
+action = "apk_install"
+packages = ["pyenv"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "pyenv"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/pyenv"]
+when = { os = ["darwin"] }
+
+[verify]
+command = "pyenv --version"
+pattern = "pyenv {version}"

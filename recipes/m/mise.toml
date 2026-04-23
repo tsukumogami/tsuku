@@ -3,15 +3,36 @@ name = "mise"
 description = "Dev tools version manager"
 homepage = "https://github.com/jdx/mise"
 version_format = "semver"
-supported_libc = ["glibc"]
+curated = true
 
+# glibc Linux
 [[steps]]
 action = "github_archive"
 repo = "jdx/mise"
-asset_pattern = "mise-v{version}-{os}-{arch}.tar.gz"
+when = { os = ["linux"], libc = ["glibc"] }
+asset_pattern = "mise-v{version}-linux-{arch}.tar.gz"
 strip_dirs = 1
 binaries = ["bin/mise"]
-os_mapping = { linux = "linux", darwin = "macos" }
+arch_mapping = { amd64 = "x64", arm64 = "arm64" }
+
+# musl Linux: mise publishes dedicated musl binaries
+[[steps]]
+action = "github_archive"
+repo = "jdx/mise"
+when = { os = ["linux"], libc = ["musl"] }
+asset_pattern = "mise-v{version}-linux-{arch}-musl.tar.gz"
+strip_dirs = 1
+binaries = ["bin/mise"]
+arch_mapping = { amd64 = "x64", arm64 = "arm64" }
+
+# macOS
+[[steps]]
+action = "github_archive"
+repo = "jdx/mise"
+when = { os = ["darwin"] }
+asset_pattern = "mise-v{version}-macos-{arch}.tar.gz"
+strip_dirs = 1
+binaries = ["bin/mise"]
 arch_mapping = { amd64 = "x64", arm64 = "arm64" }
 
 [verify]

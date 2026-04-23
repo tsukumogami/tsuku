@@ -4,7 +4,7 @@ status: Active
 execution_mode: multi-pr
 upstream: docs/designs/DESIGN-curated-recipes.md
 milestone: "Curated Recipe System"
-issue_count: 27
+issue_count: 28
 ---
 
 ## Status
@@ -57,8 +57,8 @@ Introduce a `curated = true` flag for handcrafted recipes, nightly cross-platfor
 | ~~_Curates fzf, lazygit, and btop, and replaces the batch-generated recipes for lazydocker and htop with handcrafted cross-platform versions._~~ | | |
 | ~~[#2286: feat(recipes): backfill curated recipes — shell utilities](https://github.com/tsukumogami/tsuku/issues/2286)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260)~~ | ~~testable~~ |
 | ~~_Curates git, curl, and httpie; rewrites the batch recipes for wget and jq; and authors a new recipe for tmux. Several tools here may require source build fallbacks on some platforms._~~ | | |
-| [#2287: feat(recipes): backfill curated recipes — environment and version managers](https://github.com/tsukumogami/tsuku/issues/2287) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260) | testable |
-| _Curates direnv and mise, rewrites the batch recipe for asdf, and authors new recipes for pyenv and rbenv following the shell-based clone-and-install pattern._ | | |
+| ~~[#2287: feat(recipes): backfill curated recipes — environment and version managers](https://github.com/tsukumogami/tsuku/issues/2287)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260)~~ | ~~testable~~ |
+| ~~_Curates direnv and mise, rewrites the batch recipe for asdf, and authors new recipes for pyenv and rbenv following the shell-based clone-and-install pattern._~~ | | |
 | [#2288: feat(recipes): backfill curated recipes — JS and Node.js ecosystem](https://github.com/tsukumogami/tsuku/issues/2288) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260) | testable |
 | _Curates bun, rewrites the batch recipe for yarn, and authors new recipes for deno, pnpm, and nvm._ | | |
 | [#2289: feat(recipes): backfill curated recipes — Go and shell linters](https://github.com/tsukumogami/tsuku/issues/2289) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260) | testable |
@@ -83,6 +83,8 @@ Introduce a `curated = true` flag for handcrafted recipes, nightly cross-platfor
 | _Adds the `nghttp3` recipe (curl), fixes the macOS path for `libevent` (tmux), rewrites `utf8proc` from batch garbage (tmux), and updates `pcre2` to install its dylib on macOS (git). Unblocks darwin coverage for all four tools._ | | |
 | [#2313: feat(recipes): add macOS support to curl, wget, tmux, and git recipes](https://github.com/tsukumogami/tsuku/issues/2313) | [#2312](https://github.com/tsukumogami/tsuku/issues/2312) | testable |
 | _Removes the `supported_os = ["linux"]` restriction from curl, wget, tmux, and git by adding macOS Homebrew steps wired to the runtime dependencies fixed in #2312. All four recipes gain darwin/amd64 and darwin/arm64 coverage._ | | |
+| [#2315: feat(recipes): curate rbenv recipe with working cross-platform installation](https://github.com/tsukumogami/tsuku/issues/2315) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260) | testable |
+| _Promotes `recipes/r/rbenv.toml` to `curated = true`. The recipe was authored in #2287 but could not be curated because Homebrew bottles for rbenv 1.3.2 are unavailable on Sonoma and Linux. Needs a working installation path for all declared platforms._ | | |
 
 ## Dependency Graph
 
@@ -115,8 +117,9 @@ graph TD
     I2295["#2295: C++/JVM build tools"]
     I2296["#2296: cloud CLIs + orchestration"]
     I2297["#2297: IaC quality + policy"]
-    I2312["#2312: macOS dylib deps (nghttp3, libevent, utf8proc)"]
-    I2313["#2313: macOS support for curl, wget, tmux"]
+    I2312["#2312: macOS dylib deps (nghttp3, libevent, utf8proc, pcre2)"]
+    I2313["#2313: macOS support for curl, wget, tmux, git"]
+    I2315["#2315: curate rbenv recipe"]
 
     I2259 --> I2261
     I2259 --> I2262
@@ -162,6 +165,8 @@ graph TD
     I2260 --> I2296
     I2260 --> I2297
     I2312 --> I2313
+    I2259 --> I2315
+    I2260 --> I2315
 
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
@@ -174,7 +179,7 @@ graph TD
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
     class I2259,I2260,I2261,I2262,I2263,I2264,I2265,I2266,I2267,I2268,I2281,I2282,I2283,I2284,I2285,I2286 done
-    class I2287,I2288,I2289,I2290,I2291,I2292,I2293,I2294,I2295,I2296,I2297,I2312 ready
+    class I2287,I2288,I2289,I2290,I2291,I2292,I2293,I2294,I2295,I2296,I2297,I2312,I2315 ready
     class I2313 blocked
 ```
 
