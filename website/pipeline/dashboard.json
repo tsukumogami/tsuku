@@ -1,19 +1,19 @@
 {
-  "generated_at": "2026-04-23T20:58:50Z",
+  "generated_at": "2026-04-23T21:05:07Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 25,
       "excluded": 6,
-      "failed": 82,
-      "pending": 3842,
-      "success": 1350
+      "failed": 80,
+      "pending": 3843,
+      "success": 1351
     },
     "by_tier": {
       "1": {
         "blocked": 2,
-        "pending": 8,
-        "success": 8
+        "pending": 7,
+        "success": 9
       },
       "2": {
         "blocked": 5,
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 82,
-        "pending": 3821,
+        "failed": 80,
+        "pending": 3823,
         "success": 1333
       }
     },
@@ -55,8 +55,8 @@
       },
       "homebrew": {
         "blocked": 25,
-        "pending": 3743,
-        "success": 1115,
+        "pending": 3742,
+        "success": 1116,
         "total": 4883
       },
       "manual": {
@@ -68,12 +68,14 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
+        "failed": 19,
+        "pending": 1,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -464,15 +466,6 @@
           "next_retry_at": "2026-04-24T02:22:15Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 228,
-          "next_retry_at": "1734-01-12T21:10:58Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -840,15 +833,6 @@
           "category": "install_failed",
           "failure_count": 10,
           "next_retry_at": "2026-04-24T11:00:17Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 358,
-          "next_retry_at": "1734-01-12T21:10:58Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -1238,14 +1222,6 @@
           "category": "install_failed",
           "failure_count": 3,
           "next_retry_at": "2026-02-24T06:13:51Z"
-        },
-        {
-          "id": "homebrew:tmux",
-          "name": "tmux",
-          "ecosystem": "homebrew",
-          "priority": 1,
-          "category": "install_failed",
-          "failure_count": 16
         },
         {
           "id": "homebrew:anomalyco/tap/opencode",
@@ -3048,6 +3024,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 228,
+          "next_retry_at": "1734-01-12T21:10:58Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -13385,6 +13370,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 358,
+          "next_retry_at": "1734-01-12T21:10:58Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -28299,6 +28293,14 @@
           "priority": 1,
           "category": "missing_dep",
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:tmux",
+          "name": "tmux",
+          "ecosystem": "homebrew",
+          "priority": 1,
+          "category": "install_failed",
+          "failure_count": 16
         },
         {
           "id": "homebrew:wget",
