@@ -435,8 +435,13 @@ func (a *NpmExecAction) executePackageInstall(ctx *ExecutionContext, params map[
 		ignoreScripts = val
 	}
 
-	// Validate Node.js version if constraint specified
-	if nodeVersion != "" {
+	// Validate Node.js version only for packages with native addons.
+	// Pure-JS packages work across node versions; only native addon ABIs are
+	// tied to a specific Node.js release. Alpine Linux installs an older nodejs
+	// from apk (e.g., 22.x) while glibc systems get the latest from tsuku, so
+	// strict exact-version matching breaks musl installs for pure-JS packages.
+	hasNativeAddons, _ := params["has_native_addons"].(bool)
+	if nodeVersion != "" && hasNativeAddons {
 		// Strip the "v" prefix if present for validation
 		constraint := strings.TrimPrefix(nodeVersion, "v")
 		if err := validateNodeVersion(constraint, ctx.ExecPaths...); err != nil {

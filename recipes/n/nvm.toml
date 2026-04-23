@@ -19,7 +19,6 @@ url = "https://github.com/nvm-sh/nvm/archive/refs/tags/v{version}.tar.gz"
 when = { os = ["linux"], libc = ["glibc", "musl"] }
 strip_dirs = 1
 install_mode = "directory"
-binaries = []
 
 # macOS
 [[steps]]
@@ -28,7 +27,6 @@ url = "https://github.com/nvm-sh/nvm/archive/refs/tags/v{version}.tar.gz"
 when = { os = ["darwin"] }
 strip_dirs = 1
 install_mode = "directory"
-binaries = []
 
 [[steps]]
 action = "set_env"
