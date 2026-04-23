@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-04-21T22:49:16Z",
-  "total_recipes": 1416,
+  "generated_at": "2026-04-23T21:04:11Z",
+  "total_recipes": 1417,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 850,
-        "total": 1416,
-        "pct": 60.02824858757062
+        "supported": 848,
+        "total": 1417,
+        "pct": 59.84474241354975
       },
       "glibc": {
-        "supported": 1381,
-        "total": 1416,
-        "pct": 97.52824858757062
+        "supported": 1382,
+        "total": 1417,
+        "pct": 97.52999294283698
       },
       "musl": {
-        "supported": 1237,
-        "total": 1416,
-        "pct": 87.35875706214689
+        "supported": 1238,
+        "total": 1417,
+        "pct": 87.36767819336627
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1264,
-        "musl_support": 1087,
-        "glibc_support": 1231
+        "total": 1265,
+        "musl_support": 1088,
+        "glibc_support": 1232
       }
     }
   },
@@ -3549,9 +3549,7 @@
         "darwin"
       ],
       "errors": null,
-      "warnings": [
-        "recipe 'curl' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "curlie",
@@ -6121,15 +6119,15 @@
       "name": "git",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
-      "warnings": [
-        "recipe 'git' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "git-credential-oauth",
@@ -8245,11 +8243,12 @@
       "name": "httpie",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": false
       },
       "gaps": [
+        "darwin",
         "musl"
       ],
       "errors": null,
@@ -9281,17 +9280,13 @@
       "name": "jq",
       "type": "tool",
       "platforms": {
-        "darwin": false,
+        "darwin": true,
         "glibc": true,
         "musl": true
       },
-      "gaps": [
-        "darwin"
-      ],
+      "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'jq' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "jq-lsp",
@@ -19140,6 +19135,20 @@
       ]
     },
     {
+      "name": "tmux",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "tmuxai",
       "type": "tool",
       "platforms": {
@@ -20418,15 +20427,15 @@
       "name": "wget",
       "type": "tool",
       "platforms": {
-        "darwin": true,
+        "darwin": false,
         "glibc": true,
         "musl": true
       },
-      "gaps": null,
+      "gaps": [
+        "darwin"
+      ],
       "errors": null,
-      "warnings": [
-        "recipe 'wget' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "whalebrew",
