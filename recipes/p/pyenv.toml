@@ -1,0 +1,44 @@
+[metadata]
+name = "pyenv"
+description = "Simple Python version management"
+homepage = "https://github.com/pyenv/pyenv"
+version_format = "semver"
+curated = true
+
+[version]
+github_repo = "pyenv/pyenv"
+tag_prefix = "v"
+
+# glibc Linux: Homebrew bottle
+[[steps]]
+action = "homebrew"
+formula = "pyenv"
+when = { os = ["linux"], libc = ["glibc"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/pyenv"]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["pyenv"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "pyenv"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/pyenv"]
+when = { os = ["darwin"] }
+
+[verify]
+command = "pyenv --version"
+pattern = "pyenv {version}"

@@ -1,21 +1,28 @@
 [metadata]
-  name = "asdf"
-  description = "Extendable version manager with support for Ruby, Node.js, Erlang & more"
-  homepage = "https://asdf-vm.com/"
-  version_format = ""
-  requires_sudo = false
-  tier = 0
-  type = ""
-  llm_validation = "skipped"
+name = "asdf"
+description = "Extendable version manager with support for multiple languages"
+homepage = "https://asdf-vm.com/"
+version_format = "semver"
+curated = true
 
+# Linux: static Go binary — works on glibc and musl
 [[steps]]
-  action = "homebrew"
-  formula = "asdf"
+action = "github_archive"
+repo = "asdf-vm/asdf"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
+asset_pattern = "asdf-v{version}-linux-{arch}.tar.gz"
+strip_dirs = 1
+binaries = ["asdf"]
 
+# macOS
 [[steps]]
-  action = "install_binaries"
-  binaries = ["bin/asdf"]
+action = "github_archive"
+repo = "asdf-vm/asdf"
+when = { os = ["darwin"] }
+asset_pattern = "asdf-v{version}-darwin-{arch}.tar.gz"
+strip_dirs = 1
+binaries = ["asdf"]
 
 [verify]
-  command = "asdf --version"
-  pattern = ""
+command = "asdf --version"
+pattern = "{version}"

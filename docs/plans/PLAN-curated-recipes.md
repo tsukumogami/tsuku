@@ -115,8 +115,8 @@ graph TD
     I2295["#2295: C++/JVM build tools"]
     I2296["#2296: cloud CLIs + orchestration"]
     I2297["#2297: IaC quality + policy"]
-    I2312["#2312: macOS dylib deps (nghttp3, libevent, utf8proc)"]
-    I2313["#2313: macOS support for curl, wget, tmux"]
+    I2312["#2312: macOS dylib deps (nghttp3, libevent, utf8proc, pcre2)"]
+    I2313["#2313: macOS support for curl, wget, tmux, git"]
 
     I2259 --> I2261
     I2259 --> I2262
