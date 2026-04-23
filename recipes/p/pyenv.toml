@@ -5,10 +5,6 @@ homepage = "https://github.com/pyenv/pyenv"
 version_format = "semver"
 curated = true
 
-[version]
-github_repo = "pyenv/pyenv"
-tag_prefix = "v"
-
 # glibc Linux: Homebrew bottle
 [[steps]]
 action = "homebrew"

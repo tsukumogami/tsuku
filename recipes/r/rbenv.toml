@@ -5,10 +5,6 @@ homepage = "https://github.com/rbenv/rbenv"
 version_format = "semver"
 curated = true
 
-[version]
-github_repo = "rbenv/rbenv"
-tag_prefix = "v"
-
 # glibc Linux: Homebrew bottle
 [[steps]]
 action = "homebrew"
