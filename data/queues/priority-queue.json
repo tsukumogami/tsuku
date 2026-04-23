@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-23T11:13:04Z",
+  "updated_at": "2026-04-23T13:30:54Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 222,
-      "next_retry_at": "1734-01-12T09:45:44.325154195Z"
+      "failure_count": 224,
+      "next_retry_at": "1734-01-12T13:43:37.095562853Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 352,
-      "next_retry_at": "1734-01-12T09:45:44.325154195Z"
+      "failure_count": 354,
+      "next_retry_at": "1734-01-12T13:43:37.095562853Z"
     },
     {
       "name": "libaacs",
@@ -31296,7 +31296,7 @@
       "name": "multimarkdown",
       "source": "rubygems:multimarkdown",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -33386,7 +33386,7 @@
       "name": "ocp",
       "source": "rubygems:ocp",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
@@ -40536,7 +40536,7 @@
       "name": "rename",
       "source": "rubygems:rename",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -41346,11 +41346,11 @@
       "name": "rsync",
       "source": "rubygems:rsync",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 1,
+      "next_retry_at": "2026-04-23T14:30:53.950338661Z"
     },
     {
       "name": "rsyslog",
