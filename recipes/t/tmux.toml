@@ -5,6 +5,10 @@ homepage = "https://github.com/tmux/tmux"
 # tmux uses non-standard versions like "3.6a"; raw format preserves them as-is
 version_format = "raw"
 curated = true
+# macOS: homebrew tmux bottle has RPATH references to libutf8proc.3.dylib and
+# libevent from separate homebrew packages; libevent itself is not installable
+# on macOS via tsuku. darwin coverage is excluded until these deps are supported.
+supported_os = ["linux"]
 
 # glibc Linux: Homebrew bottle
 [[steps]]
@@ -23,18 +27,6 @@ when = { os = ["linux"], libc = ["glibc"] }
 action = "apk_install"
 packages = ["tmux"]
 when = { os = ["linux"], libc = ["musl"] }
-
-# macOS: Homebrew
-[[steps]]
-action = "homebrew"
-formula = "tmux"
-when = { os = ["darwin"] }
-
-[[steps]]
-action = "install_binaries"
-install_mode = "directory"
-outputs = ["bin/tmux"]
-when = { os = ["darwin"] }
 
 [verify]
 command = "tmux -V"

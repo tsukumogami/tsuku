@@ -4,7 +4,6 @@ description = "Distributed revision control system"
 homepage = "https://git-scm.com/"
 version_format = "semver"
 curated = true
-dependencies = ["curl"]
 
 # glibc Linux: Homebrew bottle
 [[steps]]

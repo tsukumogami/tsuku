@@ -4,6 +4,10 @@ description = "Internet file retriever"
 homepage = "https://www.gnu.org/software/wget/"
 version_format = "semver"
 curated = true
+# macOS: homebrew wget bottle has RPATH references to libintl.8.dylib from
+# gettext and other packages not managed by tsuku. darwin coverage is excluded
+# until runtime_dependencies supports homebrew dylib chaining.
+supported_os = ["linux"]
 
 # glibc Linux: Homebrew bottle
 [[steps]]
@@ -22,18 +26,6 @@ when = { os = ["linux"], libc = ["glibc"] }
 action = "apk_install"
 packages = ["wget"]
 when = { os = ["linux"], libc = ["musl"] }
-
-# macOS: Homebrew
-[[steps]]
-action = "homebrew"
-formula = "wget"
-when = { os = ["darwin"] }
-
-[[steps]]
-action = "install_binaries"
-install_mode = "directory"
-outputs = ["bin/wget"]
-when = { os = ["darwin"] }
 
 [verify]
 command = "wget --version"

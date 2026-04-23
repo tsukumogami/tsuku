@@ -4,7 +4,15 @@ description = "Command line tool for transferring data with URLs"
 homepage = "https://curl.se/"
 version_format = "semver"
 curated = true
+# macOS: homebrew curl bottle has RPATH references to libnghttp3.9.dylib from a
+# separate homebrew package; bundling transitive dylibs is not supported.
+# darwin coverage is excluded until runtime_dependencies supports dylib chaining.
+supported_os = ["linux"]
 dependencies = ["openssl", "zlib"]
+
+[version]
+source = "homebrew"
+formula = "curl"
 
 # Linux: build from source (configure_make works on both glibc and musl)
 [[steps]]
@@ -32,7 +40,7 @@ source_dir = "curl-{version}"
 configure_args = ["--with-openssl", "--with-zlib", "--disable-silent-rules", "--without-libpsl"]
 executables = ["curl"]
 
-# $ORIGIN-based RPATH is Linux-only (ELF); macOS uses @loader_path but is served via homebrew
+# $ORIGIN-based RPATH is Linux-only (ELF); macOS is excluded above
 [[steps]]
 action = "set_rpath"
 when = { os = ["linux"] }
@@ -44,18 +52,6 @@ action = "install_binaries"
 when = { os = ["linux"] }
 install_mode = "directory"
 outputs = ["bin/curl"]
-
-# macOS: Homebrew (system curl is outdated; homebrew provides current release)
-[[steps]]
-action = "homebrew"
-formula = "curl"
-when = { os = ["darwin"] }
-
-[[steps]]
-action = "install_binaries"
-install_mode = "directory"
-outputs = ["bin/curl"]
-when = { os = ["darwin"] }
 
 [verify]
 command = "curl --version"
