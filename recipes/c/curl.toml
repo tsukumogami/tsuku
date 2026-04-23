@@ -2,16 +2,22 @@
 name = "curl"
 description = "Command line tool for transferring data with URLs"
 homepage = "https://curl.se/"
-dependencies = ["openssl", "zlib"]
-binaries = ["bin/curl"]
+version_format = "semver"
+curated = true
+# macOS: homebrew curl bottle has RPATH references to libnghttp3.9.dylib from a
+# separate homebrew package; bundling transitive dylibs is not supported.
+# darwin coverage is excluded until runtime_dependencies supports dylib chaining.
 supported_os = ["linux"]
+dependencies = ["openssl", "zlib"]
 
 [version]
 source = "homebrew"
 formula = "curl"
 
+# Linux: build from source (configure_make works on both glibc and musl)
 [[steps]]
 action = "download"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 url = "https://curl.se/download/curl-{version}.tar.gz"
 signature_url = "https://curl.se/download/curl-{version}.tar.gz.asc"
 signature_key_url = "https://daniel.haxx.se/mykey.asc"
@@ -19,28 +25,31 @@ signature_key_fingerprint = "27EDEAF22F3ABCEB50DB9A125CC908FDB71E12C2"
 
 [[steps]]
 action = "extract"
+when = { os = ["linux"] }
 archive = "curl-{version}.tar.gz"
 format = "tar.gz"
 
 [[steps]]
 action = "setup_build_env"
+when = { os = ["linux"] }
 
 [[steps]]
 action = "configure_make"
+when = { os = ["linux"] }
 source_dir = "curl-{version}"
 configure_args = ["--with-openssl", "--with-zlib", "--disable-silent-rules", "--without-libpsl"]
 executables = ["curl"]
 
-# NOTE: set_rpath only targets the binary, not the shared library, for cross-platform
-# compatibility. macOS uses .dylib while Linux uses .so for library naming.
-# See issue #653 for future improvement of cross-platform library RPATH support.
+# $ORIGIN-based RPATH is Linux-only (ELF); macOS is excluded above
 [[steps]]
 action = "set_rpath"
+when = { os = ["linux"] }
 binaries = [".install/bin/curl"]
 rpath = "$ORIGIN/../lib:{libs_dir}/openssl-{deps.openssl.version}/lib:{libs_dir}/zlib-{deps.zlib.version}/lib"
 
 [[steps]]
 action = "install_binaries"
+when = { os = ["linux"] }
 install_mode = "directory"
 outputs = ["bin/curl"]
 

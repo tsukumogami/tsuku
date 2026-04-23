@@ -3,6 +3,11 @@ name = "httpie"
 description = "A user-friendly HTTP client for the API era"
 homepage = "https://httpie.io/"
 version_format = "semver"
+curated = true
+# pipx installs Python wheels; musl linux has spotty wheel support for
+# httpie's C deps (cryptography), and the macOS test environment lacks a
+# ready pipx runtime. Restrict to glibc linux.
+supported_os = ["linux"]
 supported_libc = ["glibc"]
 
 [[steps]]
