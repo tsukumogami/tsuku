@@ -1,40 +1,41 @@
 [metadata]
-name = "wget"
-description = "Internet file retriever"
-homepage = "https://www.gnu.org/software/wget/"
-version_format = "semver"
+name = "tmux"
+description = "Terminal multiplexer"
+homepage = "https://github.com/tmux/tmux"
+# tmux uses non-standard versions like "3.6a"; raw format preserves them as-is
+version_format = "raw"
 curated = true
 
 # glibc Linux: Homebrew bottle
 [[steps]]
 action = "homebrew"
-formula = "wget"
+formula = "tmux"
 when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-outputs = ["bin/wget"]
+outputs = ["bin/tmux"]
 when = { os = ["linux"], libc = ["glibc"] }
 
 # musl Linux: Alpine package
 [[steps]]
 action = "apk_install"
-packages = ["wget"]
+packages = ["tmux"]
 when = { os = ["linux"], libc = ["musl"] }
 
 # macOS: Homebrew
 [[steps]]
 action = "homebrew"
-formula = "wget"
+formula = "tmux"
 when = { os = ["darwin"] }
 
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-outputs = ["bin/wget"]
+outputs = ["bin/tmux"]
 when = { os = ["darwin"] }
 
 [verify]
-command = "wget --version"
-pattern = "GNU Wget {version}"
+command = "tmux -V"
+pattern = "tmux {version}"

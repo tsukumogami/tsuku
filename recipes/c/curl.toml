@@ -2,16 +2,14 @@
 name = "curl"
 description = "Command line tool for transferring data with URLs"
 homepage = "https://curl.se/"
+version_format = "semver"
+curated = true
 dependencies = ["openssl", "zlib"]
-binaries = ["bin/curl"]
-supported_os = ["linux"]
 
-[version]
-source = "homebrew"
-formula = "curl"
-
+# Linux: build from source (configure_make works on both glibc and musl)
 [[steps]]
 action = "download"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 url = "https://curl.se/download/curl-{version}.tar.gz"
 signature_url = "https://curl.se/download/curl-{version}.tar.gz.asc"
 signature_key_url = "https://daniel.haxx.se/mykey.asc"
@@ -19,30 +17,45 @@ signature_key_fingerprint = "27EDEAF22F3ABCEB50DB9A125CC908FDB71E12C2"
 
 [[steps]]
 action = "extract"
+when = { os = ["linux"] }
 archive = "curl-{version}.tar.gz"
 format = "tar.gz"
 
 [[steps]]
 action = "setup_build_env"
+when = { os = ["linux"] }
 
 [[steps]]
 action = "configure_make"
+when = { os = ["linux"] }
 source_dir = "curl-{version}"
 configure_args = ["--with-openssl", "--with-zlib", "--disable-silent-rules", "--without-libpsl"]
 executables = ["curl"]
 
-# NOTE: set_rpath only targets the binary, not the shared library, for cross-platform
-# compatibility. macOS uses .dylib while Linux uses .so for library naming.
-# See issue #653 for future improvement of cross-platform library RPATH support.
+# $ORIGIN-based RPATH is Linux-only (ELF); macOS uses @loader_path but is served via homebrew
 [[steps]]
 action = "set_rpath"
+when = { os = ["linux"] }
 binaries = [".install/bin/curl"]
 rpath = "$ORIGIN/../lib:{libs_dir}/openssl-{deps.openssl.version}/lib:{libs_dir}/zlib-{deps.zlib.version}/lib"
 
 [[steps]]
 action = "install_binaries"
+when = { os = ["linux"] }
 install_mode = "directory"
 outputs = ["bin/curl"]
+
+# macOS: Homebrew (system curl is outdated; homebrew provides current release)
+[[steps]]
+action = "homebrew"
+formula = "curl"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/curl"]
+when = { os = ["darwin"] }
 
 [verify]
 command = "curl --version"
