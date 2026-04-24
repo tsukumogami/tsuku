@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-24T22:42:49Z",
+  "generated_at": "2026-04-24T22:44:06Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 24,
       "excluded": 6,
-      "failed": 48,
-      "pending": 3875,
+      "failed": 47,
+      "pending": 3876,
       "success": 1352
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 48,
-        "pending": 3855,
+        "failed": 47,
+        "pending": 3856,
         "success": 1333
       }
     },
@@ -74,7 +74,8 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -453,15 +454,6 @@
           "next_retry_at": "2026-05-01T08:05:57Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 235,
-          "next_retry_at": "1734-01-13T21:04:25Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -543,6 +535,15 @@
           "next_retry_at": "2026-05-01T20:51:41Z"
         },
         {
+          "id": "rubygems:cog",
+          "name": "cog",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 13,
+          "next_retry_at": "2026-05-01T22:43:26Z"
+        },
+        {
           "id": "npm:countdown",
           "name": "countdown",
           "ecosystem": "npm",
@@ -568,6 +569,15 @@
           "category": "install_failed",
           "failure_count": 13,
           "next_retry_at": "2026-05-01T18:57:27Z"
+        },
+        {
+          "id": "npm:e2b",
+          "name": "e2b",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 13,
+          "next_retry_at": "2026-05-01T22:43:26Z"
         },
         {
           "id": "npm:ent",
@@ -615,15 +625,6 @@
           "next_retry_at": "2026-04-25T20:39:53Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 367,
-          "next_retry_at": "1734-01-13T21:04:25Z"
-        },
-        {
           "id": "npm:mailhog",
           "name": "mailhog",
           "ecosystem": "npm",
@@ -640,15 +641,6 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-04-26T08:57:59Z"
-        },
-        {
-          "id": "rubygems:meli",
-          "name": "meli",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-04-24T20:59:12Z"
         },
         {
           "id": "rubygems:memcached",
@@ -2723,6 +2715,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 235,
+          "next_retry_at": "1734-01-13T21:04:25Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -4982,15 +4983,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:cog",
-          "name": "cog",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-04-24T02:22:15Z"
-        },
-        {
           "id": "homebrew:coin3d",
           "name": "coin3d",
           "ecosystem": "homebrew",
@@ -6973,15 +6965,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:e2b",
-          "name": "e2b",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-04-24T19:04:53Z"
         },
         {
           "id": "homebrew:eask-cli",
@@ -13278,6 +13261,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 367,
+          "next_retry_at": "1734-01-13T21:04:25Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -15523,6 +15515,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:meli",
+          "name": "meli",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-04-24T20:59:12Z"
         },
         {
           "id": "homebrew:mender-artifact",
