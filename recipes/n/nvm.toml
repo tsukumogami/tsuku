@@ -39,6 +39,6 @@ target = "nvm"
 shells = ["bash", "zsh"]
 
 [verify]
-command = "nvm --version"
+command = "test -f {install_dir}/nvm.sh"
 mode = "output"
-reason = "nvm is a shell function sourced via shell init; requires an interactive shell session to invoke"
+reason = "nvm is a shell function sourced via shell init; verify that the installation file exists instead"

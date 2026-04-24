@@ -4,6 +4,7 @@ description = "Fast, reliable, and secure dependency management"
 homepage = "https://classic.yarnpkg.com/"
 version_format = "semver"
 curated = true
+supported_libc = ["glibc"]
 # Yarn Classic (1.x) — the widely-used global installer. Yarn Berry (3.x+) is
 # installed per-project via Corepack and is not a standalone global CLI tool.
 
