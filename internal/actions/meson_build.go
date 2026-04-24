@@ -397,7 +397,9 @@ func findLibraryDirectories(libDir string) []string {
 		// Check if this is a shared library file
 		if !info.IsDir() {
 			ext := filepath.Ext(path)
-			isLibrary := ext == ".so" || ext == ".dylib" || strings.HasPrefix(ext, ".so.")
+			// filepath.Ext("libsixel.so.1") returns ".1", not ".so" or ".so.1",
+			// so check for versioned sonames like libsixel.so.1 via Contains too.
+			isLibrary := ext == ".so" || ext == ".dylib" || strings.Contains(filepath.Base(path), ".so.")
 
 			if isLibrary {
 				// Add the parent directory (not the file itself)
