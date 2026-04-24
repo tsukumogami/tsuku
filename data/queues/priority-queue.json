@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-24T17:01:14Z",
+  "updated_at": "2026-04-24T18:57:27Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 234,
@@ -7356,11 +7356,11 @@
       "name": "chisel",
       "source": "rubygems:chisel",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-04-24T02:22:15.642209897Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-01T18:57:27.705710419Z"
     },
     {
       "name": "chisel-tunnel",
@@ -11186,11 +11186,11 @@
       "name": "dmd",
       "source": "npm:dmd",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-04-24T16:11:06.26829207Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-01T18:57:27.705710419Z"
     },
     {
       "name": "dmg2img",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 366,
@@ -29486,7 +29486,7 @@
       "name": "mdv",
       "source": "rubygems:mdv",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 10,
@@ -50306,11 +50306,11 @@
       "name": "vllm",
       "source": "pypi:vllm",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-04-24T16:11:06.26829207Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-01T18:57:27.705710419Z"
     },
     {
       "name": "vmware-tanzu/carvel/vendir",
