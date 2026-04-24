@@ -186,6 +186,35 @@ func IsActionEvaluable(action string) bool {
 	return evaluable
 }
 
+// ExtractBinariesFromPlan returns the binary paths registered by install_binaries
+// steps in the plan. The caller uses these to create correctly named symlinks in
+// $TSUKU_HOME/tools/current/. Without this list, symlink creation falls back to
+// bin/<toolname>, which is wrong when the installed binary has a different name
+// (e.g., argo-cd installs argocd, golang installs go/gofmt).
+func ExtractBinariesFromPlan(plan *InstallationPlan) []string {
+	var binaries []string
+	for _, step := range plan.Steps {
+		if step.Action != "install_binaries" {
+			continue
+		}
+		raw, ok := step.Params["binaries"]
+		if !ok {
+			continue
+		}
+		switch v := raw.(type) {
+		case []interface{}:
+			for _, item := range v {
+				if s, ok := item.(string); ok {
+					binaries = append(binaries, s)
+				}
+			}
+		case []string:
+			binaries = append(binaries, v...)
+		}
+	}
+	return binaries
+}
+
 // ValidationError describes a plan validation failure.
 type ValidationError struct {
 	Step    int    // 0-indexed step number

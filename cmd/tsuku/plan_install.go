@@ -97,6 +97,11 @@ func runPlanBasedInstall(planPath, toolName string) error {
 		// Prepare install options
 		installOpts := install.DefaultInstallOptions()
 		installOpts.Plan = executor.ToStoragePlan(plan)
+		// Extract binary paths from install_binaries steps so the install manager
+		// creates correctly named symlinks in tools/current/. Without this, the
+		// fallback creates bin/<toolname>, which is wrong when the binary has a
+		// different name (e.g., argo-cd installs argocd, golang installs go).
+		installOpts.Binaries = executor.ExtractBinariesFromPlan(plan)
 
 		// Install to permanent location
 		if err := mgr.InstallWithOptions(effectiveToolName, plan.Version, exec.WorkDir(), installOpts); err != nil {
