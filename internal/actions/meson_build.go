@@ -174,16 +174,15 @@ func (a *MesonBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 		return fmt.Errorf("meson install failed: %w\nOutput: %s", err, string(installOutput))
 	}
 
-	// Step 4: Fix RPATH on installed executables if shared libraries exist in lib/
-	// Meson builds often link executables to shared libraries in lib/
-	// The RPATH gets set to the absolute staging directory, which breaks after relocation
-	// Skip RPATH fixup entirely when only static libraries exist — no runtime relocation needed
-	libDir := filepath.Join(ctx.InstallDir, "lib")
-	if stat, err := os.Stat(libDir); err == nil && stat.IsDir() {
-		// Find where .so files are actually located (could be in subdirectories)
-		libPaths := findLibraryDirectories(libDir)
+	// Step 4: Fix RPATH on installed executables if shared libraries exist anywhere in InstallDir.
+	// Meson builds often link executables to shared libraries. The RPATH gets set to the absolute
+	// staging directory, which breaks after relocation. Search the entire install tree to handle
+	// all meson layouts: lib/, lib64/, lib/x86_64-linux-gnu/, etc.
+	// Skip RPATH fixup entirely when only static libraries exist — no runtime relocation needed.
+	{
+		libPaths := findLibraryDirectories(ctx.InstallDir)
 		if len(libPaths) == 0 {
-			reporter.Log("   lib/ contains only static libraries, skipping RPATH fixup")
+			reporter.Log("   No shared libraries found, skipping RPATH fixup")
 		} else {
 			reporter.Log("   Found shared libraries in: %v", libPaths)
 
@@ -418,7 +417,7 @@ func findLibraryDirectories(libDir string) []string {
 }
 
 // buildRpathFromLibDirs converts absolute library directory paths to $ORIGIN-relative paths.
-// Returns a single RPATH string with relative paths to all library directories.
+// Returns a colon-separated RPATH string covering all library directories.
 func buildRpathFromLibDirs(libPaths []string, installDir string) string {
 	if len(libPaths) == 0 {
 		return ""
@@ -441,12 +440,5 @@ func buildRpathFromLibDirs(libPaths []string, installDir string) string {
 		rpathParts = append(rpathParts, rpathPart)
 	}
 
-	if len(rpathParts) == 0 {
-		return ""
-	}
-
-	// Return the first (most common) path
-	// Note: We can't use ':' to combine multiple paths because validateRpath rejects it
-	// In practice, libraries are usually in one location
-	return rpathParts[0]
+	return strings.Join(rpathParts, ":")
 }
