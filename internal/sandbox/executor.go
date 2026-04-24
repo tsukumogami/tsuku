@@ -478,7 +478,11 @@ func (e *Executor) readVerifyResults(outputDir string, plan *executor.Installati
 		expectedExitCode = *plan.Verify.ExitCode
 	}
 
-	verified := executor.CheckPlanVerification(verifyExitCode, output, expectedExitCode, plan.Verify.Pattern)
+	// Expand {version} in the pattern to the resolved version string.
+	// The plan stores patterns verbatim from the recipe (e.g. "{version}"),
+	// but the tool output contains the actual version number.
+	pattern := strings.ReplaceAll(plan.Verify.Pattern, "{version}", plan.Version)
+	verified := executor.CheckPlanVerification(verifyExitCode, output, expectedExitCode, pattern)
 	return verified, verifyExitCode
 }
 
