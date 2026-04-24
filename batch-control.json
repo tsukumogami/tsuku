@@ -9,39 +9,39 @@
   "circuit_breaker": {
     "github": {
       "state": "open",
-      "failures": 445,
-      "last_failure": "2026-04-24T08:04:54Z",
-      "opens_at": "2026-04-24T09:04:54Z"
+      "failures": 446,
+      "last_failure": "2026-04-24T09:56:30Z",
+      "opens_at": "2026-04-24T10:56:30Z"
     },
     "homebrew": {
       "state": "open",
-      "failures": 406,
-      "last_failure": "2026-04-24T08:04:54Z",
-      "opens_at": "2026-04-24T09:04:54Z"
+      "failures": 407,
+      "last_failure": "2026-04-24T09:56:30Z",
+      "opens_at": "2026-04-24T10:56:30Z"
     },
     "rubygems": {
       "state": "open",
-      "failures": 83,
-      "last_failure": "2026-04-24T08:04:54Z",
-      "opens_at": "2026-04-24T09:04:54Z"
+      "failures": 84,
+      "last_failure": "2026-04-24T09:56:30Z",
+      "opens_at": "2026-04-24T10:56:30Z"
     },
     "crates.io": {
       "state": "open",
-      "failures": 442,
-      "last_failure": "2026-04-24T08:04:54Z",
-      "opens_at": "2026-04-24T09:04:54Z"
+      "failures": 443,
+      "last_failure": "2026-04-24T09:56:30Z",
+      "opens_at": "2026-04-24T10:56:30Z"
     },
     "npm": {
       "state": "open",
-      "failures": 146,
-      "last_failure": "2026-04-24T08:04:54Z",
-      "opens_at": "2026-04-24T09:04:54Z"
+      "failures": 147,
+      "last_failure": "2026-04-24T09:56:30Z",
+      "opens_at": "2026-04-24T10:56:30Z"
     },
     "pypi": {
       "state": "open",
-      "failures": 415,
-      "last_failure": "2026-04-24T08:04:54Z",
-      "opens_at": "2026-04-24T09:04:54Z"
+      "failures": 416,
+      "last_failure": "2026-04-24T09:56:30Z",
+      "opens_at": "2026-04-24T10:56:30Z"
     },
     "default": {
       "state": "closed",
