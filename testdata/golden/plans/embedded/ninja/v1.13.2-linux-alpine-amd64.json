@@ -13,7 +13,7 @@
       "action": "apk_install",
       "params": {
         "packages": [
-          "ninja-build"
+          "ninja-is-really-ninja"
         ]
       },
       "evaluable": false,

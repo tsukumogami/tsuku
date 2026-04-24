@@ -4,6 +4,7 @@ description = "Fast all-in-one JavaScript runtime"
 homepage = "https://bun.sh/"
 version_format = "semver"
 curated = true
+runtime_dependencies = ["gcc-libs"]
 
 [version]
 github_repo = "oven-sh/bun"

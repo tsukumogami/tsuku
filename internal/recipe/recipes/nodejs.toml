@@ -41,7 +41,8 @@ command = '''
 mv bin/node bin/node.real
 cat > bin/node << 'WRAPPER'
 #!/bin/sh
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REAL="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
+SCRIPT_DIR="$(cd "$(dirname "$REAL")" && pwd)"
 INSTALL_DIR="$(dirname "$SCRIPT_DIR")"
 export LD_LIBRARY_PATH="$INSTALL_DIR/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 exec "$INSTALL_DIR/bin/node.real" "$@"

@@ -250,18 +250,22 @@ func (a *PipExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 		if isPythonScript {
 			// Python script: execute through python3 to use correct interpreter
 			// Add venv bin to PATH so dependencies like ninja can be found
+			// readlink -f resolves symlinks so the wrapper works when called via tools/current/
 			wrapperScript = fmt.Sprintf(`#!/bin/sh
 # Wrapper for %s from pip venv (Python script)
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REAL="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
+SCRIPT_DIR="$(cd "$(dirname "$REAL")" && pwd)"
 VENV_DIR="$SCRIPT_DIR/../venvs/%s"
 export PATH="$VENV_DIR/bin:$PATH"
 exec "$VENV_DIR/bin/python3" "$VENV_DIR/bin/%s" "$@"
 `, exe, packageName, exe)
 		} else {
 			// Compiled binary: execute directly with venv bin in PATH
+			// readlink -f resolves symlinks so the wrapper works when called via tools/current/
 			wrapperScript = fmt.Sprintf(`#!/bin/sh
 # Wrapper for %s from pip venv (binary)
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REAL="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
+SCRIPT_DIR="$(cd "$(dirname "$REAL")" && pwd)"
 VENV_DIR="$SCRIPT_DIR/../venvs/%s"
 export PATH="$VENV_DIR/bin:$PATH"
 exec "$VENV_DIR/bin/%s" "$@"
