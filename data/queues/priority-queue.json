@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-24T08:05:57Z",
+  "updated_at": "2026-04-24T09:57:34Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 231,
-      "next_retry_at": "1734-01-13T05:52:31.827841287Z"
+      "failure_count": 232,
+      "next_retry_at": "1734-01-13T10:10:16.999789307Z"
     },
     {
       "name": "azqr",
@@ -4446,11 +4446,11 @@
       "name": "basis_universal",
       "source": "crates.io:basis_universal",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-04-24T05:33:26.771352032Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-01T09:57:33.854565115Z"
     },
     {
       "name": "bastet",
@@ -4836,11 +4836,11 @@
       "name": "bettercap",
       "source": "rubygems:bettercap",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-04-23T23:45:58.746474948Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-01T09:57:33.854565115Z"
     },
     {
       "name": "bfg",
@@ -9116,7 +9116,7 @@
       "name": "countdown",
       "source": "npm:countdown",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 12,
@@ -20816,7 +20816,7 @@
       "name": "hyperkit",
       "source": "rubygems:hyperkit",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 11,
@@ -21326,7 +21326,7 @@
       "name": "imgproxy",
       "source": "rubygems:imgproxy",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 11,
@@ -21416,7 +21416,7 @@
       "name": "influxdb",
       "source": "rubygems:influxdb",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 11,
@@ -21756,7 +21756,7 @@
       "name": "ipfs",
       "source": "rubygems:ipfs",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 11,
@@ -23966,7 +23966,7 @@
       "name": "kor",
       "source": "rubygems:kor",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 11,
@@ -25056,7 +25056,7 @@
       "name": "lemon",
       "source": "rubygems:lemon",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 11,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 361,
-      "next_retry_at": "1734-01-13T05:52:31.827841287Z"
+      "failure_count": 363,
+      "next_retry_at": "1734-01-13T10:10:16.999789307Z"
     },
     {
       "name": "libaacs",
@@ -35596,7 +35596,7 @@
       "name": "parallel",
       "source": "rubygems:parallel",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 7,
