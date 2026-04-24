@@ -20,6 +20,7 @@ type sandboxJSONOutput struct {
 	Verified        bool    `json:"verified"`
 	InstallExitCode int     `json:"install_exit_code"`
 	VerifyExitCode  int     `json:"verify_exit_code"`
+	VerifyOutput    string  `json:"verify_output,omitempty"` // included when verify fails
 	DurationMs      int64   `json:"duration_ms"`
 	Error           *string `json:"error"` // null on success, string on failure
 }
@@ -194,6 +195,7 @@ func buildSandboxJSONOutput(toolName string, result *sandbox.SandboxResult) sand
 			errMsg = fmt.Sprintf("installation failed with exit code %d", result.ExitCode)
 		} else {
 			errMsg = fmt.Sprintf("verification failed with exit code %d", result.VerifyExitCode)
+			out.VerifyOutput = strings.TrimSpace(result.VerifyOutput)
 		}
 		out.Error = &errMsg
 		return out
