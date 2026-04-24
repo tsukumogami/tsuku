@@ -15,44 +15,36 @@
         {
           "action": "download_file",
           "params": {
-            "checksum": "4cc8034607d8d7c835debef687dfcf5c3fe316fd767fce86ca14979d81a221fe",
-            "dest": "cmake.tar.gz",
-            "url": "https://ghcr.io/v2/homebrew/core/cmake/blobs/sha256:4cc8034607d8d7c835debef687dfcf5c3fe316fd767fce86ca14979d81a221fe"
+            "checksum": "c2302d3e9c48daabee5ea7c4db4b2b93b989bcc89dae8b760880e00120641b5b",
+            "checksum_algo": "sha256",
+            "dest": "cmake-4.2.3-macos-universal.tar.gz",
+            "url": "https://github.com/Kitware/CMake/releases/download/v4.2.3/cmake-4.2.3-macos-universal.tar.gz"
           },
           "evaluable": true,
           "deterministic": true,
-          "url": "https://ghcr.io/v2/homebrew/core/cmake/blobs/sha256:4cc8034607d8d7c835debef687dfcf5c3fe316fd767fce86ca14979d81a221fe",
-          "checksum": "4cc8034607d8d7c835debef687dfcf5c3fe316fd767fce86ca14979d81a221fe",
-          "size": 20205285
+          "url": "https://github.com/Kitware/CMake/releases/download/v4.2.3/cmake-4.2.3-macos-universal.tar.gz",
+          "checksum": "c2302d3e9c48daabee5ea7c4db4b2b93b989bcc89dae8b760880e00120641b5b",
+          "size": 84254384
         },
         {
           "action": "extract",
           "params": {
-            "archive": "cmake.tar.gz",
+            "archive": "cmake-4.2.3-macos-universal.tar.gz",
             "format": "tar.gz",
-            "strip_dirs": 2
+            "strip_dirs": 3
           },
           "evaluable": true,
-          "deterministic": true
-        },
-        {
-          "action": "homebrew_relocate",
-          "params": {
-            "formula": "cmake"
-          },
-          "evaluable": false,
           "deterministic": true
         },
         {
           "action": "install_binaries",
           "params": {
-            "install_mode": "directory",
-            "outputs": [
+            "binaries": [
               "bin/cmake",
               "bin/ctest",
-              "bin/cpack",
-              "bin/ccmake"
-            ]
+              "bin/cpack"
+            ],
+            "install_mode": "directory"
           },
           "evaluable": true,
           "deterministic": true
@@ -60,7 +52,7 @@
       ],
       "verify": {
         "command": "cmake --version",
-        "pattern": "cmake version {version}"
+        "pattern": "{version}"
       }
     },
     {
@@ -276,7 +268,6 @@
     }
   ],
   "verify": {
-    "command": "ninja --version",
-    "pattern": "{version}"
+    "command": "ninja --version"
   }
 }

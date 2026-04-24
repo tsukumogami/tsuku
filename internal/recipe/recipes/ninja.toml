@@ -42,4 +42,5 @@ when = { os = ["linux"], libc = ["musl"] }
 
 [verify]
 command = "ninja --version"
-pattern = "{version}"
+mode = "output"
+reason = "Alpine musl installs ninja via apk at a different version than the GitHub release; output mode verifies availability across all platforms"

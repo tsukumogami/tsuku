@@ -35,7 +35,6 @@
     }
   ],
   "verify": {
-    "command": "cmake --version",
-    "pattern": "{version}"
+    "command": "cmake --version"
   }
 }

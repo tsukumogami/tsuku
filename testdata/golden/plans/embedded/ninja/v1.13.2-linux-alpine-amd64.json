@@ -21,7 +21,6 @@
     }
   ],
   "verify": {
-    "command": "ninja --version",
-    "pattern": "{version}"
+    "command": "ninja --version"
   }
 }
