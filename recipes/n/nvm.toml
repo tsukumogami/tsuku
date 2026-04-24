@@ -30,7 +30,7 @@ install_mode = "directory"
 
 [[steps]]
 action = "set_env"
-vars = { NVM_DIR = "{install_dir}" }
+vars = [{name = "NVM_DIR", value = "{install_dir}"}]
 
 [[steps]]
 action = "install_shell_init"
