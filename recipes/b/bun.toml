@@ -4,7 +4,6 @@ description = "Fast all-in-one JavaScript runtime"
 homepage = "https://bun.sh/"
 version_format = "semver"
 curated = true
-runtime_dependencies = ["gcc-libs"]
 
 [version]
 github_repo = "oven-sh/bun"
@@ -20,7 +19,12 @@ strip_dirs = 1
 binaries = ["bun"]
 arch_mapping = { amd64 = "x64", arm64 = "aarch64" }
 
-# musl Linux
+# musl Linux: bun's musl binary dynamically links libstdc++ and libgcc_s
+[[steps]]
+action = "apk_install"
+packages = ["libstdc++"]
+when = { os = ["linux"], libc = ["musl"] }
+
 [[steps]]
 action = "github_archive"
 repo = "oven-sh/bun"
