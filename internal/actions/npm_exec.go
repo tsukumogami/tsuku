@@ -513,21 +513,26 @@ func (a *NpmExecAction) executePackageInstall(ctx *ExecutionContext, params map[
 		}
 	}
 
-	// Run npm ci with security hardening flags
-	reporter.Log("   Installing: npm ci in %s", ctx.InstallDir)
+	// Use npm install with the exact version instead of npm ci.
+	// npm ci requires the lockfile format to match the installed npm version.
+	// This breaks when glibc eval (npm 11) generates the plan and Alpine musl
+	// executes it (npm 10 from apk). Specifying an exact version is still
+	// deterministic without requiring lockfile format compatibility.
+	reporter.Log("   Installing: npm install %s@%s in %s", packageName, version, ctx.InstallDir)
 
-	ciArgs := []string{"ci", "--no-audit", "--no-fund", "--prefer-offline"}
+	installArgs := []string{"install", "--no-audit", "--no-fund",
+		fmt.Sprintf("%s@%s", packageName, version)}
 	if ignoreScripts {
-		ciArgs = append(ciArgs, "--ignore-scripts")
+		installArgs = append(installArgs, "--ignore-scripts")
 	}
 
-	ciCmd := exec.CommandContext(ctx.Context, npmPath, ciArgs...)
-	ciCmd.Dir = ctx.InstallDir
-	ciCmd.Env = env
+	installCmd := exec.CommandContext(ctx.Context, npmPath, installArgs...)
+	installCmd.Dir = ctx.InstallDir
+	installCmd.Env = env
 
-	output, err := ciCmd.CombinedOutput()
+	output, err := installCmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("npm ci failed: %w\nOutput: %s", err, string(output))
+		return fmt.Errorf("npm install failed: %w\nOutput: %s", err, string(output))
 	}
 
 	// npm ci installs executables to node_modules/.bin/

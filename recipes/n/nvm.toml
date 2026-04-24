@@ -34,7 +34,7 @@ vars = { NVM_DIR = "{install_dir}" }
 
 [[steps]]
 action = "install_shell_init"
-source_file = "{install_dir}/nvm.sh"
+source_file = "nvm.sh"
 target = "nvm"
 shells = ["bash", "zsh"]
 
