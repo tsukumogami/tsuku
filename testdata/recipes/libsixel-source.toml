@@ -28,6 +28,7 @@ action = "meson_build"
 source_dir = "."
 executables = ["img2sixel", "sixel2png"]
 buildtype = "release"
+meson_args = ["-Ddefault_library=static"]
 
 [[steps]]
 action = "install_binaries"
