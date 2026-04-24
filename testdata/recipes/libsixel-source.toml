@@ -29,7 +29,12 @@ source_dir = "."
 executables = ["img2sixel", "sixel2png"]
 buildtype = "release"
 
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/img2sixel", "bin/sixel2png"]
+
 [verify]
 command = "img2sixel --version"
-# Note: static version source isn't implemented, so {version} defaults to "dev"
-# Just verify command runs successfully without pattern matching
+mode = "output"
+reason = "static version source returns 'dev', not the real version string"
