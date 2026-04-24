@@ -428,7 +428,7 @@ func (e *Executor) Sandbox(
 	verified, verifyExitCode := e.readVerifyResults(outputDir, plan)
 
 	return &SandboxResult{
-		Passed:         result.ExitCode == 0,
+		Passed:         result.ExitCode == 0 && verified,
 		ExitCode:       result.ExitCode,
 		Stdout:         result.Stdout,
 		Stderr:         result.Stderr,
@@ -603,7 +603,12 @@ func (e *Executor) buildSandboxScript(
 		sb.WriteString("\n# Run verify command and capture results to marker files\n")
 		sb.WriteString("set +e\n")
 		sb.WriteString("export PATH=\"$TSUKU_HOME/bin:$TSUKU_HOME/tools/current:$PATH\"\n")
-		sb.WriteString(fmt.Sprintf("%s > /workspace/output/%s 2>&1\n", plan.Verify.Command, verifyOutputMarker))
+		// Expand {install_dir} to the tool's install path in the sandbox.
+		// The sandbox sets TSUKU_HOME=/workspace/tsuku, so the install dir
+		// follows the same tool-version convention as the host.
+		installDir := fmt.Sprintf("$TSUKU_HOME/tools/%s-%s", plan.Tool, plan.Version)
+		verifyCmd := strings.ReplaceAll(plan.Verify.Command, "{install_dir}", installDir)
+		sb.WriteString(fmt.Sprintf("%s > /workspace/output/%s 2>&1\n", verifyCmd, verifyOutputMarker))
 		sb.WriteString(fmt.Sprintf("echo $? > /workspace/output/%s\n", verifyExitMarker))
 	}
 

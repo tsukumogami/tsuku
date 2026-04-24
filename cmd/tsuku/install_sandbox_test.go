@@ -39,7 +39,7 @@ func TestSandboxJSONOutput_Serialization(t *testing.T) {
 				InstallExitCode: 1,
 				VerifyExitCode:  -1,
 				DurationMs:      1234,
-				Error:           strPtr("sandbox test failed with exit code 1"),
+				Error:           strPtr("installation failed with exit code 1"),
 			},
 			wantNull: false,
 		},
