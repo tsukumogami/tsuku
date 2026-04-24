@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-24T13:25:10Z",
+  "updated_at": "2026-04-24T15:12:53Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 233,
@@ -6606,11 +6606,11 @@
       "name": "cassandra",
       "source": "rubygems:cassandra",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-04-23T23:45:58.746474948Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-01T15:12:53.607206513Z"
     },
     {
       "name": "cassandra-reaper",
@@ -10236,11 +10236,11 @@
       "name": "datasette",
       "source": "npm:datasette",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-04-24T13:20:32.372315068Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-01T15:12:53.607206513Z"
     },
     {
       "name": "datawire/blackbird/telepresence",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 365,
@@ -28016,7 +28016,7 @@
       "name": "lsof",
       "source": "rubygems:lsof",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 10,
@@ -46686,11 +46686,11 @@
       "name": "tctl",
       "source": "pypi:tctl",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-04-24T13:20:32.372315068Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-01T15:12:53.607206513Z"
     },
     {
       "name": "tdlib",
