@@ -2,6 +2,7 @@ package executor
 
 import (
 	"fmt"
+	"path"
 	"runtime"
 	"strings"
 	"time"
@@ -186,30 +187,59 @@ func IsActionEvaluable(action string) bool {
 	return evaluable
 }
 
-// ExtractBinariesFromPlan returns the binary paths registered by install_binaries
+// ExtractBinariesFromPlan returns the binary dest paths registered by install_binaries
 // steps in the plan. The caller uses these to create correctly named symlinks in
 // $TSUKU_HOME/tools/current/. Without this list, symlink creation falls back to
 // bin/<toolname>, which is wrong when the installed binary has a different name
 // (e.g., argo-cd installs argocd, golang installs go/gofmt).
+//
+// Applies the same normalization as the install_binaries action:
+// - binaries mode: string "foo" → "bin/foo", string "src/foo" → "bin/foo"
+// - directory mode: paths kept as-is (e.g., "bin/cmake", "cargo/bin/cargo")
+// - map {src, dest}: uses dest directly
 func ExtractBinariesFromPlan(plan *InstallationPlan) []string {
 	var binaries []string
+	seen := make(map[string]bool)
 	for _, step := range plan.Steps {
 		if step.Action != "install_binaries" {
 			continue
 		}
-		raw, ok := step.Params["binaries"]
+		// Prefer "outputs" key, fall back to "binaries" (deprecated alias)
+		raw, ok := step.Params["outputs"]
+		if !ok {
+			raw, ok = step.Params["binaries"]
+			if !ok {
+				continue
+			}
+		}
+		installMode, _ := step.Params["install_mode"].(string)
+		isDirectoryMode := installMode == "directory" || installMode == "directory_wrapped"
+
+		items, ok := raw.([]interface{})
 		if !ok {
 			continue
 		}
-		switch v := raw.(type) {
-		case []interface{}:
-			for _, item := range v {
-				if s, ok := item.(string); ok {
-					binaries = append(binaries, s)
+		for _, item := range items {
+			var destPath string
+			switch v := item.(type) {
+			case string:
+				if isDirectoryMode {
+					destPath = v
+				} else {
+					destPath = path.Join("bin", path.Base(v))
+				}
+			case map[string]interface{}:
+				if dest, ok := v["dest"].(string); ok {
+					destPath = dest
 				}
 			}
-		case []string:
-			binaries = append(binaries, v...)
+			if destPath != "" {
+				binaryName := path.Base(destPath)
+				if !seen[binaryName] {
+					binaries = append(binaries, destPath)
+					seen[binaryName] = true
+				}
+			}
 		}
 	}
 	return binaries
