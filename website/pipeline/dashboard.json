@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-24T13:24:32Z",
+  "generated_at": "2026-04-24T13:25:46Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 24,
       "excluded": 6,
-      "failed": 50,
-      "pending": 3873,
+      "failed": 47,
+      "pending": 3876,
       "success": 1352
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 50,
-        "pending": 3853,
+        "failed": 47,
+        "pending": 3856,
         "success": 1333
       }
     },
@@ -81,8 +81,8 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 26,
-        "pending": 49,
+        "failed": 23,
+        "pending": 52,
         "success": 13,
         "total": 89
       }
@@ -454,6 +454,15 @@
           "next_retry_at": "2026-05-01T08:05:57Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 233,
+          "next_retry_at": "1734-01-13T13:37:53Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -481,6 +490,15 @@
           "next_retry_at": "2026-05-01T11:11:55Z"
         },
         {
+          "id": "rubygems:bup",
+          "name": "bup",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 13,
+          "next_retry_at": "2026-05-01T13:25:09Z"
+        },
+        {
           "id": "npm:chainsaw",
           "name": "chainsaw",
           "ecosystem": "npm",
@@ -497,15 +515,6 @@
           "category": "install_failed",
           "failure_count": 13,
           "next_retry_at": "2026-05-01T11:11:55Z"
-        },
-        {
-          "id": "npm:datasette",
-          "name": "datasette",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-04-24T13:20:32Z"
         },
         {
           "id": "npm:dmd",
@@ -571,13 +580,13 @@
           "next_retry_at": "2026-04-25T20:39:53Z"
         },
         {
-          "id": "rubygems:libnotify",
-          "name": "libnotify",
-          "ecosystem": "rubygems",
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-24T13:20:32Z"
+          "failure_count": 365,
+          "next_retry_at": "1734-01-13T13:37:53Z"
         },
         {
           "id": "rubygems:lsof",
@@ -742,24 +751,6 @@
           "next_retry_at": "2026-04-29T01:24:49Z"
         },
         {
-          "id": "rubygems:pastel",
-          "name": "pastel",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-04-24T11:31:33Z"
-        },
-        {
-          "id": "rubygems:pdftohtml",
-          "name": "pdftohtml",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-04-24T12:57:40Z"
-        },
-        {
           "id": "rubygems:pidof",
           "name": "pidof",
           "ecosystem": "rubygems",
@@ -823,15 +814,6 @@
           "next_retry_at": "2026-04-25T06:48:49Z"
         },
         {
-          "id": "rubygems:re2",
-          "name": "re2",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-04-24T11:11:57Z"
-        },
-        {
           "id": "npm:sigstore",
           "name": "sigstore",
           "ecosystem": "npm",
@@ -839,15 +821,6 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-04-27T05:46:25Z"
-        },
-        {
-          "id": "pypi:tctl",
-          "name": "tctl",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-04-24T13:20:32Z"
         },
         {
           "id": "pypi:vllm",
@@ -2744,15 +2717,6 @@
           "failure_count": 1
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 232,
-          "next_retry_at": "1734-01-13T10:10:16Z"
-        },
-        {
           "id": "homebrew:azure-cli",
           "name": "azure-cli",
           "ecosystem": "homebrew",
@@ -3732,15 +3696,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:bup",
-          "name": "bup",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-04-23T23:45:58Z"
         },
         {
           "id": "homebrew:burp",
@@ -5955,6 +5910,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:datasette",
+          "name": "datasette",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-04-24T13:20:32Z"
         },
         {
           "id": "homebrew:datawire/blackbird/telepresence",
@@ -13342,15 +13306,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 363,
-          "next_retry_at": "1734-01-13T10:10:16Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -13680,6 +13635,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:libnotify",
+          "name": "libnotify",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-04-24T13:20:32Z"
         },
         {
           "id": "homebrew:libolm",
@@ -18828,6 +18792,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:pastel",
+          "name": "pastel",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-04-24T11:31:33Z"
+        },
+        {
           "id": "homebrew:patchpal",
           "name": "patchpal",
           "ecosystem": "homebrew",
@@ -18945,6 +18918,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:pdftohtml",
+          "name": "pdftohtml",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-04-24T12:57:40Z"
         },
         {
           "id": "homebrew:pdm",
@@ -21364,6 +21346,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:re2",
+          "name": "re2",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-04-24T11:11:57Z"
         },
         {
           "id": "homebrew:readsb",
@@ -24898,6 +24889,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:tctl",
+          "name": "tctl",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-04-24T13:20:32Z"
         },
         {
           "id": "homebrew:tdlib",
