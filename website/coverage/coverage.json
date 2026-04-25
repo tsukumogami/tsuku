@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-04-25T21:24:55Z",
-  "total_recipes": 1421,
+  "generated_at": "2026-04-25T23:36:55Z",
+  "total_recipes": 1422,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 853,
-        "total": 1421,
-        "pct": 60.028149190710764
+        "supported": 854,
+        "total": 1422,
+        "pct": 60.056258790436004
       },
       "glibc": {
-        "supported": 1386,
-        "total": 1421,
-        "pct": 97.53694581280789
+        "supported": 1387,
+        "total": 1422,
+        "pct": 97.53867791842475
       },
       "musl": {
-        "supported": 1241,
-        "total": 1421,
-        "pct": 87.33286418015483
+        "supported": 1245,
+        "total": 1422,
+        "pct": 87.55274261603375
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1269,
-        "musl_support": 1091,
-        "glibc_support": 1236
+        "total": 1270,
+        "musl_support": 1095,
+        "glibc_support": 1237
       }
     }
   },
@@ -1493,11 +1493,9 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": false
+        "musl": true
       },
-      "gaps": [
-        "musl"
-      ],
+      "gaps": null,
       "errors": null,
       "warnings": null
     },
@@ -4838,6 +4836,18 @@
       "gaps": [
         "musl"
       ],
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "eslint",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
       "errors": null,
       "warnings": null
     },
@@ -16104,11 +16114,9 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": false
+        "musl": true
       },
-      "gaps": [
-        "musl"
-      ],
+      "gaps": null,
       "errors": null,
       "warnings": null
     },
@@ -16997,11 +17005,9 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": false
+        "musl": true
       },
-      "gaps": [
-        "musl"
-      ],
+      "gaps": null,
       "errors": null,
       "warnings": null
     },
