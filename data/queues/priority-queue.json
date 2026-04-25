@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-25T08:56:54Z",
+  "updated_at": "2026-04-25T10:45:47Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 238,
-      "next_retry_at": "1734-01-14T07:31:52.21121231Z"
+      "failure_count": 239,
+      "next_retry_at": "1734-01-14T10:58:30.011155542Z"
     },
     {
       "name": "azqr",
@@ -12116,11 +12116,11 @@
       "name": "dug",
       "source": "rubygems:dug",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-04-24T05:33:26.771352032Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-05-02T10:45:46.86593135Z"
     },
     {
       "name": "dumbpipe",
@@ -18186,7 +18186,7 @@
       "name": "got",
       "source": "npm:got",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 11,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 371,
-      "next_retry_at": "1734-01-14T07:31:52.21121231Z"
+      "failure_count": 373,
+      "next_retry_at": "1734-01-14T10:58:30.011155542Z"
     },
     {
       "name": "libaacs",
