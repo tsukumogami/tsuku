@@ -1,0 +1,31 @@
+[metadata]
+name = "step"
+description = "A zero-trust swiss army knife for working with X.509, OAuth, JWT, OATH OTP"
+homepage = "https://smallstep.com/cli/"
+version_format = "semver"
+curated = true
+
+[version]
+github_repo = "smallstep/cli"
+tag_prefix = "v"
+
+# Linux: statically linked Go binary works on glibc and musl
+[[steps]]
+action = "github_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
+repo = "smallstep/cli"
+asset_pattern = "step_linux_{version}_{arch}.tar.gz"
+strip_dirs = 1
+binaries = ["bin/step"]
+
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "smallstep/cli"
+asset_pattern = "step_darwin_{version}_{arch}.tar.gz"
+strip_dirs = 1
+binaries = ["bin/step"]
+
+[verify]
+command = "step --version"
+pattern = "{version}"

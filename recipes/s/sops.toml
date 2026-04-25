@@ -1,0 +1,16 @@
+[metadata]
+name = "sops"
+description = "Simple and flexible tool for managing secrets"
+homepage = "https://github.com/getsops/sops"
+version_format = "semver"
+curated = true
+
+[[steps]]
+action = "github_file"
+repo = "getsops/sops"
+asset_pattern = "sops-v{version}.{os}.{arch}"
+binary = "sops"
+
+[verify]
+command = "sops --version"
+pattern = "{version}"
