@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-25T10:45:15Z",
+  "generated_at": "2026-04-25T10:46:37Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 24,
       "excluded": 6,
-      "failed": 48,
-      "pending": 3875,
+      "failed": 50,
+      "pending": 3873,
       "success": 1352
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 18,
         "excluded": 6,
-        "failed": 48,
-        "pending": 3855,
+        "failed": 50,
+        "pending": 3853,
         "success": 1333
       }
     },
@@ -74,15 +74,14 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 24,
-        "pending": 51,
+        "failed": 25,
+        "pending": 50,
         "success": 13,
         "total": 89
       }
@@ -454,6 +453,15 @@
           "next_retry_at": "2026-05-01T08:05:57Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 239,
+          "next_retry_at": "1734-01-14T10:58:30Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -607,6 +615,15 @@
           "next_retry_at": "2026-05-02T08:56:53Z"
         },
         {
+          "id": "rubygems:dug",
+          "name": "dug",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-05-02T10:45:46Z"
+        },
+        {
           "id": "npm:e2b",
           "name": "e2b",
           "ecosystem": "npm",
@@ -623,15 +640,6 @@
           "category": "install_failed",
           "failure_count": 13,
           "next_retry_at": "2026-05-02T08:56:53Z"
-        },
-        {
-          "id": "npm:got",
-          "name": "got",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-25T10:44:23Z"
         },
         {
           "id": "npm:hasura-cli",
@@ -659,6 +667,15 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-04-25T20:39:53Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 373,
+          "next_retry_at": "1734-01-14T10:58:30Z"
         },
         {
           "id": "npm:mailhog",
@@ -2724,15 +2741,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 238,
-          "next_retry_at": "1734-01-14T07:31:52Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -6777,15 +6785,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:dug",
-          "name": "dug",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-24T05:33:26Z"
-        },
-        {
           "id": "homebrew:dumbpipe",
           "name": "dumbpipe",
           "ecosystem": "homebrew",
@@ -9795,6 +9794,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:got",
+          "name": "got",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-25T10:44:23Z"
         },
         {
           "id": "homebrew:gpa",
@@ -13232,15 +13240,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 371,
-          "next_retry_at": "1734-01-14T07:31:52Z"
         },
         {
           "id": "homebrew:libaacs",
