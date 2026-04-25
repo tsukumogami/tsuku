@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-25T20:43:05Z",
+  "generated_at": "2026-04-25T20:44:11Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -74,14 +74,15 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 28,
-        "pending": 47,
+        "failed": 29,
+        "pending": 46,
         "success": 13,
         "total": 89
       }
@@ -442,6 +443,15 @@
           "next_retry_at": "2026-05-01T08:05:57Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 242,
+          "next_retry_at": "1734-01-14T20:56:20Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -676,6 +686,15 @@
           "next_retry_at": "2026-05-02T18:54:13Z"
         },
         {
+          "id": "rubygems:haproxy",
+          "name": "haproxy",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-05-02T20:43:37Z"
+        },
+        {
           "id": "npm:hasura-cli",
           "name": "hasura-cli",
           "ecosystem": "npm",
@@ -692,24 +711,6 @@
           "category": "install_failed",
           "failure_count": 12,
           "next_retry_at": "2026-05-02T18:54:13Z"
-        },
-        {
-          "id": "npm:lcm",
-          "name": "lcm",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-25T20:39:53Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 378,
-          "next_retry_at": "1734-01-14T19:06:56Z"
         },
         {
           "id": "npm:mailhog",
@@ -2739,15 +2740,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 241,
-          "next_retry_at": "1734-01-14T17:56:54Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -10446,15 +10438,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:haproxy",
-          "name": "haproxy",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-24T07:36:32Z"
-        },
-        {
           "id": "homebrew:harbor-cli",
           "name": "harbor-cli",
           "ecosystem": "homebrew",
@@ -13051,6 +13034,15 @@
           "failure_count": 0
         },
         {
+          "id": "npm:lcm",
+          "name": "lcm",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-25T20:39:53Z"
+        },
+        {
           "id": "homebrew:ldid",
           "name": "ldid",
           "ecosystem": "homebrew",
@@ -13193,6 +13185,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 378,
+          "next_retry_at": "1734-01-14T19:06:56Z"
         },
         {
           "id": "homebrew:libaacs",
