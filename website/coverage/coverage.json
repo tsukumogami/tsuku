@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-04-23T22:22:30Z",
-  "total_recipes": 1418,
+  "generated_at": "2026-04-25T13:58:39Z",
+  "total_recipes": 1421,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 849,
-        "total": 1418,
-        "pct": 59.87306064880112
+        "supported": 853,
+        "total": 1421,
+        "pct": 60.028149190710764
       },
       "glibc": {
-        "supported": 1383,
-        "total": 1418,
-        "pct": 97.53173483779972
+        "supported": 1386,
+        "total": 1421,
+        "pct": 97.53694581280789
       },
       "musl": {
-        "supported": 1239,
-        "total": 1418,
-        "pct": 87.37658674188998
+        "supported": 1241,
+        "total": 1421,
+        "pct": 87.33286418015483
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1266,
-        "musl_support": 1089,
-        "glibc_support": 1233
+        "total": 1269,
+        "musl_support": 1091,
+        "glibc_support": 1236
       }
     }
   },
@@ -1793,17 +1793,13 @@
       "name": "bun",
       "type": "tool",
       "platforms": {
-        "darwin": false,
+        "darwin": true,
         "glibc": true,
         "musl": true
       },
-      "gaps": [
-        "darwin"
-      ],
+      "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'bun' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "bundler",
@@ -3782,6 +3778,20 @@
       "warnings": [
         "recipe 'delta' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "deno",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": false
+      },
+      "gaps": [
+        "musl"
+      ],
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "dependabot",
@@ -14446,6 +14456,18 @@
       "warnings": null
     },
     {
+      "name": "nvm",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "nvtop",
       "type": "tool",
       "platforms": {
@@ -15810,6 +15832,18 @@
       "warnings": [
         "recipe 'pngcrush' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "pnpm",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "po4a",
