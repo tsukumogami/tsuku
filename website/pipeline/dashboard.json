@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-25T15:44:22Z",
+  "generated_at": "2026-04-25T15:45:29Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 23,
       "excluded": 6,
-      "failed": 51,
-      "pending": 3870,
+      "failed": 52,
+      "pending": 3869,
       "success": 1355
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 17,
         "excluded": 6,
-        "failed": 51,
-        "pending": 3852,
+        "failed": 52,
+        "pending": 3851,
         "success": 1334
       }
     },
@@ -74,8 +74,7 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -443,15 +442,6 @@
           "next_retry_at": "2026-05-01T08:05:57Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 240,
-          "next_retry_at": "1734-01-14T14:25:27Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -650,6 +640,15 @@
           "next_retry_at": "2026-05-02T14:12:44Z"
         },
         {
+          "id": "rubygems:gitingest",
+          "name": "gitingest",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-05-02T15:44:49Z"
+        },
+        {
           "id": "npm:got",
           "name": "got",
           "ecosystem": "npm",
@@ -657,6 +656,15 @@
           "category": "install_failed",
           "failure_count": 12,
           "next_retry_at": "2026-05-02T13:06:40Z"
+        },
+        {
+          "id": "npm:hasura-cli",
+          "name": "hasura-cli",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-05-02T15:44:49Z"
         },
         {
           "id": "npm:kew",
@@ -675,6 +683,15 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-04-25T20:39:53Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 376,
+          "next_retry_at": "1734-01-14T15:57:32Z"
         },
         {
           "id": "npm:mailhog",
@@ -774,15 +791,6 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-04-29T01:24:49Z"
-        },
-        {
-          "id": "rubygems:pidof",
-          "name": "pidof",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-04-25T14:51:44Z"
         },
         {
           "id": "rubygems:pioneer",
@@ -2722,6 +2730,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 240,
+          "next_retry_at": "1734-01-14T14:25:27Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -9279,15 +9296,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:gitingest",
-          "name": "gitingest",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-24T05:33:26Z"
-        },
-        {
           "id": "homebrew:gitlab-ci-local",
           "name": "gitlab-ci-local",
           "ecosystem": "homebrew",
@@ -10601,15 +10609,6 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:hasura-cli",
-          "name": "hasura-cli",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-25T14:08:11Z"
         },
         {
           "id": "homebrew:hatch",
@@ -13203,15 +13202,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 374,
-          "next_retry_at": "1734-01-14T14:11:48Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -19206,6 +19196,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:pidof",
+          "name": "pidof",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-04-25T14:51:44Z"
         },
         {
           "id": "homebrew:pie",
