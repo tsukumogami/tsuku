@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-24T22:43:26Z",
+  "updated_at": "2026-04-25T02:15:01Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 235,
-      "next_retry_at": "1734-01-13T21:04:25.022957894Z"
+      "failure_count": 236,
+      "next_retry_at": "1734-01-14T02:27:43.998634464Z"
     },
     {
       "name": "azqr",
@@ -9156,11 +9156,11 @@
       "name": "cowsay",
       "source": "rubygems:cowsay",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-04-24T02:22:15.642209897Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-02T02:15:00.853410272Z"
     },
     {
       "name": "cp2k",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 367,
-      "next_retry_at": "1734-01-13T21:04:25.022957894Z"
+      "failure_count": 369,
+      "next_retry_at": "1734-01-14T02:27:43.998634464Z"
     },
     {
       "name": "libaacs",
@@ -29606,7 +29606,7 @@
       "name": "memcached",
       "source": "rubygems:memcached",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 9,
@@ -30426,7 +30426,7 @@
       "name": "mktorrent",
       "source": "rubygems:mktorrent",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 9,
