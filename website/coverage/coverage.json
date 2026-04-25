@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-25T13:58:39Z",
+  "generated_at": "2026-04-25T21:24:55Z",
   "total_recipes": 1421,
   "summary": {
     "by_platform": {
@@ -148,9 +148,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'actionlint' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "actions-up",
@@ -7070,9 +7068,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'golangci-lint' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "golangci-lint-langserver",
@@ -17556,9 +17552,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'shellcheck' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "shellshare",
@@ -17584,9 +17578,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'shfmt' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "shtool",
