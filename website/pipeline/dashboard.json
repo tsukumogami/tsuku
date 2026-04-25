@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-04-25T22:44:05Z",
+  "generated_at": "2026-04-25T23:38:00Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 23,
       "excluded": 6,
       "failed": 54,
-      "pending": 3867,
-      "success": 1355
+      "pending": 3866,
+      "success": 1356
     },
     "by_tier": {
       "1": {
@@ -24,8 +24,8 @@
         "blocked": 17,
         "excluded": 6,
         "failed": 54,
-        "pending": 3849,
-        "success": 1334
+        "pending": 3848,
+        "success": 1335
       }
     },
     "by_ecosystem": {
@@ -55,8 +55,8 @@
       },
       "homebrew": {
         "blocked": 23,
-        "pending": 3740,
-        "success": 1120,
+        "pending": 3739,
+        "success": 1121,
         "total": 4883
       },
       "manual": {
@@ -68,14 +68,13 @@
         "total": 1
       },
       "npm": {
-        "failed": 19,
-        "pending": 1,
+        "failed": 18,
+        "pending": 2,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -443,15 +442,6 @@
           "next_retry_at": "2026-05-01T08:05:57Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 243,
-          "next_retry_at": "1734-01-14T22:56:14Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -720,6 +710,15 @@
           "category": "install_failed",
           "failure_count": 12,
           "next_retry_at": "2026-05-02T18:54:13Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 380,
+          "next_retry_at": "1734-01-14T23:50:00Z"
         },
         {
           "id": "npm:mailhog",
@@ -2749,6 +2748,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 243,
+          "next_retry_at": "1734-01-14T22:56:14Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -7337,13 +7345,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "homebrew:eslint",
-          "name": "eslint",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
         },
         {
           "id": "homebrew:eslint_d",
@@ -13185,15 +13186,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 379,
-          "next_retry_at": "1734-01-14T21:38:02Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -30514,6 +30506,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:eslint",
+          "name": "eslint",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "crates.io:espflash",
           "name": "espflash",
           "ecosystem": "crates.io",
@@ -40566,6 +40565,11 @@
     {
       "name": "eksctl",
       "source": "github:eksctl-io/eksctl",
+      "validation_status": "valid"
+    },
+    {
+      "name": "eslint",
+      "source": "homebrew:eslint",
       "validation_status": "valid"
     },
     {
