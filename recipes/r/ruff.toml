@@ -11,7 +11,7 @@ action = "github_archive"
 when = { os = ["linux"], libc = ["glibc"] }
 repo = "astral-sh/ruff"
 asset_pattern = "ruff-{arch}.tar.gz"
-strip_dirs = 0
+strip_dirs = 1
 binaries = ["ruff"]
 arch_mapping = { amd64 = "x86_64-unknown-linux-gnu", arm64 = "aarch64-unknown-linux-gnu" }
 
@@ -21,7 +21,7 @@ action = "github_archive"
 when = { os = ["linux"], libc = ["musl"] }
 repo = "astral-sh/ruff"
 asset_pattern = "ruff-{arch}.tar.gz"
-strip_dirs = 0
+strip_dirs = 1
 binaries = ["ruff"]
 arch_mapping = { amd64 = "x86_64-unknown-linux-musl", arm64 = "aarch64-unknown-linux-musl" }
 
@@ -30,7 +30,7 @@ action = "github_archive"
 when = { os = ["darwin"] }
 repo = "astral-sh/ruff"
 asset_pattern = "ruff-{arch}.tar.gz"
-strip_dirs = 0
+strip_dirs = 1
 binaries = ["ruff"]
 arch_mapping = { amd64 = "x86_64-apple-darwin", arm64 = "aarch64-apple-darwin" }
 
