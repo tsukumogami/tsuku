@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-25T05:22:12Z",
+  "updated_at": "2026-04-25T07:19:09Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 236,
-      "next_retry_at": "1734-01-14T02:27:43.998634464Z"
+      "failure_count": 238,
+      "next_retry_at": "1734-01-14T07:31:52.21121231Z"
     },
     {
       "name": "azqr",
@@ -10876,11 +10876,11 @@
       "name": "dict",
       "source": "rubygems:dict",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-04-24T02:22:15.642209897Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-02T07:19:09.065988118Z"
     },
     {
       "name": "diesel",
@@ -12966,7 +12966,7 @@
       "name": "ent",
       "source": "npm:ent",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 12,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 369,
-      "next_retry_at": "1734-01-14T02:27:43.998634464Z"
+      "failure_count": 371,
+      "next_retry_at": "1734-01-14T07:31:52.21121231Z"
     },
     {
       "name": "libaacs",
@@ -39796,7 +39796,7 @@
       "name": "quickjs",
       "source": "rubygems:quickjs",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
