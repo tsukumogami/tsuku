@@ -36,4 +36,5 @@ arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
 
 [verify]
 command = "shellcheck --version"
-pattern = "{version}"
+mode = "output"
+reason = "apk_install on Alpine may provide a different version than the GitHub release"
