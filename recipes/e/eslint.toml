@@ -1,0 +1,15 @@
+[metadata]
+name = "eslint"
+description = "Pluggable JavaScript linter"
+homepage = "https://eslint.org"
+version_format = "semver"
+curated = true
+
+[[steps]]
+action = "npm_install"
+package = "eslint"
+executables = ["eslint"]
+
+[verify]
+command = "eslint --version"
+pattern = "v{version}"

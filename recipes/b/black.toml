@@ -3,13 +3,28 @@ name = "black"
 description = "The uncompromising Python code formatter"
 homepage = "https://github.com/psf/black"
 version_format = "semver"
-supported_libc = ["glibc"]
+curated = true
 
 [[steps]]
 action = "pipx_install"
+when = { os = ["linux"], libc = ["glibc"] }
+package = "black"
+executables = ["black", "blackd"]
+
+# musl Linux (Alpine): pipx fails without musl wheels; use system package instead
+[[steps]]
+action = "apk_install"
+when = { os = ["linux"], libc = ["musl"] }
+packages = ["black"]
+fallback = "install black via: sudo apk add black"
+
+[[steps]]
+action = "pipx_install"
+when = { os = ["darwin"] }
 package = "black"
 executables = ["black", "blackd"]
 
 [verify]
 command = "black --version"
-pattern = "black, {version}"
+mode = "output"
+reason = "apk_install on Alpine may provide a different version than the PyPI release"
