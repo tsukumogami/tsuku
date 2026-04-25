@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-25T07:19:09Z",
+  "updated_at": "2026-04-25T08:56:54Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 238,
@@ -11566,11 +11566,11 @@
       "name": "doggo",
       "source": "rubygems:doggo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-04-24T05:33:26.771352032Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-02T08:56:53.876888288Z"
     },
     {
       "name": "dokku/repo/dokku",
@@ -12966,11 +12966,11 @@
       "name": "ent",
       "source": "npm:ent",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-04-25T07:10:37.475215951Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-02T08:56:53.876888288Z"
     },
     {
       "name": "ente-cli",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 371,
