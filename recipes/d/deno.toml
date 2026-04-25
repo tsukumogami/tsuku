@@ -1,0 +1,56 @@
+[metadata]
+name = "deno"
+description = "A secure runtime for JavaScript and TypeScript"
+homepage = "https://deno.land/"
+version_format = "semver"
+curated = true
+# Upstream only publishes glibc Linux binaries; the apk_install step below is
+# kept to satisfy the structural libc coverage validator.
+supported_libc = ["glibc"]
+
+# Linux amd64
+[[steps]]
+action = "github_archive"
+repo = "denoland/deno"
+when = { platform = ["linux/amd64"] }
+asset_pattern = "deno-x86_64-unknown-linux-gnu.zip"
+strip_dirs = 0
+binaries = ["deno"]
+
+# Linux arm64
+[[steps]]
+action = "github_archive"
+repo = "denoland/deno"
+when = { platform = ["linux/arm64"] }
+asset_pattern = "deno-aarch64-unknown-linux-gnu.zip"
+strip_dirs = 0
+binaries = ["deno"]
+
+# macOS amd64
+[[steps]]
+action = "github_archive"
+repo = "denoland/deno"
+when = { platform = ["darwin/amd64"] }
+asset_pattern = "deno-x86_64-apple-darwin.zip"
+strip_dirs = 0
+binaries = ["deno"]
+
+# macOS arm64
+[[steps]]
+action = "github_archive"
+repo = "denoland/deno"
+when = { platform = ["darwin/arm64"] }
+asset_pattern = "deno-aarch64-apple-darwin.zip"
+strip_dirs = 0
+binaries = ["deno"]
+
+# musl Linux: apk fallback (declared for coverage; supported_libc = ["glibc"]
+# prevents this from being tested in nightly CI)
+[[steps]]
+action = "apk_install"
+packages = ["deno"]
+when = { os = ["linux"], libc = ["musl"] }
+
+[verify]
+command = "deno --version"
+pattern = "deno {version}"

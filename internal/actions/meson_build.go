@@ -174,65 +174,60 @@ func (a *MesonBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 		return fmt.Errorf("meson install failed: %w\nOutput: %s", err, string(installOutput))
 	}
 
-	// Step 4: Fix RPATH on installed executables if lib/ directory exists
-	// Meson builds often link executables to shared libraries in lib/
-	// The RPATH gets set to the absolute staging directory, which breaks after relocation
-	libDir := filepath.Join(ctx.InstallDir, "lib")
-	if stat, err := os.Stat(libDir); err == nil && stat.IsDir() {
-		reporter.Log("   Found lib/ directory, fixing RPATH for shared library dependencies")
-
-		// Find where .so files are actually located (could be in subdirectories)
-		libPaths := findLibraryDirectories(libDir)
+	// Step 4: Fix RPATH on installed executables if shared libraries exist anywhere in InstallDir.
+	// Meson builds often link executables to shared libraries. The RPATH gets set to the absolute
+	// staging directory, which breaks after relocation. Search the entire install tree to handle
+	// all meson layouts: lib/, lib64/, lib/x86_64-linux-gnu/, etc.
+	// Skip RPATH fixup entirely when only static libraries exist — no runtime relocation needed.
+	{
+		libPaths := findLibraryDirectories(ctx.InstallDir)
 		if len(libPaths) == 0 {
-			reporter.Log("   No shared libraries found in lib/")
+			reporter.Log("   No shared libraries found, skipping RPATH fixup")
 		} else {
-			reporter.Log("   Found libraries in: %v", libPaths)
-		}
+			reporter.Log("   Found shared libraries in: %v", libPaths)
 
-		binDir := filepath.Join(ctx.InstallDir, "bin")
-		for _, exe := range executables {
-			exePath := filepath.Join(binDir, exe)
-			reporter.Log("   Processing %s", exe)
-
-			// Detect binary format
-			format, err := detectBinaryFormat(exePath)
-			if err != nil {
-				return fmt.Errorf("failed to detect binary format for %s: %w", exe, err)
-			}
-			reporter.Log("   Binary format: %s", format)
-
-			// Build RPATH from found library directories
-			// Convert absolute paths to $ORIGIN-relative paths
 			rpath := buildRpathFromLibDirs(libPaths, ctx.InstallDir)
 			if rpath == "" {
-				// Fallback to standard lib path
 				rpath = "$ORIGIN/../lib"
 			}
 			reporter.Log("   RPATH: %s", rpath)
 
-			// Set RPATH for relative library lookup
-			var rpathErr error
-			switch format {
-			case "elf":
-				reporter.Log("   Setting RPATH with patchelf")
-				rpathErr = setRpathLinux(ctx, exePath, rpath, reporter)
-			case "macho":
-				reporter.Log("   Setting RPATH with install_name_tool")
-				rpathErr = setRpathMacOS(exePath, rpath, reporter)
-				if rpathErr == nil {
-					// Also fix library load commands to use @rpath
-					rpathErr = fixMachoLibraryPaths(exePath, ctx.InstallDir, reporter)
-				}
-			default:
-				// Unknown format, skip RPATH fix
-				reporter.Log("   Skipping RPATH fix (unknown format)")
-				continue
-			}
+			binDir := filepath.Join(ctx.InstallDir, "bin")
+			for _, exe := range executables {
+				exePath := filepath.Join(binDir, exe)
+				reporter.Log("   Processing %s", exe)
 
-			if rpathErr != nil {
-				return fmt.Errorf("failed to set RPATH for %s: %w", exe, rpathErr)
+				// Detect binary format
+				format, err := detectBinaryFormat(exePath)
+				if err != nil {
+					return fmt.Errorf("failed to detect binary format for %s: %w", exe, err)
+				}
+				reporter.Log("   Binary format: %s", format)
+
+				// Set RPATH for relative library lookup
+				var rpathErr error
+				switch format {
+				case "elf":
+					reporter.Log("   Setting RPATH with patchelf")
+					rpathErr = setRpathLinux(ctx, exePath, rpath, reporter)
+				case "macho":
+					reporter.Log("   Setting RPATH with install_name_tool")
+					rpathErr = setRpathMacOS(exePath, rpath, reporter)
+					if rpathErr == nil {
+						// Also fix library load commands to use @rpath
+						rpathErr = fixMachoLibraryPaths(exePath, ctx.InstallDir, reporter)
+					}
+				default:
+					// Unknown format, skip RPATH fix
+					reporter.Log("   Skipping RPATH fix (unknown format)")
+					continue
+				}
+
+				if rpathErr != nil {
+					return fmt.Errorf("failed to set RPATH for %s: %w", exe, rpathErr)
+				}
+				reporter.Log("   Successfully set RPATH for %s", exe)
 			}
-			reporter.Log("   Successfully set RPATH for %s", exe)
 		}
 	}
 
@@ -401,7 +396,9 @@ func findLibraryDirectories(libDir string) []string {
 		// Check if this is a shared library file
 		if !info.IsDir() {
 			ext := filepath.Ext(path)
-			isLibrary := ext == ".so" || ext == ".dylib" || strings.HasPrefix(ext, ".so.")
+			// filepath.Ext("libsixel.so.1") returns ".1", not ".so" or ".so.1",
+			// so check for versioned sonames like libsixel.so.1 via Contains too.
+			isLibrary := ext == ".so" || ext == ".dylib" || strings.Contains(filepath.Base(path), ".so.")
 
 			if isLibrary {
 				// Add the parent directory (not the file itself)
@@ -420,7 +417,7 @@ func findLibraryDirectories(libDir string) []string {
 }
 
 // buildRpathFromLibDirs converts absolute library directory paths to $ORIGIN-relative paths.
-// Returns a single RPATH string with relative paths to all library directories.
+// Returns a colon-separated RPATH string covering all library directories.
 func buildRpathFromLibDirs(libPaths []string, installDir string) string {
 	if len(libPaths) == 0 {
 		return ""
@@ -443,12 +440,5 @@ func buildRpathFromLibDirs(libPaths []string, installDir string) string {
 		rpathParts = append(rpathParts, rpathPart)
 	}
 
-	if len(rpathParts) == 0 {
-		return ""
-	}
-
-	// Return the first (most common) path
-	// Note: We can't use ':' to combine multiple paths because validateRpath rejects it
-	// In practice, libraries are usually in one location
-	return rpathParts[0]
+	return strings.Join(rpathParts, ":")
 }

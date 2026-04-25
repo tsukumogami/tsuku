@@ -20,6 +20,7 @@ type sandboxJSONOutput struct {
 	Verified        bool    `json:"verified"`
 	InstallExitCode int     `json:"install_exit_code"`
 	VerifyExitCode  int     `json:"verify_exit_code"`
+	VerifyOutput    string  `json:"verify_output,omitempty"` // included when verify fails
 	DurationMs      int64   `json:"duration_ms"`
 	Error           *string `json:"error"` // null on success, string on failure
 }
@@ -189,7 +190,13 @@ func buildSandboxJSONOutput(toolName string, result *sandbox.SandboxResult) sand
 
 	// Handle failed sandbox test
 	if !result.Passed {
-		errMsg := fmt.Sprintf("sandbox test failed with exit code %d", result.ExitCode)
+		var errMsg string
+		if result.ExitCode != 0 {
+			errMsg = fmt.Sprintf("installation failed with exit code %d", result.ExitCode)
+		} else {
+			errMsg = fmt.Sprintf("verification failed with exit code %d", result.VerifyExitCode)
+			out.VerifyOutput = strings.TrimSpace(result.VerifyOutput)
+		}
 		out.Error = &errMsg
 		return out
 	}
@@ -217,15 +224,13 @@ func emitSandboxHumanReadable(result *sandbox.SandboxResult) error {
 			printInfo("Container output:")
 			printInfo(result.Stdout)
 		}
-		// Report verification results separately if install passed but verify failed
-		if !result.Verified && result.VerifyExitCode >= 0 {
-			printInfo()
-			printInfof("Note: verification command exited %d (expected 0)\n", result.VerifyExitCode)
-			printInfo("This does not affect the install result. Use --json for detailed verification output.")
-		}
 	} else {
 		printInfo("Sandbox test FAILED")
-		printInfof("Exit code: %d\n", result.ExitCode)
+		if result.ExitCode != 0 {
+			printInfof("Exit code: %d\n", result.ExitCode)
+		} else {
+			printInfof("Verification failed with exit code: %d\n", result.VerifyExitCode)
+		}
 		if result.Stderr != "" {
 			printInfo()
 			printInfo("Error output:")
@@ -236,7 +241,10 @@ func emitSandboxHumanReadable(result *sandbox.SandboxResult) error {
 			printInfo("Container output:")
 			printInfo(result.Stdout)
 		}
-		return fmt.Errorf("sandbox test failed with exit code %d", result.ExitCode)
+		if result.ExitCode != 0 {
+			return fmt.Errorf("sandbox test failed with exit code %d", result.ExitCode)
+		}
+		return fmt.Errorf("sandbox verification failed with exit code %d", result.VerifyExitCode)
 	}
 
 	return nil

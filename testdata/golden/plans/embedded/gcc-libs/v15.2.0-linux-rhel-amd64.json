@@ -96,7 +96,7 @@
     {
       "action": "run_command",
       "params": {
-        "command": "mkdir -p lib\n# Copy the actual library files (find the real files, not symlinks)\ncp lib/gcc/current/libstdc++.so.6.0.* lib/\ncp lib/gcc/current/libgcc_s.so.1 lib/\n# Create standard symlinks with explicit targets\ncd lib\nSTDCXX=$(ls libstdc++.so.6.0.* 2>/dev/null | head -1)\nln -sf \"$STDCXX\" libstdc++.so.6\nln -sf libstdc++.so.6 libstdc++.so\nln -sf libgcc_s.so.1 libgcc_s.so\n"
+        "command": "mkdir -p lib\n# Copy the actual library files (find the real files, not symlinks)\ncp lib/gcc/current/libstdc++.so.6.0.* lib/\ncp lib/gcc/current/libgcc_s.so.1 lib/\n# libatomic is required by some binaries (e.g. node.real); copy versioned file + create soname symlink\ncp lib/gcc/current/libatomic.so.1.* lib/ 2>/dev/null || cp lib/gcc/current/libatomic.so.1 lib/ 2>/dev/null || true\n# Create standard symlinks with explicit targets\ncd lib\nSTDCXX=$(ls libstdc++.so.6.0.* 2>/dev/null | head -1)\nln -sf \"$STDCXX\" libstdc++.so.6\nln -sf libstdc++.so.6 libstdc++.so\nln -sf libgcc_s.so.1 libgcc_s.so\nLIBATOMIC=$(ls libatomic.so.1.* 2>/dev/null | head -1)\n[ -n \"$LIBATOMIC\" ] && ln -sf \"$LIBATOMIC\" libatomic.so.1 || true\n[ -f libatomic.so.1 ] && ln -sf libatomic.so.1 libatomic.so || true\n"
       },
       "evaluable": false,
       "deterministic": false
@@ -106,7 +106,8 @@
       "params": {
         "patterns": [
           "lib/libstdc++.so*",
-          "lib/libgcc_s.so*"
+          "lib/libgcc_s.so*",
+          "lib/libatomic.so*"
         ]
       },
       "evaluable": true,

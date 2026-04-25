@@ -55,4 +55,5 @@ install_mode = "directory"
 
 [verify]
 command = "cmake --version"
-pattern = "{version}"
+mode = "output"
+reason = "Alpine musl installs cmake via apk at a different version than the GitHub release; output mode verifies availability across all platforms"

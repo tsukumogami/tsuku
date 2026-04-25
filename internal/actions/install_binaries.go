@@ -25,10 +25,14 @@ func (a *InstallBinariesAction) Name() string {
 func (a *InstallBinariesAction) Preflight(params map[string]interface{}) *PreflightResult {
 	result := &PreflightResult{}
 
+	installMode, _ := GetString(params, "install_mode")
+	isDirectoryMode := installMode == "directory" || installMode == "directory_wrapped"
+
 	_, hasOutputs := params["outputs"]
 	_, hasBinaries := params["binaries"]
 
-	if !hasOutputs && !hasBinaries {
+	// Directory modes don't require outputs — the whole extracted tree is installed.
+	if !isDirectoryMode && !hasOutputs && !hasBinaries {
 		result.AddError("install_binaries action requires 'outputs' parameter")
 	}
 	if hasOutputs && hasBinaries {
@@ -38,10 +42,12 @@ func (a *InstallBinariesAction) Preflight(params map[string]interface{}) *Prefli
 		result.AddError("'binary' parameter is not supported; use 'outputs' array instead")
 	}
 
-	// ERROR: Empty outputs/binaries array
-	outputs := a.getOutputsParam(params)
-	if outputs != nil && len(outputs) == 0 {
-		result.AddError("outputs array is empty; no files will be installed")
+	// ERROR: Empty outputs/binaries array (only applies to binaries mode)
+	if !isDirectoryMode {
+		outputs := a.getOutputsParam(params)
+		if outputs != nil && len(outputs) == 0 {
+			result.AddError("outputs array is empty; no files will be installed")
+		}
 	}
 	return result
 }
@@ -69,26 +75,31 @@ func (a *InstallBinariesAction) getOutputsParam(params map[string]interface{}) [
 //   - executables (optional): List of files to make executable; if empty, inferred from path (bin/* = executable)
 //   - install_mode (optional): "binaries" (default), "directory", or "directory_wrapped"
 func (a *InstallBinariesAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
-	// Get outputs list (required) - prefer 'outputs' over deprecated 'binaries'
-	outputsRaw := a.getOutputsParam(params)
-	if outputsRaw == nil {
-		return fmt.Errorf("install_binaries action requires 'outputs' parameter")
-	}
-
-	// Parse outputs list
-	outputs, err := a.parseOutputs(outputsRaw)
-	if err != nil {
-		return fmt.Errorf("failed to parse outputs: %w", err)
-	}
-
-	// Get explicit executables list (optional)
-	explicitExecutables, _ := GetStringSlice(params, "executables")
-
 	// Get install_mode parameter (default: "binaries")
 	installMode, _ := GetString(params, "install_mode")
 	if installMode == "" {
 		installMode = "binaries"
 	}
+
+	// Get outputs list — required for binaries mode, optional for directory modes
+	// (directory modes copy the whole extracted tree; no per-file listing needed)
+	outputsRaw := a.getOutputsParam(params)
+	if outputsRaw == nil && installMode == "binaries" {
+		return fmt.Errorf("install_binaries action requires 'outputs' parameter")
+	}
+
+	// Parse outputs list (nil-safe: returns empty slice for nil input)
+	var outputs []recipe.BinaryMapping
+	if outputsRaw != nil {
+		var err error
+		outputs, err = a.parseOutputs(outputsRaw)
+		if err != nil {
+			return fmt.Errorf("failed to parse outputs: %w", err)
+		}
+	}
+
+	// Get explicit executables list (optional)
+	explicitExecutables, _ := GetStringSlice(params, "executables")
 
 	// Enforce verification for directory-based installs (defense in depth)
 	// This check also exists in composite actions (github_archive, download_archive),

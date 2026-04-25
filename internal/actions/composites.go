@@ -117,19 +117,20 @@ func (a *DownloadArchiveAction) Execute(ctx *ExecutionContext, params map[string
 		}
 	}
 
-	binariesRaw, ok := params["binaries"]
-	if !ok {
-		return fmt.Errorf("binaries is required")
-	}
-
-	stripDirs, _ := GetInt(params, "strip_dirs") // Defaults to 0 if not present
-
 	// Parse install_mode parameter (optional, for verification enforcement)
 	installMode, _ := GetString(params, "install_mode")
 	if installMode == "" {
 		installMode = "binaries" // Default mode
 	}
 	installMode = strings.ToLower(installMode) // Normalize to lowercase
+
+	// binaries is required for binaries mode; optional for directory modes
+	binariesRaw, hasBinaries := params["binaries"]
+	if !hasBinaries && installMode == "binaries" {
+		return fmt.Errorf("binaries is required when install_mode is 'binaries'")
+	}
+
+	stripDirs, _ := GetInt(params, "strip_dirs") // Defaults to 0 if not present
 
 	// Enforce verification for directory-based installs
 	// Libraries are exempt since they cannot be run directly to verify
@@ -214,27 +215,31 @@ func (a *DownloadArchiveAction) Execute(ctx *ExecutionContext, params map[string
 		return fmt.Errorf("failed to copy extracted content: %w", err)
 	}
 
-	// Step 4: Chmod binaries to ensure they're executable
-	// Chmod needs to happen in the install directory since we already copied there
-	// Temporarily update context to point to install dir for chmod
-	installCtx := *ctx
-	installCtx.WorkDir = ctx.InstallDir
+	// Step 4: Chmod specific binaries if listed; skip for pure directory installs
+	// that don't enumerate executables (e.g., shell-function tools like nvm).
+	if hasBinaries {
+		installCtx := *ctx
+		installCtx.WorkDir = ctx.InstallDir
 
-	chmodFiles := extractSourceFiles(binariesRaw)
-	chmodAction := &ChmodAction{}
-	chmodParams := map[string]interface{}{
-		"files": chmodFiles,
+		chmodFiles := extractSourceFiles(binariesRaw)
+		if len(chmodFiles) > 0 {
+			chmodAction := &ChmodAction{}
+			chmodParams := map[string]interface{}{
+				"files": chmodFiles,
+			}
+			if err := chmodAction.Execute(&installCtx, chmodParams); err != nil {
+				return fmt.Errorf("chmod failed: %w", err)
+			}
+		}
+
+		binDir := filepath.Join(ctx.InstallDir, "bin")
+		reporter := ctx.GetReporter()
+		reporter.Log("   Installed complete directory structure")
+		reporter.Log("   Verified %d executable(s) in %s", len(chmodFiles), binDir)
+	} else {
+		reporter := ctx.GetReporter()
+		reporter.Log("   Installed complete directory structure")
 	}
-
-	if err := chmodAction.Execute(&installCtx, chmodParams); err != nil {
-		return fmt.Errorf("chmod failed: %w", err)
-	}
-
-	binDir := filepath.Join(ctx.InstallDir, "bin")
-
-	reporter := ctx.GetReporter()
-	reporter.Log("   Installed complete directory structure")
-	reporter.Log("   Verified %d executable(s) in %s", len(chmodFiles), binDir)
 
 	return nil
 }
@@ -256,13 +261,6 @@ func (a *DownloadArchiveAction) Decompose(ctx *EvalContext, params map[string]in
 		}
 	}
 
-	binariesRaw, ok := params["binaries"]
-	if !ok {
-		return nil, fmt.Errorf("binaries is required")
-	}
-
-	stripDirs, _ := GetInt(params, "strip_dirs")
-
 	installMode, _ := GetString(params, "install_mode")
 	if installMode == "" {
 		installMode = "binaries"
@@ -272,6 +270,15 @@ func (a *DownloadArchiveAction) Decompose(ctx *EvalContext, params map[string]in
 	if installMode != "binaries" && installMode != "directory" && installMode != "directory_wrapped" {
 		return nil, fmt.Errorf("invalid install_mode '%s': must be 'binaries', 'directory', or 'directory_wrapped'", installMode)
 	}
+
+	// binaries is required for binaries install mode; optional for directory modes
+	// (directory installs copy the whole extracted tree, no per-file chmod needed)
+	binariesRaw, hasBinaries := params["binaries"]
+	if !hasBinaries && installMode == "binaries" {
+		return nil, fmt.Errorf("binaries is required when install_mode is 'binaries'")
+	}
+
+	stripDirs, _ := GetInt(params, "strip_dirs")
 
 	// Get mappings for delegation
 	osMapping, _ := GetMapStringString(params, "os_mapping")
@@ -286,9 +293,6 @@ func (a *DownloadArchiveAction) Decompose(ctx *EvalContext, params map[string]in
 	// Get the resolved filename from download step
 	archiveFilename, _ := GetString(downloadStep.Params, "dest")
 
-	// Extract chmod files
-	chmodFiles := extractSourceFiles(binariesRaw)
-
 	// Build steps using the download step from delegation
 	steps := []Step{
 		downloadStep,
@@ -300,20 +304,29 @@ func (a *DownloadArchiveAction) Decompose(ctx *EvalContext, params map[string]in
 				"strip_dirs": stripDirs,
 			},
 		},
-		{
-			Action: "chmod",
-			Params: map[string]interface{}{
-				"files": chmodFiles,
-			},
-		},
-		{
-			Action: "install_binaries",
-			Params: map[string]interface{}{
-				"binaries":     binariesRaw,
-				"install_mode": installMode,
-			},
-		},
 	}
+
+	// Only add chmod step when there are specific binaries to mark executable.
+	// Directory installs copy the whole tree; no per-file chmod is needed.
+	if hasBinaries {
+		chmodFiles := extractSourceFiles(binariesRaw)
+		if len(chmodFiles) > 0 {
+			steps = append(steps, Step{
+				Action: "chmod",
+				Params: map[string]interface{}{
+					"files": chmodFiles,
+				},
+			})
+		}
+	}
+
+	steps = append(steps, Step{
+		Action: "install_binaries",
+		Params: map[string]interface{}{
+			"binaries":     binariesRaw,
+			"install_mode": installMode,
+		},
+	})
 
 	return steps, nil
 }

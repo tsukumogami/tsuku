@@ -547,7 +547,7 @@ func TestReadVerifyResults_NoVerifyCommand(t *testing.T) {
 		// No Verify field
 	}
 
-	verified, exitCode := exec.readVerifyResults("/nonexistent", plan)
+	verified, exitCode, _ := exec.readVerifyResults("/nonexistent", plan)
 	if !verified {
 		t.Error("Expected verified=true when no verify command")
 	}
@@ -566,7 +566,7 @@ func TestReadVerifyResults_EmptyVerifyCommand(t *testing.T) {
 		Verify:  &executor.PlanVerify{Command: ""},
 	}
 
-	verified, exitCode := exec.readVerifyResults("/nonexistent", plan)
+	verified, exitCode, _ := exec.readVerifyResults("/nonexistent", plan)
 	if !verified {
 		t.Error("Expected verified=true when verify command is empty")
 	}
@@ -603,7 +603,7 @@ func TestReadVerifyResults_MarkerFilesExist(t *testing.T) {
 		},
 	}
 
-	verified, exitCode := exec.readVerifyResults(workspaceDir, plan)
+	verified, exitCode, _ := exec.readVerifyResults(workspaceDir, plan)
 	if !verified {
 		t.Error("Expected verified=true when pattern matches")
 	}
@@ -637,7 +637,7 @@ func TestReadVerifyResults_PatternMismatch(t *testing.T) {
 		},
 	}
 
-	verified, exitCode := exec.readVerifyResults(workspaceDir, plan)
+	verified, exitCode, _ := exec.readVerifyResults(workspaceDir, plan)
 	if verified {
 		t.Error("Expected verified=false when pattern does not match")
 	}
@@ -671,7 +671,7 @@ func TestReadVerifyResults_NonZeroExitCode(t *testing.T) {
 		},
 	}
 
-	verified, exitCode := exec.readVerifyResults(workspaceDir, plan)
+	verified, exitCode, _ := exec.readVerifyResults(workspaceDir, plan)
 	if verified {
 		t.Error("Expected verified=false when exit code is non-zero")
 	}
@@ -707,7 +707,7 @@ func TestReadVerifyResults_NonDefaultExpectedExitCode(t *testing.T) {
 		},
 	}
 
-	verified, exitCode := exec.readVerifyResults(workspaceDir, plan)
+	verified, exitCode, _ := exec.readVerifyResults(workspaceDir, plan)
 	if !verified {
 		t.Error("Expected verified=true when non-default exit code matches and pattern found")
 	}
@@ -732,7 +732,7 @@ func TestReadVerifyResults_MissingMarkerFiles(t *testing.T) {
 		},
 	}
 
-	verified, exitCode := exec.readVerifyResults(workspaceDir, plan)
+	verified, exitCode, _ := exec.readVerifyResults(workspaceDir, plan)
 	if verified {
 		t.Error("Expected verified=false when marker files are missing")
 	}
@@ -1140,7 +1140,7 @@ func TestReadVerifyResults_OutputDirectory(t *testing.T) {
 	}
 
 	// Pass outputDir (not workspaceDir) -- matching how Sandbox() now calls it
-	verified, exitCode := exec.readVerifyResults(outputDir, plan)
+	verified, exitCode, _ := exec.readVerifyResults(outputDir, plan)
 	if !verified {
 		t.Error("Expected verified=true when reading from output directory")
 	}
@@ -1149,7 +1149,7 @@ func TestReadVerifyResults_OutputDirectory(t *testing.T) {
 	}
 
 	// Verify that reading from workspaceDir directly would fail (markers aren't there)
-	verified2, exitCode2 := exec.readVerifyResults(workspaceDir, plan)
+	verified2, exitCode2, _ := exec.readVerifyResults(workspaceDir, plan)
 	if verified2 {
 		t.Error("Reading from workspaceDir (not outputDir) should fail to find markers")
 	}

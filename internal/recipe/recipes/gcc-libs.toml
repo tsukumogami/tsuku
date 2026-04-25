@@ -1,11 +1,11 @@
-# GCC Runtime Libraries - libstdc++ and libgcc_s
+# GCC Runtime Libraries - libstdc++, libgcc_s, and libatomic
 # These are needed by binaries compiled with GCC (like nodejs)
 # Extracted from Homebrew's gcc bottle on glibc, system packages on musl
 # Only needed on Linux - macOS provides these via system frameworks
 
 [metadata]
 name = "gcc-libs"
-description = "GCC runtime libraries (libstdc++, libgcc_s)"
+description = "GCC runtime libraries (libstdc++, libgcc_s, libatomic)"
 homepage = "https://gcc.gnu.org/"
 type = "library"
 supported_os = ["linux"]
@@ -28,19 +28,24 @@ mkdir -p lib
 # Copy the actual library files (find the real files, not symlinks)
 cp lib/gcc/current/libstdc++.so.6.0.* lib/
 cp lib/gcc/current/libgcc_s.so.1 lib/
+# libatomic is required by some binaries (e.g. node.real); copy versioned file + create soname symlink
+cp lib/gcc/current/libatomic.so.1.* lib/ 2>/dev/null || cp lib/gcc/current/libatomic.so.1 lib/ 2>/dev/null || true
 # Create standard symlinks with explicit targets
 cd lib
 STDCXX=$(ls libstdc++.so.6.0.* 2>/dev/null | head -1)
 ln -sf "$STDCXX" libstdc++.so.6
 ln -sf libstdc++.so.6 libstdc++.so
 ln -sf libgcc_s.so.1 libgcc_s.so
+LIBATOMIC=$(ls libatomic.so.1.* 2>/dev/null | head -1)
+[ -n "$LIBATOMIC" ] && ln -sf "$LIBATOMIC" libatomic.so.1 || true
+[ -f libatomic.so.1 ] && ln -sf libatomic.so.1 libatomic.so || true
 '''
 description = "Flattening library files to lib/"
 when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
 action = "install_libraries"
-patterns = ["lib/libstdc++.so*", "lib/libgcc_s.so*"]
+patterns = ["lib/libstdc++.so*", "lib/libgcc_s.so*", "lib/libatomic.so*"]
 when = { os = ["linux"], libc = ["glibc"] }
 
 # musl Linux: System packages (apk handles transitive deps)

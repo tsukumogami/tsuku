@@ -52,6 +52,7 @@ type SandboxResult struct {
 	Error          error  // Error if sandbox failed to run
 	Verified       bool   // Whether verify command passed (true if no verify command)
 	VerifyExitCode int    // Verify command's exit code (-1 if no verify command)
+	VerifyOutput   string // Combined stdout+stderr of the verify command
 	DurationMs     int64  // Total execution time in milliseconds
 }
 
@@ -425,15 +426,16 @@ func (e *Executor) Sandbox(
 
 	// Install succeeded. Now check verification results.
 	// Markers are written to the output directory mount, not workspaceDir directly.
-	verified, verifyExitCode := e.readVerifyResults(outputDir, plan)
+	verified, verifyExitCode, verifyOutput := e.readVerifyResults(outputDir, plan)
 
 	return &SandboxResult{
-		Passed:         result.ExitCode == 0,
+		Passed:         result.ExitCode == 0 && verified,
 		ExitCode:       result.ExitCode,
 		Stdout:         result.Stdout,
 		Stderr:         result.Stderr,
 		Verified:       verified,
 		VerifyExitCode: verifyExitCode,
+		VerifyOutput:   verifyOutput,
 		DurationMs:     time.Since(startTime).Milliseconds(),
 	}, nil
 }
@@ -441,12 +443,12 @@ func (e *Executor) Sandbox(
 // readVerifyResults reads verification marker files from the output directory
 // and evaluates the verify results using executor.CheckPlanVerification.
 // The outputDir corresponds to the host-side path mounted at /workspace/output/.
-// Returns (verified, verifyExitCode).
-// If no verify command exists, returns (true, -1).
-func (e *Executor) readVerifyResults(outputDir string, plan *executor.InstallationPlan) (bool, int) {
+// Returns (verified, verifyExitCode, verifyOutput).
+// If no verify command exists, returns (true, -1, "").
+func (e *Executor) readVerifyResults(outputDir string, plan *executor.InstallationPlan) (bool, int, string) {
 	// If no verify command, verification is considered passed
 	if plan.Verify == nil || plan.Verify.Command == "" {
-		return true, -1
+		return true, -1, ""
 	}
 
 	// Read marker files from the output directory
@@ -457,13 +459,13 @@ func (e *Executor) readVerifyResults(outputDir string, plan *executor.Installati
 	if err != nil {
 		// Marker files don't exist -- something went wrong with the verify step
 		e.logger.Debug("Failed to read verify exit marker", "error", err)
-		return false, -1
+		return false, -1, ""
 	}
 
 	verifyExitCode, err := strconv.Atoi(strings.TrimSpace(string(exitData)))
 	if err != nil {
 		e.logger.Debug("Failed to parse verify exit code", "error", err)
-		return false, -1
+		return false, -1, ""
 	}
 
 	output := ""
@@ -478,8 +480,12 @@ func (e *Executor) readVerifyResults(outputDir string, plan *executor.Installati
 		expectedExitCode = *plan.Verify.ExitCode
 	}
 
-	verified := executor.CheckPlanVerification(verifyExitCode, output, expectedExitCode, plan.Verify.Pattern)
-	return verified, verifyExitCode
+	// Expand {version} in the pattern to the resolved version string.
+	// The plan stores patterns verbatim from the recipe (e.g. "{version}"),
+	// but the tool output contains the actual version number.
+	pattern := strings.ReplaceAll(plan.Verify.Pattern, "{version}", plan.Version)
+	verified := executor.CheckPlanVerification(verifyExitCode, output, expectedExitCode, pattern)
+	return verified, verifyExitCode, output
 }
 
 // augmentWithInfrastructurePackages adds packages needed for sandbox execution
@@ -603,7 +609,12 @@ func (e *Executor) buildSandboxScript(
 		sb.WriteString("\n# Run verify command and capture results to marker files\n")
 		sb.WriteString("set +e\n")
 		sb.WriteString("export PATH=\"$TSUKU_HOME/bin:$TSUKU_HOME/tools/current:$PATH\"\n")
-		sb.WriteString(fmt.Sprintf("%s > /workspace/output/%s 2>&1\n", plan.Verify.Command, verifyOutputMarker))
+		// Expand {install_dir} to the tool's install path in the sandbox.
+		// The sandbox sets TSUKU_HOME=/workspace/tsuku, so the install dir
+		// follows the same tool-version convention as the host.
+		installDir := fmt.Sprintf("$TSUKU_HOME/tools/%s-%s", plan.Tool, plan.Version)
+		verifyCmd := strings.ReplaceAll(plan.Verify.Command, "{install_dir}", installDir)
+		sb.WriteString(fmt.Sprintf("%s > /workspace/output/%s 2>&1\n", verifyCmd, verifyOutputMarker))
 		sb.WriteString(fmt.Sprintf("echo $? > /workspace/output/%s\n", verifyExitMarker))
 	}
 
