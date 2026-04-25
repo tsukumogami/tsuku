@@ -3,14 +3,36 @@ name = "ruff"
 description = "An extremely fast Python linter, written in Rust"
 homepage = "https://github.com/astral-sh/ruff"
 version_format = "semver"
-# Ruff is a compiled Rust binary distributed via PyPI - no Python needed at runtime
-runtime_dependencies = []
-supported_libc = ["glibc"]
+curated = true
+
+# glibc Linux: native Rust binaries from GitHub releases
+[[steps]]
+action = "github_archive"
+when = { os = ["linux"], libc = ["glibc"] }
+repo = "astral-sh/ruff"
+asset_pattern = "ruff-{arch}.tar.gz"
+strip_dirs = 0
+binaries = ["ruff"]
+arch_mapping = { amd64 = "x86_64-unknown-linux-gnu", arm64 = "aarch64-unknown-linux-gnu" }
+
+# musl Linux (Alpine): statically linked musl variants
+[[steps]]
+action = "github_archive"
+when = { os = ["linux"], libc = ["musl"] }
+repo = "astral-sh/ruff"
+asset_pattern = "ruff-{arch}.tar.gz"
+strip_dirs = 0
+binaries = ["ruff"]
+arch_mapping = { amd64 = "x86_64-unknown-linux-musl", arm64 = "aarch64-unknown-linux-musl" }
 
 [[steps]]
-action = "pipx_install"
-package = "ruff"
-executables = ["ruff"]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "astral-sh/ruff"
+asset_pattern = "ruff-{arch}.tar.gz"
+strip_dirs = 0
+binaries = ["ruff"]
+arch_mapping = { amd64 = "x86_64-apple-darwin", arm64 = "aarch64-apple-darwin" }
 
 [verify]
 command = "ruff --version"

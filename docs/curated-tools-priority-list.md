@@ -11,13 +11,13 @@ Popularity rankings are based on Homebrew download analytics, GitHub star counts
 ## Action Summary
 
 ### No action needed (handcrafted — full platform support)
-git, docker, terraform, gh, golang, fzf, btop, curl, httpie, lazygit, k9s, stern, kubectx, direnv, mise, asdf, pyenv, eksctl, flux, skaffold, kustomize, velero, vault, packer, bun, yarn, deno, pnpm, nvm, claude, gemini, trivy, grype, cosign, syft, actionlint, golangci-lint, ruff, black, tflint, pulumi, caddy, age, consul, vagrant, lazydocker, jq, wget, tmux
+git, docker, terraform, gh, golang, fzf, btop, curl, httpie, lazygit, k9s, stern, kubectx, direnv, mise, asdf, pyenv, eksctl, flux, skaffold, kustomize, velero, vault, packer, bun, yarn, deno, pnpm, nvm, claude, gemini, trivy, grype, cosign, syft, actionlint, golangci-lint, ruff, black, prettier, eslint, tflint, pulumi, caddy, age, consul, vagrant, lazydocker, jq, wget, tmux
 
 ### Review coverage (batch — may need platform expansion or full handcrafting)
-helm, ripgrep, fd, eza, zoxide, htop, cilium-cli, istioctl, bazel, ollama, act, earthly, goreleaser, shellcheck, shfmt, prettier, infracost, terragrunt, mkcert
+helm, ripgrep, fd, eza, zoxide, htop, cilium-cli, istioctl, bazel, ollama, act, earthly, goreleaser, shellcheck, shfmt, infracost, terragrunt, mkcert
 
 ### Author recipe (missing or discovery-only — needs a recipe)
-node, python, kubectl, aws-cli, rust, bat, starship, neovim, delta, rbenv, gcloud, azure-cli, argocd, ansible, cmake, ninja-build, meson, make, gradle, maven, sbt, aider, copilot, ko, dive, hadolint, pre-commit, lefthook, checkov, sops, step, eslint
+node, python, kubectl, aws-cli, rust, bat, starship, neovim, delta, rbenv, gcloud, azure-cli, argocd, ansible, cmake, ninja-build, meson, make, gradle, maven, sbt, aider, copilot, ko, dive, hadolint, pre-commit, lefthook, checkov, sops, step
 
 ## Tool Ranking
 
@@ -109,10 +109,10 @@ node, python, kubectl, aws-cli, rust, bat, starship, neovim, delta, rbenv, gclou
 | 84 | lefthook | discovery-only | author recipe |
 | 85 | actionlint | handcrafted | curated |
 | 86 | golangci-lint | handcrafted | curated |
-| 87 | ruff | handcrafted | no action needed |
-| 88 | black | handcrafted | no action needed |
-| 89 | prettier | batch | review coverage |
-| 90 | eslint | missing | author recipe |
+| 87 | ruff | handcrafted | curated |
+| 88 | black | handcrafted | curated |
+| 89 | prettier | handcrafted | curated |
+| 90 | eslint | handcrafted | curated |
 | 91 | tflint | handcrafted | no action needed |
 | 92 | checkov | discovery-only | author recipe |
 | 93 | infracost | batch | review coverage |
