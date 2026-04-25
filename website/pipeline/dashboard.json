@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-25T14:12:09Z",
+  "generated_at": "2026-04-25T14:13:19Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -74,14 +74,15 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 26,
-        "pending": 49,
+        "failed": 27,
+        "pending": 48,
         "success": 13,
         "total": 89
       }
@@ -442,6 +443,15 @@
           "next_retry_at": "2026-05-01T08:05:57Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 240,
+          "next_retry_at": "1734-01-14T14:25:27Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -631,6 +641,15 @@
           "next_retry_at": "2026-05-02T13:06:40Z"
         },
         {
+          "id": "rubygems:flash",
+          "name": "flash",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-05-02T14:12:44Z"
+        },
+        {
           "id": "npm:got",
           "name": "got",
           "ecosystem": "npm",
@@ -638,15 +657,6 @@
           "category": "install_failed",
           "failure_count": 12,
           "next_retry_at": "2026-05-02T13:06:40Z"
-        },
-        {
-          "id": "npm:hasura-cli",
-          "name": "hasura-cli",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-25T14:08:11Z"
         },
         {
           "id": "npm:kew",
@@ -665,15 +675,6 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-04-25T20:39:53Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 374,
-          "next_retry_at": "1734-01-14T14:11:48Z"
         },
         {
           "id": "npm:mailhog",
@@ -2721,15 +2722,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 239,
-          "next_retry_at": "1734-01-14T10:58:30Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -8062,15 +8054,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:flash",
-          "name": "flash",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-24T05:33:26Z"
-        },
-        {
           "id": "homebrew:flashrom",
           "name": "flashrom",
           "ecosystem": "homebrew",
@@ -10618,6 +10601,15 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:hasura-cli",
+          "name": "hasura-cli",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-25T14:08:11Z"
         },
         {
           "id": "homebrew:hatch",
@@ -13211,6 +13203,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 374,
+          "next_retry_at": "1734-01-14T14:11:48Z"
         },
         {
           "id": "homebrew:libaacs",
