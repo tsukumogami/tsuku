@@ -3,14 +3,24 @@ name = "actionlint"
 description = "Static checker for GitHub Actions workflow files"
 homepage = "https://github.com/rhysd/actionlint"
 version_format = "semver"
+curated = true
 
 [[steps]]
 action = "github_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 repo = "rhysd/actionlint"
 asset_pattern = "actionlint_{version}_{os}_{arch}.tar.gz"
 strip_dirs = 0
 binaries = ["actionlint"]
-os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "rhysd/actionlint"
+asset_pattern = "actionlint_{version}_{os}_{arch}.tar.gz"
+strip_dirs = 0
+binaries = ["actionlint"]
 arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
 
 [verify]

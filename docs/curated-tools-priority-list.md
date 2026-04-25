@@ -103,12 +103,12 @@ node, python, kubectl, aws-cli, rust, bat, starship, neovim, delta, rbenv, gclou
 | 78 | cosign | handcrafted | no action needed |
 | 79 | syft | handcrafted | no action needed |
 | 80 | hadolint | discovery-only | author recipe |
-| 81 | shellcheck | batch | review coverage |
-| 82 | shfmt | batch | review coverage |
+| 81 | shellcheck | handcrafted | curated |
+| 82 | shfmt | handcrafted | curated |
 | 83 | pre-commit | discovery-only | author recipe |
 | 84 | lefthook | discovery-only | author recipe |
-| 85 | actionlint | handcrafted | no action needed |
-| 86 | golangci-lint | handcrafted | no action needed |
+| 85 | actionlint | handcrafted | curated |
+| 86 | golangci-lint | handcrafted | curated |
 | 87 | ruff | handcrafted | no action needed |
 | 88 | black | handcrafted | no action needed |
 | 89 | prettier | batch | review coverage |
