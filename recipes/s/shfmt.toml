@@ -1,21 +1,20 @@
 [metadata]
-  name = "shfmt"
-  description = "Autoformat shell script source code"
-  homepage = "https://github.com/mvdan/sh"
-  version_format = ""
-  requires_sudo = false
-  tier = 0
-  type = ""
-  llm_validation = "skipped"
+name = "shfmt"
+description = "Shell script formatter"
+homepage = "https://github.com/mvdan/sh"
+version_format = "semver"
+curated = true
+
+[version]
+github_repo = "mvdan/sh"
+tag_prefix = "v"
 
 [[steps]]
-  action = "homebrew"
-  formula = "shfmt"
-
-[[steps]]
-  action = "install_binaries"
-  binaries = ["bin/shfmt"]
+action = "github_file"
+repo = "mvdan/sh"
+asset_pattern = "shfmt_v{version}_{os}_{arch}"
+binaries = [{src = "shfmt_v{version}_{os}_{arch}", dest = "bin/shfmt"}]
 
 [verify]
-  command = "shfmt --version"
-  pattern = ""
+command = "shfmt --version"
+pattern = "{version}"
