@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-25T08:56:15Z",
+  "generated_at": "2026-04-25T08:57:32Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -74,14 +74,15 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 23,
-        "pending": 52,
+        "failed": 24,
+        "pending": 51,
         "success": 13,
         "total": 89
       }
@@ -453,15 +454,6 @@
           "next_retry_at": "2026-05-01T08:05:57Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 238,
-          "next_retry_at": "1734-01-14T07:31:52Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -606,6 +598,15 @@
           "next_retry_at": "2026-05-01T18:57:27Z"
         },
         {
+          "id": "rubygems:doggo",
+          "name": "doggo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 13,
+          "next_retry_at": "2026-05-02T08:56:53Z"
+        },
+        {
           "id": "npm:e2b",
           "name": "e2b",
           "ecosystem": "npm",
@@ -613,6 +614,15 @@
           "category": "install_failed",
           "failure_count": 13,
           "next_retry_at": "2026-05-01T22:43:26Z"
+        },
+        {
+          "id": "npm:ent",
+          "name": "ent",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 13,
+          "next_retry_at": "2026-05-02T08:56:53Z"
         },
         {
           "id": "npm:got",
@@ -649,15 +659,6 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-04-25T20:39:53Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 371,
-          "next_retry_at": "1734-01-14T07:31:52Z"
         },
         {
           "id": "npm:mailhog",
@@ -2723,6 +2724,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 238,
+          "next_retry_at": "1734-01-14T07:31:52Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -6501,15 +6511,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:doggo",
-          "name": "doggo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-04-24T05:33:26Z"
-        },
-        {
           "id": "homebrew:dokku/repo/dokku",
           "name": "dokku/repo/dokku",
           "ecosystem": "homebrew",
@@ -7259,15 +7260,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:ent",
-          "name": "ent",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-04-25T07:10:37Z"
         },
         {
           "id": "homebrew:env0/terratag/terratag",
@@ -13240,6 +13232,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 371,
+          "next_retry_at": "1734-01-14T07:31:52Z"
         },
         {
           "id": "homebrew:libaacs",
