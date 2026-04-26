@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-26T22:41:56Z",
+  "generated_at": "2026-04-26T22:43:02Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 23,
       "excluded": 6,
-      "failed": 59,
-      "pending": 3856,
+      "failed": 60,
+      "pending": 3855,
       "success": 1361
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 17,
         "excluded": 6,
-        "failed": 59,
-        "pending": 3841,
+        "failed": 60,
+        "pending": 3840,
         "success": 1337
       }
     },
@@ -68,21 +68,20 @@
         "total": 1
       },
       "npm": {
-        "failed": 18,
-        "pending": 2,
+        "failed": 17,
+        "pending": 3,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 36,
-        "pending": 39,
+        "failed": 37,
+        "pending": 38,
         "success": 13,
         "total": 89
       }
@@ -441,15 +440,6 @@
           "category": "install_failed",
           "failure_count": 13,
           "next_retry_at": "2026-05-01T08:05:57Z"
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 249,
-          "next_retry_at": "1734-01-15T20:55:36Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -821,6 +811,24 @@
           "next_retry_at": "2026-05-03T20:42:53Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 391,
+          "next_retry_at": "1734-01-15T22:55:11Z"
+        },
+        {
+          "id": "rubygems:libnotify",
+          "name": "libnotify",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-05-03T22:42:28Z"
+        },
+        {
           "id": "npm:mailhog",
           "name": "mailhog",
           "ecosystem": "npm",
@@ -893,13 +901,13 @@
           "next_retry_at": "2026-04-29T01:24:49Z"
         },
         {
-          "id": "npm:q",
-          "name": "q",
+          "id": "npm:pocketbase",
+          "name": "pocketbase",
           "ecosystem": "npm",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-26T22:40:37Z"
+          "failure_count": 12,
+          "next_retry_at": "2026-05-03T22:42:28Z"
         },
         {
           "id": "npm:sigstore",
@@ -2767,6 +2775,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 249,
+          "next_retry_at": "1734-01-15T20:55:36Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -13092,15 +13109,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 389,
-          "next_retry_at": "1734-01-15T19:10:18Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -13430,15 +13438,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:libnotify",
-          "name": "libnotify",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-04-24T13:20:32Z"
         },
         {
           "id": "homebrew:libolm",
@@ -19424,15 +19423,6 @@
           "failure_count": 0
         },
         {
-          "id": "npm:pocketbase",
-          "name": "pocketbase",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-26T15:43:22Z"
-        },
-        {
           "id": "homebrew:poco",
           "name": "poco",
           "ecosystem": "homebrew",
@@ -20534,6 +20524,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:q",
+          "name": "q",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-26T22:40:37Z"
         },
         {
           "id": "homebrew:qalculate-gtk",
