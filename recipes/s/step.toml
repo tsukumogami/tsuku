@@ -5,10 +5,6 @@ homepage = "https://smallstep.com/cli/"
 version_format = "semver"
 curated = true
 
-[version]
-github_repo = "smallstep/cli"
-tag_prefix = "v"
-
 # Linux: statically linked Go binary works on glibc and musl
 [[steps]]
 action = "github_archive"
