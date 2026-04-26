@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-26T02:38:25Z",
+  "generated_at": "2026-04-26T02:39:35Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 23,
       "excluded": 6,
-      "failed": 53,
-      "pending": 3865,
+      "failed": 55,
+      "pending": 3863,
       "success": 1358
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 17,
         "excluded": 6,
-        "failed": 53,
-        "pending": 3848,
+        "failed": 55,
+        "pending": 3846,
         "success": 1336
       }
     },
@@ -74,15 +74,14 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 30,
-        "pending": 45,
+        "failed": 31,
+        "pending": 44,
         "success": 13,
         "total": 89
       }
@@ -443,6 +442,15 @@
           "next_retry_at": "2026-05-01T08:05:57Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 244,
+          "next_retry_at": "1734-01-15T02:51:41Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -704,6 +712,15 @@
           "next_retry_at": "2026-05-02T22:43:31Z"
         },
         {
+          "id": "rubygems:htmldoc",
+          "name": "htmldoc",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-05-03T02:38:58Z"
+        },
+        {
           "id": "npm:kew",
           "name": "kew",
           "ecosystem": "npm",
@@ -713,13 +730,13 @@
           "next_retry_at": "2026-05-02T18:54:13Z"
         },
         {
-          "id": "npm:mailhog",
-          "name": "mailhog",
-          "ecosystem": "npm",
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-26T02:34:03Z"
+          "failure_count": 381,
+          "next_retry_at": "1734-01-15T02:51:41Z"
         },
         {
           "id": "npm:markdown-toc",
@@ -2731,15 +2748,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 243,
-          "next_retry_at": "1734-01-14T22:56:14Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -10935,15 +10943,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:htmldoc",
-          "name": "htmldoc",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-24T07:36:32Z"
-        },
-        {
           "id": "homebrew:htmlhint",
           "name": "htmlhint",
           "ecosystem": "homebrew",
@@ -13171,15 +13170,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 380,
-          "next_retry_at": "1734-01-14T23:50:00Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -14826,6 +14816,15 @@
           "category": "install_failed",
           "failure_count": 10,
           "next_retry_at": "2026-04-24T16:11:06Z"
+        },
+        {
+          "id": "npm:mailhog",
+          "name": "mailhog",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-26T02:34:03Z"
         },
         {
           "id": "homebrew:mailsy",
