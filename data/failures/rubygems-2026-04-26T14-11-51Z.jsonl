@@ -1,0 +1,1 @@
+{"schema_version":1,"ecosystem":"rubygems","environment":"linux-glibc-x86_64","updated_at":"2026-04-26T14-11-51Z","failures":[{"package_id":"rubygems:influxdb","category":"install_failed","message":"Error: recipe validation failed for 'influxdb'\n  - metadata.homepage: homepage must start with https:// (got: http://influxdb.org)","timestamp":"2026-04-26T14:11:41.088146305Z"}]}
