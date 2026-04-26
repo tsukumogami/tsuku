@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-26T14:15:07Z",
+  "updated_at": "2026-04-26T15:45:58Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 247,
@@ -21756,11 +21756,11 @@
       "name": "ipfs",
       "source": "rubygems:ipfs",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-04-24T09:21:39.477211792Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-05-03T15:45:58.040019676Z"
     },
     {
       "name": "ipinfo-cli",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 385,
-      "next_retry_at": "1734-01-15T14:20:30.046687607Z"
+      "failure_count": 387,
+      "next_retry_at": "1734-01-15T15:58:41.185243868Z"
     },
     {
       "name": "libaacs",
@@ -28896,11 +28896,11 @@
       "name": "markdown-toc",
       "source": "npm:markdown-toc",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-04-26T08:57:59.218255103Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-05-03T15:45:58.040019676Z"
     },
     {
       "name": "markdownlint-cli",
@@ -37216,7 +37216,7 @@
       "name": "pocketbase",
       "source": "npm:pocketbase",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 11,
