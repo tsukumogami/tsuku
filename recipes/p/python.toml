@@ -1,0 +1,42 @@
+[metadata]
+name = "python"
+description = "Python programming language interpreter"
+homepage = "https://www.python.org"
+# version_format is calver: the version source is astral-sh/python-build-standalone
+# release dates (e.g. 20260414). The Python minor version (3.13) is pinned in
+# asset_pattern via "3.13.*" glob and must be updated manually when a new minor
+# is released (e.g. change to "3.14.*" and update binaries to ["bin/python3.14"]).
+version_format = "calver"
+curated = true
+
+[[steps]]
+action = "github_archive"
+when = { os = ["linux"], libc = ["glibc"] }
+repo = "astral-sh/python-build-standalone"
+asset_pattern = "cpython-3.13.*+{version}-{arch}-unknown-linux-gnu-install_only.tar.gz"
+strip_dirs = 1
+binaries = ["bin/python3.13"]
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[[steps]]
+action = "github_archive"
+when = { os = ["linux"], libc = ["musl"] }
+repo = "astral-sh/python-build-standalone"
+asset_pattern = "cpython-3.13.*+{version}-{arch}-unknown-linux-musl-install_only.tar.gz"
+strip_dirs = 1
+binaries = ["bin/python3.13"]
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "astral-sh/python-build-standalone"
+asset_pattern = "cpython-3.13.*+{version}-{arch}-apple-darwin-install_only.tar.gz"
+strip_dirs = 1
+binaries = ["bin/python3.13"]
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "python3.13 --version"
+mode = "output"
+reason = "Version identifier is a release date (calver), not the Python version string"

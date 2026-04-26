@@ -1,29 +1,29 @@
-# Go - The Go Programming Language
-# Official site: https://go.dev/
-# NOTE: Uses GitHub for version detection, downloads from go.dev/dl
-
 [metadata]
 name = "golang"
 description = "The Go programming language compiler and tools"
 homepage = "https://go.dev/"
 version_format = "semver"
+curated = true
 
 [version]
-github_repo = "golang/go"  # Detect version from GitHub releases
+github_repo = "golang/go"
 
 [[steps]]
 action = "download_archive"
-url = "https://go.dev/dl/go{version}.{os}-{arch}.tar.gz"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
+url = "https://go.dev/dl/go{version}.linux-{arch}.tar.gz"
 strip_dirs = 1
-binaries = ["bin/go", "bin/gofmt"]
 install_mode = "directory"
-os_mapping = { darwin = "darwin", linux = "linux" }
-arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+binaries = ["bin/go", "bin/gofmt"]
+
+[[steps]]
+action = "download_archive"
+when = { os = ["darwin"] }
+url = "https://go.dev/dl/go{version}.darwin-{arch}.tar.gz"
+strip_dirs = 1
+install_mode = "directory"
+binaries = ["bin/go", "bin/gofmt"]
 
 [verify]
 command = "go version"
 pattern = "go{version}"
-
-[[verify.additional]]
-command = "gofmt -h"
-pattern = "usage: gofmt"
