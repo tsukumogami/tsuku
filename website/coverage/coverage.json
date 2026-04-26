@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T00:17:56Z",
+  "generated_at": "2026-04-26T03:56:42Z",
   "total_recipes": 1424,
   "summary": {
     "by_platform": {
@@ -9,14 +9,14 @@
         "pct": 60.1123595505618
       },
       "glibc": {
-        "supported": 1390,
+        "supported": 1391,
         "total": 1424,
-        "pct": 97.6123595505618
+        "pct": 97.68258426966293
       },
       "musl": {
-        "supported": 1248,
+        "supported": 1246,
         "total": 1424,
-        "pct": 87.64044943820225
+        "pct": 87.5
       }
     },
     "by_category": {
@@ -27,8 +27,8 @@
       },
       "tool": {
         "total": 1272,
-        "musl_support": 1098,
-        "glibc_support": 1240
+        "musl_support": 1096,
+        "glibc_support": 1241
       }
     }
   },
@@ -126,11 +126,10 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": false,
+        "glibc": true,
         "musl": false
       },
       "gaps": [
-        "glibc",
         "musl"
       ],
       "errors": null,
@@ -4611,13 +4610,13 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
-      "warnings": [
-        "recipe 'earthly' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "editorconfig",
@@ -7208,9 +7207,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": [
         "recipe 'goreleaser' has platform-specific actions without libc when clauses and no musl fallback"
