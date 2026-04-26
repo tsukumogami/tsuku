@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-26T09:04:40Z",
+  "updated_at": "2026-04-26T10:50:46Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 245,
-      "next_retry_at": "1734-01-15T07:07:01.265941624Z"
+      "failure_count": 246,
+      "next_retry_at": "1734-01-15T11:03:29.801546252Z"
     },
     {
       "name": "azqr",
@@ -20816,11 +20816,11 @@
       "name": "hyperkit",
       "source": "rubygems:hyperkit",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-04-24T09:21:39.477211792Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-05-03T10:50:46.65632206Z"
     },
     {
       "name": "hypre",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 382,
-      "next_retry_at": "1734-01-15T07:07:01.265941624Z"
+      "failure_count": 384,
+      "next_retry_at": "1734-01-15T11:03:29.801546252Z"
     },
     {
       "name": "libaacs",
