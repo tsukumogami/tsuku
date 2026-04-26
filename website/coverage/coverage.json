@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-04-26T03:56:42Z",
-  "total_recipes": 1424,
+  "generated_at": "2026-04-26T14:07:26Z",
+  "total_recipes": 1427,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 856,
-        "total": 1424,
-        "pct": 60.1123595505618
+        "supported": 859,
+        "total": 1427,
+        "pct": 60.196215837421164
       },
       "glibc": {
-        "supported": 1391,
-        "total": 1424,
-        "pct": 97.68258426966293
+        "supported": 1394,
+        "total": 1427,
+        "pct": 97.68745620182202
       },
       "musl": {
-        "supported": 1246,
-        "total": 1424,
-        "pct": 87.5
+        "supported": 1249,
+        "total": 1427,
+        "pct": 87.52627890679747
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1272,
-        "musl_support": 1096,
-        "glibc_support": 1241
+        "total": 1275,
+        "musl_support": 1099,
+        "glibc_support": 1244
       }
     }
   },
@@ -4037,6 +4037,18 @@
       ]
     },
     {
+      "name": "dive",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "dlv",
       "type": "tool",
       "platforms": {
@@ -4100,7 +4112,9 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": null
+      "warnings": [
+        "recipe 'docker' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
     },
     {
       "name": "docker-buildx",
@@ -7794,6 +7808,18 @@
       ]
     },
     {
+      "name": "hadolint",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "haskell-language-server",
       "type": "tool",
       "platforms": {
@@ -9716,6 +9742,18 @@
       "warnings": [
         "recipe 'kn' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "ko",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "komac",
