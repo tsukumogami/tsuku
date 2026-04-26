@@ -1,0 +1,1 @@
+{"schema_version":1,"ecosystem":"rubygems","environment":"linux-glibc-x86_64","updated_at":"2026-04-26T20-40-30Z","failures":[{"package_id":"rubygems:less","category":"install_failed","message":"Error: recipe validation failed for 'less'\n  - metadata.homepage: homepage must start with https:// (got: http://lesscss.org)","timestamp":"2026-04-26T20:40:19.966024039Z"}]}
