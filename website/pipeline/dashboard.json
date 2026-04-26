@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-26T09:04:01Z",
+  "generated_at": "2026-04-26T09:05:16Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 23,
       "excluded": 6,
-      "failed": 56,
-      "pending": 3862,
+      "failed": 55,
+      "pending": 3863,
       "success": 1358
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 17,
         "excluded": 6,
-        "failed": 56,
-        "pending": 3845,
+        "failed": 55,
+        "pending": 3846,
         "success": 1336
       }
     },
@@ -68,20 +68,21 @@
         "total": 1
       },
       "npm": {
-        "failed": 18,
-        "pending": 2,
+        "failed": 17,
+        "pending": 3,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 32,
-        "pending": 43,
+        "failed": 33,
+        "pending": 42,
         "success": 13,
         "total": 89
       }
@@ -442,15 +443,6 @@
           "next_retry_at": "2026-05-01T08:05:57Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 245,
-          "next_retry_at": "1734-01-15T07:07:01Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -730,6 +722,15 @@
           "next_retry_at": "2026-05-03T06:54:18Z"
         },
         {
+          "id": "rubygems:hydra",
+          "name": "hydra",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-05-03T09:04:40Z"
+        },
+        {
           "id": "npm:kew",
           "name": "kew",
           "ecosystem": "npm",
@@ -739,22 +740,13 @@
           "next_retry_at": "2026-05-02T18:54:13Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 382,
-          "next_retry_at": "1734-01-15T07:07:01Z"
-        },
-        {
-          "id": "npm:markdown-toc",
-          "name": "markdown-toc",
+          "id": "npm:lcm",
+          "name": "lcm",
           "ecosystem": "npm",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-26T08:57:59Z"
+          "failure_count": 12,
+          "next_retry_at": "2026-05-03T09:04:40Z"
         },
         {
           "id": "npm:mongoose",
@@ -2757,6 +2749,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 245,
+          "next_retry_at": "1734-01-15T07:07:01Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -11092,15 +11093,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:hydra",
-          "name": "hydra",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-24T07:36:32Z"
-        },
-        {
           "id": "homebrew:hyfetch",
           "name": "hyfetch",
           "ecosystem": "homebrew",
@@ -13017,15 +13009,6 @@
           "failure_count": 0
         },
         {
-          "id": "npm:lcm",
-          "name": "lcm",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-25T20:39:53Z"
-        },
-        {
           "id": "homebrew:ldid",
           "name": "ldid",
           "ecosystem": "homebrew",
@@ -13168,6 +13151,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 382,
+          "next_retry_at": "1734-01-15T07:07:01Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -15014,6 +15006,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:markdown-toc",
+          "name": "markdown-toc",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-26T08:57:59Z"
         },
         {
           "id": "homebrew:markdownlint-cli",
