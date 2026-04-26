@@ -29,7 +29,7 @@ copilot — the gh-copilot CLI extension was deprecated in September 2025 (upstr
 | 1 | git | handcrafted | no action needed |
 | 2 | node | discovery-only | author recipe |
 | 3 | python | missing | author recipe |
-| 4 | docker | handcrafted | no action needed |
+| 4 | docker | handcrafted | curated |
 | 5 | kubectl | batch | review coverage |
 | 6 | terraform | handcrafted | no action needed |
 | 7 | aws-cli | discovery-only | author recipe |
@@ -99,13 +99,13 @@ copilot — the gh-copilot CLI extension was deprecated in September 2025 (upstr
 | 71 | act | handcrafted | no action needed |
 | 72 | earthly | handcrafted | no action needed |
 | 73 | goreleaser | handcrafted | no action needed |
-| 74 | ko | discovery-only | author recipe |
-| 75 | dive | discovery-only | author recipe |
+| 74 | ko | handcrafted | curated |
+| 75 | dive | handcrafted | curated |
 | 76 | trivy | handcrafted | no action needed |
 | 77 | grype | handcrafted | no action needed |
 | 78 | cosign | handcrafted | no action needed |
 | 79 | syft | handcrafted | no action needed |
-| 80 | hadolint | discovery-only | author recipe |
+| 80 | hadolint | handcrafted | curated |
 | 81 | shellcheck | handcrafted | curated |
 | 82 | shfmt | handcrafted | curated |
 | 83 | pre-commit | discovery-only | author recipe |

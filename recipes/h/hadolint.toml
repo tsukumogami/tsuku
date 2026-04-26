@@ -1,0 +1,19 @@
+[metadata]
+name = "hadolint"
+description = "Dockerfile linter, validate inline bash"
+homepage = "https://github.com/hadolint/hadolint"
+version_format = "semver"
+curated = true
+
+# Single step covers all platforms; hadolint assets use "macos" instead of "darwin"
+[[steps]]
+action = "github_file"
+repo = "hadolint/hadolint"
+asset_pattern = "hadolint-{os}-{arch}"
+binary = "hadolint"
+os_mapping = { darwin = "macos" }
+arch_mapping = { amd64 = "x86_64" }
+
+[verify]
+command = "hadolint --version"
+pattern = "{version}"

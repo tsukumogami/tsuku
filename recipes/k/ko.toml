@@ -1,0 +1,29 @@
+[metadata]
+name = "ko"
+description = "Build and deploy Go applications on Kubernetes"
+homepage = "https://ko.build"
+version_format = "semver"
+curated = true
+
+# Linux: statically linked Go binary works on glibc and musl
+[[steps]]
+action = "github_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
+repo = "ko-build/ko"
+asset_pattern = "ko_{version}_Linux_{arch}.tar.gz"
+strip_dirs = 0
+binaries = ["ko"]
+arch_mapping = { amd64 = "x86_64" }
+
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "ko-build/ko"
+asset_pattern = "ko_{version}_Darwin_{arch}.tar.gz"
+strip_dirs = 0
+binaries = ["ko"]
+arch_mapping = { amd64 = "x86_64" }
+
+[verify]
+command = "ko version"
+pattern = "{version}"
