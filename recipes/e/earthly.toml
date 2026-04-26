@@ -1,34 +1,18 @@
 [metadata]
-  name = "earthly"
-  description = "Build automation tool for the container era"
-  homepage = "https://earthly.dev/"
-  version_format = ""
-  requires_sudo = false
-  tier = 0
-  type = ""
-  llm_validation = "skipped"
-
-[version]
-  source = ""
-  github_repo = ""
-  tag_prefix = ""
-  module = ""
-  formula = ""
-  cask = ""
-  tap = ""
-  fossil_repo = ""
-  project_name = ""
-  version_separator = ""
-  timeline_tag = ""
+name = "earthly"
+description = "Build automation tool for the container era"
+homepage = "https://earthly.dev/"
+version_format = "semver"
+curated = true
+# earthly ships glibc-linked binaries; no musl/alpine build available upstream
+supported_libc = ["glibc"]
 
 [[steps]]
-  action = "homebrew"
-  formula = "earthly"
-
-[[steps]]
-  action = "install_binaries"
-  binaries = ["bin/earthly"]
+action = "github_file"
+repo = "earthly/earthly"
+asset_pattern = "earthly-{os}-{arch}"
+binary = "earthly"
 
 [verify]
-  command = "earthly --version"
-  pattern = ""
+command = "earthly --version"
+pattern = "{version}"
