@@ -1,19 +1,19 @@
 {
-  "generated_at": "2026-04-26T13:08:26Z",
+  "generated_at": "2026-04-26T14:08:26Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 23,
       "excluded": 6,
       "failed": 56,
-      "pending": 3862,
-      "success": 1358
+      "pending": 3859,
+      "success": 1361
     },
     "by_tier": {
       "1": {
         "blocked": 2,
-        "pending": 6,
-        "success": 10
+        "pending": 4,
+        "success": 12
       },
       "2": {
         "blocked": 4,
@@ -24,8 +24,8 @@
         "blocked": 17,
         "excluded": 6,
         "failed": 56,
-        "pending": 3845,
-        "success": 1336
+        "pending": 3844,
+        "success": 1337
       }
     },
     "by_ecosystem": {
@@ -45,8 +45,8 @@
         "total": 105
       },
       "github": {
-        "pending": 5,
-        "success": 106,
+        "pending": 3,
+        "success": 108,
         "total": 111
       },
       "go": {
@@ -55,8 +55,8 @@
       },
       "homebrew": {
         "blocked": 23,
-        "pending": 3738,
-        "success": 1122,
+        "pending": 3737,
+        "success": 1123,
         "total": 4883
       },
       "manual": {
@@ -74,15 +74,14 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 34,
-        "pending": 41,
+        "failed": 33,
+        "pending": 42,
         "success": 13,
         "total": 89
       }
@@ -767,6 +766,15 @@
           "next_retry_at": "2026-05-03T09:04:40Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 385,
+          "next_retry_at": "1734-01-15T14:20:30Z"
+        },
+        {
           "id": "npm:mailhog",
           "name": "mailhog",
           "ecosystem": "npm",
@@ -783,15 +791,6 @@
           "category": "install_failed",
           "failure_count": 9,
           "next_retry_at": "2026-04-30T15:58:16Z"
-        },
-        {
-          "id": "rubygems:neo4j",
-          "name": "neo4j",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-04-26T13:40:38Z"
         },
         {
           "id": "rubygems:nkf",
@@ -922,15 +921,6 @@
       ],
       "pending": [
         {
-          "id": "github:wagoodman/dive",
-          "name": "dive",
-          "ecosystem": "github",
-          "priority": 1,
-          "category": "generation_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-02-24T06:13:34Z"
-        },
-        {
           "id": "github:github/hub",
           "name": "hub",
           "ecosystem": "github",
@@ -938,15 +928,6 @@
           "category": "generation_failed",
           "failure_count": 3,
           "next_retry_at": "2026-02-24T06:13:36Z"
-        },
-        {
-          "id": "github:ko-build/ko",
-          "name": "ko",
-          "ecosystem": "github",
-          "priority": 1,
-          "category": "generation_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-02-24T06:13:40Z"
         },
         {
           "id": "github:BurntSushi/ripgrep",
@@ -10402,13 +10383,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:hadolint",
-          "name": "hadolint",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:hadoop",
           "name": "hadoop",
           "ecosystem": "homebrew",
@@ -13142,15 +13116,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 384,
-          "next_retry_at": "1734-01-15T11:03:29Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -16647,6 +16612,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:neo4j",
+          "name": "neo4j",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-04-26T13:40:38Z"
         },
         {
           "id": "homebrew:neocmakelsp",
@@ -28190,6 +28164,15 @@
           "next_retry_at": "2026-02-24T06:13:32Z"
         },
         {
+          "id": "github:wagoodman/dive",
+          "name": "dive",
+          "ecosystem": "github",
+          "priority": 1,
+          "category": "generation_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-02-24T06:13:34Z"
+        },
+        {
           "id": "homebrew:eza",
           "name": "eza",
           "ecosystem": "homebrew",
@@ -28213,6 +28196,15 @@
           "category": "generation_failed",
           "failure_count": 3,
           "next_retry_at": "2026-02-24T06:13:38Z"
+        },
+        {
+          "id": "github:ko-build/ko",
+          "name": "ko",
+          "ecosystem": "github",
+          "priority": 1,
+          "category": "generation_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-02-24T06:13:40Z"
         },
         {
           "id": "homebrew:neovim",
@@ -31829,6 +31821,13 @@
         {
           "id": "homebrew:gzip",
           "name": "gzip",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:hadolint",
+          "name": "hadolint",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -40821,6 +40820,11 @@
     {
       "name": "gum",
       "source": "github:charmbracelet/gum",
+      "validation_status": "valid"
+    },
+    {
+      "name": "hadolint",
+      "source": "homebrew:hadolint",
       "validation_status": "valid"
     },
     {
