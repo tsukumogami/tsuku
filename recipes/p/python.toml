@@ -15,6 +15,7 @@ when = { os = ["linux"], libc = ["glibc"] }
 repo = "astral-sh/python-build-standalone"
 asset_pattern = "cpython-3.13.*+{version}-{arch}-unknown-linux-gnu-install_only.tar.gz"
 strip_dirs = 1
+install_mode = "directory"
 binaries = ["bin/python3.13"]
 arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
 
@@ -24,6 +25,7 @@ when = { os = ["linux"], libc = ["musl"] }
 repo = "astral-sh/python-build-standalone"
 asset_pattern = "cpython-3.13.*+{version}-{arch}-unknown-linux-musl-install_only.tar.gz"
 strip_dirs = 1
+install_mode = "directory"
 binaries = ["bin/python3.13"]
 arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
 
@@ -33,6 +35,7 @@ when = { os = ["darwin"] }
 repo = "astral-sh/python-build-standalone"
 asset_pattern = "cpython-3.13.*+{version}-{arch}-apple-darwin-install_only.tar.gz"
 strip_dirs = 1
+install_mode = "directory"
 binaries = ["bin/python3.13"]
 arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
 
