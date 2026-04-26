@@ -1,19 +1,19 @@
 {
-  "generated_at": "2026-04-25T23:40:31Z",
+  "generated_at": "2026-04-26T00:18:52Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 23,
       "excluded": 6,
-      "failed": 54,
-      "pending": 3866,
-      "success": 1356
+      "failed": 53,
+      "pending": 3865,
+      "success": 1358
     },
     "by_tier": {
       "1": {
         "blocked": 2,
-        "pending": 7,
-        "success": 9
+        "pending": 6,
+        "success": 10
       },
       "2": {
         "blocked": 4,
@@ -23,9 +23,9 @@
       "3": {
         "blocked": 17,
         "excluded": 6,
-        "failed": 54,
+        "failed": 53,
         "pending": 3848,
-        "success": 1335
+        "success": 1336
       }
     },
     "by_ecosystem": {
@@ -45,8 +45,8 @@
         "total": 105
       },
       "github": {
-        "pending": 6,
-        "success": 105,
+        "pending": 5,
+        "success": 106,
         "total": 111
       },
       "go": {
@@ -55,8 +55,8 @@
       },
       "homebrew": {
         "blocked": 23,
-        "pending": 3739,
-        "success": 1121,
+        "pending": 3738,
+        "success": 1122,
         "total": 4883
       },
       "manual": {
@@ -74,7 +74,8 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -712,15 +713,6 @@
           "next_retry_at": "2026-05-02T18:54:13Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 380,
-          "next_retry_at": "1734-01-14T23:50:00Z"
-        },
-        {
           "id": "npm:mailhog",
           "name": "mailhog",
           "ecosystem": "npm",
@@ -946,15 +938,6 @@
           "category": "generation_failed",
           "failure_count": 3,
           "next_retry_at": "2026-02-24T06:13:44Z"
-        },
-        {
-          "id": "github:smallstep/cli",
-          "name": "step",
-          "ecosystem": "github",
-          "priority": 1,
-          "category": "generation_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-02-24T06:13:46Z"
         },
         {
           "id": "homebrew:go-task",
@@ -13188,6 +13171,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 380,
+          "next_retry_at": "1734-01-14T23:50:00Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -23554,13 +23546,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:sops",
-          "name": "sops",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:source-highlight",
           "name": "source-highlight",
           "ecosystem": "homebrew",
@@ -28244,6 +28229,15 @@
           "priority": 1,
           "category": "missing_dep",
           "failure_count": 0
+        },
+        {
+          "id": "github:smallstep/cli",
+          "name": "step",
+          "ecosystem": "github",
+          "priority": 1,
+          "category": "generation_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-02-24T06:13:46Z"
         },
         {
           "id": "homebrew:tmux",
@@ -36252,6 +36246,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:sops",
+          "name": "sops",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:sourcekitten",
           "name": "sourcekitten",
           "ecosystem": "homebrew",
@@ -41432,6 +41433,11 @@
     {
       "name": "smartmontools",
       "source": "homebrew:smartmontools",
+      "validation_status": "valid"
+    },
+    {
+      "name": "sops",
+      "source": "homebrew:sops",
       "validation_status": "valid"
     },
     {
