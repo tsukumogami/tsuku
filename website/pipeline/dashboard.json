@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-26T06:55:10Z",
+  "generated_at": "2026-04-26T07:41:40Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 23,
       "excluded": 6,
-      "failed": 53,
-      "pending": 3865,
+      "failed": 56,
+      "pending": 3862,
       "success": 1358
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 17,
         "excluded": 6,
-        "failed": 53,
-        "pending": 3848,
+        "failed": 56,
+        "pending": 3845,
         "success": 1336
       }
     },
@@ -68,21 +68,20 @@
         "total": 1
       },
       "npm": {
-        "failed": 17,
-        "pending": 3,
+        "failed": 18,
+        "pending": 2,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 31,
-        "pending": 44,
+        "failed": 32,
+        "pending": 43,
         "success": 13,
         "total": 89
       }
@@ -443,6 +442,15 @@
           "next_retry_at": "2026-05-01T08:05:57Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 245,
+          "next_retry_at": "1734-01-15T07:07:01Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -713,6 +721,15 @@
           "next_retry_at": "2026-05-03T02:38:58Z"
         },
         {
+          "id": "rubygems:httpx",
+          "name": "httpx",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-05-03T06:54:18Z"
+        },
+        {
           "id": "npm:kew",
           "name": "kew",
           "ecosystem": "npm",
@@ -720,6 +737,15 @@
           "category": "install_failed",
           "failure_count": 12,
           "next_retry_at": "2026-05-02T18:54:13Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 382,
+          "next_retry_at": "1734-01-15T07:07:01Z"
         },
         {
           "id": "npm:markdown-toc",
@@ -2731,15 +2757,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 244,
-          "next_retry_at": "1734-01-15T02:51:41Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -10991,15 +11008,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:httpx",
-          "name": "httpx",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-24T07:36:32Z"
-        },
-        {
           "id": "homebrew:httpyac",
           "name": "httpyac",
           "ecosystem": "homebrew",
@@ -13160,15 +13168,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 381,
-          "next_retry_at": "1734-01-15T02:51:41Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -39732,16 +39731,8 @@
       }
     },
     "last_run": {
-      "batch_id": "2026-04-26T06-50-46Z",
-      "ecosystems": {
-        "crates.io": 1,
-        "github": 1,
-        "homebrew": 1,
-        "npm": 1,
-        "pypi": 1,
-        "rubygems": 1
-      },
-      "timestamp": "2026-04-26T06:50:46Z",
+      "batch_id": "2026-04-26T07-41-17Z",
+      "timestamp": "2026-04-26T07:41:17Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39762,7 +39753,7 @@
       "total": 1,
       "recipes_merged": 1
     },
-    "runs_since_last_success": 144
+    "runs_since_last_success": 145
   },
   "runs": [
     {
