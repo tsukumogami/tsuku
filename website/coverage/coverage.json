@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-04-25T23:36:55Z",
-  "total_recipes": 1422,
+  "generated_at": "2026-04-26T00:17:56Z",
+  "total_recipes": 1424,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 854,
-        "total": 1422,
-        "pct": 60.056258790436004
+        "supported": 856,
+        "total": 1424,
+        "pct": 60.1123595505618
       },
       "glibc": {
-        "supported": 1387,
-        "total": 1422,
-        "pct": 97.53867791842475
+        "supported": 1390,
+        "total": 1424,
+        "pct": 97.6123595505618
       },
       "musl": {
-        "supported": 1245,
-        "total": 1422,
-        "pct": 87.55274261603375
+        "supported": 1248,
+        "total": 1424,
+        "pct": 87.64044943820225
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1270,
-        "musl_support": 1095,
-        "glibc_support": 1237
+        "total": 1272,
+        "musl_support": 1098,
+        "glibc_support": 1240
       }
     }
   },
@@ -260,9 +260,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'age' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "agent-browser",
@@ -1940,9 +1938,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'caddy' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "cadence-workflow",
@@ -13451,17 +13447,12 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": false,
-        "musl": false
+        "glibc": true,
+        "musl": true
       },
-      "gaps": [
-        "glibc",
-        "musl"
-      ],
+      "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'mkcert' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "mlx-c",
@@ -17887,6 +17878,18 @@
       ]
     },
     {
+      "name": "sops",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "sourcekitten",
       "type": "tool",
       "platforms": {
@@ -18189,6 +18192,18 @@
       "warnings": [
         "recipe 'steampipe' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "step",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "stern",
