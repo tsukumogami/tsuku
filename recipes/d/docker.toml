@@ -4,18 +4,14 @@ description = "Container runtime platform"
 homepage = "https://www.docker.com"
 version_format = "semver"
 curated = true
-# docker ships glibc-linked binaries; no musl/alpine static build available for v25+
-supported_libc = ["glibc"]
 
 [[steps]]
-action = "homebrew"
-when = { os = ["linux"], libc = ["glibc"] }
-formula = "docker"
-
-[[steps]]
-action = "install_binaries"
-when = { os = ["linux"], libc = ["glibc"] }
-binaries = ["bin/docker"]
+action = "download_archive"
+when = { os = ["linux"] }
+url = "https://download.docker.com/linux/static/stable/{arch}/docker-{version}.tgz"
+strip_dirs = 1
+binaries = ["docker"]
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
 
 [[steps]]
 action = "homebrew"
