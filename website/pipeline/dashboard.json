@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-26T13:07:20Z",
+  "generated_at": "2026-04-26T13:08:26Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 23,
       "excluded": 6,
-      "failed": 58,
-      "pending": 3860,
+      "failed": 56,
+      "pending": 3862,
       "success": 1358
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 17,
         "excluded": 6,
-        "failed": 58,
-        "pending": 3843,
+        "failed": 56,
+        "pending": 3845,
         "success": 1336
       }
     },
@@ -68,13 +68,14 @@
         "total": 1
       },
       "npm": {
-        "failed": 18,
-        "pending": 2,
+        "failed": 17,
+        "pending": 3,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -442,15 +443,6 @@
           "next_retry_at": "2026-05-01T08:05:57Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 246,
-          "next_retry_at": "1734-01-15T11:03:29Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -748,6 +740,15 @@
           "next_retry_at": "2026-05-03T10:50:46Z"
         },
         {
+          "id": "rubygems:imgproxy",
+          "name": "imgproxy",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-05-03T13:07:48Z"
+        },
+        {
           "id": "npm:kew",
           "name": "kew",
           "ecosystem": "npm",
@@ -766,22 +767,13 @@
           "next_retry_at": "2026-05-03T09:04:40Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 384,
-          "next_retry_at": "1734-01-15T11:03:29Z"
-        },
-        {
-          "id": "npm:mongoose",
-          "name": "mongoose",
+          "id": "npm:mailhog",
+          "name": "mailhog",
           "ecosystem": "npm",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-26T13:02:43Z"
+          "failure_count": 12,
+          "next_retry_at": "2026-05-03T13:07:48Z"
         },
         {
           "id": "rubygems:multimarkdown",
@@ -854,15 +846,6 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-04-29T01:24:49Z"
-        },
-        {
-          "id": "rubygems:pngcheck",
-          "name": "pngcheck",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 7,
-          "next_retry_at": "2026-04-26T12:58:15Z"
         },
         {
           "id": "npm:pocketbase",
@@ -2775,6 +2758,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 246,
+          "next_retry_at": "1734-01-15T11:03:29Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -11385,15 +11377,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:imgproxy",
-          "name": "imgproxy",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-24T09:21:39Z"
-        },
-        {
           "id": "homebrew:imlib2",
           "name": "imlib2",
           "ecosystem": "homebrew",
@@ -13161,6 +13144,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 384,
+          "next_retry_at": "1734-01-15T11:03:29Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -14809,15 +14801,6 @@
           "next_retry_at": "2026-04-24T16:11:06Z"
         },
         {
-          "id": "npm:mailhog",
-          "name": "mailhog",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-26T02:34:03Z"
-        },
-        {
           "id": "homebrew:mailsy",
           "name": "mailsy",
           "ecosystem": "homebrew",
@@ -16046,6 +16029,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:mongoose",
+          "name": "mongoose",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-04-26T13:02:43Z"
         },
         {
           "id": "homebrew:mongosh",
@@ -19436,6 +19428,15 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:pngcheck",
+          "name": "pngcheck",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-04-26T12:58:15Z"
         },
         {
           "id": "homebrew:pngpaste",
