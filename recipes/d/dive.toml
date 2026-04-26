@@ -1,0 +1,27 @@
+[metadata]
+name = "dive"
+description = "A tool for exploring each layer in a docker image"
+homepage = "https://github.com/wagoodman/dive"
+version_format = "semver"
+curated = true
+
+# Linux: statically linked Go binary works on glibc and musl
+[[steps]]
+action = "github_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
+repo = "wagoodman/dive"
+asset_pattern = "dive_{version}_linux_{arch}.tar.gz"
+strip_dirs = 0
+binaries = ["dive"]
+
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "wagoodman/dive"
+asset_pattern = "dive_{version}_darwin_{arch}.tar.gz"
+strip_dirs = 0
+binaries = ["dive"]
+
+[verify]
+command = "dive --version"
+pattern = "{version}"
