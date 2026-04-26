@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-26T13:07:48Z",
+  "updated_at": "2026-04-26T14:07:47Z",
   "entries": [
     {
       "name": "node",
@@ -36,7 +36,7 @@
       "name": "dive",
       "source": "github:wagoodman/dive",
       "priority": 1,
-      "status": "pending",
+      "status": "success",
       "confidence": "curated",
       "disambiguated_at": null,
       "failure_count": 3,
@@ -86,7 +86,7 @@
       "name": "ko",
       "source": "github:ko-build/ko",
       "priority": 1,
-      "status": "pending",
+      "status": "success",
       "confidence": "curated",
       "disambiguated_at": null,
       "failure_count": 3,
@@ -19416,8 +19416,8 @@
       "name": "hadolint",
       "source": "homebrew:hadolint",
       "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
+      "status": "success",
+      "confidence": "curated",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
       "next_retry_at": null
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 384,
-      "next_retry_at": "1734-01-15T11:03:29.801546252Z"
+      "failure_count": 385,
+      "next_retry_at": "1734-01-15T14:20:30.046687607Z"
     },
     {
       "name": "libaacs",
@@ -31996,7 +31996,7 @@
       "name": "neo4j",
       "source": "rubygems:neo4j",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
