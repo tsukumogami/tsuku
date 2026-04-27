@@ -30,7 +30,7 @@ jobs:
 
   finalize:
     needs: extract-tag
-    uses: tsukumogami/shirabe/.github/workflows/finalize-release.yml@v0.4.0
+    uses: tsukumogami/shirabe/.github/workflows/finalize-release.yml@v0.5.1
     with:
       tag: ${{ needs.extract-tag.outputs.tag }}
       expected-assets: 16
