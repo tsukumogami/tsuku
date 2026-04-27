@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-04-27T20:18:34Z",
-  "total_recipes": 1429,
+  "generated_at": "2026-04-27T21:12:49Z",
+  "total_recipes": 1432,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 861,
-        "total": 1429,
-        "pct": 60.2519244226732
+        "supported": 864,
+        "total": 1432,
+        "pct": 60.33519553072626
       },
       "glibc": {
-        "supported": 1396,
-        "total": 1429,
-        "pct": 97.69069279216235
+        "supported": 1400,
+        "total": 1432,
+        "pct": 97.76536312849163
       },
       "musl": {
-        "supported": 1251,
-        "total": 1429,
-        "pct": 87.54373687893631
+        "supported": 1254,
+        "total": 1432,
+        "pct": 87.56983240223464
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1277,
-        "musl_support": 1101,
-        "glibc_support": 1246
+        "total": 1280,
+        "musl_support": 1104,
+        "glibc_support": 1250
       }
     }
   },
@@ -2539,6 +2539,20 @@
       "warnings": [
         "recipe 'checkmake' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "checkov",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": false
+      },
+      "gaps": [
+        "musl"
+      ],
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "chezmoi",
@@ -8676,9 +8690,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'infracost' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "inframap",
@@ -10591,6 +10603,18 @@
       "warnings": [
         "recipe 'ldns' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "lefthook",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "legitify",
@@ -16119,6 +16143,18 @@
       ]
     },
     {
+      "name": "pre-commit",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "prek",
       "type": "tool",
       "platforms": {
@@ -18936,17 +18972,12 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": false,
-        "musl": false
+        "glibc": true,
+        "musl": true
       },
-      "gaps": [
-        "glibc",
-        "musl"
-      ],
+      "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'terragrunt' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "terramaid",
