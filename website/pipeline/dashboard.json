@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-04-27T21:07:48Z",
+  "generated_at": "2026-04-27T21:13:55Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 23,
       "excluded": 6,
       "failed": 69,
-      "pending": 3845,
-      "success": 1362
+      "pending": 3842,
+      "success": 1365
     },
     "by_tier": {
       "1": {
@@ -24,8 +24,8 @@
         "blocked": 17,
         "excluded": 6,
         "failed": 69,
-        "pending": 3830,
-        "success": 1338
+        "pending": 3827,
+        "success": 1341
       }
     },
     "by_ecosystem": {
@@ -55,8 +55,8 @@
       },
       "homebrew": {
         "blocked": 23,
-        "pending": 3736,
-        "success": 1124,
+        "pending": 3733,
+        "success": 1127,
         "total": 4883
       },
       "manual": {
@@ -68,14 +68,13 @@
         "total": 1
       },
       "npm": {
-        "failed": 18,
-        "pending": 2,
+        "failed": 17,
+        "pending": 3,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -441,15 +440,6 @@
           "category": "install_failed",
           "failure_count": 13,
           "next_retry_at": "2026-05-01T08:05:57Z"
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 255,
-          "next_retry_at": "1734-01-16T21:19:54Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -819,6 +809,15 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-05-03T20:42:53Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 400,
+          "next_retry_at": "1734-01-16T21:26:00Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -2852,6 +2851,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 255,
+          "next_retry_at": "1734-01-16T21:19:54Z"
+        },
+        {
           "id": "homebrew:azure-cli",
           "name": "azure-cli",
           "ecosystem": "homebrew",
@@ -4414,13 +4422,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "homebrew:checkov",
-          "name": "checkov",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
         },
         {
           "id": "homebrew:checkstyle",
@@ -13098,13 +13099,6 @@
           "failure_count": 1
         },
         {
-          "id": "homebrew:lefthook",
-          "name": "lefthook",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:lego",
           "name": "lego",
           "ecosystem": "homebrew",
@@ -13173,15 +13167,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 399,
-          "next_retry_at": "1734-01-16T20:31:43Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -19664,13 +19649,6 @@
         {
           "id": "homebrew:ppsspp",
           "name": "ppsspp",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:pre-commit",
-          "name": "pre-commit",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -29491,6 +29469,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:checkov",
+          "name": "checkov",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:chezmoi",
           "name": "chezmoi",
           "ecosystem": "homebrew",
@@ -33053,6 +33038,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:lefthook",
+          "name": "lefthook",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:legitify",
           "name": "legitify",
           "ecosystem": "homebrew",
@@ -35428,6 +35420,13 @@
         {
           "id": "homebrew:pqiv",
           "name": "pqiv",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:pre-commit",
+          "name": "pre-commit",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -40391,6 +40390,11 @@
       "validation_status": "valid"
     },
     {
+      "name": "checkov",
+      "source": "homebrew:checkov",
+      "validation_status": "valid"
+    },
+    {
       "name": "chibi-scheme",
       "source": "homebrew:chibi-scheme",
       "validation_status": "valid"
@@ -41001,6 +41005,11 @@
       "validation_status": "valid"
     },
     {
+      "name": "lefthook",
+      "source": "homebrew:lefthook",
+      "validation_status": "valid"
+    },
+    {
       "name": "lf",
       "source": "github:gokcehan/lf",
       "validation_status": "valid"
@@ -41308,6 +41317,11 @@
     {
       "name": "popeye",
       "source": "github:derailed/popeye",
+      "validation_status": "valid"
+    },
+    {
+      "name": "pre-commit",
+      "source": "homebrew:pre-commit",
       "validation_status": "valid"
     },
     {
