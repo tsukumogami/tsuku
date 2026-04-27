@@ -1,0 +1,24 @@
+[metadata]
+name = "maven"
+description = "Apache Maven build automation tool for Java projects (requires a JDK at runtime)"
+homepage = "https://maven.apache.org/"
+version_format = "semver"
+curated = true
+
+[version]
+github_repo = "apache/maven"
+tag_prefix = "maven-"
+
+# Maven ships a single platform-agnostic distribution; the same tarball works on
+# every OS and architecture because maven is a JVM application.
+[[steps]]
+action = "download_archive"
+when = { os = ["linux", "darwin"], libc = ["glibc", "musl"] }
+url = "https://archive.apache.org/dist/maven/maven-3/{version}/binaries/apache-maven-{version}-bin.tar.gz"
+strip_dirs = 1
+install_mode = "directory"
+binaries = ["bin/mvn"]
+
+[verify]
+command = "mvn --version"
+pattern = "Apache Maven {version}"

@@ -2,12 +2,33 @@
 name = "meson"
 description = "Fast and user-friendly build system"
 homepage = "https://mesonbuild.com"
+version_format = "semver"
+curated = true
 
+[version]
+github_repo = "mesonbuild/meson"
+
+# glibc Linux: pipx pulls a pure-Python wheel; works without native deps.
 [[steps]]
 action = "pipx_install"
+when = { os = ["linux"], libc = ["glibc"] }
+package = "meson"
+executables = ["meson"]
+
+# musl Linux (Alpine): pipx is fragile on musl; use the system package.
+[[steps]]
+action = "apk_install"
+when = { os = ["linux"], libc = ["musl"] }
+packages = ["meson"]
+
+# macOS: pipx works for the pure-Python meson distribution.
+[[steps]]
+action = "pipx_install"
+when = { os = ["darwin"] }
 package = "meson"
 executables = ["meson"]
 
 [verify]
 command = "meson --version"
-pattern = "{version}"
+mode = "output"
+reason = "Alpine package version may differ from upstream release; output mode confirms the tool is runnable on every platform"
