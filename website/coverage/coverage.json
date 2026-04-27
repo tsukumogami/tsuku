@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-04-26T14:07:26Z",
-  "total_recipes": 1427,
+  "generated_at": "2026-04-27T15:28:58Z",
+  "total_recipes": 1428,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 859,
-        "total": 1427,
-        "pct": 60.196215837421164
+        "supported": 860,
+        "total": 1428,
+        "pct": 60.22408963585434
       },
       "glibc": {
-        "supported": 1394,
-        "total": 1427,
-        "pct": 97.68745620182202
+        "supported": 1395,
+        "total": 1428,
+        "pct": 97.68907563025209
       },
       "musl": {
-        "supported": 1249,
-        "total": 1427,
-        "pct": 87.52627890679747
+        "supported": 1250,
+        "total": 1428,
+        "pct": 87.53501400560224
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1275,
-        "musl_support": 1099,
-        "glibc_support": 1244
+        "total": 1276,
+        "musl_support": 1100,
+        "glibc_support": 1245
       }
     }
   },
@@ -7059,9 +7059,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'golang' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "golang-migrate",
@@ -16396,6 +16394,18 @@
       "gaps": [
         "musl"
       ],
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "python",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
       "errors": null,
       "warnings": null
     },
