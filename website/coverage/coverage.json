@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-27T21:12:49Z",
+  "generated_at": "2026-04-27T22:06:53Z",
   "total_recipes": 1432,
   "summary": {
     "by_platform": {
@@ -11524,9 +11524,7 @@
       },
       "gaps": null,
       "errors": null,
-      "warnings": [
-        "recipe 'libnghttp3' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libngspice",
@@ -19939,12 +19937,8 @@
         "musl": true
       },
       "gaps": null,
-      "errors": [
-        "library recipe 'utf8proc' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
-      ],
-      "warnings": [
-        "recipe 'utf8proc' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "utftex",
