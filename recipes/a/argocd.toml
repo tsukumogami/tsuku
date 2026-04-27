@@ -1,0 +1,30 @@
+[metadata]
+name = "argocd"
+description = "Declarative continuous delivery for Kubernetes"
+homepage = "https://argo-cd.readthedocs.io/"
+version_format = "semver"
+curated = true
+
+[version]
+github_repo = "argoproj/argo-cd"
+tag_prefix = "v"
+
+# Linux: statically linked Go binary (works on glibc and musl).
+[[steps]]
+action = "github_file"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
+repo = "argoproj/argo-cd"
+asset_pattern = "argocd-linux-{arch}"
+binaries = [{src = "argocd-linux-{arch}", dest = "bin/argocd"}]
+
+# macOS: per-arch single binary.
+[[steps]]
+action = "github_file"
+when = { os = ["darwin"] }
+repo = "argoproj/argo-cd"
+asset_pattern = "argocd-darwin-{arch}"
+binaries = [{src = "argocd-darwin-{arch}", dest = "bin/argocd"}]
+
+[verify]
+command = "argocd version --client"
+pattern = "argocd: v{version}"
