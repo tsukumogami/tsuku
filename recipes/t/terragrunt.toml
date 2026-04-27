@@ -1,22 +1,30 @@
 [metadata]
-  name = "terragrunt"
-  description = "Thin wrapper for Terraform e.g. for locking state"
-  homepage = "https://terragrunt.gruntwork.io/"
-  version_format = ""
-  requires_sudo = false
-  tier = 0
-  type = ""
-  llm_validation = "skipped"
-supported_os = ["darwin"]
+name = "terragrunt"
+description = "Thin wrapper for Terraform that adds tooling for keeping configurations DRY"
+homepage = "https://terragrunt.gruntwork.io/"
+version_format = "semver"
+curated = true
 
-[[steps]]
-  action = "homebrew"
-  formula = "terragrunt"
+[version]
+github_repo = "gruntwork-io/terragrunt"
+tag_prefix = "v"
 
+# Linux: statically linked Go binary, works on glibc and musl.
 [[steps]]
-  action = "install_binaries"
-  binaries = ["bin/terragrunt"]
+action = "github_file"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
+repo = "gruntwork-io/terragrunt"
+asset_pattern = "terragrunt_linux_{arch}"
+binaries = [{src = "terragrunt_linux_{arch}", dest = "bin/terragrunt"}]
+
+# macOS: per-arch single binary.
+[[steps]]
+action = "github_file"
+when = { os = ["darwin"] }
+repo = "gruntwork-io/terragrunt"
+asset_pattern = "terragrunt_darwin_{arch}"
+binaries = [{src = "terragrunt_darwin_{arch}", dest = "bin/terragrunt"}]
 
 [verify]
-  command = "terragrunt --version"
-  pattern = ""
+command = "terragrunt --version"
+pattern = "terragrunt version v{version}"

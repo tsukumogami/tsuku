@@ -1,0 +1,29 @@
+[metadata]
+name = "checkov"
+description = "Static analysis for infrastructure-as-code"
+homepage = "https://www.checkov.io/"
+version_format = "semver"
+curated = true
+# Checkov pulls a wide native dependency closure (cryptography, lxml, ...);
+# musl wheels are spotty and Alpine has no upstream apk package, so the
+# install fails to compile from source. Restrict to glibc Linux and macOS.
+supported_libc = ["glibc"]
+
+# glibc Linux: pipx pulls the checkov distribution from PyPI.
+[[steps]]
+action = "pipx_install"
+when = { os = ["linux"], libc = ["glibc"] }
+package = "checkov"
+executables = ["checkov"]
+
+# macOS: pipx works for both Intel and Apple Silicon.
+[[steps]]
+action = "pipx_install"
+when = { os = ["darwin"] }
+package = "checkov"
+executables = ["checkov"]
+
+[verify]
+command = "checkov --version"
+mode = "output"
+reason = "checkov --version prints just a numeric version with no tool prefix; output mode confirms the binary is runnable"

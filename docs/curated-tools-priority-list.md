@@ -11,13 +11,13 @@ Popularity rankings are based on Homebrew download analytics, GitHub star counts
 ## Action Summary
 
 ### No action needed (handcrafted or curated — full platform support)
-git, docker, terraform, gh, golang, python, rust, fzf, btop, curl, httpie, lazygit, k9s, stern, kubectx, direnv, mise, asdf, pyenv, eksctl, flux, skaffold, kustomize, velero, vault, packer, bun, yarn, deno, pnpm, nvm, claude, gemini, trivy, grype, cosign, syft, actionlint, golangci-lint, ruff, black, prettier, eslint, tflint, pulumi, caddy, age, mkcert, sops, step, consul, vagrant, lazydocker, jq, wget, tmux, act, earthly, goreleaser, make, ninja-build, meson, argocd
+git, docker, terraform, gh, golang, python, rust, fzf, btop, curl, httpie, lazygit, k9s, stern, kubectx, direnv, mise, asdf, pyenv, eksctl, flux, skaffold, kustomize, velero, vault, packer, bun, yarn, deno, pnpm, nvm, claude, gemini, trivy, grype, cosign, syft, actionlint, golangci-lint, ruff, black, prettier, eslint, tflint, pulumi, caddy, age, mkcert, sops, step, consul, vagrant, lazydocker, jq, wget, tmux, act, earthly, goreleaser, make, ninja-build, meson, argocd, terragrunt, infracost, lefthook, pre-commit, checkov
 
 ### Review coverage (batch — may need platform expansion or full handcrafting)
-helm, ripgrep, fd, eza, zoxide, htop, cilium-cli, istioctl, bazel, ollama, shellcheck, shfmt, infracost, terragrunt
+helm, ripgrep, fd, eza, zoxide, htop, cilium-cli, istioctl, bazel, ollama, shellcheck, shfmt
 
 ### Author recipe (missing or discovery-only — needs a recipe)
-node, kubectl, aws-cli, bat, starship, neovim, delta, rbenv, gcloud, ansible, azure-cli, cmake, gradle, maven, sbt, aider, ko, dive, hadolint, pre-commit, lefthook, checkov
+node, kubectl, aws-cli, bat, starship, neovim, delta, rbenv, gcloud, ansible, azure-cli, cmake, gradle, maven, sbt, aider, ko, dive, hadolint
 
 ### Not available (deprecated or no standalone binary)
 copilot — the gh-copilot CLI extension was deprecated in September 2025 (upstream notice: https://github.blog/changelog/2025-09-25-upcoming-deprecation-of-gh-copilot-cli-extension/); Copilot features are now integrated into the gh CLI directly
@@ -108,8 +108,8 @@ copilot — the gh-copilot CLI extension was deprecated in September 2025 (upstr
 | 80 | hadolint | handcrafted | curated |
 | 81 | shellcheck | handcrafted | curated |
 | 82 | shfmt | handcrafted | curated |
-| 83 | pre-commit | discovery-only | author recipe |
-| 84 | lefthook | discovery-only | author recipe |
+| 83 | pre-commit | curated | curated |
+| 84 | lefthook | curated | curated |
 | 85 | actionlint | handcrafted | curated |
 | 86 | golangci-lint | handcrafted | curated |
 | 87 | ruff | handcrafted | curated |
@@ -117,9 +117,9 @@ copilot — the gh-copilot CLI extension was deprecated in September 2025 (upstr
 | 89 | prettier | handcrafted | curated |
 | 90 | eslint | handcrafted | curated |
 | 91 | tflint | handcrafted | no action needed |
-| 92 | checkov | discovery-only | author recipe |
-| 93 | infracost | batch | review coverage |
-| 94 | terragrunt | batch | review coverage |
+| 92 | checkov | curated | curated |
+| 93 | infracost | curated | curated |
+| 94 | terragrunt | curated | curated |
 | 95 | pulumi | handcrafted | no action needed |
 | 96 | caddy | handcrafted | no action needed |
 | 97 | mkcert | handcrafted | no action needed |

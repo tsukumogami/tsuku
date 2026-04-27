@@ -1,0 +1,32 @@
+[metadata]
+name = "lefthook"
+description = "Fast and powerful Git hooks manager"
+homepage = "https://lefthook.dev/"
+version_format = "semver"
+curated = true
+
+[version]
+github_repo = "evilmartians/lefthook"
+tag_prefix = "v"
+
+# Linux: statically linked Go binary, works on glibc and musl.
+[[steps]]
+action = "github_file"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
+repo = "evilmartians/lefthook"
+asset_pattern = "lefthook_{version}_Linux_{arch}"
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+binary = "lefthook"
+
+# macOS: per-arch binary; upstream uses "MacOS" (not "Darwin") in the asset name.
+[[steps]]
+action = "github_file"
+when = { os = ["darwin"] }
+repo = "evilmartians/lefthook"
+asset_pattern = "lefthook_{version}_MacOS_{arch}"
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+binary = "lefthook"
+
+[verify]
+command = "lefthook version"
+pattern = "{version}"
