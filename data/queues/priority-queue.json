@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-27T21:07:11Z",
+  "updated_at": "2026-04-27T21:13:17Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 255,
@@ -7266,8 +7266,8 @@
       "name": "checkov",
       "source": "homebrew:checkov",
       "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
+      "status": "success",
+      "confidence": "curated",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
       "next_retry_at": null
@@ -25016,8 +25016,8 @@
       "name": "lefthook",
       "source": "homebrew:lefthook",
       "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
+      "status": "success",
+      "confidence": "curated",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
       "next_retry_at": null
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 399,
-      "next_retry_at": "1734-01-16T20:31:43.041222897Z"
+      "failure_count": 400,
+      "next_retry_at": "1734-01-16T21:26:00.775911182Z"
     },
     {
       "name": "libaacs",
@@ -37716,8 +37716,8 @@
       "name": "pre-commit",
       "source": "homebrew:pre-commit",
       "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
+      "status": "success",
+      "confidence": "curated",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
       "next_retry_at": null
