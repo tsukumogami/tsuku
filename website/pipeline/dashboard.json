@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-27T17:26:53Z",
+  "generated_at": "2026-04-27T17:28:00Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 23,
       "excluded": 6,
-      "failed": 65,
-      "pending": 3850,
+      "failed": 67,
+      "pending": 3848,
       "success": 1361
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 17,
         "excluded": 6,
-        "failed": 65,
-        "pending": 3835,
+        "failed": 67,
+        "pending": 3833,
         "success": 1337
       }
     },
@@ -74,15 +74,14 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 43,
-        "pending": 32,
+        "failed": 44,
+        "pending": 31,
         "success": 13,
         "total": 89
       }
@@ -441,15 +440,6 @@
           "category": "install_failed",
           "failure_count": 13,
           "next_retry_at": "2026-05-01T08:05:57Z"
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 253,
-          "next_retry_at": "1734-01-16T16:06:08Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -821,6 +811,15 @@
           "next_retry_at": "2026-05-03T20:42:53Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 398,
+          "next_retry_at": "1734-01-16T17:40:06Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -902,6 +901,15 @@
           "next_retry_at": "2026-05-04T15:53:25Z"
         },
         {
+          "id": "rubygems:mktorrent",
+          "name": "mktorrent",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-05-04T17:27:23Z"
+        },
+        {
           "id": "npm:mongoose",
           "name": "mongoose",
           "ecosystem": "npm",
@@ -981,6 +989,15 @@
           "category": "install_failed",
           "failure_count": 12,
           "next_retry_at": "2026-05-04T11:08:02Z"
+        },
+        {
+          "id": "npm:sigstore",
+          "name": "sigstore",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-05-04T17:27:23Z"
         },
         {
           "id": "pypi:tctl",
@@ -2821,6 +2838,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 253,
+          "next_retry_at": "1734-01-16T16:06:08Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -13146,15 +13172,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 396,
-          "next_retry_at": "1734-01-16T15:42:08Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -15740,15 +15757,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:mktorrent",
-          "name": "mktorrent",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-04-25T02:12:48Z"
         },
         {
           "id": "homebrew:mkvtomp4",
@@ -23135,15 +23143,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:sigstore",
-          "name": "sigstore",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-04-27T05:46:25Z"
         },
         {
           "id": "homebrew:sile",
