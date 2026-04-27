@@ -676,7 +676,7 @@ Plan: [docs/plans/PLAN-curated-recipes.md](../plans/PLAN-curated-recipes.md)
 | ~~[#2295: feat(recipes): backfill curated recipes — C++ and JVM build tools](https://github.com/tsukumogami/tsuku/issues/2295)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260)~~ | ~~testable~~ |
 | ~~_Curates the embedded recipes for make, ninja, and meson. Gradle, maven, and sbt deferred: #2325 (milestone-tag handling for gradle and sbt) and #2327 (openjdk recipe needed before any JVM tool can be verified)._~~ | | |
 | ~~[#2296: feat(recipes): backfill curated recipes — cloud CLIs and orchestration](https://github.com/tsukumogami/tsuku/issues/2296)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260)~~ | ~~testable~~ |
-| ~~_Curates azure-cli, ansible, and argocd, and rewrites bazel from the batch output. Gcloud deferred to #2328 (no GitHub releases, no HTTP/JSON version source in tsuku)._~~ | | |
+| ~~_Curates azure-cli, ansible, and argocd. Gcloud deferred to #2328 (no GitHub releases, no HTTP/JSON version source in tsuku) and bazel deferred to #2330 (single-binary self-extraction fails in the sandbox)._~~ | | |
 | [#2297: feat(recipes): backfill curated recipes — IaC quality and policy tools](https://github.com/tsukumogami/tsuku/issues/2297) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260) | testable |
 | _Rewrites the batch recipes for terragrunt and infracost, and authors new recipes for pre-commit, lefthook, and checkov._ | | |
 

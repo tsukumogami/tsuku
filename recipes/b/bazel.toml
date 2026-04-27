@@ -1,31 +1,35 @@
 [metadata]
-name = "bazel"
-description = "Fast, scalable, multi-language build system"
-homepage = "https://bazel.build/"
-version_format = "semver"
-curated = true
-# Bazel binaries embed an OpenJDK runtime that uses glibc-style dynamic
-# linking; they fail to start on musl (Alpine has no bazel apk package).
-supported_libc = ["glibc"]
+  name = "bazel"
+  description = "Google's own build tool"
+  homepage = "https://bazel.build/"
+  version_format = ""
+  requires_sudo = false
+  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
 
-# Linux: single binary published per architecture, glibc only.
-[[steps]]
-action = "github_file"
-when = { os = ["linux"], libc = ["glibc"] }
-repo = "bazelbuild/bazel"
-asset_pattern = "bazel-{version}-linux-{arch}"
-arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
-binaries = [{src = "bazel-{version}-linux-{arch}", dest = "bin/bazel"}]
+[version]
+  source = ""
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = ""
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
 
-# macOS: per-arch single binary.
 [[steps]]
-action = "github_file"
-when = { os = ["darwin"] }
-repo = "bazelbuild/bazel"
-asset_pattern = "bazel-{version}-darwin-{arch}"
-arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
-binaries = [{src = "bazel-{version}-darwin-{arch}", dest = "bin/bazel"}]
+  action = "homebrew"
+  formula = "bazel"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/bazel", "bin/bazel-9.0.0"]
 
 [verify]
-command = "bazel --version"
-pattern = "bazel {version}"
+  command = "bazel --version"
+  pattern = ""

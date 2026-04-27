@@ -25,4 +25,5 @@ executables = ["az"]
 
 [verify]
 command = "az --version"
-pattern = "azure-cli\\s+{version}"
+mode = "output"
+reason = "az --version prints a fixed-width column layout (azure-cli<spaces>{version}); strings.Contains cannot match across the variable whitespace, so output mode is used instead"

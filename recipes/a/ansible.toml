@@ -9,7 +9,7 @@ curated = true
 [[steps]]
 action = "pipx_install"
 when = { os = ["linux"], libc = ["glibc"] }
-package = "ansible"
+package = "ansible-core"
 executables = ["ansible", "ansible-playbook", "ansible-galaxy", "ansible-vault", "ansible-config", "ansible-doc", "ansible-inventory", "ansible-pull", "ansible-console"]
 
 # musl Linux (Alpine): pipx is fragile on musl; use the system package.
@@ -22,7 +22,7 @@ packages = ["ansible"]
 [[steps]]
 action = "pipx_install"
 when = { os = ["darwin"] }
-package = "ansible"
+package = "ansible-core"
 executables = ["ansible", "ansible-playbook", "ansible-galaxy", "ansible-vault", "ansible-config", "ansible-doc", "ansible-inventory", "ansible-pull", "ansible-console"]
 
 [verify]

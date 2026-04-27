@@ -11,10 +11,10 @@ Popularity rankings are based on Homebrew download analytics, GitHub star counts
 ## Action Summary
 
 ### No action needed (handcrafted or curated — full platform support)
-git, docker, terraform, gh, golang, python, rust, fzf, btop, curl, httpie, lazygit, k9s, stern, kubectx, direnv, mise, asdf, pyenv, eksctl, flux, skaffold, kustomize, velero, vault, packer, bun, yarn, deno, pnpm, nvm, claude, gemini, trivy, grype, cosign, syft, actionlint, golangci-lint, ruff, black, prettier, eslint, tflint, pulumi, caddy, age, mkcert, sops, step, consul, vagrant, lazydocker, jq, wget, tmux, act, earthly, goreleaser, make, ninja-build, meson, argocd, ansible, azure-cli, bazel
+git, docker, terraform, gh, golang, python, rust, fzf, btop, curl, httpie, lazygit, k9s, stern, kubectx, direnv, mise, asdf, pyenv, eksctl, flux, skaffold, kustomize, velero, vault, packer, bun, yarn, deno, pnpm, nvm, claude, gemini, trivy, grype, cosign, syft, actionlint, golangci-lint, ruff, black, prettier, eslint, tflint, pulumi, caddy, age, mkcert, sops, step, consul, vagrant, lazydocker, jq, wget, tmux, act, earthly, goreleaser, make, ninja-build, meson, argocd, ansible, azure-cli
 
 ### Review coverage (batch — may need platform expansion or full handcrafting)
-helm, ripgrep, fd, eza, zoxide, htop, cilium-cli, istioctl, ollama, shellcheck, shfmt, infracost, terragrunt
+helm, ripgrep, fd, eza, zoxide, htop, cilium-cli, istioctl, bazel, ollama, shellcheck, shfmt, infracost, terragrunt
 
 ### Author recipe (missing or discovery-only — needs a recipe)
 node, kubectl, aws-cli, bat, starship, neovim, delta, rbenv, gcloud, cmake, gradle, maven, sbt, aider, ko, dive, hadolint, pre-commit, lefthook, checkov
@@ -83,7 +83,7 @@ copilot — the gh-copilot CLI extension was deprecated in September 2025 (upstr
 | 55 | ninja-build | curated | curated |
 | 56 | meson | curated | curated |
 | 57 | make | curated | curated |
-| 58 | bazel | curated | curated |
+| 58 | bazel | batch | review coverage |
 | 59 | gradle | discovery-only | author recipe |
 | 60 | maven | discovery-only | author recipe |
 | 61 | sbt | discovery-only | author recipe |
