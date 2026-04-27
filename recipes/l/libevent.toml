@@ -4,14 +4,17 @@ description = "Asynchronous event library"
 homepage = "https://libevent.org/"
 type = "library"
 dependencies = ["openssl"]
-# macOS: homebrew bottle unavailable for sonoma (2.1.12)
-# linux/arm64: homebrew bottle install fails on glibc arm64 containers
+# macOS: tsuku's homebrew bottle resolver looks up the GHCR manifest at the
+# unrevised version path (`/manifests/2.1.12`), but libevent's bottles live
+# under `/manifests/2.1.12_1` because of the revision bump. Tracked in the
+# follow-up to this issue.
+# linux/arm64: homebrew bottle install fails on glibc arm64 containers.
 unsupported_platforms = ["darwin/arm64", "darwin/amd64", "linux/arm64"]
 
 [metadata.satisfies]
 homebrew = ["libevent"]
 
-# glibc Linux: Homebrew bottle
+# glibc Linux: Homebrew bottle.
 [[steps]]
 action = "homebrew"
 formula = "libevent"
@@ -36,7 +39,7 @@ outputs = [
 ]
 when = { os = ["linux"], libc = ["glibc"] }
 
-# musl Linux: Alpine package
+# musl Linux: Alpine package.
 [[steps]]
 action = "apk_install"
 packages = ["libevent-dev"]

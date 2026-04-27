@@ -1,50 +1,51 @@
 [metadata]
-  name = "utf8proc"
-  description = "Clean C library for processing UTF-8 Unicode data"
-  homepage = "https://juliastrings.github.io/utf8proc/"
-  version_format = ""
-  requires_sudo = false
-  tier = 0
-  type = "library"
-  llm_validation = "skipped"
+name = "utf8proc"
+description = "Clean C library for processing UTF-8 Unicode data"
+homepage = "https://juliastrings.github.io/utf8proc/"
+type = "library"
+curated = true
 
-[version]
-  source = ""
-  github_repo = ""
-  tag_prefix = ""
-  module = ""
-  formula = ""
-  cask = ""
-  tap = ""
-  fossil_repo = ""
-  project_name = ""
-  version_separator = ""
-  timeline_tag = ""
+[metadata.satisfies]
+homebrew = ["utf8proc"]
+
+# glibc Linux: Homebrew bottle.
+[[steps]]
+action = "homebrew"
+formula = "utf8proc"
+when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
-  action = "homebrew"
-  formula = "utf8proc"
-  [steps.when]
-    libc = ["glibc"]
-    os = ["linux"]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libutf8proc.so",
+    "lib/libutf8proc.so.3",
+    "lib/libutf8proc.a",
+    "lib/pkgconfig/libutf8proc.pc",
+    "include/utf8proc.h",
+]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package.
+[[steps]]
+action = "apk_install"
+packages = ["utf8proc-dev"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew bottle. Provides libutf8proc.3.dylib referenced by the tmux bottle.
+[[steps]]
+action = "homebrew"
+formula = "utf8proc"
+when = { os = ["darwin"] }
 
 [[steps]]
-  action = "install_binaries"
-  install_mode = "directory"
-  outputs = ["lib/libutf8proc.a", "lib/libutf8proc.so", "lib/libutf8proc.so.3", "lib/libutf8proc.so.3.2.3", "lib/pkgconfig/libutf8proc.pc", "include/utf8proc.h"]
-  [steps.when]
-    libc = ["glibc"]
-    os = ["linux"]
-
-[[steps]]
-  action = "homebrew"
-  formula = "utf8proc"
-  [steps.when]
-    os = ["darwin"]
-
-[[steps]]
-  action = "install_binaries"
-  install_mode = "directory"
-  outputs = ["lib/libutf8proc.3.dylib", "lib/libutf8proc.a", "lib/libutf8proc.dylib", "lib/pkgconfig/libutf8proc.pc", "include/utf8proc.h"]
-  [steps.when]
-    os = ["darwin"]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libutf8proc.dylib",
+    "lib/libutf8proc.3.dylib",
+    "lib/libutf8proc.a",
+    "lib/pkgconfig/libutf8proc.pc",
+    "include/utf8proc.h",
+]
+when = { os = ["darwin"] }
