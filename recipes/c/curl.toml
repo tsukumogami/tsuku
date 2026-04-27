@@ -5,7 +5,7 @@ homepage = "https://curl.se/"
 version_format = "semver"
 curated = true
 dependencies = ["openssl", "zlib"]
-runtime_dependencies = ["openssl", "zlib", "libnghttp3", "libnghttp2", "libngtcp2", "libssh2", "brotli", "zstd"]
+runtime_dependencies = ["libnghttp3", "libnghttp2", "libngtcp2", "libssh2", "brotli", "zstd"]
 
 # Linux: build from source (configure_make works on both glibc and musl)
 [[steps]]
@@ -55,7 +55,7 @@ outputs = ["bin/curl"]
 action = "homebrew"
 formula = "curl"
 when = { os = ["darwin"] }
-dependencies = ["openssl", "zlib", "libnghttp3", "libnghttp2", "libngtcp2", "libssh2", "brotli", "zstd"]
+dependencies = ["libnghttp3", "libnghttp2", "libngtcp2", "libssh2", "brotli", "zstd"]
 
 [[steps]]
 action = "install_binaries"
