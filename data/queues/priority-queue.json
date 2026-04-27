@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-27T13:54:29Z",
+  "updated_at": "2026-04-27T15:29:25Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 252,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 395,
-      "next_retry_at": "1734-01-16T11:20:45.876675829Z"
+      "failure_count": 396,
+      "next_retry_at": "1734-01-16T15:42:08.626927186Z"
     },
     {
       "name": "libaacs",
@@ -50986,7 +50986,7 @@
       "name": "webdav",
       "source": "npm:webdav",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 10,
