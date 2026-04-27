@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-27T19:23:03Z",
+  "updated_at": "2026-04-27T20:19:00Z",
   "entries": [
     {
       "name": "node",
@@ -2616,8 +2616,8 @@
       "name": "argocd",
       "source": "homebrew:argocd",
       "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
+      "status": "success",
+      "confidence": "curated",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
       "next_retry_at": null
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 254,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 398,
-      "next_retry_at": "1734-01-16T17:40:06.274334388Z"
+      "failure_count": 399,
+      "next_retry_at": "1734-01-16T20:31:43.041222897Z"
     },
     {
       "name": "libaacs",
