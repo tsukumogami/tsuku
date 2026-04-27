@@ -4,10 +4,7 @@ description = "Internet file retriever"
 homepage = "https://www.gnu.org/software/wget/"
 version_format = "semver"
 curated = true
-# macOS: homebrew wget bottle has RPATH references to libintl.8.dylib from
-# gettext and other packages not managed by tsuku. darwin coverage is excluded
-# until runtime_dependencies supports homebrew dylib chaining.
-supported_os = ["linux"]
+runtime_dependencies = ["openssl", "gettext", "libidn2", "libunistring"]
 
 # glibc Linux: Homebrew bottle
 [[steps]]
@@ -26,6 +23,23 @@ when = { os = ["linux"], libc = ["glibc"] }
 action = "apk_install"
 packages = ["wget"]
 when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew bottle. The bottle's @rpath references libintl.8.dylib
+# (gettext), libidn2.0.dylib (libidn2), libunistring.5.dylib, and
+# libssl.3.dylib / libcrypto.3.dylib (openssl). tsuku's homebrew action
+# patches these references to point at the matching tsuku-installed
+# dependencies.
+[[steps]]
+action = "homebrew"
+formula = "wget"
+when = { os = ["darwin"] }
+dependencies = ["openssl", "gettext", "libidn2", "libunistring"]
+
+[[steps]]
+action = "install_binaries"
+when = { os = ["darwin"] }
+install_mode = "directory"
+outputs = ["bin/wget"]
 
 [verify]
 command = "wget --version"

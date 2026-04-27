@@ -29,7 +29,7 @@ action = "apk_install"
 packages = ["gettext-dev"]
 when = { os = ["linux"], libc = ["musl"] }
 
-# macOS: Homebrew
+# macOS: Homebrew bottle. Provides libintl.8.dylib referenced by the wget bottle.
 [[steps]]
 action = "homebrew"
 formula = "gettext"
@@ -40,6 +40,7 @@ action = "install_binaries"
 install_mode = "directory"
 outputs = [
     "lib/libintl.dylib",
+    "lib/libintl.8.dylib",
     "lib/libintl.a",
     "include/libintl.h",
 ]

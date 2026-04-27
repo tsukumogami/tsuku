@@ -4,15 +4,8 @@ description = "Command line tool for transferring data with URLs"
 homepage = "https://curl.se/"
 version_format = "semver"
 curated = true
-# macOS: homebrew curl bottle has RPATH references to libnghttp3.9.dylib from a
-# separate homebrew package; bundling transitive dylibs is not supported.
-# darwin coverage is excluded until runtime_dependencies supports dylib chaining.
-supported_os = ["linux"]
 dependencies = ["openssl", "zlib"]
-
-[version]
-source = "homebrew"
-formula = "curl"
+runtime_dependencies = ["openssl", "zlib", "libnghttp3", "libnghttp2", "libngtcp2", "libssh2", "brotli", "zstd"]
 
 # Linux: build from source (configure_make works on both glibc and musl)
 [[steps]]
@@ -50,6 +43,23 @@ rpath = "$ORIGIN/../lib:{libs_dir}/openssl-{deps.openssl.version}/lib:{libs_dir}
 [[steps]]
 action = "install_binaries"
 when = { os = ["linux"] }
+install_mode = "directory"
+outputs = ["bin/curl"]
+
+# macOS: Homebrew bottle. The bottle's @rpath references libnghttp3.9.dylib,
+# libnghttp2.14.dylib, libngtcp2.16.dylib, libssh2.1.dylib, libssl.3.dylib,
+# libcrypto.3.dylib, libbrotli*.dylib, and libzstd.1.dylib from sibling
+# homebrew packages; tsuku's homebrew action patches these references to
+# point at the matching tsuku-installed dependencies.
+[[steps]]
+action = "homebrew"
+formula = "curl"
+when = { os = ["darwin"] }
+dependencies = ["openssl", "zlib", "libnghttp3", "libnghttp2", "libngtcp2", "libssh2", "brotli", "zstd"]
+
+[[steps]]
+action = "install_binaries"
+when = { os = ["darwin"] }
 install_mode = "directory"
 outputs = ["bin/curl"]
 
