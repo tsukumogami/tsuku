@@ -5,9 +5,10 @@
 
 [metadata]
 name = "ruby"
-description = "Ruby programming language (execution dependency for gem-based tools)"
-homepage = "https://www.ruby-lang.org/"
+description = "Object-oriented scripting language"
+homepage = "https://www.ruby-lang.org"
 version_format = "semver"
+curated = true
 dependencies = ["libyaml"]
 
 [version]
@@ -260,4 +261,5 @@ when = { os = ["darwin"] }
 
 [verify]
 command = "ruby --version"
-pattern = "ruby {version}"
+mode = "output"
+reason = "Alpine package version may differ from ruby-builder release version; output mode confirms the tool is runnable"

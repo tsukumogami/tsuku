@@ -4,9 +4,10 @@
 
 [metadata]
 name = "rust"
-description = "Rust programming language toolchain (execution dependency for cargo-based tools)"
+description = "Rust programming language and Cargo package manager"
 homepage = "https://www.rust-lang.org/"
 version_format = "semver"
+curated = true
 
 [version]
 github_repo = "rust-lang/rust"  # Detect version from GitHub releases
@@ -45,6 +46,11 @@ when = { os = ["linux"], libc = ["glibc"] }
 # Depends on bash because Rust's install.sh requires #!/usr/bin/env bash.
 # TODO(#1948): Switch from linux_family = "alpine" to libc = ["musl"] once the
 # family policy analyzer supports libc-based constraints.
+[[steps]]
+action = "apk_install"
+packages = ["libgcc"]
+when = { os = ["linux"], linux_family = "alpine" }
+
 [[steps]]
 action = "download"
 url = "https://static.rust-lang.org/dist/rust-{version}-{arch}-{os}.tar.gz"
