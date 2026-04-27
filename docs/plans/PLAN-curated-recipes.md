@@ -79,8 +79,8 @@ Introduce a `curated = true` flag for handcrafted recipes, nightly cross-platfor
 | ~~_Authors a new curated recipe for argocd. Other tools deferred: gcloud to #2328 (no version source for Google's distribution channel), bazel to #2330 (single-binary self-extraction fails in the test-recipe sandbox), and ansible plus azure-cli to #2331 (the bundled python-standalone is 3.10 and pipx_install picks the latest pypi version, which has dropped 3.10 support; needs version-constraint support)._~~ | | |
 | ~~[#2297: feat(recipes): backfill curated recipes — IaC quality and policy tools](https://github.com/tsukumogami/tsuku/issues/2297)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260)~~ | ~~testable~~ |
 | ~~_Rewrites the batch recipes for terragrunt and infracost, and authors new recipes for pre-commit, lefthook, and checkov._~~ | | |
-| [#2312: feat(recipes): fix macOS library dependencies needed for curl, wget, tmux, and git](https://github.com/tsukumogami/tsuku/issues/2312) | None | testable |
-| _Adds the `nghttp3` recipe (curl), fixes the macOS path for `libevent` (tmux), rewrites `utf8proc` from batch garbage (tmux), and updates `pcre2` to install its dylib on macOS (git). Unblocks darwin coverage for all four tools._ | | |
+| ~~[#2312: feat(recipes): fix macOS library dependencies needed for curl, wget, tmux, and git](https://github.com/tsukumogami/tsuku/issues/2312)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Adds the `nghttp3` recipe (curl), rewrites `utf8proc` from batch garbage (tmux), and updates `pcre2` to install its dylib on macOS (git). The libevent macOS path is deferred to #2333 because tsuku's homebrew bottle resolver does not yet understand revision-suffixed manifests; the libevent recipe keeps its `darwin/*` `unsupported_platforms` entries until the resolver is fixed._~~ | | |
 | [#2313: feat(recipes): add macOS support to curl, wget, tmux, and git recipes](https://github.com/tsukumogami/tsuku/issues/2313) | [#2312](https://github.com/tsukumogami/tsuku/issues/2312) | testable |
 | _Removes the `supported_os = ["linux"]` restriction from curl, wget, tmux, and git by adding macOS Homebrew steps wired to the runtime dependencies fixed in #2312. All four recipes gain darwin/amd64 and darwin/arm64 coverage._ | | |
 | [#2315: feat(recipes): curate rbenv recipe with working cross-platform installation](https://github.com/tsukumogami/tsuku/issues/2315) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260) | testable |
@@ -178,8 +178,8 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2259,I2260,I2261,I2262,I2263,I2264,I2265,I2266,I2267,I2268,I2281,I2282,I2283,I2284,I2285,I2286,I2287,I2288,I2289,I2290,I2291,I2292,I2293,I2294,I2295,I2296,I2297 done
-    class I2312,I2315 ready
+    class I2259,I2260,I2261,I2262,I2263,I2264,I2265,I2266,I2267,I2268,I2281,I2282,I2283,I2284,I2285,I2286,I2287,I2288,I2289,I2290,I2291,I2292,I2293,I2294,I2295,I2296,I2297,I2312 done
+    class I2315 ready
     class I2313 blocked
 ```
 
