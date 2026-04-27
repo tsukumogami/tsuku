@@ -1,34 +1,30 @@
 [metadata]
-  name = "infracost"
-  description = "Cost estimates for Terraform"
-  homepage = "https://www.infracost.io/docs/"
-  version_format = ""
-  requires_sudo = false
-  tier = 0
-  type = ""
-  llm_validation = "skipped"
+name = "infracost"
+description = "Cloud cost estimates for Terraform"
+homepage = "https://www.infracost.io/"
+version_format = "semver"
+curated = true
 
 [version]
-  source = ""
-  github_repo = ""
-  tag_prefix = ""
-  module = ""
-  formula = ""
-  cask = ""
-  tap = ""
-  fossil_repo = ""
-  project_name = ""
-  version_separator = ""
-  timeline_tag = ""
+github_repo = "infracost/infracost"
+tag_prefix = "v"
 
+# Linux: statically linked Go binary in a tar.gz; works on glibc and musl.
 [[steps]]
-  action = "homebrew"
-  formula = "infracost"
+action = "github_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
+repo = "infracost/infracost"
+asset_pattern = "infracost-linux-{arch}.tar.gz"
+binaries = [{src = "infracost-linux-{arch}", dest = "bin/infracost"}]
 
+# macOS: per-arch tarball with the same internal binary name.
 [[steps]]
-  action = "install_binaries"
-  binaries = ["bin/infracost"]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "infracost/infracost"
+asset_pattern = "infracost-darwin-{arch}.tar.gz"
+binaries = [{src = "infracost-darwin-{arch}", dest = "bin/infracost"}]
 
 [verify]
-  command = "infracost --version"
-  pattern = ""
+command = "infracost --version"
+pattern = "Infracost v{version}"

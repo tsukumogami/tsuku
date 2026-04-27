@@ -1,0 +1,31 @@
+[metadata]
+name = "pre-commit"
+description = "Framework for managing and maintaining multi-language pre-commit hooks"
+homepage = "https://pre-commit.com/"
+version_format = "semver"
+curated = true
+
+# glibc Linux: pipx pulls a pure-Python wheel; pre-commit 4.x supports Python 3.10+.
+[[steps]]
+action = "pipx_install"
+when = { os = ["linux"], libc = ["glibc"] }
+package = "pre-commit"
+executables = ["pre-commit"]
+
+# musl Linux (Alpine): pipx is fragile on musl; use the system package.
+[[steps]]
+action = "apk_install"
+when = { os = ["linux"], libc = ["musl"] }
+packages = ["pre-commit"]
+
+# macOS: pipx works for the pure-Python pre-commit distribution.
+[[steps]]
+action = "pipx_install"
+when = { os = ["darwin"] }
+package = "pre-commit"
+executables = ["pre-commit"]
+
+[verify]
+command = "pre-commit --version"
+mode = "output"
+reason = "Alpine package version may differ from upstream pypi release; output mode confirms the tool is runnable on every platform"

@@ -677,8 +677,8 @@ Plan: [docs/plans/PLAN-curated-recipes.md](../plans/PLAN-curated-recipes.md)
 | ~~_Curates the embedded recipes for make, ninja, and meson. Gradle, maven, and sbt deferred: #2325 (milestone-tag handling for gradle and sbt) and #2327 (openjdk recipe needed before any JVM tool can be verified)._~~ | | |
 | ~~[#2296: feat(recipes): backfill curated recipes — cloud CLIs and orchestration](https://github.com/tsukumogami/tsuku/issues/2296)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260)~~ | ~~testable~~ |
 | ~~_Curates argocd. Deferred: gcloud (#2328), bazel (#2330), ansible and azure-cli (#2331 — pipx version-constraint needed because python-standalone 3.10 cannot install the latest pypi releases)._~~ | | |
-| [#2297: feat(recipes): backfill curated recipes — IaC quality and policy tools](https://github.com/tsukumogami/tsuku/issues/2297) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260) | testable |
-| _Rewrites the batch recipes for terragrunt and infracost, and authors new recipes for pre-commit, lefthook, and checkov._ | | |
+| ~~[#2297: feat(recipes): backfill curated recipes — IaC quality and policy tools](https://github.com/tsukumogami/tsuku/issues/2297)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260)~~ | ~~testable~~ |
+| ~~_Rewrites the batch recipes for terragrunt and infracost, and authors new recipes for pre-commit, lefthook, and checkov._~~ | | |
 
 ```mermaid
 graph TD
@@ -758,8 +758,7 @@ graph TD
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
 
-    class I2259,I2260,I2261,I2262,I2263,I2264,I2265,I2266,I2267,I2268,I2281,I2282,I2283,I2284,I2285,I2286,I2287,I2288,I2289,I2290,I2291,I2292,I2293,I2294,I2295,I2296 done
-    class I2297 ready
+    class I2259,I2260,I2261,I2262,I2263,I2264,I2265,I2266,I2267,I2268,I2281,I2282,I2283,I2284,I2285,I2286,I2287,I2288,I2289,I2290,I2291,I2292,I2293,I2294,I2295,I2296,I2297 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design.
