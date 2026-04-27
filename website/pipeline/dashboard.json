@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-04-27T19:23:40Z",
+  "generated_at": "2026-04-27T20:19:34Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 23,
       "excluded": 6,
       "failed": 68,
-      "pending": 3847,
-      "success": 1361
+      "pending": 3846,
+      "success": 1362
     },
     "by_tier": {
       "1": {
@@ -24,8 +24,8 @@
         "blocked": 17,
         "excluded": 6,
         "failed": 68,
-        "pending": 3832,
-        "success": 1337
+        "pending": 3831,
+        "success": 1338
       }
     },
     "by_ecosystem": {
@@ -55,8 +55,8 @@
       },
       "homebrew": {
         "blocked": 23,
-        "pending": 3737,
-        "success": 1123,
+        "pending": 3736,
+        "success": 1124,
         "total": 4883
       },
       "manual": {
@@ -68,14 +68,13 @@
         "total": 1
       },
       "npm": {
-        "failed": 18,
-        "pending": 2,
+        "failed": 17,
+        "pending": 3,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -441,15 +440,6 @@
           "category": "install_failed",
           "failure_count": 13,
           "next_retry_at": "2026-05-01T08:05:57Z"
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 254,
-          "next_retry_at": "1734-01-16T19:35:46Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -819,6 +809,15 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-05-03T20:42:53Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 399,
+          "next_retry_at": "1734-01-16T20:31:43Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -2106,13 +2105,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:argocd",
-          "name": "argocd",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:argon2",
           "name": "argon2",
           "ecosystem": "homebrew",
@@ -2848,6 +2840,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 254,
+          "next_retry_at": "1734-01-16T19:35:46Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -13171,15 +13172,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 398,
-          "next_retry_at": "1734-01-16T17:40:06Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -28607,6 +28599,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:argocd",
+          "name": "argocd",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:argocd-autopilot",
           "name": "argocd-autopilot",
           "ecosystem": "homebrew",
@@ -40187,6 +40186,11 @@
     {
       "name": "argo-cd",
       "source": "github:argoproj/argo-cd",
+      "validation_status": "valid"
+    },
+    {
+      "name": "argocd",
+      "source": "homebrew:argocd",
       "validation_status": "valid"
     },
     {
