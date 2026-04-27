@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-27T22:04:33Z",
+  "generated_at": "2026-04-27T22:07:37Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 23,
       "excluded": 6,
-      "failed": 69,
-      "pending": 3842,
+      "failed": 68,
+      "pending": 3843,
       "success": 1365
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 17,
         "excluded": 6,
-        "failed": 69,
-        "pending": 3827,
+        "failed": 68,
+        "pending": 3828,
         "success": 1341
       }
     },
@@ -74,7 +74,8 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -809,15 +810,6 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-05-03T20:42:53Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 400,
-          "next_retry_at": "1734-01-16T21:26:00Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -13167,6 +13159,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 400,
+          "next_retry_at": "1734-01-16T21:26:00Z"
         },
         {
           "id": "homebrew:libaacs",
