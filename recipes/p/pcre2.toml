@@ -3,7 +3,6 @@ name = "pcre2"
 description = "Perl compatible regular expressions library with a new API"
 homepage = "https://www.pcre.org/"
 type = "library"
-curated = true
 binaries = ["bin/pcre2grep", "bin/pcre2test"]
 
 [metadata.satisfies]
@@ -50,8 +49,7 @@ install_mode = "directory"
 outputs = ["bin/pcre2grep", "bin/pcre2test"]
 when = { os = ["linux"], libc = ["musl"] }
 
-# macOS: Homebrew bottle. Installs the CLI binaries and the dylibs that
-# dependent tools (such as the homebrew git bottle) reference at runtime.
+# macOS: Homebrew
 [[steps]]
 action = "homebrew"
 formula = "pcre2"
@@ -60,28 +58,7 @@ when = { os = ["darwin"] }
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-outputs = [
-    "bin/pcre2grep",
-    "bin/pcre2test",
-    "lib/libpcre2-8.dylib",
-    "lib/libpcre2-8.0.dylib",
-    "lib/libpcre2-8.a",
-    "lib/libpcre2-16.dylib",
-    "lib/libpcre2-16.0.dylib",
-    "lib/libpcre2-16.a",
-    "lib/libpcre2-32.dylib",
-    "lib/libpcre2-32.0.dylib",
-    "lib/libpcre2-32.a",
-    "lib/libpcre2-posix.dylib",
-    "lib/libpcre2-posix.3.dylib",
-    "lib/libpcre2-posix.a",
-    "lib/pkgconfig/libpcre2-8.pc",
-    "lib/pkgconfig/libpcre2-16.pc",
-    "lib/pkgconfig/libpcre2-32.pc",
-    "lib/pkgconfig/libpcre2-posix.pc",
-    "include/pcre2.h",
-    "include/pcre2posix.h",
-]
+outputs = ["bin/pcre2grep", "bin/pcre2test"]
 when = { os = ["darwin"] }
 
 [verify]
