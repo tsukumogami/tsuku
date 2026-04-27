@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-04-27T16:28:02Z",
-  "total_recipes": 1428,
+  "generated_at": "2026-04-27T20:18:34Z",
+  "total_recipes": 1429,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 860,
-        "total": 1428,
-        "pct": 60.22408963585434
+        "supported": 861,
+        "total": 1429,
+        "pct": 60.2519244226732
       },
       "glibc": {
-        "supported": 1395,
-        "total": 1428,
-        "pct": 97.68907563025209
+        "supported": 1396,
+        "total": 1429,
+        "pct": 97.69069279216235
       },
       "musl": {
-        "supported": 1250,
-        "total": 1428,
-        "pct": 87.53501400560224
+        "supported": 1251,
+        "total": 1429,
+        "pct": 87.54373687893631
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1276,
-        "musl_support": 1100,
-        "glibc_support": 1245
+        "total": 1277,
+        "musl_support": 1101,
+        "glibc_support": 1246
       }
     }
   },
@@ -587,6 +587,18 @@
     },
     {
       "name": "argo-cd",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "argocd",
       "type": "tool",
       "platforms": {
         "darwin": true,
