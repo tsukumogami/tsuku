@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T23:41:03Z",
+  "generated_at": "2026-04-27T02:39:03Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -37843,13 +37843,68 @@
     }
   ],
   "failures": {
-    "generation_failed": 826,
-    "install_failed": 2506,
+    "generation_failed": 827,
+    "install_failed": 2511,
     "missing_dep": 68,
     "network_error": 8,
     "recipe_not_found": 74
   },
   "failure_details": [
+    {
+      "id": "pypi-2026-04-27T02-37-04Z-lib3mf",
+      "package": "lib3mf",
+      "ecosystem": "pypi",
+      "category": "install_failed",
+      "subcategory": "verify_pattern_mismatch",
+      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\n✅ python-standalone@20260414\nInstalled python-standalone\n   Package: lib3mf@2.5.0\n   Executables: [lib3mf]\n   Using python: /home/runner/.tsuku/tools/python-standalone-20260414/bin/python3\nwarning:    Package contains native addons (may have platform-specific behavior)\n   Creating venv: /tmp/action-validator-3084530317/.install/venvs/lib3mf\n   Installing 1 packages with hash verification\n❌ lib3mf@2.5.0\nIns",
+      "batch_id": "2026-04-27T02-37-04Z",
+      "timestamp": "2026-04-27T02:37:04.062512655Z"
+    },
+    {
+      "id": "rubygems-2026-04-27T02-36-53Z-lsof",
+      "package": "lsof",
+      "ecosystem": "rubygems",
+      "category": "install_failed",
+      "message": "Error: recipe validation failed for 'lsof'\n  - metadata.homepage: homepage must start with https:// (got: http://pivotallabs.com)",
+      "batch_id": "2026-04-27T02-37-04Z",
+      "timestamp": "2026-04-27T02:36:53.906235304Z"
+    },
+    {
+      "id": "crates.io-2026-04-27T02-36-47Z-bindgen",
+      "package": "bindgen",
+      "ecosystem": "crates.io",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\n   Output: install: creating uninstall script at /tmp/action-validator-3718601559/.install/lib/rustlib/uninstall.sh\ninstall: installing component 'rustc'\ninstall: installing component 'rust-std-x86_64-unknown-linux-gnu'\ninstall: installing component 'rust-docs'\ninstall: installing component 'rust-docs-json-preview'\ninstall: installing component 'cargo'\ninstall: installing component 'rustfmt-preview'\ninstall: installing component 'rust-",
+      "batch_id": "2026-04-27T02-37-04Z",
+      "timestamp": "2026-04-27T02:36:47.413282863Z"
+    },
+    {
+      "id": "npm-2026-04-27T02-35-07Z-azion",
+      "package": "azion",
+      "ecosystem": "npm",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\n✅ gcc-libs@15.2.0\n✅ nodejs@25.9.0\nInstalled nodejs\n   Package: azion@3.1.2\n   Executables: [azion]\n   Using npm: /home/runner/.tsuku/tools/nodejs-25.9.0/bin/npm\n   Installing: npm install azion@3.1.2 in /tmp/action-validator-2778873896/.install\n❌ azion@3.1.2\nInstallation failed: step 1 (npm_exec) failed: expected executable azion not found at /tmp/action-validator-2778873896/.install/node_modules/.bin/azion",
+      "batch_id": "2026-04-27T02-37-04Z",
+      "timestamp": "2026-04-27T02:35:07.119664644Z"
+    },
+    {
+      "id": "homebrew-2026-04-27T02-34-25Z-task",
+      "package": "task",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\n✅ patchelf@0.18.0",
+      "batch_id": "2026-04-27T02-37-04Z",
+      "timestamp": "2026-04-27T02:34:25.986629459Z"
+    },
+    {
+      "id": "github-2026-04-27T02-34-23Z-hub",
+      "package": "hub",
+      "ecosystem": "github",
+      "category": "generation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'hub' resolved to github (github/hub), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "2026-04-27T02-37-04Z",
+      "timestamp": "2026-04-27T02:34:23.118904214Z"
+    },
     {
       "id": "npm-2026-04-26T22-39-49Z-pocketbase",
       "package": "pocketbase",
@@ -39630,70 +39685,15 @@
       "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\n✅ gcc-libs@15.2.0\n✅ nodejs@25.9.0\nInstalled nodejs\n   Package: azion@3.1.2\n   Executables: [azion]\n   Using npm: /home/runner/.tsuku/tools/nodejs-25.9.0/bin/npm\n   Installing: npm ci in /tmp/action-validator-1525123691/.install\n❌ azion@3.1.2\nInstallation failed: step 1 (npm_exec) failed: expected executable azion not found at /tmp/action-validator-1525123691/.install/node_modules/.bin/azion",
       "batch_id": "2026-04-24T05-37-01Z",
       "timestamp": "2026-04-24T05:36:49.239252274Z"
-    },
-    {
-      "id": "rubygems-2026-04-24T05-36-10Z-amp",
-      "package": "amp",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Error: recipe validation failed for 'amp'\n  - metadata.homepage: homepage must start with https:// (got: http://amp.carboni.ca/)",
-      "batch_id": "2026-04-24T05-37-01Z",
-      "timestamp": "2026-04-24T05:36:10.664735649Z"
-    },
-    {
-      "id": "crates.io-2026-04-24T05-36-03Z-numpy",
-      "package": "numpy",
-      "ecosystem": "crates.io",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\n   Output: install: creating uninstall script at /tmp/action-validator-2993469951/.install/lib/rustlib/uninstall.sh\ninstall: installing component 'rustc'\ninstall: installing component 'rust-std-x86_64-unknown-linux-gnu'\ninstall: installing component 'rust-docs'\ninstall: installing component 'rust-docs-json-preview'\ninstall: installing component 'cargo'\ninstall: installing component 'rustfmt-preview'\ninstall: installing component 'rust-",
-      "batch_id": "2026-04-24T05-37-01Z",
-      "timestamp": "2026-04-24T05:36:03.947969919Z"
-    },
-    {
-      "id": "homebrew-2026-04-24T05-35-10Z-task",
-      "package": "task",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\n✅ patchelf@0.18.0",
-      "batch_id": "2026-04-24T05-37-01Z",
-      "timestamp": "2026-04-24T05:35:10.318539504Z"
-    },
-    {
-      "id": "github-2026-04-24T05-35-06Z-dive",
-      "package": "dive",
-      "ecosystem": "github",
-      "category": "generation_failed",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'dive' resolved to github (wagoodman/dive), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
-      "batch_id": "2026-04-24T05-37-01Z",
-      "timestamp": "2026-04-24T05:35:06.137632928Z"
-    },
-    {
-      "id": "pypi-2026-04-24T02-31-00Z-lib3mf",
-      "package": "lib3mf",
-      "ecosystem": "pypi",
-      "category": "install_failed",
-      "subcategory": "rate_limited",
-      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\n   ⚠ Low GitHub API rate limit: 7 requests remaining (resets at 2026-04-24T02:49:59Z)\n✅ python-standalone@20260414\nInstalled python-standalone\n   Package: lib3mf@2.5.0\n   Executables: [lib3mf]\n   Using python: /home/runner/.tsuku/tools/python-standalone-20260414/bin/python3\nwarning:    Package contains native addons (may have platform-specific behavior)\n   Creating venv: /tmp/action-validator-4234092557/.i",
-      "batch_id": "2026-04-24T02-31-00Z",
-      "timestamp": "2026-04-24T02:31:00.265694577Z"
-    },
-    {
-      "id": "npm-2026-04-24T02-30-47Z-azion",
-      "package": "azion",
-      "ecosystem": "npm",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\n✅ gcc-libs@15.2.0\n✅ nodejs@25.9.0\nInstalled nodejs\n   Package: azion@3.1.2\n   Executables: [azion]\n   Using npm: /home/runner/.tsuku/tools/nodejs-25.9.0/bin/npm\n   Installing: npm ci in /tmp/action-validator-4167879612/.install\n❌ azion@3.1.2\nInstallation failed: step 1 (npm_exec) failed: expected executable azion not found at /tmp/action-validator-4167879612/.install/node_modules/.bin/azion",
-      "batch_id": "2026-04-24T02-31-00Z",
-      "timestamp": "2026-04-24T02:30:47.904936286Z"
     }
   ],
   "health": {
     "ecosystems": {
       "crates.io": {
         "breaker_state": "open",
-        "failures": 473,
-        "last_failure": "2026-04-26T22:41:27Z",
-        "opens_at": "2026-04-26T23:41:27Z"
+        "failures": 474,
+        "last_failure": "2026-04-27T02:38:36Z",
+        "opens_at": "2026-04-27T03:38:36Z"
       },
       "default": {
         "breaker_state": "closed",
@@ -39701,38 +39701,46 @@
       },
       "github": {
         "breaker_state": "open",
-        "failures": 476,
-        "last_failure": "2026-04-26T22:41:27Z",
-        "opens_at": "2026-04-26T23:41:27Z"
+        "failures": 477,
+        "last_failure": "2026-04-27T02:38:36Z",
+        "opens_at": "2026-04-27T03:38:36Z"
       },
       "homebrew": {
         "breaker_state": "open",
-        "failures": 437,
-        "last_failure": "2026-04-26T22:41:27Z",
-        "opens_at": "2026-04-26T23:41:27Z"
+        "failures": 438,
+        "last_failure": "2026-04-27T02:38:36Z",
+        "opens_at": "2026-04-27T03:38:36Z"
       },
       "npm": {
         "breaker_state": "open",
-        "failures": 177,
-        "last_failure": "2026-04-26T22:41:27Z",
-        "opens_at": "2026-04-26T23:41:27Z"
+        "failures": 178,
+        "last_failure": "2026-04-27T02:38:36Z",
+        "opens_at": "2026-04-27T03:38:36Z"
       },
       "pypi": {
         "breaker_state": "open",
-        "failures": 446,
-        "last_failure": "2026-04-26T22:41:27Z",
-        "opens_at": "2026-04-26T23:41:27Z"
+        "failures": 447,
+        "last_failure": "2026-04-27T02:38:36Z",
+        "opens_at": "2026-04-27T03:38:36Z"
       },
       "rubygems": {
         "breaker_state": "open",
-        "failures": 114,
-        "last_failure": "2026-04-26T22:41:27Z",
-        "opens_at": "2026-04-26T23:41:27Z"
+        "failures": 115,
+        "last_failure": "2026-04-27T02:38:36Z",
+        "opens_at": "2026-04-27T03:38:36Z"
       }
     },
     "last_run": {
-      "batch_id": "2026-04-26T23-40-41Z",
-      "timestamp": "2026-04-26T23:40:41Z",
+      "batch_id": "2026-04-27T02-38-42Z",
+      "ecosystems": {
+        "crates.io": 1,
+        "github": 1,
+        "homebrew": 1,
+        "npm": 1,
+        "pypi": 1,
+        "rubygems": 1
+      },
+      "timestamp": "2026-04-27T02:38:42Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39753,7 +39761,7 @@
       "total": 1,
       "recipes_merged": 1
     },
-    "runs_since_last_success": 160
+    "runs_since_last_success": 161
   },
   "runs": [
     {
