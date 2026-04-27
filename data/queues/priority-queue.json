@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-27T02:39:41Z",
+  "updated_at": "2026-04-27T05:59:14Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 250,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 391,
-      "next_retry_at": "1734-01-15T22:55:11.807399987Z"
+      "failure_count": 393,
+      "next_retry_at": "1734-01-16T06:11:57.332753039Z"
     },
     {
       "name": "libaacs",
@@ -28546,11 +28546,11 @@
       "name": "mailcatcher",
       "source": "rubygems:mailcatcher",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-04-24T16:11:06.26829207Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-05-04T05:59:14.187528847Z"
     },
     {
       "name": "mailhog",
@@ -38126,11 +38126,11 @@
       "name": "protoc-gen-js",
       "source": "npm:protoc-gen-js",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-04-26T18:50:54.979472455Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-05-04T05:59:14.187528847Z"
     },
     {
       "name": "protolint",
@@ -43656,7 +43656,7 @@
       "name": "sigstore",
       "source": "npm:sigstore",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 11,
