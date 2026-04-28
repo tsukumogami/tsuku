@@ -130,50 +130,13 @@ Recipes that depend on a Wave 4 *code change* require a tsuku release containing
 
 ## Dependency Graph
 
+Waves 0–3 are fully complete and have been removed from the diagram for
+clarity. Their ticket histories live in this document's tables above.
+The diagram tracks active work: Wave 4 follow-ups and the Wave 5 recipe
+authoring they unblock.
+
 ```mermaid
 graph TD
-    subgraph wave0 ["Wave 0: Foundation"]
-        I2259["#2259: curated flag + CI infrastructure"]
-        I2260["#2260: top-100 priority list"]
-    end
-
-    subgraph wave1 ["Wave 1: Initial handcrafted recipes"]
-        I2261["#2261: claude + gemini-cli"]
-        I2262["#2262: cross-platform kubectl"]
-        I2263["#2263: cross-platform helm"]
-        I2264["#2264: bat + starship + neovim"]
-        I2265["#2265: node.js recipe"]
-    end
-
-    subgraph wave2 ["Wave 2: First backfill round"]
-        I2266["#2266: cloud CLIs + build tools"]
-        I2267["#2267: modern CLIs + AI tools"]
-    end
-
-    subgraph wave3 ["Wave 3: Category backfill batches"]
-        I2268["#2268: superseded by #2281–#2297"]
-        I2281["#2281: security scanners"]
-        I2282["#2282: K8s core CLIs"]
-        I2283["#2283: K8s ecosystem"]
-        I2284["#2284: HashiCorp + infra"]
-        I2285["#2285: terminal UI / TUI"]
-        I2286["#2286: shell utilities"]
-        I2287["#2287: env/version managers"]
-        I2288["#2288: JS/Node ecosystem"]
-        I2289["#2289: Go/shell linters"]
-        I2290["#2290: Python/JS formatters"]
-        I2291["#2291: crypto + certs"]
-        I2292["#2292: CI/CD automation"]
-        I2293["#2293: container + image tools"]
-        I2294["#2294: language runtimes"]
-        I2295["#2295: C++/JVM build tools"]
-        I2296["#2296: cloud CLIs + orchestration"]
-        I2297["#2297: IaC quality + policy"]
-        I2312["#2312: macOS dylib deps (libnghttp3, utf8proc; libevent + pcre2 deferred)"]
-        I2313["#2313: macOS support for wget; curl/tmux/git deferred"]
-        I2315["#2315: curate rbenv recipe"]
-    end
-
     subgraph wave4 ["Wave 4: Follow-ups from milestone work"]
         I2325["#2325: -Mn milestone tags in github provider"]
         I2327["#2327: openjdk recipe for JVM verify"]
@@ -193,53 +156,6 @@ graph TD
         I2346["#2346: gcloud recipe"]
     end
 
-    I2259 --> I2261
-    I2259 --> I2262
-    I2259 --> I2263
-    I2259 --> I2264
-    I2259 --> I2265
-    I2259 --> I2266
-    I2259 --> I2267
-    I2260 --> I2266
-    I2260 --> I2267
-    I2259 --> I2281
-    I2259 --> I2282
-    I2259 --> I2283
-    I2259 --> I2284
-    I2259 --> I2285
-    I2259 --> I2286
-    I2259 --> I2287
-    I2259 --> I2288
-    I2259 --> I2289
-    I2259 --> I2290
-    I2259 --> I2291
-    I2259 --> I2292
-    I2259 --> I2293
-    I2259 --> I2294
-    I2259 --> I2295
-    I2259 --> I2296
-    I2259 --> I2297
-    I2260 --> I2281
-    I2260 --> I2282
-    I2260 --> I2283
-    I2260 --> I2284
-    I2260 --> I2285
-    I2260 --> I2286
-    I2260 --> I2287
-    I2260 --> I2288
-    I2260 --> I2289
-    I2260 --> I2290
-    I2260 --> I2291
-    I2260 --> I2292
-    I2260 --> I2293
-    I2260 --> I2294
-    I2260 --> I2295
-    I2260 --> I2296
-    I2260 --> I2297
-    I2312 --> I2313
-    I2259 --> I2315
-    I2260 --> I2315
-
     I2333 --> I2336
     I2335 --> I2336
 
@@ -248,11 +164,6 @@ graph TD
     I2327 --> I2344
     I2331 --> I2345
     I2328 --> I2346
-
-    %% Invisible inter-wave anchor edges to force vertical wave-by-wave layout.
-    I2265 ~~~ I2267
-    I2267 ~~~ I2268
-    I2315 ~~~ I2325
 
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
@@ -264,7 +175,6 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2259,I2260,I2261,I2262,I2263,I2264,I2265,I2266,I2267,I2268,I2281,I2282,I2283,I2284,I2285,I2286,I2287,I2288,I2289,I2290,I2291,I2292,I2293,I2294,I2295,I2296,I2297,I2312,I2313,I2315 done
     class I2325 done
     class I2327,I2328,I2330,I2331,I2333,I2335,I2338 ready
     class I2336,I2343,I2344,I2345,I2346 blocked
