@@ -500,6 +500,7 @@ data that already flows through tsuku at install time:
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
 | ~~[#2325: fix(version): treat -Mn milestone tags as pre-releases in GitHub provider](https://github.com/tsukumogami/tsuku/issues/2325)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Replaces the substring-keyword `isStableVersion` filter with a SemVer-aware predicate plus a non-SemVer fallback. Adds the `[version] stable_qualifiers` recipe field with default `["release", "final", "lts", "ga", "stable"]`. Implementation lives in `internal/version/provider_github.go` and `internal/version/fossil_provider.go`._~~ | | |
 
 ```mermaid
 graph TD
@@ -509,3 +510,5 @@ graph TD
 
     class I2325 done
 ```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
