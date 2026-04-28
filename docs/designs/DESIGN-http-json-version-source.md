@@ -524,9 +524,9 @@ together so the mechanism is exercised end-to-end.
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#2328: feat(version): add a version source for Google Cloud SDK to enable gcloud recipe](https://github.com/tsukumogami/tsuku/issues/2328) | None | testable |
-| _Expanded scope: implements the generic `http_json` version source described in this design (path parser, walker, provider, validator, recipe-factory strategy), removes the `ResolveHashiCorp` dead code, and authors `recipes/g/gcloud.toml` as the first consumer._ | | |
-| [#2327: feat(recipes): add openjdk recipe to enable JVM tool verification](https://github.com/tsukumogami/tsuku/issues/2327) | [#2328](https://github.com/tsukumogami/tsuku/issues/2328) | testable |
+| ~~[#2328: feat(version): add a version source for Google Cloud SDK to enable gcloud recipe](https://github.com/tsukumogami/tsuku/issues/2328)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Expanded scope: implements the generic `http_json` version source described in this design (path parser, walker, provider, validator, recipe-factory strategy), deprecates `source = "hashicorp"` (removal tracked in #2349), and authors `recipes/g/gcloud.toml` as the first consumer._~~ | | |
+| [#2327: feat(recipes): add openjdk recipe to enable JVM tool verification](https://github.com/tsukumogami/tsuku/issues/2327) | None | testable |
 | _Authors the openjdk recipe using `http_json` against Adoptium's API. Unblocks the JVM-tool verification (maven, gradle, sbt) currently deferred from #2295._ | | |
 
 ```mermaid
@@ -534,13 +534,11 @@ graph TD
     I2328["#2328: http_json source + gcloud recipe"]
     I2327["#2327: openjdk recipe (Adoptium)"]
 
-    I2328 --> I2327
-
+    classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
 
-    class I2328 ready
-    class I2327 blocked
+    class I2328 done
+    class I2327 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
