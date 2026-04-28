@@ -81,8 +81,8 @@ Introduce a `curated = true` flag for handcrafted recipes, nightly cross-platfor
 | ~~_Rewrites the batch recipes for terragrunt and infracost, and authors new recipes for pre-commit, lefthook, and checkov._~~ | | |
 | ~~[#2312: feat(recipes): fix macOS library dependencies needed for curl, wget, tmux, and git](https://github.com/tsukumogami/tsuku/issues/2312)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Curates the existing `libnghttp3` recipe (the homebrew formula is `libnghttp3`, not `nghttp3`) and exposes `libnghttp3.9.dylib` for curl, and rewrites `utf8proc` from batch garbage (tmux). libevent is deferred to #2333 (the homebrew bottle resolver does not yet understand revision-suffixed manifests), and pcre2 is deferred to #2335 (touching the recipe surfaced pre-existing rhel and alpine sandbox failures that need investigation alongside the macOS dylib expansion). Both deferred recipes keep their existing `unsupported_platforms` and uncurated state._~~ | | |
-| [#2313: feat(recipes): add macOS support to curl, wget, tmux, and git recipes](https://github.com/tsukumogami/tsuku/issues/2313) | [#2312](https://github.com/tsukumogami/tsuku/issues/2312) | testable |
-| _Removes the `supported_os = ["linux"]` restriction from curl, wget, tmux, and git by adding macOS Homebrew steps wired to the runtime dependencies fixed in #2312. All four recipes gain darwin/amd64 and darwin/arm64 coverage._ | | |
+| ~~[#2313: feat(recipes): add macOS support to curl, wget, tmux, and git recipes](https://github.com/tsukumogami/tsuku/issues/2313)~~ | ~~[#2312](https://github.com/tsukumogami/tsuku/issues/2312)~~ | ~~testable~~ |
+| ~~_Adds a darwin homebrew step to `wget` and extends `gettext` to install `libintl.8.dylib` so the wget bottle's `@rpath` resolves. curl, tmux, and git are deferred: curl to #2338 (a rhel-only sandbox verify failure surfaces when the recipe is touched, similar in shape to the pcre2 rhel issue from #2335), tmux to #2336 against #2333 (libevent macOS), and git to #2336 against #2335 (pcre2 macOS)._~~ | | |
 | [#2315: feat(recipes): curate rbenv recipe with working cross-platform installation](https://github.com/tsukumogami/tsuku/issues/2315) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260) | testable |
 | _Promotes `recipes/r/rbenv.toml` to `curated = true`. The recipe was authored in #2287 but could not be curated because Homebrew bottles for rbenv 1.3.2 are unavailable on Sonoma and Linux. Needs a working installation path for all declared platforms._ | | |
 
@@ -178,9 +178,8 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2259,I2260,I2261,I2262,I2263,I2264,I2265,I2266,I2267,I2268,I2281,I2282,I2283,I2284,I2285,I2286,I2287,I2288,I2289,I2290,I2291,I2292,I2293,I2294,I2295,I2296,I2297,I2312 done
+    class I2259,I2260,I2261,I2262,I2263,I2264,I2265,I2266,I2267,I2268,I2281,I2282,I2283,I2284,I2285,I2286,I2287,I2288,I2289,I2290,I2291,I2292,I2293,I2294,I2295,I2296,I2297,I2312,I2313 done
     class I2315 ready
-    class I2313 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan
