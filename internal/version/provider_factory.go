@@ -55,6 +55,7 @@ func NewProviderFactory() *ProviderFactory {
 	f := &ProviderFactory{}
 
 	// Register strategies (priority order determined by Priority() methods)
+	f.Register(&HTTPJSONSourceStrategy{})    // PriorityKnownRegistry (100) - intercepts source="http_json"
 	f.Register(&PyPISourceStrategy{})        // PriorityKnownRegistry (100) - intercepts source="pypi"
 	f.Register(&CratesIOSourceStrategy{})    // PriorityKnownRegistry (100) - intercepts source="crates_io"
 	f.Register(&RubyGemsSourceStrategy{})    // PriorityKnownRegistry (100) - intercepts source="rubygems"
@@ -121,6 +122,27 @@ func (s *ExplicitSourceStrategy) Create(resolver *Resolver, r *recipe.Recipe) (V
 	}
 
 	return NewCustomProvider(resolver, r.Version.Source), nil
+}
+
+// HTTPJSONSourceStrategy handles recipes with [version] source = "http_json".
+// The strategy reads url and version_path from the recipe and constructs an
+// HTTPJSONProvider.
+type HTTPJSONSourceStrategy struct{}
+
+func (s *HTTPJSONSourceStrategy) Priority() int { return PriorityKnownRegistry }
+
+func (s *HTTPJSONSourceStrategy) CanHandle(r *recipe.Recipe) bool {
+	return r.Version.Source == "http_json"
+}
+
+func (s *HTTPJSONSourceStrategy) Create(resolver *Resolver, r *recipe.Recipe) (VersionProvider, error) {
+	if r.Version.URL == "" {
+		return nil, fmt.Errorf("source = \"http_json\" requires [version] url")
+	}
+	if r.Version.VersionPath == "" {
+		return nil, fmt.Errorf("source = \"http_json\" requires [version] version_path")
+	}
+	return NewHTTPJSONProvider(resolver, r.Version.URL, r.Version.VersionPath)
 }
 
 // PyPISourceStrategy handles recipes with [version] source = "pypi"

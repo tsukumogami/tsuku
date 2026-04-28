@@ -1,0 +1,42 @@
+[metadata]
+name = "gcloud"
+description = "Google Cloud command-line tool"
+homepage = "https://cloud.google.com/sdk/gcloud"
+version_format = "semver"
+curated = true
+# The gcloud distribution bundles a CPython interpreter linked against
+# glibc and POSIX libc surfaces present on macOS/glibc Linux. Alpine's
+# musl cannot run the bundled interpreter, so the recipe is restricted
+# to glibc Linux and macOS.
+supported_libc = ["glibc"]
+
+[version]
+source = "http_json"
+url = "https://dl.google.com/dl/cloudsdk/channels/rapid/components-2.json"
+version_path = "version"
+
+# Linux: per-architecture tarball. Google uses "x86_64" and "arm" in the
+# asset filename (note: not "arm64"), so the recipe maps tsuku's
+# amd64/arm64 to those names.
+[[steps]]
+action = "download_archive"
+when = { os = ["linux"], libc = ["glibc"] }
+url = "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-{version}-linux-{arch}.tar.gz"
+arch_mapping = { amd64 = "x86_64", arm64 = "arm" }
+strip_dirs = 1
+install_mode = "directory"
+binaries = ["bin/gcloud", "bin/gsutil", "bin/bq"]
+
+# macOS: same shape; same arm64 -> "arm" rename.
+[[steps]]
+action = "download_archive"
+when = { os = ["darwin"] }
+url = "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-{version}-darwin-{arch}.tar.gz"
+arch_mapping = { amd64 = "x86_64", arm64 = "arm" }
+strip_dirs = 1
+install_mode = "directory"
+binaries = ["bin/gcloud", "bin/gsutil", "bin/bq"]
+
+[verify]
+command = "gcloud --version"
+pattern = "Google Cloud SDK {version}"

@@ -191,6 +191,14 @@ type VersionSection struct {
 	VersionSeparator string `toml:"version_separator"` // Separator in version numbers for tag conversion (e.g., "-" converts 9.0.0 to 9-0-0)
 	TimelineTag      string `toml:"timeline_tag"`      // Tag filter for timeline URL (default: "release")
 
+	// http_json source fields. Required when source = "http_json".
+	// URL is the HTTPS endpoint serving the manifest JSON.
+	// VersionPath is a small path expression (dotted access plus [N]
+	// array indexing) that locates the version field in the response.
+	// See docs/designs/DESIGN-http-json-version-source.md.
+	URL         string `toml:"url,omitempty"`
+	VersionPath string `toml:"version_path,omitempty"`
+
 	// StableQualifiers names hyphenated suffixes that the upstream uses as
 	// stable release qualifiers rather than prereleases (e.g., ["release",
 	// "final"] for projects that tag stable releases as 1.0.0-RELEASE).

@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -318,11 +319,27 @@ func (r *Resolver) ListGitHubVersions(ctx context.Context, repo string) ([]strin
 	return SortVersionsDescending(versions), nil
 }
 
-// ResolveHashiCorp resolves the latest version from HashiCorp releases
-// For now, this is a placeholder - real implementation would query releases.hashicorp.com
+// ResolveHashiCorp resolves the latest version from HashiCorp releases.
+//
+// DEPRECATED: source = "hashicorp" is deprecated and will be removed in a
+// future release. Use source = "http_json" with
+// url = "https://checkpoint-api.hashicorp.com/v1/check/<product>" and
+// version_path = "current_version" instead. This function is kept for one
+// release window so existing in-flight recipes do not break; new recipes
+// must not use it.
+//
+// The implementation is a placeholder that returns hardcoded versions for a
+// handful of products. It has never been wired up to a real upstream source.
 func (r *Resolver) ResolveHashiCorp(ctx context.Context, product string) (string, error) {
-	// Placeholder: In production, this would fetch from https://releases.hashicorp.com/{product}/
-	// For validation, we'll use common known versions as fallback
+	// Emit a deprecation warning to stderr so users running `tsuku eval`
+	// against a recipe that uses this source see it in their output.
+	fmt.Fprintf(os.Stderr,
+		"warning: source = \"hashicorp\" is deprecated and will be removed in a future release; "+
+			"use source = \"http_json\" with url = \"https://checkpoint-api.hashicorp.com/v1/check/%s\" "+
+			"and version_path = \"current_version\" instead\n",
+		product,
+	)
+
 	knownVersions := map[string]string{
 		"terraform": "1.6.6",
 		"vault":     "1.15.4",

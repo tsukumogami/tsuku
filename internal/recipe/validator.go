@@ -160,12 +160,13 @@ func validateVersion(result *ValidationResult, r *Recipe) {
 		"github_releases": true,
 		"github_tags":     true,
 		"nodejs_dist":     true,
+		"http_json":       true,
 		"npm":             true,
 		"pypi":            true,
 		"crates_io":       true,
 		"rubygems":        true,
 		"homebrew":        true,
-		"hashicorp":       true,
+		"hashicorp":       true, // DEPRECATED: see http_json with checkpoint API
 		"manual":          true,
 		"go_toolchain":    true,
 		"goproxy":         true,
@@ -204,6 +205,32 @@ func validateVersion(result *ValidationResult, r *Recipe) {
 		if !hasRepoInStep && !canInferVersionSource {
 			result.addWarning("version.github_repo", "github_repo is recommended when using github version source")
 		}
+	}
+
+	// http_json field validation: source = "http_json" requires url and
+	// version_path; the URL must be HTTPS. The path expression is parsed
+	// at provider construction; we only check non-emptiness here.
+	if source == "http_json" {
+		if r.Version.URL == "" {
+			result.addError("version.url", "version.url is required when source = \"http_json\"")
+		} else if !strings.HasPrefix(r.Version.URL, "https://") {
+			result.addError("version.url", fmt.Sprintf("version.url must use HTTPS, got %q", r.Version.URL))
+		}
+		if r.Version.VersionPath == "" {
+			result.addError("version.version_path", "version.version_path is required when source = \"http_json\"")
+		}
+	}
+
+	// Deprecation: source = "hashicorp" is kept in the allowlist for one
+	// release but emits a warning pointing recipe authors at http_json
+	// against the checkpoint API. Removal tracked separately.
+	if source == "hashicorp" {
+		result.addWarning(
+			"version.source",
+			"source = \"hashicorp\" is deprecated and will be removed in a future release; "+
+				"use source = \"http_json\" with url = \"https://checkpoint-api.hashicorp.com/v1/check/<product>\" "+
+				"and version_path = \"current_version\" instead",
+		)
 	}
 }
 
