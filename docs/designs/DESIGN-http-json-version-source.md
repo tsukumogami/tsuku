@@ -362,11 +362,44 @@ func (s *HTTPJSONSourceStrategy) Create(resolver *Resolver, r *recipe.Recipe) (V
 
 Register it alongside the other source strategies in `NewProviderFactory()`.
 
-### Removed dead code
+### Deprecated `source = "hashicorp"`
 
-Delete `(r *Resolver) ResolveHashiCorp` from
-`internal/version/resolver.go:321-356`. The function is unused and the
-HashiCorp checkpoint API is now expressed in recipes via `http_json`.
+The current code recognizes `source = "hashicorp"` in two validator
+allowlists (`internal/recipe/validator.go:168` and
+`internal/version/validation.go:47`) and routes it to
+`ResolveHashiCorp` at `internal/version/resolver.go:321`. The function
+is a placeholder that returns hardcoded versions for a small set of
+products and is not wired up by any recipe in tree, but external or
+in-flight recipes could be using it.
+
+This design deprecates rather than deletes. The deprecation lands in
+this PR and is removed in a subsequent release after the migration
+window:
+
+1. **This release (this PR):** keep `ResolveHashiCorp` and the
+   allowlist entries. Emit a deprecation warning at every call site:
+   - The validator emits a warning when it encounters
+     `source = "hashicorp"`, naming the recipe and pointing to
+     `http_json` against `https://checkpoint-api.hashicorp.com/v1/check/<product>`.
+   - `ResolveHashiCorp` itself logs the same warning at the start of
+     resolution, so users running `tsuku eval` see it in the output.
+2. **After the next tsuku release ships:** sweep in-tree recipes for
+   any that adopted `source = "hashicorp"` (none today; the existing
+   HashiCorp recipes use `github_repo`) and migrate them to
+   `source = "http_json"` against the checkpoint API. Coordinate with
+   any known external recipe authors.
+3. **A later release (tracked in a follow-up issue):** remove
+   `ResolveHashiCorp`, the two allowlist entries, and any remaining
+   tests. Add a release-notes entry describing the removal.
+
+The deprecation message should read something like:
+
+```
+warning: [version] source = "hashicorp" is deprecated and will be
+removed in a future release. Use source = "http_json" with
+url = "https://checkpoint-api.hashicorp.com/v1/check/<product>" and
+version_path = "current_version" instead.
+```
 
 ## Implementation Approach
 
@@ -400,13 +433,19 @@ version source" to "http_json source") in four contained slices:
 4. **Wiring and consumers.**
    - Add `HTTPJSONSourceStrategy` to
      `internal/version/provider_factory.go`.
-   - Delete `ResolveHashiCorp` from `resolver.go`.
+   - Add deprecation warnings to the `source = "hashicorp"` path:
+     - In the validator (`internal/recipe/validator.go`,
+       `internal/version/validation.go`), emit a warning when the
+       source name is encountered.
+     - In `ResolveHashiCorp` (`internal/version/resolver.go`), log
+       the warning at resolution time.
+     - Do not remove the function or the allowlist entries in this
+       PR; that happens in a follow-up after the next release.
+   - File a follow-up issue tracking the removal of
+     `ResolveHashiCorp` and the allowlist entries, scheduled for
+     after the next tsuku release.
    - Author `recipes/g/gcloud.toml` (closes #2328's recipe portion).
    - Update the openjdk design (#2327) to use `http_json` + Adoptium.
-   - Optional: migrate one HashiCorp recipe (e.g., terraform) to
-     `[version] source = "http_json"` against the checkpoint API as a
-     proof, leaving the rest as `github_repo` until there's a reason
-     to change.
 
 The four slices land in a single PR for review coherence — the path
 parser, provider, schema, and at least one consumer recipe ship
@@ -444,7 +483,8 @@ together so the mechanism is exercised end-to-end.
   the checkpoint API for version resolution.
 - New tools with JSON manifests follow the same pattern: a recipe
   change, no Go change.
-- Removes the `ResolveHashiCorp` dead code in `resolver.go`.
+- Marks the unused `source = "hashicorp"` path deprecated, with a
+  removal scheduled for the release after next.
 - Provides a clear seam for future v2 work (filters, composition) when
   Postgres/Elasticsearch become priorities.
 
@@ -472,9 +512,10 @@ together so the mechanism is exercised end-to-end.
 - `internal/version/http_json_test.go` (new test)
 - `internal/version/http_json_path_test.go` (new test)
 - `internal/version/provider_factory.go` (`HTTPJSONSourceStrategy`)
-- `internal/version/resolver.go` (delete `ResolveHashiCorp`)
+- `internal/version/resolver.go` (deprecation warning in `ResolveHashiCorp`; function and allowlist entries kept for one release)
+- `internal/version/validation.go` (deprecation warning when `source = "hashicorp"` is seen)
 - `internal/recipe/types.go` (`VersionSection.URL`, `VersionPath`)
-- `internal/recipe/validator.go` (new validation rules)
+- `internal/recipe/validator.go` (new validation rules for `http_json`; deprecation warning for `source = "hashicorp"`)
 - `recipes/g/gcloud.toml` (new recipe, closes the gcloud portion of #2328)
 
 ## Implementation Issues
