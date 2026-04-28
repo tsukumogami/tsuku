@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   The GitHub version provider's `isStableVersion` filter uses substring matching
   against a hardcoded keyword list (`preview`, `alpha`, `beta`, `rc`, `dev`,
@@ -44,7 +44,7 @@ rationale: |
 
 ## Status
 
-Planned
+Current
 
 ## Context and Problem Statement
 
@@ -493,22 +493,12 @@ data that already flows through tsuku at install time:
 - Recipes whose upstream uses hyphen-suffixed stable qualifiers (audit)
 - Recipe-author skill documentation (one-line note about the new field)
 
-## Implementation Issues
+## Implementation History
 
-### Milestone: [Curated Recipe System](https://github.com/tsukumogami/tsuku/milestone/113)
-
-| Issue | Dependencies | Tier |
-|-------|--------------|------|
-| ~~[#2325: fix(version): treat -Mn milestone tags as pre-releases in GitHub provider](https://github.com/tsukumogami/tsuku/issues/2325)~~ | ~~None~~ | ~~testable~~ |
-| ~~_Replaces the substring-keyword `isStableVersion` filter with a SemVer-aware predicate plus a non-SemVer fallback. Adds the `[version] stable_qualifiers` recipe field with default `["release", "final", "lts", "ga", "stable"]`. Implementation lives in `internal/version/provider_github.go` and `internal/version/fossil_provider.go`._~~ | | |
-
-```mermaid
-graph TD
-    I2325["#2325: SemVer-aware prerelease detection"]
-
-    classDef done fill:#c8e6c9
-
-    class I2325 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
+Implemented by [#2325](https://github.com/tsukumogami/tsuku/issues/2325)
+in [PR #2341](https://github.com/tsukumogami/tsuku/pull/2341). The
+implementation lives in `internal/version/provider_github.go`,
+`internal/version/fossil_provider.go`,
+`internal/version/provider_factory.go`, and
+`internal/recipe/types.go`. Tests are in
+`internal/version/provider_github_test.go`.
