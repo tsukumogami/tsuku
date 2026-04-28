@@ -427,16 +427,16 @@ The three slices land in a single PR.
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| ~~[#2328: feat(version): add a version source for Google Cloud SDK to enable gcloud recipe](https://github.com/tsukumogami/tsuku/issues/2328)~~ | ~~None~~ | ~~testable~~ |
-| ~~_Adds `internal/version/gcloud.go` with a `ResolveGCloud` method that fetches Google's components-2.json manifest and reads the top-level `version` field. Registers `gcloud_dist` in the version registry alongside `nodejs_dist`. Authors `recipes/g/gcloud.toml` using `download_archive` against `dl.google.com` with full coverage for linux/amd64, linux/arm64, darwin/amd64, and darwin/arm64._~~ | | |
+| [#2328: feat(version): add a version source for Google Cloud SDK to enable gcloud recipe](https://github.com/tsukumogami/tsuku/issues/2328) | None | testable |
+| _Adds `internal/version/gcloud.go` with a `ResolveGCloud` method that fetches Google's components-2.json manifest and reads the top-level `version` field. Registers `gcloud_dist` in the version registry alongside `nodejs_dist`. Authors `recipes/g/gcloud.toml` using `download_archive` against `dl.google.com` with full coverage for linux/amd64, linux/arm64, darwin/amd64, and darwin/arm64._ | | |
 
 ```mermaid
 graph TD
     I2328["#2328: gcloud version source"]
 
-    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
 
-    class I2328 done
+    class I2328 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
