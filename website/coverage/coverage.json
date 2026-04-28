@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-04-28T04:00:09Z",
-  "total_recipes": 1433,
+  "generated_at": "2026-04-28T19:14:31Z",
+  "total_recipes": 1434,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 866,
-        "total": 1433,
-        "pct": 60.43265875785067
+        "supported": 867,
+        "total": 1434,
+        "pct": 60.46025104602511
       },
       "glibc": {
-        "supported": 1401,
-        "total": 1433,
-        "pct": 97.7669225401256
+        "supported": 1402,
+        "total": 1434,
+        "pct": 97.76847977684798
       },
       "musl": {
         "supported": 1254,
-        "total": 1433,
-        "pct": 87.50872295882763
+        "total": 1434,
+        "pct": 87.44769874476988
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1281,
+        "total": 1282,
         "musl_support": 1104,
-        "glibc_support": 1251
+        "glibc_support": 1252
       }
     }
   },
@@ -5890,6 +5890,22 @@
       "errors": null,
       "warnings": [
         "recipe 'gcab' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "gcloud",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": false
+      },
+      "gaps": [
+        "musl"
+      ],
+      "errors": null,
+      "warnings": [
+        "recipe 'gcloud' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
@@ -21403,6 +21419,11 @@
       "recipe": "git",
       "issue": "https://github.com/tsukumogami/tsuku/issues/953",
       "reason": "compile_from_source toolchain version drift (macOS build failures)"
+    },
+    {
+      "recipe": "ruby",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/2342",
+      "reason": "ruby-builder ubuntu-22.04 binary fails to start on rhel (fedora) and arch sandbox containers; binary works on debian/suse/alpine"
     },
     {
       "recipe": "netlify-cli",
