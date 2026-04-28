@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-27T22:06:53Z",
+  "generated_at": "2026-04-28T03:13:03Z",
   "total_recipes": 1432,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 864,
+        "supported": 865,
         "total": 1432,
-        "pct": 60.33519553072626
+        "pct": 60.4050279329609
       },
       "glibc": {
         "supported": 1400,
@@ -20568,13 +20568,11 @@
       "name": "wget",
       "type": "tool",
       "platforms": {
-        "darwin": false,
+        "darwin": true,
         "glibc": true,
         "musl": true
       },
-      "gaps": [
-        "darwin"
-      ],
+      "gaps": null,
       "errors": null,
       "warnings": null
     },
