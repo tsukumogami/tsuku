@@ -92,8 +92,8 @@ These issues capture infrastructure and recipe gaps surfaced while authoring the
 
 | Issue | Dependencies | Complexity |
 |-------|--------------|------------|
-| [#2325: fix(version): treat -Mn milestone tags as pre-releases in GitHub provider](https://github.com/tsukumogami/tsuku/issues/2325) | None | testable |
-| _The github version provider's `isStableVersion` substring filter does not catch milestone tags like `v9.6.0-M1` (gradle) or `v2.0.0-M5` (sbt), so `tsuku eval` resolves to a non-existent download URL. Blocks gradle and sbt curation._ | | |
+| ~~[#2325: fix(version): treat -Mn milestone tags as pre-releases in GitHub provider](https://github.com/tsukumogami/tsuku/issues/2325)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Replaces the substring-keyword `isStableVersion` filter with a SemVer-aware predicate (any non-empty prerelease component is unstable unless it matches a stable qualifier), plus a non-SemVer fallback to catch markers spliced into the version without a hyphen (e.g., jq's `1.8.2rc1`). Default stable qualifiers `["release", "final", "lts", "ga", "stable"]` admit the common JVM RELEASE/FINAL conventions; the `[version] stable_qualifiers` recipe field overrides for exotic upstreams. Designed in `docs/designs/DESIGN-prerelease-detection.md`._~~ | | |
 | [#2327: feat(recipes): add openjdk recipe to enable JVM tool verification](https://github.com/tsukumogami/tsuku/issues/2327) | None | testable |
 | _Sandbox containers do not bundle a JDK and the registry has no `openjdk` recipe to declare as a dependency. JVM tools (maven, gradle, sbt) install successfully but fail verify because `mvn --version` etc. need a JVM at runtime._ | | |
 | [#2328: feat(version): add a version source for Google Cloud SDK to enable gcloud recipe](https://github.com/tsukumogami/tsuku/issues/2328) | None | testable |
@@ -230,7 +230,8 @@ graph TD
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
     class I2259,I2260,I2261,I2262,I2263,I2264,I2265,I2266,I2267,I2268,I2281,I2282,I2283,I2284,I2285,I2286,I2287,I2288,I2289,I2290,I2291,I2292,I2293,I2294,I2295,I2296,I2297,I2312,I2313,I2315 done
-    class I2325,I2327,I2328,I2330,I2331,I2333,I2335,I2338 ready
+    class I2325 done
+    class I2327,I2328,I2330,I2331,I2333,I2335,I2338 ready
     class I2336 blocked
 ```
 

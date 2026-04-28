@@ -15,7 +15,7 @@ func TestFossilTimelineProvider_Integration(t *testing.T) {
 	}
 
 	resolver := New()
-	provider := NewFossilTimelineProvider(resolver, "https://sqlite.org/src", "sqlite")
+	provider := NewFossilTimelineProvider(resolver, "https://sqlite.org/src", "sqlite", nil)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

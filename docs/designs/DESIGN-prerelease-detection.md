@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Planned
 problem: |
   The GitHub version provider's `isStableVersion` filter uses substring matching
   against a hardcoded keyword list (`preview`, `alpha`, `beta`, `rc`, `dev`,
@@ -11,14 +11,18 @@ problem: |
   definition would falsely reject hyphen-suffixed stable qualifiers like
   `-RELEASE`, `-FINAL`, `-LTS`, and `-GA` used by some JVM-ecosystem projects.
 decision: |
-  Replace the substring keyword filter with a SemVer-aware definition: any
-  version whose `splitPrerelease` yields a non-empty prerelease component is
-  unstable, except when the prerelease component matches a known
-  stable-release qualifier. Ship a default qualifier list of `["release",
-  "final", "lts", "ga", "stable"]` so the common JVM-ecosystem conventions
-  Just Work. Recipes whose upstream uses an exotic qualifier override the
-  default with a `[version] stable_qualifiers = [...]` field (replace
-  semantic, not append). The change is scoped to the GitHub provider's
+  Replace the substring keyword filter with a two-layered check. The
+  primary layer is SemVer-aware: any version whose `splitPrerelease` yields
+  a non-empty prerelease component is unstable, except when the prerelease
+  component matches a known stable-release qualifier. Ship a default
+  qualifier list of `["release", "final", "lts", "ga", "stable"]` so the
+  common JVM-ecosystem conventions Just Work. Recipes whose upstream uses
+  an exotic qualifier override the default with a `[version]
+  stable_qualifiers = [...]` field (replace semantic, not append). The
+  fallback layer preserves a small substring keyword list (`alpha`,
+  `beta`, `rc`, `preview`, `snapshot`, `nightly`, `dev`) for upstreams
+  whose tags splice prerelease markers into the version without a hyphen
+  (e.g., jq's `1.8.2rc1`). The change is scoped to the GitHub provider's
   filter and to the parallel filter in the Fossil provider; the comparison
   logic in `version_utils.go` is unchanged.
 rationale: |
@@ -40,7 +44,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Planned
 
 ## Context and Problem Statement
 
@@ -290,12 +294,38 @@ stable; nothing is implicitly added.
 ```go
 func isStableVersion(version string, stableQualifiers map[string]bool) bool {
     _, prerelease := splitPrerelease(version)
-    if prerelease == "" {
-        return true
+    if prerelease != "" {
+        return stableQualifiers[strings.ToLower(prerelease)]
     }
-    return stableQualifiers[strings.ToLower(prerelease)]
+    // Fallback: catch non-SemVer prerelease markers spliced into the
+    // version without a hyphen (e.g., jq's "1.8.2rc1").
+    lower := strings.ToLower(version)
+    for _, marker := range nonSemverUnstableMarkers {
+        if strings.Contains(lower, marker) {
+            return false
+        }
+    }
+    return true
+}
+
+var nonSemverUnstableMarkers = []string{
+    "alpha", "beta", "rc", "preview", "snapshot", "nightly", "dev",
 }
 ```
+
+The check is two-layered:
+
+1. **SemVer prerelease check** (anything after the first hyphen): a
+   non-empty prerelease component is unstable unless it matches one of
+   the `stableQualifiers`. This catches every SemVer-style prerelease
+   format by construction (alpha, beta, rc, dev, M1, M2, ...) and
+   admits "this is the release" suffixes via the qualifier map.
+2. **Non-SemVer fallback** (no hyphen at all): some upstreams splice the
+   prerelease marker into the version without a separator. jq tags
+   `1.8.2rc1` (no hyphen between `2` and `rc`) is the canonical example
+   surfaced by the audit. The fallback substring match against
+   `nonSemverUnstableMarkers` preserves the historical filter's
+   behavior for these cases.
 
 The `stableQualifiers` map is constructed once at provider construction
 time. If the recipe's `StableQualifiers` slice is empty, the provider
@@ -367,18 +397,20 @@ The implementation lands in #2325 in three contained slices:
      rejected through the prerelease check, since the keyword test is
      no longer needed but the prerelease test catches them).
 3. **Audit and recipe updates.**
-   - Run `git grep -l 'github_repo' recipes/ internal/recipe/recipes/`.
-   - For each recipe, check upstream tags only when there is reason to
-     suspect an exotic convention. The default qualifier list already
-     covers `RELEASE`, `FINAL`, `LTS`, `GA`, and `stable`, so the audit
-     is narrowed to recipes whose upstream uses something else.
-   - Realistic finding: most recipes use plain semver and need no
-     change. The set that does need the field is small and exotic.
-   - Recipes that need an override receive a
-     `stable_qualifiers = [...]` line in the same PR as the filter
-     change.
-   - The PR description lists the audit results so reviewers can flag
-     any miss.
+   - Run `tsuku eval --recipe <r>` against each curated recipe with
+     `tag_prefix` set, and confirm the resolved version is unchanged
+     from main-branch behavior (or has improved by skipping a milestone
+     prerelease).
+   - The audit during the implementation of #2325 found one
+     non-SemVer-compliant case that the strict-SemVer-only design
+     would have regressed: jq tags `jq-1.8.2rc1` (no hyphen between
+     the version and `rc`). The implementation gained the non-SemVer
+     fallback layer to handle this and similar upstreams. No further
+     audit findings emerged.
+   - Recipes whose upstream uses an exotic stable qualifier (anything
+     not in the default list) receive a `stable_qualifiers = [...]`
+     line. None were found among the curated set; the field is
+     available for future recipes that need it.
 
 The three slices land in a single PR because the filter change without
 the audit risks regression on exotic-qualifier upstreams, and the recipe
@@ -444,6 +476,13 @@ data that already flows through tsuku at install time:
   `X.Y.Z`.** The default would then admit a prerelease. No real example
   is known; if one is found, the recipe overrides
   `stable_qualifiers` with a list that excludes the offending suffix.
+- **Non-SemVer fallback admits some false positives.** The substring
+  match against `nonSemverUnstableMarkers` will reject any version
+  containing `alpha/beta/rc/preview/snapshot/nightly/dev` as a
+  substring, even when the upstream meant something else. No real
+  example is known where this is wrong (the tokens are distinctive
+  enough to almost never collide with semantic version content), but
+  the constraint is documented here for future readers.
 
 ### Affected Components
 

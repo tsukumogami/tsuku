@@ -190,6 +190,13 @@ type VersionSection struct {
 	ProjectName      string `toml:"project_name"`      // Project name for tarball filename (e.g., "sqlite")
 	VersionSeparator string `toml:"version_separator"` // Separator in version numbers for tag conversion (e.g., "-" converts 9.0.0 to 9-0-0)
 	TimelineTag      string `toml:"timeline_tag"`      // Tag filter for timeline URL (default: "release")
+
+	// StableQualifiers names hyphenated suffixes that the upstream uses as
+	// stable release qualifiers rather than prereleases (e.g., ["release",
+	// "final"] for projects that tag stable releases as 1.0.0-RELEASE).
+	// When unset, the version provider uses DefaultStableQualifiers.
+	// When set, this list replaces the default — it does not extend it.
+	StableQualifiers []string `toml:"stable_qualifiers,omitempty"`
 }
 
 // Matchable provides platform dimension accessors for matching.

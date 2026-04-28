@@ -98,7 +98,7 @@ func TestFossilTimelineProvider_ParseTimelineTags(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := NewFossilTimelineProviderWithOptions(nil, "https://example.com", "test", tt.tagPrefix, tt.versionSeparator, "release")
+			p := NewFossilTimelineProviderWithOptions(nil, "https://example.com", "test", tt.tagPrefix, tt.versionSeparator, "release", nil)
 			tags := p.parseTimelineTags(tt.html)
 
 			if len(tags) != len(tt.expectedTags) {
@@ -149,7 +149,7 @@ func TestFossilTimelineProvider_TagVersionConversion(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := NewFossilTimelineProviderWithOptions(nil, "https://example.com", "test", tt.tagPrefix, tt.versionSeparator, "release")
+			p := NewFossilTimelineProviderWithOptions(nil, "https://example.com", "test", tt.tagPrefix, tt.versionSeparator, "release", nil)
 			version := p.tagToVersion(tt.tag)
 
 			if version != tt.expectedVersion {
@@ -185,7 +185,7 @@ func TestFossilTimelineProvider_VersionToTag(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := NewFossilTimelineProviderWithOptions(nil, "https://example.com", "test", tt.tagPrefix, tt.versionSeparator, "release")
+			p := NewFossilTimelineProviderWithOptions(nil, "https://example.com", "test", tt.tagPrefix, tt.versionSeparator, "release", nil)
 			tag := p.versionToTag(tt.version)
 
 			if tag != tt.expectedTag {
@@ -227,7 +227,7 @@ func TestFossilTimelineProvider_TarballURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := NewFossilTimelineProviderWithOptions(nil, tt.repo, tt.projectName, tt.tagPrefix, tt.versionSeparator, "release")
+			p := NewFossilTimelineProviderWithOptions(nil, tt.repo, tt.projectName, tt.tagPrefix, tt.versionSeparator, "release", nil)
 			url := p.TarballURL(tt.version)
 
 			if url != tt.expectedURL {
@@ -260,7 +260,7 @@ func TestFossilTimelineProvider_BuildTimelineURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := NewFossilTimelineProviderWithOptions(nil, tt.repo, "test", "", "", tt.timelineTag)
+			p := NewFossilTimelineProviderWithOptions(nil, tt.repo, "test", "", "", tt.timelineTag, nil)
 			url := p.buildTimelineURL()
 
 			if url != tt.expectedURL {
@@ -283,7 +283,7 @@ func TestFossilTimelineProvider_ListVersions(t *testing.T) {
 
 	resolver := New()
 	resolver.httpClient = server.Client()
-	p := NewFossilTimelineProvider(resolver, server.URL, "sqlite")
+	p := NewFossilTimelineProvider(resolver, server.URL, "sqlite", nil)
 
 	versions, err := p.ListVersions(context.Background())
 	if err != nil {
@@ -316,7 +316,7 @@ func TestFossilTimelineProvider_ResolveLatest(t *testing.T) {
 
 	resolver := New()
 	resolver.httpClient = server.Client()
-	p := NewFossilTimelineProvider(resolver, server.URL, "sqlite")
+	p := NewFossilTimelineProvider(resolver, server.URL, "sqlite", nil)
 
 	info, err := p.ResolveLatest(context.Background())
 	if err != nil {
@@ -344,7 +344,7 @@ func TestFossilTimelineProvider_ResolveVersion(t *testing.T) {
 
 	resolver := New()
 	resolver.httpClient = server.Client()
-	p := NewFossilTimelineProvider(resolver, server.URL, "sqlite")
+	p := NewFossilTimelineProvider(resolver, server.URL, "sqlite", nil)
 
 	tests := []struct {
 		name          string
@@ -399,7 +399,7 @@ func TestFossilTimelineProvider_ResolveVersion(t *testing.T) {
 }
 
 func TestFossilTimelineProvider_SourceDescription(t *testing.T) {
-	p := NewFossilTimelineProvider(nil, "https://sqlite.org/src", "sqlite")
+	p := NewFossilTimelineProvider(nil, "https://sqlite.org/src", "sqlite", nil)
 	desc := p.SourceDescription()
 
 	expected := "Fossil:https://sqlite.org/src"

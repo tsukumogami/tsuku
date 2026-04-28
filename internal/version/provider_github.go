@@ -6,30 +6,60 @@ import (
 	"strings"
 )
 
+// DefaultStableQualifiers names hyphenated suffixes that universally signal a
+// stable release across upstream conventions. Any version whose prerelease
+// component (per SemVer's splitPrerelease) is one of these is treated as
+// stable. Recipes whose upstream uses an exotic qualifier override this list
+// via [version] stable_qualifiers — the recipe's list replaces the default.
+//
+// Designed in docs/designs/DESIGN-prerelease-detection.md.
+var DefaultStableQualifiers = []string{"release", "final", "lts", "ga", "stable"}
+
 // GitHubProvider resolves versions from GitHub releases/tags.
 // Implements both VersionResolver and VersionLister interfaces.
 type GitHubProvider struct {
-	resolver  *Resolver
-	repo      string // owner/repo format (e.g., "rust-lang/rust")
-	tagPrefix string // optional prefix to filter tags (e.g., "ruby-")
+	resolver         *Resolver
+	repo             string          // owner/repo format (e.g., "rust-lang/rust")
+	tagPrefix        string          // optional prefix to filter tags (e.g., "ruby-")
+	stableQualifiers map[string]bool // hyphenated suffixes treated as stable (lowercased)
 }
 
-// NewGitHubProvider creates a provider for GitHub-based tools
-func NewGitHubProvider(resolver *Resolver, repo string) *GitHubProvider {
+// NewGitHubProvider creates a provider for GitHub-based tools.
+// stableQualifiers names hyphenated suffixes the upstream uses as stable
+// release qualifiers; pass nil to use DefaultStableQualifiers.
+func NewGitHubProvider(resolver *Resolver, repo string, stableQualifiers []string) *GitHubProvider {
 	return &GitHubProvider{
-		resolver: resolver,
-		repo:     repo,
+		resolver:         resolver,
+		repo:             repo,
+		stableQualifiers: buildStableQualifierSet(stableQualifiers),
 	}
 }
 
-// NewGitHubProviderWithPrefix creates a provider that filters tags by prefix
-// The prefix is stripped from version strings (e.g., "ruby-3.3.10" -> "3.3.10")
-func NewGitHubProviderWithPrefix(resolver *Resolver, repo, tagPrefix string) *GitHubProvider {
+// NewGitHubProviderWithPrefix creates a provider that filters tags by prefix.
+// The prefix is stripped from version strings (e.g., "ruby-3.3.10" -> "3.3.10").
+// stableQualifiers names hyphenated suffixes the upstream uses as stable
+// release qualifiers; pass nil to use DefaultStableQualifiers.
+func NewGitHubProviderWithPrefix(resolver *Resolver, repo, tagPrefix string, stableQualifiers []string) *GitHubProvider {
 	return &GitHubProvider{
-		resolver:  resolver,
-		repo:      repo,
-		tagPrefix: tagPrefix,
+		resolver:         resolver,
+		repo:             repo,
+		tagPrefix:        tagPrefix,
+		stableQualifiers: buildStableQualifierSet(stableQualifiers),
 	}
+}
+
+// buildStableQualifierSet converts a list of qualifier strings to a
+// lowercased lookup set. nil or empty input falls back to
+// DefaultStableQualifiers.
+func buildStableQualifierSet(qualifiers []string) map[string]bool {
+	if len(qualifiers) == 0 {
+		qualifiers = DefaultStableQualifiers
+	}
+	set := make(map[string]bool, len(qualifiers))
+	for _, q := range qualifiers {
+		set[strings.ToLower(q)] = true
+	}
+	return set
 }
 
 // ListVersions returns all available versions from GitHub releases/tags (newest first)
@@ -55,13 +85,36 @@ func (p *GitHubProvider) ListVersions(ctx context.Context) ([]string, error) {
 	return filtered, nil
 }
 
-// isStableVersion checks if a version string represents a stable release
-// Returns false for preview, alpha, beta, rc releases
-func isStableVersion(version string) bool {
+// nonSemverUnstableMarkers names prerelease keywords that some upstreams
+// embed directly into the version string without a hyphen separator
+// (e.g., jq's "1.8.2rc1"). The SemVer-aware splitPrerelease check cannot
+// catch these because there is no hyphen to split on; we fall back to a
+// substring match for the non-SemVer case.
+var nonSemverUnstableMarkers = []string{"alpha", "beta", "rc", "preview", "snapshot", "nightly", "dev"}
+
+// isStableVersion checks if a version string represents a stable release.
+//
+// The check is two-layered:
+//  1. SemVer prerelease (anything after the first hyphen): a non-empty
+//     prerelease is unstable unless it matches one of the stableQualifiers
+//     (case-insensitive exact match). This catches every SemVer-style
+//     prerelease format (alpha, beta, rc, dev, M1, M2, ...) by construction
+//     while admitting "this is the release" suffixes used by some
+//     JVM-ecosystem upstreams (RELEASE, FINAL, LTS, GA, stable).
+//  2. Non-SemVer prerelease (marker spliced into the version without a
+//     hyphen, e.g., jq's "1.8.2rc1"): fall back to a substring match
+//     against a small fixed keyword list. This preserves the historical
+//     behavior for upstreams that don't follow SemVer's prerelease syntax.
+//
+// Designed in docs/designs/DESIGN-prerelease-detection.md.
+func isStableVersion(version string, stableQualifiers map[string]bool) bool {
+	_, prerelease := splitPrerelease(version)
+	if prerelease != "" {
+		return stableQualifiers[strings.ToLower(prerelease)]
+	}
 	lower := strings.ToLower(version)
-	unstablePatterns := []string{"preview", "alpha", "beta", "rc", "dev", "snapshot", "nightly"}
-	for _, pattern := range unstablePatterns {
-		if strings.Contains(lower, pattern) {
+	for _, marker := range nonSemverUnstableMarkers {
+		if strings.Contains(lower, marker) {
 			return false
 		}
 	}
@@ -84,9 +137,10 @@ func (p *GitHubProvider) ResolveLatest(ctx context.Context) (*VersionInfo, error
 		return nil, fmt.Errorf("no versions found matching prefix %q", p.tagPrefix)
 	}
 
-	// Find the first stable version (skip preview, alpha, beta, rc releases)
+	// Find the first stable version (skip prereleases that aren't whitelisted
+	// as stable qualifiers).
 	for _, v := range versions {
-		if isStableVersion(v) {
+		if isStableVersion(v, p.stableQualifiers) {
 			return &VersionInfo{
 				Version: v,
 				Tag:     p.tagPrefix + v,

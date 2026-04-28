@@ -166,9 +166,9 @@ func (s *GitHubRepoStrategy) CanHandle(r *recipe.Recipe) bool {
 
 func (s *GitHubRepoStrategy) Create(resolver *Resolver, r *recipe.Recipe) (VersionProvider, error) {
 	if r.Version.TagPrefix != "" {
-		return NewGitHubProviderWithPrefix(resolver, r.Version.GitHubRepo, r.Version.TagPrefix), nil
+		return NewGitHubProviderWithPrefix(resolver, r.Version.GitHubRepo, r.Version.TagPrefix, r.Version.StableQualifiers), nil
 	}
-	return NewGitHubProvider(resolver, r.Version.GitHubRepo), nil
+	return NewGitHubProvider(resolver, r.Version.GitHubRepo, r.Version.StableQualifiers), nil
 }
 
 // InferredGitHubStrategy infers GitHub from github_archive/github_file actions (DEPRECATED)
@@ -191,7 +191,7 @@ func (s *InferredGitHubStrategy) Create(resolver *Resolver, r *recipe.Recipe) (V
 	for _, step := range r.Steps {
 		if step.Action == "github_archive" || step.Action == "github_file" {
 			if repo, ok := step.Params["repo"].(string); ok {
-				return NewGitHubProvider(resolver, repo), nil
+				return NewGitHubProvider(resolver, repo, r.Version.StableQualifiers), nil
 			}
 		}
 	}
@@ -772,6 +772,7 @@ func (s *InferredFossilStrategy) Create(resolver *Resolver, r *recipe.Recipe) (V
 			return NewFossilTimelineProviderWithOptions(
 				resolver, repo, projectName,
 				tagPrefix, versionSeparator, timelineTag,
+				r.Version.StableQualifiers,
 			), nil
 		}
 	}
