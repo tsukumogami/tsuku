@@ -4,7 +4,8 @@
   "version": "1.93.1",
   "platform": {
     "os": "linux",
-    "arch": "amd64"
+    "arch": "amd64",
+    "linux_family": "alpine"
   },
   "deterministic": false,
   "dependencies": [
@@ -30,6 +31,16 @@
     }
   ],
   "steps": [
+    {
+      "action": "apk_install",
+      "params": {
+        "packages": [
+          "libgcc"
+        ]
+      },
+      "evaluable": false,
+      "deterministic": false
+    },
     {
       "action": "download_file",
       "params": {
