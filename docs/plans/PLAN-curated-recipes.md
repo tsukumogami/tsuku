@@ -96,8 +96,8 @@ These issues capture infrastructure and recipe gaps surfaced while authoring the
 | ~~_Replaces the substring-keyword `isStableVersion` filter with a SemVer-aware predicate (any non-empty prerelease component is unstable unless it matches a stable qualifier), plus a non-SemVer fallback to catch markers spliced into the version without a hyphen (e.g., jq's `1.8.2rc1`). Default stable qualifiers `["release", "final", "lts", "ga", "stable"]` admit the common JVM RELEASE/FINAL conventions; the `[version] stable_qualifiers` recipe field overrides for exotic upstreams. Designed in `docs/designs/DESIGN-prerelease-detection.md`._~~ | | |
 | [#2327: feat(recipes): add openjdk recipe to enable JVM tool verification](https://github.com/tsukumogami/tsuku/issues/2327) | None | testable |
 | _Sandbox containers do not bundle a JDK and the registry has no `openjdk` recipe to declare as a dependency. JVM tools (maven, gradle, sbt) install successfully but fail verify because `mvn --version` etc. need a JVM at runtime._ | | |
-| [#2328: feat(version): add a version source for Google Cloud SDK to enable gcloud recipe](https://github.com/tsukumogami/tsuku/issues/2328) | None | testable |
-| _Google Cloud SDK has no GitHub releases; tsuku has no version provider for Google's distribution channel (`https://dl.google.com/dl/cloudsdk/channels/rapid/components-2.json`). Decision needed: add a custom `gcloud_dist` source or use the unofficial `twistedpair/google-cloud-sdk` mirror._ | | |
+| ~~[#2328: feat(version): add a version source for Google Cloud SDK to enable gcloud recipe](https://github.com/tsukumogami/tsuku/issues/2328)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Expanded scope from "gcloud_dist custom source" to a generic `http_json` version source per `docs/designs/DESIGN-http-json-version-source.md`. Adds `[version] source = "http_json"` with `url` and `version_path` fields supporting dotted access plus `[N]` array indexing. Authors `recipes/g/gcloud.toml` as the first consumer in the same PR. Deprecates `source = "hashicorp"` (kept for one release window with a runtime warning); removal tracked in #2349. Unblocks Adoptium-based openjdk in #2327 and HashiCorp checkpoint adoption in #2350-style follow-ups when needed._~~ | | |
 | [#2330: feat(recipes): author a working curated bazel recipe](https://github.com/tsukumogami/tsuku/issues/2330) | None | testable |
 | _The bare `bazel-{version}-{os}-{arch}` binary self-extracts an embedded JDK and spawns a long-lived server on first run; verify exits non-zero on glibc Linux (~55s) and macOS (~3s) in the sandbox. Needs an installer-script or Homebrew approach._ | | |
 | [#2331: feat(recipes): allow pipx_install recipes to pin a PyPI version constraint](https://github.com/tsukumogami/tsuku/issues/2331) | None | testable |
@@ -110,6 +110,8 @@ These issues capture infrastructure and recipe gaps surfaced while authoring the
 | _Once libevent and pcre2 macOS support land, drop `supported_os = ["linux"]` from `recipes/t/tmux.toml` and `recipes/g/git.toml` and add darwin homebrew steps wired to the right `runtime_dependencies`. Same shape as the curl and wget changes in #2337._ | | |
 | [#2338: fix(recipes): add macOS support to curl and resolve rhel sandbox verify failure](https://github.com/tsukumogami/tsuku/issues/2338) | None | testable |
 | _A first attempt at the curl darwin step (subsequently reverted) cleared eval and macOS install but surfaced a rhel-only sandbox verify failure on Linux: install completes (`install_exit_code = 0`) but `passed = false`. Same shape as the pcre2 rhel issue. Needs local reproduction since the workflow does not upload `.log-*.txt` artifacts._ | | |
+| [#2349: chore(version): remove deprecated source = "hashicorp" after release](https://github.com/tsukumogami/tsuku/issues/2349) | tsuku release containing [#2328](https://github.com/tsukumogami/tsuku/issues/2328) | testable |
+| _Second half of the deprecation introduced in #2328. Removes `(r *Resolver) ResolveHashiCorp`, the `"hashicorp"` source-name allowlist entries, and the deprecation warnings, after the next tsuku release ships and any external recipes have had a chance to migrate._ | | |
 
 ### Wave 5: Recipe authoring after Wave 4 lands
 
@@ -125,8 +127,8 @@ Recipes that depend on a Wave 4 *code change* require a tsuku release containing
 | _Both upstreams use `-Mn` milestone tags that #2325 now filters as prereleases (released in the binary), and both need the openjdk runtime dependency from #2327 for verify._ | | |
 | [#2345: feat(recipes): author ansible and azure-cli recipes](https://github.com/tsukumogami/tsuku/issues/2345) | tsuku release containing [#2331](https://github.com/tsukumogami/tsuku/issues/2331) | testable |
 | _Both pin to a python-3.10-compatible pypi release using the new pipx version-constraint feature in #2331. Recipe authors using the new constraint syntax need a tsuku binary that knows about it._ | | |
-| [#2346: feat(recipes): author gcloud recipe](https://github.com/tsukumogami/tsuku/issues/2346) | tsuku release containing [#2328](https://github.com/tsukumogami/tsuku/issues/2328) | testable |
-| _Recipe uses the new gcloud version source from #2328. Same release-dependency story: the recipe references a `[version] source` value that the tsuku binary must recognize._ | | |
+| ~~[#2346: feat(recipes): author gcloud recipe](https://github.com/tsukumogami/tsuku/issues/2346)~~ | ~~tsuku release containing [#2328](https://github.com/tsukumogami/tsuku/issues/2328)~~ | ~~testable~~ |
+| ~~_Bundled into #2328: the gcloud recipe ships in the same PR as the `http_json` mechanism, so there is no release gap to bridge. The recipe references `[version] source = "http_json"` which the same tsuku binary introduces._~~ | | |
 
 ## Dependency Graph
 
@@ -140,20 +142,20 @@ graph TD
     subgraph wave4 ["Wave 4: Follow-ups from milestone work"]
         I2325["#2325: -Mn milestone tags in github provider"]
         I2327["#2327: openjdk recipe for JVM verify"]
-        I2328["#2328: gcloud version source"]
+        I2328["#2328: http_json source + gcloud recipe"]
         I2330["#2330: working bazel recipe"]
         I2331["#2331: pipx PyPI version constraint"]
         I2333["#2333: revision-suffixed homebrew bottles (libevent darwin)"]
         I2335["#2335: pcre2 macOS dylibs + rhel/alpine fixes"]
         I2336["#2336: tmux + git macOS support"]
         I2338["#2338: curl macOS + rhel sandbox failure"]
+        I2349["#2349: remove deprecated hashicorp source"]
     end
 
     subgraph wave5 ["Wave 5: Recipe authoring after Wave 4"]
         I2343["#2343: maven recipe"]
         I2344["#2344: gradle + sbt recipes"]
         I2345["#2345: ansible + azure-cli recipes"]
-        I2346["#2346: gcloud recipe"]
     end
 
     I2333 --> I2336
@@ -163,7 +165,7 @@ graph TD
     I2325 --> I2344
     I2327 --> I2344
     I2331 --> I2345
-    I2328 --> I2346
+    I2328 --> I2349
 
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
@@ -175,9 +177,9 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2325 done
-    class I2327,I2328,I2330,I2331,I2333,I2335,I2338 ready
-    class I2336,I2343,I2344,I2345,I2346 blocked
+    class I2325,I2328 done
+    class I2327,I2330,I2331,I2333,I2335,I2338 ready
+    class I2336,I2343,I2344,I2345,I2349 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan

@@ -1,0 +1,52 @@
+[metadata]
+name = "gcloud"
+description = "Google Cloud command-line tool"
+homepage = "https://cloud.google.com/sdk/gcloud"
+version_format = "semver"
+curated = true
+# The gcloud distribution bundles a CPython interpreter linked against
+# glibc and POSIX libc surfaces present on macOS/glibc Linux. Alpine's
+# musl cannot run the bundled interpreter, so the recipe is restricted
+# to glibc Linux and macOS.
+supported_libc = ["glibc"]
+# Google's `linux-arm.tar.gz` is the 64-bit ARM build (per their docs at
+# https://docs.cloud.google.com/sdk/docs/install-sdk), but unlike the
+# x86_64 tarball it ships *without* a bundled Python interpreter (60 MB
+# vs 97 MB). The `bin/gcloud` wrapper falls back to searching PATH for
+# python3, which the sandbox containers do not provide. Restricted on
+# linux/arm64 until the recipe declares a Python runtime dependency on
+# that arch — tracked separately as a recipe-level follow-up.
+# darwin/arm64 (Apple Silicon) is unaffected because the darwin-arm
+# build does bundle Python.
+unsupported_platforms = ["linux/arm64"]
+
+[version]
+source = "http_json"
+url = "https://dl.google.com/dl/cloudsdk/channels/rapid/components-2.json"
+version_path = "version"
+
+# Linux: per-architecture tarball. Google uses "x86_64" and "arm" in the
+# asset filename (note: not "arm64"), so the recipe maps tsuku's
+# amd64/arm64 to those names.
+[[steps]]
+action = "download_archive"
+when = { os = ["linux"], libc = ["glibc"] }
+url = "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-{version}-linux-{arch}.tar.gz"
+arch_mapping = { amd64 = "x86_64", arm64 = "arm" }
+strip_dirs = 1
+install_mode = "directory"
+binaries = ["bin/gcloud", "bin/gsutil", "bin/bq"]
+
+# macOS: same shape; same arm64 -> "arm" rename.
+[[steps]]
+action = "download_archive"
+when = { os = ["darwin"] }
+url = "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-{version}-darwin-{arch}.tar.gz"
+arch_mapping = { amd64 = "x86_64", arm64 = "arm" }
+strip_dirs = 1
+install_mode = "directory"
+binaries = ["bin/gcloud", "bin/gsutil", "bin/bq"]
+
+[verify]
+command = "gcloud --version"
+pattern = "Google Cloud SDK {version}"
