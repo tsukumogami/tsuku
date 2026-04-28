@@ -4,6 +4,10 @@ description = "Ruby version management tool"
 homepage = "https://github.com/rbenv/rbenv"
 version_format = "semver"
 curated = true
+# rbenv ships as bash scripts (#!/usr/bin/env bash). Alpine does not include
+# bash by default; declaring glibc-only keeps the recipe scope honest about
+# which platforms it actually works on.
+supported_libc = ["glibc"]
 
 [version]
 github_repo = "rbenv/rbenv"
