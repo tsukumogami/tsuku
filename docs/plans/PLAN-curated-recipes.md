@@ -4,7 +4,7 @@ status: Active
 execution_mode: multi-pr
 upstream: docs/designs/DESIGN-curated-recipes.md
 milestone: "Curated Recipe System"
-issue_count: 37
+issue_count: 41
 ---
 
 ## Status
@@ -111,6 +111,23 @@ These issues capture infrastructure and recipe gaps surfaced while authoring the
 | [#2338: fix(recipes): add macOS support to curl and resolve rhel sandbox verify failure](https://github.com/tsukumogami/tsuku/issues/2338) | None | testable |
 | _A first attempt at the curl darwin step (subsequently reverted) cleared eval and macOS install but surfaced a rhel-only sandbox verify failure on Linux: install completes (`install_exit_code = 0`) but `passed = false`. Same shape as the pcre2 rhel issue. Needs local reproduction since the workflow does not upload `.log-*.txt` artifacts._ | | |
 
+### Wave 5: Recipe authoring after Wave 4 lands
+
+These recipes were attempted in Wave 3 batches and reverted because their Wave 4 prereqs were not yet available. They ship as small, focused PRs once each prereq lands. The four entries below cover every Wave 3 recipe that was deferred due to a Wave 4 blocker; the other deferred items (libevent darwin, pcre2 macOS, tmux/git darwin, curl darwin, bazel) include the recipe update inside their Wave 4 issue scope and don't need separate authoring tickets.
+
+Recipes that depend on a Wave 4 *code change* require a tsuku release containing that change, since the recipe behavior they rely on lives in the tsuku binary, not in the recipe registry.
+
+| Issue | Dependencies | Complexity |
+|-------|--------------|------------|
+| [#2343: feat(recipes): author maven recipe](https://github.com/tsukumogami/tsuku/issues/2343) | [#2327](https://github.com/tsukumogami/tsuku/issues/2327) | testable |
+| _Recipe-only change. Maven ships a single platform-agnostic Apache distribution; the recipe needs an openjdk runtime dependency so `mvn --version` can verify._ | | |
+| [#2344: feat(recipes): author gradle and sbt recipes](https://github.com/tsukumogami/tsuku/issues/2344) | [#2327](https://github.com/tsukumogami/tsuku/issues/2327), tsuku release containing [#2325](https://github.com/tsukumogami/tsuku/issues/2325) | testable |
+| _Both upstreams use `-Mn` milestone tags that #2325 now filters as prereleases (released in the binary), and both need the openjdk runtime dependency from #2327 for verify._ | | |
+| [#2345: feat(recipes): author ansible and azure-cli recipes](https://github.com/tsukumogami/tsuku/issues/2345) | tsuku release containing [#2331](https://github.com/tsukumogami/tsuku/issues/2331) | testable |
+| _Both pin to a python-3.10-compatible pypi release using the new pipx version-constraint feature in #2331. Recipe authors using the new constraint syntax need a tsuku binary that knows about it._ | | |
+| [#2346: feat(recipes): author gcloud recipe](https://github.com/tsukumogami/tsuku/issues/2346) | tsuku release containing [#2328](https://github.com/tsukumogami/tsuku/issues/2328) | testable |
+| _Recipe uses the new gcloud version source from #2328. Same release-dependency story: the recipe references a `[version] source` value that the tsuku binary must recognize._ | | |
+
 ## Dependency Graph
 
 ```mermaid
@@ -169,6 +186,13 @@ graph TD
         I2338["#2338: curl macOS + rhel sandbox failure"]
     end
 
+    subgraph wave5 ["Wave 5: Recipe authoring after Wave 4"]
+        I2343["#2343: maven recipe"]
+        I2344["#2344: gradle + sbt recipes"]
+        I2345["#2345: ansible + azure-cli recipes"]
+        I2346["#2346: gcloud recipe"]
+    end
+
     I2259 --> I2261
     I2259 --> I2262
     I2259 --> I2263
@@ -219,6 +243,12 @@ graph TD
     I2333 --> I2336
     I2335 --> I2336
 
+    I2327 --> I2343
+    I2325 --> I2344
+    I2327 --> I2344
+    I2331 --> I2345
+    I2328 --> I2346
+
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
@@ -232,14 +262,14 @@ graph TD
     class I2259,I2260,I2261,I2262,I2263,I2264,I2265,I2266,I2267,I2268,I2281,I2282,I2283,I2284,I2285,I2286,I2287,I2288,I2289,I2290,I2291,I2292,I2293,I2294,I2295,I2296,I2297,I2312,I2313,I2315 done
     class I2325 done
     class I2327,I2328,I2330,I2331,I2333,I2335,I2338 ready
-    class I2336 blocked
+    class I2336,I2343,I2344,I2345,I2346 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan
 
 ## Implementation Sequence
 
-**Critical path**: #2259 → #2260 → Wave 3 backfill batches → Wave 4 follow-ups for the recipes deferred during Wave 3.
+**Critical path**: #2259 → #2260 → Wave 3 backfill batches → Wave 4 follow-ups → tsuku release containing the Wave 4 code changes → Wave 5 recipe authoring.
 
 | Wave | Issues | Start condition |
 |------|--------|----------------|
@@ -248,6 +278,7 @@ graph TD
 | Wave 2 | #2266, #2267 | After both #2259 and #2260 merge |
 | Wave 3 | #2281–#2297, #2312, #2313, #2315 (20 backfill batches) | After #2259 and #2260 merge |
 | Wave 4 | #2325, #2327, #2328, #2330, #2331, #2333, #2335, #2336, #2338 | After Wave 3 surfaces the gap each issue captures |
+| Wave 5 | #2343, #2344, #2345, #2346 | After the Wave 4 prereq for each lands and (if a code change) is included in a tsuku release |
 
 Wave 3 issues were fully independent of each other; each batch was scoped to a coherent tool category and shipped as a single PR.
 
@@ -255,5 +286,14 @@ Wave 3 issues were fully independent of each other; each batch was scoped to a c
 
 - **#2336 (tmux + git macOS)** is hard-blocked by #2333 (libevent darwin) and #2335 (pcre2 macOS dylibs).
 - **#2335 and #2338** share the same RHEL sandbox failure shape (install completes with `exit 0`, verify exits non-zero with no log artifact). Investigating one will likely produce the diagnostic capability needed for the other; consider taking them together.
-- **#2325, #2327, #2331** unblock recipe authoring rather than fixing existing recipes. After each lands, the corresponding recipes can be authored as small follow-up PRs (gradle/sbt for #2325, maven and any other JVM tool for #2327, ansible/azure-cli for #2331).
+- **#2325, #2327, #2331** unblock Wave 5 recipe authoring rather than fixing existing recipes. After each lands (and is released for the code-change ones), the corresponding Wave 5 ticket can ship.
 - **#2330 (bazel)** depends on #2327 if the chosen approach uses the `bazel_nojdk-*` asset; otherwise independent.
+
+**Wave 5 priority**: every Wave 5 ticket is small (one or two recipes per ticket), independent of the other Wave 5 tickets, and gated only by its own Wave 4 prereqs. Order is determined by which Wave 4 prereq lands first:
+
+- **#2343 (maven)** ships as soon as #2327 (openjdk recipe) lands. No tsuku release dependency since #2327 is recipe-only.
+- **#2344 (gradle, sbt)** needs #2327 *and* a tsuku release containing #2325. Among Wave 5, this is the one that can be cut as soon as #2325 ships in a tagged release and #2327 lands.
+- **#2345 (ansible, azure-cli)** is gated by a release containing #2331.
+- **#2346 (gcloud)** is gated by a release containing #2328.
+
+The "tsuku release" gate exists because recipes that use new tsuku features (custom version sources, recipe-level constraint syntax) need a tsuku binary that knows about those features. Recipes that only depend on bug-fix behavior changes (like #2325's stricter prerelease filter) don't strictly need a release, but in practice we prefer one so the recipe doesn't have to work around stale tsuku binaries in users' caches.
