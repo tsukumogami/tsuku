@@ -9,6 +9,12 @@ curated = true
 # musl cannot run the bundled interpreter, so the recipe is restricted
 # to glibc Linux and macOS.
 supported_libc = ["glibc"]
+# Google publishes only `linux-arm` (32-bit ARM) on Linux; there is no
+# `linux-arm64`/`linux-aarch64` build. The bundled Python is 32-bit and
+# does not run on 64-bit ARM containers without multiarch support.
+# darwin-arm is the Apple Silicon (64-bit) build and works natively on
+# darwin/arm64; this restriction only affects Linux.
+unsupported_platforms = ["linux/arm64"]
 
 [version]
 source = "http_json"
