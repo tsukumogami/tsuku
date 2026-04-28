@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-28T18:24:06Z",
+  "updated_at": "2026-04-28T19:14:54Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 260,
-      "next_retry_at": "1734-01-17T16:30:27.422784076Z"
+      "failure_count": 261,
+      "next_retry_at": "1734-01-17T19:27:37.610133815Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 407,
-      "next_retry_at": "1734-01-17T16:30:27.422784076Z"
+      "failure_count": 408,
+      "next_retry_at": "1734-01-17T19:27:37.610133815Z"
     },
     {
       "name": "libaacs",
