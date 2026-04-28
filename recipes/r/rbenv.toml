@@ -1,0 +1,38 @@
+[metadata]
+name = "rbenv"
+description = "Ruby version management tool"
+homepage = "https://github.com/rbenv/rbenv"
+version_format = "semver"
+curated = true
+
+[version]
+github_repo = "rbenv/rbenv"
+tag_prefix = "v"
+
+# rbenv ships as a directory of bash scripts (bin/rbenv plus libexec/rbenv-*).
+# Upstream publishes only source archives via the GitHub tarball API; there
+# are no release assets, so download the source archive directly. The same
+# tree works on every supported platform; the optional `src/` C extension
+# speeds up rbenv but is not required for correct operation.
+[[steps]]
+action = "download"
+when = { os = ["linux", "darwin"], libc = ["glibc", "musl"] }
+url = "https://github.com/rbenv/rbenv/archive/refs/tags/v{version}.tar.gz"
+skip_verification_reason = "GitHub source archives don't provide checksums"
+
+[[steps]]
+action = "extract"
+when = { os = ["linux", "darwin"], libc = ["glibc", "musl"] }
+archive = "v{version}.tar.gz"
+format = "tar.gz"
+strip_dirs = 1
+
+[[steps]]
+action = "install_binaries"
+when = { os = ["linux", "darwin"], libc = ["glibc", "musl"] }
+install_mode = "directory"
+outputs = ["bin/rbenv"]
+
+[verify]
+command = "rbenv --version"
+pattern = "rbenv {version}"

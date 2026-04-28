@@ -11,13 +11,13 @@ Popularity rankings are based on Homebrew download analytics, GitHub star counts
 ## Action Summary
 
 ### No action needed (handcrafted or curated — full platform support)
-git, docker, terraform, gh, golang, python, rust, fzf, btop, curl, httpie, lazygit, k9s, stern, kubectx, direnv, mise, asdf, pyenv, eksctl, flux, skaffold, kustomize, velero, vault, packer, bun, yarn, deno, pnpm, nvm, claude, gemini, trivy, grype, cosign, syft, actionlint, golangci-lint, ruff, black, prettier, eslint, tflint, pulumi, caddy, age, mkcert, sops, step, consul, vagrant, lazydocker, jq, wget, tmux, act, earthly, goreleaser, make, ninja-build, meson, argocd, terragrunt, infracost, lefthook, pre-commit, checkov
+git, docker, terraform, gh, golang, python, rust, fzf, btop, curl, httpie, lazygit, k9s, stern, kubectx, direnv, mise, asdf, pyenv, rbenv, eksctl, flux, skaffold, kustomize, velero, vault, packer, bun, yarn, deno, pnpm, nvm, claude, gemini, trivy, grype, cosign, syft, actionlint, golangci-lint, ruff, black, prettier, eslint, tflint, pulumi, caddy, age, mkcert, sops, step, consul, vagrant, lazydocker, jq, wget, tmux, act, earthly, goreleaser, make, ninja-build, meson, argocd, terragrunt, infracost, lefthook, pre-commit, checkov
 
 ### Review coverage (batch — may need platform expansion or full handcrafting)
 helm, ripgrep, fd, eza, zoxide, htop, cilium-cli, istioctl, bazel, ollama, shellcheck, shfmt
 
 ### Author recipe (missing or discovery-only — needs a recipe)
-node, kubectl, aws-cli, bat, starship, neovim, delta, rbenv, gcloud, ansible, azure-cli, cmake, gradle, maven, sbt, aider, ko, dive, hadolint
+node, kubectl, aws-cli, bat, starship, neovim, delta, gcloud, ansible, azure-cli, cmake, gradle, maven, sbt, aider, ko, dive, hadolint
 
 ### Not available (deprecated or no standalone binary)
 copilot — the gh-copilot CLI extension was deprecated in September 2025 (upstream notice: https://github.blog/changelog/2025-09-25-upcoming-deprecation-of-gh-copilot-cli-extension/); Copilot features are now integrated into the gh CLI directly
@@ -63,7 +63,7 @@ copilot — the gh-copilot CLI extension was deprecated in September 2025 (upstr
 | 35 | asdf | handcrafted | no action needed |
 | 36 | pyenv | handcrafted | no action needed |
 | 37 | nvm | handcrafted | no action needed |
-| 38 | rbenv | discovery-only | author recipe |
+| 38 | rbenv | curated | curated |
 | 39 | gcloud | missing | author recipe |
 | 40 | azure-cli | discovery-only | author recipe |
 | 41 | eksctl | handcrafted | no action needed |
