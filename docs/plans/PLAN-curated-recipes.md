@@ -249,6 +249,11 @@ graph TD
     I2331 --> I2345
     I2328 --> I2346
 
+    %% Invisible inter-wave anchor edges to force vertical wave-by-wave layout.
+    I2265 ~~~ I2267
+    I2267 ~~~ I2268
+    I2315 ~~~ I2325
+
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
