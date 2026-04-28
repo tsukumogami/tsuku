@@ -205,7 +205,7 @@ func TestProviderFromRecipe_Priority(t *testing.T) {
 
 func TestGitHubProvider_Interface(t *testing.T) {
 	resolver := New()
-	provider := NewGitHubProvider(resolver, "rust-lang/rust")
+	provider := NewGitHubProvider(resolver, "rust-lang/rust", nil)
 
 	// Verify it implements VersionResolver
 	var _ VersionResolver = provider
@@ -216,7 +216,7 @@ func TestGitHubProvider_Interface(t *testing.T) {
 
 func TestGitHubProvider_SourceDescription(t *testing.T) {
 	resolver := New()
-	provider := NewGitHubProvider(resolver, "rust-lang/rust")
+	provider := NewGitHubProvider(resolver, "rust-lang/rust", nil)
 
 	desc := provider.SourceDescription()
 	expected := "GitHub:rust-lang/rust"

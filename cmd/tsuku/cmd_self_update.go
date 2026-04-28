@@ -29,7 +29,7 @@ var selfUpdateCmd = &cobra.Command{
 
 		// Resolve latest version
 		res := version.New()
-		provider := version.NewGitHubProvider(res, updates.SelfRepo)
+		provider := version.NewGitHubProvider(res, updates.SelfRepo, nil)
 		latest, err := provider.ResolveLatest(cmd.Context())
 		if err != nil {
 			return fmt.Errorf("resolve latest version: %w", err)

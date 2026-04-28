@@ -90,7 +90,7 @@ func CheckAndApplySelf(ctx context.Context, cfg *config.Config, userCfg *usercon
 		return nil
 	}
 
-	provider := version.NewGitHubProvider(resolver, SelfRepo)
+	provider := version.NewGitHubProvider(resolver, SelfRepo, nil)
 
 	latest, err := provider.ResolveLatest(ctx)
 	if err != nil {

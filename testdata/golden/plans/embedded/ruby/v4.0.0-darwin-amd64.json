@@ -123,7 +123,6 @@
     }
   ],
   "verify": {
-    "command": "ruby --version",
-    "pattern": "ruby {version}"
+    "command": "ruby --version"
   }
 }

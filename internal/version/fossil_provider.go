@@ -16,15 +16,18 @@ import (
 // Tag format: version-3.46.0, core-9-0-0 (with version_separator)
 type FossilTimelineProvider struct {
 	resolver         *Resolver
-	repo             string // Full URL to Fossil repo (e.g., "https://sqlite.org/src")
-	projectName      string // Project name for tarball (e.g., "sqlite")
-	tagPrefix        string // Prefix before version in tags (default: "version-")
-	versionSeparator string // Separator in version numbers (default: ".")
-	timelineTag      string // Tag filter for timeline URL (default: "release")
+	repo             string          // Full URL to Fossil repo (e.g., "https://sqlite.org/src")
+	projectName      string          // Project name for tarball (e.g., "sqlite")
+	tagPrefix        string          // Prefix before version in tags (default: "version-")
+	versionSeparator string          // Separator in version numbers (default: ".")
+	timelineTag      string          // Tag filter for timeline URL (default: "release")
+	stableQualifiers map[string]bool // hyphenated suffixes treated as stable (lowercased)
 }
 
 // NewFossilTimelineProvider creates a provider for Fossil-hosted projects.
-func NewFossilTimelineProvider(resolver *Resolver, repo, projectName string) *FossilTimelineProvider {
+// stableQualifiers names hyphenated suffixes the upstream uses as stable
+// release qualifiers; pass nil to use DefaultStableQualifiers.
+func NewFossilTimelineProvider(resolver *Resolver, repo, projectName string, stableQualifiers []string) *FossilTimelineProvider {
 	return &FossilTimelineProvider{
 		resolver:         resolver,
 		repo:             repo,
@@ -32,12 +35,15 @@ func NewFossilTimelineProvider(resolver *Resolver, repo, projectName string) *Fo
 		tagPrefix:        "version-",
 		versionSeparator: ".",
 		timelineTag:      "release",
+		stableQualifiers: buildStableQualifierSet(stableQualifiers),
 	}
 }
 
 // NewFossilTimelineProviderWithOptions creates a provider with custom tag format options.
-func NewFossilTimelineProviderWithOptions(resolver *Resolver, repo, projectName, tagPrefix, versionSeparator, timelineTag string) *FossilTimelineProvider {
-	p := NewFossilTimelineProvider(resolver, repo, projectName)
+// stableQualifiers names hyphenated suffixes the upstream uses as stable
+// release qualifiers; pass nil to use DefaultStableQualifiers.
+func NewFossilTimelineProviderWithOptions(resolver *Resolver, repo, projectName, tagPrefix, versionSeparator, timelineTag string, stableQualifiers []string) *FossilTimelineProvider {
+	p := NewFossilTimelineProvider(resolver, repo, projectName, stableQualifiers)
 	if tagPrefix != "" {
 		p.tagPrefix = tagPrefix
 	}
@@ -140,7 +146,7 @@ func (p *FossilTimelineProvider) ResolveLatest(ctx context.Context) (*VersionInf
 
 	// Find the first stable version
 	for _, v := range versions {
-		if isStableVersion(v) {
+		if isStableVersion(v, p.stableQualifiers) {
 			return &VersionInfo{
 				Version: v,
 				Tag:     p.versionToTag(v),
