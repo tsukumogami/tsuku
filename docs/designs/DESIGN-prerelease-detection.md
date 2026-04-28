@@ -493,6 +493,19 @@ data that already flows through tsuku at install time:
 - Recipes whose upstream uses hyphen-suffixed stable qualifiers (audit)
 - Recipe-author skill documentation (one-line note about the new field)
 
-### Implementation Issue
+## Implementation Issues
 
-This design is implemented by [#2325](https://github.com/tsukumogami/tsuku/issues/2325).
+### Milestone: [Curated Recipe System](https://github.com/tsukumogami/tsuku/milestone/113)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#2325: fix(version): treat -Mn milestone tags as pre-releases in GitHub provider](https://github.com/tsukumogami/tsuku/issues/2325) | None | testable |
+
+```mermaid
+graph TD
+    I2325["#2325: SemVer-aware prerelease detection"]
+
+    classDef ready fill:#bbdefb
+
+    class I2325 ready
+```
