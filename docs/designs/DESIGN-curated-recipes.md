@@ -621,6 +621,8 @@ this residual risk entirely.
 
 ## Implementation Issues
 
+Plan: [docs/plans/PLAN-curated-recipes.md](../plans/PLAN-curated-recipes.md)
+
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
 | ~~[#2259: feat(recipe): add curated flag to recipe metadata and CI infrastructure](https://github.com/tsukumogami/tsuku/issues/2259)~~ | ~~None~~ | ~~testable~~ |
@@ -642,7 +644,7 @@ this residual risk entirely.
 | ~~[#2267: feat(recipes): backfill curated recipes — modern CLI tools and AI assistants](https://github.com/tsukumogami/tsuku/issues/2267)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260)~~ | ~~testable~~ |
 | ~~_Replaces batch-generated recipes for ripgrep, fd, eza, zoxide, and delta with handcrafted versions, and adds missing AI tool recipes (aider, ollama)._~~ | | |
 | ~~[#2268: feat(recipes): backfill curated recipes — remaining top-100 gaps](https://github.com/tsukumogami/tsuku/issues/2268)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260), [#2266](https://github.com/tsukumogami/tsuku/issues/2266), [#2267](https://github.com/tsukumogami/tsuku/issues/2267)~~ | ~~testable~~ |
-| ~~_Superseded by #2281–#2297, the 17 category-sized backfill batches that decomposed the original umbrella issue._~~ | | |
+| ~~_Superseded by #2281–#2297; see `docs/plans/PLAN-curated-recipes.md` for the full decomposition into 17 category-sized batches._~~ | | |
 | ~~[#2281: feat(recipes): backfill curated recipes — security scanners](https://github.com/tsukumogami/tsuku/issues/2281)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260)~~ | ~~testable~~ |
 | ~~_Curates trivy, grype, cosign, syft, and tflint — 5 handcrafted recipes needing upstream asset re-verification and the `curated = true` flag._~~ | | |
 | ~~[#2282: feat(recipes): backfill curated recipes — Kubernetes core CLIs](https://github.com/tsukumogami/tsuku/issues/2282)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260)~~ | ~~testable~~ |
