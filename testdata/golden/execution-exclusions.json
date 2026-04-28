@@ -18,6 +18,11 @@
       "reason": "compile_from_source toolchain version drift (macOS build failures)"
     },
     {
+      "recipe": "ruby",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/2342",
+      "reason": "ruby-builder ubuntu-22.04 binary fails to start on rhel (fedora) and arch sandbox containers; binary works on debian/suse/alpine"
+    },
+    {
       "recipe": "netlify-cli",
       "issue": "https://github.com/tsukumogami/tsuku/issues/1592",
       "reason": "npm EBADPLATFORM: @rollup/rollup-android-arm-eabi declares Android-only platform"
