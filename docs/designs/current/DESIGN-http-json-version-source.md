@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   Several upstreams publish their current release version in a JSON manifest
   served over HTTPS but do not publish to GitHub releases or any of the
@@ -39,7 +39,7 @@ rationale: |
 
 ## Status
 
-Planned
+Current
 
 ## Context and Problem Statement
 
@@ -364,88 +364,51 @@ Register it alongside the other source strategies in `NewProviderFactory()`.
 
 ### Deprecated `source = "hashicorp"`
 
-The current code recognizes `source = "hashicorp"` in two validator
-allowlists (`internal/recipe/validator.go:168` and
-`internal/version/validation.go:47`) and routes it to
-`ResolveHashiCorp` at `internal/version/resolver.go:321`. The function
-is a placeholder that returns hardcoded versions for a small set of
-products and is not wired up by any recipe in tree, but external or
-in-flight recipes could be using it.
+The pre-existing `source = "hashicorp"` allowlist entries
+(`internal/recipe/validator.go` and `internal/version/validation.go`)
+and the `ResolveHashiCorp` placeholder
+(`internal/version/resolver.go`) emit a deprecation warning at both
+validate time and resolve time. The function and allowlist entries
+remain in place for one release window; the removal is tracked
+separately so external or in-flight recipes that may be using the
+legacy shorthand have time to migrate to `http_json` against the
+checkpoint API.
 
-This design deprecates rather than deletes. The deprecation lands in
-this PR and is removed in a subsequent release after the migration
-window:
-
-1. **This release (this PR):** keep `ResolveHashiCorp` and the
-   allowlist entries. Emit a deprecation warning at every call site:
-   - The validator emits a warning when it encounters
-     `source = "hashicorp"`, naming the recipe and pointing to
-     `http_json` against `https://checkpoint-api.hashicorp.com/v1/check/<product>`.
-   - `ResolveHashiCorp` itself logs the same warning at the start of
-     resolution, so users running `tsuku eval` see it in the output.
-2. **After the next tsuku release ships:** sweep in-tree recipes for
-   any that adopted `source = "hashicorp"` (none today; the existing
-   HashiCorp recipes use `github_repo`) and migrate them to
-   `source = "http_json"` against the checkpoint API. Coordinate with
-   any known external recipe authors.
-3. **A later release (tracked in a follow-up issue):** remove
-   `ResolveHashiCorp`, the two allowlist entries, and any remaining
-   tests. Add a release-notes entry describing the removal.
-
-The deprecation message should read something like:
+The deprecation warning reads:
 
 ```
-warning: [version] source = "hashicorp" is deprecated and will be
-removed in a future release. Use source = "http_json" with
+warning: source = "hashicorp" is deprecated and will be removed in a
+future release; use source = "http_json" with
 url = "https://checkpoint-api.hashicorp.com/v1/check/<product>" and
-version_path = "current_version" instead.
+version_path = "current_version" instead
 ```
 
 ## Implementation Approach
 
-The implementation lands in #2328 (whose scope expands from "gcloud
-version source" to "http_json source") in four contained slices:
+The implementation shipped in four contained slices, all within
+`internal/version/` and `internal/recipe/`:
 
-1. **Path parser and walker.**
-   - Add `internal/version/http_json_path.go` with the path-syntax
-     parser and walker.
-   - Tests in `internal/version/http_json_path_test.go` covering:
-     plain top-level, nested dotted, array index at top, array index
-     after dot, leading-dot tolerance, errors (unknown key, out-of-range
-     index, type mismatch).
+1. **Path parser and walker** — `internal/version/http_json_path.go`
+   implements the dotted+index path grammar with table-driven tests in
+   `http_json_path_test.go` covering valid syntax, invalid syntax,
+   walker success, walker errors, and leaf stringification.
 
-2. **HTTP/JSON provider.**
-   - Add `internal/version/http_json.go` with `HTTPJSONProvider` and
-     `NewHTTPJSONProvider`.
-   - Tests using `httptest.NewServer` to serve fixture manifests:
-     gcloud-shaped, HashiCorp-shaped, Adoptium-shaped (both
-     endpoints), various error cases (network failure, non-200, bad
-     JSON, path miss, oversized response).
+2. **HTTP/JSON provider** — `internal/version/http_json.go` defines
+   `HTTPJSONProvider` and `NewHTTPJSONProvider`, with tests in
+   `http_json_test.go` using `httptest.NewServer` to exercise
+   gcloud-shaped, HashiCorp-shaped, and Adoptium-shaped fixtures plus
+   the error cases (network failure, non-200, bad JSON, path miss,
+   oversized response).
 
-3. **Schema and validator.**
-   - Add `URL` and `VersionPath` fields to
-     `recipe.VersionSection` in `internal/recipe/types.go`.
-   - Add validation in `internal/recipe/validator.go`:
-     `source = "http_json"` requires both fields; `url` must start
-     with `https://`; `version_path` must parse via
-     `parseVersionPath`.
+3. **Schema and validator** — `recipe.VersionSection` gained the
+   `URL` and `VersionPath` fields in `internal/recipe/types.go`.
+   `internal/recipe/validator.go` enforces both fields when
+   `source = "http_json"`, requires HTTPS, and emits the deprecation
+   warning for `source = "hashicorp"`.
 
-4. **Wiring and consumers.**
-   - Add `HTTPJSONSourceStrategy` to
-     `internal/version/provider_factory.go`.
-   - Add deprecation warnings to the `source = "hashicorp"` path:
-     - In the validator (`internal/recipe/validator.go`,
-       `internal/version/validation.go`), emit a warning when the
-       source name is encountered.
-     - In `ResolveHashiCorp` (`internal/version/resolver.go`), log
-       the warning at resolution time.
-     - Do not remove the function or the allowlist entries in this
-       PR; that happens in a follow-up after the next release.
-   - File a follow-up issue tracking the removal of
-     `ResolveHashiCorp` and the allowlist entries, scheduled for
-     after the next tsuku release.
-   - Author `recipes/g/gcloud.toml` (closes #2328's recipe portion).
-   - Update the openjdk design (#2327) to use `http_json` + Adoptium.
+4. **Wiring and consumers** — `HTTPJSONSourceStrategy` registers in
+   `internal/version/provider_factory.go` at `PriorityKnownRegistry`.
+   `recipes/g/gcloud.toml` is the first consumer.
 
 The four slices land in a single PR for review coherence — the path
 parser, provider, schema, and at least one consumer recipe ship
@@ -516,29 +479,4 @@ together so the mechanism is exercised end-to-end.
 - `internal/version/validation.go` (deprecation warning when `source = "hashicorp"` is seen)
 - `internal/recipe/types.go` (`VersionSection.URL`, `VersionPath`)
 - `internal/recipe/validator.go` (new validation rules for `http_json`; deprecation warning for `source = "hashicorp"`)
-- `recipes/g/gcloud.toml` (new recipe, closes the gcloud portion of #2328)
-
-## Implementation Issues
-
-### Milestone: [Curated Recipe System](https://github.com/tsukumogami/tsuku/milestone/113)
-
-| Issue | Dependencies | Tier |
-|-------|--------------|------|
-| ~~[#2328: feat(version): add a version source for Google Cloud SDK to enable gcloud recipe](https://github.com/tsukumogami/tsuku/issues/2328)~~ | ~~None~~ | ~~testable~~ |
-| ~~_Expanded scope: implements the generic `http_json` version source described in this design (path parser, walker, provider, validator, recipe-factory strategy), deprecates `source = "hashicorp"` (removal tracked in #2349), and authors `recipes/g/gcloud.toml` as the first consumer._~~ | | |
-| [#2327: feat(recipes): add openjdk recipe to enable JVM tool verification](https://github.com/tsukumogami/tsuku/issues/2327) | None | testable |
-| _Authors the openjdk recipe using `http_json` against Adoptium's API. Unblocks the JVM-tool verification (maven, gradle, sbt) currently deferred from #2295._ | | |
-
-```mermaid
-graph TD
-    I2328["#2328: http_json source + gcloud recipe"]
-    I2327["#2327: openjdk recipe (Adoptium)"]
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-
-    class I2328 done
-    class I2327 ready
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
+- `recipes/g/gcloud.toml` (first consumer)
