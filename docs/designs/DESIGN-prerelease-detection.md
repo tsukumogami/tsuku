@@ -104,35 +104,152 @@ By strict SemVer, every one of these is a prerelease. By the project's own
 intent, none of them is. The filter cannot get this right without knowing
 the upstream's convention.
 
-## Goals
+## Decision Drivers
 
-1. Stop returning milestone (or other exotic) prereleases as the latest
-   stable when the upstream also publishes plain semver stables.
-2. Continue to admit upstreams whose hyphenated suffix signals stability
-   (`-RELEASE`, `-FINAL`, `-LTS`, `-GA`, `-stable`).
-3. Keep existing curated and handcrafted recipes resolving to the same
-   versions they do today, except in cases where they were silently
+The chosen approach must satisfy these requirements, in priority order:
+
+1. **Stop returning milestone (or other exotic) prereleases as the latest
+   stable** when the upstream also publishes plain semver stables. This is
+   the bug that triggered the work.
+2. **Continue to admit upstreams whose hyphenated suffix signals stability**
+   (`-RELEASE`, `-FINAL`, `-LTS`, `-GA`, `-stable`). The fix must not
+   regress the JVM ecosystem.
+3. **Keep existing curated and handcrafted recipes resolving to the same
+   versions they do today**, except in cases where they were silently
    resolving to a wrong (milestone) version that happened not to break.
-4. Avoid inventing new abstractions. Reuse the SemVer-aware
-   `splitPrerelease` already in `version_utils.go`.
+4. **Reuse the SemVer-aware `splitPrerelease` already in `version_utils.go`**.
+   The filter and the comparison logic disagree today about what a
+   prerelease is; aligning them is the right shape.
+5. **Avoid inventing new abstractions** unless the simpler fix cannot meet
+   the first four drivers.
 
-## Non-Goals
-
-- Adding a general-purpose tag-filter regex to `[version]`. That is more
-  expressive than the problem requires and shifts complexity onto recipe
-  authors who would have to design and debug regular expressions per recipe.
-  Captured as a future option in "Alternatives Considered" below.
+Out of scope (intentionally not driving the design):
+- Adding a general-purpose tag-filter regex to `[version]`. Captured as a
+  rejected option below.
 - Distinguishing "alpha < beta < rc" within prereleases. That ordering
   already lives in `comparePrereleaseIdentifiers` and is unchanged.
 - Filtering pre-releases out of `ListVersions`. The lister must continue
-  to return every tag so that explicit version pins (e.g.,
+  to return every tag so explicit pins (e.g.,
   `tsuku install gradle@9.6.0-M1`) keep working.
 
-## Decision
+## Considered Options
 
-### 1. Replace the substring filter with a SemVer-aware predicate
+### Option A: Strict SemVer with per-recipe `stable_qualifiers` field (chosen)
 
-Change `isStableVersion` to:
+Replace the substring filter with `_, pre := splitPrerelease(v); pre == ""`,
+and add an opt-in `[version] stable_qualifiers` recipe field listing
+hyphenated suffixes the upstream uses as release qualifiers.
+
+- Pro: Aligns the filter with the comparison logic. Catches every exotic
+  prerelease format by construction. Recipe authors document upstream
+  convention where it belongs (in the recipe).
+- Pro: Per-recipe scope reflects empirical reality — tagging conventions
+  vary across upstreams but are stable within a single repository.
+- Con: Requires an audit of existing recipes whose upstream tags use
+  hyphen-suffixed stables before flipping the default to strict.
+- Con: New recipe authors must check upstream convention. Small ask
+  (`git ls-remote --tags` plus a glance), but one extra step.
+
+### Option B: Extend the keyword blocklist
+
+Add `milestone` to the substring list and a regex matching `^m\d+$`
+against the prerelease component. Keep everything else unchanged.
+
+- Pro: Smallest possible change. Zero risk to existing recipes.
+- Con: Whack-a-mole. The next exotic prerelease format from another
+  ecosystem brings us back to this issue. The substring approach is
+  the underlying flaw.
+
+### Option C: Strict SemVer with a global stable-qualifier allowlist
+
+Hardcode `["release", "final", "lts", "ga", "stable"]` into the provider
+as universally-admitted prerelease components.
+
+- Pro: No per-recipe configuration; existing recipes that depend on
+  RELEASE-suffixed tags keep working without changes.
+- Con: A global list risks both false positives (admitting a prerelease
+  the upstream actually intends as unstable) and false negatives (missing
+  a project-specific qualifier we did not anticipate). Tagging
+  conventions vary across upstreams; a global list cannot get every
+  upstream right.
+
+### Option D: Per-recipe regex tag filter
+
+Add `[version] tag_filter = "regex"` that admits only matching tags.
+
+- Pro: Maximally expressive. Handles cases the allowlist cannot.
+- Con: More general than the problem requires. Recipe authors must design
+  and debug a regex per recipe, and the regex must handle prefix-stripped
+  vs raw tags, escape semantics, etc. Higher cost per recipe and per
+  reviewer.
+
+### Option E: Use the GitHub releases API's `prerelease` flag
+
+The `releases` API exposes a `prerelease: bool` annotation that respects
+the upstream's intent.
+
+- Pro: Authoritative when available — the upstream tells us directly.
+- Con: Only works when the upstream uses the GitHub releases UI
+  consistently. Many repos use git tags without GitHub releases (the
+  existing `Resolver.resolveFromTags` fallback exists for exactly this
+  case), and in that path no `prerelease` flag is available. Cannot be
+  the primary mechanism without losing coverage.
+
+## Decision Outcome
+
+Chose **Option A: Strict SemVer with per-recipe `stable_qualifiers` field**.
+
+Option A satisfies all five decision drivers. The strict SemVer baseline
+catches the immediate gradle/sbt bug and every future exotic prerelease
+format by construction (driver 1). The per-recipe override admits the JVM
+RELEASE/FINAL-style conventions without globally weakening the filter
+(driver 2). The audit step protects existing recipes from regression
+(driver 3). Reusing `splitPrerelease` reuses an existing primitive
+(driver 4). A single new recipe field is minimal new abstraction (driver 5).
+
+Option B was rejected because it does not address driver 1 generally —
+the next exotic prerelease format requires another keyword addition.
+Option C was rejected because the user observed that tagging conventions
+vary across upstreams but are stable within a repository, which makes
+per-recipe configuration the correct abstraction. Option D was rejected
+as more general than needed. Option E was rejected because it does not
+work uniformly across the tags and releases code paths.
+
+## Solution Architecture
+
+The solution lives entirely in the version-resolution layer of tsuku. No
+runtime, executor, or recipe-action changes are involved.
+
+### New recipe field
+
+`recipe.VersionSection` gains an optional field:
+
+```go
+StableQualifiers []string `toml:"stable_qualifiers"`
+```
+
+Recipes whose upstream uses hyphen-suffixed stable qualifiers list them
+explicitly:
+
+```toml
+[version]
+github_repo = "spring-projects/spring-framework"
+tag_prefix = "v"
+stable_qualifiers = ["release"]
+```
+
+```toml
+[version]
+github_repo = "hibernate/hibernate-orm"
+stable_qualifiers = ["final", "ga"]
+```
+
+The default is empty (`StableQualifiers = nil` or `[]`), meaning strict
+SemVer: any hyphenated suffix is a prerelease.
+
+### Updated filter predicate
+
+`isStableVersion` in `internal/version/provider_github.go` becomes:
 
 ```go
 func isStableVersion(version string, stableQualifiers map[string]bool) bool {
@@ -144,44 +261,113 @@ func isStableVersion(version string, stableQualifiers map[string]bool) bool {
 }
 ```
 
-The function gains a `stableQualifiers` parameter sourced from the recipe.
-Default (empty map) means "strict SemVer: any prerelease is unstable."
+The `stableQualifiers` map is constructed once at provider construction
+time from the recipe's `StableQualifiers` slice (lowercased keys).
 
-### 2. Add `[version] stable_qualifiers` recipe field
+### Threading the field through the providers
 
-Extend `recipe.VersionSection` with:
-
-```go
-StableQualifiers []string `toml:"stable_qualifiers"`
-```
-
-The field is a list of lowercase prerelease identifiers that the upstream
-uses as stable release qualifiers. Recipe example:
-
-```toml
-[version]
-github_repo = "spring-projects/spring-framework"
-tag_prefix = "v"
-stable_qualifiers = ["release"]
-```
-
-The provider builds the `map[string]bool` from this slice once at
-construction time and passes it into `isStableVersion`.
-
-### 3. Apply the same change to the Fossil provider
+`NewGitHubProvider` and `NewGitHubProviderWithPrefix` gain a
+`stableQualifiers []string` argument. The provider stores the lowercased
+set as a `map[string]bool` and passes it into `isStableVersion`.
 
 `internal/version/fossil_provider.go` calls `isStableVersion(v)` in
-`ResolveLatest` (the only other caller). Update the signature consistently
-so the Fossil provider receives the same `stableQualifiers` map plumbed
-through from the recipe.
+`ResolveLatest` (the only other caller in the codebase). Update the
+signature consistently and thread the recipe's
+`StableQualifiers` through the Fossil provider as well.
 
-### 4. Audit existing recipes before flipping the default
+`internal/version/provider_factory.go` reads
+`recipe.VersionSection.StableQualifiers` and passes it into the provider
+constructors.
 
-`git grep -l 'github_repo' recipes/ internal/recipe/recipes/` produces the
-candidate list. For each, check whether the upstream's latest stable is
-plain semver (no change needed) or hyphen-suffixed (add
-`stable_qualifiers`). Realistically the second category is small and
-likely does not include any currently-curated recipe.
+### Composition with the comparison logic
+
+The comparison logic (`comparePrereleases` in `version_utils.go`) is
+unchanged. It already ranks plain semver above any hyphenated version. So:
+
+- When upstream tags both `1.0.0` and `1.0.0-RELEASE`, plain wins
+  (correct: `comparePrereleases` ranks empty prerelease above any
+  non-empty prerelease).
+- When upstream tags only `1.0.0-RELEASE`, `2.0.0-RELEASE`,
+  `3.0.0-RELEASE`, the qualifier-admitted family sorts among itself
+  correctly (`compareCoreParts` ranks `3.0.0` highest, so
+  `3.0.0-RELEASE` wins).
+
+### What is explicitly out of scope
+
+- **Compound prerelease suffixes** like `1.0.0-final.1` or
+  `1.0.0-RELEASE-hotfix`. The qualifier match is exact; compound forms
+  are rejected. If a real upstream needs this, the recipe author can pin
+  manually until we add a richer mechanism.
+- **Case-and-space variations** like `Final-1` or `release_1`. Same
+  answer.
+
+## Implementation Approach
+
+The implementation lands in #2325 in three contained slices:
+
+1. **Schema and provider plumbing.**
+   - Add `StableQualifiers []string` to `recipe.VersionSection` in
+     `internal/recipe/types.go`. No validator changes required — the
+     strict-validate path already enforces typed recipe fields, and an
+     optional list with no constraint passes through.
+   - Update `NewGitHubProvider`, `NewGitHubProviderWithPrefix`, and the
+     Fossil provider constructors to accept `stableQualifiers []string`,
+     storing it as a `map[string]bool` keyed by the lowercased
+     qualifier.
+   - Update `internal/version/provider_factory.go` to read the field
+     from the recipe and pass it through.
+2. **Filter logic.**
+   - Replace the body of `isStableVersion` with the SemVer-aware
+     predicate above.
+   - Add a new `internal/version/provider_github_test.go` (existing
+     tests for this file are sparse). Table-driven cases covering:
+     plain semver, alpha/beta/rc, milestone (`-M1`, `-M2`), each stable
+     qualifier (`release`, `final`, `lts`, `ga`, `stable`), build
+     metadata after `+`, mixed qualifier and prerelease in different
+     case orderings, and the existing keywords (which should still be
+     rejected through the prerelease check, since the keyword test is
+     no longer needed but the prerelease test catches them).
+3. **Audit and recipe updates.**
+   - Run `git grep -l 'github_repo' recipes/ internal/recipe/recipes/`.
+   - For each recipe, inspect upstream tags via
+     `git ls-remote --tags <repo> | tail -50` (or the GitHub API) to
+     check for hyphen-suffixed stable releases.
+   - Recipes whose upstream uses hyphen-suffixed stables receive a
+     `stable_qualifiers = [...]` line in the same PR as the filter
+     change.
+   - The PR description explicitly lists the audit results so reviewers
+     can flag any miss.
+
+The three slices land in a single PR because the filter change without
+the audit risks regression and the recipe updates without the schema
+change do not parse.
+
+## Security Considerations
+
+This change is confined to the version-resolution layer and operates on
+data that already flows through tsuku at install time:
+
+- **No new external attack surface.** The version provider already fetches
+  tags and releases from GitHub via authenticated or anonymous API calls
+  with established error handling. The change reads the same data and
+  applies a different in-memory predicate; no new endpoints, no new
+  credential paths.
+- **No new code-execution paths.** `isStableVersion` is a pure function on
+  string input. Adding the `stableQualifiers` map does not introduce
+  reflection, dynamic loading, or shell-out behavior.
+- **Recipe field is data, not code.** `stable_qualifiers` is a list of
+  lowercase strings used only as map keys. There is no regex or template
+  evaluation; an attacker who controls a recipe cannot use the field to
+  affect any other code path. The field is also checked by the
+  strict-validate path before any plan is generated.
+- **No version-resolution regression that could install untrusted
+  binaries.** The change tightens the filter (admits fewer versions by
+  default) rather than loosening it. The qualifier opt-in only re-admits
+  versions the upstream itself published with a stable-signaling
+  hyphen-suffix, and the recipe author who wrote the field has reviewed
+  the upstream's tagging convention. Pinning behavior
+  (`tsuku install <tool>@<version>`) is unaffected because the lister
+  continues to return every tag.
 
 ## Consequences
 
@@ -199,91 +385,29 @@ likely does not include any currently-curated recipe.
 - Tests gain a clear pinning surface: each behavior is exercised by a
   small input, not by a substring trick.
 
-### Negative / Risks
+### Negative
 
 - **Behavior change for existing recipes whose upstream tags use
-  hyphen-suffixed stables.** Mitigation: audit + add `stable_qualifiers`
-  to those recipes in the same PR. The PR description should call out
-  the audit explicitly so reviewers can flag any miss.
+  hyphen-suffixed stables.** Mitigation: the audit step in the
+  Implementation Approach catches these, and the same PR adds the
+  `stable_qualifiers` field to each affected recipe.
 - **Recipe authors of new tools must know the upstream's tagging
-  convention.** This is a small ask — `git ls-remote --tags` plus a
-  glance is enough — but it is one extra step.
-- The change touches a stable, well-exercised code path. We should add
-  table-driven tests for `isStableVersion` covering: plain semver,
-  alpha/beta/rc, milestone (`-M1`, `-M2`, with and without numeric
-  suffix), each stable qualifier (`release`, `final`, `lts`, `ga`,
-  `stable`), build metadata after `+`, and the existing keywords (since
-  they are no longer special-cased — they should still be rejected
-  through the prerelease check, but the test pins that behavior).
+  convention.** This is a small ask but it is one extra step in the
+  recipe-authoring flow. We should document it in the recipe-author
+  skill.
+- The change touches a stable, well-exercised code path. We must add
+  the table-driven tests described in the Implementation Approach to
+  pin behavior before flipping the default.
 
-## Alternatives Considered
-
-### A. Extend the keyword blocklist
-
-Add `milestone` and a regex matching `^m\d+$` against the prerelease
-component. Rejected: whack-a-mole. The next exotic prerelease format from
-another ecosystem brings us back to this issue.
-
-### B. Strict SemVer with a global allowlist
-
-Hardcode `["release", "final", "lts", "ga", "stable"]` into the provider.
-Rejected: the user pointed out that tagging conventions vary across
-repositories but are stable within a repository. A global allowlist
-risks both false positives (admitting a prerelease the upstream actually
-intends as unstable) and false negatives (missing a project-specific
-qualifier we did not anticipate). The cost of per-recipe configuration
-is one extra line in the recipes that need it.
-
-### C. Per-recipe regex tag filter
-
-Add `[version] tag_filter = "regex"` that admits only matching tags.
-Rejected for now: more general but more complex. The regex would need
-to handle prefix-stripped vs raw tags, escape semantics, and recipe
-authors would have to design and debug a regex per recipe. We can
-revisit if the `stable_qualifiers` field proves insufficient.
-
-### D. Use the GitHub releases API's `prerelease` flag
-
-The `releases` API exposes a `prerelease: bool` annotation that respects
-the upstream's intent. Rejected as a primary mechanism: it only works
-when the upstream uses the GitHub releases UI consistently and tags
-both releases and pre-releases through it. Many repos use git tags
-without GitHub releases (the existing
-`Resolver.resolveFromTags` fallback exists for exactly this case), and
-in that path no `prerelease` flag is available. The proposed solution
-works uniformly across the tags and releases code paths.
-
-## Implementation Notes
-
-- The signature change to `isStableVersion` is internal; no exported API
-  changes.
-- `provider_github.go:NewGitHubProvider` and `NewGitHubProviderWithPrefix`
-  gain a `stableQualifiers []string` argument, populated from
-  `recipe.VersionSection.StableQualifiers`.
-- The `provider_factory.go` constructor for the GitHub strategy threads
-  the field through.
-- Tests live in a new `internal/version/provider_github_test.go` (the
-  existing tests for this file are sparse) and exercise the
-  `isStableVersion` predicate directly with the table cases listed above.
-- Validation: `tsuku validate --strict` already enforces typed recipe
-  fields; adding `StableQualifiers` extends the schema with no special
-  validator work.
-
-## Open Questions
-
-None at this time. The audit in step 4 may surface recipes that need
-the new field; if any of those recipes are currently curated, the audit
-should be completed before this design moves to "Accepted" so the same
-PR can land both the filter change and the recipe updates.
-
-## Affected Components
+### Affected Components
 
 - `internal/version/provider_github.go` (filter and providers)
 - `internal/version/fossil_provider.go` (parallel filter)
 - `internal/recipe/types.go` (`VersionSection.StableQualifiers`)
 - `internal/version/provider_factory.go` (threading the field)
 - Recipes whose upstream uses hyphen-suffixed stable qualifiers (audit)
+- Recipe-author skill documentation (one-line note about the new field)
 
-## Implementation Issue
+### Implementation Issue
 
 This design is implemented by [#2325](https://github.com/tsukumogami/tsuku/issues/2325).
