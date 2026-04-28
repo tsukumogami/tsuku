@@ -4,7 +4,7 @@ status: Active
 execution_mode: multi-pr
 upstream: docs/designs/DESIGN-curated-recipes.md
 milestone: "Curated Recipe System"
-issue_count: 28
+issue_count: 37
 ---
 
 ## Status
@@ -83,43 +83,91 @@ Introduce a `curated = true` flag for handcrafted recipes, nightly cross-platfor
 | ~~_Curates the existing `libnghttp3` recipe (the homebrew formula is `libnghttp3`, not `nghttp3`) and exposes `libnghttp3.9.dylib` for curl, and rewrites `utf8proc` from batch garbage (tmux). libevent is deferred to #2333 (the homebrew bottle resolver does not yet understand revision-suffixed manifests), and pcre2 is deferred to #2335 (touching the recipe surfaced pre-existing rhel and alpine sandbox failures that need investigation alongside the macOS dylib expansion). Both deferred recipes keep their existing `unsupported_platforms` and uncurated state._~~ | | |
 | ~~[#2313: feat(recipes): add macOS support to curl, wget, tmux, and git recipes](https://github.com/tsukumogami/tsuku/issues/2313)~~ | ~~[#2312](https://github.com/tsukumogami/tsuku/issues/2312)~~ | ~~testable~~ |
 | ~~_Adds a darwin homebrew step to `wget` and extends `gettext` to install `libintl.8.dylib` so the wget bottle's `@rpath` resolves. curl, tmux, and git are deferred: curl to #2338 (a rhel-only sandbox verify failure surfaces when the recipe is touched, similar in shape to the pcre2 rhel issue from #2335), tmux to #2336 against #2333 (libevent macOS), and git to #2336 against #2335 (pcre2 macOS)._~~ | | |
-| [#2315: feat(recipes): curate rbenv recipe with working cross-platform installation](https://github.com/tsukumogami/tsuku/issues/2315) | [#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260) | testable |
-| _Promotes `recipes/r/rbenv.toml` to `curated = true`. The recipe was authored in #2287 but could not be curated because Homebrew bottles for rbenv 1.3.2 are unavailable on Sonoma and Linux. Needs a working installation path for all declared platforms._ | | |
+| ~~[#2315: feat(recipes): curate rbenv recipe with working cross-platform installation](https://github.com/tsukumogami/tsuku/issues/2315)~~ | ~~[#2259](https://github.com/tsukumogami/tsuku/issues/2259), [#2260](https://github.com/tsukumogami/tsuku/issues/2260)~~ | ~~testable~~ |
+| ~~_Authors `recipes/r/rbenv.toml` from scratch using `download` + `extract` + `install_binaries` against the GitHub source tarball. Upstream publishes only source archives (no release assets) and the homebrew bottle is tagged `all` (a single platform-agnostic blob), neither of which the existing `github_archive` or `homebrew` actions handle. Scoped to glibc only via `supported_libc` because Alpine does not ship bash by default._~~ | | |
+
+### Wave 4: Follow-ups from milestone work
+
+These issues capture infrastructure and recipe gaps surfaced while authoring the Wave 3 backfill batches. They were not part of the original plan but are the natural next steps to land the deferred recipes (libevent darwin, pcre2 macOS dylibs, gcloud, gradle, sbt, maven, ansible, azure-cli, bazel, curl macOS, tmux macOS, git macOS).
+
+| Issue | Dependencies | Complexity |
+|-------|--------------|------------|
+| [#2325: fix(version): treat -Mn milestone tags as pre-releases in GitHub provider](https://github.com/tsukumogami/tsuku/issues/2325) | None | testable |
+| _The github version provider's `isStableVersion` substring filter does not catch milestone tags like `v9.6.0-M1` (gradle) or `v2.0.0-M5` (sbt), so `tsuku eval` resolves to a non-existent download URL. Blocks gradle and sbt curation._ | | |
+| [#2327: feat(recipes): add openjdk recipe to enable JVM tool verification](https://github.com/tsukumogami/tsuku/issues/2327) | None | testable |
+| _Sandbox containers do not bundle a JDK and the registry has no `openjdk` recipe to declare as a dependency. JVM tools (maven, gradle, sbt) install successfully but fail verify because `mvn --version` etc. need a JVM at runtime._ | | |
+| [#2328: feat(version): add a version source for Google Cloud SDK to enable gcloud recipe](https://github.com/tsukumogami/tsuku/issues/2328) | None | testable |
+| _Google Cloud SDK has no GitHub releases; tsuku has no version provider for Google's distribution channel (`https://dl.google.com/dl/cloudsdk/channels/rapid/components-2.json`). Decision needed: add a custom `gcloud_dist` source or use the unofficial `twistedpair/google-cloud-sdk` mirror._ | | |
+| [#2330: feat(recipes): author a working curated bazel recipe](https://github.com/tsukumogami/tsuku/issues/2330) | None | testable |
+| _The bare `bazel-{version}-{os}-{arch}` binary self-extracts an embedded JDK and spawns a long-lived server on first run; verify exits non-zero on glibc Linux (~55s) and macOS (~3s) in the sandbox. Needs an installer-script or Homebrew approach._ | | |
+| [#2331: feat(recipes): allow pipx_install recipes to pin a PyPI version constraint](https://github.com/tsukumogami/tsuku/issues/2331) | None | testable |
+| _pipx_install always picks the latest pypi version, but tsuku's bundled python-standalone is CPython 3.10. ansible-core 2.20 requires Python >= 3.12 and azure-cli's transitive deps fail on 3.10. Blocks ansible and azure-cli curation._ | | |
+| [#2333: fix(homebrew): resolve revision-suffixed bottles so libevent darwin can be installed](https://github.com/tsukumogami/tsuku/issues/2333) | None | testable |
+| _tsuku's homebrew bottle resolver looks up the GHCR manifest at `/manifests/{version}` and matches `ref.name == {version}.{platform_tag}`, but libevent's manifest entries are tagged with the revision-suffixed version (`2.1.12_1.arm64_sonoma`) because the formula declares `revision: 1`. Blocks libevent darwin (and therefore tmux darwin)._ | | |
+| [#2335: fix(recipes): curate pcre2 with macOS dylib outputs and fix rhel + alpine sandbox failures](https://github.com/tsukumogami/tsuku/issues/2335) | None | testable |
+| _pcre2 fails on RHEL glibc and Alpine musl (`install_exit_code = 0`, `passed = false`). Touching the recipe to add macOS dylib outputs surfaces the failures. The `libpcre2-8.0.dylib` expansion and the RHEL/Alpine investigation belong together. Blocks git darwin._ | | |
+| [#2336: feat(recipes): add macOS support to tmux and git recipes](https://github.com/tsukumogami/tsuku/issues/2336) | [#2333](https://github.com/tsukumogami/tsuku/issues/2333), [#2335](https://github.com/tsukumogami/tsuku/issues/2335) | testable |
+| _Once libevent and pcre2 macOS support land, drop `supported_os = ["linux"]` from `recipes/t/tmux.toml` and `recipes/g/git.toml` and add darwin homebrew steps wired to the right `runtime_dependencies`. Same shape as the curl and wget changes in #2337._ | | |
+| [#2338: fix(recipes): add macOS support to curl and resolve rhel sandbox verify failure](https://github.com/tsukumogami/tsuku/issues/2338) | None | testable |
+| _A first attempt at the curl darwin step (subsequently reverted) cleared eval and macOS install but surfaced a rhel-only sandbox verify failure on Linux: install completes (`install_exit_code = 0`) but `passed = false`. Same shape as the pcre2 rhel issue. Needs local reproduction since the workflow does not upload `.log-*.txt` artifacts._ | | |
 
 ## Dependency Graph
 
 ```mermaid
 graph TD
-    I2259["#2259: curated flag + CI infrastructure"]
-    I2260["#2260: top-100 priority list"]
-    I2261["#2261: claude + gemini-cli recipes"]
-    I2262["#2262: cross-platform kubectl"]
-    I2263["#2263: cross-platform helm"]
-    I2264["#2264: bat + starship + neovim"]
-    I2265["#2265: node.js recipe"]
-    I2266["#2266: backfill — cloud CLIs + build tools"]
-    I2267["#2267: backfill — modern CLIs + AI tools"]
-    I2268["#2268: superseded by #2281–#2297"]
-    I2281["#2281: security scanners"]
-    I2282["#2282: K8s core CLIs"]
-    I2283["#2283: K8s ecosystem"]
-    I2284["#2284: HashiCorp + infra"]
-    I2285["#2285: terminal UI / TUI"]
-    I2286["#2286: shell utilities"]
-    I2287["#2287: env/version managers"]
-    I2288["#2288: JS/Node ecosystem"]
-    I2289["#2289: Go/shell linters"]
-    I2290["#2290: Python/JS formatters"]
-    I2291["#2291: crypto + certs"]
-    I2292["#2292: CI/CD automation"]
-    I2293["#2293: container + image tools"]
-    I2294["#2294: language runtimes"]
-    I2295["#2295: C++/JVM build tools"]
-    I2296["#2296: cloud CLIs + orchestration"]
-    I2297["#2297: IaC quality + policy"]
-    I2312["#2312: macOS dylib deps (nghttp3, libevent, utf8proc, pcre2)"]
-    I2313["#2313: macOS support for curl, wget, tmux, git"]
-    I2315["#2315: curate rbenv recipe"]
+    subgraph wave0 ["Wave 0: Foundation"]
+        I2259["#2259: curated flag + CI infrastructure"]
+        I2260["#2260: top-100 priority list"]
+    end
+
+    subgraph wave1 ["Wave 1: Initial handcrafted recipes"]
+        I2261["#2261: claude + gemini-cli"]
+        I2262["#2262: cross-platform kubectl"]
+        I2263["#2263: cross-platform helm"]
+        I2264["#2264: bat + starship + neovim"]
+        I2265["#2265: node.js recipe"]
+    end
+
+    subgraph wave2 ["Wave 2: First backfill round"]
+        I2266["#2266: cloud CLIs + build tools"]
+        I2267["#2267: modern CLIs + AI tools"]
+    end
+
+    subgraph wave3 ["Wave 3: Category backfill batches"]
+        I2268["#2268: superseded by #2281–#2297"]
+        I2281["#2281: security scanners"]
+        I2282["#2282: K8s core CLIs"]
+        I2283["#2283: K8s ecosystem"]
+        I2284["#2284: HashiCorp + infra"]
+        I2285["#2285: terminal UI / TUI"]
+        I2286["#2286: shell utilities"]
+        I2287["#2287: env/version managers"]
+        I2288["#2288: JS/Node ecosystem"]
+        I2289["#2289: Go/shell linters"]
+        I2290["#2290: Python/JS formatters"]
+        I2291["#2291: crypto + certs"]
+        I2292["#2292: CI/CD automation"]
+        I2293["#2293: container + image tools"]
+        I2294["#2294: language runtimes"]
+        I2295["#2295: C++/JVM build tools"]
+        I2296["#2296: cloud CLIs + orchestration"]
+        I2297["#2297: IaC quality + policy"]
+        I2312["#2312: macOS dylib deps (libnghttp3, utf8proc; libevent + pcre2 deferred)"]
+        I2313["#2313: macOS support for wget; curl/tmux/git deferred"]
+        I2315["#2315: curate rbenv recipe"]
+    end
+
+    subgraph wave4 ["Wave 4: Follow-ups from milestone work"]
+        I2325["#2325: -Mn milestone tags in github provider"]
+        I2327["#2327: openjdk recipe for JVM verify"]
+        I2328["#2328: gcloud version source"]
+        I2330["#2330: working bazel recipe"]
+        I2331["#2331: pipx PyPI version constraint"]
+        I2333["#2333: revision-suffixed homebrew bottles (libevent darwin)"]
+        I2335["#2335: pcre2 macOS dylibs + rhel/alpine fixes"]
+        I2336["#2336: tmux + git macOS support"]
+        I2338["#2338: curl macOS + rhel sandbox failure"]
+    end
 
     I2259 --> I2261
     I2259 --> I2262
@@ -168,6 +216,9 @@ graph TD
     I2259 --> I2315
     I2260 --> I2315
 
+    I2333 --> I2336
+    I2335 --> I2336
+
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
@@ -178,23 +229,30 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2259,I2260,I2261,I2262,I2263,I2264,I2265,I2266,I2267,I2268,I2281,I2282,I2283,I2284,I2285,I2286,I2287,I2288,I2289,I2290,I2291,I2292,I2293,I2294,I2295,I2296,I2297,I2312,I2313 done
-    class I2315 ready
+    class I2259,I2260,I2261,I2262,I2263,I2264,I2265,I2266,I2267,I2268,I2281,I2282,I2283,I2284,I2285,I2286,I2287,I2288,I2289,I2290,I2291,I2292,I2293,I2294,I2295,I2296,I2297,I2312,I2313,I2315 done
+    class I2325,I2327,I2328,I2330,I2331,I2333,I2335,I2338 ready
+    class I2336 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan
 
 ## Implementation Sequence
 
-**Critical path**: #2259 → #2260 → Wave 3 backfill batches (#2281–#2297)
+**Critical path**: #2259 → #2260 → Wave 3 backfill batches → Wave 4 follow-ups for the recipes deferred during Wave 3.
 
 | Wave | Issues | Start condition |
 |------|--------|----------------|
 | Wave 0 | #2259, #2260 | Immediately — no prerequisites |
 | Wave 1 | #2261, #2262, #2263, #2264, #2265 | After #2259 merges |
 | Wave 2 | #2266, #2267 | After both #2259 and #2260 merge |
-| Wave 3 | #2281–#2297 (17 backfill batches) | After #2259 and #2260 merge |
+| Wave 3 | #2281–#2297, #2312, #2313, #2315 (20 backfill batches) | After #2259 and #2260 merge |
+| Wave 4 | #2325, #2327, #2328, #2330, #2331, #2333, #2335, #2336, #2338 | After Wave 3 surfaces the gap each issue captures |
 
-Wave 3 issues are fully independent of each other; any can be picked up in any order and worked in parallel. Each batch is scoped to a coherent tool category and ships as a single PR.
+Wave 3 issues were fully independent of each other; each batch was scoped to a coherent tool category and shipped as a single PR.
 
-**Priority within Wave 3**: lead with the "handcrafted-only" batches (#2281 security scanners, #2282 K8s CLIs) since those are low-risk validation plus flag additions. The "new recipe" heavy batches (#2294 language runtimes, #2295 build tools, #2296 cloud CLIs) require more research time per tool.
+**Wave 4 priority**: most issues are independent and can be worked in parallel. The exceptions:
+
+- **#2336 (tmux + git macOS)** is hard-blocked by #2333 (libevent darwin) and #2335 (pcre2 macOS dylibs).
+- **#2335 and #2338** share the same RHEL sandbox failure shape (install completes with `exit 0`, verify exits non-zero with no log artifact). Investigating one will likely produce the diagnostic capability needed for the other; consider taking them together.
+- **#2325, #2327, #2331** unblock recipe authoring rather than fixing existing recipes. After each lands, the corresponding recipes can be authored as small follow-up PRs (gradle/sbt for #2325, maven and any other JVM tool for #2327, ansible/azure-cli for #2331).
+- **#2330 (bazel)** depends on #2327 if the chosen approach uses the `bazel_nojdk-*` asset; otherwise independent.
