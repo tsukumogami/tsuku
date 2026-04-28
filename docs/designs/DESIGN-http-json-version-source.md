@@ -496,8 +496,10 @@ graph TD
     I2328 --> I2327
 
     classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
 
-    class I2328,I2327 ready
+    class I2328 ready
+    class I2327 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
