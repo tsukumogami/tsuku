@@ -13,25 +13,27 @@ problem: |
 decision: |
   Replace the substring keyword filter with a SemVer-aware definition: any
   version whose `splitPrerelease` yields a non-empty prerelease component is
-  unstable, with one exception. Add an opt-in `[version] stable_qualifiers`
-  recipe field that names hyphenated suffixes which the upstream uses as
-  release qualifiers rather than prereleases. The default is empty
-  (= strict SemVer); recipes whose upstream uses RELEASE/FINAL-style
-  conventions opt in by listing those qualifiers explicitly. The change is
-  scoped to the GitHub provider's filter and to the parallel filter in the
-  Fossil provider; the comparison logic in `version_utils.go` is unchanged.
+  unstable, except when the prerelease component matches a known
+  stable-release qualifier. Ship a default qualifier list of `["release",
+  "final", "lts", "ga", "stable"]` so the common JVM-ecosystem conventions
+  Just Work. Recipes whose upstream uses an exotic qualifier override the
+  default with a `[version] stable_qualifiers = [...]` field (replace
+  semantic, not append). The change is scoped to the GitHub provider's
+  filter and to the parallel filter in the Fossil provider; the comparison
+  logic in `version_utils.go` is unchanged.
 rationale: |
   The filter and the comparison logic disagree today about what counts as a
   prerelease. The comparison logic uses `splitPrerelease`, which is the
   SemVer-correct definition. The filter uses substring matching, which is a
   weaker heuristic that misses milestone tags. Aligning the filter with the
-  comparison logic eliminates the underlying mismatch without inventing a new
-  abstraction. Per-recipe opt-in for stable qualifiers reflects the empirical
-  reality that tagging conventions vary across upstreams but are stable within
-  a single repository, and lets the recipe author encode their upstream's
-  convention in the same place they encode the version source. A small global
-  default allowlist was considered and rejected as needlessly impositional —
-  the few projects that use these qualifiers can declare them once.
+  comparison logic eliminates the underlying mismatch without inventing a
+  new abstraction. The default qualifier list reflects the empirical
+  observation that a small set of suffixes (`RELEASE`, `FINAL`, `LTS`,
+  `GA`, `stable`) are universally used to *signal stability*, never the
+  opposite — admitting them by default reduces the audit and per-recipe
+  configuration burden without any realistic false-positive risk. The
+  per-recipe override exists for upstreams whose convention is genuinely
+  exotic and is rarely needed.
 ---
 
 # DESIGN: Prerelease Detection in Version Providers
@@ -134,21 +136,28 @@ Out of scope (intentionally not driving the design):
 
 ## Considered Options
 
-### Option A: Strict SemVer with per-recipe `stable_qualifiers` field (chosen)
+### Option A: Strict SemVer with default stable-qualifier list and per-recipe override (chosen)
 
-Replace the substring filter with `_, pre := splitPrerelease(v); pre == ""`,
-and add an opt-in `[version] stable_qualifiers` recipe field listing
-hyphenated suffixes the upstream uses as release qualifiers.
+Replace the substring filter with `_, pre := splitPrerelease(v); pre ==
+"" || stableQualifiers[lower(pre)]`. Ship a default qualifier list of
+`["release", "final", "lts", "ga", "stable"]` so common JVM-ecosystem
+conventions Just Work. Recipes whose upstream uses an exotic qualifier
+override the default with a `[version] stable_qualifiers = [...]` field
+(replace semantic, not append).
 
 - Pro: Aligns the filter with the comparison logic. Catches every exotic
-  prerelease format by construction. Recipe authors document upstream
-  convention where it belongs (in the recipe).
-- Pro: Per-recipe scope reflects empirical reality — tagging conventions
-  vary across upstreams but are stable within a single repository.
-- Con: Requires an audit of existing recipes whose upstream tags use
-  hyphen-suffixed stables before flipping the default to strict.
-- Con: New recipe authors must check upstream convention. Small ask
-  (`git ls-remote --tags` plus a glance), but one extra step.
+  prerelease format by construction.
+- Pro: The default list covers the universally-used "this is the
+  release" qualifiers. Most recipes need no change at all; the audit
+  becomes "find recipes whose upstream uses an *unusual* qualifier,"
+  which is rare.
+- Pro: When an override is needed, the recipe encodes upstream
+  convention in the same place it encodes the version source.
+- Con: Adds a small surface to the schema (one optional list field).
+- Con: A future upstream could in theory tag `X.Y.Z-RELEASE` as a
+  *prerelease*; if that happens, the recipe author overrides with a
+  smaller `stable_qualifiers` list. Realistic risk is essentially zero
+  since `RELEASE` etc. mean "this is the release" by convention.
 
 ### Option B: Extend the keyword blocklist
 
@@ -160,18 +169,21 @@ against the prerelease component. Keep everything else unchanged.
   ecosystem brings us back to this issue. The substring approach is
   the underlying flaw.
 
-### Option C: Strict SemVer with a global stable-qualifier allowlist
+### Option C: Strict SemVer with no default qualifiers, per-recipe opt-in only
 
-Hardcode `["release", "final", "lts", "ga", "stable"]` into the provider
-as universally-admitted prerelease components.
+Replace the filter with strict SemVer (any prerelease is unstable) and
+require recipes whose upstream uses RELEASE/FINAL-style conventions to
+opt in via `stable_qualifiers`. No defaults shipped.
 
-- Pro: No per-recipe configuration; existing recipes that depend on
-  RELEASE-suffixed tags keep working without changes.
-- Con: A global list risks both false positives (admitting a prerelease
-  the upstream actually intends as unstable) and false negatives (missing
-  a project-specific qualifier we did not anticipate). Tagging
-  conventions vary across upstreams; a global list cannot get every
-  upstream right.
+- Pro: Most conservative; nothing is admitted unless a recipe author
+  explicitly says so.
+- Con: Every recipe whose upstream uses a hyphen-suffixed stable
+  qualifier — Spring, Hibernate, several Apache projects — needs an
+  explicit field. The audit step becomes onerous and easy to miss.
+- Con: The convention set (RELEASE/FINAL/LTS/GA/stable) is
+  well-established across many upstreams. Forcing every recipe to
+  opt in repeats boilerplate without buying any safety, given the
+  universal English meaning of these qualifiers.
 
 ### Option D: Per-recipe regex tag filter
 
@@ -197,28 +209,47 @@ the upstream's intent.
 
 ## Decision Outcome
 
-Chose **Option A: Strict SemVer with per-recipe `stable_qualifiers` field**.
+Chose **Option A: Strict SemVer with default stable-qualifier list and per-recipe override**.
 
 Option A satisfies all five decision drivers. The strict SemVer baseline
 catches the immediate gradle/sbt bug and every future exotic prerelease
-format by construction (driver 1). The per-recipe override admits the JVM
-RELEASE/FINAL-style conventions without globally weakening the filter
-(driver 2). The audit step protects existing recipes from regression
-(driver 3). Reusing `splitPrerelease` reuses an existing primitive
-(driver 4). A single new recipe field is minimal new abstraction (driver 5).
+format by construction (driver 1). The default qualifier list admits the
+universal "this is the release" suffixes without per-recipe boilerplate
+(driver 2). The default-plus-override shape lets existing recipes resolve
+to the same versions they do today, with the audit narrowing to the
+unusual cases (driver 3). Reusing `splitPrerelease` reuses an existing
+primitive (driver 4). A single optional list field is minimal new
+abstraction (driver 5).
 
 Option B was rejected because it does not address driver 1 generally —
 the next exotic prerelease format requires another keyword addition.
-Option C was rejected because the user observed that tagging conventions
-vary across upstreams but are stable within a repository, which makes
-per-recipe configuration the correct abstraction. Option D was rejected
-as more general than needed. Option E was rejected because it does not
-work uniformly across the tags and releases code paths.
+Option C (strict SemVer with no defaults) was rejected because it forces
+every Spring/Hibernate/Apache-style recipe to opt in for no real safety
+gain. Option D was rejected as more general than needed. Option E was
+rejected because it does not work uniformly across the tags and releases
+code paths.
 
 ## Solution Architecture
 
 The solution lives entirely in the version-resolution layer of tsuku. No
 runtime, executor, or recipe-action changes are involved.
+
+### Default qualifier list
+
+The provider package exposes a single source of truth for the default
+list:
+
+```go
+// DefaultStableQualifiers names hyphenated suffixes that universally
+// signal a stable release across upstream conventions. Recipes whose
+// upstream uses an exotic qualifier override this list with
+// [version] stable_qualifiers.
+var DefaultStableQualifiers = []string{"release", "final", "lts", "ga", "stable"}
+```
+
+When a recipe declares no `stable_qualifiers` field, the provider uses
+this list. When the recipe declares the field, the recipe's list
+*replaces* the default (not appends).
 
 ### New recipe field
 
@@ -228,24 +259,29 @@ runtime, executor, or recipe-action changes are involved.
 StableQualifiers []string `toml:"stable_qualifiers"`
 ```
 
-Recipes whose upstream uses hyphen-suffixed stable qualifiers list them
-explicitly:
+Most recipes need no `stable_qualifiers` field at all because the
+default list already covers their upstream's convention. Recipes whose
+upstream uses an exotic qualifier (for example, a project that uses
+`-prod` or some uncommon marker) override the default explicitly:
 
 ```toml
 [version]
-github_repo = "spring-projects/spring-framework"
-tag_prefix = "v"
-stable_qualifiers = ["release"]
+github_repo = "some-org/exotic-project"
+stable_qualifiers = ["prod"]
 ```
+
+A recipe that wants to *narrow* the default — for example, one whose
+upstream tags both `1.0.0-RELEASE` (stable) and `1.0.0-LTS` (a
+prerelease, hypothetically) — lists only the qualifiers that apply:
 
 ```toml
 [version]
-github_repo = "hibernate/hibernate-orm"
-stable_qualifiers = ["final", "ga"]
+github_repo = "some-org/odd-lts-convention"
+stable_qualifiers = ["release"]   # excludes lts/final/ga/stable from the default
 ```
 
-The default is empty (`StableQualifiers = nil` or `[]`), meaning strict
-SemVer: any hyphenated suffix is a prerelease.
+In both override cases the field's contents fully define what is
+stable; nothing is implicitly added.
 
 ### Updated filter predicate
 
@@ -262,7 +298,10 @@ func isStableVersion(version string, stableQualifiers map[string]bool) bool {
 ```
 
 The `stableQualifiers` map is constructed once at provider construction
-time from the recipe's `StableQualifiers` slice (lowercased keys).
+time. If the recipe's `StableQualifiers` slice is empty, the provider
+builds the map from `DefaultStableQualifiers`. If it is non-empty, the
+provider builds the map from the recipe's slice (the default is
+discarded — replace, not append).
 
 ### Threading the field through the providers
 
@@ -329,18 +368,21 @@ The implementation lands in #2325 in three contained slices:
      no longer needed but the prerelease test catches them).
 3. **Audit and recipe updates.**
    - Run `git grep -l 'github_repo' recipes/ internal/recipe/recipes/`.
-   - For each recipe, inspect upstream tags via
-     `git ls-remote --tags <repo> | tail -50` (or the GitHub API) to
-     check for hyphen-suffixed stable releases.
-   - Recipes whose upstream uses hyphen-suffixed stables receive a
+   - For each recipe, check upstream tags only when there is reason to
+     suspect an exotic convention. The default qualifier list already
+     covers `RELEASE`, `FINAL`, `LTS`, `GA`, and `stable`, so the audit
+     is narrowed to recipes whose upstream uses something else.
+   - Realistic finding: most recipes use plain semver and need no
+     change. The set that does need the field is small and exotic.
+   - Recipes that need an override receive a
      `stable_qualifiers = [...]` line in the same PR as the filter
      change.
-   - The PR description explicitly lists the audit results so reviewers
-     can flag any miss.
+   - The PR description lists the audit results so reviewers can flag
+     any miss.
 
 The three slices land in a single PR because the filter change without
-the audit risks regression and the recipe updates without the schema
-change do not parse.
+the audit risks regression on exotic-qualifier upstreams, and the recipe
+updates without the schema change do not parse.
 
 ## Security Considerations
 
@@ -387,17 +429,21 @@ data that already flows through tsuku at install time:
 
 ### Negative
 
-- **Behavior change for existing recipes whose upstream tags use
-  hyphen-suffixed stables.** Mitigation: the audit step in the
-  Implementation Approach catches these, and the same PR adds the
-  `stable_qualifiers` field to each affected recipe.
-- **Recipe authors of new tools must know the upstream's tagging
-  convention.** This is a small ask but it is one extra step in the
-  recipe-authoring flow. We should document it in the recipe-author
-  skill.
+- **Behavior change for existing recipes whose upstream tags use exotic
+  hyphen-suffixed stables** (anything outside the default list).
+  Mitigation: the audit step in the Implementation Approach catches
+  these, and the same PR adds the `stable_qualifiers` field to each
+  affected recipe.
+- **Recipe authors of new tools usually need to do nothing**, since the
+  default list covers the common cases. They only need to think about
+  the field when the upstream uses an exotic convention.
 - The change touches a stable, well-exercised code path. We must add
   the table-driven tests described in the Implementation Approach to
   pin behavior before flipping the default.
+- **Hypothetical: an upstream tags `X.Y.Z-RELEASE` as a prerelease of
+  `X.Y.Z`.** The default would then admit a prerelease. No real example
+  is known; if one is found, the recipe overrides
+  `stable_qualifiers` with a list that excludes the offending suffix.
 
 ### Affected Components
 
