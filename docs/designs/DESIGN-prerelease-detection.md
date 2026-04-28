@@ -499,13 +499,13 @@ data that already flows through tsuku at install time:
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#2325: fix(version): treat -Mn milestone tags as pre-releases in GitHub provider](https://github.com/tsukumogami/tsuku/issues/2325) | None | testable |
+| ~~[#2325: fix(version): treat -Mn milestone tags as pre-releases in GitHub provider](https://github.com/tsukumogami/tsuku/issues/2325)~~ | ~~None~~ | ~~testable~~ |
 
 ```mermaid
 graph TD
     I2325["#2325: SemVer-aware prerelease detection"]
 
-    classDef ready fill:#bbdefb
+    classDef done fill:#c8e6c9
 
-    class I2325 ready
+    class I2325 done
 ```
