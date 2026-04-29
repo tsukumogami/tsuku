@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-29T19:29:51Z",
+  "updated_at": "2026-04-29T21:09:26Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 271,
-      "next_retry_at": "1734-01-18T17:47:22.611066267Z"
+      "failure_count": 273,
+      "next_retry_at": "1734-01-18T21:22:09.428889297Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 418,
-      "next_retry_at": "1734-01-18T17:47:22.611066267Z"
+      "failure_count": 420,
+      "next_retry_at": "1734-01-18T21:22:09.428889297Z"
     },
     {
       "name": "libaacs",
@@ -42166,11 +42166,11 @@
       "name": "scalingo",
       "source": "rubygems:scalingo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-04-29T16:19:35.49836961Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-04-29T23:09:26.283665105Z"
     },
     {
       "name": "scamper",
