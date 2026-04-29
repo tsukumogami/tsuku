@@ -1966,6 +1966,81 @@ func TestHomebrewBuilder_getBlobSHAFromManifest(t *testing.T) {
 			platformTag: "x86_64_linux",
 			wantErr:     true,
 		},
+		{
+			// libevent-style: formula has revision=1 and the manifest
+			// entries are tagged "<version>_1.<platform>". Resolver
+			// must accept the revision-suffixed form.
+			name: "revision-suffixed entries (libevent-style)",
+			manifest: &ghcrManifest{
+				Manifests: []ghcrManifestEntry{
+					{
+						Annotations: map[string]string{
+							"org.opencontainers.image.ref.name": "2.1.12_1.arm64_sonoma",
+							"sh.brew.bottle.digest":             "sha256:abc",
+						},
+					},
+					{
+						Annotations: map[string]string{
+							"org.opencontainers.image.ref.name": "2.1.12_1.x86_64_linux",
+							"sh.brew.bottle.digest":             "sha256:def",
+						},
+					},
+				},
+			},
+			version:     "2.1.12",
+			platformTag: "arm64_sonoma",
+			wantSHA:     "abc",
+		},
+		{
+			// Mixed manifests (rare but possible during a homebrew
+			// transition): both unrevised and _1 entries present.
+			// Resolver must prefer the highest revision.
+			name: "mixed entries — prefer highest revision",
+			manifest: &ghcrManifest{
+				Manifests: []ghcrManifestEntry{
+					{
+						Annotations: map[string]string{
+							"org.opencontainers.image.ref.name": "1.0.0.arm64_sonoma",
+							"sh.brew.bottle.digest":             "sha256:rev0",
+						},
+					},
+					{
+						Annotations: map[string]string{
+							"org.opencontainers.image.ref.name": "1.0.0_1.arm64_sonoma",
+							"sh.brew.bottle.digest":             "sha256:rev1",
+						},
+					},
+					{
+						Annotations: map[string]string{
+							"org.opencontainers.image.ref.name": "1.0.0_2.arm64_sonoma",
+							"sh.brew.bottle.digest":             "sha256:rev2",
+						},
+					},
+				},
+			},
+			version:     "1.0.0",
+			platformTag: "arm64_sonoma",
+			wantSHA:     "rev2",
+		},
+		{
+			// Other version's revision-suffixed entries must not
+			// match. e.g., "1.0.0_1.arm64" should not match version
+			// "1.0".
+			name: "revisioned entry for different version is not matched",
+			manifest: &ghcrManifest{
+				Manifests: []ghcrManifestEntry{
+					{
+						Annotations: map[string]string{
+							"org.opencontainers.image.ref.name": "1.0.0_1.arm64_sonoma",
+							"sh.brew.bottle.digest":             "sha256:rev1",
+						},
+					},
+				},
+			},
+			version:     "1.0",
+			platformTag: "arm64_sonoma",
+			wantErr:     true,
+		},
 	}
 
 	for _, tt := range tests {

@@ -15,6 +15,7 @@ import (
 	"os"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -1306,12 +1307,14 @@ func (b *HomebrewBuilder) checkBottleAvailability(ctx context.Context, formula, 
 		return nil, fmt.Errorf("failed to fetch manifest: %w", err)
 	}
 
-	// Build a set of available platform tags from manifest
+	// Build a set of available platform tags from manifest. ref.name
+	// format is "<version>.<platform>" or, for revisioned formulas,
+	// "<version>_<revision>.<platform>". The platform tag lives at
+	// the end after the last `.`, so a HasSuffix check on
+	// "."+platform handles both forms.
 	availableTags := make(map[string]bool)
 	for _, entry := range manifest.Manifests {
 		if refName, ok := entry.Annotations["org.opencontainers.image.ref.name"]; ok {
-			// ref.name format is "{version}.{platform_tag}" e.g., "1.0.0.arm64_sonoma"
-			// Version may contain dots, so find the platform tag at the end
 			for _, platform := range targetPlatforms {
 				if strings.HasSuffix(refName, "."+platform) {
 					availableTags[platform] = true
@@ -1542,28 +1545,77 @@ func (b *HomebrewBuilder) listBottleBinaries(ctx context.Context, formula, versi
 }
 
 // getBlobSHAFromManifest extracts the blob SHA for a platform from a manifest.
+//
+// Accepts both unrevised (<version>.<platform>) and revision-suffixed
+// (<version>_<N>.<platform>) ref-name forms. When multiple revisions
+// match, the highest is preferred. See selectBuilderBottleEntry.
 func (b *HomebrewBuilder) getBlobSHAFromManifest(manifest *ghcrManifest, version, platformTag string) (string, error) {
-	// The expected ref name format is "{version}.{platform_tag}"
-	expectedRefName := fmt.Sprintf("%s.%s", version, platformTag)
-
-	for _, entry := range manifest.Manifests {
-		if refName, ok := entry.Annotations["org.opencontainers.image.ref.name"]; ok {
-			if refName == expectedRefName {
-				if digest, ok := entry.Annotations["sh.brew.bottle.digest"]; ok {
-					if strings.HasPrefix(digest, "sha256:") {
-						return strings.TrimPrefix(digest, "sha256:"), nil
-					}
-					return digest, nil
-				}
-				if strings.HasPrefix(entry.Digest, "sha256:") {
-					return strings.TrimPrefix(entry.Digest, "sha256:"), nil
-				}
-				return entry.Digest, nil
+	matched := selectBuilderBottleEntry(manifest.Manifests, version, platformTag)
+	if matched != nil {
+		if digest, ok := matched.Annotations["sh.brew.bottle.digest"]; ok {
+			if strings.HasPrefix(digest, "sha256:") {
+				return strings.TrimPrefix(digest, "sha256:"), nil
 			}
+			return digest, nil
 		}
+		if strings.HasPrefix(matched.Digest, "sha256:") {
+			return strings.TrimPrefix(matched.Digest, "sha256:"), nil
+		}
+		return matched.Digest, nil
 	}
 
-	return "", fmt.Errorf("no bottle found for platform tag: %s", platformTag)
+	return "", fmt.Errorf("no bottle found for platform tag: %s (expected ref: %s.%s or %s_<revision>.%s)",
+		platformTag, version, platformTag, version, platformTag)
+}
+
+// selectBuilderBottleEntry scans manifest entries for the one matching
+// the requested platform. Accepts both unrevised (<version>.<platform>)
+// and revision-suffixed (<version>_<N>.<platform>) ref-name forms.
+// When multiple revisions match, returns the entry with the highest
+// revision. Mirrors the action-side helper but operates on this
+// package's manifest entry type.
+func selectBuilderBottleEntry(entries []ghcrManifestEntry, version, platformTag string) *ghcrManifestEntry {
+	suffix := "." + platformTag
+	exactRefName := version + suffix
+	revisionPrefix := version + "_"
+
+	var (
+		best       *ghcrManifestEntry
+		bestRevSet bool
+		bestRev    int
+	)
+	for i := range entries {
+		e := &entries[i]
+		refName, ok := e.Annotations["org.opencontainers.image.ref.name"]
+		if !ok {
+			continue
+		}
+		if refName == exactRefName {
+			if !bestRevSet || bestRev < 0 {
+				best = e
+				bestRev = 0
+				bestRevSet = true
+			}
+			continue
+		}
+		if !strings.HasPrefix(refName, revisionPrefix) || !strings.HasSuffix(refName, suffix) {
+			continue
+		}
+		mid := refName[len(revisionPrefix) : len(refName)-len(suffix)]
+		if mid == "" {
+			continue
+		}
+		rev, err := strconv.Atoi(mid)
+		if err != nil || rev < 0 {
+			continue
+		}
+		if !bestRevSet || rev > bestRev {
+			best = e
+			bestRev = rev
+			bestRevSet = true
+		}
+	}
+	return best
 }
 
 // downloadBottleBlob downloads a bottle blob from GHCR to a local file.
