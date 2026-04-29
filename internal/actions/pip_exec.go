@@ -110,7 +110,7 @@ func (a *PipExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 
 	// Step 1: Verify Python version if specified
 	if expectedPythonVersion != "" {
-		actualVersion, err := getPythonVersion(pythonPath)
+		actualVersion, err := GetPythonVersion(pythonPath)
 		if err != nil {
 			return fmt.Errorf("failed to get Python version: %w", err)
 		}
@@ -332,8 +332,12 @@ exec "$(dirname "$0")/python3" "$0" "$@"
 	return os.WriteFile(scriptPath, newContent, 0755)
 }
 
-// getPythonVersion returns the Python version string (e.g., "3.11.7")
-func getPythonVersion(pythonPath string) (string, error) {
+// GetPythonVersion returns the Python version string (e.g., "3.11.7")
+// from running `<pythonPath> --version`. The path is expected to come
+// from ResolvePythonStandalone(), which constructs it inside
+// $TSUKU_HOME/tools/python-standalone-* via filepath.Join — no shell
+// expansion or argv injection.
+func GetPythonVersion(pythonPath string) (string, error) {
 	cmd := exec.Command(pythonPath, "--version")
 	output, err := cmd.Output()
 	if err != nil {

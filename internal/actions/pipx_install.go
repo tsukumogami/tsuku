@@ -334,7 +334,7 @@ func (a *PipxInstallAction) Decompose(ctx *EvalContext, params map[string]interf
 	}
 
 	// Get Python version for reproducibility
-	pythonVersion, _ := getPythonVersion(pythonPath)
+	pythonVersion, _ := GetPythonVersion(pythonPath)
 
 	// Build pip_exec params
 	pipExecParams := map[string]interface{}{
@@ -374,7 +374,7 @@ func (a *PipxInstallAction) decomposeWithConstraints(ctx *EvalContext, packageNa
 	pythonPath := ResolvePythonStandalone()
 	pythonVersion := ""
 	if pythonPath != "" {
-		pythonVersion, _ = getPythonVersion(pythonPath)
+		pythonVersion, _ = GetPythonVersion(pythonPath)
 	}
 
 	// Build pip_exec params

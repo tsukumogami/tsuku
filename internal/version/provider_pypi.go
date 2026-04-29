@@ -71,6 +71,9 @@ func (p *PyPIProvider) ListVersions(ctx context.Context) ([]string, error) {
 	}
 	filtered := make([]string, 0, len(releases))
 	for _, r := range releases {
+		if isPyPIPrerelease(r.Version) {
+			continue
+		}
 		if isPyPIReleaseCompatible(r.RequiresPython, target) {
 			filtered = append(filtered, r.Version)
 		}
@@ -107,6 +110,9 @@ func (p *PyPIProvider) ResolveLatest(ctx context.Context) (*VersionInfo, error) 
 		}
 	}
 	for _, r := range releases {
+		if isPyPIPrerelease(r.Version) {
+			continue
+		}
 		if isPyPIReleaseCompatible(r.RequiresPython, target) {
 			return &VersionInfo{Tag: r.Version, Version: r.Version}, nil
 		}
@@ -175,4 +181,20 @@ func isPyPIReleaseCompatible(requiresPython string, target pep440.Version) bool 
 		return false
 	}
 	return spec.Satisfies(target)
+}
+
+// isPyPIPrerelease reports whether v is a PEP 440 prerelease, dev,
+// or post-release string (e.g., "2.17.9rc1", "1.0.0a1", "1.0.0b2",
+// "1.0.0.dev1", "1.0.0.post1"). The check is purely textual — any
+// alphabetic character after the leading numeric segments triggers
+// the skip. Used to mirror pip's default behavior of preferring
+// stable releases unless `--pre` is requested.
+func isPyPIPrerelease(v string) bool {
+	for i := 0; i < len(v); i++ {
+		c := v[i]
+		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') {
+			return true
+		}
+	}
+	return false
 }

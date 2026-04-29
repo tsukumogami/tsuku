@@ -86,11 +86,18 @@ func (e *Executor) SetSkipCacheSecurityChecks(skip bool) {
 	e.skipCacheSecurityChecks = skip
 }
 
-// resolveVersionWith attempts to resolve the latest version for the recipe using the given resolver
+// resolveVersionWith attempts to resolve the latest version for the recipe using the given resolver.
+//
+// For pipx_install recipes, the bundled python-standalone's major.minor
+// is probed before constructing the version provider so PyPI's
+// per-release `requires_python` filtering runs at the cache-key seam.
+// See docs/designs/DESIGN-pipx-pypi-version-pinning.md.
 func (e *Executor) resolveVersionWith(ctx context.Context, resolver *version.Resolver) (*version.VersionInfo, error) {
-	// Use unified provider factory
 	factory := version.NewProviderFactory()
-	provider, err := factory.ProviderFromRecipe(resolver, e.recipe)
+
+	pythonMajorMinor := resolveBundledPythonMajorMinor(e.recipe)
+
+	provider, err := factory.ProviderFromRecipeForPipx(resolver, e.recipe, pythonMajorMinor)
 	if err != nil {
 		return nil, err
 	}
@@ -99,6 +106,54 @@ func (e *Executor) resolveVersionWith(ctx context.Context, resolver *version.Res
 	// constraints (e.g., "1.7", "2") match the highest version within that
 	// prefix for providers that implement VersionLister.
 	return version.ResolveWithinBoundary(ctx, provider, e.reqVersion)
+}
+
+// resolveBundledPythonMajorMinor probes the bundled python-standalone
+// binary and returns its major.minor (e.g., "3.13"). Returns the empty
+// string for recipes that have no pipx_install steps (so non-pipx
+// recipes incur no Python probe) or when the binary is not yet
+// installed (the existing CheckEvalDeps flow inside resolveStep will
+// install it later, and resolution will fall back to absolute-latest
+// for this run; subsequent runs probe successfully).
+//
+// The probe never aborts version resolution: a missing or unreadable
+// python-standalone is silently treated as "no Python context known."
+// The downstream CheckEvalDeps will surface a missing python-standalone
+// to the user via cfg.OnEvalDepsNeeded as today.
+func resolveBundledPythonMajorMinor(r *recipe.Recipe) string {
+	if r == nil {
+		return ""
+	}
+	hasPipx := false
+	for _, step := range r.Steps {
+		if step.Action == "pipx_install" {
+			hasPipx = true
+			break
+		}
+	}
+	if !hasPipx {
+		return ""
+	}
+	pythonPath := actions.ResolvePythonStandalone()
+	if pythonPath == "" {
+		return ""
+	}
+	full, err := actions.GetPythonVersion(pythonPath)
+	if err != nil {
+		return ""
+	}
+	return truncatePythonMajorMinor(full)
+}
+
+// truncatePythonMajorMinor returns the leading "X.Y" of a CPython
+// version string. Falls back to the full string if the input is
+// shorter than two dot-separated components.
+func truncatePythonMajorMinor(full string) string {
+	parts := strings.SplitN(full, ".", 3)
+	if len(parts) < 2 {
+		return full
+	}
+	return parts[0] + "." + parts[1]
 }
 
 // ResolveVersion resolves a version constraint to a concrete version string.

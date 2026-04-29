@@ -2043,3 +2043,43 @@ func TestResolveWithinBoundary_PartialSemver_ResolverOnly(t *testing.T) {
 		t.Errorf("ResolveWithinBoundary(\"0.5\") = %q, want %q", info.Version, "0.5.3")
 	}
 }
+
+func TestTruncatePythonMajorMinor(t *testing.T) {
+	cases := []struct {
+		in, want string
+	}{
+		{"3.13.0", "3.13"},
+		{"3.10.20", "3.10"},
+		{"3.11", "3.11"},
+		{"3", "3"},
+		{"", ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.in, func(t *testing.T) {
+			got := truncatePythonMajorMinor(tc.in)
+			if got != tc.want {
+				t.Errorf("truncatePythonMajorMinor(%q) = %q, want %q", tc.in, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestResolveBundledPythonMajorMinor_NonPipxRecipe(t *testing.T) {
+	// A recipe with no pipx_install steps must NOT trigger the python
+	// probe; the function returns "" without invoking ResolvePythonStandalone.
+	r := &recipe.Recipe{
+		Steps: []recipe.Step{
+			{Action: "github_archive", Params: map[string]any{"repo": "BurntSushi/ripgrep"}},
+		},
+	}
+	got := resolveBundledPythonMajorMinor(r)
+	if got != "" {
+		t.Errorf("resolveBundledPythonMajorMinor(non-pipx) = %q, want empty", got)
+	}
+}
+
+func TestResolveBundledPythonMajorMinor_NilRecipe(t *testing.T) {
+	if got := resolveBundledPythonMajorMinor(nil); got != "" {
+		t.Errorf("resolveBundledPythonMajorMinor(nil) = %q, want empty", got)
+	}
+}

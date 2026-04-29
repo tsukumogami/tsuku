@@ -1469,3 +1469,116 @@ func TestInferredGoProxyStrategy_Create_WithPatternInference(t *testing.T) {
 		})
 	}
 }
+
+func TestProviderFromRecipeForPipx_RoutesToPipxAware(t *testing.T) {
+	r := &recipe.Recipe{
+		Version: recipe.VersionSection{Source: "pypi"},
+		Steps: []recipe.Step{
+			{Action: "pipx_install", Params: map[string]any{"package": "ansible-core"}},
+		},
+	}
+	factory := NewProviderFactory()
+	resolver := New()
+
+	// With pythonMajorMinor set, must route to NewPyPIProviderForPipx.
+	provider, err := factory.ProviderFromRecipeForPipx(resolver, r, "3.10")
+	if err != nil {
+		t.Fatalf("ProviderFromRecipeForPipx failed: %v", err)
+	}
+	pp, ok := provider.(*PyPIProvider)
+	if !ok {
+		t.Fatalf("expected *PyPIProvider, got %T", provider)
+	}
+	if pp.pythonMajorMinor != "3.10" {
+		t.Errorf("PyPIProvider.pythonMajorMinor = %q, want %q", pp.pythonMajorMinor, "3.10")
+	}
+}
+
+func TestProviderFromRecipeForPipx_EmptyPythonFallsBackToCreate(t *testing.T) {
+	r := &recipe.Recipe{
+		Version: recipe.VersionSection{Source: "pypi"},
+		Steps: []recipe.Step{
+			{Action: "pipx_install", Params: map[string]any{"package": "ansible-core"}},
+		},
+	}
+	factory := NewProviderFactory()
+	resolver := New()
+
+	// Empty pythonMajorMinor — provider must NOT carry pipx context.
+	provider, err := factory.ProviderFromRecipeForPipx(resolver, r, "")
+	if err != nil {
+		t.Fatalf("ProviderFromRecipeForPipx failed: %v", err)
+	}
+	pp, ok := provider.(*PyPIProvider)
+	if !ok {
+		t.Fatalf("expected *PyPIProvider, got %T", provider)
+	}
+	if pp.pythonMajorMinor != "" {
+		t.Errorf("PyPIProvider.pythonMajorMinor = %q, want empty", pp.pythonMajorMinor)
+	}
+}
+
+func TestProviderFromRecipeForPipx_NonPipxStrategyUnaffected(t *testing.T) {
+	// A non-PyPI recipe with pythonMajorMinor set must still construct
+	// the standard provider — strategies that don't implement
+	// PipxAwareStrategy ignore the parameter.
+	r := &recipe.Recipe{
+		Version: recipe.VersionSection{GitHubRepo: "BurntSushi/ripgrep"},
+	}
+	factory := NewProviderFactory()
+	resolver := New()
+
+	provider, err := factory.ProviderFromRecipeForPipx(resolver, r, "3.10")
+	if err != nil {
+		t.Fatalf("ProviderFromRecipeForPipx failed: %v", err)
+	}
+	if _, ok := provider.(*PyPIProvider); ok {
+		t.Errorf("expected GitHub provider, got *PyPIProvider")
+	}
+}
+
+func TestPyPISourceStrategy_CreateWithPython(t *testing.T) {
+	r := &recipe.Recipe{
+		Version: recipe.VersionSection{Source: "pypi"},
+		Steps: []recipe.Step{
+			{Action: "pipx_install", Params: map[string]any{"package": "ansible-core"}},
+		},
+	}
+	s := &PyPISourceStrategy{}
+	resolver := New()
+	provider, err := s.CreateWithPython(resolver, r, "3.10")
+	if err != nil {
+		t.Fatalf("CreateWithPython failed: %v", err)
+	}
+	pp, ok := provider.(*PyPIProvider)
+	if !ok {
+		t.Fatalf("expected *PyPIProvider, got %T", provider)
+	}
+	if pp.pythonMajorMinor != "3.10" {
+		t.Errorf("pythonMajorMinor = %q, want %q", pp.pythonMajorMinor, "3.10")
+	}
+	if pp.packageName != "ansible-core" {
+		t.Errorf("packageName = %q, want %q", pp.packageName, "ansible-core")
+	}
+}
+
+func TestInferredPyPIStrategy_CreateWithPython(t *testing.T) {
+	r := &recipe.Recipe{
+		Steps: []recipe.Step{
+			{Action: "pipx_install", Params: map[string]any{"package": "black"}},
+		},
+	}
+	s := &InferredPyPIStrategy{}
+	resolver := New()
+	provider, err := s.CreateWithPython(resolver, r, "3.13")
+	if err != nil {
+		t.Fatalf("CreateWithPython failed: %v", err)
+	}
+	pp, ok := provider.(*PyPIProvider)
+	if !ok {
+		t.Fatalf("expected *PyPIProvider, got %T", provider)
+	}
+	if pp.pythonMajorMinor != "3.13" {
+		t.Errorf("pythonMajorMinor = %q, want %q", pp.pythonMajorMinor, "3.13")
+	}
+}
