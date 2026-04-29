@@ -48,41 +48,47 @@ Feature: Project-level auto-update integration
     And the file "cache/updates/serve.json" exists
 
   Scenario: no project config allows auto-apply to attempt update
-    # Without .tsuku.toml, auto-apply should attempt the update
-    # (the install will fail since serve isn't a real installed binary, but auto-apply will try)
-    Given I create home file "cache/updates/serve.json" with content:
+    # Without .tsuku.toml, auto-apply should attempt the update.
+    # Use a fake tool name so the install fails fast on recipe lookup
+    # — the test verifies cache consumption, not a real install.
+    Given I create home file "cache/updates/fake-auto-apply-tool.json" with content:
       """
-      {"tool":"serve","active_version":"0.6.0","requested":"","latest_within_pin":"0.7.0","latest_overall":"0.7.0","source":"github","checked_at":"2026-04-01T00:00:00Z","expires_at":"2026-04-02T00:00:00Z","error":""}
+      {"tool":"fake-auto-apply-tool","active_version":"0.6.0","requested":"","latest_within_pin":"0.7.0","latest_overall":"0.7.0","source":"github","checked_at":"2026-04-01T00:00:00Z","expires_at":"2026-04-02T00:00:00Z","error":""}
       """
     And I create home file "state.json" with content:
       """
-      {"installed":{"serve":{"active_version":"0.6.0","versions":{"0.6.0":{"requested":""}}}}}
+      {"installed":{"fake-auto-apply-tool":{"active_version":"0.6.0","versions":{"0.6.0":{"requested":""}}}}}
       """
     When I run "tsuku list"
     Then the exit code is 0
-    # Cache entry consumed because auto-apply attempted the update (even if it failed)
-    And the file "cache/updates/serve.json" does not exist
+    # Cache entry consumed by the detached `tsuku apply-updates` process
+    # auto-apply spawns from `tsuku list`'s PersistentPreRun. The spawn
+    # is async (per #2278), so the assertion polls.
+    And the file "cache/updates/fake-auto-apply-tool.json" eventually does not exist within 30 seconds
 
   Scenario: undeclared tool in project config uses global pin
-    # Project config declares python but not serve -- serve uses global pin
-    Given I create home file "cache/updates/serve.json" with content:
+    # Project config declares python but not the cached tool -- the
+    # cached tool uses global pin. Fake name fails install fast.
+    Given I create home file "cache/updates/fake-auto-apply-tool.json" with content:
       """
-      {"tool":"serve","active_version":"0.6.0","requested":"","latest_within_pin":"0.7.0","latest_overall":"0.7.0","source":"github","checked_at":"2026-04-01T00:00:00Z","expires_at":"2026-04-02T00:00:00Z","error":""}
+      {"tool":"fake-auto-apply-tool","active_version":"0.6.0","requested":"","latest_within_pin":"0.7.0","latest_overall":"0.7.0","source":"github","checked_at":"2026-04-01T00:00:00Z","expires_at":"2026-04-02T00:00:00Z","error":""}
       """
     And I create home file "state.json" with content:
       """
-      {"installed":{"serve":{"active_version":"0.6.0","versions":{"0.6.0":{"requested":""}}}}}
+      {"installed":{"fake-auto-apply-tool":{"active_version":"0.6.0","versions":{"0.6.0":{"requested":""}}}}}
       """
     And I create home file "myproject/.tsuku.toml" with content:
       """
       [tools]
       python = "3.12"
       """
-    # serve is not in .tsuku.toml, so auto-apply should attempt it with global pin
+    # The cached tool is not in .tsuku.toml, so auto-apply should attempt
+    # it with the global pin.
     When I run from "myproject" "tsuku list"
     Then the exit code is 0
-    # Cache entry consumed because serve wasn't suppressed by project config
-    And the file "cache/updates/serve.json" does not exist
+    # Cache entry consumed asynchronously by the detached `tsuku apply-updates`
+    # process (per #2278); poll for absence.
+    And the file "cache/updates/fake-auto-apply-tool.json" eventually does not exist within 30 seconds
 
   Scenario: tsuku commands work from project directory
     Given I create home file "myproject/.tsuku.toml" with content:
