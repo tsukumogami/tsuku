@@ -33,10 +33,11 @@ type pypiPackageInfo struct {
 }
 
 // pypiReleaseFile carries the per-file metadata tsuku consumes from
-// PyPI's JSON API. Only `requires_python` is needed today; other
+// PyPI's JSON API. Only `requires_python` and `yanked` are read; other
 // fields are intentionally unmodelled to keep the struct narrow.
 type pypiReleaseFile struct {
 	RequiresPython string `json:"requires_python"`
+	Yanked         bool   `json:"yanked"`
 }
 
 // ResolvePyPI fetches the latest version from PyPI JSON API
@@ -229,10 +230,16 @@ func (r *Resolver) ListPyPIVersions(ctx context.Context, packageName string) ([]
 
 // pypiRelease pairs a version string with the per-file metadata
 // tsuku consumes. Used by PyPIProvider's pipx-aware paths to filter
-// by `requires_python` without making a second HTTP fetch.
+// by `requires_python` and yanked status without making a second
+// HTTP fetch.
 type pypiRelease struct {
 	Version        string
 	RequiresPython string
+	// Yanked is true when every file for this release is yanked.
+	// Yanked releases are excluded from auto-resolution but remain
+	// visible to user pins (matching pip's --no-pre-style semantics:
+	// explicit is authoritative).
+	Yanked bool
 }
 
 // listPyPIReleasesWithMetadata returns all releases newest-first with
@@ -323,16 +330,24 @@ func (r *Resolver) listPyPIReleasesWithMetadata(ctx context.Context, packageName
 	for _, v := range versions {
 		// All files for a release share the same `requires_python` in
 		// practice; take the first non-empty value as authoritative.
-		// Releases with no files (yanked-only) carry empty metadata,
-		// which is treated as compatible by the filter (matches pip).
+		// A release is yanked when all its files are yanked; partially-
+		// yanked releases (rare) keep their non-yanked files available
+		// and are not treated as yanked here.
 		var rp string
-		for _, f := range pkgInfo.Releases[v] {
-			if f.RequiresPython != "" {
+		yanked := true
+		files := pkgInfo.Releases[v]
+		if len(files) == 0 {
+			yanked = false // no files at all (some legacy entries) — leave selectable
+		}
+		for _, f := range files {
+			if f.RequiresPython != "" && rp == "" {
 				rp = f.RequiresPython
-				break
+			}
+			if !f.Yanked {
+				yanked = false
 			}
 		}
-		releases = append(releases, pypiRelease{Version: v, RequiresPython: rp})
+		releases = append(releases, pypiRelease{Version: v, RequiresPython: rp, Yanked: yanked})
 	}
 	return releases, nil
 }

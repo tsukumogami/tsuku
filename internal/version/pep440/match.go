@@ -13,11 +13,6 @@ func (s Specifier) Satisfies(target Version) bool {
 	return true
 }
 
-// IsEmpty reports whether the specifier has no clauses.
-func (s Specifier) IsEmpty() bool {
-	return len(s.clauses) == 0
-}
-
 // matches evaluates a single clause against target.
 func (c clause) matches(target Version) bool {
 	switch c.op {

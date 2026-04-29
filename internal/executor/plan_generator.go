@@ -125,6 +125,17 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 	// Create version resolver
 	resolver := version.New()
 
+	// Propagate the eval-deps callback into the executor so that
+	// version resolution for pipx_install recipes can surface a
+	// missing python-standalone before the version filter runs.
+	// Without this, the cache key for the plan would be born from
+	// the unfiltered absolute-latest version on a fresh machine.
+	// Don't overwrite a callback set explicitly via SetEvalDepsCallback.
+	if e.onEvalDepsNeeded == nil && cfg.OnEvalDepsNeeded != nil {
+		e.onEvalDepsNeeded = cfg.OnEvalDepsNeeded
+		e.autoAcceptEvalDeps = cfg.AutoAcceptEvalDeps
+	}
+
 	// Resolve version from recipe (or use pinned version if provided)
 	var versionInfo *version.VersionInfo
 	if cfg.PinnedVersion != "" {

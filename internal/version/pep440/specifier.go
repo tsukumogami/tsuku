@@ -176,16 +176,20 @@ func parseClause(s string) (clause, error) {
 
 // Canonical returns a sanitized, ASCII-only canonical form of s
 // suitable for inclusion in error messages. If s fails any
-// input-hardening check, returns the literal string "<malformed>".
-// Never returns raw upstream bytes.
+// input-hardening check (length cap, clause count, ASCII validation,
+// segment magnitude, unsupported operator), returns the literal
+// string "<malformed>". Never returns raw upstream bytes.
+//
+// On success, the returned string is the input with whitespace
+// trimmed from each clause. The input has already passed every
+// hardening check, so no further sanitization is needed.
 func Canonical(s string) string {
-	spec, err := ParseSpecifier(s)
-	if err != nil {
+	if _, err := ParseSpecifier(s); err != nil {
 		return "<malformed>"
 	}
-	parts := make([]string, len(spec.clauses))
-	for i, c := range spec.clauses {
-		parts[i] = c.String()
+	parts := strings.Split(s, ",")
+	for i, p := range parts {
+		parts[i] = strings.TrimSpace(p)
 	}
 	return strings.Join(parts, ",")
 }

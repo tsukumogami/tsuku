@@ -174,28 +174,6 @@ func TestPyPIProvider_ResolveLatest_EmptyPythonMajorMinorPreservesBehavior(t *te
 	}
 }
 
-func TestPyPIProvider_ListVersions_FiltersByPython(t *testing.T) {
-	server := newMockPyPIServer(t, "ansible-core", ansibleStyleReleases())
-	defer server.Close()
-
-	resolver := New(WithPyPIRegistry(server.URL))
-	provider := NewPyPIProviderForPipx(resolver, "ansible-core", "3.10")
-
-	versions, err := provider.ListVersions(context.Background())
-	if err != nil {
-		t.Fatalf("ListVersions failed: %v", err)
-	}
-	// Only the 2.17.x line should be returned.
-	if len(versions) != 2 {
-		t.Errorf("ListVersions() = %v (len %d), want 2 entries (2.17.14, 2.17.0)", versions, len(versions))
-	}
-	for _, v := range versions {
-		if !strings.HasPrefix(v, "2.17.") {
-			t.Errorf("ListVersions() returned %q, want 2.17.x only", v)
-		}
-	}
-}
-
 func TestPyPIProvider_ResolveVersion_UserPinUnaffected(t *testing.T) {
 	// User pin to an incompatible version must succeed (return that
 	// version) — explicit pins are authoritative.
@@ -211,6 +189,124 @@ func TestPyPIProvider_ResolveVersion_UserPinUnaffected(t *testing.T) {
 	}
 	if got.Version != "2.20.5" {
 		t.Errorf("ResolveVersion(\"2.20.5\") = %q, want \"2.20.5\" (user pin authoritative)", got.Version)
+	}
+}
+
+func TestIsPyPIPrerelease(t *testing.T) {
+	cases := []struct {
+		v    string
+		want bool
+	}{
+		// Pre-releases (skip)
+		{"1.0a1", true},
+		{"1.0.a1", true},
+		{"1.0b2", true},
+		{"1.0rc1", true},
+		{"1.0c1", true},
+		{"2.17.9rc1", true},
+		{"1.0alpha1", true},
+		{"1.0.alpha1", true},
+		{"1.0beta3", true},
+		{"1.0pre1", true},
+		{"1.0preview1", true},
+		{"1.0-a1", true},
+		{"1.0_a1", true},
+		// Final releases (don't skip)
+		{"1.0", false},
+		{"1.0.0", false},
+		{"2.17.14", false},
+		{"3.10.20", false},
+		// Post-releases (don't skip — pip installs these by default)
+		{"1.0.post1", false},
+		{"1.0.post0", false},
+		// Dev releases — currently not classified as prerelease (see
+		// docstring rationale on isPyPIPrerelease).
+		{"1.0.dev1", false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.v, func(t *testing.T) {
+			got := isPyPIPrerelease(tc.v)
+			if got != tc.want {
+				t.Errorf("isPyPIPrerelease(%q) = %v, want %v", tc.v, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestPyPIProvider_ResolveLatest_SkipsYankedReleases(t *testing.T) {
+	// Build a fixture where the absolute-latest release is yanked.
+	// The compat filter must skip it and return the next eligible.
+	releases := []pypiTestRelease{
+		{Version: "2.0.0", RequiresPython: ">=3.10"}, // yanked
+		{Version: "1.0.0", RequiresPython: ">=3.10"},
+	}
+	type fileDict struct {
+		RequiresPython string `json:"requires_python"`
+		Yanked         bool   `json:"yanked"`
+	}
+	type response struct {
+		Info struct {
+			Version string `json:"version"`
+			Name    string `json:"name"`
+		} `json:"info"`
+		Releases map[string][]fileDict `json:"releases"`
+	}
+	resp := response{}
+	resp.Info.Name = "yank-tool"
+	resp.Info.Version = "2.0.0"
+	resp.Releases = map[string][]fileDict{
+		"2.0.0": {{RequiresPython: ">=3.10", Yanked: true}},
+		"1.0.0": {{RequiresPython: ">=3.10", Yanked: false}},
+	}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(resp)
+	}))
+	defer server.Close()
+	_ = releases // used only for documentation symmetry above
+
+	resolver := New(WithPyPIRegistry(server.URL))
+	provider := NewPyPIProviderForPipx(resolver, "yank-tool", "3.10")
+
+	got, err := provider.ResolveLatest(context.Background())
+	if err != nil {
+		t.Fatalf("ResolveLatest failed: %v", err)
+	}
+	if got.Version != "1.0.0" {
+		t.Errorf("ResolveLatest() = %q, want %q (yanked 2.0.0 must be skipped)", got.Version, "1.0.0")
+	}
+}
+
+func TestNewPyPIProviderForPipx_PanicsOnEmptyPython(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Fatal("NewPyPIProviderForPipx(_, _, \"\") expected panic, got none")
+		}
+	}()
+	resolver := New()
+	_ = NewPyPIProviderForPipx(resolver, "ansible-core", "")
+}
+
+func TestPyPIProvider_ListVersions_NotFilteredByPython(t *testing.T) {
+	// User pins reach ListVersions via ResolveWithinBoundary's
+	// boundary path. ListVersions must NOT filter — otherwise
+	// `tsuku install ansible@2` could silently downgrade past a 2.20
+	// the user explicitly asked for.
+	server := newMockPyPIServer(t, "ansible-core", ansibleStyleReleases())
+	defer server.Close()
+
+	resolver := New(WithPyPIRegistry(server.URL))
+	provider := NewPyPIProviderForPipx(resolver, "ansible-core", "3.10")
+
+	versions, err := provider.ListVersions(context.Background())
+	if err != nil {
+		t.Fatalf("ListVersions failed: %v", err)
+	}
+	// All releases must be present, including the 3.12-only ones the
+	// auto-resolution filter would skip.
+	want := []string{"2.20.5", "2.20.0", "2.19.2", "2.18.0", "2.17.14", "2.17.0"}
+	if len(versions) != len(want) {
+		t.Fatalf("ListVersions() = %v (len %d), want all %d entries", versions, len(versions), len(want))
 	}
 }
 

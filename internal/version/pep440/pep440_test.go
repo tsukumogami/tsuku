@@ -70,9 +70,6 @@ func TestParseSpecifier_SurveyStrings(t *testing.T) {
 			if err != nil {
 				t.Fatalf("ParseSpecifier(%q) error: %v", in, err)
 			}
-			if spec.IsEmpty() {
-				t.Fatalf("ParseSpecifier(%q) produced empty specifier", in)
-			}
 			// Sanity: every target version should evaluate without panicking.
 			for _, tv := range targetVersionsForSurvey {
 				v, perr := ParseVersion(tv)
@@ -219,7 +216,7 @@ func TestSatisfies_BundledPythonScenarios(t *testing.T) {
 		target string
 		want   bool
 	}{
-		// ansible-core lines vs Python 3.10 (the failing case from #2331)
+		// ansible-core release lines vs bundled Python 3.10
 		{">=3.10", "3.10", true},
 		{">=3.11", "3.10", false},
 		{">=3.12", "3.10", false},

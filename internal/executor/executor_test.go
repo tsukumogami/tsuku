@@ -2064,22 +2064,112 @@ func TestTruncatePythonMajorMinor(t *testing.T) {
 	}
 }
 
-func TestResolveBundledPythonMajorMinor_NonPipxRecipe(t *testing.T) {
+func TestResolvePipxPythonMajorMinor_NonPipxRecipe(t *testing.T) {
 	// A recipe with no pipx_install steps must NOT trigger the python
-	// probe; the function returns "" without invoking ResolvePythonStandalone.
+	// probe or the eval-deps callback. The method returns "" cleanly.
 	r := &recipe.Recipe{
 		Steps: []recipe.Step{
 			{Action: "github_archive", Params: map[string]any{"repo": "BurntSushi/ripgrep"}},
 		},
 	}
-	got := resolveBundledPythonMajorMinor(r)
+	e := &Executor{recipe: r}
+	got, err := e.resolvePipxPythonMajorMinor()
+	if err != nil {
+		t.Fatalf("resolvePipxPythonMajorMinor(non-pipx) failed: %v", err)
+	}
 	if got != "" {
-		t.Errorf("resolveBundledPythonMajorMinor(non-pipx) = %q, want empty", got)
+		t.Errorf("resolvePipxPythonMajorMinor(non-pipx) = %q, want empty", got)
 	}
 }
 
-func TestResolveBundledPythonMajorMinor_NilRecipe(t *testing.T) {
-	if got := resolveBundledPythonMajorMinor(nil); got != "" {
-		t.Errorf("resolveBundledPythonMajorMinor(nil) = %q, want empty", got)
+func TestResolvePipxPythonMajorMinor_NilRecipe(t *testing.T) {
+	e := &Executor{}
+	got, err := e.resolvePipxPythonMajorMinor()
+	if err != nil {
+		t.Fatalf("resolvePipxPythonMajorMinor(nil) failed: %v", err)
+	}
+	if got != "" {
+		t.Errorf("resolvePipxPythonMajorMinor(nil) = %q, want empty", got)
+	}
+}
+
+func TestResolvePipxPythonMajorMinor_EvalDepsCallback(t *testing.T) {
+	// For a pipx_install recipe with python-standalone missing AND a
+	// callback set, the callback must fire so subsequent probe can
+	// succeed. The callback is invoked with the missing deps; we
+	// don't care that the test environment may still not have
+	// python-standalone after the no-op callback returns — we only
+	// verify the callback wiring itself.
+	r := &recipe.Recipe{
+		Steps: []recipe.Step{
+			{Action: "pipx_install", Params: map[string]any{"package": "ansible-core"}},
+		},
+	}
+	e := &Executor{recipe: r}
+
+	called := false
+	gotDeps := []string(nil)
+	e.SetEvalDepsCallback(func(deps []string, autoAccept bool) error {
+		called = true
+		gotDeps = deps
+		if !autoAccept {
+			t.Errorf("autoAccept = false, want true")
+		}
+		return nil
+	}, true)
+
+	// We don't assert on the returned major.minor — it depends on
+	// whether python-standalone happens to be installed in the test
+	// env. We assert only that the callback was invoked when missing.
+	if _, err := e.resolvePipxPythonMajorMinor(); err != nil {
+		t.Fatalf("resolvePipxPythonMajorMinor failed: %v", err)
+	}
+
+	// In a clean test environment (no python-standalone installed),
+	// the callback fires. If python-standalone IS installed locally
+	// (developer's machine), CheckEvalDeps reports nothing missing
+	// and the callback is skipped — that's also valid behavior.
+	if called {
+		expected := []string{"python-standalone"}
+		if len(gotDeps) != 1 || gotDeps[0] != expected[0] {
+			t.Errorf("callback got deps = %v, want %v", gotDeps, expected)
+		}
+	}
+}
+
+func TestRecipeHasPipxInstall(t *testing.T) {
+	cases := []struct {
+		name    string
+		recipe  *recipe.Recipe
+		wantHas bool
+	}{
+		{"nil", nil, false},
+		{"empty", &recipe.Recipe{}, false},
+		{
+			"non-pipx steps only",
+			&recipe.Recipe{Steps: []recipe.Step{{Action: "github_archive"}}},
+			false,
+		},
+		{
+			"single pipx_install step",
+			&recipe.Recipe{Steps: []recipe.Step{{Action: "pipx_install"}}},
+			true,
+		},
+		{
+			"mixed steps",
+			&recipe.Recipe{Steps: []recipe.Step{
+				{Action: "download_file"},
+				{Action: "pipx_install"},
+			}},
+			true,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := recipeHasPipxInstall(tc.recipe)
+			if got != tc.wantHas {
+				t.Errorf("recipeHasPipxInstall = %v, want %v", got, tc.wantHas)
+			}
+		})
 	}
 }

@@ -27,7 +27,9 @@ type PyPIProvider struct {
 }
 
 // NewPyPIProvider creates a provider for PyPI packages with no
-// Python-compat filtering. Behavior matches the pre-#2331 contract.
+// Python-compat filtering. ResolveLatest returns the absolute-latest
+// release from PyPI's `info.version`. For pipx_install callers that
+// have a bundled-Python context, use NewPyPIProviderForPipx instead.
 func NewPyPIProvider(resolver *Resolver, packageName string) *PyPIProvider {
 	return &PyPIProvider{
 		resolver:    resolver,
@@ -40,8 +42,17 @@ func NewPyPIProvider(resolver *Resolver, packageName string) *PyPIProvider {
 // the version provider factory when constructing a PyPI provider for
 // a `pipx_install` recipe step. ResolveLatest walks the release list
 // newest-first and returns the first compatible release; ListVersions
-// returns only compatible releases.
+// is intentionally NOT filtered so user pins (`tsuku install foo@2`)
+// route through the full version list.
+//
+// Panics if pythonMajorMinor is empty — call NewPyPIProvider instead
+// when no Python context is available, so the silent-fallthrough trap
+// (caller forgets to plumb pythonMajorMinor and gets unfiltered
+// behavior) cannot fire.
 func NewPyPIProviderForPipx(resolver *Resolver, packageName, pythonMajorMinor string) *PyPIProvider {
+	if pythonMajorMinor == "" {
+		panic("pep440: NewPyPIProviderForPipx requires non-empty pythonMajorMinor; use NewPyPIProvider for non-pipx callers")
+	}
 	return &PyPIProvider{
 		resolver:         resolver,
 		packageName:      packageName,
@@ -49,36 +60,14 @@ func NewPyPIProviderForPipx(resolver *Resolver, packageName, pythonMajorMinor st
 	}
 }
 
-// ListVersions returns available versions from PyPI (newest first).
-// When the provider was constructed with a Python major.minor, the
-// list is filtered to releases compatible with that Python.
+// ListVersions returns all available versions from PyPI (newest first).
+// The list is NOT filtered by pythonMajorMinor even when set —
+// ListVersions is the path used by user pins (boundary-aware partial
+// matches like `tsuku install foo@2`), and an explicit pin is
+// authoritative even if it produces an incompatible install. Auto-
+// resolution filtering happens inside ResolveLatest.
 func (p *PyPIProvider) ListVersions(ctx context.Context) ([]string, error) {
-	if p.pythonMajorMinor == "" {
-		return p.resolver.ListPyPIVersions(ctx, p.packageName)
-	}
-	releases, err := p.resolver.listPyPIReleasesWithMetadata(ctx, p.packageName)
-	if err != nil {
-		return nil, err
-	}
-	target, err := pep440.ParseVersion(p.pythonMajorMinor)
-	if err != nil {
-		return nil, &ResolverError{
-			Type:    ErrTypeValidation,
-			Source:  "pypi",
-			Message: fmt.Sprintf("invalid bundled Python version %q", p.pythonMajorMinor),
-			Err:     err,
-		}
-	}
-	filtered := make([]string, 0, len(releases))
-	for _, r := range releases {
-		if isPyPIPrerelease(r.Version) {
-			continue
-		}
-		if isPyPIReleaseCompatible(r.RequiresPython, target) {
-			filtered = append(filtered, r.Version)
-		}
-	}
-	return filtered, nil
+	return p.resolver.ListPyPIVersions(ctx, p.packageName)
 }
 
 // ResolveLatest returns the latest PyPI release. When the provider has
@@ -110,6 +99,17 @@ func (p *PyPIProvider) ResolveLatest(ctx context.Context) (*VersionInfo, error) 
 		}
 	}
 	for _, r := range releases {
+		// Skip yanked releases for auto-resolution. User pins still
+		// surface yanked versions via ResolveVersion (the user-pin
+		// path bypasses this method entirely).
+		if r.Yanked {
+			continue
+		}
+		// Skip PEP 440 prereleases (e.g., "2.17.9rc1") to match pip's
+		// default behavior of preferring stable releases. .post and
+		// .dev releases are not skipped — pip installs .post by
+		// default, and .dev is only excluded by pip's --pre flag,
+		// which tsuku does not expose.
 		if isPyPIPrerelease(r.Version) {
 			continue
 		}
@@ -183,18 +183,82 @@ func isPyPIReleaseCompatible(requiresPython string, target pep440.Version) bool 
 	return spec.Satisfies(target)
 }
 
-// isPyPIPrerelease reports whether v is a PEP 440 prerelease, dev,
-// or post-release string (e.g., "2.17.9rc1", "1.0.0a1", "1.0.0b2",
-// "1.0.0.dev1", "1.0.0.post1"). The check is purely textual — any
-// alphabetic character after the leading numeric segments triggers
-// the skip. Used to mirror pip's default behavior of preferring
-// stable releases unless `--pre` is requested.
+// isPyPIPrerelease reports whether v carries a PEP 440 PRE-release
+// suffix (a/alpha, b/beta, c/rc/pre/preview) — versions that pip
+// excludes by default unless `--pre` is passed.
+//
+// Notably NOT prereleases under this rule:
+//   - `.postN` (post-releases): pip installs these by default; they
+//     represent packaging fixes to a final release.
+//   - `.devN` (dev-releases): excluded by pip with `--pre`, but tsuku
+//     does not expose `--pre`, and `.dev` releases are vanishingly
+//     rare in real tsuku-curated tools. Treating them as stable here
+//     errs toward "match pip's default" — if a recipe ever resolves
+//     to a `.dev` release, the recipe author can pin via the
+//     user-pin path or file an issue to harden this rule.
+//
+// The PEP 440 grammar places the pre-release marker immediately after
+// the numeric release segments, optionally preceded by `.`, `-`, or
+// `_` — e.g., "1.0a1", "1.0.a1", "1.0-a1", "1.0_a1", "1.0rc1".
+// Implementation: scan past the dotted-numeric prefix, then check the
+// first non-numeric character against the known pre-release markers.
 func isPyPIPrerelease(v string) bool {
-	for i := 0; i < len(v); i++ {
+	// Skip the leading numeric / dot segments.
+	i := 0
+	for i < len(v) {
 		c := v[i]
-		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') {
-			return true
+		if (c >= '0' && c <= '9') || c == '.' {
+			i++
+			continue
+		}
+		break
+	}
+	if i >= len(v) {
+		return false
+	}
+	// Optional separator before the suffix.
+	if v[i] == '-' || v[i] == '_' {
+		i++
+		if i >= len(v) {
+			return false
+		}
+	}
+	suffix := v[i:]
+	// Lower-case the leading letters for matching.
+	for _, prefix := range []string{"alpha", "beta", "preview", "pre", "rc", "a", "b", "c"} {
+		if hasASCIIPrefixCI(suffix, prefix) {
+			// Ensure the next character (if any) is a digit or
+			// terminator — avoids classifying "1.0.cookie" or similar
+			// false positives, though such versions don't occur in
+			// real PyPI metadata.
+			rest := suffix[len(prefix):]
+			if rest == "" {
+				return true
+			}
+			c := rest[0]
+			if c >= '0' && c <= '9' {
+				return true
+			}
 		}
 	}
 	return false
+}
+
+// hasASCIIPrefixCI reports whether s starts with prefix, comparing
+// case-insensitively in the ASCII range only.
+func hasASCIIPrefixCI(s, prefix string) bool {
+	if len(s) < len(prefix) {
+		return false
+	}
+	for i := range len(prefix) {
+		a := s[i]
+		b := prefix[i]
+		if a >= 'A' && a <= 'Z' {
+			a += 'a' - 'A'
+		}
+		if a != b {
+			return false
+		}
+	}
+	return true
 }
