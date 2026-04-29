@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-04-28T19:14:31Z",
-  "total_recipes": 1434,
+  "generated_at": "2026-04-29T03:27:05Z",
+  "total_recipes": 1435,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 867,
-        "total": 1434,
-        "pct": 60.46025104602511
+        "supported": 868,
+        "total": 1435,
+        "pct": 60.48780487804878
       },
       "glibc": {
-        "supported": 1402,
-        "total": 1434,
-        "pct": 97.76847977684798
+        "supported": 1403,
+        "total": 1435,
+        "pct": 97.77003484320558
       },
       "musl": {
         "supported": 1254,
-        "total": 1434,
-        "pct": 87.44769874476988
+        "total": 1435,
+        "pct": 87.38675958188153
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1282,
+        "total": 1283,
         "musl_support": 1104,
-        "glibc_support": 1252
+        "glibc_support": 1253
       }
     }
   },
@@ -464,6 +464,20 @@
       "warnings": [
         "recipe 'annie' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "ansible",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": false
+      },
+      "gaps": [
+        "musl"
+      ],
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "ansifilter",
