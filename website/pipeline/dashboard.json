@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-29T17:34:03Z",
+  "generated_at": "2026-04-29T17:35:24Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 23,
       "excluded": 6,
-      "failed": 82,
-      "pending": 3827,
+      "failed": 84,
+      "pending": 3825,
       "success": 1367
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 17,
         "excluded": 6,
-        "failed": 82,
-        "pending": 3812,
+        "failed": 84,
+        "pending": 3810,
         "success": 1343
       }
     },
@@ -68,14 +68,12 @@
         "total": 1
       },
       "npm": {
-        "failed": 19,
-        "pending": 1,
+        "failed": 20,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -441,6 +439,15 @@
           "category": "install_failed",
           "failure_count": 13,
           "next_retry_at": "2026-05-01T08:05:57Z"
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 271,
+          "next_retry_at": "1734-01-18T17:47:22Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -812,6 +819,15 @@
           "next_retry_at": "2026-05-03T20:42:53Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 418,
+          "next_retry_at": "1734-01-18T17:47:22Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -1100,13 +1116,13 @@
           "next_retry_at": "2026-04-30T00:19:07Z"
         },
         {
-          "id": "rubygems:scalingo",
-          "name": "scalingo",
+          "id": "rubygems:rename",
+          "name": "rename",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-04-29T16:19:35Z"
+          "failure_count": 3,
+          "next_retry_at": "2026-04-29T21:34:39Z"
         },
         {
           "id": "npm:sigstore",
@@ -2960,15 +2976,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 269,
-          "next_retry_at": "1734-01-18T12:35:37Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -13280,15 +13287,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 416,
-          "next_retry_at": "1734-01-18T12:35:37Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -21370,15 +21368,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:rename",
-          "name": "rename",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-04-29T13:02:47Z"
-        },
-        {
           "id": "homebrew:renode/tap/renode",
           "name": "renode/tap/renode",
           "ecosystem": "homebrew",
@@ -22254,6 +22243,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:scalingo",
+          "name": "scalingo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-04-29T16:19:35Z"
         },
         {
           "id": "homebrew:scamper",
