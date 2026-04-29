@@ -133,14 +133,26 @@ Examples:
 			exitWithCode(ExitInstallFailed)
 		}
 
-		// Get the new version after update
+		// Get the active version after update. List returns one entry
+		// per retained version, so we must pick the entry where
+		// IsActive is true — otherwise an older retained version
+		// could shadow the just-installed one in the loop below.
 		tools, _ = mgr.List()
 		var newVersion string
 		for _, tool := range tools {
-			if tool.Name == toolName {
+			if tool.Name == toolName && tool.IsActive {
 				newVersion = tool.Version
 				break
 			}
+		}
+
+		// Surface the outcome so the user sees something after "Updating
+		// <tool>...". The install machinery's "is already installed"
+		// progress message is a transient TTY status that gets cleared on
+		// command exit; without this line, an up-to-date tool produces no
+		// visible output. See #2356.
+		if msg := updateOutcomeMessage(toolName, previousVersion, newVersion); msg != "" {
+			printInfo(msg)
 		}
 
 		// Lifecycle-aware stale cleanup: delete files the old version created
@@ -174,6 +186,27 @@ Examples:
 				toolName, previousVersion, newVersion, "manual"))
 		}
 	},
+}
+
+// updateOutcomeMessage returns the user-facing summary line for an
+// update operation, given the tool's pre- and post-update versions.
+// Returns the empty string when the post-update version cannot be
+// determined (defensive: don't lie to the user).
+//
+// Branches:
+//
+//	newVersion == ""                      → "" (no message)
+//	newVersion == previousVersion         → "<tool> is already at the latest version (<v>)."
+//	newVersion != previousVersion         → "Updated <tool>: <old> -> <new>"
+func updateOutcomeMessage(toolName, previousVersion, newVersion string) string {
+	switch {
+	case newVersion == "":
+		return ""
+	case newVersion == previousVersion:
+		return fmt.Sprintf("%s is already at the latest version (%s).", toolName, newVersion)
+	default:
+		return fmt.Sprintf("Updated %s: %s -> %s", toolName, previousVersion, newVersion)
+	}
 }
 
 // warnShellInitChanges compares content hashes between old and new cleanup
@@ -238,9 +271,15 @@ func runUpdateAll(cmd *cobra.Command) {
 	telemetryClient := telemetry.NewClient()
 	telemetry.ShowNoticeIfNeeded()
 
-	var updated, failed, skipped int
+	var updated, upToDate, failed, skipped int
 
 	for _, tool := range tools {
+		// mgr.List returns one entry per retained version. Update each
+		// tool by name only once; iterate the active version's entry.
+		if !tool.IsActive {
+			continue
+		}
+
 		// Read pin constraint
 		var requested string
 		if state != nil {
@@ -271,6 +310,7 @@ func runUpdateAll(cmd *cobra.Command) {
 			loader.CacheRecipe(tool.Name, r)
 		}
 
+		previousVersion := tool.Version
 		printInfof("Updating %s...\n", tool.Name)
 		if err := runInstallWithTelemetry(tool.Name, requested, "", true, "", telemetryClient); err != nil {
 			fmt.Fprintf(os.Stderr, "  Failed to update %s: %v\n", tool.Name, err)
@@ -281,25 +321,53 @@ func runUpdateAll(cmd *cobra.Command) {
 			failed++
 			continue
 		}
-		updated++
+
+		// Detect whether the install actually changed the active version
+		// or whether the tool was already at latest. The install
+		// machinery's "is already installed" status is a transient TTY
+		// message; without this distinction the summary would overcount
+		// updates. See #2356.
+		// Find the active version after install. List returns one entry
+		// per retained version; the active one carries IsActive=true.
+		newVersion := previousVersion
+		if afterTools, listErr := mgr.List(); listErr == nil {
+			for _, t := range afterTools {
+				if t.Name == tool.Name && t.IsActive {
+					newVersion = t.Version
+					break
+				}
+			}
+		}
+		if newVersion == previousVersion {
+			printInfof("  %s is already at the latest version (%s).\n", tool.Name, newVersion)
+			upToDate++
+		} else {
+			printInfof("  %s: %s -> %s\n", tool.Name, previousVersion, newVersion)
+			updated++
+		}
 	}
 
 	if updateDryRun {
 		return
 	}
 
-	total := len(tools) - skipped
+	total := updated + upToDate + failed
 	if total == 0 {
-		printInfo("All tools are exact-pinned, nothing to update.")
+		if skipped > 0 {
+			printInfo("All tools are exact-pinned, nothing to update.")
+		} else {
+			printInfo("No tools to update.")
+		}
 		return
 	}
 
-	if updated == 0 && failed == 0 {
+	switch {
+	case failed == 0 && updated == 0:
 		printInfo("All tools are up to date.")
-	} else if failed == 0 {
-		printInfof("Updated %d/%d tools.\n", updated, total)
-	} else {
-		printInfof("Updated %d/%d tools (%d failed).\n", updated, total, failed)
+	case failed == 0:
+		printInfof("Updated %d, up to date %d.\n", updated, upToDate)
+	default:
+		printInfof("Updated %d, up to date %d, failed %d.\n", updated, upToDate, failed)
 	}
 }
 

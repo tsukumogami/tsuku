@@ -153,3 +153,51 @@ func TestWarnShellInitChanges_MultipleShellChanges(t *testing.T) {
 		t.Errorf("did not expect warning about fish, got: %s", output)
 	}
 }
+
+func TestUpdateOutcomeMessage(t *testing.T) {
+	cases := []struct {
+		name   string
+		tool   string
+		oldVer string
+		newVer string
+		want   string
+	}{
+		{
+			name:   "no version (defensive)",
+			tool:   "kubectl",
+			oldVer: "1.30.0",
+			newVer: "",
+			want:   "",
+		},
+		{
+			name:   "already at latest",
+			tool:   "nodejs",
+			oldVer: "25.9.0",
+			newVer: "25.9.0",
+			want:   "nodejs is already at the latest version (25.9.0).",
+		},
+		{
+			name:   "updated to a newer version",
+			tool:   "kubectl",
+			oldVer: "1.30.0",
+			newVer: "1.31.0",
+			want:   "Updated kubectl: 1.30.0 -> 1.31.0",
+		},
+		{
+			name:   "first install (empty old version)",
+			tool:   "kubectl",
+			oldVer: "",
+			newVer: "1.31.0",
+			want:   "Updated kubectl:  -> 1.31.0",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := updateOutcomeMessage(tc.tool, tc.oldVer, tc.newVer)
+			if got != tc.want {
+				t.Errorf("updateOutcomeMessage(%q, %q, %q) = %q, want %q",
+					tc.tool, tc.oldVer, tc.newVer, got, tc.want)
+			}
+		})
+	}
+}
