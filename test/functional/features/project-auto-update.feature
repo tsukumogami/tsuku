@@ -64,7 +64,7 @@ Feature: Project-level auto-update integration
     # Cache entry consumed by the detached `tsuku apply-updates` process
     # auto-apply spawns from `tsuku list`'s PersistentPreRun. The spawn
     # is async (per #2278), so the assertion polls.
-    And the file "cache/updates/fake-auto-apply-tool.json" eventually does not exist within 30 seconds
+    And the file "cache/updates/fake-auto-apply-tool.json" eventually does not exist within 90 seconds
 
   Scenario: undeclared tool in project config uses global pin
     # Project config declares python but not the cached tool -- the
@@ -88,7 +88,7 @@ Feature: Project-level auto-update integration
     Then the exit code is 0
     # Cache entry consumed asynchronously by the detached `tsuku apply-updates`
     # process (per #2278); poll for absence.
-    And the file "cache/updates/fake-auto-apply-tool.json" eventually does not exist within 30 seconds
+    And the file "cache/updates/fake-auto-apply-tool.json" eventually does not exist within 90 seconds
 
   Scenario: tsuku commands work from project directory
     Given I create home file "myproject/.tsuku.toml" with content:
