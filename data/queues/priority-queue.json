@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-29T00:02:21Z",
+  "updated_at": "2026-04-29T02:47:52Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 263,
-      "next_retry_at": "1734-01-17T22:15:11.236458581Z"
+      "failure_count": 265,
+      "next_retry_at": "1734-01-18T03:00:35.154261089Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 410,
-      "next_retry_at": "1734-01-17T22:15:11.236458581Z"
+      "failure_count": 412,
+      "next_retry_at": "1734-01-18T03:00:35.154261089Z"
     },
     {
       "name": "libaacs",
@@ -33386,7 +33386,7 @@
       "name": "ocp",
       "source": "rubygems:ocp",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -40296,11 +40296,11 @@
       "name": "re2",
       "source": "rubygems:re2",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-04-24T11:11:57.267503728Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-04-30T10:47:52.009036897Z"
     },
     {
       "name": "re2c",
