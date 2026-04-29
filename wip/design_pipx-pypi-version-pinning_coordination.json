@@ -1,0 +1,37 @@
+{
+  "topic": "pipx-pypi-version-pinning",
+  "decisions": [
+    {
+      "id": 1,
+      "question": "Where does the Python-compat filter run, and how does that location obtain the bundled Python major.minor?",
+      "status": "complete",
+      "complexity": "standard",
+      "report_file": "wip/design_pipx-pypi-version-pinning_decision_1_report.md",
+      "chosen": "Filter inside pipx_install.Decompose, after ResolvePythonStandalone(); read major.minor by probing the binary via getPythonVersion."
+    },
+    {
+      "id": 2,
+      "question": "What PEP 440 specifier subset must the version-compatibility evaluator support?",
+      "status": "complete",
+      "complexity": "standard",
+      "report_file": "wip/design_pipx-pypi-version-pinning_decision_2_report.md",
+      "chosen": "In-tree minimal evaluator: >=, <=, >, <, ==, !=, comma-AND, !=X.Y.* / ==X.Y.* wildcards. Reject ~= and === with clear error."
+    },
+    {
+      "id": 3,
+      "question": "What does tsuku surface when no PyPI release is compatible with the bundled Python?",
+      "status": "complete",
+      "complexity": "standard",
+      "report_file": "wip/design_pipx-pypi-version-pinning_decision_3_report.md",
+      "chosen": "Typed *ResolverError (ErrTypeNoCompatibleRelease) with one-line message naming package, bundled Python, latest version and its requirement."
+    }
+  ],
+  "cross_validation": "passed",
+  "cross_validation_notes": [
+    "D2's assumption of a 'recipe-author override path established in decision 1' does not hold. Resolution: when the PEP 440 evaluator hits an unsupported clause for a release, treat that release as incompatible (skip it). If ALL releases are unevaluable, surface D3's typed error.",
+    "D1's behavior on 'no compatible release' (return original ctx.Version, let pip fail) is superseded by D3's pre-flight typed error. Tsuku surfaces the typed error before invoking pip download.",
+    "D1 estimated PEP 440 evaluator at ~50 LOC; D2's empirically-grounded estimate is ~250 LOC (incl. wildcards). D2's estimate is adopted.",
+    "D3's source-prefix uncertainty resolved: PyPIProvider gains a new method (e.g., ResolveLatestCompatibleWith(pythonMajorMinor)) called from pipx_install.Decompose. Provider remains the error source, preserving the 'pypi resolver:' prefix."
+  ],
+  "round": 1
+}

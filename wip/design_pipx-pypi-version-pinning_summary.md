@@ -54,5 +54,30 @@ release automatically.
 
 ## Current Status
 
-**Phase:** 0 — Setup (Explore Handoff)
+**Phase:** 6 — Final Review (complete)
 **Last Updated:** 2026-04-28
+
+## Security Review (Phase 5)
+
+**Outcome:** Option 2 — Document considerations
+**Summary:** Three parser hardening checks added at Phase 5
+(per-clause length cap, ASCII-only validation, segment-magnitude cap).
+Folded into Phase 1 deliverables and Security Considerations.
+
+## Phase 6 Architecture Review
+
+**Outcome:** Three blocking issues raised, all addressed by revising
+Decision 1's chosen approach. Filter relocated from
+`pipx_install.Decompose` to `PyPIProvider.ResolveLatest`, with the
+bundled Python supplied via runtime probe at provider construction.
+Cache-key vs. installed-version divergence eliminated. `pypiPackageInfo`
+struct shape correctly described (`Releases map[string][]struct{}`
+replaced by typed file struct).
+
+## Phase 6 Security Re-review
+
+**Outcome:** Two new low-severity findings, both folded in. Total-length
+and clause-count caps added to the parser hardening list (now 5
+checks). Error message template explicitly renders `<Z>` through
+`pep440.Canonical(...)` to prevent log injection / terminal-escape via
+attacker-controlled PyPI metadata.
