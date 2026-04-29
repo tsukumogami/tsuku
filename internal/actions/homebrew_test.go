@@ -861,3 +861,92 @@ func TestGhcrHTTPClient(t *testing.T) {
 		t.Error("ghcrHTTPClient() returned client with zero timeout")
 	}
 }
+
+func TestSelectBottleEntry(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name       string
+		entries    []ghcrManifestEntry
+		version    string
+		platform   string
+		wantRefSet bool
+		wantRef    string
+	}{
+		{
+			name: "exact match (revision 0)",
+			entries: []ghcrManifestEntry{
+				{Annotations: map[string]string{"org.opencontainers.image.ref.name": "1.0.0.arm64_sonoma"}},
+				{Annotations: map[string]string{"org.opencontainers.image.ref.name": "1.0.0.x86_64_linux"}},
+			},
+			version: "1.0.0", platform: "arm64_sonoma",
+			wantRefSet: true, wantRef: "1.0.0.arm64_sonoma",
+		},
+		{
+			// libevent-style: revision-suffixed entries.
+			name: "revision-suffixed entry only (libevent)",
+			entries: []ghcrManifestEntry{
+				{Annotations: map[string]string{"org.opencontainers.image.ref.name": "2.1.12_1.arm64_sonoma"}},
+			},
+			version: "2.1.12", platform: "arm64_sonoma",
+			wantRefSet: true, wantRef: "2.1.12_1.arm64_sonoma",
+		},
+		{
+			name: "mixed — prefer highest revision",
+			entries: []ghcrManifestEntry{
+				{Annotations: map[string]string{"org.opencontainers.image.ref.name": "1.0.0.arm64_sonoma"}},
+				{Annotations: map[string]string{"org.opencontainers.image.ref.name": "1.0.0_1.arm64_sonoma"}},
+				{Annotations: map[string]string{"org.opencontainers.image.ref.name": "1.0.0_2.arm64_sonoma"}},
+			},
+			version: "1.0.0", platform: "arm64_sonoma",
+			wantRefSet: true, wantRef: "1.0.0_2.arm64_sonoma",
+		},
+		{
+			name: "no match — revision-suffixed for different version",
+			entries: []ghcrManifestEntry{
+				{Annotations: map[string]string{"org.opencontainers.image.ref.name": "1.0.0_1.arm64_sonoma"}},
+			},
+			version: "1.0", platform: "arm64_sonoma",
+			wantRefSet: false,
+		},
+		{
+			name: "no match — wrong platform",
+			entries: []ghcrManifestEntry{
+				{Annotations: map[string]string{"org.opencontainers.image.ref.name": "1.0.0_1.x86_64_linux"}},
+			},
+			version: "1.0.0", platform: "arm64_sonoma",
+			wantRefSet: false,
+		},
+		{
+			name: "ignore non-numeric suffix",
+			entries: []ghcrManifestEntry{
+				{Annotations: map[string]string{"org.opencontainers.image.ref.name": "1.0.0_abc.arm64_sonoma"}},
+			},
+			version: "1.0.0", platform: "arm64_sonoma",
+			wantRefSet: false,
+		},
+		{
+			name:    "empty entries",
+			version: "1.0.0", platform: "arm64_sonoma",
+			wantRefSet: false,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := selectBottleEntry(tc.entries, tc.version, tc.platform)
+			if got == nil {
+				if tc.wantRefSet {
+					t.Errorf("selectBottleEntry returned nil; want match for ref %q", tc.wantRef)
+				}
+				return
+			}
+			if !tc.wantRefSet {
+				t.Errorf("selectBottleEntry returned %v; want nil", got)
+				return
+			}
+			refName := got.Annotations["org.opencontainers.image.ref.name"]
+			if refName != tc.wantRef {
+				t.Errorf("selectBottleEntry returned ref %q; want %q", refName, tc.wantRef)
+			}
+		})
+	}
+}

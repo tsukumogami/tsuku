@@ -3,13 +3,10 @@ name = "libevent"
 description = "Asynchronous event library"
 homepage = "https://libevent.org/"
 type = "library"
+curated = true
 dependencies = ["openssl"]
-# macOS: tsuku's homebrew bottle resolver looks up the GHCR manifest at the
-# unrevised version path (`/manifests/2.1.12`), but libevent's bottles live
-# under `/manifests/2.1.12_1` because of the revision bump. Tracked in the
-# follow-up to this issue.
 # linux/arm64: homebrew bottle install fails on glibc arm64 containers.
-unsupported_platforms = ["darwin/arm64", "darwin/amd64", "linux/arm64"]
+unsupported_platforms = ["linux/arm64"]
 
 [metadata.satisfies]
 homebrew = ["libevent"]
@@ -44,4 +41,37 @@ when = { os = ["linux"], libc = ["glibc"] }
 action = "apk_install"
 packages = ["libevent-dev"]
 when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew bottle. Provides libevent-2.1.7.dylib referenced by the
+# tmux bottle's @rpath. The revision-suffixed manifest entries (formula
+# declares `revision: 1`) are resolved by `selectBottleEntry` /
+# `selectBuilderBottleEntry`.
+[[steps]]
+action = "homebrew"
+formula = "libevent"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "lib/libevent.dylib",
+    "lib/libevent-2.1.7.dylib",
+    "lib/libevent.a",
+    "lib/libevent_core.dylib",
+    "lib/libevent_core-2.1.7.dylib",
+    "lib/libevent_core.a",
+    "lib/libevent_extra.dylib",
+    "lib/libevent_extra-2.1.7.dylib",
+    "lib/libevent_extra.a",
+    "lib/libevent_openssl.dylib",
+    "lib/libevent_openssl-2.1.7.dylib",
+    "lib/libevent_openssl.a",
+    "lib/libevent_pthreads.dylib",
+    "lib/libevent_pthreads-2.1.7.dylib",
+    "lib/libevent_pthreads.a",
+    "lib/pkgconfig/libevent.pc",
+    "include/event2/event.h",
+]
+when = { os = ["darwin"] }
 

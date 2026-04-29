@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -135,6 +136,60 @@ func (a *HomebrewAction) Execute(ctx *ExecutionContext, params map[string]interf
 	reporter.Log("   Extracted and relocated: %s", formula)
 
 	return nil
+}
+
+// resolveBottleVersion returns the upstream-canonical bottle version
+// for the given formula. For revision-0 formulas, this is the stable
+// version (`2.1.12`); for revisioned formulas, it's the stable version
+// with the revision suffix appended (`2.1.12_1`). Both the GHCR
+// manifest URL and the per-platform ref-name annotation use this
+// canonical form.
+//
+// On any formulae.brew.sh fetch failure, falls back to the unrevised
+// `version` so the existing un-revisioned path still works.
+func (a *HomebrewAction) resolveBottleVersion(ctx context.Context, formula, version string) (string, error) {
+	revision, err := a.getFormulaRevision(ctx, formula)
+	if err != nil {
+		// Soft-fail: callers see the raw `getBlobSHA` error if the
+		// formula's manifest doesn't have unrevised entries either.
+		return version, nil
+	}
+	if revision <= 0 {
+		return version, nil
+	}
+	return fmt.Sprintf("%s_%d", version, revision), nil
+}
+
+// getFormulaRevision returns the integer `revision` field for a
+// homebrew formula via formulae.brew.sh. Returns 0 when the field is
+// missing or not parseable.
+func (a *HomebrewAction) getFormulaRevision(ctx context.Context, formula string) (int, error) {
+	apiURL := fmt.Sprintf("https://formulae.brew.sh/api/formula/%s.json", formula)
+	req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
+	if err != nil {
+		return 0, err
+	}
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := ghcrHTTPClient().Do(req)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return 0, fmt.Errorf("formulae.brew.sh returned %d", resp.StatusCode)
+	}
+
+	// Read at most 1 MiB; formula JSON is small (~tens of KB).
+	limited := io.LimitReader(resp.Body, 1024*1024)
+	var info struct {
+		Revision int `json:"revision"`
+	}
+	if err := json.NewDecoder(limited).Decode(&info); err != nil {
+		return 0, err
+	}
+	return info.Revision, nil
 }
 
 // validateFormulaName ensures the formula name is safe
@@ -262,34 +317,83 @@ func (a *HomebrewAction) getBlobSHA(formula, version, platformTag, token string)
 		return "", fmt.Errorf("failed to parse manifest: %w", err)
 	}
 
-	// The expected ref name format is "{version}.{platform_tag}"
-	// e.g., "0.2.5.arm64_sonoma" or "0.2.5.x86_64_linux"
-	expectedRefName := fmt.Sprintf("%s.%s", version, platformTag)
-
-	// Find the entry matching our platform tag
-	for _, entry := range manifest.Manifests {
-		// Check org.opencontainers.image.ref.name annotation for the bottle tag
-		// Format: "{version}.{platform_tag}" e.g., "0.2.5.arm64_sonoma"
-		if refName, ok := entry.Annotations["org.opencontainers.image.ref.name"]; ok {
-			if refName == expectedRefName {
-				// Return the blob digest from sh.brew.bottle.digest annotation
-				if digest, ok := entry.Annotations["sh.brew.bottle.digest"]; ok {
-					// Digest format: sha256:xxx or just the hash
-					if strings.HasPrefix(digest, "sha256:") {
-						return strings.TrimPrefix(digest, "sha256:"), nil
-					}
-					return digest, nil
-				}
-				// Fall back to manifest digest if no specific bottle digest
-				if strings.HasPrefix(entry.Digest, "sha256:") {
-					return strings.TrimPrefix(entry.Digest, "sha256:"), nil
-				}
-				return entry.Digest, nil
+	// Pick the entry whose ref.name names the requested platform. The
+	// canonical ref-name format is "<version>(_<revision>)?.<platform>"
+	// — homebrew formulas with `revision >= 1` produce entries like
+	// "2.1.12_1.arm64_sonoma" while revision-0 formulas produce
+	// "2.1.12.arm64_sonoma". Accept either; when multiple revisions
+	// match, prefer the highest.
+	matched := selectBottleEntry(manifest.Manifests, version, platformTag)
+	if matched != nil {
+		// Return the blob digest from sh.brew.bottle.digest annotation
+		if digest, ok := matched.Annotations["sh.brew.bottle.digest"]; ok {
+			// Digest format: sha256:xxx or just the hash
+			if strings.HasPrefix(digest, "sha256:") {
+				return strings.TrimPrefix(digest, "sha256:"), nil
 			}
+			return digest, nil
 		}
+		// Fall back to manifest digest if no specific bottle digest
+		if strings.HasPrefix(matched.Digest, "sha256:") {
+			return strings.TrimPrefix(matched.Digest, "sha256:"), nil
+		}
+		return matched.Digest, nil
 	}
 
-	return "", fmt.Errorf("no bottle found for platform tag: %s (expected ref: %s)", platformTag, expectedRefName)
+	return "", fmt.Errorf("no bottle found for platform tag: %s (expected ref: %s.%s or %s_<revision>.%s)",
+		platformTag, version, platformTag, version, platformTag)
+}
+
+// selectBottleEntry scans manifest entries for the one matching the
+// requested platform. Accepts both unrevised (<version>.<platform>)
+// and revision-suffixed (<version>_<N>.<platform>) ref-name forms;
+// when multiple revisions match, returns the entry with the highest
+// revision (consistent with homebrew's "latest revision wins"
+// convention for bottle availability).
+func selectBottleEntry(entries []ghcrManifestEntry, version, platformTag string) *ghcrManifestEntry {
+	suffix := "." + platformTag
+	exactRefName := version + suffix
+	revisionPrefix := version + "_"
+
+	var (
+		best       *ghcrManifestEntry
+		bestRevSet bool
+		bestRev    int
+	)
+	for i := range entries {
+		e := &entries[i]
+		refName, ok := e.Annotations["org.opencontainers.image.ref.name"]
+		if !ok {
+			continue
+		}
+		if refName == exactRefName {
+			if !bestRevSet || bestRev < 0 {
+				// Treat the unrevised entry as revision 0; a
+				// revisioned match (>= 1) wins over it.
+				best = e
+				bestRev = 0
+				bestRevSet = true
+			}
+			continue
+		}
+		if !strings.HasPrefix(refName, revisionPrefix) || !strings.HasSuffix(refName, suffix) {
+			continue
+		}
+		mid := refName[len(revisionPrefix) : len(refName)-len(suffix)]
+		if mid == "" {
+			continue
+		}
+		rev, err := strconv.Atoi(mid)
+		if err != nil || rev < 0 {
+			continue
+		}
+		if !bestRevSet || rev > bestRev {
+			best = e
+			bestRev = rev
+			bestRevSet = true
+		}
+	}
+	return best
 }
 
 // downloadBottle downloads a bottle blob from GHCR
@@ -386,6 +490,16 @@ func (a *HomebrewAction) Decompose(ctx *EvalContext, params map[string]interface
 		return nil, fmt.Errorf("unsupported platform: %w", err)
 	}
 
+	// Resolve the upstream-canonical bottle version string. Homebrew
+	// formulas with `revision >= 1` publish their bottles under
+	// "/manifests/<version>_<revision>" with ref-name entries also
+	// suffixed by "_<revision>", so we need to learn the revision
+	// from formulae.brew.sh before constructing either URL.
+	bottleVersion, err := a.resolveBottleVersion(ctx.Context, formula, ctx.VersionTag)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve bottle version: %w", err)
+	}
+
 	// Get anonymous GHCR token
 	token, err := a.getGHCRToken(formula)
 	if err != nil {
@@ -393,7 +507,7 @@ func (a *HomebrewAction) Decompose(ctx *EvalContext, params map[string]interface
 	}
 
 	// Get manifest and find platform-specific blob SHA
-	blobSHA, err := a.getBlobSHA(formula, ctx.VersionTag, platformTag, token)
+	blobSHA, err := a.getBlobSHA(formula, bottleVersion, platformTag, token)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get blob SHA: %w", err)
 	}
