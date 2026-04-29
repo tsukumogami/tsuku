@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-29T03:27:05Z",
+  "generated_at": "2026-04-29T11:33:00Z",
   "total_recipes": 1435,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 868,
+        "supported": 869,
         "total": 1435,
-        "pct": 60.48780487804878
+        "pct": 60.55749128919861
       },
       "glibc": {
         "supported": 1403,
@@ -11054,13 +11054,11 @@
       "name": "libevent",
       "type": "library",
       "platforms": {
-        "darwin": false,
+        "darwin": true,
         "glibc": true,
         "musl": true
       },
-      "gaps": [
-        "darwin"
-      ],
+      "gaps": null,
       "errors": null,
       "warnings": null
     },
