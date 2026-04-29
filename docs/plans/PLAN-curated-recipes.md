@@ -102,8 +102,8 @@ These issues capture infrastructure and recipe gaps surfaced while authoring the
 | _The bare `bazel-{version}-{os}-{arch}` binary self-extracts an embedded JDK and spawns a long-lived server on first run; verify exits non-zero on glibc Linux (~55s) and macOS (~3s) in the sandbox. Needs an installer-script or Homebrew approach._ | | |
 | ~~[#2331: feat(recipes): allow pipx_install recipes to pin a PyPI version constraint](https://github.com/tsukumogami/tsuku/issues/2331)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Resolved with a different mechanism than the title suggests. Recipes do not declare PyPI version constraints; instead, `PyPIProvider.ResolveLatest` filters by per-release `requires_python` against the bundled `python-standalone` major.minor. Auto-resolution picks the newest stable, non-yanked, Python-compatible release. Lands `recipes/a/ansible.toml` as the proof point. azure-cli is deferred — its eval already succeeds and its post-install failure is a separate transitive C-extension ABI issue. See `docs/designs/current/DESIGN-pipx-pypi-version-pinning.md`._~~ | | |
-| [#2333: fix(homebrew): resolve revision-suffixed bottles so libevent darwin can be installed](https://github.com/tsukumogami/tsuku/issues/2333) | None | testable |
-| _tsuku's homebrew bottle resolver looks up the GHCR manifest at `/manifests/{version}` and matches `ref.name == {version}.{platform_tag}`, but libevent's manifest entries are tagged with the revision-suffixed version (`2.1.12_1.arm64_sonoma`) because the formula declares `revision: 1`. Blocks libevent darwin (and therefore tmux darwin)._ | | |
+| ~~[#2333: fix(homebrew): resolve revision-suffixed bottles so libevent darwin can be installed](https://github.com/tsukumogami/tsuku/issues/2333)~~ | ~~None~~ | ~~testable~~ |
+| ~~_The homebrew action now fetches `revision` from formulae.brew.sh and constructs `<version>_<revision>` for both the manifest URL and the ref-name match when revision >= 1; the shared matcher accepts both unrevised and revision-suffixed entry forms within a single manifest. `recipes/l/libevent.toml` ships with darwin support and the macOS dylib outputs (`libevent-2.1.7.dylib` and the static archives) so tmux's @rpath resolves at runtime._~~ | | |
 | [#2335: fix(recipes): curate pcre2 with macOS dylib outputs and fix rhel + alpine sandbox failures](https://github.com/tsukumogami/tsuku/issues/2335) | None | testable |
 | _pcre2 fails on RHEL glibc and Alpine musl (`install_exit_code = 0`, `passed = false`). Touching the recipe to add macOS dylib outputs surfaces the failures. The `libpcre2-8.0.dylib` expansion and the RHEL/Alpine investigation belong together. Blocks git darwin._ | | |
 | [#2336: feat(recipes): add macOS support to tmux and git recipes](https://github.com/tsukumogami/tsuku/issues/2336) | [#2333](https://github.com/tsukumogami/tsuku/issues/2333), [#2335](https://github.com/tsukumogami/tsuku/issues/2335) | testable |
@@ -177,8 +177,8 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2325,I2328,I2331 done
-    class I2327,I2330,I2333,I2335,I2338 ready
+    class I2325,I2328,I2331,I2333 done
+    class I2327,I2330,I2335,I2338 ready
     class I2336,I2343,I2344,I2345,I2349 blocked
 ```
 
