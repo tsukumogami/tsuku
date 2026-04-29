@@ -123,6 +123,26 @@ Platform: All. Dependencies: python-standalone (eval + install time).
 If the package ships compiled binaries (like ruff), set
 `runtime_dependencies = []` to skip runtime Python.
 
+**Version selection.** Recipes do not declare a version pin. tsuku
+resolves `latest` to the newest PyPI release whose `requires_python`
+metadata is satisfied by the bundled `python-standalone` binary's
+major.minor. PEP 440 prereleases (e.g., `2.17.9rc1`) and yanked
+releases are skipped automatically; `.post` releases are accepted.
+When no PyPI release is compatible, resolution fails with a typed
+`*ResolverError` (`ErrTypeNoCompatibleRelease`) of the shape:
+
+```
+pypi resolver: no release of <package> is compatible with bundled
+Python <X.Y> (latest is <V>, requires Python <Z>)
+```
+
+User pins (`tsuku install foo@x.y`) bypass this filter — explicit
+pins are authoritative. To recover when a recipe's auto-resolution
+hits the no-compatible-release branch, either pin via the CLI, or
+file an issue against the recipe so a follow-up can pin to a known-
+good range. See `docs/designs/DESIGN-pipx-pypi-version-pinning.md`
+for the full design.
+
 ### go_install
 
 | Parameter | Type | Required | Description |

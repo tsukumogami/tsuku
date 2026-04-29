@@ -38,6 +38,25 @@ type Executor struct {
 	resolvedDeps            actions.ResolvedDeps // Pre-resolved dependencies (from state manager)
 	noShellInit             bool                 // Skip install_shell_init in post-install phase
 	reporter                progress.Reporter    // Progress reporter propagated to all execution contexts
+
+	// onEvalDepsNeeded installs missing eval-time dependencies. Set
+	// once via SetEvalDepsCallback before version resolution runs.
+	// When nil, version resolution skips the early eval-deps surface;
+	// missing deps are detected later by resolveStep's per-step
+	// CheckEvalDeps and surfaced as an error there.
+	onEvalDepsNeeded   func(deps []string, autoAccept bool) error
+	autoAcceptEvalDeps bool
+}
+
+// SetEvalDepsCallback installs a callback that ensures eval-time
+// dependencies (like python-standalone for pipx_install recipes) are
+// installed before version resolution constructs the version provider.
+// Without this, the provider's Python-compatibility filter cannot probe
+// the bundled Python on a fresh machine, and the install plan's cache
+// key would be born from the unfiltered absolute-latest version.
+func (e *Executor) SetEvalDepsCallback(fn func(deps []string, autoAccept bool) error, autoAccept bool) {
+	e.onEvalDepsNeeded = fn
+	e.autoAcceptEvalDeps = autoAccept
 }
 
 // New creates a new executor
@@ -86,11 +105,21 @@ func (e *Executor) SetSkipCacheSecurityChecks(skip bool) {
 	e.skipCacheSecurityChecks = skip
 }
 
-// resolveVersionWith attempts to resolve the latest version for the recipe using the given resolver
+// resolveVersionWith attempts to resolve the latest version for the recipe using the given resolver.
+//
+// For pipx_install recipes, the executor first ensures python-standalone
+// is installed (via the eval-deps callback set by SetEvalDepsCallback)
+// and then probes its major.minor so PyPI's per-release requires_python
+// filtering runs at the cache-key seam. See
+// docs/designs/DESIGN-pipx-pypi-version-pinning.md.
 func (e *Executor) resolveVersionWith(ctx context.Context, resolver *version.Resolver) (*version.VersionInfo, error) {
-	// Use unified provider factory
+	pythonMajorMinor, err := e.resolvePipxPythonMajorMinor()
+	if err != nil {
+		return nil, err
+	}
+
 	factory := version.NewProviderFactory()
-	provider, err := factory.ProviderFromRecipe(resolver, e.recipe)
+	provider, err := factory.ProviderFromRecipeForPipx(resolver, e.recipe, pythonMajorMinor)
 	if err != nil {
 		return nil, err
 	}
@@ -101,6 +130,85 @@ func (e *Executor) resolveVersionWith(ctx context.Context, resolver *version.Res
 	return version.ResolveWithinBoundary(ctx, provider, e.reqVersion)
 }
 
+// resolvePipxPythonMajorMinor returns the bundled Python's major.minor
+// for pipx_install recipes, or "" for non-pipx recipes.
+//
+// For pipx recipes, this is the binding seam between the design's
+// requirement (the cache-key version must be filtered against the
+// Python that runs the install) and reality (python-standalone may
+// not be installed yet on the user's machine). It runs in three steps:
+//
+//  1. Scan the recipe for pipx_install steps. If none, return "".
+//  2. Surface the action's eval-deps. If python-standalone is missing
+//     and a callback is set (via SetEvalDepsCallback), invoke it to
+//     install it. Without the callback, return "" — the per-step
+//     CheckEvalDeps in resolveStep will surface the missing dep to
+//     the user later, but the cache key for this run will not be
+//     Python-compat-filtered.
+//  3. Probe the (now-installed) binary via getPythonVersion and
+//     truncate to major.minor.
+func (e *Executor) resolvePipxPythonMajorMinor() (string, error) {
+	if e.recipe == nil {
+		return "", nil
+	}
+	if !recipeHasPipxInstall(e.recipe) {
+		return "", nil
+	}
+
+	// Surface eval-deps before the probe. This is what makes the
+	// first-run install of a pipx recipe pick a Python-compatible
+	// version.
+	deps := actions.GetEvalDeps("pipx_install")
+	if missing := actions.CheckEvalDeps(deps); len(missing) > 0 {
+		if e.onEvalDepsNeeded == nil {
+			// No callback wired (e.g., a caller path that hasn't
+			// opted into auto-install). Fall through silently: the
+			// per-step CheckEvalDeps will surface this to the user
+			// later. The cache key for this run won't be filtered,
+			// but resolveStep will still fail clearly.
+			return "", nil
+		}
+		if err := e.onEvalDepsNeeded(missing, e.autoAcceptEvalDeps); err != nil {
+			return "", fmt.Errorf("eval-time dependencies not satisfied: %w", err)
+		}
+	}
+
+	pythonPath := actions.ResolvePythonStandalone()
+	if pythonPath == "" {
+		return "", nil
+	}
+	full, err := actions.GetPythonVersion(pythonPath)
+	if err != nil {
+		return "", nil
+	}
+	return truncatePythonMajorMinor(full), nil
+}
+
+// recipeHasPipxInstall reports whether the recipe contains any
+// pipx_install steps.
+func recipeHasPipxInstall(r *recipe.Recipe) bool {
+	if r == nil {
+		return false
+	}
+	for _, step := range r.Steps {
+		if step.Action == "pipx_install" {
+			return true
+		}
+	}
+	return false
+}
+
+// truncatePythonMajorMinor returns the leading "X.Y" of a CPython
+// version string. Falls back to the full string if the input is
+// shorter than two dot-separated components.
+func truncatePythonMajorMinor(full string) string {
+	parts := strings.SplitN(full, ".", 3)
+	if len(parts) < 2 {
+		return full
+	}
+	return parts[0] + "." + parts[1]
+}
+
 // ResolveVersion resolves a version constraint to a concrete version string.
 // This is Phase 1 of the two-phase installation model: version resolution runs
 // before cache lookup to determine the cache key.
@@ -108,10 +216,20 @@ func (e *Executor) resolveVersionWith(ctx context.Context, resolver *version.Res
 // If constraint is empty, resolves to the latest version.
 // If constraint is specified, attempts to resolve that specific version.
 // Returns the resolved version string (e.g., "14.1.0").
+//
+// For pipx_install recipes, this routes through the same Python-compat-aware
+// path as resolveVersionWith so the cache key produced here matches the
+// version the install plan will install. See
+// docs/designs/DESIGN-pipx-pypi-version-pinning.md.
 func (e *Executor) ResolveVersion(ctx context.Context, constraint string) (string, error) {
+	pythonMajorMinor, err := e.resolvePipxPythonMajorMinor()
+	if err != nil {
+		return "", err
+	}
+
 	resolver := version.New()
 	factory := version.NewProviderFactory()
-	provider, err := factory.ProviderFromRecipe(resolver, e.recipe)
+	provider, err := factory.ProviderFromRecipeForPipx(resolver, e.recipe, pythonMajorMinor)
 	if err != nil {
 		return "", err
 	}

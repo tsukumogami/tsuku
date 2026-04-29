@@ -1,0 +1,26 @@
+[metadata]
+name = "ansible"
+description = "Radically simple IT automation"
+homepage = "https://www.ansible.com"
+version_format = "semver"
+curated = true
+supported_libc = ["glibc"]
+
+[[steps]]
+action = "pipx_install"
+package = "ansible-core"
+executables = [
+    "ansible",
+    "ansible-config",
+    "ansible-console",
+    "ansible-doc",
+    "ansible-galaxy",
+    "ansible-inventory",
+    "ansible-playbook",
+    "ansible-pull",
+    "ansible-vault",
+]
+
+[verify]
+command = "ansible --version"
+pattern = "{version}"

@@ -104,6 +104,37 @@ func (f *ProviderFactory) ProviderFromRecipe(resolver *Resolver, r *recipe.Recip
 	return nil, fmt.Errorf("no version source configured for recipe %s (add [version] section)", r.Metadata.Name)
 }
 
+// PipxAwareStrategy is implemented by strategies that can construct a
+// pipx-context PyPI provider when the executor has resolved the bundled
+// Python's major.minor. Strategies that don't implement this interface
+// are unaffected by the pipx routing path.
+type PipxAwareStrategy interface {
+	// CreateWithPython constructs a provider with the bundled Python's
+	// major.minor (e.g., "3.10") so PyPI release filtering can run at
+	// version-resolution time. Should be called only after the executor
+	// has verified python-standalone is installed.
+	CreateWithPython(resolver *Resolver, r *recipe.Recipe, pythonMajorMinor string) (VersionProvider, error)
+}
+
+// ProviderFromRecipeForPipx is the pipx-aware variant of ProviderFromRecipe.
+// When pythonMajorMinor is non-empty AND the matching strategy implements
+// PipxAwareStrategy, the provider is constructed via CreateWithPython.
+// Non-pipx strategies (and the empty-pythonMajorMinor case) fall through
+// to standard Create — preserving today's behavior for non-pipx recipes.
+func (f *ProviderFactory) ProviderFromRecipeForPipx(resolver *Resolver, r *recipe.Recipe, pythonMajorMinor string) (VersionProvider, error) {
+	for _, strategy := range f.strategies {
+		if strategy.CanHandle(r) {
+			if pythonMajorMinor != "" {
+				if pa, ok := strategy.(PipxAwareStrategy); ok {
+					return pa.CreateWithPython(resolver, r, pythonMajorMinor)
+				}
+			}
+			return strategy.Create(resolver, r)
+		}
+	}
+	return nil, fmt.Errorf("no version source configured for recipe %s (add [version] section)", r.Metadata.Name)
+}
+
 // --- Concrete Strategies ---
 
 // ExplicitSourceStrategy handles recipes with explicit [version] source = "..."
@@ -171,6 +202,21 @@ func (s *PyPISourceStrategy) Create(resolver *Resolver, r *recipe.Recipe) (Versi
 		if step.Action == "pipx_install" {
 			if pkg, ok := step.Params["package"].(string); ok {
 				return NewPyPIProvider(resolver, pkg), nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("no PyPI package found in pipx_install steps")
+}
+
+// CreateWithPython constructs a PyPI provider that filters releases by
+// requires_python against pythonMajorMinor. Used by
+// ProviderFromRecipeForPipx after the executor has resolved the bundled
+// Python's major.minor.
+func (s *PyPISourceStrategy) CreateWithPython(resolver *Resolver, r *recipe.Recipe, pythonMajorMinor string) (VersionProvider, error) {
+	for _, step := range r.Steps {
+		if step.Action == "pipx_install" {
+			if pkg, ok := step.Params["package"].(string); ok {
+				return NewPyPIProviderForPipx(resolver, pkg, pythonMajorMinor), nil
 			}
 		}
 	}
@@ -268,6 +314,19 @@ func (s *InferredPyPIStrategy) Create(resolver *Resolver, r *recipe.Recipe) (Ver
 		if step.Action == "pipx_install" {
 			if pkg, ok := step.Params["package"].(string); ok {
 				return NewPyPIProvider(resolver, pkg), nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("no PyPI package found in pipx_install steps")
+}
+
+// CreateWithPython is the pipx-aware variant of Create. Returns a
+// PyPIProvider that filters by requires_python against pythonMajorMinor.
+func (s *InferredPyPIStrategy) CreateWithPython(resolver *Resolver, r *recipe.Recipe, pythonMajorMinor string) (VersionProvider, error) {
+	for _, step := range r.Steps {
+		if step.Action == "pipx_install" {
+			if pkg, ok := step.Params["package"].(string); ok {
+				return NewPyPIProviderForPipx(resolver, pkg, pythonMajorMinor), nil
 			}
 		}
 	}

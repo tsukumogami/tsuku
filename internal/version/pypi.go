@@ -24,7 +24,20 @@ type pypiPackageInfo struct {
 		Version string `json:"version"` // Latest version
 		Name    string `json:"name"`
 	} `json:"info"`
-	Releases map[string][]struct{} `json:"releases"` // All versions as keys
+	// Releases maps version → file dicts. Each file dict carries its
+	// own `requires_python`. In practice all files for a release share
+	// the same value, so the first non-empty entry is authoritative.
+	// Releases with no files (yanked-only, etc.) appear as an empty
+	// slice and are still surfaced as version keys.
+	Releases map[string][]pypiReleaseFile `json:"releases"`
+}
+
+// pypiReleaseFile carries the per-file metadata tsuku consumes from
+// PyPI's JSON API. Only `requires_python` and `yanked` are read; other
+// fields are intentionally unmodelled to keep the struct narrow.
+type pypiReleaseFile struct {
+	RequiresPython string `json:"requires_python"`
+	Yanked         bool   `json:"yanked"`
 }
 
 // ResolvePyPI fetches the latest version from PyPI JSON API
@@ -213,6 +226,130 @@ func (r *Resolver) ListPyPIVersions(ctx context.Context, packageName string) ([]
 	})
 
 	return versions, nil
+}
+
+// pypiRelease pairs a version string with the per-file metadata
+// tsuku consumes. Used by PyPIProvider's pipx-aware paths to filter
+// by `requires_python` and yanked status without making a second
+// HTTP fetch.
+type pypiRelease struct {
+	Version        string
+	RequiresPython string
+	// Yanked is true when every file for this release is yanked.
+	// Yanked releases are excluded from auto-resolution but remain
+	// visible to user pins (matching pip's --no-pre-style semantics:
+	// explicit is authoritative).
+	Yanked bool
+}
+
+// listPyPIReleasesWithMetadata returns all releases newest-first with
+// their `requires_python` string. Reuses the same fetch path and
+// 10 MB response cap as ListPyPIVersions; the caller's tests can
+// substitute the registry URL via Resolver.pypiRegistryURL.
+func (r *Resolver) listPyPIReleasesWithMetadata(ctx context.Context, packageName string) ([]pypiRelease, error) {
+	if !isValidPyPIPackageName(packageName) {
+		return nil, &ResolverError{
+			Type:    ErrTypeValidation,
+			Source:  "pypi",
+			Message: fmt.Sprintf("invalid PyPI package name: %s", packageName),
+		}
+	}
+
+	registryURL := r.pypiRegistryURL
+	if registryURL == "" {
+		registryURL = "https://pypi.org"
+	}
+	baseURL, err := url.Parse(registryURL)
+	if err != nil {
+		return nil, &ResolverError{
+			Type:    ErrTypeNetwork,
+			Source:  "pypi",
+			Message: "failed to parse base URL",
+			Err:     err,
+		}
+	}
+	apiURL := baseURL.JoinPath("pypi", packageName, "json")
+
+	req, err := http.NewRequestWithContext(ctx, "GET", apiURL.String(), nil)
+	if err != nil {
+		return nil, &ResolverError{
+			Type:    ErrTypeNetwork,
+			Source:  "pypi",
+			Message: "failed to create request",
+			Err:     err,
+		}
+	}
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := r.httpClient.Do(req)
+	if err != nil {
+		return nil, WrapNetworkError(err, "pypi", "failed to fetch package info")
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 404 {
+		return nil, &ResolverError{
+			Type:    ErrTypeNotFound,
+			Source:  "pypi",
+			Message: fmt.Sprintf("package %s not found on PyPI", packageName),
+		}
+	}
+	if resp.StatusCode != 200 {
+		return nil, &ResolverError{
+			Type:    ErrTypeNetwork,
+			Source:  "pypi",
+			Message: fmt.Sprintf("HTTP %d", resp.StatusCode),
+		}
+	}
+
+	limitedReader := io.LimitReader(resp.Body, maxPyPIResponseSize)
+	var pkgInfo pypiPackageInfo
+	if err := json.NewDecoder(limitedReader).Decode(&pkgInfo); err != nil {
+		return nil, &ResolverError{
+			Type:    ErrTypeParsing,
+			Source:  "pypi",
+			Message: "failed to parse PyPI response",
+			Err:     err,
+		}
+	}
+
+	versions := make([]string, 0, len(pkgInfo.Releases))
+	for v := range pkgInfo.Releases {
+		versions = append(versions, v)
+	}
+	sort.Slice(versions, func(i, j int) bool {
+		v1, err1 := semver.NewVersion(versions[i])
+		v2, err2 := semver.NewVersion(versions[j])
+		if err1 == nil && err2 == nil {
+			return v2.LessThan(v1)
+		}
+		return versions[i] > versions[j]
+	})
+
+	releases := make([]pypiRelease, 0, len(versions))
+	for _, v := range versions {
+		// All files for a release share the same `requires_python` in
+		// practice; take the first non-empty value as authoritative.
+		// A release is yanked when all its files are yanked; partially-
+		// yanked releases (rare) keep their non-yanked files available
+		// and are not treated as yanked here.
+		var rp string
+		yanked := true
+		files := pkgInfo.Releases[v]
+		if len(files) == 0 {
+			yanked = false // no files at all (some legacy entries) — leave selectable
+		}
+		for _, f := range files {
+			if f.RequiresPython != "" && rp == "" {
+				rp = f.RequiresPython
+			}
+			if !f.Yanked {
+				yanked = false
+			}
+		}
+		releases = append(releases, pypiRelease{Version: v, RequiresPython: rp, Yanked: yanked})
+	}
+	return releases, nil
 }
 
 // isValidPyPIPackageName validates PyPI package names

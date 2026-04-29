@@ -138,6 +138,13 @@ func getOrGeneratePlanWith(
 	})
 }
 
+// installEvalDepsCallback returns a callback suitable for
+// Executor.SetEvalDepsCallback that auto-installs missing eval-time
+// dependencies during the install path.
+func installEvalDepsCallback(deps []string, autoAccept bool) error {
+	return installEvalDeps(deps, autoAccept)
+}
+
 func runInstallWithTelemetry(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client) error {
 	reporter := progress.NewTTYReporter(os.Stderr)
 	defer func() {
@@ -334,6 +341,13 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		return err
 	}
 	defer exec.Cleanup()
+
+	// Auto-install eval-time deps during the install path. This is what
+	// makes Executor.ResolveVersion (the cache-key step below) and
+	// resolveVersionWith (later, in plan generation) agree on the
+	// version: both probe the same bundled python-standalone, which is
+	// installed here if missing.
+	exec.SetEvalDepsCallback(installEvalDepsCallback, true)
 
 	// Set tools directory for finding other installed tools
 	exec.SetToolsDir(cfg.ToolsDir)
