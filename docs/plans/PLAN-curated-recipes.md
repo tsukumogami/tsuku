@@ -100,8 +100,8 @@ These issues capture infrastructure and recipe gaps surfaced while authoring the
 | ~~_Expanded scope from "gcloud_dist custom source" to a generic `http_json` version source per `docs/designs/DESIGN-http-json-version-source.md`. Adds `[version] source = "http_json"` with `url` and `version_path` fields supporting dotted access plus `[N]` array indexing. Authors `recipes/g/gcloud.toml` as the first consumer in the same PR. Deprecates `source = "hashicorp"` (kept for one release window with a runtime warning); removal tracked in #2349. Unblocks Adoptium-based openjdk in #2327 and HashiCorp checkpoint adoption in #2350-style follow-ups when needed._~~ | | |
 | [#2330: feat(recipes): author a working curated bazel recipe](https://github.com/tsukumogami/tsuku/issues/2330) | None | testable |
 | _The bare `bazel-{version}-{os}-{arch}` binary self-extracts an embedded JDK and spawns a long-lived server on first run; verify exits non-zero on glibc Linux (~55s) and macOS (~3s) in the sandbox. Needs an installer-script or Homebrew approach._ | | |
-| [#2331: feat(recipes): allow pipx_install recipes to pin a PyPI version constraint](https://github.com/tsukumogami/tsuku/issues/2331) | None | testable |
-| _pipx_install always picks the latest pypi version, but tsuku's bundled python-standalone is CPython 3.10. ansible-core 2.20 requires Python >= 3.12 and azure-cli's transitive deps fail on 3.10. Blocks ansible and azure-cli curation._ | | |
+| ~~[#2331: feat(recipes): allow pipx_install recipes to pin a PyPI version constraint](https://github.com/tsukumogami/tsuku/issues/2331)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Resolved with a different mechanism than the title suggests. Recipes do not declare PyPI version constraints; instead, `PyPIProvider.ResolveLatest` filters by per-release `requires_python` against the bundled `python-standalone` major.minor. Auto-resolution picks the newest stable, non-yanked, Python-compatible release. Lands `recipes/a/ansible.toml` as the proof point. azure-cli is deferred — its eval already succeeds and its post-install failure is a separate transitive C-extension ABI issue. See `docs/designs/current/DESIGN-pipx-pypi-version-pinning.md`._~~ | | |
 | [#2333: fix(homebrew): resolve revision-suffixed bottles so libevent darwin can be installed](https://github.com/tsukumogami/tsuku/issues/2333) | None | testable |
 | _tsuku's homebrew bottle resolver looks up the GHCR manifest at `/manifests/{version}` and matches `ref.name == {version}.{platform_tag}`, but libevent's manifest entries are tagged with the revision-suffixed version (`2.1.12_1.arm64_sonoma`) because the formula declares `revision: 1`. Blocks libevent darwin (and therefore tmux darwin)._ | | |
 | [#2335: fix(recipes): curate pcre2 with macOS dylib outputs and fix rhel + alpine sandbox failures](https://github.com/tsukumogami/tsuku/issues/2335) | None | testable |
@@ -177,8 +177,8 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2325,I2328 done
-    class I2327,I2330,I2331,I2333,I2335,I2338 ready
+    class I2325,I2328,I2331 done
+    class I2327,I2330,I2333,I2335,I2338 ready
     class I2336,I2343,I2344,I2345,I2349 blocked
 ```
 
