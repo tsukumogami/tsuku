@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   tsuku's `pipx_install` action installs Python CLI tools from PyPI, but
   `PyPIProvider.ResolveLatest` always returns the absolute-latest release
@@ -51,7 +51,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context and Problem Statement
 
