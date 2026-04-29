@@ -37,6 +37,11 @@ const (
 	ErrTypeConnection
 	// ErrTypeTLS indicates TLS/SSL certificate errors
 	ErrTypeTLS
+	// ErrTypeNoCompatibleRelease indicates the upstream has no release
+	// whose declared compatibility (e.g., PyPI's `requires_python`)
+	// is satisfied by the resolution context (e.g., the bundled
+	// `python-standalone` major.minor for `pipx_install` recipes).
+	ErrTypeNoCompatibleRelease
 )
 
 // ResolverError provides structured error information for version resolution failures
