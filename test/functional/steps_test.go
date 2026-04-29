@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/cucumber/godog"
 )
@@ -145,6 +146,27 @@ func theFileDoesNotExist(ctx context.Context, path string) error {
 		return fmt.Errorf("expected file %q not to exist", fullPath)
 	}
 	return nil
+}
+
+// theFileEventuallyDoesNotExist polls for a file's absence with a
+// bounded deadline. Used for assertions against state mutated by a
+// detached background process — e.g., auto-apply's `apply-updates`
+// subprocess, which consumes update cache entries asynchronously
+// after the foreground command (`tsuku list`, etc.) returns.
+func theFileEventuallyDoesNotExist(ctx context.Context, path string, timeoutSeconds int) error {
+	state := getState(ctx)
+	fullPath := filepath.Join(state.homeDir, path)
+	deadline := time.Now().Add(time.Duration(timeoutSeconds) * time.Second)
+	for time.Now().Before(deadline) {
+		if _, err := os.Lstat(fullPath); os.IsNotExist(err) {
+			return nil
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	if _, err := os.Lstat(fullPath); os.IsNotExist(err) {
+		return nil
+	}
+	return fmt.Errorf("expected file %q not to exist within %ds", fullPath, timeoutSeconds)
 }
 
 // iSetEnv sets an environment variable override for subsequent commands in this scenario.
