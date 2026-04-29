@@ -65,15 +65,15 @@
     {
       "action": "download_file",
       "params": {
-        "checksum": "eebab9738ff2c231ec19c5da5725a830d89322914f8aa84d58728c6b45f84a58",
+        "checksum": "606c8f502852d586f85fba5754e255fa8bf8b81d371c1f75cf7edae19d852f0c",
         "dest": "gcc.tar.gz",
-        "url": "https://ghcr.io/v2/homebrew/core/gcc/blobs/sha256:eebab9738ff2c231ec19c5da5725a830d89322914f8aa84d58728c6b45f84a58"
+        "url": "https://ghcr.io/v2/homebrew/core/gcc/blobs/sha256:606c8f502852d586f85fba5754e255fa8bf8b81d371c1f75cf7edae19d852f0c"
       },
       "evaluable": true,
       "deterministic": true,
-      "url": "https://ghcr.io/v2/homebrew/core/gcc/blobs/sha256:eebab9738ff2c231ec19c5da5725a830d89322914f8aa84d58728c6b45f84a58",
-      "checksum": "eebab9738ff2c231ec19c5da5725a830d89322914f8aa84d58728c6b45f84a58",
-      "size": 161971540
+      "url": "https://ghcr.io/v2/homebrew/core/gcc/blobs/sha256:606c8f502852d586f85fba5754e255fa8bf8b81d371c1f75cf7edae19d852f0c",
+      "checksum": "606c8f502852d586f85fba5754e255fa8bf8b81d371c1f75cf7edae19d852f0c",
+      "size": 161998997
     },
     {
       "action": "extract",
