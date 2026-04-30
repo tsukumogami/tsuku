@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-30T15:16:05Z",
+  "updated_at": "2026-04-30T17:26:04Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 279,
-      "next_retry_at": "1734-01-19T12:35:00.478706694Z"
+      "failure_count": 281,
+      "next_retry_at": "1734-01-19T17:38:47.819172925Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 426,
-      "next_retry_at": "1734-01-19T12:35:00.478706694Z"
+      "failure_count": 428,
+      "next_retry_at": "1734-01-19T17:38:47.819172925Z"
     },
     {
       "name": "libaacs",
@@ -31296,7 +31296,7 @@
       "name": "multimarkdown",
       "source": "rubygems:multimarkdown",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 9,
@@ -41346,7 +41346,7 @@
       "name": "rsync",
       "source": "rubygems:rsync",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -42166,11 +42166,11 @@
       "name": "scalingo",
       "source": "rubygems:scalingo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-04-30T15:01:30.984439525Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-05-01T01:26:04.673948733Z"
     },
     {
       "name": "scamper",
