@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-04-29T23:02:15Z",
+  "updated_at": "2026-04-30T02:49:20Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 273,
-      "next_retry_at": "1734-01-18T21:22:09.428889297Z"
+      "failure_count": 275,
+      "next_retry_at": "1734-01-19T03:02:03.947400102Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 420,
-      "next_retry_at": "1734-01-18T21:22:09.428889297Z"
+      "failure_count": 422,
+      "next_retry_at": "1734-01-19T03:02:03.947400102Z"
     },
     {
       "name": "libaacs",
@@ -40406,7 +40406,7 @@
       "name": "redis",
       "source": "rubygems:redis",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
@@ -40536,11 +40536,11 @@
       "name": "rename",
       "source": "rubygems:rename",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-04-29T21:34:39.465842075Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-04-30T10:49:20.80217591Z"
     },
     {
       "name": "render",
@@ -41346,7 +41346,7 @@
       "name": "rsync",
       "source": "rubygems:rsync",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
@@ -42166,7 +42166,7 @@
       "name": "scalingo",
       "source": "rubygems:scalingo",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 2,
@@ -42796,7 +42796,7 @@
       "name": "sesh",
       "source": "rubygems:sesh",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
