@@ -14,8 +14,8 @@ supported_os = ["linux"]
 action = "github_archive"
 when = { os = ["linux"], libc = ["glibc", "musl"] }
 repo = "aristocratos/btop"
-asset_pattern = "btop-{arch}-unknown-linux-musl.tbz"
-archive_format = "tbz"
+asset_pattern = "btop-{arch}-unknown-linux-musl.tar.gz"
+archive_format = "tar.gz"
 arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
 strip_dirs = 0
 binaries = ["btop/bin/btop"]
