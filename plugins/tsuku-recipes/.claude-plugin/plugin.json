@@ -1,6 +1,6 @@
 {
   "name": "tsuku-recipes",
-  "version": "0.11.2-dev",
+  "version": "0.11.2",
   "description": "Recipe authoring and testing skills",
   "author": {
     "name": "tsukumogami"
