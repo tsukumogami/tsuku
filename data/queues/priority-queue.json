@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-01T12:06:27Z",
+  "updated_at": "2026-05-01T13:30:36Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 288,
@@ -5826,11 +5826,11 @@
       "name": "bullet",
       "source": "rubygems:bullet",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 13,
-      "next_retry_at": "2026-05-01T11:11:55.864572199Z"
+      "failure_count": 14,
+      "next_retry_at": "2026-05-08T13:30:36.217567005Z"
     },
     {
       "name": "bulletty",
@@ -5896,7 +5896,7 @@
       "name": "bup",
       "source": "rubygems:bup",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 13,
@@ -9116,11 +9116,11 @@
       "name": "countdown",
       "source": "npm:countdown",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 13,
-      "next_retry_at": "2026-05-01T11:11:55.864572199Z"
+      "failure_count": 14,
+      "next_retry_at": "2026-05-08T13:30:36.217567005Z"
     },
     {
       "name": "coursier",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 436,
@@ -41346,7 +41346,7 @@
       "name": "rsync",
       "source": "rubygems:rsync",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
