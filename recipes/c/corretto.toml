@@ -1,0 +1,48 @@
+[metadata]
+name = "corretto"
+description = "Amazon Corretto OpenJDK distribution"
+homepage = "https://aws.amazon.com/corretto/"
+version_format = "semver"
+curated = true
+# Amazon does not ship musl builds for Corretto; users on Alpine should
+# install one of the musl-supporting distros (temurin, sapmachine).
+supported_libc = ["glibc"]
+
+# Reuse Adoptium's `most_recent_lts` because Corretto, Temurin, and the
+# rest of the OpenJDK ecosystem all align their LTS major releases on
+# the same OpenJDK upstream cadence (8, 11, 17, 21, 25, ...). The
+# corretto.aws/latest URL takes the major as a path segment, so an
+# integer is exactly what we need.
+[version]
+source = "http_json"
+url = "https://api.adoptium.net/v3/info/available_releases"
+version_path = "most_recent_lts"
+
+# Linux glibc — Corretto publishes per-arch tarballs at
+# corretto.aws/downloads/latest/, which redirect to versioned URLs.
+# Note Corretto's naming puts arch before os.
+[[steps]]
+action = "download_archive"
+url = "https://corretto.aws/downloads/latest/amazon-corretto-{version}-{arch}-linux-jdk.tar.gz"
+arch_mapping = { amd64 = "x64", arm64 = "aarch64" }
+strip_dirs = 1
+install_mode = "directory"
+binaries = ["bin/java", "bin/javac", "bin/jar"]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# macOS — same shape, nested three directories deep under
+# `amazon-corretto-{full-version}.jdk/Contents/Home/`.
+[[steps]]
+action = "download_archive"
+url = "https://corretto.aws/downloads/latest/amazon-corretto-{version}-{arch}-macos-jdk.tar.gz"
+arch_mapping = { amd64 = "x64", arm64 = "aarch64" }
+strip_dirs = 3
+install_mode = "directory"
+binaries = ["bin/java", "bin/javac", "bin/jar"]
+when = { os = ["darwin"] }
+
+[verify]
+command = "java --version"
+mode = "output"
+pattern = "Corretto"
+reason = "version is the major integer; pattern matches the Corretto distribution string in `java --version`"

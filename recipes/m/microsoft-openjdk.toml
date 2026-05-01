@@ -1,0 +1,46 @@
+[metadata]
+name = "microsoft-openjdk"
+description = "Microsoft Build of OpenJDK"
+homepage = "https://learn.microsoft.com/java/openjdk/"
+version_format = "semver"
+curated = true
+# Microsoft does not ship musl builds; users on Alpine should install
+# one of the musl-supporting distros (temurin, sapmachine).
+supported_libc = ["glibc"]
+
+# Microsoft does not publish a version metadata API. Adoptium's
+# `most_recent_lts` is used as a shared LTS-major source — Microsoft,
+# Adoptium, and the rest of the OpenJDK ecosystem track the same LTS
+# cadence (17, 21, 25, ...). The aka.ms/download-jdk URL takes the
+# major as part of the filename.
+[version]
+source = "http_json"
+url = "https://api.adoptium.net/v3/info/available_releases"
+version_path = "most_recent_lts"
+
+# Linux glibc
+[[steps]]
+action = "download_archive"
+url = "https://aka.ms/download-jdk/microsoft-jdk-{version}-linux-{arch}.tar.gz"
+arch_mapping = { amd64 = "x64", arm64 = "aarch64" }
+strip_dirs = 1
+install_mode = "directory"
+binaries = ["bin/java", "bin/javac", "bin/jar"]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# macOS — Microsoft's macOS tarball uses the standard JDK bundle
+# layout, three directories deep under `jdk-{full}/Contents/Home/`.
+[[steps]]
+action = "download_archive"
+url = "https://aka.ms/download-jdk/microsoft-jdk-{version}-macos-{arch}.tar.gz"
+arch_mapping = { amd64 = "x64", arm64 = "aarch64" }
+strip_dirs = 3
+install_mode = "directory"
+binaries = ["bin/java", "bin/javac", "bin/jar"]
+when = { os = ["darwin"] }
+
+[verify]
+command = "java --version"
+mode = "output"
+pattern = "Microsoft"
+reason = "version is the major integer; pattern matches the Microsoft distribution string in `java --version`"
