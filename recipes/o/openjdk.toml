@@ -1,0 +1,51 @@
+[metadata]
+name = "openjdk"
+description = "OpenJDK Java runtime for JVM-based tools"
+homepage = "https://openjdk.org/"
+version_format = "semver"
+curated = true
+type = "library"
+# Ships JDK 21 (current LTS) — backward-compatible with the JDK floors
+# required by downstream tools: Maven 3.9 needs 8+, sbt 1.10 needs 11+,
+# Gradle 8.x needs 17+. Pinning to 21 via the homebrew formula avoids
+# the moving target of plain "openjdk" (which tracks bleeding-edge JDK
+# major versions).
+
+[metadata.satisfies]
+homebrew = ["openjdk", "openjdk@21", "openjdk@17", "openjdk@11", "openjdk@8"]
+
+# glibc Linux: Homebrew bottle (linuxbrew)
+[[steps]]
+action = "homebrew"
+formula = "openjdk@21"
+when = { os = ["linux"], libc = ["glibc"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/java", "bin/javac", "bin/jar"]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["openjdk21"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew bottle. The openjdk bottle layout puts the JDK under
+# libexec/openjdk.jdk/Contents/Home/ and bin/java is a symlink into
+# that tree, so install the full directory rather than just bin/java.
+[[steps]]
+action = "homebrew"
+formula = "openjdk@21"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/java", "bin/javac", "bin/jar"]
+when = { os = ["darwin"] }
+
+[verify]
+command = "java --version"
+pattern = "{version}"
