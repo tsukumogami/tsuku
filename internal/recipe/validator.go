@@ -517,8 +517,15 @@ func validateVerify(result *ValidationResult, r *Recipe) {
 	if r.Verify.Pattern != "" && len(r.Verify.Patterns) > 0 {
 		result.addError("verify.patterns", "pattern and patterns cannot both be set; pick one")
 	}
-	// patterns, when present, must have at least one entry — an empty list
-	// would silently match every output and defeat verify.
+	// `patterns = []` is just as wrong as forgetting to set anything — it
+	// would collapse to "no patterns" at runtime and silently pass any
+	// output. The TOML decoder distinguishes a missing field (Patterns
+	// stays nil) from an explicit empty array (non-nil, length zero).
+	if r.Verify.Patterns != nil && len(r.Verify.Patterns) == 0 {
+		result.addError("verify.patterns", "patterns is set but empty; remove the field or add at least one entry")
+	}
+	// Each entry must be non-empty too — same reasoning, on a per-entry
+	// basis. An empty string substring matches every output.
 	if len(r.Verify.Patterns) > 0 {
 		for i, p := range r.Verify.Patterns {
 			if p == "" {

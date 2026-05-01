@@ -311,6 +311,32 @@ reason = "test"
 	}
 }
 
+func TestValidateBytes_VerifyPatternsEmptyArray(t *testing.T) {
+	// `patterns = []` must be rejected — a non-nil empty list collapses
+	// to "no patterns" at runtime and would silently pass any output.
+	recipe := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "test --version"
+mode = "output"
+patterns = []
+reason = "test"
+`
+	result := ValidateBytes([]byte(recipe))
+	if result.Valid {
+		t.Fatal("expected invalid recipe when patterns is set to an empty array")
+	}
+	if !hasError(result, "verify.patterns", "set but empty") {
+		t.Errorf("expected empty-array error, got errors: %+v", result.Errors)
+	}
+}
+
 func TestValidateBytes_VerifyPatternsEmptyEntry(t *testing.T) {
 	recipe := `
 [metadata]
