@@ -17,68 +17,43 @@ source = "http_json"
 url = "https://api.adoptium.net/v3/info/available_releases"
 version_path = "most_recent_lts"
 
-# Linux glibc amd64
+# Linux glibc — Adoptium publishes a single tarball per arch under
+# `os=linux`. The arch_mapping translates tsuku's amd64/arm64 to
+# Adoptium's x64/aarch64.
 [[steps]]
 action = "download_archive"
-url = "https://api.adoptium.net/v3/binary/latest/{version}/ga/linux/x64/jdk/hotspot/normal/eclipse"
+url = "https://api.adoptium.net/v3/binary/latest/{version}/ga/linux/{arch}/jdk/hotspot/normal/eclipse"
+arch_mapping = { amd64 = "x64", arm64 = "aarch64" }
 archive_format = "tar.gz"
 strip_dirs = 1
 install_mode = "directory"
 binaries = ["bin/java", "bin/javac", "bin/jar"]
-when = { platform = ["linux/amd64"], libc = ["glibc"] }
+when = { os = ["linux"], libc = ["glibc"] }
 
-# Linux glibc arm64
+# Linux musl — Adoptium ships static-musl builds tagged `os=alpine-linux`
+# that work on any musl distro. Same arch transformation as glibc.
 [[steps]]
 action = "download_archive"
-url = "https://api.adoptium.net/v3/binary/latest/{version}/ga/linux/aarch64/jdk/hotspot/normal/eclipse"
+url = "https://api.adoptium.net/v3/binary/latest/{version}/ga/alpine-linux/{arch}/jdk/hotspot/normal/eclipse"
+arch_mapping = { amd64 = "x64", arm64 = "aarch64" }
 archive_format = "tar.gz"
 strip_dirs = 1
 install_mode = "directory"
 binaries = ["bin/java", "bin/javac", "bin/jar"]
-when = { platform = ["linux/arm64"], libc = ["glibc"] }
+when = { os = ["linux"], libc = ["musl"] }
 
-# Linux musl amd64 (Alpine)
+# macOS — Adoptium's tarball nests the JDK three directories deep
+# under `jdk-{version}/Contents/Home/`, so strip_dirs=3 lands bin/java
+# at the install root. The Adoptium os name for macOS is `mac`.
 [[steps]]
 action = "download_archive"
-url = "https://api.adoptium.net/v3/binary/latest/{version}/ga/alpine-linux/x64/jdk/hotspot/normal/eclipse"
-archive_format = "tar.gz"
-strip_dirs = 1
-install_mode = "directory"
-binaries = ["bin/java", "bin/javac", "bin/jar"]
-when = { platform = ["linux/amd64"], libc = ["musl"] }
-
-# Linux musl arm64 (Alpine)
-[[steps]]
-action = "download_archive"
-url = "https://api.adoptium.net/v3/binary/latest/{version}/ga/alpine-linux/aarch64/jdk/hotspot/normal/eclipse"
-archive_format = "tar.gz"
-strip_dirs = 1
-install_mode = "directory"
-binaries = ["bin/java", "bin/javac", "bin/jar"]
-when = { platform = ["linux/arm64"], libc = ["musl"] }
-
-# Darwin amd64
-# Adoptium's macOS tarball nests the JDK under Contents/Home/, so two
-# levels of stripping land bin/java at the install root rather than at
-# Contents/Home/bin/java.
-[[steps]]
-action = "download_archive"
-url = "https://api.adoptium.net/v3/binary/latest/{version}/ga/mac/x64/jdk/hotspot/normal/eclipse"
+url = "https://api.adoptium.net/v3/binary/latest/{version}/ga/mac/{arch}/jdk/hotspot/normal/eclipse"
+arch_mapping = { amd64 = "x64", arm64 = "aarch64" }
 archive_format = "tar.gz"
 strip_dirs = 3
 install_mode = "directory"
 binaries = ["bin/java", "bin/javac", "bin/jar"]
-when = { platform = ["darwin/amd64"] }
-
-# Darwin arm64
-[[steps]]
-action = "download_archive"
-url = "https://api.adoptium.net/v3/binary/latest/{version}/ga/mac/aarch64/jdk/hotspot/normal/eclipse"
-archive_format = "tar.gz"
-strip_dirs = 3
-install_mode = "directory"
-binaries = ["bin/java", "bin/javac", "bin/jar"]
-when = { platform = ["darwin/arm64"] }
+when = { os = ["darwin"] }
 
 [verify]
 command = "java --version"
@@ -86,7 +61,7 @@ mode = "output"
 pattern = "Temurin"
 # Match the distribution name rather than the version. The version
 # field is the integer major (e.g. "25"), and `java --version`'s
-# build line includes the substring "Temurin" on every Adoptium-
-# published JDK, so this is a precise distribution check that works
+# build line embeds "Temurin-{version}" on every Adoptium-published
+# JDK, so this is a precise distribution check that doesn't drift
 # across LTS bumps.
 reason = "version is the major integer; pattern matches the Temurin distribution string"
