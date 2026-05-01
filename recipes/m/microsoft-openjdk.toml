@@ -42,13 +42,14 @@ when = { os = ["darwin"] }
 [verify]
 command = "java --version"
 mode = "output"
-pattern = "Microsoft"
-# Microsoft is the outlier among the popular OpenJDK distros: their build
-# line reads `OpenJDK Runtime Environment Microsoft-{internal-build-id}`
+# Microsoft is the outlier among the popular OpenJDK distros: their
+# build line reads `OpenJDK Runtime Environment Microsoft-{internal-build-id}`
 # (e.g. `Microsoft-13877136`) where the suffix is an internal build hash,
-# not the JDK version. tsuku's verify takes a single substring pattern,
-# so we can't bind both vendor and version in one match — Microsoft
-# verification is vendor-only here. The downloaded URL is what binds the
-# major version (`{version}` in `aka.ms/download-jdk/microsoft-jdk-{version}-...`),
-# so a wrong major would still surface as a 404 at install time.
-reason = "Microsoft embeds an internal build hash (not the JDK version) after the vendor name; vendor-only check"
+# not the JDK version. The version itself appears on a different line
+# (`openjdk {full-version}`). The multi-pattern verify schema introduced
+# in #2365 lets us bind both facts in one check via AND-matching: the
+# install fails verify unless the output contains *both* the Microsoft
+# vendor name *and* an `openjdk {major}` line matching the resolved
+# version.
+patterns = ["Microsoft", "openjdk {version}"]
+reason = "Microsoft embeds an internal build hash after the vendor name; bind vendor + version separately via multi-pattern AND"
