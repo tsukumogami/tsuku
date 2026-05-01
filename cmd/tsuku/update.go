@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 )
 
@@ -124,13 +125,15 @@ Examples:
 			}
 		}
 
-		// Don't print "Updating <tool>..." here — the install
-		// reporter's spinner shows the tool and phase as transient
-		// status, replaced on completion by either "✅ <name>@<version>"
-		// (the install's own permanent line) or, for the no-op case,
-		// the line emitted below by updateOutcomeMessage. See #2280
-		// for the single-line-per-package pattern.
-		if err := runInstallWithTelemetry(toolName, reqVersion, "", true, "", telemetryClient); err != nil {
+		// Create a reporter here so that both the install progress and the
+		// outcome line share the same stream (stderr). This lets the TTY
+		// spinner be replaced in-place by the permanent outcome line via
+		// reporter.Log, rather than the spinner being cleared on stderr and
+		// the outcome appearing on a separate stdout line. See #2280/#2359.
+		reporter := progress.NewTTYReporter(os.Stderr)
+
+		if err := runInstallWithExternalReporter(toolName, reqVersion, "", true, "", telemetryClient, reporter); err != nil {
+			reporter.Stop()
 			if telemetryClient != nil {
 				telemetryClient.SendUpdateOutcome(telemetry.NewUpdateOutcomeFailureEvent(
 					toolName, reqVersion, telemetry.ClassifyError(err), "manual"))
@@ -151,14 +154,14 @@ Examples:
 			}
 		}
 
-		// Surface the outcome so the user sees something after "Updating
-		// <tool>...". The install machinery's "is already installed"
-		// progress message is a transient TTY status that gets cleared on
-		// command exit; without this line, an up-to-date tool produces no
-		// visible output. See #2356.
-		if msg := updateOutcomeMessage(toolName, previousVersion, newVersion); msg != "" {
-			printInfo(msg)
+		// Emit the no-op outcome via the reporter so the TTY spinner is
+		// replaced in-place. The update outcome (new version) is already
+		// handled by the install reporter's "✅ <name>@<version>" line.
+		if msg := updateOutcomeMessage(toolName, previousVersion, newVersion); msg != "" && !quietFlag {
+			reporter.Log("%s", msg)
 		}
+		reporter.Stop()
+		reporter.FlushDeferred()
 
 		// Lifecycle-aware stale cleanup: delete files the old version created
 		// that the new version no longer needs (e.g., shell.d scripts for a
@@ -317,11 +320,14 @@ func runUpdateAll(cmd *cobra.Command) {
 		}
 
 		previousVersion := tool.Version
-		// "Updating <tool>..." is intentionally not printed here for
-		// the same reason as the single-tool path above (#2280): the
-		// install reporter's spinner already shows the tool and phase.
-		if err := runInstallWithTelemetry(tool.Name, requested, "", true, "", telemetryClient); err != nil {
-			fmt.Fprintf(os.Stderr, "  Failed to update %s: %v\n", tool.Name, err)
+
+		// Per-tool reporter so the spinner is replaced in-place by the
+		// outcome line, consistent with the single-tool path.
+		toolReporter := progress.NewTTYReporter(os.Stderr)
+
+		if err := runInstallWithExternalReporter(tool.Name, requested, "", true, "", telemetryClient, toolReporter); err != nil {
+			toolReporter.Log("failed to update %s: %v", tool.Name, err)
+			toolReporter.Stop()
 			if telemetryClient != nil {
 				telemetryClient.SendUpdateOutcome(telemetry.NewUpdateOutcomeFailureEvent(
 					tool.Name, requested, telemetry.ClassifyError(err), "manual-batch"))
@@ -348,15 +354,19 @@ func runUpdateAll(cmd *cobra.Command) {
 				}
 			}
 		}
-		// Print the no-op line only. Real updates already get a
-		// permanent "✅ <name>@<version>" line from the install
-		// reporter (see #2280); a second line here would duplicate it.
+		// Emit the no-op outcome via the reporter so the TTY spinner is
+		// replaced in-place. Real updates already get a permanent
+		// "✅ <name>@<version>" line from the install reporter (#2280).
 		if newVersion == previousVersion {
-			printInfof("  %s is already at the latest version (%s).\n", tool.Name, newVersion)
+			if !quietFlag {
+				toolReporter.Log("%s is already at the latest version (%s).", tool.Name, newVersion)
+			}
 			upToDate++
 		} else {
 			updated++
 		}
+		toolReporter.Stop()
+		toolReporter.FlushDeferred()
 	}
 
 	if updateDryRun {
