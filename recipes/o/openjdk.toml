@@ -4,19 +4,14 @@ description = "OpenJDK Java runtime for JVM-based tools"
 homepage = "https://openjdk.org/"
 version_format = "semver"
 curated = true
-# Ships JDK 21 (current LTS) — backward-compatible with the JDK floors
-# required by downstream tools: Maven 3.9 needs 8+, sbt 1.10 needs 11+,
-# Gradle 8.x needs 17+. Pinning to 21 via the homebrew formula avoids
-# the moving target of plain "openjdk" (which tracks bleeding-edge JDK
-# major versions).
 
 [metadata.satisfies]
-homebrew = ["openjdk", "openjdk@21"]
+homebrew = ["openjdk"]
 
 # glibc Linux: Homebrew bottle (linuxbrew)
 [[steps]]
 action = "homebrew"
-formula = "openjdk@21"
+formula = "openjdk"
 when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
@@ -36,7 +31,7 @@ when = { os = ["linux"], libc = ["musl"] }
 # that tree, so install the full directory rather than just bin/java.
 [[steps]]
 action = "homebrew"
-formula = "openjdk@21"
+formula = "openjdk"
 when = { os = ["darwin"] }
 
 [[steps]]
