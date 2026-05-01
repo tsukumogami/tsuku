@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-29T11:33:00Z",
+  "generated_at": "2026-05-01T17:25:40Z",
   "total_recipes": 1435,
   "summary": {
     "by_platform": {
@@ -133,9 +133,7 @@
         "musl"
       ],
       "errors": null,
-      "warnings": [
-        "recipe 'act' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "actionlint",
@@ -667,9 +665,7 @@
       "errors": [
         "library recipe 'argtable3' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'argtable3' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "aribb24",
@@ -683,9 +679,7 @@
       "errors": [
         "library recipe 'aribb24' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'aribb24' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "arm-linux-gnueabihf-binutils",
@@ -1368,9 +1362,7 @@
       "errors": [
         "library recipe 'beagle' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'beagle' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "bedops",
@@ -1713,9 +1705,7 @@
       "errors": [
         "library recipe 'bstring' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'bstring' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "btop",
@@ -1891,9 +1881,7 @@
       "errors": [
         "library recipe 'c-blosc2' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'c-blosc2' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "c2048",
@@ -2698,9 +2686,7 @@
       "errors": [
         "library recipe 'cjson' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'cjson' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "clang-build-analyzer",
@@ -3161,9 +3147,7 @@
       "errors": [
         "library recipe 'concurrencykit' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'concurrencykit' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "config-file-validator",
@@ -3205,9 +3189,7 @@
       "errors": [
         "library recipe 'confuse' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'confuse' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "console-bridge",
@@ -3221,9 +3203,7 @@
       "errors": [
         "library recipe 'console-bridge' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'console-bridge' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "consul",
@@ -3558,9 +3538,7 @@
       "errors": [
         "library recipe 'cunit' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'cunit' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "curl",
@@ -4400,9 +4378,7 @@
       "errors": [
         "library recipe 'double-conversion' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'double-conversion' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "dovi-tool",
@@ -5534,9 +5510,7 @@
       "errors": [
         "library recipe 'fmt' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'fmt' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "fnm",
@@ -5648,9 +5622,7 @@
       "errors": [
         "library recipe 'freetype' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'freetype' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "frei0r",
@@ -5664,9 +5636,7 @@
       "errors": [
         "library recipe 'frei0r' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'frei0r' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "fresh-editor",
@@ -5842,9 +5812,7 @@
       "errors": [
         "library recipe 'game-music-emu' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'game-music-emu' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "gastown",
@@ -5918,9 +5886,7 @@
         "musl"
       ],
       "errors": null,
-      "warnings": [
-        "recipe 'gcloud' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "gdbm",
@@ -6564,9 +6530,7 @@
       "errors": [
         "library recipe 'glfw' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'glfw' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "glib",
@@ -6592,9 +6556,7 @@
       "errors": [
         "library recipe 'glm' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'glm' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "glooctl",
@@ -7281,9 +7243,7 @@
         "musl"
       ],
       "errors": null,
-      "warnings": [
-        "recipe 'goreleaser' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "goreman",
@@ -7538,9 +7498,7 @@
       "errors": [
         "library recipe 'graphene' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'graphene' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "graphite2",
@@ -7795,9 +7753,7 @@
       "errors": [
         "library recipe 'gumbo-parser' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'gumbo-parser' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "gupnp",
@@ -7827,9 +7783,7 @@
       "errors": [
         "library recipe 'gupnp-av' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'gupnp-av' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "gwyddion",
@@ -7977,9 +7931,7 @@
       "errors": [
         "library recipe 'hdrhistogram_c' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'hdrhistogram_c' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "headscale-cli",
@@ -8175,9 +8127,7 @@
       "errors": [
         "library recipe 'highway' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'highway' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "himalaya",
@@ -8207,9 +8157,7 @@
       "errors": [
         "library recipe 'hiredis' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'hiredis' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "hl",
@@ -8570,9 +8518,7 @@
       "errors": [
         "library recipe 'iir1' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'iir1' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "ijq",
@@ -8634,9 +8580,7 @@
       "errors": [
         "library recipe 'imath' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'imath' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "imessage-ruby",
@@ -8766,9 +8710,7 @@
       "errors": [
         "library recipe 'inih' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'inih' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "iniparser",
@@ -8782,9 +8724,7 @@
       "errors": [
         "library recipe 'iniparser' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'iniparser' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "innoextract",
@@ -8972,9 +8912,7 @@
       "errors": [
         "library recipe 'isl' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'isl' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "istioctl",
@@ -9015,9 +8953,7 @@
       "errors": [
         "library recipe 'ivykis' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'ivykis' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "jackett",
@@ -9063,9 +8999,7 @@
       "errors": [
         "library recipe 'jansson' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'jansson' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "javacc",
@@ -9435,9 +9369,7 @@
       "errors": [
         "library recipe 'json-c' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'json-c' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "json-glib",
@@ -9467,9 +9399,7 @@
       "errors": [
         "library recipe 'jsoncpp' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'jsoncpp' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "jsonnet",
@@ -10732,9 +10662,7 @@
       "errors": [
         "library recipe 'libaec' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libaec' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libb2",
@@ -10748,9 +10676,7 @@
       "errors": [
         "library recipe 'libb2' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libb2' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libbladerf",
@@ -10796,9 +10722,7 @@
       "errors": [
         "library recipe 'libcbor' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libcbor' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libcdio",
@@ -10844,9 +10768,7 @@
       "errors": [
         "library recipe 'libconfig' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libconfig' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libcue",
@@ -10860,9 +10782,7 @@
       "errors": [
         "library recipe 'libcue' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libcue' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libcurl",
@@ -10968,9 +10888,7 @@
       "errors": [
         "library recipe 'libdex' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libdex' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libdnet",
@@ -10998,9 +10916,7 @@
       "errors": [
         "library recipe 'libdvdcss' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libdvdcss' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libepoxy",
@@ -11014,9 +10930,7 @@
       "errors": [
         "library recipe 'libepoxy' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libepoxy' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "liberica",
@@ -11046,9 +10960,7 @@
       "errors": [
         "library recipe 'libev' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libev' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libevent",
@@ -11090,9 +11002,7 @@
       "errors": [
         "library recipe 'libexif' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libexif' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libffcall",
@@ -11106,9 +11016,7 @@
       "errors": [
         "library recipe 'libffcall' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libffcall' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libfixposix",
@@ -11122,9 +11030,7 @@
       "errors": [
         "library recipe 'libfixposix' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libfixposix' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libfreenect",
@@ -11186,9 +11092,7 @@
       "errors": [
         "library recipe 'libgee' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libgee' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libgit2",
@@ -11214,9 +11118,7 @@
       "errors": [
         "library recipe 'libgit2-glib' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libgit2-glib' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libgpg-error",
@@ -11262,9 +11164,7 @@
       "errors": [
         "library recipe 'libid3tag' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libid3tag' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libidn",
@@ -11352,9 +11252,7 @@
       "errors": [
         "library recipe 'libjodycode' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libjodycode' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libksba",
@@ -11398,9 +11296,7 @@
       "errors": [
         "library recipe 'liblqr' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'liblqr' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libmagic",
@@ -11414,9 +11310,7 @@
       "errors": [
         "library recipe 'libmagic' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libmagic' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libmatio",
@@ -11462,9 +11356,7 @@
       "errors": [
         "library recipe 'libmodbus' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libmodbus' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libmpc",
@@ -11478,9 +11370,7 @@
       "errors": [
         "library recipe 'libmpc' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libmpc' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libmpdclient",
@@ -11494,9 +11384,7 @@
       "errors": [
         "library recipe 'libmpdclient' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libmpdclient' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libnatpmp",
@@ -11566,9 +11454,7 @@
       "errors": [
         "library recipe 'libngspice' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libngspice' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libngtcp2",
@@ -11596,9 +11482,7 @@
       "errors": [
         "library recipe 'libogg' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libogg' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libomp",
@@ -11612,9 +11496,7 @@
       "errors": [
         "library recipe 'libomp' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libomp' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libpaho-mqtt",
@@ -11674,9 +11556,7 @@
       "errors": [
         "library recipe 'libpg-query' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libpg-query' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libpipeline",
@@ -11690,9 +11570,7 @@
       "errors": [
         "library recipe 'libpipeline' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libpipeline' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libplist",
@@ -11752,9 +11630,7 @@
       "errors": [
         "library recipe 'libptytty' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libptytty' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libqalculate",
@@ -11784,9 +11660,7 @@
       "errors": [
         "library recipe 'libre' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libre' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "librealsense",
@@ -11848,9 +11722,7 @@
       "errors": [
         "library recipe 'librttopo' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'librttopo' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libsamplerate",
@@ -11864,9 +11736,7 @@
       "errors": [
         "library recipe 'libsamplerate' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libsamplerate' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libsigsegv",
@@ -11880,9 +11750,7 @@
       "errors": [
         "library recipe 'libsigsegv' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libsigsegv' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libsixel",
@@ -11912,9 +11780,7 @@
       "errors": [
         "library recipe 'libslirp' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libslirp' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libsodium",
@@ -11928,9 +11794,7 @@
       "errors": [
         "library recipe 'libsodium' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libsodium' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libspiro",
@@ -11944,9 +11808,7 @@
       "errors": [
         "library recipe 'libspiro' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libspiro' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libssh",
@@ -11960,9 +11822,7 @@
       "errors": [
         "library recipe 'libssh' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libssh' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libssh2",
@@ -12038,9 +11898,7 @@
       "errors": [
         "library recipe 'libtommath' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libtommath' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libtool",
@@ -12070,9 +11928,7 @@
       "errors": [
         "library recipe 'libtorrent-rakshasa' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libtorrent-rakshasa' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libtpms",
@@ -12086,9 +11942,7 @@
       "errors": [
         "library recipe 'libtpms' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libtpms' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libtrace",
@@ -12118,9 +11972,7 @@
       "errors": [
         "library recipe 'libudfread' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libudfread' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libultrahdr",
@@ -12150,9 +12002,7 @@
       "errors": [
         "library recipe 'libuninameslist' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libuninameslist' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libunistring",
@@ -12166,9 +12016,7 @@
       "errors": [
         "library recipe 'libunistring' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libunistring' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libusb",
@@ -12182,9 +12030,7 @@
       "errors": [
         "library recipe 'libusb' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libusb' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libusb-compat",
@@ -12212,9 +12058,7 @@
       "errors": [
         "library recipe 'libuv' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libuv' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libvidstab",
@@ -12228,9 +12072,7 @@
       "errors": [
         "library recipe 'libvidstab' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libvidstab' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libvmaf",
@@ -12258,9 +12100,7 @@
       "errors": [
         "library recipe 'libvpx' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libvpx' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libvterm",
@@ -12290,9 +12130,7 @@
       "errors": [
         "library recipe 'libwapcaplet' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libwapcaplet' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libwebm",
@@ -12352,9 +12190,7 @@
       "errors": [
         "library recipe 'libxcrypt' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libxcrypt' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libxls",
@@ -12384,9 +12220,7 @@
       "errors": [
         "library recipe 'libxlsxwriter' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libxlsxwriter' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libxml2",
@@ -12430,9 +12264,7 @@
       "errors": [
         "library recipe 'libxmp' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'libxmp' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "libxpm",
@@ -12574,9 +12406,7 @@
       "errors": [
         "library recipe 'llhttp' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'llhttp' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "lmdb",
@@ -12606,9 +12436,7 @@
       "errors": [
         "library recipe 'lmfit' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'lmfit' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "localai",
@@ -12793,9 +12621,7 @@
       "errors": [
         "library recipe 'luv' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'luv' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "lxc",
@@ -12851,9 +12677,7 @@
       "errors": [
         "library recipe 'lzlib' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'lzlib' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "lzo",
@@ -12867,9 +12691,7 @@
       "errors": [
         "library recipe 'lzo' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'lzo' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "m4",
@@ -12913,9 +12735,7 @@
       "errors": [
         "library recipe 'mad' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'mad' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "mafft",
@@ -13465,9 +13285,7 @@
       "errors": [
         "library recipe 'minizip' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'minizip' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "mint",
@@ -13568,9 +13386,7 @@
       "errors": [
         "library recipe 'mlx-c' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'mlx-c' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "mmctl",
@@ -13763,9 +13579,7 @@
       "errors": [
         "library recipe 'mpdecimal' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'mpdecimal' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "mpfr",
@@ -13779,9 +13593,7 @@
       "errors": [
         "library recipe 'mpfr' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'mpfr' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "mpg123",
@@ -13839,9 +13651,7 @@
       "errors": [
         "library recipe 'msgpack' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'msgpack' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "mtools",
@@ -14503,9 +14313,7 @@
       "errors": [
         "library recipe 'npth' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'npth' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "nspr",
@@ -14844,9 +14652,7 @@
       "errors": [
         "library recipe 'opencore-amr' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'opencore-amr' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "openfga",
@@ -15013,9 +14819,7 @@
       "errors": [
         "library recipe 'opus' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'opus' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "ormolu",
@@ -15772,9 +15576,7 @@
       "errors": [
         "library recipe 'pixman' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'pixman' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "pixz",
@@ -15818,9 +15620,7 @@
       "errors": [
         "library recipe 'pkcs11-helper' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'pkcs11-helper' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "pkcs11-tools",
@@ -16062,9 +15862,7 @@
       "errors": [
         "library recipe 'popt' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'popt' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "portaudio",
@@ -16372,9 +16170,7 @@
       "errors": [
         "library recipe 'pugixml' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'pugixml' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "pulsarctl",
@@ -16739,9 +16535,7 @@
       "errors": [
         "library recipe 'readosm' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'readosm' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "rebar3",
@@ -16847,9 +16641,7 @@
       "errors": [
         "library recipe 'reproc' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'reproc' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "resterm",
@@ -17091,9 +16883,7 @@
       "errors": [
         "library recipe 'rpds-py' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'rpds-py' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "rpm2cpio",
@@ -17481,9 +17271,7 @@
       "errors": [
         "library recipe 'sdl2-net' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'sdl2-net' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "sdl3",
@@ -17497,9 +17285,7 @@
       "errors": [
         "library recipe 'sdl3' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'sdl3' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "seaweedfs",
@@ -17628,9 +17414,7 @@
       "errors": [
         "library recipe 'sfsexp' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'sfsexp' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "sftpgo",
@@ -17770,9 +17554,7 @@
       "errors": [
         "library recipe 'simdjson' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'simdjson' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "simg2img",
@@ -18104,9 +17886,7 @@
       "errors": [
         "library recipe 'speexdsp' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'speexdsp' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "spin",
@@ -18720,9 +18500,7 @@
       "errors": [
         "library recipe 'talloc' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'talloc' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "talm",
@@ -19303,9 +19081,7 @@
       "errors": [
         "library recipe 'tinyxml2' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'tinyxml2' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "tldx",
@@ -19874,9 +19650,7 @@
       "errors": [
         "library recipe 'unbound' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'unbound' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "uncrustify",
@@ -20073,9 +19847,7 @@
       "errors": [
         "library recipe 'uvwasi' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'uvwasi' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "v2ray",
@@ -21046,9 +20818,7 @@
       "errors": [
         "library recipe 'xvid' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'xvid' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "xxhash",
@@ -21093,9 +20863,7 @@
       "errors": [
         "library recipe 'yaml-cpp' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'yaml-cpp' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "yaml-language-server",
@@ -21259,9 +21027,7 @@
       "errors": [
         "library recipe 'yyjson' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'yyjson' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "z3",
@@ -21307,9 +21073,7 @@
       "errors": [
         "library recipe 'zimg' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'zimg' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "zizmor",
@@ -21339,9 +21103,7 @@
       "errors": [
         "library recipe 'zlib-ng-compat' has no musl path and no explicit constraint (add supported_libc = [\"glibc\"] with unsupported_reason if musl cannot be supported)"
       ],
-      "warnings": [
-        "recipe 'zlib-ng-compat' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "zls",
