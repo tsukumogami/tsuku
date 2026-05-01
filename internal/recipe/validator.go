@@ -513,6 +513,20 @@ func validateVerify(result *ValidationResult, r *Recipe) {
 		return
 	}
 
+	// pattern and patterns are mutually exclusive — pick one shape per recipe.
+	if r.Verify.Pattern != "" && len(r.Verify.Patterns) > 0 {
+		result.addError("verify.patterns", "pattern and patterns cannot both be set; pick one")
+	}
+	// patterns, when present, must have at least one entry — an empty list
+	// would silently match every output and defeat verify.
+	if len(r.Verify.Patterns) > 0 {
+		for i, p := range r.Verify.Patterns {
+			if p == "" {
+				result.addError(fmt.Sprintf("verify.patterns[%d]", i), "pattern entry is empty")
+			}
+		}
+	}
+
 	// Check for dangerous patterns in verify command
 	validateDangerousPatterns(result, r.Verify.Command)
 
@@ -579,10 +593,23 @@ func validateVerifyMode(result *ValidationResult, r *Recipe) {
 
 	switch mode {
 	case VerifyModeVersion:
-		// Version mode should have {version} in pattern for proper verification
-		// This is a warning because version_format transforms can normalize versions
+		// Version mode should have {version} somewhere in the pattern(s)
+		// for proper verification. This is a warning because version_format
+		// transforms can normalize versions.
 		if r.Verify.Pattern != "" && !strings.Contains(r.Verify.Pattern, "{version}") {
 			result.addWarning("verify.pattern", "version mode pattern should include {version} for proper verification")
+		}
+		if len(r.Verify.Patterns) > 0 {
+			anyHasVersion := false
+			for _, p := range r.Verify.Patterns {
+				if strings.Contains(p, "{version}") {
+					anyHasVersion = true
+					break
+				}
+			}
+			if !anyHasVersion {
+				result.addWarning("verify.patterns", "version mode patterns should include {version} in at least one entry for proper verification")
+			}
 		}
 
 	case VerifyModeOutput:

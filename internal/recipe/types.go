@@ -144,6 +144,16 @@ func (r *Recipe) ToTOML() ([]byte, error) {
 		if r.Verify.Pattern != "" {
 			buf.WriteString(fmt.Sprintf("pattern = %q\n", r.Verify.Pattern))
 		}
+		if len(r.Verify.Patterns) > 0 {
+			buf.WriteString("patterns = [")
+			for i, p := range r.Verify.Patterns {
+				if i > 0 {
+					buf.WriteString(", ")
+				}
+				buf.WriteString(fmt.Sprintf("%q", p))
+			}
+			buf.WriteString("]\n")
+		}
 	}
 
 	return []byte(buf.String()), nil
@@ -807,10 +817,18 @@ const (
 	VersionFormatStripV = "strip_v"
 )
 
-// VerifySection defines how to verify the installation
+// VerifySection defines how to verify the installation.
+//
+// Pattern and Patterns are mutually exclusive: set one or the other.
+// Pattern (single substring) covers the common case where one match
+// confirms the install. Patterns (substring AND-list) is for tools
+// whose `--version` output prints multiple independent identifying
+// strings in non-adjacent positions — e.g., a vendor name on one line
+// and the version on another — where one substring can't bind both.
 type VerifySection struct {
 	Command       string             `toml:"command"`
 	Pattern       string             `toml:"pattern"`
+	Patterns      []string           `toml:"patterns,omitempty"`
 	Mode          string             `toml:"mode,omitempty"`
 	VersionFormat string             `toml:"version_format,omitempty"`
 	Reason        string             `toml:"reason,omitempty"`

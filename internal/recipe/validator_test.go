@@ -285,6 +285,97 @@ command = "test"
 	}
 }
 
+func TestValidateBytes_VerifyPatternsMutex(t *testing.T) {
+	// Both pattern and patterns set — must be rejected.
+	recipe := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "test --version"
+mode = "output"
+pattern = "test"
+patterns = ["test", "version"]
+reason = "test"
+`
+	result := ValidateBytes([]byte(recipe))
+	if result.Valid {
+		t.Fatal("expected invalid recipe when both pattern and patterns are set")
+	}
+	if !hasError(result, "verify.patterns", "cannot both be set") {
+		t.Errorf("expected mutex error, got errors: %+v", result.Errors)
+	}
+}
+
+func TestValidateBytes_VerifyPatternsEmptyEntry(t *testing.T) {
+	recipe := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "test --version"
+mode = "output"
+patterns = ["valid", ""]
+reason = "test"
+`
+	result := ValidateBytes([]byte(recipe))
+	if result.Valid {
+		t.Fatal("expected invalid recipe when patterns has an empty entry")
+	}
+	if !hasError(result, "verify.patterns[1]", "empty") {
+		t.Errorf("expected empty-entry error, got errors: %+v", result.Errors)
+	}
+}
+
+func TestValidateBytes_VerifyPatternsVersionModeWarning(t *testing.T) {
+	// version mode (default) without {version} in any patterns entry
+	// should warn the same way single-pattern mode does today.
+	recipe := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "test --version"
+patterns = ["Vendor", "release"]
+`
+	result := ValidateBytes([]byte(recipe))
+	if !hasWarning(result, "verify.patterns", "{version}") {
+		t.Errorf("expected version-mode warning, got warnings: %+v", result.Warnings)
+	}
+}
+
+func TestValidateBytes_VerifyPatternsVersionModeNoWarning(t *testing.T) {
+	// At least one entry has {version} — no warning.
+	recipe := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "test --version"
+patterns = ["Vendor", "build {version}"]
+`
+	result := ValidateBytes([]byte(recipe))
+	if hasWarning(result, "verify.patterns", "{version}") {
+		t.Errorf("did not expect version-mode warning when one entry has {version}; warnings: %+v", result.Warnings)
+	}
+}
+
 func TestValidateBytes_MissingVerifyCommand(t *testing.T) {
 	recipe := `
 [metadata]
