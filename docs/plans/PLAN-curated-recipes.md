@@ -94,8 +94,10 @@ These issues capture infrastructure and recipe gaps surfaced while authoring the
 |-------|--------------|------------|
 | ~~[#2325: fix(version): treat -Mn milestone tags as pre-releases in GitHub provider](https://github.com/tsukumogami/tsuku/issues/2325)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Replaces the substring-keyword `isStableVersion` filter with a SemVer-aware predicate (any non-empty prerelease component is unstable unless it matches a stable qualifier), plus a non-SemVer fallback to catch markers spliced into the version without a hyphen (e.g., jq's `1.8.2rc1`). Default stable qualifiers `["release", "final", "lts", "ga", "stable"]` admit the common JVM RELEASE/FINAL conventions; the `[version] stable_qualifiers` recipe field overrides for exotic upstreams. Designed in `docs/designs/DESIGN-prerelease-detection.md`._~~ | | |
-| [#2327: feat(recipes): add openjdk recipe to enable JVM tool verification](https://github.com/tsukumogami/tsuku/issues/2327) | None | testable |
-| _Sandbox containers do not bundle a JDK and the registry has no `openjdk` recipe to declare as a dependency. JVM tools (maven, gradle, sbt) install successfully but fail verify because `mvn --version` etc. need a JVM at runtime._ | | |
+| [#2327: feat(recipes): add curated openjdk family (openjdk, temurin, corretto, microsoft-openjdk)](https://github.com/tsukumogami/tsuku/issues/2327) | [#2365](https://github.com/tsukumogami/tsuku/issues/2365) | testable |
+| _Scope expanded from a single openjdk recipe to four cross-platform JDK distribution recipes. `openjdk` is the Homebrew + apk fallback; `temurin`, `corretto`, and `microsoft-openjdk` are vendor-specific recipes that pull from each project's own infrastructure (Adoptium API, corretto.aws, aka.ms). All share Adoptium's `most_recent_lts` integer as the LTS-major source. Sandbox containers do not bundle a JDK and the registry has no `openjdk` recipe to declare as a dependency. JVM tools (maven, gradle, sbt) install successfully but fail verify because `mvn --version` etc. need a JVM at runtime. Blocked on #2365 — `microsoft-openjdk` cannot bind verify to both vendor and version with the current single-pattern verify schema (Microsoft suffixes the vendor name with an internal build hash, not the JDK version)._ |
+| [#2365: feat(recipe): support multi-pattern verify checks](https://github.com/tsukumogami/tsuku/issues/2365) | None | testable |
+| _Extends `[verify]` to accept a `patterns = [...]` array (mutually exclusive with the existing `pattern` field) so recipes can bind multiple independent facts (vendor + version) when those facts appear in non-adjacent positions in the verify command's output. Surfaced by `microsoft-openjdk` in #2327, which prints `Microsoft-{internal-build-hash}` rather than `Microsoft-{version}` and so can't be checked against both vendor and version with a single substring._ | | |
 | ~~[#2328: feat(version): add a version source for Google Cloud SDK to enable gcloud recipe](https://github.com/tsukumogami/tsuku/issues/2328)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Expanded scope from "gcloud_dist custom source" to a generic `http_json` version source per `docs/designs/DESIGN-http-json-version-source.md`. Adds `[version] source = "http_json"` with `url` and `version_path` fields supporting dotted access plus `[N]` array indexing. Authors `recipes/g/gcloud.toml` as the first consumer in the same PR. Deprecates `source = "hashicorp"` (kept for one release window with a runtime warning); removal tracked in #2349. Unblocks Adoptium-based openjdk in #2327 and HashiCorp checkpoint adoption in #2350-style follow-ups when needed._~~ | | |
 | [#2330: feat(recipes): author a working curated bazel recipe](https://github.com/tsukumogami/tsuku/issues/2330) | None | testable |
@@ -141,7 +143,7 @@ authoring they unblock.
 graph TD
     subgraph wave4 ["Wave 4: Follow-ups from milestone work"]
         I2325["#2325: -Mn milestone tags in github provider"]
-        I2327["#2327: openjdk recipe for JVM verify"]
+        I2327["#2327: curated openjdk family (openjdk + temurin + corretto + microsoft-openjdk)"]
         I2328["#2328: http_json source + gcloud recipe"]
         I2330["#2330: working bazel recipe"]
         I2331["#2331: pipx PyPI version constraint"]
@@ -150,6 +152,7 @@ graph TD
         I2336["#2336: tmux + git macOS support"]
         I2338["#2338: curl macOS + rhel sandbox failure"]
         I2349["#2349: remove deprecated hashicorp source"]
+        I2365["#2365: multi-pattern verify (blocks #2327 microsoft-openjdk)"]
     end
 
     subgraph wave5 ["Wave 5: Recipe authoring after Wave 4"]
@@ -161,6 +164,7 @@ graph TD
     I2333 --> I2336
     I2335 --> I2336
 
+    I2365 --> I2327
     I2327 --> I2343
     I2325 --> I2344
     I2327 --> I2344
@@ -178,8 +182,8 @@ graph TD
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
     class I2325,I2328,I2331,I2333 done
-    class I2327,I2330,I2335,I2338 ready
-    class I2336,I2343,I2344,I2345,I2349 blocked
+    class I2330,I2335,I2338,I2365 ready
+    class I2327,I2336,I2343,I2344,I2345,I2349 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan
