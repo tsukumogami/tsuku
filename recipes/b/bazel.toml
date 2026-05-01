@@ -21,8 +21,13 @@ formula = "bazel"
 when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
+# Bazel's homebrew wrapper at bin/bazel is a shell script that execs
+# libexec/bin/bazel (the bazel-real binary plus embedded JDK). Install
+# the entire bottle as a directory so the wrapper's libexec reference
+# resolves; only bin/bazel needs PATH exposure.
 action = "install_binaries"
-binaries = ["bin/bazel"]
+install_mode = "directory"
+outputs = ["bin/bazel"]
 when = { os = ["linux"], libc = ["glibc"] }
 
 # macOS: Homebrew bottle.
@@ -32,8 +37,13 @@ formula = "bazel"
 when = { os = ["darwin"] }
 
 [[steps]]
+# Bazel's homebrew wrapper at bin/bazel is a shell script that execs
+# libexec/bin/bazel (the bazel-real binary plus embedded JDK). Install
+# the entire bottle as a directory so the wrapper's libexec reference
+# resolves; only bin/bazel needs PATH exposure.
 action = "install_binaries"
-binaries = ["bin/bazel"]
+install_mode = "directory"
+outputs = ["bin/bazel"]
 when = { os = ["darwin"] }
 
 [verify]
