@@ -4,7 +4,6 @@ description = "OpenJDK Java runtime for JVM-based tools"
 homepage = "https://openjdk.org/"
 version_format = "semver"
 curated = true
-type = "library"
 # Ships JDK 21 (current LTS) — backward-compatible with the JDK floors
 # required by downstream tools: Maven 3.9 needs 8+, sbt 1.10 needs 11+,
 # Gradle 8.x needs 17+. Pinning to 21 via the homebrew formula avoids
