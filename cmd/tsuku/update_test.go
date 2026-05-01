@@ -177,18 +177,23 @@ func TestUpdateOutcomeMessage(t *testing.T) {
 			want:   "nodejs is already at the latest version (25.9.0).",
 		},
 		{
-			name:   "updated to a newer version",
+			// Real updates already get a permanent "✅ <name>@<version>"
+			// line from the install reporter (#2280); no extra line
+			// from updateOutcomeMessage.
+			name:   "updated to a newer version yields no extra line",
 			tool:   "kubectl",
 			oldVer: "1.30.0",
 			newVer: "1.31.0",
-			want:   "Updated kubectl: 1.30.0 -> 1.31.0",
+			want:   "",
 		},
 		{
-			name:   "first install (empty old version)",
+			// Same: a fresh install (empty old version) is "different
+			// from previous", install reporter handles its own line.
+			name:   "first install yields no extra line",
 			tool:   "kubectl",
 			oldVer: "",
 			newVer: "1.31.0",
-			want:   "Updated kubectl:  -> 1.31.0",
+			want:   "",
 		},
 	}
 	for _, tc := range cases {

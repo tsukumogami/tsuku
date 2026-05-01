@@ -124,7 +124,12 @@ Examples:
 			}
 		}
 
-		printInfof("Updating %s...\n", toolName)
+		// Don't print "Updating <tool>..." here — the install
+		// reporter's spinner shows the tool and phase as transient
+		// status, replaced on completion by either "✅ <name>@<version>"
+		// (the install's own permanent line) or, for the no-op case,
+		// the line emitted below by updateOutcomeMessage. See #2280
+		// for the single-line-per-package pattern.
 		if err := runInstallWithTelemetry(toolName, reqVersion, "", true, "", telemetryClient); err != nil {
 			if telemetryClient != nil {
 				telemetryClient.SendUpdateOutcome(telemetry.NewUpdateOutcomeFailureEvent(
@@ -189,24 +194,25 @@ Examples:
 }
 
 // updateOutcomeMessage returns the user-facing summary line for an
-// update operation, given the tool's pre- and post-update versions.
-// Returns the empty string when the post-update version cannot be
-// determined (defensive: don't lie to the user).
+// update operation, or the empty string when no extra line is needed.
+//
+// The install machinery's reporter already prints a permanent
+// "✅ <name>@<version>" line per successful install (see #2280), so
+// printing an "Updated X: A -> B" line here would duplicate it. We
+// only emit a line for the no-op case, where the install's
+// "is already installed" message is a transient TTY spinner that
+// gets cleared on command exit.
 //
 // Branches:
 //
-//	newVersion == ""                      → "" (no message)
-//	newVersion == previousVersion         → "<tool> is already at the latest version (<v>)."
-//	newVersion != previousVersion         → "Updated <tool>: <old> -> <new>"
+//	newVersion == ""              → "" (no message; defensive)
+//	newVersion == previousVersion → "<tool> is already at the latest version (<v>)."
+//	newVersion != previousVersion → "" (success line already printed by install reporter)
 func updateOutcomeMessage(toolName, previousVersion, newVersion string) string {
-	switch {
-	case newVersion == "":
+	if newVersion == "" || newVersion != previousVersion {
 		return ""
-	case newVersion == previousVersion:
-		return fmt.Sprintf("%s is already at the latest version (%s).", toolName, newVersion)
-	default:
-		return fmt.Sprintf("Updated %s: %s -> %s", toolName, previousVersion, newVersion)
 	}
+	return fmt.Sprintf("%s is already at the latest version (%s).", toolName, newVersion)
 }
 
 // warnShellInitChanges compares content hashes between old and new cleanup
@@ -311,7 +317,9 @@ func runUpdateAll(cmd *cobra.Command) {
 		}
 
 		previousVersion := tool.Version
-		printInfof("Updating %s...\n", tool.Name)
+		// "Updating <tool>..." is intentionally not printed here for
+		// the same reason as the single-tool path above (#2280): the
+		// install reporter's spinner already shows the tool and phase.
 		if err := runInstallWithTelemetry(tool.Name, requested, "", true, "", telemetryClient); err != nil {
 			fmt.Fprintf(os.Stderr, "  Failed to update %s: %v\n", tool.Name, err)
 			if telemetryClient != nil {
@@ -325,10 +333,12 @@ func runUpdateAll(cmd *cobra.Command) {
 		// Detect whether the install actually changed the active version
 		// or whether the tool was already at latest. The install
 		// machinery's "is already installed" status is a transient TTY
-		// message; without this distinction the summary would overcount
-		// updates. See #2356.
-		// Find the active version after install. List returns one entry
-		// per retained version; the active one carries IsActive=true.
+		// message; we need to count up-to-date separately so the summary
+		// at the end is accurate.
+		//
+		// List returns one entry per retained version; pick the one
+		// flagged IsActive so we don't shadow the just-installed
+		// version with an older retained one.
 		newVersion := previousVersion
 		if afterTools, listErr := mgr.List(); listErr == nil {
 			for _, t := range afterTools {
@@ -338,11 +348,13 @@ func runUpdateAll(cmd *cobra.Command) {
 				}
 			}
 		}
+		// Print the no-op line only. Real updates already get a
+		// permanent "✅ <name>@<version>" line from the install
+		// reporter (see #2280); a second line here would duplicate it.
 		if newVersion == previousVersion {
 			printInfof("  %s is already at the latest version (%s).\n", tool.Name, newVersion)
 			upToDate++
 		} else {
-			printInfof("  %s: %s -> %s\n", tool.Name, previousVersion, newVersion)
 			updated++
 		}
 	}
