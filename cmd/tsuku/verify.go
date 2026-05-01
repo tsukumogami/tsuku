@@ -186,9 +186,48 @@ func RunToolVerification(r *recipe.Recipe, toolName string, toolState *install.T
 	return runVisibleToolVerification(r, toolName, toolState, versionState, installDir, cfg, state, opts)
 }
 
-// makeVerifyEnv creates an environment for verification commands with proper PATH setup.
-// It filters out existing PATH entries and prepends the install directories to ensure
-// the installed tool's binaries are found before system binaries.
+// substitutedVerifyPatterns returns the verify section's pattern(s)
+// with {version} and {install_dir} substituted, normalized into a
+// slice. Returns nil if neither Pattern nor Patterns is set.
+//
+// The validator enforces mutual exclusion between Pattern and
+// Patterns, so at runtime exactly one of them is populated when set.
+func substitutedVerifyPatterns(v *recipe.VerifySection, version, installDir string) []string {
+	subst := func(p string) string {
+		p = strings.ReplaceAll(p, "{version}", version)
+		p = strings.ReplaceAll(p, "{install_dir}", installDir)
+		return p
+	}
+	if len(v.Patterns) > 0 {
+		out := make([]string, len(v.Patterns))
+		for i, p := range v.Patterns {
+			out[i] = subst(p)
+		}
+		return out
+	}
+	if v.Pattern != "" {
+		return []string{subst(v.Pattern)}
+	}
+	return nil
+}
+
+// matchVerifyPatterns returns the patterns that did NOT appear as
+// substrings in output. Empty return = all patterns matched (or no
+// patterns to match — treated as success).
+func matchVerifyPatterns(patterns []string, output string) []string {
+	var missing []string
+	for _, p := range patterns {
+		if !strings.Contains(output, p) {
+			missing = append(missing, p)
+		}
+	}
+	return missing
+}
+
+// makeVerifyEnv creates an environment for verification commands with
+// proper PATH setup. It filters out existing PATH entries and prepends
+// the install directories to ensure the installed tool's binaries are
+// found before system binaries.
 func makeVerifyEnv(installDir string, cfg *config.Config) []string {
 	// Filter out existing PATH to avoid duplicate entries
 	env := make([]string, 0)
@@ -218,9 +257,7 @@ func runHiddenToolVerification(r *recipe.Recipe, toolName, version, installDir s
 	command = strings.ReplaceAll(command, "{version}", version)
 	command = strings.ReplaceAll(command, "{install_dir}", installDir)
 
-	pattern := r.Verify.Pattern
-	pattern = strings.ReplaceAll(pattern, "{version}", version)
-	pattern = strings.ReplaceAll(pattern, "{install_dir}", installDir)
+	patterns := substitutedVerifyPatterns(r.Verify, version, installDir)
 
 	if opts.Verbose {
 		printInfof("  Running: %s\n", command)
@@ -239,13 +276,11 @@ func runHiddenToolVerification(r *recipe.Recipe, toolName, version, installDir s
 		printInfof("  Output: %s\n", outputStr)
 	}
 
-	if pattern != "" {
-		if !strings.Contains(outputStr, pattern) {
-			return fmt.Errorf("output does not match expected pattern\n  Expected: %s\n  Got: %s", pattern, outputStr)
-		}
-		if opts.Verbose {
-			printInfof("  Pattern matched: %s\n", pattern)
-		}
+	if missing := matchVerifyPatterns(patterns, outputStr); len(missing) > 0 {
+		return fmt.Errorf("output does not match expected pattern(s)\n  Missing: %s\n  Got: %s", strings.Join(missing, ", "), outputStr)
+	}
+	if opts.Verbose && len(patterns) > 0 {
+		printInfof("  Pattern(s) matched: %s\n", strings.Join(patterns, ", "))
 	}
 
 	// Binary integrity verification
@@ -295,7 +330,6 @@ func runVisibleToolVerification(r *recipe.Recipe, toolName string, toolState *in
 	}
 
 	command := r.Verify.Command
-	pattern := r.Verify.Pattern
 
 	version := toolState.Version
 	if toolState.ActiveVersion != "" {
@@ -303,8 +337,7 @@ func runVisibleToolVerification(r *recipe.Recipe, toolName string, toolState *in
 	}
 	command = strings.ReplaceAll(command, "{version}", version)
 	command = strings.ReplaceAll(command, "{install_dir}", installDir)
-	pattern = strings.ReplaceAll(pattern, "{version}", version)
-	pattern = strings.ReplaceAll(pattern, "{install_dir}", installDir)
+	patterns := substitutedVerifyPatterns(r.Verify, version, installDir)
 
 	if opts.Verbose {
 		printInfof("    Running: %s\n", command)
@@ -321,8 +354,8 @@ func runVisibleToolVerification(r *recipe.Recipe, toolName string, toolState *in
 		printInfof("    Output: %s\n", outputStr)
 	}
 
-	if pattern != "" && !strings.Contains(outputStr, pattern) {
-		return fmt.Errorf("pattern mismatch\n  Expected: %s\n  Got: %s", pattern, outputStr)
+	if missing := matchVerifyPatterns(patterns, outputStr); len(missing) > 0 {
+		return fmt.Errorf("pattern mismatch\n  Missing: %s\n  Got: %s", strings.Join(missing, ", "), outputStr)
 	}
 	if opts.Verbose {
 		printInfo("    Installation verified\n")

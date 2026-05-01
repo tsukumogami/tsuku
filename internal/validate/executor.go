@@ -337,13 +337,17 @@ func (e *Executor) checkVerification(r *recipe.Recipe, result *RunResult) bool {
 		expectedExitCode = *r.Verify.ExitCode
 	}
 
-	pattern := ""
+	var patterns []string
 	if r.Verify != nil {
-		pattern = r.Verify.Pattern
+		if len(r.Verify.Patterns) > 0 {
+			patterns = r.Verify.Patterns
+		} else if r.Verify.Pattern != "" {
+			patterns = []string{r.Verify.Pattern}
+		}
 	}
 
 	output := result.Stdout + result.Stderr
-	return planexec.CheckPlanVerification(result.ExitCode, output, expectedExitCode, pattern)
+	return planexec.CheckPlanVerification(result.ExitCode, output, expectedExitCode, patterns)
 }
 
 // GetAssetChecksum returns the SHA256 checksum of a downloaded asset.

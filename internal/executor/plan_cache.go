@@ -143,9 +143,10 @@ type depForHashing struct {
 
 // verifyForHash is a normalized PlanVerify for hashing.
 type verifyForHash struct {
-	Command  string `json:"command,omitempty"`
-	ExitCode *int   `json:"exit_code,omitempty"`
-	Pattern  string `json:"pattern,omitempty"`
+	Command  string   `json:"command,omitempty"`
+	ExitCode *int     `json:"exit_code,omitempty"`
+	Pattern  string   `json:"pattern,omitempty"`
+	Patterns []string `json:"patterns,omitempty"`
 }
 
 // planContentForHashing converts an InstallationPlan to a normalized
@@ -188,6 +189,7 @@ func planContentForHashing(plan *InstallationPlan) planForHashing {
 			Command:  plan.Verify.Command,
 			ExitCode: plan.Verify.ExitCode,
 			Pattern:  plan.Verify.Pattern,
+			Patterns: plan.Verify.Patterns,
 		}
 	}
 
@@ -228,6 +230,7 @@ func convertDepsForHashing(deps []DependencyPlan) []depForHashing {
 				Command:  dep.Verify.Command,
 				ExitCode: dep.Verify.ExitCode,
 				Pattern:  dep.Verify.Pattern,
+				Patterns: dep.Verify.Patterns,
 			}
 		}
 	}

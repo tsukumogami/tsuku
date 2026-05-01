@@ -79,10 +79,16 @@ type DependencyPlan struct {
 }
 
 // PlanVerify captures verification information from the recipe.
+//
+// Pattern and Patterns mirror VerifySection: Pattern is the legacy
+// single-substring form, Patterns is the multi-substring AND-list.
+// Recipes set one or the other (the validator rejects both), so the
+// plan also carries one or the other.
 type PlanVerify struct {
-	Command  string `json:"command,omitempty"`
-	Pattern  string `json:"pattern,omitempty"`
-	ExitCode *int   `json:"exit_code,omitempty"` // Expected exit code (default: 0)
+	Command  string   `json:"command,omitempty"`
+	Pattern  string   `json:"pattern,omitempty"`
+	Patterns []string `json:"patterns,omitempty"`
+	ExitCode *int     `json:"exit_code,omitempty"` // Expected exit code (default: 0)
 }
 
 // Platform identifies the target operating system and architecture.

@@ -280,6 +280,7 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		verify = &PlanVerify{
 			Command:  e.recipe.Verify.Command,
 			Pattern:  e.recipe.Verify.Pattern,
+			Patterns: e.recipe.Verify.Patterns,
 			ExitCode: e.recipe.Verify.ExitCode,
 		}
 	}
@@ -799,6 +800,7 @@ func generateSingleDependencyPlan(
 		verify = &PlanVerify{
 			Command:  depRecipe.Verify.Command,
 			Pattern:  depRecipe.Verify.Pattern,
+			Patterns: depRecipe.Verify.Patterns,
 			ExitCode: depRecipe.Verify.ExitCode,
 		}
 	}

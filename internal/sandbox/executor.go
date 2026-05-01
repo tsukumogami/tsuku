@@ -480,12 +480,32 @@ func (e *Executor) readVerifyResults(outputDir string, plan *executor.Installati
 		expectedExitCode = *plan.Verify.ExitCode
 	}
 
-	// Expand {version} in the pattern to the resolved version string.
+	// Expand {version} in the pattern(s) to the resolved version string.
 	// The plan stores patterns verbatim from the recipe (e.g. "{version}"),
 	// but the tool output contains the actual version number.
-	pattern := strings.ReplaceAll(plan.Verify.Pattern, "{version}", plan.Version)
-	verified := executor.CheckPlanVerification(verifyExitCode, output, expectedExitCode, pattern)
+	patterns := planVerifyPatterns(plan.Verify, plan.Version)
+	verified := executor.CheckPlanVerification(verifyExitCode, output, expectedExitCode, patterns)
 	return verified, verifyExitCode, output
+}
+
+// planVerifyPatterns returns the verify patterns from a PlanVerify with
+// {version} substituted. Patterns takes precedence over Pattern when set
+// (the validator already enforces mutual exclusion at recipe parse time).
+func planVerifyPatterns(v *executor.PlanVerify, version string) []string {
+	subst := func(p string) string {
+		return strings.ReplaceAll(p, "{version}", version)
+	}
+	if len(v.Patterns) > 0 {
+		out := make([]string, len(v.Patterns))
+		for i, p := range v.Patterns {
+			out[i] = subst(p)
+		}
+		return out
+	}
+	if v.Pattern != "" {
+		return []string{subst(v.Pattern)}
+	}
+	return nil
 }
 
 // augmentWithInfrastructurePackages adds packages needed for sandbox execution

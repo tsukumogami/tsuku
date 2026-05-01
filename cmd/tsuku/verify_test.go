@@ -3,11 +3,109 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/verify"
 )
+
+func TestSubstitutedVerifyPatterns(t *testing.T) {
+	cases := []struct {
+		name    string
+		verify  recipe.VerifySection
+		version string
+		want    []string
+	}{
+		{
+			name:    "single pattern with version placeholder",
+			verify:  recipe.VerifySection{Pattern: "openjdk {version}"},
+			version: "25.0.3",
+			want:    []string{"openjdk 25.0.3"},
+		},
+		{
+			name:    "multi-pattern with version placeholder in one entry",
+			verify:  recipe.VerifySection{Patterns: []string{"Microsoft", "openjdk {version}"}},
+			version: "25.0.3",
+			want:    []string{"Microsoft", "openjdk 25.0.3"},
+		},
+		{
+			name:    "neither pattern nor patterns",
+			verify:  recipe.VerifySection{},
+			version: "1.0",
+			want:    nil,
+		},
+		{
+			name:    "patterns takes precedence over pattern when somehow both set (validator rejects this)",
+			verify:  recipe.VerifySection{Pattern: "ignored", Patterns: []string{"a", "b"}},
+			version: "9",
+			want:    []string{"a", "b"},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := substitutedVerifyPatterns(&tc.verify, tc.version, "/tmp/install")
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("substitutedVerifyPatterns: got %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestMatchVerifyPatterns(t *testing.T) {
+	cases := []struct {
+		name        string
+		patterns    []string
+		output      string
+		wantMissing []string
+	}{
+		{
+			name:        "no patterns matches anything",
+			patterns:    nil,
+			output:      "anything",
+			wantMissing: nil,
+		},
+		{
+			name:        "single pattern matched",
+			patterns:    []string{"Temurin-25"},
+			output:      "OpenJDK Runtime Environment Temurin-25.0.3+9 (build ...)",
+			wantMissing: nil,
+		},
+		{
+			name:        "single pattern missed",
+			patterns:    []string{"Temurin-26"},
+			output:      "OpenJDK Runtime Environment Temurin-25.0.3+9 (build ...)",
+			wantMissing: []string{"Temurin-26"},
+		},
+		{
+			name:        "all patterns matched",
+			patterns:    []string{"Microsoft", "openjdk 25"},
+			output:      "openjdk 25.0.3 ...\nOpenJDK Runtime Environment Microsoft-13877136 (build 25.0.3+9-LTS)",
+			wantMissing: nil,
+		},
+		{
+			name:        "one pattern missed reports only that one",
+			patterns:    []string{"Microsoft", "openjdk 26"},
+			output:      "openjdk 25.0.3 ...\nOpenJDK Runtime Environment Microsoft-13877136 (build 25.0.3+9-LTS)",
+			wantMissing: []string{"openjdk 26"},
+		},
+		{
+			name:        "all patterns missed",
+			patterns:    []string{"Corretto", "openjdk 8"},
+			output:      "OpenJDK Runtime Environment Temurin-25.0.3+9",
+			wantMissing: []string{"Corretto", "openjdk 8"},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := matchVerifyPatterns(tc.patterns, tc.output)
+			if !reflect.DeepEqual(got, tc.wantMissing) {
+				t.Errorf("matchVerifyPatterns: got %v, want %v", got, tc.wantMissing)
+			}
+		})
+	}
+}
 
 func TestIsSharedLibrary(t *testing.T) {
 	tests := []struct {
