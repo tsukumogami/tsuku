@@ -186,9 +186,6 @@ func RunToolVerification(r *recipe.Recipe, toolName string, toolState *install.T
 	return runVisibleToolVerification(r, toolName, toolState, versionState, installDir, cfg, state, opts)
 }
 
-// makeVerifyEnv creates an environment for verification commands with proper PATH setup.
-// It filters out existing PATH entries and prepends the install directories to ensure
-// the installed tool's binaries are found before system binaries.
 // substitutedVerifyPatterns returns the verify section's pattern(s)
 // with {version} and {install_dir} substituted, normalized into a
 // slice. Returns nil if neither Pattern nor Patterns is set.
@@ -227,6 +224,10 @@ func matchVerifyPatterns(patterns []string, output string) []string {
 	return missing
 }
 
+// makeVerifyEnv creates an environment for verification commands with
+// proper PATH setup. It filters out existing PATH entries and prepends
+// the install directories to ensure the installed tool's binaries are
+// found before system binaries.
 func makeVerifyEnv(installDir string, cfg *config.Config) []string {
 	// Filter out existing PATH to avoid duplicate entries
 	env := make([]string, 0)

@@ -472,15 +472,17 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 		// Add verify info if available
 		if plan.Verify != nil && plan.Verify.Command != "" {
 			recipeForContext.Verify = &recipe.VerifySection{
-				Command: plan.Verify.Command,
-				Pattern: plan.Verify.Pattern,
+				Command:  plan.Verify.Command,
+				Pattern:  plan.Verify.Pattern,
+				Patterns: plan.Verify.Patterns,
 			}
 		}
 	} else if (recipeForContext.Verify == nil || recipeForContext.Verify.Command == "") && plan.Verify != nil && plan.Verify.Command != "" {
 		// Recipe exists but has no verify, add from plan
 		recipeForContext.Verify = &recipe.VerifySection{
-			Command: plan.Verify.Command,
-			Pattern: plan.Verify.Pattern,
+			Command:  plan.Verify.Command,
+			Pattern:  plan.Verify.Pattern,
+			Patterns: plan.Verify.Patterns,
 		}
 	}
 
@@ -812,8 +814,9 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 	}
 	if dep.Verify != nil {
 		depRecipe.Verify = &recipe.VerifySection{
-			Command: dep.Verify.Command,
-			Pattern: dep.Verify.Pattern,
+			Command:  dep.Verify.Command,
+			Pattern:  dep.Verify.Pattern,
+			Patterns: dep.Verify.Patterns,
 		}
 	}
 
