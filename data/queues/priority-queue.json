@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-01T06:20:52Z",
+  "updated_at": "2026-05-01T09:05:15Z",
   "entries": [
     {
       "name": "node",
@@ -636,11 +636,11 @@
       "name": "numpy",
       "source": "crates.io:numpy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 13,
-      "next_retry_at": "2026-05-01T05:39:48.682617095Z"
+      "failure_count": 14,
+      "next_retry_at": "2026-05-08T09:05:15.01240518Z"
     },
     {
       "name": "p11-kit",
@@ -1906,11 +1906,11 @@
       "name": "amp",
       "source": "rubygems:amp",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-05-01T05:39:48.682617095Z"
+      "failure_count": 15,
+      "next_retry_at": "2026-05-08T09:05:15.01240518Z"
     },
     {
       "name": "amplify",
@@ -2866,7 +2866,7 @@
       "name": "arturo",
       "source": "rubygems:arturo",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 13,
@@ -2886,7 +2886,7 @@
       "name": "ascii",
       "source": "crates.io:ascii",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 13,
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 285,
-      "next_retry_at": "1734-01-20T03:07:07.248265944Z"
+      "failure_count": 287,
+      "next_retry_at": "1734-01-20T09:17:58.157629372Z"
     },
     {
       "name": "azqr",
@@ -7036,7 +7036,7 @@
       "name": "chainsaw",
       "source": "npm:chainsaw",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 13,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 432,
-      "next_retry_at": "1734-01-20T03:07:07.248265944Z"
+      "failure_count": 434,
+      "next_retry_at": "1734-01-20T09:17:58.157629372Z"
     },
     {
       "name": "libaacs",
@@ -40536,7 +40536,7 @@
       "name": "rename",
       "source": "rubygems:rename",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
