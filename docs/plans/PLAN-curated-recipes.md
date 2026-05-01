@@ -98,8 +98,8 @@ These issues capture infrastructure and recipe gaps surfaced while authoring the
 | _Sandbox containers do not bundle a JDK and the registry has no `openjdk` recipe to declare as a dependency. JVM tools (maven, gradle, sbt) install successfully but fail verify because `mvn --version` etc. need a JVM at runtime._ | | |
 | ~~[#2328: feat(version): add a version source for Google Cloud SDK to enable gcloud recipe](https://github.com/tsukumogami/tsuku/issues/2328)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Expanded scope from "gcloud_dist custom source" to a generic `http_json` version source per `docs/designs/DESIGN-http-json-version-source.md`. Adds `[version] source = "http_json"` with `url` and `version_path` fields supporting dotted access plus `[N]` array indexing. Authors `recipes/g/gcloud.toml` as the first consumer in the same PR. Deprecates `source = "hashicorp"` (kept for one release window with a runtime warning); removal tracked in #2349. Unblocks Adoptium-based openjdk in #2327 and HashiCorp checkpoint adoption in #2350-style follow-ups when needed._~~ | | |
-| [#2330: feat(recipes): author a working curated bazel recipe](https://github.com/tsukumogami/tsuku/issues/2330) | None | testable |
-| _The bare `bazel-{version}-{os}-{arch}` binary self-extracts an embedded JDK and spawns a long-lived server on first run; verify exits non-zero on glibc Linux (~55s) and macOS (~3s) in the sandbox. Needs an installer-script or Homebrew approach._ | | |
+| ~~[#2330: feat(recipes): author a working curated bazel recipe](https://github.com/tsukumogami/tsuku/issues/2330)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Authored `recipes/b/bazel.toml` using the homebrew bottle for both glibc Linux and macOS — homebrew handles the embedded-JDK self-extraction layout that broke in the bare-binary attempt. Restricted to glibc via `supported_libc = ["glibc"]` (Alpine cannot run the embedded JDK). Also fixed a pre-existing libc-coverage validator false positive that flagged darwin-only homebrew steps as "no libc clause" even though the schema forbids `libc` on non-linux when clauses._~~ | | |
 | ~~[#2331: feat(recipes): allow pipx_install recipes to pin a PyPI version constraint](https://github.com/tsukumogami/tsuku/issues/2331)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Resolved with a different mechanism than the title suggests. Recipes do not declare PyPI version constraints; instead, `PyPIProvider.ResolveLatest` filters by per-release `requires_python` against the bundled `python-standalone` major.minor. Auto-resolution picks the newest stable, non-yanked, Python-compatible release. Lands `recipes/a/ansible.toml` as the proof point. azure-cli is deferred — its eval already succeeds and its post-install failure is a separate transitive C-extension ABI issue. See `docs/designs/current/DESIGN-pipx-pypi-version-pinning.md`._~~ | | |
 | ~~[#2333: fix(homebrew): resolve revision-suffixed bottles so libevent darwin can be installed](https://github.com/tsukumogami/tsuku/issues/2333)~~ | ~~None~~ | ~~testable~~ |
@@ -177,8 +177,8 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2325,I2328,I2331,I2333 done
-    class I2327,I2330,I2335,I2338 ready
+    class I2325,I2328,I2330,I2331,I2333 done
+    class I2327,I2335,I2338 ready
     class I2336,I2343,I2344,I2345,I2349 blocked
 ```
 

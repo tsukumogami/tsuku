@@ -78,7 +78,12 @@ func AnalyzeRecipeCoverage(r *Recipe) CoverageReport {
 			if hasMuslLibcWhenClause(step) {
 				hasMuslPath = true
 			}
-			if isGlibcBoundAction(step.Action) && !hasLibcWhenClause(step) {
+			// stepMatchesGlibc gates this on the step actually being
+			// reachable from a glibc Linux target. Darwin-only steps
+			// can't carry a libc clause (the schema forbids it on
+			// non-linux), so without this guard they would falsely
+			// trigger "no libc clause" warnings.
+			if isGlibcBoundAction(step.Action) && !hasLibcWhenClause(step) && stepMatchesGlibc(step.When) {
 				hasUnguardedGlibcAction = true
 			}
 		}

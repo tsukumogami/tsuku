@@ -1,35 +1,41 @@
 [metadata]
-  name = "bazel"
-  description = "Google's own build tool"
-  homepage = "https://bazel.build/"
-  version_format = ""
-  requires_sudo = false
-  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
-  tier = 0
-  type = ""
-  llm_validation = "skipped"
+name = "bazel"
+description = "Google's own build tool"
+homepage = "https://bazel.build/"
+version_format = "semver"
+curated = true
+# Bazel ships a self-extracting JDK with each release, glibc-linked.
+# Alpine (musl) cannot run the embedded interpreter, so the recipe is
+# scoped to glibc Linux + macOS. Homebrew bottles handle the
+# self-extraction layout correctly across both, where the bare GitHub
+# binary failed in the test-recipe sandbox (#2330).
+supported_libc = ["glibc"]
 
-[version]
-  source = ""
-  github_repo = ""
-  tag_prefix = ""
-  module = ""
-  formula = ""
-  cask = ""
-  tap = ""
-  fossil_repo = ""
-  project_name = ""
-  version_separator = ""
-  timeline_tag = ""
+[metadata.satisfies]
+homebrew = ["bazel"]
+
+# glibc Linux: Homebrew bottle.
+[[steps]]
+action = "homebrew"
+formula = "bazel"
+when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
-  action = "homebrew"
-  formula = "bazel"
+action = "install_binaries"
+binaries = ["bin/bazel"]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# macOS: Homebrew bottle.
+[[steps]]
+action = "homebrew"
+formula = "bazel"
+when = { os = ["darwin"] }
 
 [[steps]]
-  action = "install_binaries"
-  binaries = ["bin/bazel", "bin/bazel-9.0.0"]
+action = "install_binaries"
+binaries = ["bin/bazel"]
+when = { os = ["darwin"] }
 
 [verify]
-  command = "bazel --version"
-  pattern = ""
+command = "bazel --version"
+pattern = "{version}"

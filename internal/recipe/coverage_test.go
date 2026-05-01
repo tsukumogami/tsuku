@@ -618,6 +618,35 @@ func TestAnalyzeRecipeCoverage_UnguardedHomebrewNoApkInstall(t *testing.T) {
 	}
 }
 
+func TestAnalyzeRecipeCoverage_DarwinOnlyHomebrewSkipsMuslWarning(t *testing.T) {
+	// A homebrew step gated to darwin (`when = { os = ["darwin"] }`)
+	// is not glibc-bound at runtime — the schema even forbids a libc
+	// clause on non-linux. Without considering the step's OS, the
+	// musl-coverage check would falsely flag any recipe with a
+	// darwin homebrew step.
+	r := &Recipe{
+		Metadata: MetadataSection{Name: "darwin-only-tool", SupportedLibc: []string{"glibc"}},
+		Steps: []Step{
+			{
+				Action: "homebrew",
+				When:   &WhenClause{OS: []string{"linux"}, Libc: []string{"glibc"}},
+			},
+			{
+				Action: "homebrew",
+				When:   &WhenClause{OS: []string{"darwin"}},
+			},
+		},
+	}
+
+	report := AnalyzeRecipeCoverage(r)
+
+	for _, w := range report.Warnings {
+		if w == "recipe 'darwin-only-tool' has platform-specific actions without libc when clauses and no musl fallback" {
+			t.Errorf("unexpected musl coverage warning for darwin-only homebrew step: %v", report.Warnings)
+		}
+	}
+}
+
 func TestIsGlibcBoundAction(t *testing.T) {
 	tests := []struct {
 		action   string
