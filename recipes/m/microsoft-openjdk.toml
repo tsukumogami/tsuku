@@ -43,4 +43,12 @@ when = { os = ["darwin"] }
 command = "java --version"
 mode = "output"
 pattern = "Microsoft"
-reason = "version is the major integer; pattern matches the Microsoft distribution string in `java --version`"
+# Microsoft is the outlier among the popular OpenJDK distros: their build
+# line reads `OpenJDK Runtime Environment Microsoft-{internal-build-id}`
+# (e.g. `Microsoft-13877136`) where the suffix is an internal build hash,
+# not the JDK version. tsuku's verify takes a single substring pattern,
+# so we can't bind both vendor and version in one match — Microsoft
+# verification is vendor-only here. The downloaded URL is what binds the
+# major version (`{version}` in `aka.ms/download-jdk/microsoft-jdk-{version}-...`),
+# so a wrong major would still surface as a 404 at install time.
+reason = "Microsoft embeds an internal build hash (not the JDK version) after the vendor name; vendor-only check"
