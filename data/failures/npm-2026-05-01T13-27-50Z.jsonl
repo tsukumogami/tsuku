@@ -1,0 +1,1 @@
+{"schema_version":1,"ecosystem":"npm","environment":"linux-glibc-x86_64","updated_at":"2026-05-01T13-27-50Z","failures":[{"package_id":"npm:countdown","category":"install_failed","message":"Error: recipe validation failed for 'countdown'\n  - metadata.homepage: homepage must start with https:// (got: http://countdownjs.org)","timestamp":"2026-05-01T13:27:39.732571658Z"}]}
