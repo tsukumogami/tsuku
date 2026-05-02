@@ -94,12 +94,12 @@ These issues capture infrastructure and recipe gaps surfaced while authoring the
 |-------|--------------|------------|
 | ~~[#2325: fix(version): treat -Mn milestone tags as pre-releases in GitHub provider](https://github.com/tsukumogami/tsuku/issues/2325)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Replaces the substring-keyword `isStableVersion` filter with a SemVer-aware predicate (any non-empty prerelease component is unstable unless it matches a stable qualifier), plus a non-SemVer fallback to catch markers spliced into the version without a hyphen (e.g., jq's `1.8.2rc1`). Default stable qualifiers `["release", "final", "lts", "ga", "stable"]` admit the common JVM RELEASE/FINAL conventions; the `[version] stable_qualifiers` recipe field overrides for exotic upstreams. Designed in `docs/designs/DESIGN-prerelease-detection.md`._~~ | | |
-| [#2327: feat(recipes): add curated openjdk family (openjdk, temurin, corretto, microsoft-openjdk)](https://github.com/tsukumogami/tsuku/issues/2327) | [#2365](https://github.com/tsukumogami/tsuku/issues/2365), [#2368](https://github.com/tsukumogami/tsuku/issues/2368) | testable |
-| _Scope expanded from a single openjdk recipe to four cross-platform JDK distribution recipes. `openjdk` is the Homebrew + apk fallback; `temurin`, `corretto`, and `microsoft-openjdk` are vendor-specific recipes that pull from each project's own infrastructure (Adoptium API, corretto.aws, aka.ms). All share Adoptium's `most_recent_lts` integer as the LTS-major source. Sandbox containers do not bundle a JDK and the registry has no `openjdk` recipe to declare as a dependency. JVM tools (maven, gradle, sbt) install successfully but fail verify because `mvn --version` etc. need a JVM at runtime. Blocked on #2365 (multi-pattern verify, needed for the `microsoft-openjdk` strict-version check) and #2368 (multi-recipe alias picker, needed so `tsuku install java` presents the four-vendor choice instead of resolving to a single arbitrary recipe)._ |
-| [#2365: feat(recipe): support multi-pattern verify checks](https://github.com/tsukumogami/tsuku/issues/2365) | None | testable |
-| _Extends `[verify]` to accept a `patterns = [...]` array (mutually exclusive with the existing `pattern` field) so recipes can bind multiple independent facts (vendor + version) when those facts appear in non-adjacent positions in the verify command's output. Surfaced by `microsoft-openjdk` in #2327, which prints `Microsoft-{internal-build-hash}` rather than `Microsoft-{version}` and so can't be checked against both vendor and version with a single substring._ | | |
-| [#2368: feat(install): present a picker when multiple recipes satisfy an alias](https://github.com/tsukumogami/tsuku/issues/2368) | None | testable |
-| _The OpenJDK family in #2327 ships four valid answers to "give me Java." Today's satisfies index is 1-to-many at the type level (`map[string]satisfiesEntry`), so a virtual alias like `java` can map to at most one recipe and `tsuku install java` either silently picks one or errors. Extends the schema to support multi-satisfier aliases and adds an interactive picker (with non-TTY error+`--from` fallback) so users see and choose among all eligible recipes._ | | |
+| [#2327: feat(recipes): add curated openjdk family (openjdk, temurin, corretto, microsoft-openjdk)](https://github.com/tsukumogami/tsuku/issues/2327) | tsuku release containing [#2368](https://github.com/tsukumogami/tsuku/issues/2368) | testable |
+| _Scope expanded from a single openjdk recipe to four cross-platform JDK distribution recipes. `openjdk` is the Homebrew + apk fallback; `temurin`, `corretto`, and `microsoft-openjdk` are vendor-specific recipes that pull from each project's own infrastructure (Adoptium API, corretto.aws, aka.ms). All share Adoptium's `most_recent_lts` integer as the LTS-major source. Both prerequisite blockers are now released — #2365 (multi-pattern verify) shipped in v0.11.3 and #2368 (multi-recipe alias picker) shipped in v0.11.4 — so this PR ships the four recipes plus `aliases = ["java"]` declarations on each, fulfilling R12 of `PRD-multi-satisfier-picker.md`. After this lands, `tsuku install java` presents the four-vendor picker on a TTY (or the structured ambiguous-alias error under `-y`/non-TTY)._ |
+| ~~[#2365: feat(recipe): support multi-pattern verify checks](https://github.com/tsukumogami/tsuku/issues/2365)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Extends `[verify]` to accept a `patterns = [...]` array (mutually exclusive with the existing `pattern` field) so recipes can bind multiple independent facts (vendor + version) when those facts appear in non-adjacent positions in the verify command's output. Surfaced by `microsoft-openjdk` in #2327, which prints `Microsoft-{internal-build-hash}` rather than `Microsoft-{version}` and so can't be checked against both vendor and version with a single substring. Shipped in v0.11.3._~~ | | |
+| ~~[#2368: feat(install): present a picker when multiple recipes satisfy an alias](https://github.com/tsukumogami/tsuku/issues/2368)~~ | ~~None~~ | ~~testable~~ |
+| ~~_The OpenJDK family in #2327 ships four valid answers to "give me Java." Today's satisfies index is 1-to-many at the type level (`map[string]satisfiesEntry`), so a virtual alias like `java` can map to at most one recipe and `tsuku install java` either silently picks one or errors. Extends the schema to support multi-satisfier aliases and adds an interactive picker (with non-TTY error+`--from` fallback) so users see and choose among all eligible recipes. Shipped in v0.11.4 via PR #2369._~~ | | |
 | ~~[#2328: feat(version): add a version source for Google Cloud SDK to enable gcloud recipe](https://github.com/tsukumogami/tsuku/issues/2328)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Expanded scope from "gcloud_dist custom source" to a generic `http_json` version source per `docs/designs/DESIGN-http-json-version-source.md`. Adds `[version] source = "http_json"` with `url` and `version_path` fields supporting dotted access plus `[N]` array indexing. Authors `recipes/g/gcloud.toml` as the first consumer in the same PR. Deprecates `source = "hashicorp"` (kept for one release window with a runtime warning); removal tracked in #2349. Unblocks Adoptium-based openjdk in #2327 and HashiCorp checkpoint adoption in #2350-style follow-ups when needed._~~ | | |
 | [#2330: feat(recipes): author a working curated bazel recipe](https://github.com/tsukumogami/tsuku/issues/2330) | None | testable |
@@ -185,9 +185,9 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2325,I2328,I2331,I2333 done
-    class I2330,I2335,I2338,I2365,I2368 ready
-    class I2327,I2336,I2343,I2344,I2345,I2349 blocked
+    class I2325,I2328,I2331,I2333,I2365,I2368 done
+    class I2327,I2330,I2335,I2338 ready
+    class I2336,I2343,I2344,I2345,I2349 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan
@@ -202,7 +202,7 @@ graph TD
 | Wave 1 | #2261, #2262, #2263, #2264, #2265 | After #2259 merges |
 | Wave 2 | #2266, #2267 | After both #2259 and #2260 merge |
 | Wave 3 | #2281–#2297, #2312, #2313, #2315 (20 backfill batches) | After #2259 and #2260 merge |
-| Wave 4 | #2325, #2327, #2328, #2330, #2331, #2333, #2335, #2336, #2338 | After Wave 3 surfaces the gap each issue captures |
+| Wave 4 | #2325, #2327, #2328, #2330, #2331, #2333, #2335, #2336, #2338, #2365, #2368 | After Wave 3 surfaces the gap each issue captures |
 | Wave 5 | #2343, #2344, #2345, #2346 | After the Wave 4 prereq for each lands and (if a code change) is included in a tsuku release |
 
 Wave 3 issues were fully independent of each other; each batch was scoped to a coherent tool category and shipped as a single PR.

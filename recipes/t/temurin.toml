@@ -12,6 +12,9 @@ curated = true
 # who need JDK 8 should either pin via Homebrew/apk through the
 # `openjdk` recipe or wait for a JDK 8-aware variant.
 
+[metadata.satisfies]
+aliases = ["java"]
+
 # The Adoptium API's `most_recent_lts` field returns just the major
 # version integer (e.g. 21, 25). The recipe substitutes that into the
 # download URL's feature_version path segment, and Adoptium's binary

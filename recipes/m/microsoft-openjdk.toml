@@ -13,6 +13,9 @@ supported_libc = ["glibc"]
 # binaries because the modern `--version` flag and output shape are
 # JDK 9+ conventions.
 
+[metadata.satisfies]
+aliases = ["java"]
+
 # Microsoft does not publish a version metadata API. Adoptium's
 # `most_recent_lts` is used as a shared LTS-major source — Microsoft,
 # Adoptium, and the rest of the OpenJDK ecosystem track the same LTS

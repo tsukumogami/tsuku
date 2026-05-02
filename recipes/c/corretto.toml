@@ -15,6 +15,9 @@ supported_libc = ["glibc"]
 # JDK 8 should pin via Homebrew/apk through the `openjdk` recipe or
 # wait for a JDK 8-aware variant.
 
+[metadata.satisfies]
+aliases = ["java"]
+
 # Reuse Adoptium's `most_recent_lts` because Corretto, Temurin, and the
 # rest of the OpenJDK ecosystem all align their LTS major releases on
 # the same OpenJDK upstream cadence (8, 11, 17, 21, 25, ...). The
