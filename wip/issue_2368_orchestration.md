@@ -64,9 +64,9 @@ myself of:
 
 ## Status
 
-- [ ] /explore
-- [ ] /prd
-- [ ] /design
+- [x] /explore — round 1, 6 leads, no contradictions; crystallized to PRD
+- [x] /prd — `docs/prds/PRD-multi-satisfier-picker.md`, Accepted (now In Progress), 17 ACs
+- [x] /design — `docs/designs/DESIGN-multi-satisfier-picker.md`, Accepted, 5 decisions + security review
 - [ ] /plan (single-pr)
 - [ ] /work-on (one or more issues, depending on what /plan produces)
 - [ ] PR open

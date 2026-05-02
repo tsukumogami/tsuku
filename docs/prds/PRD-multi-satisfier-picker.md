@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: In Progress
 problem: |
   Users typing `tsuku install <name>` cannot pick among multiple recipes that
   satisfy the same alias. The OpenJDK family in PR #2362 ships four recipes
@@ -20,7 +20,7 @@ source_issue: 2368
 
 ## Status
 
-Draft
+In Progress
 
 ## Vocabulary
 
