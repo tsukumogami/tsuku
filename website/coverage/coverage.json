@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-02T20:02:30Z",
+  "generated_at": "2026-05-02T23:29:20Z",
   "total_recipes": 1439,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 873,
+        "supported": 874,
         "total": 1439,
-        "pct": 60.6671299513551
+        "pct": 60.736622654621264
       },
       "glibc": {
         "supported": 1407,
@@ -14,9 +14,9 @@
         "pct": 97.77623349548298
       },
       "musl": {
-        "supported": 1256,
+        "supported": 1255,
         "total": 1439,
-        "pct": 87.28283530229326
+        "pct": 87.2133425990271
       }
     },
     "by_category": {
@@ -27,7 +27,7 @@
       },
       "tool": {
         "total": 1287,
-        "musl_support": 1106,
+        "musl_support": 1105,
         "glibc_support": 1257
       }
     }
@@ -1249,17 +1249,15 @@
       "name": "bazel",
       "type": "tool",
       "platforms": {
-        "darwin": false,
+        "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
       "gaps": [
-        "darwin"
+        "musl"
       ],
       "errors": null,
-      "warnings": [
-        "recipe 'bazel' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "bazelisk",
