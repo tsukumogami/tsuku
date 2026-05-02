@@ -4,6 +4,13 @@ description = "Eclipse Temurin OpenJDK distribution from Adoptium"
 homepage = "https://adoptium.net/"
 version_format = "semver"
 curated = true
+# JDK 9+ only. Adoptium publishes JDK 8 binaries (and `temurin@8` will
+# install successfully), but the verify command and pattern below
+# assume the modern `java --version` shape that JDK 9 introduced —
+# JDK 8 uses `java -version` (single dash) and reports as
+# `(Temurin)(build 1.8.0_X-Y)` rather than `Temurin-X.Y.Z+B`. Users
+# who need JDK 8 should either pin via Homebrew/apk through the
+# `openjdk` recipe or wait for a JDK 8-aware variant.
 
 # The Adoptium API's `most_recent_lts` field returns just the major
 # version integer (e.g. 21, 25). The recipe substitutes that into the

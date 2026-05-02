@@ -7,6 +7,13 @@ curated = true
 # Amazon does not ship musl builds for Corretto; users on Alpine should
 # install one of the musl-supporting distros (temurin, sapmachine).
 supported_libc = ["glibc"]
+# JDK 9+ only. Amazon publishes Corretto 8 (and `corretto@8` will
+# install successfully), but the verify command and pattern below
+# assume the modern `java --version` shape that JDK 9 introduced —
+# JDK 8 uses `java -version` (single dash) and reports as
+# `Corretto-1.8.0_X` rather than `Corretto-X.Y.Z`. Users who need
+# JDK 8 should pin via Homebrew/apk through the `openjdk` recipe or
+# wait for a JDK 8-aware variant.
 
 # Reuse Adoptium's `most_recent_lts` because Corretto, Temurin, and the
 # rest of the OpenJDK ecosystem all align their LTS major releases on

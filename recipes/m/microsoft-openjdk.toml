@@ -7,6 +7,11 @@ curated = true
 # Microsoft does not ship musl builds; users on Alpine should install
 # one of the musl-supporting distros (temurin, sapmachine).
 supported_libc = ["glibc"]
+# JDK 9+ only. Microsoft only ships Build of OpenJDK 11+, so this
+# isn't a downgrade in practice — but the verify command (`java
+# --version`) and pattern would also fail on hypothetical JDK 8
+# binaries because the modern `--version` flag and output shape are
+# JDK 9+ conventions.
 
 # Microsoft does not publish a version metadata API. Adoptium's
 # `most_recent_lts` is used as a shared LTS-major source — Microsoft,
