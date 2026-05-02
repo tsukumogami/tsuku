@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-02T22:42:50Z",
+  "generated_at": "2026-05-02T22:44:08Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -74,14 +74,15 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 52,
-        "pending": 23,
+        "failed": 53,
+        "pending": 22,
         "success": 13,
         "total": 89
       }
@@ -430,15 +431,6 @@
           "next_retry_at": "2026-05-08T10:34:00Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 298,
-          "next_retry_at": "1734-01-21T20:59:22Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -646,6 +638,15 @@
           "next_retry_at": "2026-05-09T20:46:39Z"
         },
         {
+          "id": "rubygems:glassfish",
+          "name": "glassfish",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 13,
+          "next_retry_at": "2026-05-09T22:43:28Z"
+        },
+        {
           "id": "npm:got",
           "name": "got",
           "ecosystem": "npm",
@@ -653,6 +654,15 @@
           "category": "install_failed",
           "failure_count": 13,
           "next_retry_at": "2026-05-09T16:49:51Z"
+        },
+        {
+          "id": "npm:hasura-cli",
+          "name": "hasura-cli",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 13,
+          "next_retry_at": "2026-05-09T22:43:28Z"
         },
         {
           "id": "rubygems:hercules",
@@ -761,15 +771,6 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-05-03T20:42:53Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 450,
-          "next_retry_at": "1734-01-21T20:59:22Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -2893,6 +2894,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 298,
+          "next_retry_at": "1734-01-21T20:59:22Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -9520,15 +9530,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:glassfish",
-          "name": "glassfish",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-05-02T17:44:11Z"
-        },
-        {
           "id": "homebrew:glaze",
           "name": "glaze",
           "ecosystem": "homebrew",
@@ -10742,15 +10743,6 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:hasura-cli",
-          "name": "hasura-cli",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-05-02T15:44:49Z"
         },
         {
           "id": "homebrew:hatch",
@@ -13247,6 +13239,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 450,
+          "next_retry_at": "1734-01-21T20:59:22Z"
         },
         {
           "id": "homebrew:libaacs",
