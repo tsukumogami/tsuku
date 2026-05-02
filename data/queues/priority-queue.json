@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-02T16:49:51Z",
+  "updated_at": "2026-05-02T19:03:35Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 296,
-      "next_retry_at": "1734-01-21T15:03:58.9579395Z"
+      "failure_count": 297,
+      "next_retry_at": "1734-01-21T19:16:18.539718874Z"
     },
     {
       "name": "azqr",
@@ -14536,11 +14536,11 @@
       "name": "flash",
       "source": "rubygems:flash",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-05-02T14:12:44.33722592Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-09T19:03:35.394494682Z"
     },
     {
       "name": "flashrom",
@@ -17116,7 +17116,7 @@
       "name": "glassfish",
       "source": "rubygems:glassfish",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 12,
@@ -18966,7 +18966,7 @@
       "name": "gsl",
       "source": "rubygems:gsl",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 12,
@@ -23566,7 +23566,7 @@
       "name": "kew",
       "source": "npm:kew",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 12,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 447,
-      "next_retry_at": "1734-01-21T15:03:58.9579395Z"
+      "failure_count": 449,
+      "next_retry_at": "1734-01-21T19:16:18.539718874Z"
     },
     {
       "name": "libaacs",
