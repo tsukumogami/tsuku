@@ -41,7 +41,6 @@ when = { os = ["darwin"] }
 
 [verify]
 command = "java --version"
-mode = "output"
 # Microsoft is the outlier among the popular OpenJDK distros: their
 # build line reads `OpenJDK Runtime Environment Microsoft-{internal-build-id}`
 # (e.g. `Microsoft-13877136`) where the suffix is an internal build hash,
@@ -52,4 +51,3 @@ mode = "output"
 # vendor name *and* an `openjdk {major}` line matching the resolved
 # version.
 patterns = ["Microsoft", "openjdk {version}"]
-reason = "Microsoft embeds an internal build hash after the vendor name; bind vendor + version separately via multi-pattern AND"

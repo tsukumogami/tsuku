@@ -54,10 +54,8 @@ when = { os = ["darwin"] }
 
 [verify]
 command = "java --version"
-mode = "output"
-pattern = "Temurin-{version}"
 # `java --version` prints `OpenJDK Runtime Environment Temurin-{full-version}`
 # on the second line. With {version} resolved to the LTS major (e.g. 25),
 # the pattern "Temurin-25" matches "Temurin-25.0.3+9-LTS" — confirming both
 # the distribution and the major version in a single substring check.
-reason = "version is the LTS major; pattern binds to Temurin-{major} in the build line"
+pattern = "Temurin-{version}"
