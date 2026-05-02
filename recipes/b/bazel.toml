@@ -1,35 +1,51 @@
 [metadata]
-  name = "bazel"
-  description = "Google's own build tool"
-  homepage = "https://bazel.build/"
-  version_format = ""
-  requires_sudo = false
-  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
-  tier = 0
-  type = ""
-  llm_validation = "skipped"
+name = "bazel"
+description = "Google's build tool with multi-language and multi-platform support"
+homepage = "https://bazel.build/"
+version_format = "semver"
+curated = true
+# Bazel ships per-platform binaries with an embedded glibc-linked OpenJDK.
+# Alpine (musl) has no upstream bazel package and the embedded JDK won't
+# load against musl libc, so document the constraint at the metadata level
+# rather than emitting Alpine-only steps that would fail at runtime.
+supported_libc = ["glibc"]
 
-[version]
-  source = ""
-  github_repo = ""
-  tag_prefix = ""
-  module = ""
-  formula = ""
-  cask = ""
-  tap = ""
-  fossil_repo = ""
-  project_name = ""
-  version_separator = ""
-  timeline_tag = ""
+[metadata.satisfies]
+homebrew = ["bazel"]
+
+# Version is resolved by the Homebrew action from the bottle metadata,
+# matching the openjdk recipe pattern. Skipping an explicit `[version]`
+# block avoids drift between a github_releases tag and the bottle's
+# version key.
+
+# glibc Linux: Homebrew bottle (linuxbrew). The bare per-platform binary
+# self-extracts on first run into a working tree under $HOME/.cache/bazel
+# and starts a long-lived server; that path failed across debian, rhel,
+# arch, and suse in the test-recipe sandbox (commit dcb34719, deferred
+# in ed8fc646; install_exit_code=6). The Homebrew bottle ships a
+# pre-extracted layout so the recipe sidesteps the self-extraction step.
+[[steps]]
+action = "homebrew"
+formula = "bazel"
+when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
-  action = "homebrew"
-  formula = "bazel"
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/bazel"]
+when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
-  action = "install_binaries"
-  binaries = ["bin/bazel", "bin/bazel-9.0.0"]
+action = "homebrew"
+formula = "bazel"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/bazel"]
+when = { os = ["darwin"] }
 
 [verify]
-  command = "bazel --version"
-  pattern = ""
+command = "bazel --version"
+pattern = "bazel {version}"
