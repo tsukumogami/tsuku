@@ -9,11 +9,11 @@ import (
 	"golang.org/x/term"
 )
 
-// ErrCancelled is returned by Pick when the user aborts the picker
+// ErrCanceled is returned by Pick when the user aborts the picker
 // (Ctrl-C / SIGINT). Callers should treat this as a deliberate user
-// action, not a failure: typically print "Cancelled." and exit non-zero
+// action, not a failure: typically print "Canceled." and exit non-zero
 // without mutating any state.
-var ErrCancelled = errors.New("picker: cancelled")
+var ErrCanceled = errors.New("picker: canceled")
 
 // Choice is one row in the picker. Name is the identifier the caller
 // receives back when the user confirms; Description is rendered alongside
@@ -37,7 +37,7 @@ func IsAvailable() bool {
 // Behavior:
 //   - Up/Down arrow keys move the cursor.
 //   - Enter confirms, returning the cursor's index.
-//   - Ctrl-C cancels, returning ErrCancelled.
+//   - Ctrl-C cancels, returning ErrCanceled.
 //   - Other input is ignored.
 //
 // The cursor is hidden during rendering and restored on exit, including
@@ -74,8 +74,8 @@ func pick(stdin io.Reader, stderr io.Writer, prompt string, choices []Choice) (i
 	}
 
 	// Hide the cursor; restore on exit.
-	fmt.Fprint(stderr, "\x1b[?25l")
-	defer fmt.Fprint(stderr, "\x1b[?25h")
+	_, _ = fmt.Fprint(stderr, "\x1b[?25l")
+	defer func() { _, _ = fmt.Fprint(stderr, "\x1b[?25h") }()
 
 	cursor := 0
 	render(stderr, prompt, choices, cursor, false)
@@ -98,7 +98,7 @@ func pick(stdin io.Reader, stderr io.Writer, prompt string, choices []Choice) (i
 			return cursor, nil
 		case isCtrlC(buf, n):
 			clear(stderr, prompt, choices)
-			return 0, ErrCancelled
+			return 0, ErrCanceled
 		default:
 			// Unknown input — ignore (don't re-render).
 			continue
@@ -144,11 +144,11 @@ func render(w io.Writer, prompt string, choices []Choice, selected int, rerender
 // doesn't appear below a stale picker frame.
 func clear(w io.Writer, prompt string, choices []Choice) {
 	// Move cursor up by total lines, then clear each as we descend.
-	fmt.Fprintf(w, "\x1b[%dA", len(choices)+1)
+	_, _ = fmt.Fprintf(w, "\x1b[%dA", len(choices)+1)
 	for i := 0; i <= len(choices); i++ {
-		fmt.Fprint(w, "\r\x1b[2K")
+		_, _ = fmt.Fprint(w, "\r\x1b[2K")
 		if i < len(choices) {
-			fmt.Fprint(w, "\n")
+			_, _ = fmt.Fprint(w, "\n")
 		}
 	}
 	// Move cursor back up to the prompt's start so subsequent writes

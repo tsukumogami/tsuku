@@ -80,7 +80,7 @@ func TestPick_DownTwiceThenUpThenEnter(t *testing.T) {
 	}
 }
 
-func TestPick_CtrlCReturnsErrCancelled(t *testing.T) {
+func TestPick_CtrlCReturnsErrCanceled(t *testing.T) {
 	choices := []Choice{
 		{Name: "openjdk"},
 		{Name: "temurin"},
@@ -89,8 +89,8 @@ func TestPick_CtrlCReturnsErrCancelled(t *testing.T) {
 	var stderr bytes.Buffer
 
 	idx, err := pick(stdin, &stderr, "Pick:", choices)
-	if !errors.Is(err, ErrCancelled) {
-		t.Fatalf("pick: err = %v, want ErrCancelled", err)
+	if !errors.Is(err, ErrCanceled) {
+		t.Fatalf("pick: err = %v, want ErrCanceled", err)
 	}
 	if idx != 0 {
 		t.Errorf("pick: idx = %d on cancel, want 0 (sentinel)", idx)

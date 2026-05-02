@@ -16,8 +16,8 @@ import (
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/registry"
-	"github.com/tsukumogami/tsuku/internal/tui"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
+	"github.com/tsukumogami/tsuku/internal/tui"
 )
 
 var installDryRun bool
@@ -328,8 +328,8 @@ Exit codes for project install:
 					// Multi-satisfier alias: branch by mode.
 					chosen, resolveErr := resolveMultiSatisfier(toolName, satisfiers)
 					if resolveErr != nil {
-						if errors.Is(resolveErr, tui.ErrCancelled) {
-							fmt.Fprintln(os.Stderr, "Cancelled.")
+						if errors.Is(resolveErr, tui.ErrCanceled) {
+							fmt.Fprintln(os.Stderr, "Canceled.")
 							exitWithCode(ExitCancelled)
 						}
 						handleAmbiguousAliasError(toolName, satisfiers)

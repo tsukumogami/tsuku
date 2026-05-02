@@ -68,6 +68,12 @@ myself of:
 - [x] /prd — `docs/prds/PRD-multi-satisfier-picker.md`, Accepted (now In Progress), 17 ACs
 - [x] /design — `docs/designs/DESIGN-multi-satisfier-picker.md`, Accepted (now Planned), 5 decisions + security review
 - [x] /plan (single-pr) — `docs/plans/PLAN-multi-satisfier-picker.md`, 6 outlines, horizontal decomposition
-- [ ] /work-on (plan-backed mode, all 6 outlines on this same branch)
+- [x] /work-on outlines 1–5 on this branch (O6 ships with PR #2362 after this lands)
+  - [x] O1: schema + alias index (commit 087b0bd7)
+  - [x] O2: internal/tui picker package (commit b9bb...)
+  - [x] O3: install command integration (commit ...)
+  - [x] O4: validator R10 (commit a3b0bea3)
+  - [x] O5: covered by O4's CI wiring; integration test added (commit 0a8d6515)
+  - [ ] O6: JDK recipes declare `aliases = ["java"]` — deferred to PR #2362 rebase
 - [ ] PR open
 - [ ] CI green
