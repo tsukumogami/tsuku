@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-02T22:43:28Z",
+  "updated_at": "2026-05-02T23:29:44Z",
   "entries": [
     {
       "name": "node",
@@ -20056,7 +20056,7 @@
       "name": "hercules",
       "source": "rubygems:hercules",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 12,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 450,
-      "next_retry_at": "1734-01-21T20:59:22.731759088Z"
+      "failure_count": 451,
+      "next_retry_at": "1734-01-21T23:42:27.762985318Z"
     },
     {
       "name": "libaacs",
