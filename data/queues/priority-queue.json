@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-02T13:12:00Z",
+  "updated_at": "2026-05-02T14:51:16Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 295,
-      "next_retry_at": "1734-01-21T11:09:16.303731632Z"
+      "failure_count": 296,
+      "next_retry_at": "1734-01-21T15:03:58.9579395Z"
     },
     {
       "name": "azqr",
@@ -12116,11 +12116,11 @@
       "name": "dug",
       "source": "rubygems:dug",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-05-02T10:45:46.86593135Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-09T14:51:15.812715308Z"
     },
     {
       "name": "dumbpipe",
@@ -14536,7 +14536,7 @@
       "name": "flash",
       "source": "rubygems:flash",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 12,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 445,
-      "next_retry_at": "1734-01-21T11:09:16.303731632Z"
+      "failure_count": 447,
+      "next_retry_at": "1734-01-21T15:03:58.9579395Z"
     },
     {
       "name": "libaacs",
