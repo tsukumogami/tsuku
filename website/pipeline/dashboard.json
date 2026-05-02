@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-02T22:44:08Z",
+  "generated_at": "2026-05-02T23:30:19Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -74,15 +74,14 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 53,
-        "pending": 22,
+        "failed": 52,
+        "pending": 23,
         "success": 13,
         "total": 89
       }
@@ -665,15 +664,6 @@
           "next_retry_at": "2026-05-09T22:43:28Z"
         },
         {
-          "id": "rubygems:hercules",
-          "name": "hercules",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-05-02T22:43:31Z"
-        },
-        {
           "id": "rubygems:htmldoc",
           "name": "htmldoc",
           "ecosystem": "rubygems",
@@ -771,6 +761,15 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-05-03T20:42:53Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 451,
+          "next_retry_at": "1734-01-21T23:42:27Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -10864,6 +10863,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:hercules",
+          "name": "hercules",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-05-02T22:43:31Z"
+        },
+        {
           "id": "homebrew:heremaps/olp-cli/olp",
           "name": "heremaps/olp-cli/olp",
           "ecosystem": "homebrew",
@@ -13239,15 +13247,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 450,
-          "next_retry_at": "1734-01-21T20:59:22Z"
         },
         {
           "id": "homebrew:libaacs",
