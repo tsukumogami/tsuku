@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-05-02T19:58:00Z",
+  "generated_at": "2026-05-02T20:03:27Z",
   "queue": {
     "total": 5305,
     "by_status": {
-      "blocked": 23,
+      "blocked": 22,
       "excluded": 6,
-      "failed": 76,
-      "pending": 3833,
-      "success": 1367
+      "failed": 74,
+      "pending": 3835,
+      "success": 1368
     },
     "by_tier": {
       "1": {
@@ -21,11 +21,11 @@
         "success": 12
       },
       "3": {
-        "blocked": 17,
+        "blocked": 16,
         "excluded": 6,
-        "failed": 76,
-        "pending": 3818,
-        "success": 1343
+        "failed": 74,
+        "pending": 3820,
+        "success": 1344
       }
     },
     "by_ecosystem": {
@@ -54,9 +54,9 @@
         "total": 8
       },
       "homebrew": {
-        "blocked": 23,
+        "blocked": 22,
         "pending": 3731,
-        "success": 1129,
+        "success": 1130,
         "total": 4883
       },
       "manual": {
@@ -68,13 +68,14 @@
         "total": 1
       },
       "npm": {
-        "failed": 18,
-        "pending": 2,
+        "failed": 17,
+        "pending": 3,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -346,18 +347,6 @@
           "failure_count": 1
         },
         {
-          "id": "homebrew:openjdk",
-          "name": "openjdk",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "missing_dep",
-          "blocked_by": [
-            "harfbuzz",
-            "little-cms2"
-          ],
-          "failure_count": 2
-        },
-        {
           "id": "homebrew:pinentry",
           "name": "pinentry",
           "ecosystem": "homebrew",
@@ -440,15 +429,6 @@
           "category": "install_failed",
           "failure_count": 14,
           "next_retry_at": "2026-05-08T10:34:00Z"
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 297,
-          "next_retry_at": "1734-01-21T19:16:18Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -773,15 +753,6 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-05-03T20:42:53Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 449,
-          "next_retry_at": "1734-01-21T19:16:18Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -2905,6 +2876,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 297,
+          "next_retry_at": "1734-01-21T19:16:18Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -13259,6 +13239,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 449,
+          "next_retry_at": "1734-01-21T19:16:18Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -34821,6 +34810,14 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:openjdk",
+          "name": "openjdk",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "missing_dep",
+          "failure_count": 2
+        },
+        {
           "id": "homebrew:openldap",
           "name": "openldap",
           "ecosystem": "homebrew",
@@ -37762,23 +37759,12 @@
     },
     {
       "dependency": "little-cms2",
-      "count": 7,
-      "direct_count": 3,
-      "total_count": 7,
-      "packages": [
-        "homebrew:imagemagick",
-        "homebrew:jpeg-xl",
-        "homebrew:openjdk"
-      ]
-    },
-    {
-      "dependency": "icu4c@78",
       "count": 5,
       "direct_count": 2,
       "total_count": 5,
       "packages": [
-        "homebrew:harfbuzz",
-        "homebrew:node"
+        "homebrew:imagemagick",
+        "homebrew:jpeg-xl"
       ]
     },
     {
@@ -37806,6 +37792,16 @@
       "total_count": 4,
       "packages": [
         "homebrew:open-mpi"
+      ]
+    },
+    {
+      "dependency": "icu4c@78",
+      "count": 3,
+      "direct_count": 2,
+      "total_count": 3,
+      "packages": [
+        "homebrew:harfbuzz",
+        "homebrew:node"
       ]
     },
     {
