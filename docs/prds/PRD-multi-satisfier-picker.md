@@ -410,3 +410,12 @@ be re-litigated during design or implementation.
   advertised in `tsuku install --help` beyond a brief note. Power users
   who discover it can use it as a deterministic CLI override, but the
   blessed user-facing flag for picking a recipe is `--from <recipe>`.
+
+## Downstream Artifacts
+
+- **Design**: [`docs/designs/current/DESIGN-multi-satisfier-picker.md`](../designs/current/DESIGN-multi-satisfier-picker.md) (Current).
+- **Picker mechanism implementation**: PR [#2369](https://github.com/tsukumogami/tsuku/pull/2369) closes [#2368](https://github.com/tsukumogami/tsuku/issues/2368) — ships R1–R11 (the schema, alias index, picker package, install integration, validator, and registry index-build hook).
+- **R12 fulfillment (JDK recipes declare `aliases = ["java"]`)**: deferred to PR [#2362](https://github.com/tsukumogami/tsuku/pull/2362) which already authors the four OpenJDK family recipes; the alias declarations land alongside that PR.
+- **Broader alias declarations on existing recipes**: tracked under [#2370](https://github.com/tsukumogami/tsuku/issues/2370) for the wider ecosystem (`ripgrep→rg`, `awscli→aws`, `golang→go`, etc.) — gated on a tsuku release containing the picker mechanism.
+
+The PRD remains **In Progress** until R12 lands via PR #2362; status transitions to Done once `tsuku install java` actually presents the four-recipe picker on a tsuku release.

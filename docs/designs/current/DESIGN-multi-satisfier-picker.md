@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Current
 problem: |
   `tsuku install <name>` cannot route the user through a choice when an alias
   is claimed by multiple recipes. The four-recipe OpenJDK family in PR #2362
@@ -30,7 +30,7 @@ upstream: docs/prds/PRD-multi-satisfier-picker.md
 
 ## Status
 
-Accepted
+Current
 
 ## Context and Problem Statement
 
@@ -680,17 +680,13 @@ The picker introduces a new interactive code surface. Specific concerns:
 
 ## Implementation Plan
 
-This design uses single-pr execution mode: implementation outlines (not
-GitHub issues) live in `docs/plans/PLAN-multi-satisfier-picker.md`.
-All six outlines ship in PR #2369 on the same branch as this design
-doc. Outline 6 (the JDK recipe declarations) lands separately on
-PR #2362's branch after #2369 merges.
+The picker mechanism shipped via PR [#2369](https://github.com/tsukumogami/tsuku/pull/2369) (closes [#2368](https://github.com/tsukumogami/tsuku/issues/2368)) under single-pr execution mode. The plan working file (`docs/plans/PLAN-multi-satisfier-picker.md`) was deleted on that branch once all outlines were implemented; the table below records what shipped.
 
 | Outline | Purpose | Status |
 |---------|---------|--------|
-| O1 | schema + alias index (no behavior change) | Done |
-| O2 | `internal/tui` picker package | Done |
-| O3 | install command integration (4-arm switch + `--pick`) | Done |
-| O4 | validator R10 (multi-satisfier in runtime_dependencies) | Done |
-| O5 | registry index-build hook (covered by O4 + existing CI) | Done |
-| O6 | JDK recipes declare `aliases = ["java"]` | Deferred to PR #2362 rebase |
+| O1 | schema + alias index (no behavior change) | Done (PR #2369) |
+| O2 | `internal/tui` picker package | Done (PR #2369) |
+| O3 | install command integration (4-arm switch + `--pick`) | Done (PR #2369) |
+| O4 | validator R10 (multi-satisfier in runtime_dependencies) | Done (PR #2369) |
+| O5 | registry index-build hook (covered by O4 + existing CI) | Done (PR #2369) |
+| O6 | JDK recipes declare `aliases = ["java"]` | Deferred to PR [#2362](https://github.com/tsukumogami/tsuku/pull/2362); broader recipe rollout tracked in [#2370](https://github.com/tsukumogami/tsuku/issues/2370) |
