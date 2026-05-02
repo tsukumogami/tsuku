@@ -100,6 +100,8 @@ func (p *RegistryProvider) SatisfiesEntries(ctx context.Context) (map[string]str
 }
 
 // satisfiesFromManifest reads satisfies entries from the cached registry manifest.
+// The reserved key "aliases" is excluded — it has multi-recipe semantics
+// handled by AliasesEntries / aliasesFromManifest, not the 1:1 satisfies index.
 func (p *RegistryProvider) satisfiesFromManifest() (map[string]string, error) {
 	manifest, err := p.registry.GetCachedManifest()
 	if err != nil {
@@ -111,7 +113,10 @@ func (p *RegistryProvider) satisfiesFromManifest() (map[string]string, error) {
 
 	result := make(map[string]string)
 	for _, entry := range manifest.Recipes {
-		for _, pkgNames := range entry.Satisfies {
+		for ecosystem, pkgNames := range entry.Satisfies {
+			if ecosystem == AliasesKey {
+				continue
+			}
 			for _, pkgName := range pkgNames {
 				if _, exists := result[pkgName]; !exists {
 					result[pkgName] = entry.Name
@@ -154,7 +159,10 @@ func (p *RegistryProvider) satisfiesFromRecipes(ctx context.Context) (map[string
 			continue
 		}
 
-		for _, pkgNames := range r.Metadata.Satisfies {
+		for ecosystem, pkgNames := range r.Metadata.Satisfies {
+			if ecosystem == AliasesKey {
+				continue
+			}
 			for _, pkgName := range pkgNames {
 				if _, exists := result[pkgName]; !exists {
 					result[pkgName] = recipeName
@@ -163,6 +171,82 @@ func (p *RegistryProvider) satisfiesFromRecipes(ctx context.Context) (map[string
 						pkgName, result[pkgName], recipeName)
 				}
 			}
+		}
+	}
+
+	return result, nil
+}
+
+// AliasesEntries returns alias -> []recipe_name mappings declared under
+// [metadata.satisfies] aliases = [...]. Multiple recipes may claim the
+// same alias; the loader's alias index is multi-valued.
+func (p *RegistryProvider) AliasesEntries(ctx context.Context) (map[string][]string, error) {
+	if p.registry != nil {
+		return p.aliasesFromManifest()
+	}
+	return p.aliasesFromRecipes(ctx)
+}
+
+// aliasesFromManifest reads alias entries from the cached registry manifest.
+func (p *RegistryProvider) aliasesFromManifest() (map[string][]string, error) {
+	manifest, err := p.registry.GetCachedManifest()
+	if err != nil {
+		return nil, err
+	}
+	if manifest == nil {
+		return nil, nil
+	}
+
+	result := make(map[string][]string)
+	for _, entry := range manifest.Recipes {
+		aliases, ok := entry.Satisfies[AliasesKey]
+		if !ok {
+			continue
+		}
+		for _, alias := range aliases {
+			result[alias] = append(result[alias], entry.Name)
+		}
+	}
+
+	return result, nil
+}
+
+// aliasesFromRecipes builds alias entries by parsing every recipe in the store.
+func (p *RegistryProvider) aliasesFromRecipes(ctx context.Context) (map[string][]string, error) {
+	paths, err := p.store.List(ctx)
+	if err != nil {
+		if paths == nil {
+			return nil, err
+		}
+	}
+
+	if paths == nil {
+		return nil, nil
+	}
+
+	result := make(map[string][]string)
+	for _, path := range paths {
+		if !strings.HasSuffix(path, ".toml") {
+			continue
+		}
+
+		recipeName := recipeNameFromPath(path)
+		data, err := p.store.Get(ctx, path)
+		if err != nil {
+			continue
+		}
+
+		var r Recipe
+		if err := toml.Unmarshal(data, &r); err != nil {
+			continue
+		}
+
+		aliases, ok := r.Metadata.Satisfies[AliasesKey]
+		if !ok {
+			continue
+		}
+		for _, alias := range aliases {
+			result[alias] = append(result[alias], recipeName)
 		}
 	}
 

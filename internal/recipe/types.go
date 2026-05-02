@@ -175,7 +175,13 @@ type MetadataSection struct {
 	LLMValidation            string              `toml:"llm_validation,omitempty"`   // LLM validation status: "skipped" or empty
 	Curated                  bool                `toml:"curated,omitempty"`          // True for handcrafted recipes in ci.curated
 	Binaries                 []string            `toml:"binaries,omitempty"`         // Explicit binary paths for homebrew recipes
-	Satisfies                map[string][]string `toml:"satisfies,omitempty"`        // Ecosystem name mappings: ecosystem -> []package_names
+	// Satisfies maps an ecosystem (homebrew, npm, pypi, ...) to the list
+	// of package names this recipe satisfies in that ecosystem. The
+	// reserved key "aliases" (see AliasesKey) is special: it lists
+	// virtual aliases that may be claimed by multiple recipes; the
+	// install command's picker engages when a typed alias resolves to
+	// two or more satisfying recipes.
+	Satisfies                map[string][]string `toml:"satisfies,omitempty"`        // Ecosystem name mappings + reserved "aliases" key
 
 	// Platform constraints (optional, defaults provide universal support)
 	SupportedOS          []string `toml:"supported_os,omitempty"`          // Allowed OS values (default: all OS)
@@ -804,6 +810,11 @@ const (
 	// VerifyModeOutput matches a pattern in command output without version check
 	VerifyModeOutput = "output"
 )
+
+// AliasesKey is the reserved key under [metadata.satisfies] that holds
+// virtual aliases (multi-satisfier-eligible). Distinct from ecosystem
+// keys (homebrew, npm, pypi, ...) which keep the existing 1:1 semantics.
+const AliasesKey = "aliases"
 
 // Version format transforms
 const (
