@@ -4,7 +4,7 @@ description = "Google's build tool with multi-language and multi-platform suppor
 homepage = "https://bazel.build/"
 version_format = "semver"
 curated = true
-# Bazel ships per-platform binaries with an embedded glibc-linked OpenJDK.
+# Bazel ships per-platform single binaries with an embedded glibc-linked OpenJDK.
 # Alpine (musl) has no upstream bazel package and the embedded JDK won't
 # load against musl libc, so document the constraint at the metadata level
 # rather than emitting Alpine-only steps that would fail at runtime.
@@ -13,38 +13,25 @@ supported_libc = ["glibc"]
 [metadata.satisfies]
 homebrew = ["bazel"]
 
-# Version is resolved by the Homebrew action from the bottle metadata,
-# matching the openjdk recipe pattern. Skipping an explicit `[version]`
-# block avoids drift between a github_releases tag and the bottle's
-# version key.
-
-# glibc Linux: Homebrew bottle (linuxbrew). The bare per-platform binary
-# self-extracts on first run into a working tree under $HOME/.cache/bazel
-# and starts a long-lived server; that path failed across debian, rhel,
-# arch, and suse in the test-recipe sandbox (commit dcb34719, deferred
-# in ed8fc646; install_exit_code=6). The Homebrew bottle ships a
-# pre-extracted layout so the recipe sidesteps the self-extraction step.
+# Linux x86_64 / arm64: bazelbuild/bazel publishes a self-contained binary
+# per platform. Bazel's upstream uses `x86_64` rather than `amd64` in the
+# asset name, so the recipe maps tsuku's amd64 to x86_64; arm64 passes
+# through unchanged.
 [[steps]]
-action = "homebrew"
-formula = "bazel"
+action = "github_file"
 when = { os = ["linux"], libc = ["glibc"] }
+repo = "bazelbuild/bazel"
+asset_pattern = "bazel-{version}-linux-{arch}"
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+binary = "bazel"
 
 [[steps]]
-action = "install_binaries"
-install_mode = "directory"
-outputs = ["bin/bazel"]
-when = { os = ["linux"], libc = ["glibc"] }
-
-[[steps]]
-action = "homebrew"
-formula = "bazel"
+action = "github_file"
 when = { os = ["darwin"] }
-
-[[steps]]
-action = "install_binaries"
-install_mode = "directory"
-outputs = ["bin/bazel"]
-when = { os = ["darwin"] }
+repo = "bazelbuild/bazel"
+asset_pattern = "bazel-{version}-darwin-{arch}"
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+binary = "bazel"
 
 [verify]
 command = "bazel --version"
