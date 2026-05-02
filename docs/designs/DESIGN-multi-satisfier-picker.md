@@ -677,3 +677,39 @@ The picker introduces a new interactive code surface. Specific concerns:
   and tests only two scenarios (happy path + Ctrl-C). If it flakes
   three times in a row, mark it skipped and file a bug — `--pick`
   coverage means the user-facing behavior is still verified.
+
+## Implementation Issues
+
+This design uses single-pr execution mode: implementation outlines (not
+GitHub issues) live in `docs/plans/PLAN-multi-satisfier-picker.md`.
+All six outlines ship in PR #2369 on the same branch as this design
+doc. Outline 6 (the JDK recipe declarations) lands separately on
+PR #2362's branch after #2369 merges.
+
+| Outline | Purpose | Status |
+|---------|---------|--------|
+| O1 | schema + alias index (no behavior change) | Done |
+| O2 | `internal/tui` picker package | Done |
+| O3 | install command integration (4-arm switch + `--pick`) | Done |
+| O4 | validator R10 (multi-satisfier in runtime_dependencies) | Done |
+| O5 | registry index-build hook (covered by O4 + existing CI) | Done |
+| O6 | JDK recipes declare `aliases = ["java"]` | Deferred to PR #2362 rebase |
+
+```mermaid
+graph TD
+    O1["O1: schema + alias index"]
+    O2["O2: tui picker package"]
+    O3["O3: install integration"]
+    O4["O4: validator R10"]
+    O5["O5: index-build hook"]
+    O6["O6: JDK recipes alias"]
+
+    O1 --> O3
+    O2 --> O3
+    O1 --> O4
+    O1 --> O5
+    O4 --> O5
+    O1 --> O6
+    O3 --> O6
+    O4 --> O6
+```
