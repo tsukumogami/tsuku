@@ -305,12 +305,24 @@ def main() -> int:
     # Build satisfies index and validate entries in a single pass.
     # The index maps alias names to canonical recipe names, mirroring the
     # CLI's satisfies fallback in internal/recipe/loader.go.
+    #
+    # The reserved `aliases` ecosystem is multi-satisfier: many recipes may
+    # declare the same alias (e.g. openjdk, temurin, corretto, microsoft-openjdk
+    # all declaring `aliases = ["java"]`). The CLI loader builds a parallel
+    # multi-valued aliasIndex; this script mirrors that with a separate dict.
+    # Direct-name match wins over alias resolution (R11), so an alias matching
+    # a canonical recipe name is also allowed.
     recipe_names = {r["name"] for r in recipes}
     satisfies_claims: dict[str, str] = {}
+    aliases_index: dict[str, list[str]] = {}
     for recipe in recipes:
         satisfies = recipe.get("satisfies", {})
         for ecosystem, pkg_names in satisfies.items():
             for pkg_name in pkg_names:
+                if ecosystem == "aliases":
+                    aliases_index.setdefault(pkg_name, []).append(recipe["name"])
+                    continue
+
                 # Check for duplicate claims across recipes
                 if pkg_name in satisfies_claims and satisfies_claims[pkg_name] != recipe["name"]:
                     all_errors.append(ValidationError(
@@ -331,8 +343,14 @@ def main() -> int:
                     ))
 
     # Validate cross-recipe dependencies (each referenced dependency must exist
-    # as a canonical name or be satisfied by another recipe's satisfies entry)
-    resolvable_names = recipe_names | set(satisfies_claims.keys())
+    # as a canonical name or be satisfied by another recipe's satisfies entry).
+    # Single-satisfier aliases resolve like ecosystem satisfies entries; the CLI
+    # validator (validateRuntimeDepsNotMultiSatisfier) catches deps that resolve
+    # to multi-satisfier aliases at install time, so they're omitted here.
+    single_satisfier_aliases = {
+        alias for alias, claimers in aliases_index.items() if len(claimers) == 1
+    }
+    resolvable_names = recipe_names | set(satisfies_claims.keys()) | single_satisfier_aliases
     for recipe in recipes:
         for dep in recipe["dependencies"]:
             if dep not in resolvable_names:
