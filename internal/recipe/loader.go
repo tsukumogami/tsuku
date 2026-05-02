@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
+	"sort"
 	"strings"
 	"sync"
 
@@ -26,8 +28,10 @@ type Loader struct {
 	recipes          map[string]*Recipe        // In-memory parsed cache
 	recipeSources    map[string]RecipeSource   // Tracks which source each cached recipe came from
 	constraintLookup ConstraintLookup          // Optional lookup for step analysis (nil skips analysis)
-	satisfiesIndex   map[string]satisfiesEntry // package_name -> satisfiesEntry (lazy-built)
+	satisfiesIndex   map[string]satisfiesEntry // package_name -> satisfiesEntry (1:1, ecosystem-keyed)
 	satisfiesOnce    sync.Once                 // ensures buildSatisfiesIndex runs once
+	aliasIndex       map[string][]string       // alias -> []recipeName (multi-valued, sorted)
+	aliasOnce        sync.Once                 // ensures buildAliasIndex runs once
 }
 
 // NewLoader creates a new recipe loader with the given providers.
@@ -388,13 +392,15 @@ func (l *Loader) Providers() []RecipeProvider {
 	return l.providers
 }
 
-// ClearCache clears the in-memory recipe cache and satisfies index.
+// ClearCache clears the in-memory recipe cache and satisfies/alias indexes.
 // This forces recipes to be re-fetched from providers on next access,
-// and the satisfies index to be rebuilt on next fallback lookup.
+// and the indexes to be rebuilt on next fallback lookup.
 func (l *Loader) ClearCache() {
 	l.recipes = make(map[string]*Recipe)
 	l.satisfiesIndex = nil
 	l.satisfiesOnce = sync.Once{}
+	l.aliasIndex = nil
+	l.aliasOnce = sync.Once{}
 }
 
 // CacheRecipe adds a recipe to the in-memory cache under the given name.
@@ -489,6 +495,71 @@ func (l *Loader) lookupSatisfiesFiltered(name string, source RecipeSource) (stri
 // Returns the canonical recipe name and true if found, or "" and false.
 func (l *Loader) LookupSatisfies(name string) (string, bool) {
 	return l.lookupSatisfies(name)
+}
+
+// buildAliasIndex scans providers implementing AliasesProvider for alias
+// entries. Called lazily on first alias lookup.
+//
+// Unlike satisfiesIndex, aliasIndex is multi-valued: an alias declared by
+// N recipes maps to a slice of N recipe names. The slice is sorted
+// alphabetically so consumers (the install command's multi-satisfier
+// picker, the validator's runtime-deps check) get a stable ordering.
+//
+// Provider order does not matter for the alias index — every contributing
+// recipe is included, regardless of which provider supplied it.
+func (l *Loader) buildAliasIndex() {
+	l.aliasIndex = make(map[string][]string)
+
+	for _, p := range l.providers {
+		ap, ok := p.(AliasesProvider)
+		if !ok {
+			continue
+		}
+
+		entries, err := ap.AliasesEntries(context.Background())
+		if err != nil {
+			continue
+		}
+
+		for alias, recipeNames := range entries {
+			for _, name := range recipeNames {
+				if !slices.Contains(l.aliasIndex[alias], name) {
+					l.aliasIndex[alias] = append(l.aliasIndex[alias], name)
+				}
+			}
+		}
+	}
+
+	for alias := range l.aliasIndex {
+		sort.Strings(l.aliasIndex[alias])
+	}
+}
+
+// LookupAllSatisfiers returns every recipe that declares the given alias
+// under [metadata.satisfies] aliases = [...]. The returned slice is sorted
+// alphabetically. Triggers lazy index build on first call.
+//
+// Returns (nil, false) when no recipe declares the alias. Returns
+// (slice, true) otherwise — even when the slice has length 1 (single
+// satisfier) or length >= 2 (multi-satisfier; picker-eligible at
+// install time).
+func (l *Loader) LookupAllSatisfiers(alias string) ([]string, bool) {
+	l.aliasOnce.Do(l.buildAliasIndex)
+	names, ok := l.aliasIndex[alias]
+	if !ok {
+		return nil, false
+	}
+	// Defensive copy so callers can't mutate the index.
+	out := make([]string, len(names))
+	copy(out, names)
+	return out, true
+}
+
+// HasMultiSatisfier reports whether the alias is claimed by two or more
+// recipes (the trigger for picker-vs-error branching at install time).
+func (l *Loader) HasMultiSatisfier(alias string) bool {
+	names, ok := l.LookupAllSatisfiers(alias)
+	return ok && len(names) >= 2
 }
 
 // ListAllWithSource returns all available recipes from all providers.

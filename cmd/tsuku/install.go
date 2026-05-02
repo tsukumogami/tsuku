@@ -17,6 +17,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/registry"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
+	"github.com/tsukumogami/tsuku/internal/tui"
 )
 
 var installDryRun bool
@@ -302,12 +303,38 @@ Exit codes for project install:
 				continue
 			}
 
-			// Check if a recipe exists. If not, try discovery before the full install flow.
-			// This avoids the confusing "recipe not found" message when discovery can resolve.
+			// Check if a recipe exists. If not, consult the alias index
+			// (multi-satisfier picker), then fall through to discovery if
+			// nothing matches. This three-stage check matches the resolution
+			// truth table in PRD-multi-satisfier-picker.md (R3):
+			//   - direct file match    -> recipe found, install proceeds
+			//   - alias single hit     -> rewrite toolName, install
+			//   - alias multi hit      -> picker (TTY) or error (-y/no-TTY)
+			//   - no match anywhere    -> existing discovery fallback
 			_, recipeErr := loader.Get(toolName, recipe.LoaderOptions{})
 			if recipeErr != nil {
-				if result := tryDiscoveryFallback(toolName); result != nil {
-					continue
+				satisfiers, _ := loader.LookupAllSatisfiers(toolName)
+				switch {
+				case len(satisfiers) == 0:
+					if result := tryDiscoveryFallback(toolName); result != nil {
+						continue
+					}
+				case len(satisfiers) == 1:
+					// Single-satisfier alias: rewrite toolName transparently.
+					// The user typed `java`; we install `openjdk` (or whichever
+					// recipe satisfies the alias). No prompt, no error.
+					toolName = satisfiers[0]
+				default:
+					// Multi-satisfier alias: branch by mode.
+					chosen, resolveErr := resolveMultiSatisfier(toolName, satisfiers)
+					if resolveErr != nil {
+						if errors.Is(resolveErr, tui.ErrCanceled) {
+							fmt.Fprintln(os.Stderr, "Canceled.")
+							exitWithCode(ExitCancelled)
+						}
+						handleAmbiguousAliasError(toolName, satisfiers)
+					}
+					toolName = chosen
 				}
 			}
 
@@ -331,7 +358,9 @@ func init() {
 	installCmd.Flags().StringVar(&installRecipePath, "recipe", "", "Path to a local recipe file (for testing)")
 	installCmd.Flags().StringVar(&installTargetFamily, "target-family", "", "Override detected linux_family (debian, rhel, arch, alpine, suse)")
 	installCmd.Flags().BoolVar(&installRequireEmbedded, "require-embedded", false, "Require action dependencies to resolve from embedded registry")
-	installCmd.Flags().StringVar(&installFrom, "from", "", "Source override: builder:source (e.g., github:cli/cli, homebrew:jq)")
+	installCmd.Flags().StringVar(&installFrom, "from", "", "Source override: builder:source (e.g., github:cli/cli, homebrew:jq), or recipe name to disambiguate a multi-satisfier alias (e.g., temurin)")
+	installCmd.Flags().StringVar(&installPick, "pick", "", "Test-only: pre-resolve a multi-satisfier alias to the named recipe without rendering the picker")
+	_ = installCmd.Flags().MarkHidden("pick")
 	installCmd.Flags().BoolVar(&installDeterministicOnly, "deterministic-only", false, "Skip LLM fallback; fail if deterministic generation fails")
 	installCmd.Flags().StringVar(&installSearchProvider, "search-provider", "", "Search provider for LLM discovery: ddg, tavily, or brave")
 	installCmd.Flags().StringArrayVar(&installEnv, "env", nil, "Pass environment variable to sandbox container (KEY=VALUE or KEY)")
