@@ -1,0 +1,54 @@
+[metadata]
+name = "openjdk"
+description = "OpenJDK Java runtime for JVM-based tools"
+homepage = "https://openjdk.org/"
+version_format = "semver"
+curated = true
+
+[metadata.satisfies]
+homebrew = ["openjdk"]
+aliases = ["java"]
+
+# glibc Linux: Homebrew bottle (linuxbrew)
+[[steps]]
+action = "homebrew"
+formula = "openjdk"
+when = { os = ["linux"], libc = ["glibc"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/java", "bin/javac", "bin/jar"]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["openjdk21"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew bottle. The openjdk bottle layout puts the JDK under
+# libexec/openjdk.jdk/Contents/Home/ and bin/java is a symlink into
+# that tree, so install the full directory rather than just bin/java.
+[[steps]]
+action = "homebrew"
+formula = "openjdk"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["bin/java", "bin/javac", "bin/jar"]
+when = { os = ["darwin"] }
+
+[verify]
+command = "java --version"
+mode = "output"
+pattern = "openjdk"
+# The Homebrew formula and Alpine apk package don't always ship the
+# exact same point release, so a `{version}` pattern spuriously fails
+# on the alpine sandbox even when java runs cleanly. Every OpenJDK
+# distribution prints `openjdk <version>` as the first `java --version`
+# line, so the prefix is a faithful "did java run" signal across the
+# matrix.
+reason = "version skew between Homebrew formula and Alpine apk; pattern matches the distribution prefix"

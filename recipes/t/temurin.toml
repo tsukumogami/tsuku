@@ -1,0 +1,71 @@
+[metadata]
+name = "temurin"
+description = "Eclipse Temurin OpenJDK distribution from Adoptium"
+homepage = "https://adoptium.net/"
+version_format = "semver"
+curated = true
+# JDK 9+ only. Adoptium publishes JDK 8 binaries (and `temurin@8` will
+# install successfully), but the verify command and pattern below
+# assume the modern `java --version` shape that JDK 9 introduced —
+# JDK 8 uses `java -version` (single dash) and reports as
+# `(Temurin)(build 1.8.0_X-Y)` rather than `Temurin-X.Y.Z+B`. Users
+# who need JDK 8 should either pin via Homebrew/apk through the
+# `openjdk` recipe or wait for a JDK 8-aware variant.
+
+[metadata.satisfies]
+aliases = ["java"]
+
+# The Adoptium API's `most_recent_lts` field returns just the major
+# version integer (e.g. 21, 25). The recipe substitutes that into the
+# download URL's feature_version path segment, and Adoptium's binary
+# endpoint redirects to whatever GA build is current for that major.
+# When Adoptium promotes a new LTS the recipe follows automatically.
+[version]
+source = "http_json"
+url = "https://api.adoptium.net/v3/info/available_releases"
+version_path = "most_recent_lts"
+
+# Linux glibc — Adoptium's `os=linux` build is glibc-linked. arch_mapping
+# translates tsuku's amd64/arm64 to Adoptium's x64/aarch64.
+[[steps]]
+action = "download_archive"
+url = "https://api.adoptium.net/v3/binary/latest/{version}/ga/linux/{arch}/jdk/hotspot/normal/eclipse"
+arch_mapping = { amd64 = "x64", arm64 = "aarch64" }
+archive_format = "tar.gz"
+strip_dirs = 1
+install_mode = "directory"
+binaries = ["bin/java", "bin/javac", "bin/jar"]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# Linux musl — Adoptium ships static-musl builds tagged `os=alpine-linux`
+# that work on any musl distro.
+[[steps]]
+action = "download_archive"
+url = "https://api.adoptium.net/v3/binary/latest/{version}/ga/alpine-linux/{arch}/jdk/hotspot/normal/eclipse"
+arch_mapping = { amd64 = "x64", arm64 = "aarch64" }
+archive_format = "tar.gz"
+strip_dirs = 1
+install_mode = "directory"
+binaries = ["bin/java", "bin/javac", "bin/jar"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS — Adoptium's tarball nests the JDK three directories deep
+# under `jdk-{version}/Contents/Home/`, so strip_dirs=3 lands bin/java
+# at the install root.
+[[steps]]
+action = "download_archive"
+url = "https://api.adoptium.net/v3/binary/latest/{version}/ga/mac/{arch}/jdk/hotspot/normal/eclipse"
+arch_mapping = { amd64 = "x64", arm64 = "aarch64" }
+archive_format = "tar.gz"
+strip_dirs = 3
+install_mode = "directory"
+binaries = ["bin/java", "bin/javac", "bin/jar"]
+when = { os = ["darwin"] }
+
+[verify]
+command = "java --version"
+# `java --version` prints `OpenJDK Runtime Environment Temurin-{full-version}`
+# on the second line. With {version} resolved to the LTS major (e.g. 25),
+# the pattern "Temurin-25" matches "Temurin-25.0.3+9-LTS" — confirming both
+# the distribution and the major version in a single substring check.
+pattern = "Temurin-{version}"
