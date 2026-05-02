@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   `tsuku install <name>` cannot route the user through a choice when an alias
   is claimed by multiple recipes. The four-recipe OpenJDK family in PR #2362
@@ -30,7 +30,7 @@ upstream: docs/prds/PRD-multi-satisfier-picker.md
 
 ## Status
 
-Accepted
+Planned
 
 ## Context and Problem Statement
 

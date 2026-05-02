@@ -66,8 +66,8 @@ myself of:
 
 - [x] /explore — round 1, 6 leads, no contradictions; crystallized to PRD
 - [x] /prd — `docs/prds/PRD-multi-satisfier-picker.md`, Accepted (now In Progress), 17 ACs
-- [x] /design — `docs/designs/DESIGN-multi-satisfier-picker.md`, Accepted, 5 decisions + security review
-- [ ] /plan (single-pr)
-- [ ] /work-on (one or more issues, depending on what /plan produces)
+- [x] /design — `docs/designs/DESIGN-multi-satisfier-picker.md`, Accepted (now Planned), 5 decisions + security review
+- [x] /plan (single-pr) — `docs/plans/PLAN-multi-satisfier-picker.md`, 6 outlines, horizontal decomposition
+- [ ] /work-on (plan-backed mode, all 6 outlines on this same branch)
 - [ ] PR open
 - [ ] CI green
