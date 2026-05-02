@@ -94,8 +94,8 @@ These issues capture infrastructure and recipe gaps surfaced while authoring the
 |-------|--------------|------------|
 | ~~[#2325: fix(version): treat -Mn milestone tags as pre-releases in GitHub provider](https://github.com/tsukumogami/tsuku/issues/2325)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Replaces the substring-keyword `isStableVersion` filter with a SemVer-aware predicate (any non-empty prerelease component is unstable unless it matches a stable qualifier), plus a non-SemVer fallback to catch markers spliced into the version without a hyphen (e.g., jq's `1.8.2rc1`). Default stable qualifiers `["release", "final", "lts", "ga", "stable"]` admit the common JVM RELEASE/FINAL conventions; the `[version] stable_qualifiers` recipe field overrides for exotic upstreams. Designed in `docs/designs/DESIGN-prerelease-detection.md`._~~ | | |
-| [#2327: feat(recipes): add curated openjdk family (openjdk, temurin, corretto, microsoft-openjdk)](https://github.com/tsukumogami/tsuku/issues/2327) | tsuku release containing [#2368](https://github.com/tsukumogami/tsuku/issues/2368) | testable |
-| _Scope expanded from a single openjdk recipe to four cross-platform JDK distribution recipes. `openjdk` is the Homebrew + apk fallback; `temurin`, `corretto`, and `microsoft-openjdk` are vendor-specific recipes that pull from each project's own infrastructure (Adoptium API, corretto.aws, aka.ms). All share Adoptium's `most_recent_lts` integer as the LTS-major source. Both prerequisite blockers are now released — #2365 (multi-pattern verify) shipped in v0.11.3 and #2368 (multi-recipe alias picker) shipped in v0.11.4 — so this PR ships the four recipes plus `aliases = ["java"]` declarations on each, fulfilling R12 of `PRD-multi-satisfier-picker.md`. After this lands, `tsuku install java` presents the four-vendor picker on a TTY (or the structured ambiguous-alias error under `-y`/non-TTY)._ |
+| ~~[#2327: feat(recipes): add curated openjdk family (openjdk, temurin, corretto, microsoft-openjdk)](https://github.com/tsukumogami/tsuku/issues/2327)~~ | ~~tsuku release containing [#2368](https://github.com/tsukumogami/tsuku/issues/2368)~~ | ~~testable~~ |
+| ~~_Scope expanded from a single openjdk recipe to four cross-platform JDK distribution recipes. `openjdk` is the Homebrew + apk fallback; `temurin`, `corretto`, and `microsoft-openjdk` are vendor-specific recipes that pull from each project's own infrastructure (Adoptium API, corretto.aws, aka.ms). All share Adoptium's `most_recent_lts` integer as the LTS-major source. Both prerequisite blockers shipped — #2365 (multi-pattern verify) in v0.11.3 and #2368 (multi-recipe alias picker) in v0.11.4 — and this PR ships the four recipes plus `aliases = ["java"]` declarations on each, fulfilling R12 of `PRD-multi-satisfier-picker.md`. `tsuku install java` now presents the four-vendor picker on a TTY (or the structured ambiguous-alias error under `-y`/non-TTY)._~~ |
 | ~~[#2365: feat(recipe): support multi-pattern verify checks](https://github.com/tsukumogami/tsuku/issues/2365)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Extends `[verify]` to accept a `patterns = [...]` array (mutually exclusive with the existing `pattern` field) so recipes can bind multiple independent facts (vendor + version) when those facts appear in non-adjacent positions in the verify command's output. Surfaced by `microsoft-openjdk` in #2327, which prints `Microsoft-{internal-build-hash}` rather than `Microsoft-{version}` and so can't be checked against both vendor and version with a single substring. Shipped in v0.11.3._~~ | | |
 | ~~[#2368: feat(install): present a picker when multiple recipes satisfy an alias](https://github.com/tsukumogami/tsuku/issues/2368)~~ | ~~None~~ | ~~testable~~ |
@@ -185,8 +185,8 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2325,I2328,I2331,I2333,I2365,I2368 done
-    class I2327,I2330,I2335,I2338 ready
+    class I2325,I2327,I2328,I2331,I2333,I2365,I2368 done
+    class I2330,I2335,I2338 ready
     class I2336,I2343,I2344,I2345,I2349 blocked
 ```
 
