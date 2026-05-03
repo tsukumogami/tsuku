@@ -382,6 +382,15 @@ jobs:
             exit 1
           fi
 
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: recipe-logs-linux-x86_64-${{ matrix.batch.batch_id }}-${{ github.run_id }}
+          path: .log-*.txt
+          retention-days: 7
+          if-no-files-found: ignore
+
   # Linux arm64: test in sandbox containers for four families (no arch arm64 image).
   # Same batched parallel-families approach as x86_64.
   test-linux-arm64:
@@ -532,6 +541,15 @@ jobs:
             echo "::error::$FAILED of $TOTAL tests failed (Linux arm64 batch ${{ matrix.batch.batch_id }})"
             exit 1
           fi
+
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: recipe-logs-linux-arm64-${{ matrix.batch.batch_id }}-${{ github.run_id }}
+          path: .log-*.txt
+          retention-days: 7
+          if-no-files-found: ignore
 
   # macOS arm64: native runner test.
   # Recipes are split into batches (one job per batch) to stay within the timeout.

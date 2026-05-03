@@ -504,7 +504,7 @@ type installError struct {
 	Subcategory    string   `json:"subcategory,omitempty"`
 	Message        string   `json:"message"`
 	MissingRecipes []string `json:"missing_recipes"`
-	ExitCode       int      `json:"exit_code"`
+	ExitCode       int      `json:"install_exit_code"`
 }
 
 // categoryFromExitCode maps an exit code to its category string for the CLI's

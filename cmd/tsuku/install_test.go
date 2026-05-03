@@ -434,8 +434,8 @@ func TestInstallErrorJSON(t *testing.T) {
 		if _, exists := parsed["subcategory"]; exists {
 			t.Errorf("subcategory should be omitted when empty, got %v", parsed["subcategory"])
 		}
-		if parsed["exit_code"].(float64) != 8 {
-			t.Errorf("exit_code = %v, want 8", parsed["exit_code"])
+		if parsed["install_exit_code"].(float64) != 8 {
+			t.Errorf("install_exit_code = %v, want 8", parsed["install_exit_code"])
 		}
 		recipes := parsed["missing_recipes"].([]interface{})
 		if len(recipes) != 2 {
@@ -471,8 +471,8 @@ func TestInstallErrorJSON(t *testing.T) {
 		if parsed["subcategory"] != "timeout" {
 			t.Errorf("subcategory = %v, want %q", parsed["subcategory"], "timeout")
 		}
-		if parsed["exit_code"].(float64) != 5 {
-			t.Errorf("exit_code = %v, want 5", parsed["exit_code"])
+		if parsed["install_exit_code"].(float64) != 5 {
+			t.Errorf("install_exit_code = %v, want 5", parsed["install_exit_code"])
 		}
 	})
 }
