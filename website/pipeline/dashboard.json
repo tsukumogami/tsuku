@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-03T20:47:03Z",
+  "generated_at": "2026-05-03T20:48:24Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 73,
-      "pending": 3836,
+      "failed": 72,
+      "pending": 3837,
       "success": 1368
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 73,
-        "pending": 3821,
+        "failed": 72,
+        "pending": 3822,
         "success": 1344
       }
     },
@@ -68,20 +68,21 @@
         "total": 1
       },
       "npm": {
-        "failed": 18,
-        "pending": 2,
+        "failed": 19,
+        "pending": 1,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 49,
-        "pending": 26,
+        "failed": 48,
+        "pending": 27,
         "success": 13,
         "total": 89
       }
@@ -430,6 +431,15 @@
           "next_retry_at": "2026-05-08T10:34:00Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 303,
+          "next_retry_at": "1734-01-22T21:00:28Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -736,6 +746,15 @@
           "next_retry_at": "2026-05-10T19:03:03Z"
         },
         {
+          "id": "rubygems:influxdb",
+          "name": "influxdb",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 13,
+          "next_retry_at": "2026-05-10T20:47:45Z"
+        },
+        {
           "id": "npm:kew",
           "name": "kew",
           "ecosystem": "npm",
@@ -752,24 +771,6 @@
           "category": "install_failed",
           "failure_count": 13,
           "next_retry_at": "2026-05-10T11:00:39Z"
-        },
-        {
-          "id": "rubygems:less",
-          "name": "less",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-05-03T20:42:53Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 459,
-          "next_retry_at": "1734-01-22T19:15:47Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -932,15 +933,6 @@
           "category": "install_failed",
           "failure_count": 9,
           "next_retry_at": "2026-05-06T06:00:18Z"
-        },
-        {
-          "id": "rubygems:pastel",
-          "name": "pastel",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-05-03T19:50:52Z"
         },
         {
           "id": "rubygems:pdftohtml",
@@ -2866,15 +2858,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 302,
-          "next_retry_at": "1734-01-22T17:05:36Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -11499,15 +11482,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:influxdb",
-          "name": "influxdb",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-05-03T14:15:06Z"
-        },
-        {
           "id": "homebrew:influxdb-cli",
           "name": "influxdb-cli",
           "ecosystem": "homebrew",
@@ -13187,6 +13161,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:less",
+          "name": "less",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-05-03T20:42:53Z"
+        },
+        {
           "id": "homebrew:lesspipe",
           "name": "lesspipe",
           "ecosystem": "homebrew",
@@ -13220,6 +13203,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 459,
+          "next_retry_at": "1734-01-22T19:15:47Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -18706,6 +18698,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:pastel",
+          "name": "pastel",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-05-03T19:50:52Z"
         },
         {
           "id": "homebrew:patchpal",
