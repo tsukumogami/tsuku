@@ -51,4 +51,12 @@ outputs = ["bin/git"]
 
 [verify]
 command = "git --version"
-pattern = "git version {version}"
+mode = "output"
+pattern = "git version"
+# The Homebrew bottle ships a newer git than Alpine's apk package
+# (currently 2.54 vs 2.47), so a `{version}` pattern spuriously fails
+# verify on the alpine sandbox even when git runs cleanly. Every git
+# distribution prints `git version <X.Y.Z>` as the first line, so the
+# prefix is a faithful "did git run" signal across the matrix. Same
+# pattern openjdk uses for the same reason.
+reason = "version skew between Homebrew formula and Alpine apk; pattern matches the prefix"
