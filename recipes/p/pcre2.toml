@@ -9,14 +9,13 @@ curated = true
 [metadata.satisfies]
 homebrew = ["pcre2"]
 
-# Linux (glibc + musl): build from source with static-only linking. Two
-# configure decisions drive the flags below:
+# Linux x86_64 (glibc + musl): build from source with static-only linking.
+# Two configure decisions drive the flags below:
 #
 #   --disable-bzip2 --disable-readline drop the transitive deps that the
 #   Linuxbrew bottle would have pulled in. The bottle hard-codes
 #   libbz2.so.1.0, which RHEL ships only as libbz2.so.1; Alpine omits
-#   readline entirely. Skipping both lets the source build run uniformly
-#   on every Linux family.
+#   readline entirely. Skipping both lets the source build run uniformly.
 #
 #   --disable-shared --enable-static makes pcre2grep/pcre2test link the
 #   library statically into each binary. This is what makes Alpine pass
@@ -29,36 +28,84 @@ homebrew = ["pcre2"]
 #
 # pcre2grep loses the -Z (bzip2-compressed input) option and pcre2test
 # loses its readline-backed interactive mode; downstream consumers (git's
-# regex APIs, pcre2grep on plain text) do not use either feature. Recipes
-# that need pcre2 as a dynamic library on Linux (none currently curated;
-# see grep, aircrack-ng, httpd) would need a follow-up change to publish
-# the .so under runtime_dependencies.
+# regex APIs, pcre2grep on plain text) do not use either feature.
+#
+# Linux arm64+glibc keeps the Linuxbrew bottle path because the source
+# build fails to plan in the arm64 sandbox (`install_exit_code = null`
+# before the container starts) for reasons that don't reproduce on
+# x86_64 — needs follow-up. The bottle's libbz2 transitive dep that
+# breaks x86_64+rhel is not addressed for arm64+rhel; that platform
+# pair stays in its pre-PR failing state.
 [[steps]]
 action = "download"
-when = { os = ["linux"], libc = ["glibc", "musl"] }
+when = { os = ["linux"], libc = ["glibc"], arch = "amd64" }
+url = "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-{version}/pcre2-{version}.tar.gz"
+checksum_url = "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-{version}/pcre2-{version}.tar.gz.sha256"
+
+[[steps]]
+action = "download"
+when = { os = ["linux"], libc = ["musl"] }
 url = "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-{version}/pcre2-{version}.tar.gz"
 checksum_url = "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-{version}/pcre2-{version}.tar.gz.sha256"
 
 [[steps]]
 action = "extract"
-when = { os = ["linux"], libc = ["glibc", "musl"] }
+when = { os = ["linux"], libc = ["glibc"], arch = "amd64" }
+archive = "pcre2-{version}.tar.gz"
+format = "tar.gz"
+
+[[steps]]
+action = "extract"
+when = { os = ["linux"], libc = ["musl"] }
 archive = "pcre2-{version}.tar.gz"
 format = "tar.gz"
 
 [[steps]]
 action = "setup_build_env"
-when = { os = ["linux"], libc = ["glibc", "musl"] }
+when = { os = ["linux"], libc = ["glibc"], arch = "amd64" }
+
+[[steps]]
+action = "setup_build_env"
+when = { os = ["linux"], libc = ["musl"] }
 
 [[steps]]
 action = "configure_make"
-when = { os = ["linux"], libc = ["glibc", "musl"] }
+when = { os = ["linux"], libc = ["glibc"], arch = "amd64" }
+source_dir = "pcre2-{version}"
+configure_args = ["--disable-bzip2", "--disable-readline", "--disable-shared", "--enable-static"]
+executables = ["pcre2grep", "pcre2test"]
+
+[[steps]]
+action = "configure_make"
+when = { os = ["linux"], libc = ["musl"] }
 source_dir = "pcre2-{version}"
 configure_args = ["--disable-bzip2", "--disable-readline", "--disable-shared", "--enable-static"]
 executables = ["pcre2grep", "pcre2test"]
 
 [[steps]]
 action = "install_binaries"
-when = { os = ["linux"], libc = ["glibc", "musl"] }
+when = { os = ["linux"], libc = ["glibc"], arch = "amd64" }
+install_mode = "directory"
+outputs = ["bin/pcre2grep", "bin/pcre2test"]
+
+[[steps]]
+action = "install_binaries"
+when = { os = ["linux"], libc = ["musl"] }
+install_mode = "directory"
+outputs = ["bin/pcre2grep", "bin/pcre2test"]
+
+# Linux arm64+glibc: Homebrew bottle. Pre-existing behavior — passes on
+# debian/suse, fails on rhel (libbz2 transitive dep). Source build was
+# tried on this platform but errors out before sandbox start in CI; see
+# the comment block above for the full context.
+[[steps]]
+action = "homebrew"
+formula = "pcre2"
+when = { os = ["linux"], libc = ["glibc"], arch = "arm64" }
+
+[[steps]]
+action = "install_binaries"
+when = { os = ["linux"], libc = ["glibc"], arch = "arm64" }
 install_mode = "directory"
 outputs = ["bin/pcre2grep", "bin/pcre2test"]
 
