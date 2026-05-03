@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-03T20:56:50Z",
+  "updated_at": "2026-05-03T22:45:42Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 303,
-      "next_retry_at": "1734-01-22T21:00:28.461334548Z"
+      "failure_count": 304,
+      "next_retry_at": "1734-01-22T22:58:25.139896366Z"
     },
     {
       "name": "azqr",
@@ -21756,11 +21756,11 @@
       "name": "ipfs",
       "source": "rubygems:ipfs",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-05-03T15:45:58.040019676Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-10T22:45:41.994672174Z"
     },
     {
       "name": "ipinfo-cli",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 460,
@@ -26066,7 +26066,7 @@
       "name": "libnotify",
       "source": "rubygems:libnotify",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 11,
@@ -35986,7 +35986,7 @@
       "name": "pdftohtml",
       "source": "rubygems:pdftohtml",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -37216,7 +37216,7 @@
       "name": "pocketbase",
       "source": "npm:pocketbase",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 12,
