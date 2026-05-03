@@ -94,14 +94,40 @@ when = { os = ["linux"], libc = ["musl"] }
 install_mode = "directory"
 outputs = ["bin/pcre2grep", "bin/pcre2test"]
 
-# Linux arm64+glibc: Homebrew bottle. Pre-existing behavior — passes on
-# debian/suse, fails on rhel (libbz2 transitive dep). Source build was
-# tried on this platform but errors out before sandbox start in CI; see
-# the comment block above for the full context.
+# Linux arm64+glibc: source build with shared linking + set_rpath. Mirrors
+# curl's pattern. The static-only build that works for x86_64 errors out
+# before sandbox start in CI on arm64 (`install_exit_code = null` for
+# debian/rhel/suse, alpine passes); shared linking with $ORIGIN-based
+# RPATH is the configuration that other arm64 source-built recipes
+# (curl) use successfully.
 [[steps]]
-action = "homebrew"
-formula = "pcre2"
+action = "download"
 when = { os = ["linux"], libc = ["glibc"], arch = "arm64" }
+url = "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-{version}/pcre2-{version}.tar.gz"
+checksum_url = "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-{version}/pcre2-{version}.tar.gz.sha256"
+
+[[steps]]
+action = "extract"
+when = { os = ["linux"], libc = ["glibc"], arch = "arm64" }
+archive = "pcre2-{version}.tar.gz"
+format = "tar.gz"
+
+[[steps]]
+action = "setup_build_env"
+when = { os = ["linux"], libc = ["glibc"], arch = "arm64" }
+
+[[steps]]
+action = "configure_make"
+when = { os = ["linux"], libc = ["glibc"], arch = "arm64" }
+source_dir = "pcre2-{version}"
+configure_args = ["--disable-bzip2", "--disable-readline"]
+executables = ["pcre2grep", "pcre2test"]
+
+[[steps]]
+action = "set_rpath"
+when = { os = ["linux"], libc = ["glibc"], arch = "arm64" }
+binaries = [".install/bin/pcre2grep", ".install/bin/pcre2test"]
+rpath = "$ORIGIN/../lib"
 
 [[steps]]
 action = "install_binaries"
