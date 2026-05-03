@@ -110,8 +110,8 @@ These issues capture infrastructure and recipe gaps surfaced while authoring the
 | ~~_The homebrew action now fetches `revision` from formulae.brew.sh and constructs `<version>_<revision>` for both the manifest URL and the ref-name match when revision >= 1; the shared matcher accepts both unrevised and revision-suffixed entry forms within a single manifest. `recipes/l/libevent.toml` ships with darwin support and the macOS dylib outputs (`libevent-2.1.7.dylib` and the static archives) so tmux's @rpath resolves at runtime._~~ | | |
 | ~~[#2335: fix(recipes): curate pcre2 with macOS dylib outputs and fix rhel + alpine sandbox failures](https://github.com/tsukumogami/tsuku/issues/2335)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Resolved by switching all glibc + musl Linux to a uniform source build with `--disable-bzip2 --disable-readline --disable-shared --enable-static`. Static linking sidesteps the Linuxbrew bottle's hard-coded `libbz2.so.1.0` (RHEL ships only `libbz2.so.1`), the Alpine musl loader's missing search of `install_dir/lib`, and a Fedora-only segfault during dynamic-linker startup. macOS keeps the homebrew bottle and `install_mode = "directory"` publishes the full bottle layout (dylibs, .a, headers, pkg-config) so the homebrew git bottle's @rpath resolves `libpcre2-8.0.dylib`. Recipe marked `curated = true`._~~ | | |
-| ~~[#2336: feat(recipes): add macOS support to tmux and git recipes](https://github.com/tsukumogami/tsuku/issues/2336)~~ | ~~[#2333](https://github.com/tsukumogami/tsuku/issues/2333), [#2335](https://github.com/tsukumogami/tsuku/issues/2335)~~ | ~~testable~~ |
-| ~~_Both prereqs (#2333 libevent macOS, #2335 pcre2 macOS dylibs) shipped, so this PR drops `supported_os = ["linux"]` from `recipes/t/tmux.toml` and `recipes/g/git.toml` and adds darwin homebrew + install_binaries steps wired to `runtime_dependencies = ["libevent", "utf8proc", "ncurses"]` (tmux) and `runtime_dependencies = ["pcre2"]` (git). Same shape as the wget recipe from #2337._~~ | | |
+| [#2336: feat(recipes): add macOS support to tmux and git recipes](https://github.com/tsukumogami/tsuku/issues/2336) | [#2333](https://github.com/tsukumogami/tsuku/issues/2333), [#2335](https://github.com/tsukumogami/tsuku/issues/2335) | testable |
+| _Both prereqs (#2333 libevent macOS, #2335 pcre2 macOS dylibs) shipped. git's macOS support landed: dropped `supported_os = ["linux"]` from `recipes/g/git.toml`, added darwin homebrew step wired to `runtime_dependencies = ["pcre2"]`. tmux's macOS support is deferred — the tmux Linux glibc path (homebrew bottle) requires `libutf8proc.so.3` from a sibling Linuxbrew install that tsuku does not chain into the binary's RPATH for tool recipes; pre-PR this was untested in CI but adding macOS support makes the matrix re-test the recipe and surfaces the gap. Needs follow-up work on transitive dylib chaining for tool recipes (architectural — applies to other tools depending on non-system shared libraries via homebrew bottles)._ | | |
 | [#2338: fix(recipes): add macOS support to curl and resolve rhel sandbox verify failure](https://github.com/tsukumogami/tsuku/issues/2338) | None | testable |
 | _A first attempt at the curl darwin step (subsequently reverted) cleared eval and macOS install but surfaced a rhel-only sandbox verify failure on Linux: install completes (`install_exit_code = 0`) but `passed = false`. Same shape as the pcre2 rhel issue. Needs local reproduction since the workflow does not upload `.log-*.txt` artifacts._ | | |
 | [#2349: chore(version): remove deprecated source = "hashicorp" after release](https://github.com/tsukumogami/tsuku/issues/2349) | tsuku release containing [#2328](https://github.com/tsukumogami/tsuku/issues/2328) | testable |
@@ -185,8 +185,8 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2325,I2327,I2328,I2330,I2331,I2333,I2335,I2336,I2365,I2368 done
-    class I2338 ready
+    class I2325,I2327,I2328,I2330,I2331,I2333,I2335,I2365,I2368 done
+    class I2336,I2338 ready
     class I2343,I2344,I2345,I2349 blocked
 ```
 
