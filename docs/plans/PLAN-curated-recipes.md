@@ -108,8 +108,8 @@ These issues capture infrastructure and recipe gaps surfaced while authoring the
 | ~~_Resolved with a different mechanism than the title suggests. Recipes do not declare PyPI version constraints; instead, `PyPIProvider.ResolveLatest` filters by per-release `requires_python` against the bundled `python-standalone` major.minor. Auto-resolution picks the newest stable, non-yanked, Python-compatible release. Lands `recipes/a/ansible.toml` as the proof point. azure-cli is deferred — its eval already succeeds and its post-install failure is a separate transitive C-extension ABI issue. See `docs/designs/current/DESIGN-pipx-pypi-version-pinning.md`._~~ | | |
 | ~~[#2333: fix(homebrew): resolve revision-suffixed bottles so libevent darwin can be installed](https://github.com/tsukumogami/tsuku/issues/2333)~~ | ~~None~~ | ~~testable~~ |
 | ~~_The homebrew action now fetches `revision` from formulae.brew.sh and constructs `<version>_<revision>` for both the manifest URL and the ref-name match when revision >= 1; the shared matcher accepts both unrevised and revision-suffixed entry forms within a single manifest. `recipes/l/libevent.toml` ships with darwin support and the macOS dylib outputs (`libevent-2.1.7.dylib` and the static archives) so tmux's @rpath resolves at runtime._~~ | | |
-| [#2335: fix(recipes): curate pcre2 with macOS dylib outputs and fix rhel + alpine sandbox failures](https://github.com/tsukumogami/tsuku/issues/2335) | None | testable |
-| _pcre2 fails on RHEL glibc and Alpine musl (`install_exit_code = 0`, `passed = false`). Touching the recipe to add macOS dylib outputs surfaces the failures. The `libpcre2-8.0.dylib` expansion and the RHEL/Alpine investigation belong together. Blocks git darwin._ | | |
+| ~~[#2335: fix(recipes): curate pcre2 with macOS dylib outputs and fix rhel + alpine sandbox failures](https://github.com/tsukumogami/tsuku/issues/2335)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Resolved by switching all glibc + musl Linux to a uniform source build with `--disable-bzip2 --disable-readline --disable-shared --enable-static`. Static linking sidesteps the Linuxbrew bottle's hard-coded `libbz2.so.1.0` (RHEL ships only `libbz2.so.1`), the Alpine musl loader's missing search of `install_dir/lib`, and a Fedora-only segfault during dynamic-linker startup. macOS keeps the homebrew bottle and `install_mode = "directory"` publishes the full bottle layout (dylibs, .a, headers, pkg-config) so the homebrew git bottle's @rpath resolves `libpcre2-8.0.dylib`. Recipe marked `curated = true`._~~ | | |
 | [#2336: feat(recipes): add macOS support to tmux and git recipes](https://github.com/tsukumogami/tsuku/issues/2336) | [#2333](https://github.com/tsukumogami/tsuku/issues/2333), [#2335](https://github.com/tsukumogami/tsuku/issues/2335) | testable |
 | _Once libevent and pcre2 macOS support land, drop `supported_os = ["linux"]` from `recipes/t/tmux.toml` and `recipes/g/git.toml` and add darwin homebrew steps wired to the right `runtime_dependencies`. Same shape as the curl and wget changes in #2337._ | | |
 | [#2338: fix(recipes): add macOS support to curl and resolve rhel sandbox verify failure](https://github.com/tsukumogami/tsuku/issues/2338) | None | testable |
@@ -185,9 +185,9 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2325,I2327,I2328,I2330,I2331,I2333,I2365,I2368 done
-    class I2335,I2338 ready
-    class I2336,I2343,I2344,I2345,I2349 blocked
+    class I2325,I2327,I2328,I2330,I2331,I2333,I2335,I2365,I2368 done
+    class I2336,I2338 ready
+    class I2343,I2344,I2345,I2349 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan
