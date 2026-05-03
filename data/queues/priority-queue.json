@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-03T07:09:56Z",
+  "updated_at": "2026-05-03T09:46:10Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 299,
-      "next_retry_at": "1734-01-22T02:58:49.555533116Z"
+      "failure_count": 300,
+      "next_retry_at": "1734-01-22T09:58:52.997154857Z"
     },
     {
       "name": "azqr",
@@ -20056,11 +20056,11 @@
       "name": "hercules",
       "source": "rubygems:hercules",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-05-02T22:43:31.64896494Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-10T09:46:09.851930665Z"
     },
     {
       "name": "heremaps/olp-cli/olp",
@@ -20786,7 +20786,7 @@
       "name": "hydra",
       "source": "rubygems:hydra",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 12,
@@ -24896,7 +24896,7 @@
       "name": "lcm",
       "source": "npm:lcm",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 12,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 453,
