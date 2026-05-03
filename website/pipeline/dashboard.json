@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-03T14:51:39Z",
+  "generated_at": "2026-05-03T14:53:00Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -74,15 +74,14 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 51,
-        "pending": 24,
+        "failed": 50,
+        "pending": 25,
         "success": 13,
         "total": 89
       }
@@ -431,15 +430,6 @@
           "next_retry_at": "2026-05-08T10:34:00Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 301,
-          "next_retry_at": "1734-01-22T13:23:43Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -719,13 +709,13 @@
           "next_retry_at": "2026-05-10T13:10:59Z"
         },
         {
-          "id": "rubygems:influxdb",
-          "name": "influxdb",
+          "id": "rubygems:hydra",
+          "name": "hydra",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-05-03T14:15:06Z"
+          "failure_count": 13,
+          "next_retry_at": "2026-05-10T14:52:23Z"
         },
         {
           "id": "rubygems:ipfs",
@@ -782,6 +772,15 @@
           "next_retry_at": "2026-05-03T20:42:53Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 457,
+          "next_retry_at": "1734-01-22T15:05:07Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -807,6 +806,15 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-05-04T05:59:14Z"
+        },
+        {
+          "id": "npm:mailhog",
+          "name": "mailhog",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 13,
+          "next_retry_at": "2026-05-10T14:52:23Z"
         },
         {
           "id": "npm:markdown-toc",
@@ -942,15 +950,6 @@
           "category": "install_failed",
           "failure_count": 9,
           "next_retry_at": "2026-05-06T06:00:18Z"
-        },
-        {
-          "id": "rubygems:parallel",
-          "name": "parallel",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-05-03T14:35:11Z"
         },
         {
           "id": "rubygems:pastel",
@@ -2885,6 +2884,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 301,
+          "next_retry_at": "1734-01-22T13:23:43Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -11206,15 +11214,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:hydra",
-          "name": "hydra",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-05-03T09:04:40Z"
-        },
-        {
           "id": "homebrew:hyfetch",
           "name": "hyfetch",
           "ecosystem": "homebrew",
@@ -11534,6 +11533,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:influxdb",
+          "name": "influxdb",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-05-03T14:15:06Z"
         },
         {
           "id": "homebrew:influxdb-cli",
@@ -13223,15 +13231,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 455,
-          "next_retry_at": "1734-01-22T11:13:23Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -14851,15 +14850,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:mailhog",
-          "name": "mailhog",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-05-03T13:07:48Z"
         },
         {
           "id": "homebrew:mailsy",
@@ -18644,6 +18634,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:parallel",
+          "name": "parallel",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-05-03T14:35:11Z"
         },
         {
           "id": "homebrew:pari",
