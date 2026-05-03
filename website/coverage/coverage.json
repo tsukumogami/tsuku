@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-03T20:56:29Z",
+  "generated_at": "2026-05-03T23:10:07Z",
   "total_recipes": 1439,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 874,
+        "supported": 875,
         "total": 1439,
-        "pct": 60.736622654621264
+        "pct": 60.80611535788742
       },
       "glibc": {
         "supported": 1407,
@@ -6178,13 +6178,11 @@
       "name": "git",
       "type": "tool",
       "platforms": {
-        "darwin": false,
+        "darwin": true,
         "glibc": true,
         "musl": true
       },
-      "gaps": [
-        "darwin"
-      ],
+      "gaps": null,
       "errors": null,
       "warnings": null
     },
