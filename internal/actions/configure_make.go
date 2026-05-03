@@ -410,6 +410,12 @@ func isValidConfigureArg(arg string) bool {
 // findMake returns the path to make, preferring system make over tsuku-installed make.
 // This is important in minimal containers where Homebrew bottles may have dynamic
 // linking issues, but system make works correctly.
+//
+// Falls back to `gmake` when `make` is not on PATH — the tsuku-managed `make`
+// recipe installs as `bin/gmake` (matching Homebrew's naming on darwin and the
+// linuxbrew GNU make formula), and sandbox foundation-image builds for recipes
+// that depend on `configure_make` rely on this fallback when the base image
+// hasn't installed the system build-essential package yet.
 func findMake() string {
 	// Check common system locations first
 	systemPaths := []string{"/usr/bin/make", "/bin/make", "/usr/local/bin/make"}
@@ -418,7 +424,15 @@ func findMake() string {
 			return p
 		}
 	}
-	// Fall back to PATH lookup
+	// Fall back to PATH lookup, trying `make` then `gmake`
+	if path, err := exec.LookPath("make"); err == nil {
+		return path
+	}
+	if path, err := exec.LookPath("gmake"); err == nil {
+		return path
+	}
+	// Last resort: return "make" so the caller's exec error message names what
+	// was searched for instead of returning an empty string.
 	return "make"
 }
 
