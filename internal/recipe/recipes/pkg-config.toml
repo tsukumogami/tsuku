@@ -4,17 +4,33 @@ description = "Helper tool for compile and link flags for libraries"
 homepage = "https://www.freedesktop.org/wiki/Software/pkg-config/"
 binaries = ["bin/pkg-config"]
 
-# glibc Linux: Homebrew bottles
+# glibc Linux amd64: Homebrew bottles
 [[steps]]
 action = "homebrew"
 formula = "pkgconf"
-when = { os = ["linux"], libc = ["glibc"] }
+when = { os = ["linux"], libc = ["glibc"], arch = "amd64" }
 
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
 outputs = ["bin/pkg-config", "bin/pkgconf", "lib/libpkgconf.so", "lib/libpkgconf.so.7", "lib/libpkgconf.so.7.0.0"]
-when = { os = ["linux"], libc = ["glibc"] }
+when = { os = ["linux"], libc = ["glibc"], arch = "amd64" }
+
+# glibc Linux arm64: System packages (Homebrew has no arm64_linux bottles for pkgconf)
+[[steps]]
+action = "apt_install"
+packages = ["pkgconf"]
+when = { os = ["linux"], libc = ["glibc"], arch = "arm64", linux_family = "debian" }
+
+[[steps]]
+action = "dnf_install"
+packages = ["pkgconf-pkg-config"]
+when = { os = ["linux"], libc = ["glibc"], arch = "arm64", linux_family = "rhel" }
+
+[[steps]]
+action = "zypper_install"
+packages = ["pkg-config"]
+when = { os = ["linux"], libc = ["glibc"], arch = "arm64", linux_family = "suse" }
 
 # musl Linux: System packages
 [[steps]]
@@ -36,4 +52,5 @@ when = { os = ["darwin"] }
 
 [verify]
 command = "pkg-config --version"
-pattern = "{version}"
+mode = "output"
+reason = "arm64 glibc installs pkgconf via system packages at a distribution version; output mode verifies availability across all platforms"
