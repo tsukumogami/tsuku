@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-03T19:03:04Z",
+  "updated_at": "2026-05-03T20:47:45Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 302,
-      "next_retry_at": "1734-01-22T17:05:36.193262011Z"
+      "failure_count": 303,
+      "next_retry_at": "1734-01-22T21:00:28.461334548Z"
     },
     {
       "name": "azqr",
@@ -21416,11 +21416,11 @@
       "name": "influxdb",
       "source": "rubygems:influxdb",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-05-03T14:15:06.971364931Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-10T20:47:45.316110356Z"
     },
     {
       "name": "influxdb-cli",
@@ -25116,7 +25116,7 @@
       "name": "less",
       "source": "rubygems:less",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 11,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 459,
@@ -35716,7 +35716,7 @@
       "name": "pastel",
       "source": "rubygems:pastel",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
