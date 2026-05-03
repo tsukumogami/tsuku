@@ -4,10 +4,11 @@ description = "Distributed revision control system"
 homepage = "https://git-scm.com/"
 version_format = "semver"
 curated = true
-# macOS: homebrew git bottle has an RPATH reference to libpcre2-8.0.dylib from
-# pcre2, which tsuku does not yet install as a dylib on macOS. darwin coverage
-# is excluded until pcre2 installs its library files on macOS.
-supported_os = ["linux"]
+# `runtime_dependencies` ensures pcre2 is installed before `git --version`
+# runs at verify time. macOS support was previously gated by
+# `supported_os = ["linux"]` and unblocked once pcre2's macOS dylib outputs
+# (`libpcre2-8.0.dylib` and friends) landed in #2335.
+runtime_dependencies = ["pcre2"]
 
 # glibc Linux: Homebrew bottle
 [[steps]]
@@ -26,6 +27,27 @@ when = { os = ["linux"], libc = ["glibc"] }
 action = "apk_install"
 packages = ["git"]
 when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew bottle. The bottle's binary load chain references
+# `libpcre2-8.0.dylib` (from pcre2) — so the `runtime_dependencies` above
+# must ship pcre2's darwin dylibs in the same install layout the bottle
+# expects.
+#
+# The step-level `dependencies` is repeated here (not just via the metadata
+# `runtime_dependencies`) so the homebrew action can resolve install-time
+# deps during decomposition; without the step entry, the macOS plan would
+# not see them at install time. Keep the two lists in sync.
+[[steps]]
+action = "homebrew"
+formula = "git"
+when = { os = ["darwin"] }
+dependencies = ["pcre2"]
+
+[[steps]]
+action = "install_binaries"
+when = { os = ["darwin"] }
+install_mode = "directory"
+outputs = ["bin/git"]
 
 [verify]
 command = "git --version"
