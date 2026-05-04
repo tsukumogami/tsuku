@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-04T17:55:26Z",
+  "updated_at": "2026-05-04T19:33:50Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 308,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 467,
-      "next_retry_at": "1734-01-23T16:20:06.511991644Z"
+      "failure_count": 469,
+      "next_retry_at": "1734-01-23T19:46:33.533423497Z"
     },
     {
       "name": "libaacs",
@@ -29546,11 +29546,11 @@
       "name": "medusa",
       "source": "rubygems:medusa",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-05-04T11:08:02.731451637Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-05-11T19:33:50.388199305Z"
     },
     {
       "name": "megacmd",
@@ -31996,7 +31996,7 @@
       "name": "neo4j",
       "source": "rubygems:neo4j",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 9,
@@ -39116,11 +39116,11 @@
       "name": "q",
       "source": "npm:q",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-05-04T11:08:02.731451637Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-11T19:33:50.388199305Z"
     },
     {
       "name": "qalculate-gtk",
