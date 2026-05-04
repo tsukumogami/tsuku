@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-04T17:54:56Z",
+  "generated_at": "2026-05-04T17:56:15Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 68,
-      "pending": 3841,
+      "failed": 67,
+      "pending": 3842,
       "success": 1368
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 68,
-        "pending": 3826,
+        "failed": 67,
+        "pending": 3827,
         "success": 1344
       }
     },
@@ -74,7 +74,8 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -428,6 +429,15 @@
           "category": "install_failed",
           "failure_count": 14,
           "next_retry_at": "2026-05-08T10:34:00Z"
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 308,
+          "next_retry_at": "1734-01-23T18:08:09Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -799,15 +809,6 @@
           "next_retry_at": "2026-05-11T09:23:20Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 467,
-          "next_retry_at": "1734-01-23T16:20:06Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -853,13 +854,13 @@
           "next_retry_at": "2026-05-10T19:03:03Z"
         },
         {
-          "id": "rubygems:mktorrent",
-          "name": "mktorrent",
+          "id": "rubygems:mdv",
+          "name": "mdv",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-05-04T17:27:23Z"
+          "failure_count": 12,
+          "next_retry_at": "2026-05-11T17:55:26Z"
         },
         {
           "id": "npm:mongoose",
@@ -968,15 +969,6 @@
           "category": "install_failed",
           "failure_count": 13,
           "next_retry_at": "2026-05-11T16:07:23Z"
-        },
-        {
-          "id": "npm:sigstore",
-          "name": "sigstore",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-05-04T17:27:23Z"
         },
         {
           "id": "pypi:tctl",
@@ -2821,15 +2813,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 307,
-          "next_retry_at": "1734-01-23T14:13:03Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -13141,6 +13124,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 467,
+          "next_retry_at": "1734-01-23T16:20:06Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -15287,15 +15279,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:mdv",
-          "name": "mdv",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-05-04T08:27:35Z"
-        },
-        {
           "id": "homebrew:mecab",
           "name": "mecab",
           "ecosystem": "homebrew",
@@ -15762,6 +15745,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:mktorrent",
+          "name": "mktorrent",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-05-04T17:27:23Z"
         },
         {
           "id": "homebrew:mkvtomp4",
@@ -23111,6 +23103,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:sigstore",
+          "name": "sigstore",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-05-04T17:27:23Z"
         },
         {
           "id": "homebrew:sile",
