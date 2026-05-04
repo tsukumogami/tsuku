@@ -192,6 +192,7 @@ Exit codes for project install:
 			if err := runInstallWithTelemetry(toolName, "", "", true, "", telemetryClient); err != nil {
 				handleInstallError(err)
 			}
+			clearAndRecordInstallSuccess(toolName)
 			return
 		}
 
@@ -268,6 +269,7 @@ Exit codes for project install:
 				if err := runInstallWithTelemetry(dArgs.RecipeName, resolveVersion, versionConstraint, true, "", telemetryClient); err != nil {
 					handleInstallError(err)
 				}
+				clearAndRecordInstallSuccess(dArgs.RecipeName)
 
 				// Record source and recipe hash on the tool state.
 				// This runs after the install's own state write (which sets Source
@@ -341,6 +343,7 @@ Exit codes for project install:
 			if err := runInstallWithTelemetry(toolName, resolveVersion, versionConstraint, true, "", telemetryClient); err != nil {
 				handleInstallError(err)
 			}
+			clearAndRecordInstallSuccess(toolName)
 		}
 
 		// Recommend shell integration for timely update checks (R5)

@@ -11,11 +11,12 @@ import (
 
 var noticesCmd = &cobra.Command{
 	Use:   "notices",
-	Short: "Show recent update failure notices",
-	Long: `Display details of recent auto-update failures.
+	Short: "Show recent update notices",
+	Long: `Display recent auto-update results.
 
-Shows tool name, attempted version, error message, and timestamp for
-each failed update. Includes both previously shown and unshown notices.`,
+Shows tool name, attempted version, error message (if any), and timestamp for
+each update result. Failure notices persist until the tool is successfully updated.
+Success notices are shown once and cleared after viewing.`,
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg, err := config.DefaultConfig()
@@ -32,11 +33,12 @@ each failed update. Includes both previously shown and unshown notices.`,
 		}
 
 		if len(all) == 0 {
-			printInfo("No update failure notices.")
+			printInfo("No update notices.")
 			return
 		}
 
 		fmt.Printf("%-15s  %-15s  %-30s  %s\n", "TOOL", "VERSION", "ERROR", "TIMESTAMP")
+		var failures, successes int
 		for _, n := range all {
 			errMsg := n.Error
 			if len(errMsg) > 30 {
@@ -48,9 +50,28 @@ each failed update. Includes both previously shown and unshown notices.`,
 				errMsg,
 				n.Timestamp.Format("2006-01-02 15:04:05"),
 			)
+			if n.Error != "" {
+				failures++
+			} else {
+				successes++
+			}
 		}
 
-		printInfof("\n%d notice(s) total. Failed updates were auto-rolled back.\n", len(all))
+		switch {
+		case failures > 0 && successes > 0:
+			printInfof("\n%d failure(s), %d success(es). Failed updates were auto-rolled back. Success entries cleared after viewing.\n", failures, successes)
+		case failures > 0:
+			printInfof("\n%d failure(s). Failed updates were auto-rolled back.\n", failures)
+		default:
+			printInfof("\n%d success(es). Cleared after viewing.\n", successes)
+		}
+
+		// Success notices are shown once; delete them after display.
+		for _, n := range all {
+			if n.Error == "" {
+				_ = notices.RemoveNotice(noticesDir, n.Tool)
+			}
+		}
 	},
 }
 

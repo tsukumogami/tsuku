@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/notices"
 	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 )
@@ -193,6 +195,19 @@ Examples:
 			telemetryClient.SendUpdateOutcome(telemetry.NewUpdateOutcomeSuccessEvent(
 				toolName, previousVersion, newVersion, "manual"))
 		}
+
+		// Clear failure notice; write success notice when version changed.
+		noticesDir := notices.NoticesDir(cfg.HomeDir)
+		_ = notices.RemoveNotice(noticesDir, toolName)
+		if newVersion != "" && newVersion != previousVersion {
+			_ = notices.WriteNotice(noticesDir, &notices.Notice{
+				Tool:             toolName,
+				AttemptedVersion: newVersion,
+				Error:            "",
+				Timestamp:        time.Now(),
+				Shown:            false,
+			})
+		}
 	},
 }
 
@@ -365,6 +380,20 @@ func runUpdateAll(cmd *cobra.Command) {
 		} else {
 			updated++
 		}
+
+		// Clear failure notice; write success notice when version changed.
+		noticesDir := notices.NoticesDir(cfg.HomeDir)
+		_ = notices.RemoveNotice(noticesDir, tool.Name)
+		if newVersion != previousVersion {
+			_ = notices.WriteNotice(noticesDir, &notices.Notice{
+				Tool:             tool.Name,
+				AttemptedVersion: newVersion,
+				Error:            "",
+				Timestamp:        time.Now(),
+				Shown:            false,
+			})
+		}
+
 		toolReporter.Stop()
 		toolReporter.FlushDeferred()
 	}
