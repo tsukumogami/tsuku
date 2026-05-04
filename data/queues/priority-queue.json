@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-04T21:13:20Z",
+  "updated_at": "2026-05-04T23:03:00Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 309,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 469,
-      "next_retry_at": "1734-01-23T19:46:33.533423497Z"
+      "failure_count": 471,
+      "next_retry_at": "1734-01-23T23:15:43.488784152Z"
     },
     {
       "name": "libaacs",
@@ -29606,11 +29606,11 @@
       "name": "memcached",
       "source": "rubygems:memcached",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-05-04T15:53:25.477091865Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-05-11T23:03:00.34355996Z"
     },
     {
       "name": "memtester",
@@ -43656,11 +43656,11 @@
       "name": "sigstore",
       "source": "npm:sigstore",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-05-04T17:27:23.129110196Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-11T23:03:00.34355996Z"
     },
     {
       "name": "sile",
