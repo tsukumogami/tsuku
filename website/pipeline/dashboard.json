@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-04T06:15:13Z",
+  "generated_at": "2026-05-04T06:16:11Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 68,
-      "pending": 3841,
+      "failed": 67,
+      "pending": 3842,
       "success": 1368
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 68,
-        "pending": 3826,
+        "failed": 67,
+        "pending": 3827,
         "success": 1344
       }
     },
@@ -68,21 +68,20 @@
         "total": 1
       },
       "npm": {
-        "failed": 18,
-        "pending": 2,
+        "failed": 17,
+        "pending": 3,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 45,
-        "pending": 30,
+        "failed": 44,
+        "pending": 31,
         "success": 13,
         "total": 89
       }
@@ -429,15 +428,6 @@
           "category": "install_failed",
           "failure_count": 14,
           "next_retry_at": "2026-05-08T10:34:00Z"
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 305,
-          "next_retry_at": "1734-01-23T02:57:35Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -791,13 +781,22 @@
           "next_retry_at": "2026-05-10T11:00:39Z"
         },
         {
-          "id": "rubygems:mailcatcher",
-          "name": "mailcatcher",
+          "id": "rubygems:lemon",
+          "name": "lemon",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-05-04T05:59:14Z"
+          "failure_count": 13,
+          "next_retry_at": "2026-05-11T06:15:32Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 463,
+          "next_retry_at": "1734-01-23T06:28:15Z"
         },
         {
           "id": "npm:mailhog",
@@ -861,6 +860,15 @@
           "category": "install_failed",
           "failure_count": 10,
           "next_retry_at": "2026-05-04T17:27:23Z"
+        },
+        {
+          "id": "npm:mongoose",
+          "name": "mongoose",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 13,
+          "next_retry_at": "2026-05-11T06:15:32Z"
         },
         {
           "id": "rubygems:multimarkdown",
@@ -935,15 +943,6 @@
           "next_retry_at": "2026-05-06T06:00:18Z"
         },
         {
-          "id": "rubygems:pngcheck",
-          "name": "pngcheck",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-05-04T04:21:00Z"
-        },
-        {
           "id": "rubygems:progress",
           "name": "progress",
           "ecosystem": "rubygems",
@@ -951,15 +950,6 @@
           "category": "install_failed",
           "failure_count": 8,
           "next_retry_at": "2026-05-07T01:04:04Z"
-        },
-        {
-          "id": "npm:protoc-gen-js",
-          "name": "protoc-gen-js",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-05-04T05:59:14Z"
         },
         {
           "id": "npm:q",
@@ -2822,6 +2812,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 305,
+          "next_retry_at": "1734-01-23T02:57:35Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -13077,15 +13076,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:lemon",
-          "name": "lemon",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-05-03T18:57:35Z"
-        },
-        {
           "id": "homebrew:leoafarias/fvm/fvm",
           "name": "leoafarias/fvm/fvm",
           "ecosystem": "homebrew",
@@ -13149,15 +13139,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 461,
-          "next_retry_at": "1734-01-22T23:23:09Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -14799,6 +14780,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:mailcatcher",
+          "name": "mailcatcher",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-05-04T05:59:14Z"
+        },
+        {
           "id": "homebrew:mailsy",
           "name": "mailsy",
           "ecosystem": "homebrew",
@@ -15973,15 +15963,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:mongoose",
-          "name": "mongoose",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-05-03T18:57:35Z"
         },
         {
           "id": "homebrew:mongosh",
@@ -19374,6 +19355,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:pngcheck",
+          "name": "pngcheck",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 8,
+          "next_retry_at": "2026-05-04T04:21:00Z"
+        },
+        {
           "id": "homebrew:pngpaste",
           "name": "pngpaste",
           "ecosystem": "homebrew",
@@ -19878,6 +19868,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:protoc-gen-js",
+          "name": "protoc-gen-js",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-05-04T05:59:14Z"
         },
         {
           "id": "homebrew:protonpass/tap/pass-cli",
