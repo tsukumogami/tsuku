@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-05T20:13:10Z",
+  "updated_at": "2026-05-05T22:06:46Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 315,
-      "next_retry_at": "1734-01-24T18:29:30.42925523Z"
+      "failure_count": 316,
+      "next_retry_at": "1734-01-24T22:19:29.905917633Z"
     },
     {
       "name": "azqr",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 479,
@@ -35986,11 +35986,11 @@
       "name": "pdftohtml",
       "source": "rubygems:pdftohtml",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-05-03T22:20:22.671017113Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-05-12T22:06:46.760693441Z"
     },
     {
       "name": "pdftoipe",
