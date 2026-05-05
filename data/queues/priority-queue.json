@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-05T10:51:27Z",
+  "updated_at": "2026-05-05T12:07:41Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 312,
-      "next_retry_at": "1734-01-24T08:26:00.566663862Z"
+      "failure_count": 314,
+      "next_retry_at": "1734-01-24T12:20:24.886345079Z"
     },
     {
       "name": "azqr",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 475,
@@ -33126,11 +33126,11 @@
       "name": "nut",
       "source": "rubygems:nut",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-05-05T09:25:48.632561624Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-05-12T12:07:41.741120887Z"
     },
     {
       "name": "nuxi",
