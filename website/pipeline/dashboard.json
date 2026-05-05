@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-05T16:29:49Z",
+  "generated_at": "2026-05-05T16:31:27Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 71,
-      "pending": 3838,
+      "failed": 72,
+      "pending": 3837,
       "success": 1368
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 71,
-        "pending": 3823,
+        "failed": 72,
+        "pending": 3822,
         "success": 1344
       }
     },
@@ -68,21 +68,20 @@
         "total": 1
       },
       "npm": {
-        "failed": 19,
-        "pending": 1,
+        "failed": 18,
+        "pending": 2,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 47,
-        "pending": 28,
+        "failed": 48,
+        "pending": 27,
         "success": 13,
         "total": 89
       }
@@ -429,15 +428,6 @@
           "category": "install_failed",
           "failure_count": 14,
           "next_retry_at": "2026-05-08T10:34:00Z"
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 314,
-          "next_retry_at": "1734-01-24T12:20:24Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -809,6 +799,15 @@
           "next_retry_at": "2026-05-11T09:23:20Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 477,
+          "next_retry_at": "1734-01-24T16:43:12Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -962,6 +961,15 @@
           "next_retry_at": "2026-05-12T12:07:41Z"
         },
         {
+          "id": "rubygems:nyan",
+          "name": "nyan",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-05-12T16:30:28Z"
+        },
+        {
           "id": "rubygems:ocp",
           "name": "ocp",
           "ecosystem": "rubygems",
@@ -1034,13 +1042,13 @@
           "next_retry_at": "2026-05-08T22:57:19Z"
         },
         {
-          "id": "npm:webdav",
-          "name": "webdav",
+          "id": "npm:wartremover",
+          "name": "wartremover",
           "ecosystem": "npm",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-05-05T14:20:22Z"
+          "failure_count": 13,
+          "next_retry_at": "2026-05-12T16:30:28Z"
         }
       ],
       "pending": [
@@ -2849,6 +2857,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 314,
+          "next_retry_at": "1734-01-24T12:20:24Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -13160,15 +13177,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 475,
-          "next_retry_at": "1734-01-24T11:04:10Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -17182,15 +17190,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:nyan",
-          "name": "nyan",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-05-04T23:07:09Z"
         },
         {
           "id": "homebrew:nyancat",
@@ -26882,15 +26881,6 @@
           "failure_count": 1
         },
         {
-          "id": "npm:wartremover",
-          "name": "wartremover",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-05-05T09:25:48Z"
-        },
-        {
           "id": "crates.io:wasm-bindgen",
           "name": "wasm-bindgen",
           "ecosystem": "crates.io",
@@ -27015,6 +27005,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:webdav",
+          "name": "webdav",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-05-05T14:20:22Z"
         },
         {
           "id": "rubygems:webhook",
