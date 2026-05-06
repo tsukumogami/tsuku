@@ -1,265 +1,406 @@
-# Security Review: tsuku-homebrew-dylib-chaining
+# Security Review: tsuku-homebrew-dylib-chaining (revised design)
+
+This review supersedes the prior round-1 review. The design was substantially
+revised after round-2 docker-based exploration: the proposed
+`chained_lib_dependencies` field is **dropped** (Decision 2 reversed); the
+existing `metadata.runtime_dependencies` field is reused; a new SONAME
+completeness scan with auto-include is added (Decision 4); RPATH writer
+switches to `patchelf --force-rpath --set-rpath` (DT_RPATH) on Linux; the
+`Type == "library"` gate is lifted; a new `internal/install/soname_index.go`
+module is introduced. The trust-boundary core (recipe registry is trusted;
+bottle contents are sha256-pinned) is unchanged.
+
+The previous review's two recommended mitigations (recipe-name validator,
+`filepath.Join` defense-in-depth at patch time) are now both written into
+the design (Phases 1, 3, and 4; "Mitigations" section). They still apply
+verbatim — only the field they target moved from `chained_lib_dependencies`
+to `runtime_dependencies`.
 
 ## Dimension Analysis
 
 ### External Artifact Handling
 **Applies:** Yes
 
-The design changes how Homebrew bottles are patched after download. Bottles
-themselves come from `homebrew/core` GHCR and are not new attack surface for
-this design — the sha256-pinned download path is unchanged. The new attack
-surface is the patching logic: a recipe-controlled list
-(`chained_lib_dependencies`) drives `patchelf --add-rpath` /
-`install_name_tool -add_rpath` invocations that produce arguments derived
-from recipe-name and resolved-version strings.
+Two new flows:
 
-**Risks (after reading the source):**
+1. **Bottle binaries fed to `readelf -d` / `otool -L`.** The bottle is
+   already a sha256-pinned trusted input. `readelf` and `otool` are
+   well-tested system tools that parse ELF / Mach-O headers — both formats
+   are bounded, length-prefixed, and well-defined. A pathological bottle
+   could declare:
+   - SONAMES with embedded path separators, null bytes, or shell
+     metacharacters (e.g., `NEEDED libfoo.so;rm -rf /`)
+   - Extremely long SONAMES (kilobyte strings)
+   - Many NEEDED entries (hundreds)
+   - SONAMES that are valid filesystem-traversal strings (e.g.,
+     `../../../etc/ld.so.conf`)
 
-1. **Path injection into RPATH via dep name (medium).** The current
-   `fixLibraryDylibRpaths` constructs the RPATH target with:
+   The classification step looks each SONAME up in a Go map keyed by
+   string. Map lookups are inert with respect to the SONAME's content —
+   a `..`-shaped SONAME would simply not match any provider entry and
+   fall through to the "coverage gap" log line. The auto-include path
+   (below) only fires when the SONAME *matched* a tsuku library, so the
+   path it generates is built from the **provider's** known recipe name +
+   version, not from the SONAME string. This means the SONAME itself
+   never reaches `filepath.Join` as a path component; it only ever
+   reaches a logger and a map lookup.
 
-   ```go
-   depLibPath := filepath.Join(ctx.LibsDir, fmt.Sprintf("%s-%s", depName, depVersion), "lib")
-   ```
+   That property is load-bearing. The design needs to make it explicit
+   so an implementer doesn't accidentally interpolate the SONAME into a
+   path or a shell argument later (e.g., for a friendlier error message).
 
-   `filepath.Join` calls `filepath.Clean`, so a dep name like `../../etc`
-   plus any `depVersion` collapses upward and yields a path outside
-   `$TSUKU_HOME/libs/`. The patched RPATH would then point to an
-   attacker-chosen filesystem location. The new `fixDylibRpathChain` /
-   `fixElfRpathChain` per the design inherit this exact construction. The
-   existing `set_rpath` action already mitigates this with
-   `validateRpath(rpath, ctx.LibsDir)` (see `internal/actions/set_rpath.go`
-   lines 404-460), which rejects absolute paths outside `LibsDir`. The new
-   chain functions need the same gate.
+2. **`readelf` / `otool` output parsed as text.** Both tools' output
+   formats are stable, but unknown-format binaries or corrupted ELF
+   headers could produce diagnostic text that the parser misclassifies.
+   The classifier should treat parse failures as "skip this binary" with
+   a warning, not as "no NEEDED entries" (the latter would silently
+   miss SONAMES the binary actually needs).
 
-2. **Option-injection into patchelf / install_name_tool (low).** Go's
-   `exec.Command(name, args...)` uses `execve(2)` directly, so shell
-   metacharacters (`;`, `|`, `$`, backticks) in arguments are passed
-   verbatim — there is no shell interpretation. However, both `patchelf`
-   and `install_name_tool` parse their own arguments. A dep name beginning
-   with `-` would, when joined into the target path, produce a path the
-   tool may interpret as a flag (e.g., `--remove-rpath` masquerading as a
-   filename, or `-id` being eaten as an option). This is mitigated in
-   practice because `filepath.Join(ctx.LibsDir, ...)` always prepends an
-   absolute LibsDir, so the constructed argument starts with `/`, not `-`.
-   The risk reappears only if `LibsDir` is empty/relative; the existing
-   homebrew_relocate code falls back to `~/.tsuku/libs` when LibsDir is
-   unset, which keeps the leading `/`.
+**Severity: low.** The design's structure already isolates SONAME content
+from path construction; the recommendation is to document that invariant.
 
-3. **Loose recipe-name validation (low, structural).** `validateMetadata`
-   in `internal/recipe/validator.go` (lines 167-208) only warns on
-   uppercase, errors on spaces, and rejects dangerous schemes in the
-   `homepage` URL. It does NOT reject `..`, `/`, or null bytes in the
-   `metadata.name` field — those checks live in
-   `internal/distributed/cache.go::validateRecipeName` and
-   `internal/index/rebuild.go::isValidRecipeName` and are only applied at
-   the registry-cache and index-rebuild boundaries. A malicious recipe
-   uploaded to a third-party tap with name `../../foo` could, in
-   principle, slip past metadata validation and be consumed by any code
-   path that doesn't go through the cache or index. The new
-   `chained_lib_dependencies` field reads these names and joins them into
-   filesystem paths, so it inherits the same gap.
-
-**Severity: medium.** Mitigations below; design needs an explicit
-validation step before merge.
-
-### Permission Scope
+### Recipe-controlled inputs
 **Applies:** Yes
 
-The change writes only to `$TSUKU_HOME/{tools,libs}/<recipe>-<version>/`,
-which is the existing permission scope. No sudo, no system files. The
-RPATH entries computed by the design are `$ORIGIN`-relative (Linux) or
-`@loader_path`-relative (macOS), anchored to the binary's own directory.
+The trust boundary moved from a new field to an existing field. The
+existing `runtime_dependencies` field has **no validator today** beyond
+TOML well-formedness. The wrapper-PATH consumer that already reads it
+treats entries as opaque recipe-name strings; if a recipe declared
+`runtime_dependencies = ["../../etc"]` today, the wrapper-PATH consumer
+would attempt to resolve a recipe by that name and fail at the registry
+boundary (where `validateRecipeName` and `isValidRecipeName` already
+reject `..` and `/`).
 
-**Risks:**
+The new chain consumer joins each entry into a filesystem path
+(`filepath.Join(ctx.LibsDir, fmt.Sprintf("%s-%s", depName, depVersion), "lib")`),
+which is exactly the construction the previous review flagged. With
+`filepath.Clean` semantics, a name containing `..` collapses upward and
+escapes `LibsDir`. The design's Phase 1 calls out the validator addition
+explicitly:
 
-1. **Relative-path escape via `..` count (medium).** A dep name like
-   `../../../foo` would pass through `fmt.Sprintf("%s-%s", ...)` and into
-   `filepath.Rel`. The resulting `$ORIGIN/...` string can encode arbitrary
-   numbers of `..` segments and so escape the install dir at load time.
-   The runtime linker resolves `$ORIGIN/../../../../../etc/something/lib`
-   without complaint. Combined with the path-injection risk above, this
-   means a malicious recipe (or a typo) can cause the patched binary to
-   load shared libraries from anywhere on the user's filesystem on every
-   subsequent invocation. The same `validateRpath`-style gate fixes both.
+> Validate `runtime_dependencies` entry name pattern (`^[a-z0-9._-]+$`);
+> reject empty strings, `..`, `/`, null bytes, leading `-`. Validate each
+> entry resolves to an installable recipe. Promote `isValidRecipeName`
+> from `internal/distributed/cache.go` and `internal/index/rebuild.go`
+> into a shared helper.
 
-2. **Defense-in-depth: validate post-Rel form (low).** The design says the
-   relative path is computed via `filepath.Rel` after `EvalSymlinks` on
-   both ends. After computing, the function should verify the relative
-   path resolves back to a child of `LibsDir` (i.e., `filepath.Join(loaderDir, relPath)`
-   stays within `$TSUKU_HOME`). This catches both the symlink-confusion
-   case and the dep-name-traversal case in one check.
+This addresses the path-injection vector at recipe-load time and is the
+right place for it.
 
-### Supply chain / dependency trust
+**Risks (as before, now anchored on `runtime_dependencies`):**
+
+1. **Path injection via dep name (medium).** `runtime_dependencies =
+   ["../../etc"]` produces an RPATH outside `$TSUKU_HOME/libs/`. Mitigated
+   by the Phase 1 validator + the Phases 3/4 `filepath.Join` post-check.
+
+2. **Option injection into patchelf / install_name_tool (low).** A name
+   beginning with `-` could be eaten as a tool flag if it ever ended up
+   un-prefixed. The constructed argument always starts with the absolute
+   `LibsDir`, which keeps the leading `/`. The validator's "reject
+   leading `-`" rule removes the dependency on that indirect mitigation.
+
+3. **Version-string injection (low).** `depVersion` is also interpolated
+   into the path. Versions come from version providers (PyPI, npm,
+   crates.io, GitHub release tags). Currently no validator constrains
+   them. A version like `../foo` would have the same effect as a name
+   like `../foo`. This is a pre-existing issue the design inherits but
+   does not introduce. Worth flagging — the `filepath.Join` post-check
+   in Phases 3/4 catches it as defense-in-depth, so the structural risk
+   is bounded, but a version validator at provider boundaries would be
+   a cleaner long-term fix. **(Out of scope for this design.)**
+
+### NEW: SONAME index construction
 **Applies:** Yes
 
-Recipes are the trust boundary. A malicious recipe in a third-party tap
-could declare `chained_lib_dependencies = ["../../etc"]` or
-`chained_lib_dependencies = ["valid-name; rm -rf /"]`. Because
-`exec.Command` does not invoke a shell, the second form is a non-issue
-for command injection — the literal string `valid-name; rm -rf /` would
-be passed to `patchelf`/`install_name_tool` as one argument (most likely
-producing an error from the tool, not executing anything). The first
-form is the real risk and is covered above.
+The new `internal/install/soname_index.go` module walks every installable
+library recipe and parses each recipe's `outputs` lists for `lib/lib*.so.*`
+and `lib/lib*.*.dylib` patterns. New attack surface:
 
-**Risks (specific to the prompt's questions):**
+1. **Malicious `outputs` entry escaping `lib/`.** A library recipe with
+   `outputs = ["../../etc/passwd"]` could in principle have its "SONAME"
+   parsed as something the index would map to `etc-passwd` or similar.
+   The index doesn't fetch or open the file — it parses the **string** of
+   the output entry to derive a SONAME basename. So the index itself is
+   safe from filesystem traversal (no I/O on the malicious path). But:
+   - The derived "SONAME" could be a confusing string that, when later
+     written to a log, misleads a human reading the warning.
+   - If the parser is permissive and accepts paths outside `lib/`, a
+     library recipe could inject mappings for SONAMES it doesn't
+     legitimately ship.
 
-- **`["../../etc/passwd"]` writing somewhere unintended.** The chain
-  patches binaries inside `$TSUKU_HOME/tools/<recipe>-<version>/`, not
-  any path derived from the dep name — the dep name only appears as RPATH
-  *content*, not as a write target. So the write-target side is safe.
-  But the RPATH content side can point anywhere on the filesystem and
-  cause the binary to load arbitrary `.so` / `.dylib` files at runtime.
-  Net: not a write primitive, but a load-path-redirection primitive.
+   Mitigation: the index parser should reject any `outputs` entry whose
+   path is not exactly under `lib/` (i.e., starts with `lib/` and does
+   not contain `..`). The basename it extracts as the SONAME should
+   itself match the SONAME regex (`^lib[a-zA-Z0-9._+-]+\.(so|dylib)(\.[0-9.]+)?$`
+   or similar). Anything that doesn't match is dropped from the index
+   with a one-line warning at index-build time.
 
-- **`["valid-name"; rm -rf /]` shell-command injection.** Not exploitable.
-  Go's `exec.Command` does not invoke a shell, so `;` is a literal
-  character in the argument. The string would be passed to `patchelf` as
-  a single rpath value; patchelf would either accept it (unusable rpath
-  is a runtime concern, not an exec concern) or reject it.
+   **Severity: low** — this is a recipe-author trust-boundary issue
+   (compromised library recipe), but the same principle as the
+   `runtime_dependencies` validator applies: validate at the boundary
+   instead of trusting the input.
 
-- **Shell metacharacter in version string.** Same answer: `exec.Command`
-  doesn't invoke a shell; metacharacters become literal argv bytes.
-  Version strings come from version providers and are constrained by the
-  provider — a malicious version on PyPI/NPM/crates.io would land in the
-  argv as a literal, not as shell syntax. The risk shifts to whether
-  patchelf/install_name_tool handles `-`-prefixed strings as options
-  (covered above).
+2. **SONAME collision between two library recipes (medium).** Two
+   library recipes could both legitimately or maliciously claim the same
+   SONAME (e.g., recipe `openssl-3` and recipe `openssl-evil` both
+   declare `lib/libssl.so.3`). The auto-include path then has to pick
+   one. If the index uses a Go map and the second insert silently
+   overwrites the first, the chosen provider depends on iteration order
+   — non-deterministic and exploitable: a recipe author could arrange
+   for their lookalike to be the one selected at install time for any
+   tool that needs `libssl.so.3` and didn't declare it.
 
-- **`$ORIGIN` / `@loader_path` prefix escape.** Yes, possible, as
-  described in Permission Scope #1. The dep-name `..` count translates
-  directly to RPATH `..` segments after `filepath.Rel`. Mitigated by
-  validating dep names before path construction.
+   The design says the index maps `SONAME → providing recipe + version`
+   (singular). It needs to specify what happens on collision. Options:
+   - **Error at index build.** Refuse to construct the index if any
+     SONAME has multiple providers. Explicit, but may break legitimate
+     cases where two recipes ship overlapping SONAMES (e.g., `openssl@1`
+     and `openssl@3`).
+   - **Multi-valued map + heuristic selection.** Map SONAME → list of
+     providers; auto-include picks the one already in the recipe's
+     `runtime_dependencies` if any, else falls back to a deterministic
+     order (alphabetical recipe name, or "no match — log coverage gap
+     with all candidates"). Conservative and deterministic.
+   - **Require explicit declaration when ambiguous.** If the SONAME has
+     multiple providers and the recipe didn't declare any of them, log
+     a coverage gap (don't auto-include); require the recipe author to
+     pick.
 
-- **Validation via `ValidateBinaryPath` or equivalent.** There is no
-  function with that exact name in the tree. The closest existing
-  primitives are `isValidRecipeName` (`internal/index/rebuild.go:149`,
-  rejects `/`, `..`, null) and `validateRecipeName`
-  (`internal/distributed/cache.go:63`, rejects `..`, `/`, OS separator).
-  Both should be promoted to the recipe validator and applied to every
-  entry in `chained_lib_dependencies` at validate-time, plus enforced
-  again at install-time defense-in-depth (consistent with how
-  `validateRpath` defends `set_rpath`).
+   This is a real gap in the design; it should be addressed before
+   implementation. **Recommended:** the third option (require explicit
+   declaration on ambiguity), which preserves auto-include's "fix the
+   common case" property without giving the SONAME index a deterministic
+   handle on which library is silently chained.
+
+3. **SONAME shadowing system libraries (low).** A library recipe could
+   declare `outputs = ["lib/libc.so.6"]` (or `libpthread.so.0`,
+   `libdl.so.2`, etc.). If the bottle's NEEDED list references
+   `libc.so.6`, the system-library check normally short-circuits ("yes,
+   the system provides this — no action"). But the design's
+   classification order matters here: if the system check is
+   "resolves via ldconfig", a tsuku-shipped libc would not be selected
+   (system shadows it, by design). Inverted: if the system check is
+   skipped or fails, a malicious library recipe could insert itself
+   into the chain for libc-class libraries.
+
+   Mitigation: keep the system-library check as the **first** filter
+   (per the design's step-3 order); ensure the check uses the runtime
+   linker's actual resolution behavior (e.g., `ldconfig -p`), not a
+   tsuku-internal allowlist that could drift. A defensive deny-list of
+   universally-system SONAMES (`libc.so.*`, `libpthread.so.*`, `ld-*`,
+   `libm.so.*`, `libdl.so.*`) at the SONAME-index parser would close
+   the gap even if the runtime check were ever bypassed. **Severity: low.**
+
+### NEW: Auto-include path
+**Applies:** Yes
+
+When the SONAME scanner finds an under-declared SONAME, it auto-includes
+the provider's `lib/` dir in the chained RPATH. This subtly shifts the
+trust boundary: a malicious bottle could declare NEEDED entries for
+SONAMES that map to tsuku libraries the recipe author didn't pick.
+
+**Concrete scenario.** A bottle for the recipe `tool-x` declares
+`runtime_dependencies = ["openssl-3"]` and ships a binary whose NEEDED
+list is `[libssl.so.3, libfoo.so.1]`. The SONAME index has a mapping
+`libfoo.so.1 → recipe foo`. Auto-include adds `$TSUKU_HOME/libs/foo-N/lib`
+to the RPATH. The recipe author never asked for `foo`, but the bottle
+caused it to be chained. If `foo` is a recipe an attacker controls or
+that contains an exploitable lib, the binary now loads attacker-influenced
+code.
+
+But this scenario requires (a) a compromised bottle (already outside our
+trust model — bottles are sha256-pinned to homebrew/core) **and** (b) a
+compromised tsuku library recipe (also outside our trust model — recipe
+registry is the trust boundary). Both ends are already-trusted; the
+auto-include path doesn't widen the boundary.
+
+What auto-include **does** introduce is a new way for a recipe-author bug
+(not malice) to produce an unexpected install: a typo in a library
+recipe's `outputs` list could cause that library to advertise itself as
+the provider of a popular SONAME, which then auto-includes that library
+into many tools' chains. The fix is the SONAME-index validation in the
+previous section — reject malformed `outputs` entries, flag collisions,
+require explicit declaration when ambiguous.
+
+**Severity: low** under the existing trust model. The mitigations from
+the SONAME-index dimension cover the bug-rather-than-malice cases.
+
+The design should also document that **`--strict` mode disables
+auto-include** (or equivalently, treats any auto-include event as a hard
+error). This makes the strict invariant "no chain entries beyond what
+the recipe declared" auditable in CI: if the strict-mode install passes,
+the recipe is fully self-described; the auto-include surface is closed.
+
+### NEW: `--strict` mode
+**Applies:** Yes
+
+`--strict` promotes the under-declaration warning to a hard error. Two
+small concerns:
+
+1. **DoS via aggressive errors blocking installs (low).** Without
+   `--strict`, the auto-include path keeps installs working when recipes
+   are under-declared. With `--strict`, an under-declared recipe fails
+   the install. If `--strict` were ever made the default, the existing
+   under-declared recipes (`git`, `wget`, `coreutils`, plus the 316
+   auto-generated batch recipes) would all break. The design should
+   explicitly state `--strict` is opt-in and that the default is
+   warn-and-auto-include. Phase 5's wording says "Optionally, in
+   `--strict` mode" which is fine; the validator additions section
+   says "In `--strict` mode, [under-declared] is treated as a hard
+   failure. In default mode it's a warning + auto-include." This is
+   correctly specified.
+
+2. **`--strict` should also gate on "no auto-includes happened",
+   not just "no warnings".** Suggested above. As written the design
+   uses "under-declaration warning → hard error" — auto-include and
+   warning are emitted together for the same event, so the two
+   formulations are equivalent. Fine as specified; calling out the
+   equivalence in the security text would help future maintainers.
+
+### Defense-in-depth at patch time
+**Applies:** Yes
+
+The previous review's recommendation (compute the relative RPATH via
+`filepath.Rel` after `EvalSymlinks`, then verify
+`filepath.Join(loaderDir, relPath)` resolves back into
+`$TSUKU_HOME/libs/`) is now in the design at Phases 3 and 4 and in the
+Mitigations section. The wording is correct:
+
+> After `filepath.Rel`, verify that `filepath.Join(loaderDir, relPath)`
+> resolves back inside `$TSUKU_HOME/libs/` — fail the install with a
+> clear error if not (defense in depth against any path-traversal that
+> slipped past the validator).
+
+**One small gap.** The design says "fail the install with a clear error
+if not." It doesn't say what happens to the binary that was already
+partially patched when the failure fires — the existing `fixMachoRpath`
+already wrote `@rpath`-prefixed install_names before the chain step
+runs. A failure here leaves the bottle in an intermediate state; the
+caller (homebrew action's relocate phase) needs to either:
+- Validate **all** dep entries before patching any, or
+- Treat the work_dir as disposable and fail the install cleanly.
+
+The second is the existing behavior of the homebrew action (work_dir is
+a temp dir; partial patching never reaches `$TSUKU_HOME` because
+`install_binaries` runs after relocate). So the gap is bounded by
+existing invariants, but the security text should call it out: validate
+every chain entry's resolved path before invoking `patchelf` /
+`install_name_tool` for any of them, so failures don't leave half-patched
+binaries in a partially-trusted state. **Severity: low.**
+
+### Permission scope
+**Applies:** Yes
+
+Unchanged from the previous review. The new SONAME scanner runs
+`readelf` / `otool` (read-only on bottle binaries), reads the SONAME
+index (in-memory map), and feeds results into the chain walk. No new
+write paths beyond the existing patchelf / install_name_tool invocations
+on bottle binaries inside `$TSUKU_HOME/{tools,libs}/<recipe>-<version>/`.
+No sudo, no system files.
 
 ### Data exposure
 **Applies:** No
 
-The design explicitly chose `$ORIGIN`/`@loader_path`-relative RPATHs over
-absolute paths. The patched binary embeds e.g.
-`$ORIGIN/../../libs/libevent-2.1.12/lib`, not `/home/alice/.tsuku/...`.
-No user-specific data (home dir, hostname, username) is embedded. The
-relative path does encode the recipe name and version of each chained
-dep, but that's the same information already carried by the recipe TOML
-and not user-private.
-
-The Mach-O install_name fix (`@rpath/libfoo.dylib`) similarly avoids
-absolute paths.
+Unchanged. `$ORIGIN` / `@loader_path`-relative RPATHs do not embed
+`$TSUKU_HOME` or any user-specific data. The SONAME index is
+in-memory at plan generation; no persistence, no logging of file
+contents. Coverage-gap log lines reference SONAMES (which are public
+recipe outputs) and recipe names (also public).
 
 ### Project-specific (public-repo conventions)
 **Applies:** Yes
 
-The design and any added Security Considerations text must follow the
-public-repo conventions in `public/CLAUDE.md`: no internal references,
-no competitor names, professional tone. The proposed text below complies.
+Design and Security Considerations text follow the public-repo conventions
+(no internal references, no competitor names, professional tone).
+Compliant.
 
-## Recommended Outcome
+## Verdict
 
-**Considerations worth documenting** — the design is fundamentally sound
-(relative paths, no sudo, recipe-only trust boundary), but two concrete
-validation gaps need to be called out and mitigated before implementation.
-These do not require a new design loop; they fit naturally into Phase 1
-(schema + validator) and Phase 2/3 (the `fixDylibRpathChain` /
-`fixElfRpathChain` functions). Adding the Security Considerations text
-below records the threat model and the mitigations the implementation
-must include.
+**Findings to address before plan.** Three concrete gaps need to be added
+to the design before implementation; all are small additions, none
+require a new design loop.
 
-The two mitigations:
+1. **SONAME-index validation (medium).**
+   - **Description.** The new `internal/install/soname_index.go` parses
+     library recipes' `outputs` lists for `lib/lib*.so.*` and
+     `lib/lib*.*.dylib` patterns. The design doesn't specify that the
+     parser must reject `outputs` entries outside `lib/`, entries
+     containing `..`, or entries that don't match the SONAME basename
+     shape. A malicious or buggy library recipe could inject arbitrary
+     mappings into the index.
+   - **Mitigation.** Add to Phase 2: "The parser rejects any `outputs`
+     entry whose path is not exactly under `lib/` (must start with
+     `lib/`, no `..` segments). The basename extracted as the SONAME
+     must match `^lib[a-zA-Z0-9._+-]+\.(so|dylib)(\.[0-9.]+)?$`. Entries
+     that fail validation are dropped with a warning at index-build
+     time." Mirror the recipe-name validator pattern (Phase 1) for
+     consistency.
+   - **Where to add.** Solution Architecture → Components row for the
+     SONAME index module; Phase 2 acceptance criteria; Security
+     Considerations → Mitigations as a fourth bullet.
 
-1. **Validate every `chained_lib_dependencies` entry at recipe-load time**
-   in `internal/recipe/validator.go`: reject entries containing `/`,
-   `\`, `..`, leading `-`, null bytes, or any non-`[a-z0-9._-]`
-   character. This is the same shape as the existing
-   `isValidRecipeName` (`internal/index/rebuild.go:149`); promote it
-   into a shared helper and apply to both `metadata.name` and
-   `chained_lib_dependencies`.
-2. **Defense-in-depth at patch time** in the new
-   `fixDylibRpathChain`/`fixElfRpathChain`: after computing the relative
-   RPATH, verify `filepath.Join(loaderDir, relPath)` is still inside
-   `$TSUKU_HOME/libs/` using the same logic as
-   `validateRpath`/`validatePathWithinDir` in
-   `internal/actions/set_rpath.go`. Reject the entry (skip-and-warn or
-   fail-fast — pick one, document the choice) if validation fails.
+2. **SONAME-collision policy (medium).**
+   - **Description.** Two library recipes can claim the same SONAME
+     (legitimately or via typo/malice). The design says the index maps
+     `SONAME → providing recipe + version` (singular) without specifying
+     collision behavior. Silent overwrite would make the auto-include
+     non-deterministic.
+   - **Mitigation.** Specify: when multiple library recipes claim the
+     same `(platform, SONAME)` pair, the index records all candidates.
+     Auto-include only fires when exactly one candidate exists OR when
+     one of the candidates is already in the recipe's
+     `runtime_dependencies`. If multiple candidates exist and none are
+     declared, log a coverage gap listing the candidates and skip
+     auto-include — the recipe author must declare the dep explicitly.
+   - **Where to add.** Decision 4's Chosen-option spec (step 3, after
+     "look it up in soname_index"); Phase 2 acceptance ("collisions
+     are surfaced; tests assert deterministic behavior on overlapping
+     SONAMES"); Security Considerations text as part of the SONAME
+     index mitigation.
 
-## Recommended Security Considerations text
+3. **All-or-nothing chain validation (low).**
+   - **Description.** The defense-in-depth `filepath.Join` post-check is
+     specified per-entry, not as a pre-pass over all entries. A failure
+     mid-chain would leave the bottle partially patched in the temp
+     work_dir. This is bounded by the existing "work_dir is disposable"
+     invariant, but the security text should make the invariant
+     explicit so a future refactor doesn't regress.
+   - **Mitigation.** Add to Phases 3 and 4: "Validate every chain
+     entry's `filepath.Join(loaderDir, relPath)` post-check **before**
+     invoking `patchelf` / `install_name_tool` for any entry. A single
+     failed entry fails the entire chain step; no partial patching."
+     Add a parallel sentence to the Security Considerations Mitigations
+     bullet 2: "Validation is performed for all entries before any
+     patching call, so a failure leaves the work_dir untouched."
+   - **Where to add.** Phases 3 and 4 acceptance; Security
+     Considerations Mitigations bullet 2.
 
-```markdown
-## Security Considerations
+## Out of scope but flagging
 
-The chain mechanism extends the trust boundary that already governs
-`homebrew` bottles: bottle contents come from `homebrew/core` GHCR with
-unchanged sha256 verification, and patches are applied only inside
-`$TSUKU_HOME/{tools,libs}/<recipe>-<version>/`. The new field
-(`chained_lib_dependencies`) is recipe-controlled, so a recipe is the
-trust boundary for the chain content.
+- **Version-string validation at provider boundaries.** `depVersion` is
+  interpolated into the same path as `depName`. A version-provider bug
+  that produced `../foo` as a version string would have the same
+  consequence as a malicious dep name. The Phase 3/4 `filepath.Join`
+  defense-in-depth catches it as a structural backstop, but a version
+  validator at the provider boundaries (PyPI, npm, GitHub releases) is
+  a cleaner long-term fix. Track separately; not blocking this design.
 
-### Threat model
+- **`tsuku doctor` RPATH validation.** Already noted in the design's
+  Consequences as a follow-up. A user-facing way to inspect a binary's
+  RPATH chain and confirm it resolves cleanly inside `$TSUKU_HOME/libs/`
+  would surface drift after `$TSUKU_HOME` moves and accidental
+  recipe-author errors. Not blocking; natural Phase 8 follow-up.
 
-A malicious or buggy recipe in a third-party tap could declare an entry
-that, after string interpolation into a filesystem path, escapes
-`$TSUKU_HOME/libs/`. For example, `chained_lib_dependencies =
-["../../etc"]` would, with `filepath.Join`'s `Clean` semantics, collapse
-upward and produce an RPATH target outside the install root. The
-runtime linker resolves the resulting `$ORIGIN`/`@loader_path`-relative
-RPATH on every invocation, so this is a load-path-redirection primitive
-(the patched binary loads shared libraries from an attacker-chosen
-location), not a write primitive.
-
-Argument injection into `patchelf` or `install_name_tool` via shell
-metacharacters is not a concern — Go's `exec.Command` uses `execve(2)`
-directly and does not invoke a shell. Option injection (a dep name
-beginning with `-` being interpreted as a tool flag) is mitigated by the
-fact that the constructed argument always starts with the absolute
-`LibsDir` path, but the validation below removes the dependency on that
-indirect mitigation.
-
-### Mitigations
-
-1. **Strict validation of `chained_lib_dependencies` entries at recipe
-   load time.** Each entry must match `^[a-z0-9._-]+$`, reject `/`,
-   `\`, `..`, leading `-`, and null bytes. This matches existing
-   recipe-name validation in the registry cache and index-rebuild paths
-   and should be promoted to a shared helper applied uniformly.
-
-2. **Defense-in-depth at patch time.** Both `fixDylibRpathChain`
-   (macOS) and `fixElfRpathChain` (Linux) compute the relative RPATH
-   via `filepath.Rel` after `EvalSymlinks`, then verify
-   `filepath.Join(loaderDir, relPath)` resolves back into
-   `$TSUKU_HOME/libs/`. An entry that fails this check is rejected
-   (the install fails with a clear error rather than producing a binary
-   with an out-of-tree RPATH).
-
-3. **No user-specific data is embedded in patched binaries.** The
-   chosen RPATH form is `$ORIGIN`/`@loader_path`-relative, so the
-   binary does not embed `$TSUKU_HOME` or any absolute user path. This
-   preserves portability across `$TSUKU_HOME` moves and avoids leaking
-   home-directory paths through binaries that may be copied or shared.
-
-### Out of scope
-
-Trust in the bottle contents themselves (a compromised
-`homebrew/core` upload) is governed by the existing sha256 verification
-in the homebrew action and is not changed by this design. Trust in the
-recipe registry (a compromised recipe in `tsuku/recipes` or a
-third-party tap) is the same trust boundary as every other recipe field
-and is mitigated by the validator rules above.
-```
-
----
+- **Authoring missing library recipes (Phase 7).** The design correctly
+  scopes the work of authoring `libuuid`, `libacl`, `libattr`, etc. as
+  out of scope. These coverage gaps will be surfaced by the SONAME
+  scanner; closing each is a separate library-recipe PR. Confirmed
+  appropriate scoping.
 
 ## YAML summary
 
 ```yaml
-outcome: considerations_worth_documenting
+outcome: findings_to_address_before_plan
 findings_count: 3
 severity_max: medium
 report_file: /home/dgazineu/dev/niwaw/tsuku/tsukumogami-4/public/tsuku/wip/research/design_tsuku-homebrew-dylib-chaining_phase5_security.md
