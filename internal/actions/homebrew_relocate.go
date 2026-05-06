@@ -99,10 +99,27 @@ func (a *HomebrewRelocateAction) Execute(ctx *ExecutionContext, params map[strin
 		return fmt.Errorf("failed to relocate placeholders: %w", err)
 	}
 
-	// For library recipes on macOS, fix RPATHs in .dylib files to include dependency paths
-	if ctx.Recipe != nil && ctx.Recipe.Metadata.Type == "library" && runtime.GOOS == "darwin" {
-		if err := a.fixLibraryDylibRpaths(ctx, installPath, reporter); err != nil {
-			return fmt.Errorf("failed to fix library dylib RPATHs: %w", err)
+	// macOS RPATH chain: emit @loader_path-relative entries for each
+	// runtime dependency the recipe declared. Runs after relocatePlaceholders
+	// (which performs the per-binary fixMachoRpath pass that wipes stale
+	// HOMEBREW rpaths) so the new entries survive the wipe.
+	//
+	// The chain function fires for any recipe Type — the Type == "library"
+	// gate that used to live here was lifted as part of Issue 3. Whether the
+	// chain emits anything is now driven by len(RuntimeDependencies) > 0.
+	if runtime.GOOS == "darwin" && len(ctx.Dependencies.RuntimeDependencies) > 0 {
+		if err := a.fixDylibRpathChain(ctx, installPath, reporter); err != nil {
+			return fmt.Errorf("failed to fix dylib RPATH chain: %w", err)
+		}
+	}
+
+	// Legacy library install-time chain. The current path-emit form is
+	// absolute (not @loader_path-relative); Issue 4 will migrate it to the
+	// relative form used by fixDylibRpathChain. Kept as a separate helper
+	// so the Issue 4 diff is reviewable in isolation.
+	if runtime.GOOS == "darwin" && ctx.Recipe != nil && ctx.Recipe.Metadata.Type == "library" {
+		if err := a.fixLibraryInstallTimeChainLegacy(ctx, installPath, reporter); err != nil {
+			return fmt.Errorf("failed to fix library install-time chain: %w", err)
 		}
 	}
 
@@ -571,9 +588,255 @@ func (a *HomebrewRelocateAction) fixMachoRpath(binaryPath, installPath string, r
 	return nil
 }
 
-// fixLibraryDylibRpaths adds RPATHs to library .dylib files pointing to dependency library directories
-// This is needed on macOS where dylibs reference their dependencies via @rpath
-func (a *HomebrewRelocateAction) fixLibraryDylibRpaths(ctx *ExecutionContext, installPath string, reporter progress.Reporter) error {
+// chainEntry describes a single runtime dependency contribution to the
+// RPATH chain: the dep's recipe name and resolved version. The version is
+// looked up from ctx.Dependencies.Runtime; entries with no resolved version
+// fall back to "latest", matching the existing behavior of the legacy
+// install-time chain when versions weren't pinned.
+type chainEntry struct {
+	name    string
+	version string
+}
+
+// fixDylibRpathChain adds @loader_path-relative RPATH entries to Mach-O
+// binaries (both bin/ and lib/) for each entry in
+// ctx.Dependencies.RuntimeDependencies (and, post-Issue 6, the local
+// auto-included slice from the SONAME completeness scan).
+//
+// Path form: relative to the binary's directory (loaderDir), computed via
+// filepath.Rel after EvalSymlinks on both ends. Each computed entry is
+// post-checked: filepath.Join(loaderDir, relPath) must resolve back inside
+// ctx.LibsDir. A failed check fails the install with a clear error before
+// any install_name_tool -add_rpath invocation for that entry.
+//
+// Order: this runs after relocatePlaceholders (which performs the
+// per-binary fixMachoRpath pass that wipes HOMEBREW rpaths via
+// install_name_tool -delete_rpath), so the new entries survive the wipe.
+func (a *HomebrewRelocateAction) fixDylibRpathChain(ctx *ExecutionContext, installPath string, reporter progress.Reporter) error {
+	// Only run on macOS
+	if runtime.GOOS != "darwin" {
+		return nil
+	}
+
+	// Build the chain entry list from RuntimeDependencies (preserving order)
+	// with versions looked up in Runtime. RuntimeDependencies is the
+	// author-declared list — see ResolvedDeps.RuntimeDependencies docstring.
+	entries := make([]chainEntry, 0, len(ctx.Dependencies.RuntimeDependencies))
+	for _, name := range ctx.Dependencies.RuntimeDependencies {
+		version := ""
+		if ctx.Dependencies.Runtime != nil {
+			version = ctx.Dependencies.Runtime[name]
+		}
+		if version == "" {
+			version = "latest"
+		}
+		entries = append(entries, chainEntry{name: name, version: version})
+	}
+
+	if len(entries) == 0 {
+		// No-op when no runtime dependencies were declared.
+		return nil
+	}
+
+	// Collect Mach-O binaries to patch: dylibs in lib/ (library and tool
+	// recipes can both ship dylibs) and executables in bin/ (tool case).
+	var binaries []string
+	for _, sub := range []string{"lib", "bin"} {
+		root := filepath.Join(ctx.WorkDir, sub)
+		if _, err := os.Stat(root); os.IsNotExist(err) {
+			continue
+		}
+		err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
+				return nil
+			}
+			if a.isMachOBinary(path) {
+				binaries = append(binaries, path)
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("failed to walk %s directory: %w", sub, err)
+		}
+	}
+
+	if len(binaries) == 0 {
+		return nil
+	}
+
+	reporter.Log("   Chaining RPATHs for %d Mach-O file(s) with %d runtime dependency(ies)",
+		len(binaries), len(entries))
+
+	installNameTool, err := exec.LookPath("install_name_tool")
+	if err != nil {
+		reporter.Warn("   install_name_tool not found, skipping dylib RPATH chain")
+		return nil
+	}
+
+	for _, binaryPath := range binaries {
+		if err := a.addChainEntriesToMachO(installNameTool, binaryPath, entries, ctx, reporter); err != nil {
+			return err
+		}
+	}
+
+	_ = installPath // reserved for future use (legacy helper still consumes it)
+	return nil
+}
+
+// addChainEntriesToMachO computes one @loader_path-relative RPATH per chain
+// entry for binaryPath, runs the defense-in-depth post-check, and applies
+// them via install_name_tool -add_rpath. The post-check fails the install
+// before the patch invocation if filepath.Join(loaderDir, relPath) escapes
+// ctx.LibsDir.
+func (a *HomebrewRelocateAction) addChainEntriesToMachO(
+	installNameTool, binaryPath string,
+	entries []chainEntry,
+	ctx *ExecutionContext,
+	reporter progress.Reporter,
+) error {
+	loaderDir := filepath.Dir(binaryPath)
+
+	// Compute and validate every entry BEFORE any patching, so a single
+	// escaping entry fails the install before any install_name_tool runs.
+	rpaths, err := computeChainRpaths(loaderDir, ctx.LibsDir, entries, filepath.Base(binaryPath))
+	if err != nil {
+		return err
+	}
+
+	// Make file writable for the duration of the patch
+	info, err := os.Stat(binaryPath)
+	if err != nil {
+		return fmt.Errorf("failed to stat %s: %w", binaryPath, err)
+	}
+	originalMode := info.Mode()
+	if originalMode&0200 == 0 {
+		if err := os.Chmod(binaryPath, originalMode|0200); err != nil {
+			return fmt.Errorf("failed to make %s writable: %w", binaryPath, err)
+		}
+		defer func() { _ = os.Chmod(binaryPath, originalMode) }()
+	}
+
+	for _, rp := range rpaths {
+		cmd := exec.Command(installNameTool, "-add_rpath", rp, binaryPath)
+		output, err := cmd.CombinedOutput()
+		if err != nil && !strings.Contains(string(output), "would duplicate") {
+			reporter.Warn("   failed to add RPATH %s to %s: %s",
+				rp, filepath.Base(binaryPath), strings.TrimSpace(string(output)))
+		}
+	}
+
+	// Re-sign the binary (required on macOS after modification, especially
+	// on Apple Silicon).
+	if codesign, err := exec.LookPath("codesign"); err == nil {
+		signCmd := exec.Command(codesign, "-f", "-s", "-", binaryPath)
+		_ = signCmd.Run() // Best effort
+	}
+
+	return nil
+}
+
+// computeChainRpaths is the path-computation half of the dylib RPATH chain.
+// It is split out from addChainEntriesToMachO so the @loader_path-relative
+// computation and the defense-in-depth post-check are unit-testable without
+// requiring Mach-O binaries or install_name_tool.
+//
+// For each entry, it computes a relative path from loaderDir to
+// $LibsDir/<name>-<version>/lib via filepath.Rel over EvalSymlinks on both
+// ends, then verifies filepath.Join(loaderDir, relPath) resolves back
+// inside libsDir. If any entry escapes libsDir, the function returns an
+// error (and emits no RPATHs) so the caller can fail the install before
+// patching anything.
+//
+// labelForError is the file-name used in the error message ("which binary
+// did the bad entry come from?"); pass filepath.Base(binaryPath).
+func computeChainRpaths(loaderDir, libsDir string, entries []chainEntry, labelForError string) ([]string, error) {
+	loaderDirReal, err := filepath.EvalSymlinks(loaderDir)
+	if err != nil {
+		// EvalSymlinks fails if a path component doesn't exist; for the
+		// loader dir (which contains the binary) this should not happen
+		// in production, but in tests with synthetic dirs it's harmless
+		// to fall back to the raw path.
+		loaderDirReal = loaderDir
+	}
+
+	// libsDirClean is the post-check anchor: filepath.Join(loaderDir,
+	// relPath) must resolve back inside libsDir. We compare in the
+	// unresolved-path space (matching how the runtime linker will resolve
+	// @loader_path relative to the binary's actual on-disk location)
+	// rather than the EvalSymlinks-resolved space. Rel-over-EvalSymlinks
+	// is what defends against symlink trickery in the underlying paths;
+	// this post-check defends against filepath.Clean collapsing an
+	// attacker-controlled name segment upward and out of the libs root.
+	libsDirClean := filepath.Clean(libsDir)
+	libsDirPrefix := libsDirClean + string(os.PathSeparator)
+
+	rpaths := make([]string, 0, len(entries))
+	for _, e := range entries {
+		depLibDir := filepath.Join(libsDir, fmt.Sprintf("%s-%s", e.name, e.version), "lib")
+		depLibDirReal, err := filepath.EvalSymlinks(depLibDir)
+		if err != nil {
+			// The dep may not yet be installed at relocate time on the
+			// host; fall back to the constructed path. The post-check
+			// below still verifies the join stays inside libs/.
+			depLibDirReal = depLibDir
+		}
+
+		relPath, err := filepath.Rel(loaderDirReal, depLibDirReal)
+		if err != nil {
+			return nil, fmt.Errorf("failed to compute @loader_path-relative path from %s to %s: %w",
+				loaderDirReal, depLibDirReal, err)
+		}
+
+		// Defense-in-depth: filepath.Join(loaderDir, relPath) must resolve
+		// back inside libsDir. A failed check rejects the entry before
+		// any install_name_tool invocation.
+		resolvedBack := filepath.Clean(filepath.Join(loaderDir, relPath))
+		if !strings.HasPrefix(resolvedBack+string(os.PathSeparator), libsDirPrefix) && resolvedBack != libsDirClean {
+			return nil, fmt.Errorf("rpath chain entry %q for %s escapes libs dir: resolved path %q is not inside %q",
+				e.name, labelForError, resolvedBack, libsDirClean)
+		}
+
+		rpaths = append(rpaths, "@loader_path/"+filepath.ToSlash(relPath))
+	}
+
+	return rpaths, nil
+}
+
+// isMachOBinary reports whether path looks like a Mach-O binary by reading
+// its magic bytes. Used to filter the chain walk to actual binaries (so a
+// dylib-named text file or stub doesn't fail install_name_tool).
+func (a *HomebrewRelocateAction) isMachOBinary(path string) bool {
+	f, err := os.Open(path)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+
+	magic := make([]byte, 4)
+	if _, err := f.Read(magic); err != nil {
+		return false
+	}
+
+	return bytes.Equal(magic, []byte{0xfe, 0xed, 0xfa, 0xce}) || // 32-bit big-endian
+		bytes.Equal(magic, []byte{0xce, 0xfa, 0xed, 0xfe}) || // 32-bit little-endian
+		bytes.Equal(magic, []byte{0xfe, 0xed, 0xfa, 0xcf}) || // 64-bit big-endian
+		bytes.Equal(magic, []byte{0xcf, 0xfa, 0xed, 0xfe}) || // 64-bit little-endian
+		bytes.Equal(magic, []byte{0xca, 0xfe, 0xba, 0xbe}) || // Fat big-endian
+		bytes.Equal(magic, []byte{0xbe, 0xba, 0xfe, 0xca}) // Fat little-endian
+}
+
+// fixLibraryInstallTimeChainLegacy is the absolute-path install-time chain
+// that fixLibraryDylibRpaths used to perform for Type == "library" recipes.
+// It is preserved as-is (still emitting absolute paths) so Issue 3 can be
+// reviewed in isolation. Issue 4 migrates this helper to use the
+// @loader_path-relative form computed by addChainEntriesToMachO.
+//
+// TODO Issue 4: migrate to @loader_path-relative paths via filepath.Rel
+// over EvalSymlinks; keep the per-entry filepath.Join post-check.
+func (a *HomebrewRelocateAction) fixLibraryInstallTimeChainLegacy(ctx *ExecutionContext, installPath string, reporter progress.Reporter) error {
 	// Only run on macOS
 	if runtime.GOOS != "darwin" {
 		return nil
@@ -670,6 +933,7 @@ func (a *HomebrewRelocateAction) fixLibraryDylibRpaths(ctx *ExecutionContext, in
 		}
 	}
 
+	_ = installPath // reserved for future use (Issue 4 migration)
 	return nil
 }
 
