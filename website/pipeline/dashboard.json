@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-06T06:15:23Z",
+  "generated_at": "2026-05-06T06:17:14Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -68,13 +68,13 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
+        "failed": 19,
+        "pending": 1,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -428,15 +428,6 @@
           "category": "install_failed",
           "failure_count": 14,
           "next_retry_at": "2026-05-08T10:34:00Z"
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 318,
-          "next_retry_at": "1734-01-25T03:19:20Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -808,6 +799,15 @@
           "next_retry_at": "2026-05-11T09:23:20Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 483,
+          "next_retry_at": "1734-01-25T06:28:38Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -970,15 +970,6 @@
           "next_retry_at": "2026-05-12T16:30:28Z"
         },
         {
-          "id": "rubygems:ocp",
-          "name": "ocp",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 9,
-          "next_retry_at": "2026-05-06T06:00:18Z"
-        },
-        {
           "id": "rubygems:parallel",
           "name": "parallel",
           "ecosystem": "rubygems",
@@ -1022,6 +1013,15 @@
           "category": "install_failed",
           "failure_count": 9,
           "next_retry_at": "2026-05-13T03:06:37Z"
+        },
+        {
+          "id": "rubygems:pngcheck",
+          "name": "pngcheck",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-05-13T06:15:55Z"
         },
         {
           "id": "npm:pocketbase",
@@ -2911,6 +2911,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 318,
+          "next_retry_at": "1734-01-25T03:19:20Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -13222,15 +13231,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 481,
-          "next_retry_at": "1734-01-25T00:18:09Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -17337,6 +17337,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:ocp",
+          "name": "ocp",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 9,
+          "next_retry_at": "2026-05-06T06:00:18Z"
+        },
+        {
           "id": "homebrew:ocrmypdf",
           "name": "ocrmypdf",
           "ecosystem": "homebrew",
@@ -19371,15 +19380,6 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:pngcheck",
-          "name": "pngcheck",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 8,
-          "next_retry_at": "2026-05-04T04:21:00Z"
         },
         {
           "id": "homebrew:pngpaste",
