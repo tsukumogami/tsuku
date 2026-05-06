@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Planned
 problem: |
   tsuku's homebrew action does not chain dylibs from sibling tsuku-installed
   library deps into a tool recipe's RPATH on either Linux or macOS. The
@@ -45,7 +45,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Planned
 
 ## Context and Problem Statement
 
