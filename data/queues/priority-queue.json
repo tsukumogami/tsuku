@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-06T20:28:13Z",
+  "updated_at": "2026-05-06T22:02:50Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 324,
-      "next_retry_at": "1734-01-25T18:35:41.060483971Z"
+      "failure_count": 326,
+      "next_retry_at": "1734-01-25T22:15:33.138590586Z"
     },
     {
       "name": "azqr",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 489,
@@ -42166,11 +42166,11 @@
       "name": "scalingo",
       "source": "rubygems:scalingo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-05-01T22:20:52.632975737Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-05-08T06:02:49.993366394Z"
     },
     {
       "name": "scamper",
