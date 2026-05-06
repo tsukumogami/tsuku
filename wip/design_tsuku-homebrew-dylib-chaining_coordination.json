@@ -1,0 +1,25 @@
+{
+  "topic": "tsuku-homebrew-dylib-chaining",
+  "decisions": [
+    {
+      "id": 1,
+      "question": "Where does the fix live? (a) new composite action `homebrew_chained` that wraps homebrew + post-install chaining; (b) strengthen the existing `homebrew` action to chain deps automatically when present; (c) new recipe-callable action `chain_deps_into_rpath` that recipes invoke after homebrew",
+      "status": "complete",
+      "complexity": "critical"
+    },
+    {
+      "id": 2,
+      "question": "How do recipes declare what dylibs to chain into the binary's load path? (a) reuse `metadata.runtime_dependencies`; (b) reuse per-step `dependencies`; (c) introduce a new explicit field (e.g., `chained_lib_dependencies` at metadata or step level)",
+      "status": "complete",
+      "complexity": "standard"
+    },
+    {
+      "id": 3,
+      "question": "How is the chain APPLIED at install time on each OS? (a) generalize `fixLibraryDylibRpaths` (lift the `Type == \"library\"` gate) and add a Linux equivalent that walks `ctx.Dependencies` and patches RPATH; (b) inject absolute paths to the dep `lib/` directories; (c) use `$ORIGIN`-relative / `@loader_path`-relative paths into a known layout (matches the existing library pattern)",
+      "status": "complete",
+      "complexity": "critical"
+    }
+  ],
+  "cross_validation": "passed",
+  "round": 1
+}
