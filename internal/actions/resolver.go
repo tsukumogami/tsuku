@@ -31,6 +31,28 @@ type RecipeLoader interface {
 type ResolvedDeps struct {
 	InstallTime map[string]string // Needed during tsuku install
 	Runtime     map[string]string // Needed when tool runs
+
+	// RuntimeDependencies carries the recipe's metadata-level
+	// runtime_dependencies entries verbatim (preserving order, not merged
+	// with action-implicit or step-level runtime deps). It is the
+	// author-controlled list that downstream consumers rely on as a single
+	// source of truth.
+	//
+	// Consumers:
+	//   - Wrapper PATH (existing): the install manager builds wrapper
+	//     scripts that prepend each runtime dependency's bin directory to
+	//     PATH so a tool's children can find their declared deps.
+	//   - RPATH chain (post-DESIGN-tsuku-homebrew-dylib-chaining): the
+	//     homebrew action's relocate phase walks RuntimeDependencies and
+	//     emits one $ORIGIN/@loader_path-relative RPATH entry per dep,
+	//     pointing at $TSUKU_HOME/libs/<dep>-<version>/lib. See
+	//     fixDylibRpathChain (macOS) and fixElfRpathChain (Linux) in
+	//     internal/actions/homebrew_relocate.go.
+	//
+	// New consumers that key off "what did the author declare?" should
+	// read this field rather than Runtime, which mixes in action-implicit
+	// and step-level entries.
+	RuntimeDependencies []string
 }
 
 // ResolveDependencies collects dependencies from a recipe by examining
@@ -203,6 +225,19 @@ func ResolveDependenciesForTarget(r *recipe.Recipe, targetOS string, target reci
 		result.Runtime[name] = version
 	}
 
+	// Phase 4: Capture metadata.runtime_dependencies verbatim into
+	// RuntimeDependencies so downstream consumers (wrapper PATH, RPATH
+	// chain) read the author-declared list directly without re-parsing
+	// recipe metadata or filtering action-implicit deps back out of
+	// Runtime.
+	if len(r.Metadata.RuntimeDependencies) > 0 {
+		result.RuntimeDependencies = make([]string, 0, len(r.Metadata.RuntimeDependencies))
+		for _, dep := range r.Metadata.RuntimeDependencies {
+			name, _ := parseDependency(dep)
+			result.RuntimeDependencies = append(result.RuntimeDependencies, name)
+		}
+	}
+
 	return result
 }
 
@@ -356,6 +391,12 @@ func ResolveTransitiveForPlatform(
 	}
 	for name, version := range deps.Runtime {
 		result.Runtime[name] = version
+	}
+	// Preserve the author-declared runtime_dependencies list verbatim.
+	// Transitive expansion may grow Runtime with deps-of-deps, but
+	// RuntimeDependencies stays scoped to what the recipe author wrote.
+	if len(deps.RuntimeDependencies) > 0 {
+		result.RuntimeDependencies = append([]string{}, deps.RuntimeDependencies...)
 	}
 
 	// Resolve install-time deps transitively

@@ -385,7 +385,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 
 	// Look up resolved dependency versions for variable expansion
 	// This mirrors the logic in installLibrary() for libraries
-	if len(r.Metadata.Dependencies) > 0 {
+	if len(r.Metadata.Dependencies) > 0 || len(r.Metadata.RuntimeDependencies) > 0 {
 		resolvedDeps := actions.ResolvedDeps{
 			InstallTime: make(map[string]string),
 		}
@@ -403,6 +403,15 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 					resolvedDeps.InstallTime[depName] = toolState.Version
 				}
 			}
+		}
+		// Carry the recipe's metadata-level runtime_dependencies through to
+		// the execution context so the homebrew action's relocate phase
+		// (RPATH chain) and wrapper-script PATH consumer can read the
+		// author-declared list verbatim. The executor populates this from
+		// the recipe metadata if we leave it empty here, but setting it at
+		// the call site keeps the wiring explicit in the install flow.
+		if len(r.Metadata.RuntimeDependencies) > 0 {
+			resolvedDeps.RuntimeDependencies = append([]string{}, r.Metadata.RuntimeDependencies...)
 		}
 		exec.SetResolvedDeps(resolvedDeps)
 	}
