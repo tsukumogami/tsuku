@@ -8,13 +8,12 @@ problem: |
   reference non-system shared libraries can't wire those refs to matching
   tsuku-installed deps. The result is a steady stream of recipes that ship
   with `supported_os = ["linux"]` or `unsupported_platforms` because the
-  bottle path doesn't work cleanly. Exploration measured >15 affected
-  recipes (top-100 strict: 10; counting workaround-dependent existing
-  recipes: 19+; counting macOS punts: 26+). Round 2 surfaced a deeper bug:
-  recipes are systematically under-declared (git misses zlib; wget misses
-  zlib + libuuid; coreutils misses acl + attr); the test containers' system
-  libs shadow the gaps, so the bug is invisible in CI but breaks on
-  minimal containers.
+  bottle path doesn't work cleanly. The blast radius is at least 15
+  affected recipes (10 top-100 tools; 19+ workaround-dependent existing
+  recipes; 26+ macOS punts). Recipes are also systematically under-declared
+  (git misses zlib; wget misses zlib + libuuid; coreutils misses acl +
+  attr); the test containers' system libs shadow the gaps, so the bug is
+  invisible in CI but breaks on minimal containers.
 decision: |
   Strengthen the existing `homebrew` action to chain dep dylibs automatically.
   Two coordinated mechanisms: (1) walk the recipe's existing
@@ -28,21 +27,18 @@ decision: |
   `$TSUKU_HOME/libs/<dep>-<version>/lib` layout, written via
   `patchelf --force-rpath --set-rpath` (DT_RPATH, not DT_RUNPATH).
 rationale: |
-  Recipe authors did not converge on any opt-in workaround pattern (across
-  1168 homebrew-using recipes, exactly 0 use the existing `set_rpath`
-  primitive to chain deps). A new opt-in primitive would face the same
-  adoption gap, and a new declarative field would force authors to learn
-  RPATH semantics that the engine should handle. Reusing
-  `runtime_dependencies` matches author intent ("this dep is needed at
-  runtime") and adds zero new fields. Empirical stress tests (round 2)
-  confirmed nonsense RPATH entries are inert (~10 stat syscalls each), so
-  the engine doesn't need to filter by dep `Type` — but they also surfaced
-  that author declarations are systematically incomplete, so the engine
-  must back-stop with binary-NEEDED extraction. Relative-path patching
-  survives `$TSUKU_HOME` moves; `DT_RPATH` avoids subtle resolution
-  differences with `DT_RUNPATH` that broke wget's libunistring lookup in
-  testing.
-upstream: wip/explore_tsuku-homebrew-dylib-chaining_findings.md
+  Across 1168 homebrew-using recipes, exactly 0 use the existing
+  `set_rpath` primitive to chain deps — opt-in workarounds don't get
+  adopted. A new opt-in primitive would face the same gap, and a new
+  declarative field would force authors to learn RPATH semantics that the
+  engine should handle. Reusing `runtime_dependencies` matches author
+  intent ("this dep is needed at runtime") and adds zero new fields.
+  Nonsense RPATH entries are inert at runtime (~10 stat syscalls each),
+  so the engine doesn't need to filter by dep `Type`. Author declarations
+  are routinely incomplete, so the engine back-stops with binary-NEEDED
+  extraction. Relative-path patching survives `$TSUKU_HOME` moves;
+  `DT_RPATH` avoids subtle resolution differences with `DT_RUNPATH` that
+  break some tools' shared-library lookups (e.g., wget's libunistring).
 ---
 
 # DESIGN: Tsuku Homebrew Dylib Chaining for Tool Recipes
@@ -98,8 +94,7 @@ The recipe registry today demonstrates the cost of this gap:
 Recipe authors have not converged on any reusable workaround. A
 recipe-side fix would require every tool author to invent the same chain
 of `set_rpath` template strings and coordinate dylib publishing with their
-dep recipes' authors. The exploration concluded the right level for the
-fix is tsuku-core; this design specifies it.
+dep recipes' authors. The right level for the fix is tsuku-core.
 
 ## Decision Drivers
 
@@ -126,19 +121,15 @@ fix is tsuku-core; this design specifies it.
   primitive would face the same fate. The fix must apply automatically
   when authors declare the dep set, not require them to remember a
   separate step.
-- **Surface under-declared recipes loudly.** Empirical evidence (round 2
-  exploration) shows recipes are systematically under-declared and the
-  test containers' system libs shadow the gaps. The engine must include a
-  back-stop that surfaces incomplete declarations rather than silently
-  shipping broken-on-minimal-containers binaries.
+- **Surface under-declared recipes loudly.** Recipes are systematically
+  under-declared and the test containers' system libs shadow the gaps.
+  The engine must include a back-stop that surfaces incomplete
+  declarations rather than silently shipping broken-on-minimal-containers
+  binaries.
 
 ## Considered Options
 
-This design decomposes into four decisions, evaluated independently and
-cross-validated. Decisions 1–3 came from the round-1 exploration; Decision
-4 was surfaced by the round-2 empirical investigation, which proved that
-declaration-only mechanisms are insufficient because recipes are routinely
-under-declared.
+This design decomposes into four decisions, evaluated independently.
 
 ### Decision 1: Where the fix lives
 
@@ -173,37 +164,34 @@ dep set explicit.
 #### Alternatives Considered
 
 **(a) New composite action `homebrew_chained`** — Forces opt-in renames
-across affected recipes; recipe authors who don't migrate stay broken. The
-exploration found 0 of 1168 homebrew-using recipes adopted the existing
-opt-in `set_rpath` primitive for chaining; a new opt-in faces the same
-adoption gap. It also creates two parallel homebrew code paths to keep in
-sync, increasing maintenance cost.
+across affected recipes; recipe authors who don't migrate stay broken.
+0 of 1168 homebrew-using recipes adopted the existing opt-in `set_rpath`
+primitive for chaining; a new opt-in faces the same adoption gap. It
+also creates two parallel homebrew code paths to keep in sync,
+increasing maintenance cost.
 
 **(c) New recipe-callable action `chain_deps_into_rpath`** — Cleanest
 backward-compatibility (recipes only get the new behavior when they
 explicitly invoke the action) but requires every author to remember to add
 the step. Overlaps semantically with the existing `set_rpath` action,
-raising documentation burden. The exploration's empirical signal is that
-recipe authors don't reach for explicit chain steps.
+raising documentation burden. Recipe authors don't reach for explicit
+chain steps in practice.
 
 ### Decision 2: How recipes declare what to chain
 
 Three places to declare the dep set: reuse `metadata.runtime_dependencies`;
-reuse per-step `dependencies`; or introduce a new explicit field. Round
-2's empirical stress tests (run inside docker containers) materially
-changed which option ranks best.
+reuse per-step `dependencies`; or introduce a new explicit field.
 
-**Key assumptions (validated in round 2):**
+**Key assumptions:**
 - Library recipes (`Type == "library"`) continue to use the existing
   implicit path that walks `ctx.Dependencies.InstallTime` from per-step
   `dependencies`. Augmentation only adds new behavior on top.
 - Nonsense RPATH entries (paths that don't exist or contain no libraries)
-  are inert at runtime. Empirical: 1000-entry RPATHs work; bogus paths
-  cost ~10 stat() syscalls each.
+  are inert at runtime — 1000-entry RPATHs still work; bogus paths cost
+  ~10 stat() syscalls each.
 - 298 recipes already declare `runtime_dependencies`. Of those, 219 are
-  all-library, 41 all-tool, 38 mixed. Across 7 measured auto-generated
-  recipes the declared deps are never over-declared (false-positive
-  safe), only under-declared.
+  all-library, 41 all-tool, 38 mixed. Auto-generated declarations are
+  never over-declared (false-positive safe), only under-declared.
 
 #### Chosen: Reuse `metadata.runtime_dependencies`
 
@@ -214,18 +202,14 @@ the homebrew action's relocate phase walks the field, takes each dep's
 no recipe migration is forced; existing recipes that already declare the
 field automatically gain the chain.
 
-The engine does not need to filter by dep `Type`. Empirical evidence
-(round 2 lead 9, lead 10) confirms that nonsense RPATH entries — like the
-non-existent `$TSUKU_HOME/libs/<tool>-<v>/lib` for a tool dep — are
-inert at runtime. The naive walk is safe.
+The engine does not need to filter by dep `Type`. Nonsense RPATH
+entries — like the non-existent `$TSUKU_HOME/libs/<tool>-<v>/lib` for a
+tool dep — are inert at runtime. The naive walk is safe.
 
-This option fails round-1's earlier rejection rationale ("backward-compat
-risk too high") because that risk turned out to be empirically minimal:
-no observed false positives, no observed misbehavior from extra RPATH
-entries. The earlier "semantically muddled" objection ("the field would
-mean three things") collapsed once the round-2 framing made clear that
-all consumers implement the same author-facing semantic ("this dep is
-needed at runtime") at different layers.
+All consumers of `runtime_dependencies` (wrapper PATH, RPATH chain)
+implement the same author-facing semantic — "this dep is needed at
+runtime" — at different layers. Reusing one field for both layers does
+not muddle the author's mental model.
 
 #### Alternatives Considered
 
@@ -237,14 +221,12 @@ guarantee they stay in sync. The field name doesn't communicate "load
 path" — it reads as "install before running this step."
 
 **(c) Introduce a new explicit field `chained_lib_dependencies`** —
-Originally chosen in round 1; reversed after round 2. The original
-rationale was "semantic clarity"; the round-2 reading is that the field
-forces authors to learn RPATH semantics (a violation of one of this
-design's own decision drivers) for negligible engine-side benefit.
-Empirical evidence dissolved the safety arguments in favor of the new
-field: nonsense entries don't break anything, false positives don't
-occur, and the existing field already carries the right author-facing
-semantic.
+Surface "semantic clarity" but at the cost of forcing authors to learn
+RPATH semantics — a violation of this design's "no engine internals in
+the schema" driver — for negligible engine-side benefit. Nonsense
+entries in the reused field don't break anything, false positives
+don't occur, and `runtime_dependencies` already carries the right
+author-facing semantic.
 
 ### Decision 3: How the chain is applied at install time
 
@@ -291,13 +273,12 @@ tools") is sound; it just needs the path-form decision packaged with it.
 
 ### Decision 4: Back-stop for under-declared recipes
 
-(New decision, surfaced by round-2 empirical findings.) Recipes are
-systematically under-declared: round-2 lead 11 found `git` missing zlib
-(`libz.so.1`), `wget` missing zlib + libuuid (`libuuid.so.1`),
-`coreutils` missing acl + attr. The gap is invisible in CI today because
-the test containers ship those libs system-wide; on minimal containers
-(or any environment where the system shadow disappears) the binaries
-break.
+Recipes are systematically under-declared. `git` is missing zlib
+(`libz.so.1`); `wget` is missing zlib + libuuid (`libuuid.so.1`);
+`coreutils` is missing acl + attr. The gap is invisible in CI today
+because the test containers ship those libs system-wide; on minimal
+containers (or any environment where the system shadow disappears) the
+binaries break.
 
 Three options for back-stopping:
 
@@ -347,10 +328,10 @@ If two library recipes claim the same `(platform, SONAME)`, the index
 build fails at plan generation time with an error pointing at both
 recipes (see Phase 2). Collisions are not a silent runtime concern.
 
-The auto-include behavior closes the structural bug the round 2
-exploration surfaced (recipes that work in CI but break on minimal
-containers). The warning path keeps recipe authors honest by surfacing
-declaration gaps that today are invisible.
+The auto-include behavior closes the structural bug where recipes
+work in CI but break on minimal containers. The warning path keeps
+recipe authors honest by surfacing declaration gaps that would
+otherwise stay invisible.
 
 #### Alternatives Considered
 
@@ -364,10 +345,9 @@ leaves the declaration gap permanent. Recipes that should declare their
 deps explicitly stay sloppy, hiding real coverage gaps (SONAMES that
 nothing in tsuku ships) under the "it works for me" surface.
 
-**(c) Skip the scan; trust author declarations only** — The original
-round-1 design. Empirically rejected: round 2 found 100% of measured
-recipes were under-declared by at least one SONAME. Trust-the-author
-ships broken binaries.
+**(c) Skip the scan; trust author declarations only** — Rejected:
+100% of measured recipes are under-declared by at least one SONAME.
+Trust-the-author ships broken binaries on minimal containers.
 
 ## Decision Outcome
 
@@ -378,9 +358,9 @@ is introduced.
    (existing field; existing meaning).
 2. **Plan generation** (in `internal/executor/plan_generator.go` and
    `internal/install/install_deps.go`) wires `RuntimeDependencies` into
-   `ctx.Dependencies.RuntimeDeps` (today this field exists for the
+   `ctx.Dependencies.RuntimeDeps`. Today this field exists for the
    wrapper-PATH consumer but the values don't reach the executor's
-   relocate context — the wiring fix that round-1 lead 4 identified).
+   relocate context; this design adds the wiring.
 3. **The `homebrew` action's relocate phase** acquires two new behaviors,
    sequenced after the existing `fixMachoRpath` / `fixElfRpath` per-binary
    pass (which removes stale RPATHs and sets the `@rpath` / `$ORIGIN`
@@ -399,8 +379,7 @@ is introduced.
      `$TSUKU_HOME/libs/<dep>-<version>/lib`. Adds the entry via
      `patchelf --force-rpath --set-rpath` (Linux) or
      `install_name_tool -add_rpath` (macOS). The walk does **not**
-     filter by dep `Type` — empirical evidence (round-2 leads 9, 10)
-     shows nonsense entries are inert.
+     filter by dep `Type` — nonsense entries are inert at runtime.
 
 The function previously known as `fixLibraryDylibRpaths` is renamed
 `fixDylibRpathChain` (macOS); a new `fixElfRpathChain` provides the
@@ -415,9 +394,9 @@ shift is reviewable as its own diff.
    (macOS) RPATHs into `$TSUKU_HOME/libs/<dep>-<version>/lib`. The path
    layout is computed at install time using `filepath.Rel` after
    `filepath.EvalSymlinks` on both ends. **Linux uses `DT_RPATH`
-   (`patchelf --force-rpath --set-rpath`), not `DT_RUNPATH`** —
-   empirical: `DT_RUNPATH` had subtle resolution differences that
-   broke wget's libunistring lookup.
+   (`patchelf --force-rpath --set-rpath`), not `DT_RUNPATH`**, because
+   `DT_RUNPATH` has subtle resolution differences that break some
+   tools' shared-library lookups (e.g., wget's libunistring).
 
 Library recipes (`Type == "library"`) get the same chain — their own
 `runtime_dependencies` (or per-step `dependencies`, for backward compat)
@@ -576,11 +555,10 @@ into the chain (it always did, for library recipes; now also for tools).
   absolute-path RPATHs to relative ones (a portability improvement); the
   test surface locks both shapes during the migration window.
 - **Tool recipes with declared `runtime_dependencies`** (`git`, `wget`,
-  316 auto-generated batch recipes): get the chain automatically. The
-  empirical evidence shows their declarations are typically correct
-  (no over-declaration) but routinely under-declared; the SONAME scan
-  closes the gap with a warning that authors can address in a follow-up
-  PR.
+  316 auto-generated batch recipes): get the chain automatically.
+  Their declarations are typically correct (no over-declaration) but
+  routinely under-declared; the SONAME scan closes the gap with a
+  warning that authors can address in a follow-up PR.
 
 ## Implementation Approach
 
@@ -588,8 +566,7 @@ into the chain (it always did, for library recipes; now also for tools).
 
 Today `metadata.runtime_dependencies` populates the wrapper-PATH consumer
 but does not reach `ctx.Dependencies` for the homebrew action's relocate
-phase (round-1 lead 4). Add the wiring in `install_deps.go` and
-`plan_generator.go`. Add validator rules: name pattern (`^[a-z0-9._-]+$`),
+phase. Add the wiring in `install_deps.go` and `plan_generator.go`. Add validator rules: name pattern (`^[a-z0-9._-]+$`),
 no `..`, no `/`, no leading `-`, no null bytes. Promote `isValidRecipeName`
 from `internal/distributed/cache.go` and `internal/index/rebuild.go` into a
 shared helper used by the validator.
@@ -647,7 +624,7 @@ tsuku-recipe coverage today (`libuuid.so.1`, `libacl.so.1`,
 `libattr.so.1`, etc.) downgrades the "no provider" log line to
 debug-level for those entries. Each allowlist entry is removed when
 the corresponding library recipe is authored, so the noise-control
-mechanism self-clears as Phase 7-style follow-up work lands.
+mechanism self-clears as those recipes land.
 
 **Acceptance:** index has entries for every dylib output in the
 curated library recipe set (`pcre2`, `libnghttp3`, `libevent`,
@@ -692,12 +669,12 @@ existing dep declarations.
 ### Phase 4 — Linux: add `fixElfRpathChain`
 
 New function. Mirror of `fixDylibRpathChain` using
-`patchelf --force-rpath --set-rpath` (writes `DT_RPATH`). Empirical
-evidence (round-2 lead 8) showed `--add-rpath` (which writes
-`DT_RUNPATH`) has subtle resolution differences that broke wget's
-libunistring lookup; `DT_RPATH` is correct. Same per-entry
-`filepath.Join` defense-in-depth post-check; same order constraint
-(runs after the per-binary `fixElfRpath` pass).
+`patchelf --force-rpath --set-rpath` (writes `DT_RPATH`). `--add-rpath`
+(which writes `DT_RUNPATH`) has subtle resolution differences that
+break some shared-library lookups (e.g., wget's libunistring), so
+`DT_RPATH` is the correct primitive. Same per-entry `filepath.Join`
+defense-in-depth post-check; same order constraint (runs after the
+per-binary `fixElfRpath` pass).
 
 **Acceptance:** `tmux` recipe with `runtime_dependencies` installs and
 runs cleanly on every Linux family (debian, rhel, arch, suse, alpine —
@@ -724,7 +701,7 @@ The chain-emit loop in Phases 3/4 then iterates `RuntimeDeps` ∪ the
 auto-included slice.
 
 **Acceptance:** scan correctly identifies the under-declared SONAMES
-empirically observed in round 2 (`git` → zlib; `wget` → zlib +
+known to affect curated recipes today (`git` → zlib; `wget` → zlib +
 libuuid; `coreutils` → acl + attr). Auto-include closes the install
 on minimal containers where today's recipes break. Known-gap
 allowlist suppresses noise for SONAMES with no current tsuku recipe.
@@ -748,12 +725,11 @@ Each migration is a small recipe-only PR. Per-recipe acceptance: install
 ### Out of scope (follow-up work)
 
 Phase 5 will surface SONAMES with no current tsuku library recipe
-(`libuuid`, `libacl`, `libattr` are the empirically observed
-candidates from round 2). Authoring those library recipes is
-downstream work — one small PR per recipe, following the existing
-library-recipe pattern. The Phase 2 known-gap allowlist suppresses
-log noise for these entries until the recipes land. Out of scope for
-this design.
+(`libuuid`, `libacl`, `libattr` are the known candidates today).
+Authoring those library recipes is downstream work — one small PR
+per recipe, following the existing library-recipe pattern. The
+Phase 2 known-gap allowlist suppresses log noise for these entries
+until the recipes land. Out of scope for this design.
 
 ## Security Considerations
 
@@ -867,18 +843,18 @@ and is mitigated by the validator rules above.
   patch is a representative example). The chain consumes whatever the
   dep recipe's standard library install ships.
 - **Catches under-declared recipes.** The SONAME scan surfaces deps
-  the recipe author forgot — empirically observed for `git` (zlib),
-  `wget` (zlib + libuuid), `coreutils` (acl + attr). These bugs are
-  invisible in CI today because the test containers ship those libs
-  system-wide; the scan exposes them.
+  the recipe author forgot — known cases include `git` (zlib),
+  `wget` (zlib + libuuid), and `coreutils` (acl + attr). These bugs
+  are invisible in CI today because the test containers ship those
+  libs system-wide; the scan exposes them.
 - **Aligns macOS and Linux semantics.** Recipe authors declare one
   existing field; the engine handles the platform-specific RPATH
   plumbing. Linux ELF gains a chaining function that didn't exist at
   all before.
 - **Restores `$TSUKU_HOME`-portability.** Binaries patched with the
   new mechanism use `$ORIGIN` / `@loader_path`-relative RPATHs and
-  empirically survive both `mv` and symlink relocation. The existing
-  recipe-side `set_rpath` action bakes absolute paths
+  survive both `mv` and symlink relocation of `$TSUKU_HOME`. The
+  existing recipe-side `set_rpath` action bakes absolute paths
   (`{libs_dir}/...`) into binaries; the new mechanism is a portability
   improvement.
 - **Zero new schema fields.** Recipe authors learn nothing new. The
@@ -888,12 +864,11 @@ and is mitigated by the validator rules above.
 ### Negative
 
 - **`runtime_dependencies` now drives two engine consumers.** Today
-  it drives wrapper-PATH; the design adds RPATH chaining. Empirical
-  evidence (round-2 stress tests) shows the second consumer is
-  false-positive-safe (declared deps are never over-declared in the
-  measured sample), but a maintainer reading the engine code now needs
-  to know two paths consume the same field. Mitigation: docstring on
-  the field explicitly enumerates the consumers.
+  it drives wrapper-PATH; the design adds RPATH chaining. The second
+  consumer is false-positive-safe (auto-generated declarations are
+  never over-declared), but a maintainer reading the engine code now
+  needs to know two paths consume the same field. Mitigation:
+  docstring on the field explicitly enumerates the consumers.
 - **Generalizing `fixLibraryDylibRpaths` is a behavior change for the
   function's existing callers.** Library recipes (`pcre2`,
   `libnghttp3`, etc.) currently get absolute-path RPATHs via the
