@@ -110,8 +110,10 @@ These issues capture infrastructure and recipe gaps surfaced while authoring the
 | ~~_The homebrew action now fetches `revision` from formulae.brew.sh and constructs `<version>_<revision>` for both the manifest URL and the ref-name match when revision >= 1; the shared matcher accepts both unrevised and revision-suffixed entry forms within a single manifest. `recipes/l/libevent.toml` ships with darwin support and the macOS dylib outputs (`libevent-2.1.7.dylib` and the static archives) so tmux's @rpath resolves at runtime._~~ | | |
 | ~~[#2335: fix(recipes): curate pcre2 with macOS dylib outputs and fix rhel + alpine sandbox failures](https://github.com/tsukumogami/tsuku/issues/2335)~~ | ~~None~~ | ~~testable~~ |
 | ~~_Resolved by switching all glibc + musl Linux to a uniform source build with `--disable-bzip2 --disable-readline --disable-shared --enable-static`. Static linking sidesteps the Linuxbrew bottle's hard-coded `libbz2.so.1.0` (RHEL ships only `libbz2.so.1`), the Alpine musl loader's missing search of `install_dir/lib`, and a Fedora-only segfault during dynamic-linker startup. macOS keeps the homebrew bottle and `install_mode = "directory"` publishes the full bottle layout (dylibs, .a, headers, pkg-config) so the homebrew git bottle's @rpath resolves `libpcre2-8.0.dylib`. Recipe marked `curated = true`._~~ | | |
-| [#2336: feat(recipes): add macOS support to tmux and git recipes](https://github.com/tsukumogami/tsuku/issues/2336) | [#2333](https://github.com/tsukumogami/tsuku/issues/2333), [#2335](https://github.com/tsukumogami/tsuku/issues/2335) | testable |
-| _Both prereqs (#2333 libevent macOS, #2335 pcre2 macOS dylibs) shipped. git's macOS support landed: dropped `supported_os = ["linux"]` from `recipes/g/git.toml`, added darwin homebrew step wired to `runtime_dependencies = ["pcre2"]`. tmux's macOS support is deferred — the tmux Linux glibc path (homebrew bottle) requires `libutf8proc.so.3` from a sibling Linuxbrew install that tsuku does not chain into the binary's RPATH for tool recipes; pre-PR this was untested in CI but adding macOS support makes the matrix re-test the recipe and surfaces the gap. Needs follow-up work on transitive dylib chaining for tool recipes (architectural — applies to other tools depending on non-system shared libraries via homebrew bottles)._ | | |
+| ~~[#2336: feat(recipes): add macOS support to tmux and git recipes](https://github.com/tsukumogami/tsuku/issues/2336)~~ | ~~[#2333](https://github.com/tsukumogami/tsuku/issues/2333), [#2335](https://github.com/tsukumogami/tsuku/issues/2335)~~ | ~~testable~~ |
+| ~~_Both prereqs (#2333 libevent macOS, #2335 pcre2 macOS dylibs) shipped. git's macOS support landed via PR #2376; tmux's macOS support landed via PR for #2377 (split out from #2336 because adding macOS support also surfaced a pre-existing Linux libutf8proc dylib chaining gap that needed `set_rpath` chains in the recipe plus a tsuku core fix for `gmake` resolution in source-build cascades)._~~ | | |
+| ~~[#2377: feat(recipes): add macOS support to tmux (deferred from #2336)](https://github.com/tsukumogami/tsuku/issues/2377)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Drops `supported_os = ["linux"]` from `recipes/t/tmux.toml`, adds darwin homebrew step wired to `runtime_dependencies = ["libevent", "utf8proc", "ncurses"]` and a `set_rpath` step on Linux glibc that chains tsuku-installed dep lib dirs into tmux's RPATH so the bottle resolves `libutf8proc.so.3`. Tsuku's `findMake` was extended to fall back to `gmake` so source-build cascades (e.g., the ncurses configure_make that runs in tmux's foundation image) succeed when only the tsuku-managed `gmake` is on PATH._~~ | | |
 | [#2338: fix(recipes): add macOS support to curl and resolve rhel sandbox verify failure](https://github.com/tsukumogami/tsuku/issues/2338) | None | testable |
 | _A first attempt at the curl darwin step (subsequently reverted) cleared eval and macOS install but surfaced a rhel-only sandbox verify failure on Linux: install completes (`install_exit_code = 0`) but `passed = false`. Same shape as the pcre2 rhel issue. Needs local reproduction since the workflow does not upload `.log-*.txt` artifacts._ | | |
 | [#2349: chore(version): remove deprecated source = "hashicorp" after release](https://github.com/tsukumogami/tsuku/issues/2349) | tsuku release containing [#2328](https://github.com/tsukumogami/tsuku/issues/2328) | testable |
@@ -152,6 +154,7 @@ graph TD
         I2333["#2333: revision-suffixed homebrew bottles (libevent darwin)"]
         I2335["#2335: pcre2 macOS dylibs + rhel/alpine fixes"]
         I2336["#2336: tmux + git macOS support"]
+        I2377["#2377: tmux macOS support (deferred from #2336)"]
         I2338["#2338: curl macOS + rhel sandbox failure"]
         I2349["#2349: remove deprecated hashicorp source"]
         I2365["#2365: multi-pattern verify (blocks #2327 microsoft-openjdk)"]
@@ -166,6 +169,7 @@ graph TD
 
     I2333 --> I2336
     I2335 --> I2336
+    I2336 --> I2377
 
     I2365 --> I2327
     I2368 --> I2327
@@ -185,8 +189,8 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2325,I2327,I2328,I2330,I2331,I2333,I2335,I2365,I2368 done
-    class I2336,I2338 ready
+    class I2325,I2327,I2328,I2330,I2331,I2333,I2335,I2336,I2365,I2368,I2377 done
+    class I2338 ready
     class I2343,I2344,I2345,I2349 blocked
 ```
 
@@ -202,7 +206,7 @@ graph TD
 | Wave 1 | #2261, #2262, #2263, #2264, #2265 | After #2259 merges |
 | Wave 2 | #2266, #2267 | After both #2259 and #2260 merge |
 | Wave 3 | #2281–#2297, #2312, #2313, #2315 (20 backfill batches) | After #2259 and #2260 merge |
-| Wave 4 | #2325, #2327, #2328, #2330, #2331, #2333, #2335, #2336, #2338, #2365, #2368 | After Wave 3 surfaces the gap each issue captures |
+| Wave 4 | #2325, #2327, #2328, #2330, #2331, #2333, #2335, #2336, #2338, #2365, #2368, #2377 | After Wave 3 surfaces the gap each issue captures |
 | Wave 5 | #2343, #2344, #2345, #2346 | After the Wave 4 prereq for each lands and (if a code change) is included in a tsuku release |
 
 Wave 3 issues were fully independent of each other; each batch was scoped to a coherent tool category and shipped as a single PR.

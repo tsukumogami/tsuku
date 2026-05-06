@@ -5,16 +5,25 @@ homepage = "https://github.com/tmux/tmux"
 # tmux uses non-standard versions like "3.6a"; raw format preserves them as-is
 version_format = "raw"
 curated = true
-# macOS: homebrew tmux bottle has RPATH references to libutf8proc.3.dylib and
-# libevent from separate homebrew packages; libevent itself is not installable
-# on macOS via tsuku. darwin coverage is excluded until these deps are supported.
-supported_os = ["linux"]
+runtime_dependencies = ["libevent", "utf8proc", "ncurses"]
 
-# glibc Linux: Homebrew bottle
+# glibc Linux: Homebrew bottle. The bottle's tmux binary references
+# libutf8proc.so.3, libevent-2.1.7.so.7, and libncursesw.so.6 from sibling
+# Linuxbrew installs that tsuku does not chain into the binary's RPATH by
+# default. The set_rpath step extends the homebrew-set $ORIGIN/../lib with
+# the matching tsuku libs/<recipe>-<version>/lib directories so the runtime
+# linker resolves them.
 [[steps]]
 action = "homebrew"
 formula = "tmux"
 when = { os = ["linux"], libc = ["glibc"] }
+dependencies = ["libevent", "utf8proc", "ncurses"]
+
+[[steps]]
+action = "set_rpath"
+when = { os = ["linux"], libc = ["glibc"] }
+binaries = [".install/bin/tmux"]
+rpath = "$ORIGIN/../lib:{libs_dir}/libevent-{deps.libevent.version}/lib:{libs_dir}/utf8proc-{deps.utf8proc.version}/lib:{libs_dir}/ncurses-{deps.ncurses.version}/lib"
 
 [[steps]]
 action = "install_binaries"
@@ -27,6 +36,19 @@ when = { os = ["linux"], libc = ["glibc"] }
 action = "apk_install"
 packages = ["tmux"]
 when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew bottle.
+[[steps]]
+action = "homebrew"
+formula = "tmux"
+when = { os = ["darwin"] }
+dependencies = ["libevent", "utf8proc", "ncurses"]
+
+[[steps]]
+action = "install_binaries"
+when = { os = ["darwin"] }
+install_mode = "directory"
+outputs = ["bin/tmux"]
 
 [verify]
 command = "tmux -V"
