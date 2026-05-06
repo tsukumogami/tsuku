@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -111,6 +112,7 @@ func ValidateRecipeWithLoader(r *Recipe, loader *Loader) *ValidationResult {
 	result := ValidateRecipe(r)
 	if loader != nil {
 		validateRuntimeDepsNotMultiSatisfier(result, r, loader)
+		validateRuntimeDependenciesResolvable(result, r, loader)
 	}
 	return result
 }
@@ -124,11 +126,113 @@ func runRecipeValidations(result *ValidationResult, r *Recipe) {
 	validateSteps(result, r)
 	validateVerify(result, r)
 	validatePlatformConstraints(result, r)
+	validateRuntimeDependencyNames(result, r)
 	// Note: Shadowed dependency validation is done at the CLI layer
 	// to avoid circular dependencies between recipe and actions packages.
 	// Multi-satisfier-alias checks (R10) require a Loader and live in
 	// ValidateRecipeWithLoader rather than runRecipeValidations because
 	// they need cross-recipe context.
+}
+
+// runtimeDepNamePattern is the strict pattern allowed for entries in
+// metadata.runtime_dependencies (and metadata.extra_runtime_dependencies):
+// lowercase ASCII letters, digits, '.', '_', and '-'. Anything else is
+// rejected to keep recipe identifiers safe across URL, path, and shell
+// contexts.
+var runtimeDepNamePattern = regexp.MustCompile(`^[a-z0-9._-]+$`)
+
+// validateRuntimeDependencyNames enforces the strict naming rules for
+// runtime_dependencies and extra_runtime_dependencies entries: each entry
+// must match runtimeDepNamePattern, must not contain path-traversal
+// sequences or null bytes, must not start with '-' (which would look like
+// a CLI flag), and the list must not contain empty strings or duplicates.
+//
+// These rules layer strict pattern enforcement on top of the minimal
+// IsValidRecipeName helper used elsewhere in the codebase. The strict
+// pattern is appropriate here because the field carries author-declared
+// recipe references that downstream consumers (wrapper PATH, RPATH chain
+// in homebrew_relocate) interpolate into shell-visible paths.
+func validateRuntimeDependencyNames(result *ValidationResult, r *Recipe) {
+	checkList := func(field string, deps []string) {
+		seen := make(map[string]int, len(deps))
+		for i, dep := range deps {
+			entryField := fmt.Sprintf("%s[%d]", field, i)
+
+			if dep == "" {
+				result.addError(entryField, "entry must not be empty")
+				continue
+			}
+			if strings.Contains(dep, "\x00") {
+				result.addError(entryField, fmt.Sprintf("entry %q contains a null byte", dep))
+				continue
+			}
+			if strings.Contains(dep, "..") {
+				result.addError(entryField, fmt.Sprintf("entry %q must not contain '..' (path traversal)", dep))
+				continue
+			}
+			if strings.Contains(dep, "/") {
+				result.addError(entryField, fmt.Sprintf("entry %q must not contain '/'", dep))
+				continue
+			}
+			if strings.Contains(dep, "\\") {
+				result.addError(entryField, fmt.Sprintf("entry %q must not contain '\\'", dep))
+				continue
+			}
+			if strings.HasPrefix(dep, "-") {
+				result.addError(entryField, fmt.Sprintf("entry %q must not start with '-' (looks like a CLI flag)", dep))
+				continue
+			}
+			if !runtimeDepNamePattern.MatchString(dep) {
+				result.addError(entryField, fmt.Sprintf("entry %q must match %s (lowercase letters, digits, '.', '_', '-')", dep, runtimeDepNamePattern.String()))
+				continue
+			}
+			// Belt-and-suspenders: also pass through the shared name helper.
+			if !IsValidRecipeName(dep) {
+				result.addError(entryField, fmt.Sprintf("entry %q is not a valid recipe name", dep))
+				continue
+			}
+			if firstIdx, dup := seen[dep]; dup {
+				result.addError(entryField, fmt.Sprintf("entry %q duplicates entry at index %d", dep, firstIdx))
+				continue
+			}
+			seen[dep] = i
+		}
+	}
+
+	checkList("metadata.runtime_dependencies", r.Metadata.RuntimeDependencies)
+	checkList("metadata.extra_runtime_dependencies", r.Metadata.ExtraRuntimeDependencies)
+}
+
+// validateRuntimeDependenciesResolvable verifies that every entry in
+// runtime_dependencies (and extra_runtime_dependencies) resolves to an
+// installable recipe via the loader. Names that match the strict pattern
+// but reference recipes that don't exist in the registry would silently
+// drop out of the dependency graph at install time; surfacing them at
+// validate time keeps the registry self-consistent.
+//
+// This check needs a Loader and runs only from ValidateRecipeWithLoader.
+func validateRuntimeDependenciesResolvable(result *ValidationResult, r *Recipe, loader *Loader) {
+	check := func(field string, deps []string) {
+		for i, dep := range deps {
+			// Skip entries that already failed the syntactic checks.
+			if dep == "" || !runtimeDepNamePattern.MatchString(dep) {
+				continue
+			}
+			if _, err := loader.Get(dep, LoaderOptions{}); err != nil {
+				// LookupSatisfies covers the case where dep is an alias
+				// claimed by exactly one recipe.
+				if _, ok := loader.LookupSatisfies(dep); ok {
+					continue
+				}
+				result.addError(
+					fmt.Sprintf("%s[%d]", field, i),
+					fmt.Sprintf("entry %q does not resolve to an installable recipe in the registry", dep),
+				)
+			}
+		}
+	}
+	check("metadata.runtime_dependencies", r.Metadata.RuntimeDependencies)
+	check("metadata.extra_runtime_dependencies", r.Metadata.ExtraRuntimeDependencies)
 }
 
 // validateRuntimeDepsNotMultiSatisfier reports an error per dependency
