@@ -326,26 +326,26 @@ but before `install_binaries` copies it to the final location:
      → no action. The system-library check is the **first** filter and
      uses the runtime linker's actual resolution (e.g., `ldconfig -p`),
      not a tsuku-internal allowlist that could drift.
-   - Look the SONAME up in the index (which is multi-valued — see
-     Phase 2). Resolve as follows:
-     - **Exactly one candidate, declared.** No action; the chain step
-       (Decision 1+2+3) handles it.
-     - **Exactly one candidate, NOT declared.** Log a warning ("recipe
-       under-declared: binary needs `libfoo.so.1` from `foo`; not in
-       `runtime_dependencies`") AND auto-include the dep's `lib/` dir
-       in the chained RPATH so the install still works.
-     - **Multiple candidates, exactly one declared.** No action; the
-       chain step handles the declared candidate. The undeclared
-       candidates are not auto-included.
-     - **Multiple candidates, none declared.** Log a coverage gap
-       listing all candidates and skip auto-include — the recipe author
-       must declare the dep explicitly to disambiguate. This avoids a
-       non-deterministic silent choice.
-   - If no candidate exists: log a coverage gap ("binary needs
+   - Look the SONAME up in the single-valued index. If a provider
+     exists:
+     - **Declared in `runtime_dependencies`:** no action; the chain
+       step handles it.
+     - **Not declared:** log a warning ("recipe under-declared: binary
+       needs `libfoo.so.1` from `foo`; not in `runtime_dependencies`")
+       and auto-include the dep's `lib/` dir in the chained RPATH so
+       the install still works.
+   - If no provider exists: log a coverage gap ("binary needs
      `libfoo.so.1` but no tsuku library recipe ships it; the bottle
-     path is fragile on minimal containers").
-4. Optionally, in `--strict` mode, treat the under-declaration warning
-   as an error and refuse to install until the recipe is updated.
+     path is fragile on minimal containers"). A small known-gaps
+     allowlist (maintained alongside the SONAME index) downgrades
+     well-known unowned SONAMES (e.g., `libuuid.so.1`, `libacl.so.1`,
+     `libattr.so.1` until library recipes for them land) to debug-level
+     so install logs don't grow noisy. Entries are removed from the
+     allowlist once the corresponding recipe exists.
+
+If two library recipes claim the same `(platform, SONAME)`, the index
+build fails at plan generation time with an error pointing at both
+recipes (see Phase 2). Collisions are not a silent runtime concern.
 
 The auto-include behavior closes the structural bug the round 2
 exploration surfaced (recipes that work in CI but break on minimal
@@ -381,24 +381,36 @@ is introduced.
    `ctx.Dependencies.RuntimeDeps` (today this field exists for the
    wrapper-PATH consumer but the values don't reach the executor's
    relocate context — the wiring fix that round-1 lead 4 identified).
-3. **The `homebrew` action's relocate phase** acquires two new behaviors:
-   - **Declared-deps chain.** Walks `ctx.Dependencies.RuntimeDeps`. For
-     each dep, computes a `$ORIGIN`/`@loader_path`-relative RPATH entry
-     pointing at `$TSUKU_HOME/libs/<dep>-<version>/lib`. Adds the entry
-     via `patchelf --force-rpath --set-rpath` (Linux) or
-     `install_name_tool -add_rpath` (macOS). The function previously
-     known as `fixLibraryDylibRpaths` is renamed `fixDylibRpathChain`
-     and applies to any recipe with non-empty `RuntimeDeps`, regardless
-     of `Type`. A new sibling `fixElfRpathChain` does the equivalent on
-     Linux. The walk does **not** filter by dep `Type` — empirical
-     evidence shows nonsense entries are inert.
-   - **SONAME completeness scan.** Runs `readelf -d` / `otool -L` on
-     each binary in the unpacked bottle. For each NEEDED SONAME not
-     resolved by the system, looks up the tsuku-installable library
-     that ships it. If the recipe's `runtime_dependencies` doesn't
-     include that library, logs a warning and auto-includes the dep
-     in the chain (closes the structural bug surfaced in round 2 where
-     `git`, `wget`, `coreutils` are all under-declared today).
+3. **The `homebrew` action's relocate phase** acquires two new behaviors,
+   sequenced after the existing `fixMachoRpath` / `fixElfRpath` per-binary
+   pass (which removes stale RPATHs and sets the `@rpath` / `$ORIGIN`
+   anchor). Running after that pass means the new chain entries survive
+   the existing `--remove-rpath` step:
+   - **SONAME completeness scan.** Runs first (still after
+     `fixMachoRpath`/`fixElfRpath`). Calls `readelf -d` / `otool -L` on
+     each binary in the unpacked bottle, classifies each NEEDED SONAME
+     using the SONAME index, and produces a local `[]chainEntry` slice
+     in Execute scope listing auto-included deps. Does **not** mutate
+     `ctx.Dependencies` — the `ctx` populated at plan time stays
+     read-only inside Execute.
+   - **Declared-deps chain.** Walks `ctx.Dependencies.RuntimeDeps`
+     ∪ the auto-included `[]chainEntry` slice. For each entry,
+     computes a `$ORIGIN`/`@loader_path`-relative RPATH pointing at
+     `$TSUKU_HOME/libs/<dep>-<version>/lib`. Adds the entry via
+     `patchelf --force-rpath --set-rpath` (Linux) or
+     `install_name_tool -add_rpath` (macOS). The walk does **not**
+     filter by dep `Type` — empirical evidence (round-2 leads 9, 10)
+     shows nonsense entries are inert.
+
+The function previously known as `fixLibraryDylibRpaths` is renamed
+`fixDylibRpathChain` (macOS); a new `fixElfRpathChain` provides the
+Linux equivalent. To avoid overloading semantics, these new functions
+read **`RuntimeDeps`** (and the local auto-included slice) only — they
+do **not** also walk `ctx.Dependencies.InstallTime` the way
+`fixLibraryDylibRpaths` did. The existing library-recipe install-time
+chain (which used `InstallTime`) is migrated separately as a Phase 3
+sub-step with golden-fixture coverage so the absolute → relative path
+shift is reviewable as its own diff.
 4. **Patching** uses `$ORIGIN`-relative (Linux) or `@loader_path`-relative
    (macOS) RPATHs into `$TSUKU_HOME/libs/<dep>-<version>/lib`. The path
    layout is computed at install time using `filepath.Rel` after
@@ -428,7 +440,7 @@ No recipe schema changes. The work is engine-side.
 | `homebrew` action's relocate phase | (1) Consume `ctx.Dependencies.RuntimeDeps` and emit per-dep RPATH entries; (2) run SONAME completeness scan on the unpacked binary and auto-include + warn on under-declared SONAMES | `internal/actions/homebrew_relocate.go` |
 | Renamed/generalized macOS function | `fixLibraryDylibRpaths` → `fixDylibRpathChain`. Replace `Type == "library"` gate with "RuntimeDeps non-empty". Emit `@loader_path`-relative paths via `install_name_tool -add_rpath`. Add `filepath.Join` post-check that the resolved path stays inside `$TSUKU_HOME/libs/`. | `internal/actions/homebrew_relocate.go` |
 | New Linux function | `fixElfRpathChain`. Mirror of `fixDylibRpathChain` for ELF. Emits `$ORIGIN`-relative paths via `patchelf --force-rpath --set-rpath` (DT_RPATH, not DT_RUNPATH). Same `filepath.Join` post-check. | `internal/actions/homebrew_relocate.go` |
-| New SONAME → recipe index | Build at plan-generation time: scan all installable library recipes, parse their `outputs` for `lib/lib*.so.*` and `lib/lib*.*.dylib` patterns, build a map from `(platform, SONAME)` → list of providing recipes (multi-valued, see Decision 4 collision policy). The parser rejects any `outputs` entry whose path is not exactly under `lib/` (must start with `lib/`, no `..` segments) and requires the extracted basename to match `^lib[a-zA-Z0-9._+-]+\.(so|dylib)(\.[0-9.]+)?$`. Entries that fail validation are dropped with a warning at index-build time. | `internal/install/soname_index.go` (new) |
+| New SONAME → recipe index | Build at plan-generation time: scan all installable library recipes, parse their `outputs` for `lib/lib*.so.*` and `lib/lib*.*.dylib` patterns, build a single-valued map `(platform, SONAME) → providing recipe`. The parser requires the path to start with `lib/` and contain no `..` segments, and the basename to start with `lib`. Other entries are skipped (they're not SONAMES). On a duplicate `(platform, SONAME)` insert, index construction fails with a clear error pointing at both providing recipes — collisions are loud, not silent. | `internal/sonameindex/sonameindex.go` (new leaf package — placed outside `internal/install/` so the executor and the homebrew action can both import it without inverting the `executor → install` dependency direction) |
 | New SONAME completeness scanner | Runs after bottle extraction. Calls `readelf -d` / `otool -L` to get NEEDED SONAMES. For each, classifies (system / declared / under-declared / uncovered). Warns on under-declared, auto-includes their lib dirs in the chain. | `internal/actions/homebrew_relocate.go` |
 | Recipe validator | Validate `runtime_dependencies` entry name pattern (`^[a-z0-9._-]+$`); reject empty strings, `..`, `/`, null bytes, leading `-`. Validate each entry resolves to an installable recipe. Promote `isValidRecipeName` from `internal/distributed/cache.go` and `internal/index/rebuild.go` into a shared helper. | `internal/recipe/validator.go` |
 | Test surface | New tests for the SONAME index, completeness scanner, and the chain walk on tool recipes. Existing `Type == "library"` tests carry over by parameterization. Plan-cache golden fixtures regenerate. | `internal/install/soname_index_test.go` (new), `internal/actions/homebrew_relocate_test.go`, `internal/executor/plan_generator_test.go` |
@@ -548,10 +560,6 @@ into the chain (it always did, for library recipes; now also for tools).
 - Each entry must resolve to an installable recipe.
 - Empty strings inside the list are rejected.
 - Duplicates are rejected.
-- In `--strict` mode, a homebrew tool recipe whose binary needs
-  non-system SONAMES not covered by `runtime_dependencies` (after
-  install-time scan) is treated as a hard failure. In default mode it's
-  a warning + auto-include.
 
 ### Backward compatibility
 
@@ -592,34 +600,39 @@ just sees the deps now.
 
 **Acceptance:** existing recipes with `runtime_dependencies` still pass
 all CI; `runtime_dependencies` reaches `ctx.Dependencies.RuntimeDeps` in
-plan-cache golden fixtures.
+plan-cache golden fixtures. Add a docstring on the `RuntimeDependencies`
+field that explicitly enumerates its consumers (today: wrapper-PATH;
+post-design: also RPATH chain via `fixDylibRpathChain` /
+`fixElfRpathChain`). The docstring is the contract pin so future
+maintainers see the dual consumption without code archaeology.
 
 ### Phase 2 — Build the SONAME → recipe index
 
-New module `internal/install/soname_index.go`. At plan-generation time,
-walk all installable library recipes, parse their `outputs` lists for
-`lib/lib*.so.*` (Linux) and `lib/lib*.*.dylib` (macOS) patterns, build a
-map `(platform, SONAME) → []provider` (multi-valued). Cache per platform.
+New leaf package `internal/sonameindex/sonameindex.go`. The package
+lives outside `internal/install/` so the executor (`internal/executor/`)
+and the homebrew action (`internal/actions/`) can both import it
+without inverting the existing `executor → install` dependency
+direction.
 
-**Parser validation.** The parser rejects any `outputs` entry whose path
-is not exactly under `lib/` — must start with `lib/`, must not contain
-`..` segments. The basename extracted as the SONAME must match
-`^lib[a-zA-Z0-9._+-]+\.(so|dylib)(\.[0-9.]+)?$`. Entries that fail
-validation are dropped with a warning at index-build time. This mirrors
-the recipe-name validator pattern from Phase 1; a malformed `outputs`
-entry never enters the index.
+At plan-generation time, walk all installable library recipes, parse
+their `outputs` lists for `lib/lib*.so.*` (Linux) and `lib/lib*.*.dylib`
+(macOS) patterns, build a single-valued map
+`(platform, SONAME) → providing recipe`. Cache per platform.
 
-**SONAME collision policy.** Two library recipes can legitimately claim
-the same SONAME (e.g., `openssl@1` and `openssl@3` both ship
-`libssl.so.3` on some platforms; or a typo in one recipe makes its
-output collide with another's). The index records all candidates per
-`(platform, SONAME)` pair. The auto-include path (Decision 4) only
-fires when exactly one candidate exists OR when one of the candidates
-is already in the recipe's `runtime_dependencies`. If multiple
-candidates exist and none are declared, the SONAME is logged as a
-coverage gap with the candidate list and auto-include is skipped — the
-recipe author must declare the dep explicitly. Silent overwrite would
-make auto-include non-deterministic and is rejected.
+**Parser validation.** Path must start with `lib/`, must not contain
+`..` segments, and the basename must start with `lib`. Other entries
+are skipped (they're not SONAMES — for example, a header file under
+`include/`). This is loose-on-purpose: the registry is a trust
+boundary, and the recipe-name validator already covers traversal
+through dep names. The parser's job is to skip non-SONAME entries
+cleanly, not to reject malformed inputs.
+
+**Collision handling.** On a duplicate `(platform, SONAME)` insert,
+index construction fails with a clear error pointing at both
+providing recipes. Collisions are loud at plan-generation time, never
+silent. The single-valued index keeps the auto-include code path
+trivially deterministic: at most one provider exists per SONAME or the
+plan generation already aborted.
 
 The index needs to handle:
 - Full SONAMES: `libpcre2-8.so.0`, `libpcre2-8.0.dylib`
@@ -629,29 +642,46 @@ The index needs to handle:
 - Versioned variants: `libfoo.so` → `libfoo.so.1` → `libfoo.so.1.2.3`;
   the index should map all three to the same provider.
 
-**Acceptance:** index has entries for every dylib output in the curated
-library recipe set (`pcre2`, `libnghttp3`, `libevent`, `utf8proc`, plus
-the 134 others); unit tests assert correct mapping; collisions are
-surfaced with deterministic behavior on overlapping SONAMES; malformed
-`outputs` entries (paths outside `lib/`, `..` segments, non-SONAME
-basenames) are dropped with warnings.
+**Known-gap allowlist.** A small static map of SONAMES with no
+tsuku-recipe coverage today (`libuuid.so.1`, `libacl.so.1`,
+`libattr.so.1`, etc.) downgrades the "no provider" log line to
+debug-level for those entries. Each allowlist entry is removed when
+the corresponding library recipe is authored, so the noise-control
+mechanism self-clears as Phase 7-style follow-up work lands.
+
+**Acceptance:** index has entries for every dylib output in the
+curated library recipe set (`pcre2`, `libnghttp3`, `libevent`,
+`utf8proc`, plus the 134 others); unit tests assert correct mapping
+and that duplicate inserts fail with a clear error.
 
 ### Phase 3 — macOS: generalize `fixLibraryDylibRpaths` to `fixDylibRpathChain`
 
-Rename the function. Replace the `Type == "library"` gate with a check on
-`ctx.Dependencies.RuntimeDeps` non-empty. Convert the path-emit form from
-absolute to `@loader_path`-relative using `filepath.Rel` over
-`EvalSymlinks` on both ends. After `filepath.Rel`, verify that
-`filepath.Join(loaderDir, relPath)` resolves back inside `$TSUKU_HOME/libs/`
-— fail the install with a clear error if not (defense in depth against
-any path-traversal that slipped past the validator).
+Rename the function. Replace the `Type == "library"` gate with a check
+on `ctx.Dependencies.RuntimeDeps` non-empty. Convert the path-emit
+form from absolute to `@loader_path`-relative using `filepath.Rel`
+over `EvalSymlinks` on both ends. After `filepath.Rel`, verify that
+`filepath.Join(loaderDir, relPath)` resolves back inside
+`$TSUKU_HOME/libs/`. A failed check fails the install with a clear
+error before any `install_name_tool -add_rpath` runs for that entry.
+The `work_dir` is disposable, so a per-entry abort is sufficient —
+any partial patching that occurred on prior entries within the same
+chain step is in `work_dir` and is discarded with the rest of the
+unpacked bottle on failure. No `$TSUKU_HOME/{tools,libs}/` content is
+touched until the relocate phase completes successfully.
 
-**All-or-nothing validation.** The `filepath.Join` post-check runs over
-**all** chain entries (declared deps + auto-included deps from the
-SONAME scan) **before** `install_name_tool -add_rpath` is invoked for
-any entry. A single failed entry fails the entire chain step; no
-partial patching. This bounds any failure to the disposable `work_dir`
-and keeps `$TSUKU_HOME/{tools,libs}/` untouched on error.
+The new function reads `RuntimeDeps` (and the local auto-included
+slice from the SONAME scan) only; it does not also walk
+`ctx.Dependencies.InstallTime` the way the old
+`fixLibraryDylibRpaths` did. The library-recipe install-time chain
+(absolute paths via `InstallTime`) migrates to relative paths in a
+**separate sub-step within Phase 3**, with its own golden-fixture diff
+so the absolute → relative shift is reviewable in isolation. This
+keeps the rename's contract narrow: one function, one source field.
+
+**Order constraint.** The chain step runs **after** the existing
+per-binary `fixMachoRpath` pass (which calls `--remove-rpath` to wipe
+stale entries and sets the `@rpath` anchor). Running after that pass
+means the new chain entries survive the wipe.
 
 **Acceptance:** `tmux` recipe with `runtime_dependencies = ["libevent",
 "utf8proc", "ncurses"]` installs and runs cleanly on macOS amd64 + arm64
@@ -663,11 +693,11 @@ existing dep declarations.
 
 New function. Mirror of `fixDylibRpathChain` using
 `patchelf --force-rpath --set-rpath` (writes `DT_RPATH`). Empirical
-evidence (round-2 lead 8) showed `--add-rpath` (which writes `DT_RUNPATH`)
-has subtle resolution differences that broke wget's libunistring lookup;
-`DT_RPATH` is correct. Same `filepath.Join` defense-in-depth post-check,
-applied as an all-or-nothing pre-pass over every chain entry before any
-`patchelf` call (matching Phase 3's invariant).
+evidence (round-2 lead 8) showed `--add-rpath` (which writes
+`DT_RUNPATH`) has subtle resolution differences that broke wget's
+libunistring lookup; `DT_RPATH` is correct. Same per-entry
+`filepath.Join` defense-in-depth post-check; same order constraint
+(runs after the per-binary `fixElfRpath` pass).
 
 **Acceptance:** `tmux` recipe with `runtime_dependencies` installs and
 runs cleanly on every Linux family (debian, rhel, arch, suse, alpine —
@@ -676,24 +706,28 @@ alpine still uses `apk_install`, the chain isn't relevant there). `git`,
 
 ### Phase 5 — SONAME completeness scan + auto-include
 
-Implement the scanner. After bottle extraction, for each binary in the
-unpacked tree run `readelf -d` (Linux) or `otool -L` (macOS), collect
-NEEDED SONAMES, classify each:
+Implement the scanner. After bottle extraction (and after the per-binary
+`fixMachoRpath`/`fixElfRpath` pass), for each binary in the unpacked
+tree run `readelf -d` (Linux) or `otool -L` (macOS), collect NEEDED
+SONAMES, classify each:
 
 - Resolves via system ldconfig / default search → no action
 - Maps to a tsuku library in the SONAME index AND in `RuntimeDeps` →
   no action; chain walk handles it
 - Maps to a tsuku library AND not in `RuntimeDeps` → log warning,
-  auto-include in chain
-- No tsuku recipe ships this SONAME → log coverage gap
+  add to the local auto-included `[]chainEntry` slice (the
+  `RuntimeDeps` data on `ctx` is not mutated)
+- No tsuku recipe ships this SONAME → log coverage gap (downgraded
+  to debug-level for entries on the known-gap allowlist; see Phase 2)
 
-Add a `--strict` flag that promotes the under-declaration warning to a
-hard error.
+The chain-emit loop in Phases 3/4 then iterates `RuntimeDeps` ∪ the
+auto-included slice.
 
 **Acceptance:** scan correctly identifies the under-declared SONAMES
-empirically observed in round 2 (`git` → zlib; `wget` → zlib + libuuid;
-`coreutils` → acl + attr). Auto-include closes the install on minimal
-containers where today's recipes break.
+empirically observed in round 2 (`git` → zlib; `wget` → zlib +
+libuuid; `coreutils` → acl + attr). Auto-include closes the install
+on minimal containers where today's recipes break. Known-gap
+allowlist suppresses noise for SONAMES with no current tsuku recipe.
 
 ### Phase 6 — Migrate the punted recipes
 
@@ -711,14 +745,15 @@ required; the engine handles chaining automatically based on existing
 Each migration is a small recipe-only PR. Per-recipe acceptance: install
 + verify pass on the test-recipe matrix on every supported platform.
 
-### Phase 7 — Address SONAME coverage gaps surfaced by Phase 5
+### Out of scope (follow-up work)
 
-The empirical evidence points at SONAMES like `libuuid`, `libacl`,
-`libattr` that have no tsuku library recipe today. Phase 5's scanner
-will log these as coverage gaps. The follow-up work — authoring the
-missing library recipes — is out of scope for this design but tracked as
-a downstream consequence (each recipe is a small PR following the
-existing library-recipe pattern).
+Phase 5 will surface SONAMES with no current tsuku library recipe
+(`libuuid`, `libacl`, `libattr` are the empirically observed
+candidates from round 2). Authoring those library recipes is
+downstream work — one small PR per recipe, following the existing
+library-recipe pattern. The Phase 2 known-gap allowlist suppresses
+log noise for these entries until the recipes land. Out of scope for
+this design.
 
 ## Security Considerations
 
@@ -770,28 +805,27 @@ trust boundary still gates the chain.
    promoted to a shared helper applied uniformly. Phase 1 of the
    implementation includes this validator change.
 
-2. **Defense-in-depth at patch time, applied all-or-nothing.** Both
-   `fixDylibRpathChain` (macOS) and `fixElfRpathChain` (Linux) compute
-   the relative RPATH via `filepath.Rel` after `EvalSymlinks`, then
-   verify `filepath.Join(loaderDir, relPath)` resolves back into
-   `$TSUKU_HOME/libs/`. The check is applied as a pre-pass over **all**
-   chain entries (declared + auto-included) before invoking `patchelf`
-   or `install_name_tool` for any of them. A single failed entry fails
-   the entire chain step; no partial patching. The failure is bounded
-   to the disposable `work_dir`, so `$TSUKU_HOME/{tools,libs}/` is
-   untouched on error. This is included in Phases 3 and 4.
+2. **Defense-in-depth at patch time.** Both `fixDylibRpathChain`
+   (macOS) and `fixElfRpathChain` (Linux) compute the relative RPATH
+   via `filepath.Rel` after `EvalSymlinks`, then verify
+   `filepath.Join(loaderDir, relPath)` resolves back into
+   `$TSUKU_HOME/libs/`. A failed check fails the install with a clear
+   error before any `patchelf` / `install_name_tool` invocation for
+   that entry. The `work_dir` is disposable, so partial patching that
+   may have occurred on prior entries is discarded with the rest of
+   the unpacked bottle on failure — `$TSUKU_HOME/{tools,libs}/` is
+   never touched until the relocate phase completes successfully.
+   This is included in Phases 3 and 4.
 
-3. **SONAME-index input validation.** The `internal/install/soname_index.go`
-   parser rejects any library-recipe `outputs` entry whose path is not
-   exactly under `lib/` (must start with `lib/`, no `..` segments) and
-   requires the extracted basename to match the SONAME shape regex
-   `^lib[a-zA-Z0-9._+-]+\.(so|dylib)(\.[0-9.]+)?$`. Entries that fail
-   validation are dropped with a warning. This prevents a buggy or
-   malicious library recipe from injecting arbitrary mappings into the
-   index. The index is multi-valued; SONAME collisions between recipes
-   never silently overwrite — when multiple candidates exist and none
-   are declared, auto-include is skipped and a coverage gap is logged
-   instead. This is included in Phase 2.
+3. **SONAME-index input validation.** The
+   `internal/sonameindex/sonameindex.go` parser requires each
+   library-recipe `outputs` entry that contributes to the index to
+   start with `lib/`, contain no `..` segments, and have a basename
+   that starts with `lib`. Other entries are skipped (they aren't
+   SONAMES). On a duplicate `(platform, SONAME)` insert, index
+   construction fails at plan-generation time with a clear error
+   pointing at both providing recipes — collisions are loud, not
+   silent. This is included in Phase 2.
 
 4. **SONAME content never reaches `filepath.Join`.** The SONAME scanner
    reads NEEDED entries from bottle-binary headers and uses the SONAME
@@ -883,10 +917,12 @@ and is mitigated by the validator rules above.
   index to rebuild. The index lives in plan-generation, so it rebuilds
   on every install — but recipe-validation tests should also exercise
   the index for known SONAMES to catch breakage early.
-- **Phase 7 (coverage gaps) is open-ended.** The scanner will surface
-  SONAMES (`libuuid`, `libacl`, `libattr`, etc.) for which no tsuku
-  library recipe exists. Those gaps are real and currently masked by
-  system shadowing. Closing each one is a separate library-recipe PR.
+- **Coverage gaps surface as follow-up work.** The scanner will flag
+  SONAMES (`libuuid`, `libacl`, `libattr`, etc.) with no tsuku library
+  recipe today. The Phase 2 known-gap allowlist downgrades these to
+  debug-level logs so install output stays clean; entries are removed
+  from the allowlist as the corresponding recipes land. Closing each
+  gap is a separate library-recipe PR — out of scope here.
 
 ### Mitigations
 
@@ -898,7 +934,4 @@ and is mitigated by the validator rules above.
   work — the engine reads both `runtime_dependencies` and per-step
   `dependencies` for the chain, so no recipe migration is forced.
   Recipe authors can drop the per-step list when convenient.
-- Add a `tsuku validate --strict` mode that promotes the SONAME scan's
-  under-declaration warning to a hard error, so curated recipes fail
-  fast on declaration gaps and recipe authors fix them at PR time.
 
