@@ -1,35 +1,38 @@
 [metadata]
-  name = "bazel"
-  description = "Google's own build tool"
-  homepage = "https://bazel.build/"
-  version_format = ""
-  requires_sudo = false
-  unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
-  tier = 0
-  type = ""
-  llm_validation = "skipped"
+name = "bazel"
+description = "Google's build tool with multi-language and multi-platform support"
+homepage = "https://bazel.build/"
+version_format = "semver"
+curated = true
+# Bazel ships per-platform single binaries with an embedded glibc-linked OpenJDK.
+# Alpine (musl) has no upstream bazel package and the embedded JDK won't
+# load against musl libc, so document the constraint at the metadata level
+# rather than emitting Alpine-only steps that would fail at runtime.
+supported_libc = ["glibc"]
 
-[version]
-  source = ""
-  github_repo = ""
-  tag_prefix = ""
-  module = ""
-  formula = ""
-  cask = ""
-  tap = ""
-  fossil_repo = ""
-  project_name = ""
-  version_separator = ""
-  timeline_tag = ""
+[metadata.satisfies]
+homebrew = ["bazel"]
+
+# Linux x86_64 / arm64: bazelbuild/bazel publishes a self-contained binary
+# per platform. Bazel's upstream uses `x86_64` rather than `amd64` in the
+# asset name, so the recipe maps tsuku's amd64 to x86_64; arm64 passes
+# through unchanged.
+[[steps]]
+action = "github_file"
+when = { os = ["linux"], libc = ["glibc"] }
+repo = "bazelbuild/bazel"
+asset_pattern = "bazel-{version}-linux-{arch}"
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+binary = "bazel"
 
 [[steps]]
-  action = "homebrew"
-  formula = "bazel"
-
-[[steps]]
-  action = "install_binaries"
-  binaries = ["bin/bazel", "bin/bazel-9.0.0"]
+action = "github_file"
+when = { os = ["darwin"] }
+repo = "bazelbuild/bazel"
+asset_pattern = "bazel-{version}-darwin-{arch}"
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+binary = "bazel"
 
 [verify]
-  command = "bazel --version"
-  pattern = ""
+command = "bazel --version"
+pattern = "bazel {version}"

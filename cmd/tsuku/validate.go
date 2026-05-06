@@ -58,6 +58,19 @@ Examples:
 		// Validate the recipe
 		result := recipe.ValidateFile(filePath)
 
+		// Multi-satisfier alias check (R10): if the recipe declares
+		// runtime_dependencies that resolve to multi-satisfier aliases
+		// in the registry's alias index, validation fails. Requires the
+		// loader to consult the index. Skipped when the recipe didn't
+		// parse (result.Recipe is nil).
+		if result.Recipe != nil && loader != nil {
+			deepResult := recipe.ValidateRecipeWithLoader(result.Recipe, loader)
+			result.Errors = append(result.Errors, deepResult.Errors...)
+			if len(deepResult.Errors) > 0 {
+				result.Valid = false
+			}
+		}
+
 		// Check for shadowed dependencies
 		if result.Recipe != nil {
 			shadowed := actions.DetectShadowedDeps(result.Recipe)

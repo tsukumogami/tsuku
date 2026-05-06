@@ -1,55 +1,81 @@
 [metadata]
 name = "pcre2"
-description = "Perl compatible regular expressions library with a new API"
+description = "Perl-compatible regular expressions library with a new API"
 homepage = "https://www.pcre.org/"
 type = "library"
 binaries = ["bin/pcre2grep", "bin/pcre2test"]
+curated = true
 
 [metadata.satisfies]
 homebrew = ["pcre2"]
 
-# glibc Linux: Homebrew bottle
-[[steps]]
-action = "homebrew"
-formula = "pcre2"
-when = { os = ["linux"], libc = ["glibc"] }
-
-[[steps]]
-action = "install_binaries"
-install_mode = "directory"
-outputs = ["bin/pcre2grep", "bin/pcre2test"]
-when = { os = ["linux"], libc = ["glibc"] }
-
-# musl Linux: compile from source
+# Linux (glibc + musl): build from source with static-only linking. Two
+# configure decisions drive the flags below:
+#
+#   --disable-bzip2 --disable-readline drop the transitive deps that the
+#   Linuxbrew bottle would have pulled in. The bottle hard-codes
+#   libbz2.so.1.0, which RHEL ships only as libbz2.so.1; Alpine omits
+#   readline entirely. Skipping both lets the source build run uniformly
+#   on every Linux family.
+#
+#   --disable-shared --enable-static makes pcre2grep/pcre2test link the
+#   library statically into each binary. This is what makes Alpine pass
+#   (the musl loader does not search install_dir/lib by default and would
+#   otherwise fail to resolve a sibling libpcre2-8.so.0). It also makes a
+#   Fedora-only segfault during pcre2grep startup go away — the dynamic
+#   build crashed on Fedora 41 even after patchelf RPATH set $ORIGIN/../lib;
+#   static linking sidesteps the loader path entirely. If a future PR
+#   re-enables shared linking, expect the Fedora crash to come back.
+#
+# pcre2grep loses the -Z (bzip2-compressed input) option and pcre2test
+# loses its readline-backed interactive mode; downstream consumers (git's
+# regex APIs, pcre2grep on plain text) do not use either feature. Recipes
+# that need pcre2 as a dynamic library on Linux (none currently curated;
+# see grep, aircrack-ng, httpd) would need a follow-up change to publish
+# the .so under runtime_dependencies.
 [[steps]]
 action = "download"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 url = "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-{version}/pcre2-{version}.tar.gz"
 checksum_url = "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-{version}/pcre2-{version}.tar.gz.sha256"
-when = { os = ["linux"], libc = ["musl"] }
 
 [[steps]]
 action = "extract"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 archive = "pcre2-{version}.tar.gz"
 format = "tar.gz"
-when = { os = ["linux"], libc = ["musl"] }
 
 [[steps]]
 action = "setup_build_env"
-when = { os = ["linux"], libc = ["musl"] }
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 
 [[steps]]
 action = "configure_make"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 source_dir = "pcre2-{version}"
-executables = ["pcre2grep"]
-when = { os = ["linux"], libc = ["musl"] }
+configure_args = ["--disable-bzip2", "--disable-readline", "--disable-shared", "--enable-static"]
+executables = ["pcre2grep", "pcre2test"]
 
 [[steps]]
 action = "install_binaries"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
 install_mode = "directory"
 outputs = ["bin/pcre2grep", "bin/pcre2test"]
-when = { os = ["linux"], libc = ["musl"] }
 
-# macOS: Homebrew
+# macOS: Homebrew bottle. macOS bzip2 is system-provided so the bottle's
+# transitive deps resolve cleanly without the source-build dance.
+#
+# install_mode = "directory" copies the entire homebrew bottle layout into
+# the install dir, so all of bin/, lib/ (every dylib + .a), include/, and
+# lib/pkgconfig/ ship without explicit listing. The `outputs` array below
+# names only the files that need bin/ symlinks for execution; the bottle's
+# libpcre2-8.0.dylib (the SONAME the homebrew git bottle's @rpath resolves
+# in #2336), the rest of the width variants (8/16/32/posix), the static
+# archives, the public headers (pcre2.h, pcre2posix.h), and the pkg-config
+# files (libpcre2-8.pc and friends) are picked up by the directory copy.
+# When upstream pcre2 bumps its libtool current/age and the SONAME goes
+# from libpcre2-8.0.dylib to libpcre2-8.1.dylib, no recipe change is
+# needed — the bottle layout shifts and the directory copy follows.
 [[steps]]
 action = "homebrew"
 formula = "pcre2"
@@ -57,9 +83,9 @@ when = { os = ["darwin"] }
 
 [[steps]]
 action = "install_binaries"
+when = { os = ["darwin"] }
 install_mode = "directory"
 outputs = ["bin/pcre2grep", "bin/pcre2test"]
-when = { os = ["darwin"] }
 
 [verify]
 command = "pcre2grep --version"

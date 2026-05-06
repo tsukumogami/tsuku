@@ -3,20 +3,36 @@ name = "make"
 description = "GNU Make build automation tool"
 homepage = "https://www.gnu.org/software/make/"
 curated = true
-# Homebrew's make installs as gmake on macOS, make on Linux - see #1581
+# Homebrew's make installs as gmake on macOS and amd64 Linux - see #1581
 binaries = ["bin/gmake"]
 
-# glibc Linux: Homebrew bottles
+# glibc Linux amd64: Homebrew bottles
 [[steps]]
 action = "homebrew"
 formula = "make"
-when = { os = ["linux"], libc = ["glibc"] }
+when = { os = ["linux"], libc = ["glibc"], arch = "amd64" }
 
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
 outputs = ["bin/gmake"]
-when = { os = ["linux"], libc = ["glibc"] }
+when = { os = ["linux"], libc = ["glibc"], arch = "amd64" }
+
+# glibc Linux arm64: System packages (Homebrew has no arm64_linux bottles for make)
+[[steps]]
+action = "apt_install"
+packages = ["make"]
+when = { os = ["linux"], libc = ["glibc"], arch = "arm64", linux_family = "debian" }
+
+[[steps]]
+action = "dnf_install"
+packages = ["make"]
+when = { os = ["linux"], libc = ["glibc"], arch = "arm64", linux_family = "rhel" }
+
+[[steps]]
+action = "zypper_install"
+packages = ["make"]
+when = { os = ["linux"], libc = ["glibc"], arch = "arm64", linux_family = "suse" }
 
 # musl Linux: System packages
 [[steps]]
@@ -37,7 +53,6 @@ outputs = ["bin/gmake"]
 when = { os = ["darwin"] }
 
 [verify]
-# Use PATH-based verification since binary name differs by platform
-# Proper fix tracked in #1581
-command = "gmake --version"
-pattern = ""
+command = "make --version"
+mode = "output"
+reason = "arm64 glibc installs make via system packages at a distribution version; output mode verifies availability across all platforms"

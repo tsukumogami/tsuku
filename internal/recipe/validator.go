@@ -96,6 +96,25 @@ func ValidateRecipe(r *Recipe) *ValidationResult {
 	return result
 }
 
+// ValidateRecipeWithLoader validates a Recipe with cross-recipe checks
+// that need access to the registry's alias index. Calls all the same
+// validations as ValidateRecipe and additionally rejects recipes whose
+// runtime_dependencies (or extra_runtime_dependencies) reference an
+// alias claimed by two or more recipes — those would make plan
+// generation non-deterministic and trigger the install picker as a
+// dependency, which is hostile UX (PRD-multi-satisfier-picker R10).
+//
+// CLI callers (tsuku validate --strict) and the registry index-build
+// path use this entry point. Pure unit tests that don't exercise the
+// alias index can keep using ValidateRecipe.
+func ValidateRecipeWithLoader(r *Recipe, loader *Loader) *ValidationResult {
+	result := ValidateRecipe(r)
+	if loader != nil {
+		validateRuntimeDepsNotMultiSatisfier(result, r, loader)
+	}
+	return result
+}
+
 // runRecipeValidations runs all validation checks on a Recipe.
 // This is the common validation logic shared by ValidateBytes and ValidateRecipe.
 func runRecipeValidations(result *ValidationResult, r *Recipe) {
@@ -106,7 +125,42 @@ func runRecipeValidations(result *ValidationResult, r *Recipe) {
 	validateVerify(result, r)
 	validatePlatformConstraints(result, r)
 	// Note: Shadowed dependency validation is done at the CLI layer
-	// to avoid circular dependencies between recipe and actions packages
+	// to avoid circular dependencies between recipe and actions packages.
+	// Multi-satisfier-alias checks (R10) require a Loader and live in
+	// ValidateRecipeWithLoader rather than runRecipeValidations because
+	// they need cross-recipe context.
+}
+
+// validateRuntimeDepsNotMultiSatisfier reports an error per dependency
+// (in runtime_dependencies and extra_runtime_dependencies) that resolves
+// to a multi-satisfier alias.
+//
+// Plan generation must be deterministic: a recipe whose dep is "java"
+// (claimed by openjdk + temurin + corretto + microsoft-openjdk) cannot
+// pick a single recipe to install, and the install picker must not
+// engage during dependency resolution (interactive prompts in the middle
+// of an install would be hostile).
+//
+// This check runs at two points:
+//   - tsuku validate --strict: catches the issue locally before PR.
+//   - registry index-build: catches the cross-recipe race where author A's
+//     recipe was valid yesterday and author D adds a new satisfier today.
+func validateRuntimeDepsNotMultiSatisfier(result *ValidationResult, r *Recipe, loader *Loader) {
+	check := func(field string, deps []string) {
+		for i, dep := range deps {
+			satisfiers, ok := loader.LookupAllSatisfiers(dep)
+			if !ok || len(satisfiers) < 2 {
+				continue
+			}
+			result.addError(
+				fmt.Sprintf("%s[%d]", field, i),
+				fmt.Sprintf("%q is a multi-satisfier alias claimed by %d recipes (%s); pin to a specific recipe instead",
+					dep, len(satisfiers), strings.Join(satisfiers, ", ")),
+			)
+		}
+	}
+	check("metadata.runtime_dependencies", r.Metadata.RuntimeDependencies)
+	check("metadata.extra_runtime_dependencies", r.Metadata.ExtraRuntimeDependencies)
 }
 
 // validateMetadata checks the metadata section

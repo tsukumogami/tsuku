@@ -1,0 +1,1 @@
+{"schema_version":1,"ecosystem":"rubygems","environment":"linux-glibc-x86_64","updated_at":"2026-05-03T02-43-28Z","failures":[{"package_id":"rubygems:gsl","category":"install_failed","message":"Error: recipe validation failed for 'gsl'\n  - metadata.homepage: homepage must start with https:// (got: http://github.com/SciRuby/rb-gsl)","timestamp":"2026-05-03T02:43:17.408619053Z"}]}

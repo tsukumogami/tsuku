@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-05-01T17:25:40Z",
-  "total_recipes": 1435,
+  "generated_at": "2026-05-03T23:10:07Z",
+  "total_recipes": 1439,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 869,
-        "total": 1435,
-        "pct": 60.55749128919861
+        "supported": 875,
+        "total": 1439,
+        "pct": 60.80611535788742
       },
       "glibc": {
-        "supported": 1403,
-        "total": 1435,
-        "pct": 97.77003484320558
+        "supported": 1407,
+        "total": 1439,
+        "pct": 97.77623349548298
       },
       "musl": {
-        "supported": 1254,
-        "total": 1435,
-        "pct": 87.38675958188153
+        "supported": 1255,
+        "total": 1439,
+        "pct": 87.2133425990271
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1283,
-        "musl_support": 1104,
-        "glibc_support": 1253
+        "total": 1287,
+        "musl_support": 1105,
+        "glibc_support": 1257
       }
     }
   },
@@ -1249,17 +1249,15 @@
       "name": "bazel",
       "type": "tool",
       "platforms": {
-        "darwin": false,
+        "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
       "gaps": [
-        "darwin"
+        "musl"
       ],
       "errors": null,
-      "warnings": [
-        "recipe 'bazel' has platform-specific actions without libc when clauses and no musl fallback"
-      ]
+      "warnings": null
     },
     {
       "name": "bazelisk",
@@ -3306,6 +3304,20 @@
       "warnings": [
         "recipe 'coreutils' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "corretto",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": false
+      },
+      "gaps": [
+        "musl"
+      ],
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "cosign",
@@ -6166,13 +6178,11 @@
       "name": "git",
       "type": "tool",
       "platforms": {
-        "darwin": false,
+        "darwin": true,
         "glibc": true,
         "musl": true
       },
-      "gaps": [
-        "darwin"
-      ],
+      "gaps": null,
       "errors": null,
       "warnings": null
     },
@@ -13128,6 +13138,20 @@
       ]
     },
     {
+      "name": "microsoft-openjdk",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": false
+      },
+      "gaps": [
+        "musl"
+      ],
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "migrate",
       "type": "tool",
       "platforms": {
@@ -14699,6 +14723,18 @@
       "warnings": [
         "recipe 'openfpgaloader' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "openjdk",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "openldap",
@@ -18714,6 +18750,18 @@
       "warnings": [
         "recipe 'temporal' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "temurin",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "termshot",
