@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-05T22:06:46Z",
+  "updated_at": "2026-05-06T00:05:26Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 316,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 479,
-      "next_retry_at": "1734-01-24T20:25:53.137907832Z"
+      "failure_count": 481,
+      "next_retry_at": "1734-01-25T00:18:09.267334982Z"
     },
     {
       "name": "libaacs",
@@ -36616,11 +36616,11 @@
       "name": "pidof",
       "source": "rubygems:pidof",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-05-04T00:17:44.277559884Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-05-13T00:05:26.12211079Z"
     },
     {
       "name": "pie",
