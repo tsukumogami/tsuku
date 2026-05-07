@@ -1,7 +1,10 @@
 package actions
 
 import (
+	"debug/elf"
+	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -623,4 +626,304 @@ func TestFixLibraryInstallTimeChain_DeterministicOrder(t *testing.T) {
 			t.Errorf("rpath %d = %q, want it to contain %q (sort-by-name order)", i, rp, wantOrder[i])
 		}
 	}
+}
+
+// -- fixElfRpathChain (Linux $ORIGIN-relative chain via patchelf) --
+
+// TestComputeChainRpaths_ELFOriginPrefix is the Linux mirror of
+// TestComputeChainRpaths_ToolBinaryWithRuntimeDeps. It exercises the same
+// path-computation machinery but with the "$ORIGIN" anchor (the prefix used
+// by the ELF chain) instead of "@loader_path". The relative-path portion
+// must match what the macOS path produces — only the anchor token differs.
+func TestComputeChainRpaths_ELFOriginPrefix(t *testing.T) {
+	t.Parallel()
+
+	tsukuHome := t.TempDir()
+	libsDir := filepath.Join(tsukuHome, "libs")
+	workDir := filepath.Join(tsukuHome, "work")
+	binDir := filepath.Join(workDir, "bin")
+	if err := os.MkdirAll(binDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for _, dep := range []struct{ name, version string }{
+		{"libevent", "2.1.12"}, {"utf8proc", "2.9.0"},
+	} {
+		if err := os.MkdirAll(filepath.Join(libsDir, dep.name+"-"+dep.version, "lib"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	binaryPath := filepath.Join(binDir, "tmux")
+	loaderDir := filepath.Dir(binaryPath)
+	entries := []chainEntry{
+		{name: "libevent", version: "2.1.12"},
+		{name: "utf8proc", version: "2.9.0"},
+	}
+
+	rpaths, err := computeChainRpathsWithPrefix(loaderDir, libsDir, entries, "tmux", "$ORIGIN")
+	if err != nil {
+		t.Fatalf("computeChainRpathsWithPrefix returned error: %v", err)
+	}
+	if len(rpaths) != len(entries) {
+		t.Fatalf("got %d rpaths, want %d", len(rpaths), len(entries))
+	}
+
+	// Every emitted entry must start with $ORIGIN/ (not @loader_path/) and
+	// resolve back to $libsDir/<dep>-<v>/lib when joined with loaderDir.
+	wantSuffixes := []string{
+		"libs/libevent-2.1.12/lib",
+		"libs/utf8proc-2.9.0/lib",
+	}
+	for i, rp := range rpaths {
+		if !strings.HasPrefix(rp, "$ORIGIN/") {
+			t.Errorf("rpath %d = %q, want $ORIGIN/ prefix", i, rp)
+		}
+		// Re-resolve via the same path the runtime linker would: drop the
+		// anchor token, join against the loader dir, clean.
+		rel := strings.TrimPrefix(rp, "$ORIGIN/")
+		joined := filepath.Clean(filepath.Join(loaderDir, filepath.FromSlash(rel)))
+		if !strings.HasSuffix(filepath.ToSlash(joined), wantSuffixes[i]) {
+			t.Errorf("rpath %d resolved to %q, expected suffix %q", i, joined, wantSuffixes[i])
+		}
+	}
+}
+
+// TestComputeChainRpaths_ELFEscapingEntryIsRejected mirrors
+// TestComputeChainRpaths_EscapingEntryIsRejected for the ELF anchor. The
+// post-check must fire regardless of which anchor prefix is in use — the
+// escape check operates on the resolved-path side, before the anchor is
+// prepended.
+func TestComputeChainRpaths_ELFEscapingEntryIsRejected(t *testing.T) {
+	t.Parallel()
+
+	tsukuHome := t.TempDir()
+	libsDir := filepath.Join(tsukuHome, "libs")
+	loaderDir := filepath.Join(tsukuHome, "work", "bin")
+	if err := os.MkdirAll(loaderDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(libsDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	entries := []chainEntry{{name: "../etc", version: "1.0"}}
+	rpaths, err := computeChainRpathsWithPrefix(loaderDir, libsDir, entries, "tool", "$ORIGIN")
+	if err == nil {
+		t.Fatalf("computeChainRpathsWithPrefix returned no error; got rpaths %v, want escape error", rpaths)
+	}
+	if !strings.Contains(err.Error(), "escapes libs dir") {
+		t.Errorf("error = %q, want it to mention 'escapes libs dir'", err.Error())
+	}
+}
+
+// TestFixElfRpathChain_NonLinuxIsNoOp checks that the chain function is a
+// no-op on non-Linux platforms (the Linux-specific patchelf path). On Linux
+// runners this test is skipped because the function does run there.
+func TestFixElfRpathChain_NonLinuxIsNoOp(t *testing.T) {
+	t.Parallel()
+	if runtime.GOOS == "linux" {
+		t.Skip("non-linux guard test")
+	}
+
+	action := &HomebrewRelocateAction{}
+	tsukuHome := t.TempDir()
+	ctx := &ExecutionContext{
+		WorkDir: filepath.Join(tsukuHome, "work"),
+		LibsDir: filepath.Join(tsukuHome, "libs"),
+		Dependencies: ResolvedDeps{
+			Runtime:             map[string]string{"libfoo": "1.2.3"},
+			RuntimeDependencies: []string{"libfoo"},
+		},
+	}
+
+	err := action.fixElfRpathChain(ctx, "/unused", progress.NoopReporter{})
+	if err != nil {
+		t.Fatalf("fixElfRpathChain on non-linux = %v, want nil", err)
+	}
+}
+
+// TestFixElfRpathChain_EmptyRuntimeDepsIsNoOp checks that an empty
+// RuntimeDependencies list short-circuits before any patchelf lookup,
+// regardless of platform. Mirror of TestFixDylibRpathChain_EmptyRuntimeDepsIsNoOp.
+func TestFixElfRpathChain_EmptyRuntimeDepsIsNoOp(t *testing.T) {
+	t.Parallel()
+
+	action := &HomebrewRelocateAction{}
+	tsukuHome := t.TempDir()
+	workDir := filepath.Join(tsukuHome, "work")
+	if err := os.MkdirAll(filepath.Join(workDir, "bin"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		WorkDir:      workDir,
+		LibsDir:      filepath.Join(tsukuHome, "libs"),
+		Dependencies: ResolvedDeps{}, // RuntimeDependencies is nil
+	}
+
+	err := action.fixElfRpathChain(ctx, "/unused", progress.NoopReporter{})
+	if err != nil {
+		t.Fatalf("fixElfRpathChain with empty RuntimeDeps = %v, want nil", err)
+	}
+}
+
+// TestIsELFBinary_MagicBytes checks the ELF magic-bytes sniff used by the
+// chain walk to pick out actual ELF files (so a script in bin/ doesn't make
+// patchelf bail). Three cases: real ELF magic, wrong magic, empty file.
+func TestIsELFBinary_MagicBytes(t *testing.T) {
+	t.Parallel()
+
+	action := &HomebrewRelocateAction{}
+	dir := t.TempDir()
+
+	cases := []struct {
+		name    string
+		content []byte
+		want    bool
+	}{
+		{"elf", []byte{0x7f, 'E', 'L', 'F', 0x02, 0x01}, true},
+		{"text", []byte("#!/bin/sh\necho hello\n"), false},
+		{"empty", []byte{}, false},
+		{"macho", []byte{0xcf, 0xfa, 0xed, 0xfe}, false},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			path := filepath.Join(dir, c.name)
+			if err := os.WriteFile(path, c.content, 0o644); err != nil {
+				t.Fatal(err)
+			}
+			if got := action.isELFBinary(path); got != c.want {
+				t.Errorf("isELFBinary(%q) = %v, want %v", c.name, got, c.want)
+			}
+		})
+	}
+}
+
+// TestFixElfRpathChain_WritesDTRpath is the integration test: on a Linux
+// host with patchelf available, the chain function must write DT_RPATH
+// entries (not DT_RUNPATH) so the runtime linker resolves chained libs
+// without the subtle DT_RUNPATH semantics that break some tools (e.g.,
+// wget's libunistring). The test patches a real ELF binary copied from
+// /bin/true and inspects the dynamic section via debug/elf to assert
+// DT_RPATH contains the chain entry and DT_RUNPATH stays empty.
+//
+// Skipped on non-Linux hosts and on Linux hosts without patchelf (the
+// chain helper relies on patchelf and the per-binary fixElfRpath pass
+// is what keeps the binary alive on Linux today; see
+// TestFindPatchelf_NotFound_ReturnsError for the discovery contract).
+func TestFixElfRpathChain_WritesDTRpath(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("DT_RPATH integration test runs on Linux only")
+	}
+	patchelfPath, err := exec.LookPath("patchelf")
+	if err != nil {
+		t.Skip("patchelf not on PATH; skipping DT_RPATH integration test")
+	}
+
+	// Find a real dynamically-linked ELF binary to copy. /bin/true is the
+	// smallest portable choice; if it doesn't exist or isn't ELF, fall back
+	// to /bin/ls.
+	srcCandidates := []string{"/bin/true", "/bin/ls"}
+	var srcBin string
+	for _, c := range srcCandidates {
+		if data, err := os.ReadFile(c); err == nil && len(data) >= 4 && string(data[:4]) == "\x7fELF" {
+			srcBin = c
+			break
+		}
+	}
+	if srcBin == "" {
+		t.Skip("no suitable ELF binary in /bin to use as test fixture")
+	}
+
+	tsukuHome := t.TempDir()
+	libsDir := filepath.Join(tsukuHome, "libs")
+	workDir := filepath.Join(tsukuHome, "work")
+	binDir := filepath.Join(workDir, "bin")
+	if err := os.MkdirAll(binDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(libsDir, "libevent-2.1.12", "lib"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	dstBin := filepath.Join(binDir, "tmux")
+	if err := copyTestFile(srcBin, dstBin, 0o755); err != nil {
+		t.Fatalf("copy fixture: %v", err)
+	}
+
+	action := &HomebrewRelocateAction{}
+	ctx := &ExecutionContext{
+		WorkDir: workDir,
+		LibsDir: libsDir,
+		// ExecPaths makes findPatchelf return the path we just resolved
+		// rather than searching the system again.
+		ExecPaths: []string{filepath.Dir(patchelfPath)},
+		Dependencies: ResolvedDeps{
+			Runtime:             map[string]string{"libevent": "2.1.12"},
+			RuntimeDependencies: []string{"libevent"},
+		},
+	}
+
+	if err := action.fixElfRpathChain(ctx, "/unused", progress.NoopReporter{}); err != nil {
+		t.Fatalf("fixElfRpathChain returned error: %v", err)
+	}
+
+	// Inspect the patched binary via debug/elf. Assert:
+	//   - DT_RPATH contains an entry pointing at libevent's lib dir.
+	//   - DT_RUNPATH is empty (the patchelf invocation must not have
+	//     written the RUNPATH variant).
+	f, err := elf.Open(dstBin)
+	if err != nil {
+		t.Fatalf("elf.Open(%s): %v", dstBin, err)
+	}
+	defer func() { _ = f.Close() }()
+
+	rpaths, err := f.DynString(elf.DT_RPATH)
+	if err != nil {
+		t.Fatalf("DynString(DT_RPATH): %v", err)
+	}
+	runpaths, err := f.DynString(elf.DT_RUNPATH)
+	if err != nil {
+		t.Fatalf("DynString(DT_RUNPATH): %v", err)
+	}
+
+	if len(runpaths) != 0 {
+		t.Errorf("DT_RUNPATH = %v, want empty (the chain must write DT_RPATH only)", runpaths)
+	}
+	if len(rpaths) == 0 {
+		t.Fatalf("DT_RPATH is empty; want an entry pointing at libevent's lib dir")
+	}
+
+	// patchelf joins entries with ":" and stores them in a single string.
+	joined := strings.Join(rpaths, ":")
+	if !strings.Contains(joined, "libevent-2.1.12/lib") {
+		t.Errorf("DT_RPATH = %q, want it to contain 'libevent-2.1.12/lib'", joined)
+	}
+	if !strings.Contains(joined, "$ORIGIN") {
+		t.Errorf("DT_RPATH = %q, want it to contain '$ORIGIN' (anchor for relative resolution)", joined)
+	}
+}
+
+// copyTestFile is a small test helper that copies src to dst with the given
+// mode. Used by TestFixElfRpathChain_WritesDTRpath to stage a real ELF
+// binary in the work dir.
+func copyTestFile(src, dst string, mode os.FileMode) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	out, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, mode)
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(out, in); err != nil {
+		out.Close()
+		return err
+	}
+	return out.Close()
 }
