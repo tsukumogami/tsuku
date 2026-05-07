@@ -15,6 +15,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/notices"
 	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/testutil"
@@ -651,5 +652,74 @@ func TestShouldInstallRuntimeDep(t *testing.T) {
 				t.Errorf("shouldInstallRuntimeDep() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestClearAndRecordInstallSuccess_NoFailureNotice(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("TSUKU_HOME", dir)
+
+	// No notice on disk — function should be a no-op.
+	clearAndRecordInstallSuccess("infisical")
+
+	noticesDir := notices.NoticesDir(dir)
+	all, err := notices.ReadAllNotices(noticesDir)
+	if err != nil {
+		t.Fatalf("ReadAllNotices: %v", err)
+	}
+	if len(all) != 0 {
+		t.Errorf("expected no notices after no-op, got %d", len(all))
+	}
+}
+
+func TestClearAndRecordInstallSuccess_SuccessNoticeExisting(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("TSUKU_HOME", dir)
+
+	// Write a success notice (Error="") — should not be touched.
+	noticesDir := notices.NoticesDir(dir)
+	_ = notices.WriteNotice(noticesDir, &notices.Notice{
+		Tool:             "infisical",
+		AttemptedVersion: "0.43.79",
+		Error:            "",
+		Timestamp:        time.Now(),
+		Shown:            false,
+	})
+
+	clearAndRecordInstallSuccess("infisical")
+
+	all, err := notices.ReadAllNotices(noticesDir)
+	if err != nil {
+		t.Fatalf("ReadAllNotices: %v", err)
+	}
+	if len(all) != 1 {
+		t.Errorf("expected success notice to remain untouched, got %d notices", len(all))
+	}
+}
+
+func TestClearAndRecordInstallSuccess_FailureNoticeCleared(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("TSUKU_HOME", dir)
+
+	// Write a failure notice.
+	noticesDir := notices.NoticesDir(dir)
+	_ = notices.WriteNotice(noticesDir, &notices.Notice{
+		Tool:             "infisical",
+		AttemptedVersion: "0.43.79",
+		Error:            "install infisical@0.43.79: download failed",
+		Timestamp:        time.Now(),
+		Shown:            false,
+	})
+
+	// Without a real state.json, List() returns empty so activeVersion="".
+	// The function should still clear the failure notice.
+	clearAndRecordInstallSuccess("infisical")
+
+	all, err := notices.ReadAllNotices(noticesDir)
+	if err != nil {
+		t.Fatalf("ReadAllNotices: %v", err)
+	}
+	if len(all) != 0 {
+		t.Errorf("expected failure notice to be removed, got %d notices", len(all))
 	}
 }

@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"time"
 
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/notices"
 	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/shellenv"
@@ -744,4 +746,39 @@ func isSystemDependencyPlan(plan *executor.InstallationPlan) bool {
 		}
 	}
 	return true
+}
+
+// clearAndRecordInstallSuccess checks whether toolName had a failure notice and,
+// if so, removes it and writes a success notice with the tool's current active version.
+// Best-effort: silently ignores errors so notice management never fails an install.
+func clearAndRecordInstallSuccess(toolName string) {
+	cfg, err := config.DefaultConfig()
+	if err != nil {
+		return
+	}
+	noticesDir := notices.NoticesDir(cfg.HomeDir)
+	existing, err := notices.ReadNotice(noticesDir, toolName)
+	if err != nil || existing == nil || existing.Error == "" {
+		return
+	}
+	var activeVersion string
+	mgr := install.New(cfg)
+	if tools, err := mgr.List(); err == nil {
+		for _, t := range tools {
+			if t.Name == toolName && t.IsActive {
+				activeVersion = t.Version
+				break
+			}
+		}
+	}
+	_ = notices.RemoveNotice(noticesDir, toolName)
+	if activeVersion != "" {
+		_ = notices.WriteNotice(noticesDir, &notices.Notice{
+			Tool:             toolName,
+			AttemptedVersion: activeVersion,
+			Error:            "",
+			Timestamp:        time.Now(),
+			Shown:            false,
+		})
+	}
 }

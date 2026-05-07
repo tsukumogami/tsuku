@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-03T23:10:26Z",
+  "updated_at": "2026-05-07T02:44:53Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 304,
-      "next_retry_at": "1734-01-22T22:58:25.139896366Z"
+      "failure_count": 328,
+      "next_retry_at": "1734-01-26T02:57:36.289878332Z"
     },
     {
       "name": "azqr",
@@ -23966,11 +23966,11 @@
       "name": "kor",
       "source": "rubygems:kor",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-05-03T17:43:45.025172749Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-11T02:44:51.930928695Z"
     },
     {
       "name": "kosli-cli",
@@ -25056,11 +25056,11 @@
       "name": "lemon",
       "source": "rubygems:lemon",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-05-03T18:57:35.000429307Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-11T06:15:32.314476479Z"
     },
     {
       "name": "lensfun",
@@ -25116,11 +25116,11 @@
       "name": "less",
       "source": "rubygems:less",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-05-03T20:42:53.58693906Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-05-11T09:23:20.833716705Z"
     },
     {
       "name": "lesspipe",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 461,
-      "next_retry_at": "1734-01-22T23:23:09.508503304Z"
+      "failure_count": 491,
+      "next_retry_at": "1734-01-26T00:09:45.643690927Z"
     },
     {
       "name": "libaacs",
@@ -26066,11 +26066,11 @@
       "name": "libnotify",
       "source": "rubygems:libnotify",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-05-03T22:42:28.662175795Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-05-11T11:53:26.108173463Z"
     },
     {
       "name": "libogg",
@@ -28019,8 +28019,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-05-04T02:39:41.479135944Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-05-11T14:00:20.005461964Z"
     },
     {
       "name": "lspmux",
@@ -28549,8 +28549,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-05-04T05:59:14.187528847Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-05-11T16:07:23.366767452Z"
     },
     {
       "name": "mailhog",
@@ -29489,8 +29489,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-05-04T08:27:35.993717357Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-05-11T17:55:26.166821447Z"
     },
     {
       "name": "mecab",
@@ -29549,8 +29549,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-05-04T11:08:02.731451637Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-05-11T19:33:50.388199305Z"
     },
     {
       "name": "megacmd",
@@ -29599,8 +29599,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-05-04T13:54:29.407504852Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-05-11T21:13:20.255894019Z"
     },
     {
       "name": "memcached",
@@ -29609,8 +29609,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-05-04T15:53:25.477091865Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-05-11T23:03:00.34355996Z"
     },
     {
       "name": "memtester",
@@ -30429,8 +30429,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-05-04T17:27:23.129110196Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-05-12T02:40:42.692347814Z"
     },
     {
       "name": "mkvtomp4",
@@ -30826,11 +30826,11 @@
       "name": "mongoose",
       "source": "npm:mongoose",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-05-03T18:57:35.000429307Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-11T06:15:32.314476479Z"
     },
     {
       "name": "mongosh",
@@ -31999,8 +31999,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-05-04T19:23:03.129908298Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-05-12T05:48:00.866368451Z"
     },
     {
       "name": "neo4j-mcp",
@@ -32589,8 +32589,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-05-04T21:07:11.778786263Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-05-12T08:13:17.42143967Z"
     },
     {
       "name": "nload",
@@ -32879,8 +32879,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-05-05T03:59:16.227035925Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-05-12T10:51:27.485747496Z"
     },
     {
       "name": "notion-mcp-server",
@@ -33129,8 +33129,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-05-05T09:25:48.632561624Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-05-12T12:07:41.741120887Z"
     },
     {
       "name": "nuxi",
@@ -33199,8 +33199,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-05-04T23:07:09.617910925Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-05-12T16:30:28.984121513Z"
     },
     {
       "name": "nyancat",
@@ -33389,8 +33389,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-05-06T06:00:18.356540874Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-05-13T09:29:20.249030436Z"
     },
     {
       "name": "ocrmypdf",
@@ -35596,11 +35596,11 @@
       "name": "parallel",
       "source": "rubygems:parallel",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-05-03T14:35:11.806380338Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-05-12T18:16:47.284031038Z"
     },
     {
       "name": "pari",
@@ -35716,11 +35716,11 @@
       "name": "pastel",
       "source": "rubygems:pastel",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-05-03T19:50:52.728402167Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-05-12T20:13:09.99268364Z"
     },
     {
       "name": "patchelf",
@@ -35986,11 +35986,11 @@
       "name": "pdftohtml",
       "source": "rubygems:pdftohtml",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-05-03T22:20:22.671017113Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-05-12T22:06:46.760693441Z"
     },
     {
       "name": "pdftoipe",
@@ -36619,8 +36619,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-05-04T00:17:44.277559884Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-05-13T00:05:26.12211079Z"
     },
     {
       "name": "pie",
@@ -36729,8 +36729,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-05-04T02:24:06.391479993Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-05-13T03:06:37.196288565Z"
     },
     {
       "name": "pioneers",
@@ -37149,8 +37149,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 8,
-      "next_retry_at": "2026-05-04T04:21:00.663173977Z"
+      "failure_count": 9,
+      "next_retry_at": "2026-05-13T06:15:55.730800504Z"
     },
     {
       "name": "pngcrush",
@@ -37216,11 +37216,11 @@
       "name": "pocketbase",
       "source": "npm:pocketbase",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-05-03T22:42:28.662175795Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-11T11:53:26.108173463Z"
     },
     {
       "name": "poco",
@@ -37956,7 +37956,7 @@
       "name": "progress",
       "source": "rubygems:progress",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
@@ -38129,8 +38129,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-05-04T05:59:14.187528847Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-11T16:07:23.366767452Z"
     },
     {
       "name": "protolint",
@@ -39119,8 +39119,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-05-04T11:08:02.731451637Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-11T19:33:50.388199305Z"
     },
     {
       "name": "qalculate-gtk",
@@ -39796,11 +39796,11 @@
       "name": "quickjs",
       "source": "rubygems:quickjs",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-05-01T16:02:21.063749829Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-05-11T19:54:06.275335426Z"
     },
     {
       "name": "quilt",
@@ -40296,11 +40296,11 @@
       "name": "re2",
       "source": "rubygems:re2",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 7,
-      "next_retry_at": "2026-05-03T04:22:17.333482502Z"
+      "failure_count": 8,
+      "next_retry_at": "2026-05-11T22:11:34.424826355Z"
     },
     {
       "name": "re2c",
@@ -40406,11 +40406,11 @@
       "name": "redis",
       "source": "rubygems:redis",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-05-01T14:04:51.752298617Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-05-09T08:33:47.631446524Z"
     },
     {
       "name": "redis@6.2",
@@ -40536,11 +40536,11 @@
       "name": "rename",
       "source": "rubygems:rename",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-05-01T07:16:05.431453161Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-05-08T02:22:57.915259779Z"
     },
     {
       "name": "render",
@@ -41346,11 +41346,11 @@
       "name": "rsync",
       "source": "rubygems:rsync",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-05-01T13:07:15.23550559Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-05-08T04:28:13.655251853Z"
     },
     {
       "name": "rsyslog",
@@ -42166,11 +42166,11 @@
       "name": "scalingo",
       "source": "rubygems:scalingo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-05-01T22:20:52.632975737Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-05-08T06:02:49.993366394Z"
     },
     {
       "name": "scamper",
@@ -42796,11 +42796,11 @@
       "name": "sesh",
       "source": "rubygems:sesh",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-05-01T01:03:39.134529199Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-05-07T03:57:02.498466735Z"
     },
     {
       "name": "sevenzip",
@@ -43659,8 +43659,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-05-04T17:27:23.129110196Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-11T23:03:00.34355996Z"
     },
     {
       "name": "sile",
@@ -44106,11 +44106,11 @@
       "name": "snappy",
       "source": "rubygems:snappy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-05-01T03:54:24.103041752Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-05-07T04:44:53.14465414Z"
     },
     {
       "name": "sngrep",
@@ -50769,8 +50769,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-05-05T09:25:48.632561624Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-12T16:30:28.984121513Z"
     },
     {
       "name": "wasm-bindgen",
@@ -50989,8 +50989,8 @@
       "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-05-05T14:20:22.671017113Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-05-12T20:13:09.99268364Z"
     },
     {
       "name": "webhook",
