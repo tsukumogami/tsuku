@@ -4,10 +4,20 @@ description = "GNU Make build automation tool"
 homepage = "https://www.gnu.org/software/make/"
 curated = true
 # Homebrew's Linux bottles ship bin/make; macOS bottles ship bin/gmake (renamed
-# to avoid colliding with /usr/bin/make). Per-step outputs handle the platform
-# difference at install time. metadata.binaries records the macOS-shipped name
-# because changing it would break the binary checksum / symlink path on darwin
-# regular installs (they consult metadata.binaries first); see #1581.
+# to avoid colliding with /usr/bin/make). The platform-conditional install_binaries
+# steps below output the right name per platform.
+#
+# metadata.binaries is global and cannot vary by platform (#1581 tracks the schema
+# gap). It is set to bin/gmake because:
+#   - The plan-based install path (tsuku install --plan, what CI exercises in the
+#     Linux Containers matrix) reads per-step outputs via ExtractBinariesFromPlan
+#     and is platform-correct regardless of metadata.binaries.
+#   - The regular install path (tsuku install make) reads metadata.binaries via
+#     ExtractBinaries. With ["bin/gmake"]: darwin works (bottle ships bin/gmake),
+#     and Linux ends up with a dangling current/gmake symlink. Verify still passes
+#     on Linux hosts that have system /usr/bin/make (the most common case) because
+#     the [verify].command fallback resolves `make --version` via $PATH.
+# Switching this to ["bin/make"] would invert the trade-off and regress darwin.
 binaries = ["bin/gmake"]
 
 # glibc Linux amd64: Homebrew bottles
@@ -59,4 +69,14 @@ when = { os = ["darwin"] }
 [verify]
 command = "make --version || gmake --version"
 mode = "output"
-reason = "Different platforms install the binary under different names: Homebrew on macOS installs bin/gmake; Homebrew on Linux glibc amd64 installs bin/make; system packages (linux arm64 glibc, musl) install make. The fallback covers both names. Output mode verifies availability rather than version match because system packages install at the distribution's pinned version."
+reason = """
+Different platforms install the binary under different names: Homebrew macOS installs \
+bin/gmake; Homebrew Linux glibc amd64 installs bin/make; system packages (linux arm64 \
+glibc, musl) install make. The fallback covers both names. Resolution depends on the \
+install path: the plan-based path resolves `make` via current/make on Linux \
+(per-step outputs) and falls back to current/gmake on darwin; the regular install path \
+on Linux currently relies on system /usr/bin/make to satisfy `make --version` because \
+metadata.binaries names bin/gmake (see metadata comment). Output mode verifies \
+availability rather than version match because system packages install at the \
+distribution's pinned version, not the recipe's pinned 4.4.1.
+"""
