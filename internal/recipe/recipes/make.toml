@@ -3,7 +3,21 @@ name = "make"
 description = "GNU Make build automation tool"
 homepage = "https://www.gnu.org/software/make/"
 curated = true
-# Homebrew's make installs as gmake on macOS and amd64 Linux - see #1581
+# Homebrew's Linux bottles ship bin/make; macOS bottles ship bin/gmake (renamed
+# to avoid colliding with /usr/bin/make). The platform-conditional install_binaries
+# steps below output the right name per platform.
+#
+# metadata.binaries is global and cannot vary by platform (#1581 tracks the schema
+# gap). It is set to bin/gmake because:
+#   - The plan-based install path (tsuku install --plan, what CI exercises in the
+#     Linux Containers matrix) reads per-step outputs via ExtractBinariesFromPlan
+#     and is platform-correct regardless of metadata.binaries.
+#   - The regular install path (tsuku install make) reads metadata.binaries via
+#     ExtractBinaries. With ["bin/gmake"]: darwin works (bottle ships bin/gmake),
+#     and Linux ends up with a dangling current/gmake symlink. Verify still passes
+#     on Linux hosts that have system /usr/bin/make (the most common case) because
+#     the [verify].command fallback resolves `make --version` via $PATH.
+# Switching this to ["bin/make"] would invert the trade-off and regress darwin.
 binaries = ["bin/gmake"]
 
 # glibc Linux amd64: Homebrew bottles
@@ -15,7 +29,7 @@ when = { os = ["linux"], libc = ["glibc"], arch = "amd64" }
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-outputs = ["bin/gmake"]
+outputs = ["bin/make"]
 when = { os = ["linux"], libc = ["glibc"], arch = "amd64" }
 
 # glibc Linux arm64: System packages (Homebrew has no arm64_linux bottles for make)
@@ -55,4 +69,13 @@ when = { os = ["darwin"] }
 [verify]
 command = "make --version"
 mode = "output"
-reason = "arm64 glibc installs make via system packages at a distribution version; output mode verifies availability across all platforms"
+reason = """
+`make` resolves on every supported target. Linux glibc amd64: per-step outputs \
+declare bin/make from the Homebrew bottle, so current/make is a working symlink. \
+Linux arm64 / musl: system packages (apt/dnf/zypper/apk) install /usr/bin/make. \
+macOS: Apple ships /usr/bin/make on every host; tsuku additionally installs \
+current/gmake from the Homebrew bottle, but `make --version` finds the system \
+binary via $PATH. Output mode verifies availability rather than version match \
+because system packages install at the distribution's pinned version, not the \
+recipe's pinned 4.4.1.
+"""
