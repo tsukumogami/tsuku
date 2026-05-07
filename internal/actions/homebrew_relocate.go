@@ -100,29 +100,48 @@ func (a *HomebrewRelocateAction) Execute(ctx *ExecutionContext, params map[strin
 		return fmt.Errorf("failed to relocate placeholders: %w", err)
 	}
 
+	// SONAME completeness scan: walk every binary in the bottle, parse its
+	// NEEDED SONAMES, classify each against the SONAME index, and produce
+	// a local []chainEntry of under-declared deps to auto-include. Runs
+	// before the chain walks so the auto-included entries can be unioned
+	// into the chain along with ctx.Dependencies.RuntimeDependencies.
+	//
+	// The scanner does NOT mutate ctx.Dependencies. Auto-included entries
+	// live in Execute scope only. When ctx.SonameIndex is nil (production
+	// call sites that haven't been plumbed yet) the scanner is a no-op
+	// and the chain walk degrades to RuntimeDependencies-only — recipes
+	// behave exactly as they did pre-Issue 6.
+	scanResult, err := runSonameCompletenessScan(ctx, reporter)
+	if err != nil {
+		return fmt.Errorf("SONAME completeness scan failed: %w", err)
+	}
+
 	// macOS RPATH chain: emit @loader_path-relative entries for each
-	// runtime dependency the recipe declared. Runs after relocatePlaceholders
-	// (which performs the per-binary fixMachoRpath pass that wipes stale
-	// HOMEBREW rpaths) so the new entries survive the wipe.
+	// runtime dependency the recipe declared (and each auto-included entry
+	// the SONAME scan produced). Runs after relocatePlaceholders (which
+	// performs the per-binary fixMachoRpath pass that wipes stale HOMEBREW
+	// rpaths) so the new entries survive the wipe.
 	//
 	// The chain function fires for any recipe Type — the Type == "library"
-	// gate that used to live here was lifted as part of Issue 3. Whether the
-	// chain emits anything is now driven by len(RuntimeDependencies) > 0.
-	if runtime.GOOS == "darwin" && len(ctx.Dependencies.RuntimeDependencies) > 0 {
-		if err := a.fixDylibRpathChain(ctx, installPath, reporter); err != nil {
+	// gate that used to live here was lifted as part of Issue 3. Whether
+	// the chain emits anything is now driven by the union of declared and
+	// auto-included entries being non-empty.
+	if runtime.GOOS == "darwin" && (len(ctx.Dependencies.RuntimeDependencies) > 0 || len(scanResult.AutoInclude) > 0) {
+		if err := a.fixDylibRpathChain(ctx, installPath, scanResult.AutoInclude, reporter); err != nil {
 			return fmt.Errorf("failed to fix dylib RPATH chain: %w", err)
 		}
 	}
 
 	// Linux RPATH chain: the ELF mirror of fixDylibRpathChain. Emits one
-	// $ORIGIN-relative RPATH entry per declared runtime dependency, written
-	// via patchelf --force-rpath --set-rpath (DT_RPATH, not DT_RUNPATH —
-	// DT_RUNPATH has subtle resolution differences that break some tools'
-	// shared-library lookups, e.g. wget's libunistring). Runs after the
-	// per-binary fixElfRpath pass executed by relocatePlaceholders so the
-	// chain entries can be appended to the rpath that pass installed.
-	if runtime.GOOS == "linux" && len(ctx.Dependencies.RuntimeDependencies) > 0 {
-		if err := a.fixElfRpathChain(ctx, installPath, reporter); err != nil {
+	// $ORIGIN-relative RPATH entry per declared (or auto-included) runtime
+	// dependency, written via patchelf --force-rpath --set-rpath (DT_RPATH,
+	// not DT_RUNPATH — DT_RUNPATH has subtle resolution differences that
+	// break some tools' shared-library lookups, e.g. wget's libunistring).
+	// Runs after the per-binary fixElfRpath pass executed by
+	// relocatePlaceholders so the chain entries can be appended to the
+	// rpath that pass installed.
+	if runtime.GOOS == "linux" && (len(ctx.Dependencies.RuntimeDependencies) > 0 || len(scanResult.AutoInclude) > 0) {
+		if err := a.fixElfRpathChain(ctx, installPath, scanResult.AutoInclude, reporter); err != nil {
 			return fmt.Errorf("failed to fix ELF RPATH chain: %w", err)
 		}
 	}
@@ -621,10 +640,55 @@ type chainEntry struct {
 	version string
 }
 
+// buildChainEntries returns the union of author-declared chain entries (from
+// ctx.Dependencies.RuntimeDependencies, preserving the recipe's declared
+// order) and the auto-included entries the SONAME completeness scan
+// produced. Declared entries come first; auto-included entries follow,
+// preserving scanner order. Entries that share a recipe name with an
+// already-emitted entry are dropped (declared wins over auto-included on
+// name collision; the declared version is what the recipe author asked
+// for).
+//
+// Splitting this helper out from fixDylibRpathChain / fixElfRpathChain
+// keeps the union semantics in one place: both chain walks consume the
+// same union and a future bug fix to the merge rule won't have to be
+// applied twice.
+func buildChainEntries(ctx *ExecutionContext, extra []chainEntry) []chainEntry {
+	if ctx == nil {
+		return nil
+	}
+	entries := make([]chainEntry, 0, len(ctx.Dependencies.RuntimeDependencies)+len(extra))
+	seen := make(map[string]bool, len(ctx.Dependencies.RuntimeDependencies)+len(extra))
+	for _, name := range ctx.Dependencies.RuntimeDependencies {
+		if seen[name] {
+			continue
+		}
+		seen[name] = true
+		version := ""
+		if ctx.Dependencies.Runtime != nil {
+			version = ctx.Dependencies.Runtime[name]
+		}
+		if version == "" {
+			version = "latest"
+		}
+		entries = append(entries, chainEntry{name: name, version: version})
+	}
+	for _, e := range extra {
+		if e.name == "" || seen[e.name] {
+			continue
+		}
+		seen[e.name] = true
+		entries = append(entries, e)
+	}
+	return entries
+}
+
 // fixDylibRpathChain adds @loader_path-relative RPATH entries to Mach-O
 // binaries (both bin/ and lib/) for each entry in
-// ctx.Dependencies.RuntimeDependencies (and, post-Issue 6, the local
-// auto-included slice from the SONAME completeness scan).
+// ctx.Dependencies.RuntimeDependencies, unioned with the auto-included
+// slice produced by the SONAME completeness scan (extra). Author-declared
+// entries appear first in the emitted RPATH order; auto-included entries
+// follow.
 //
 // Path form: relative to the binary's directory (loaderDir), computed via
 // filepath.Rel after EvalSymlinks on both ends. Each computed entry is
@@ -635,29 +699,17 @@ type chainEntry struct {
 // Order: this runs after relocatePlaceholders (which performs the
 // per-binary fixMachoRpath pass that wipes HOMEBREW rpaths via
 // install_name_tool -delete_rpath), so the new entries survive the wipe.
-func (a *HomebrewRelocateAction) fixDylibRpathChain(ctx *ExecutionContext, installPath string, reporter progress.Reporter) error {
+func (a *HomebrewRelocateAction) fixDylibRpathChain(ctx *ExecutionContext, installPath string, extra []chainEntry, reporter progress.Reporter) error {
 	// Only run on macOS
 	if runtime.GOOS != "darwin" {
 		return nil
 	}
 
-	// Build the chain entry list from RuntimeDependencies (preserving order)
-	// with versions looked up in Runtime. RuntimeDependencies is the
-	// author-declared list — see ResolvedDeps.RuntimeDependencies docstring.
-	entries := make([]chainEntry, 0, len(ctx.Dependencies.RuntimeDependencies))
-	for _, name := range ctx.Dependencies.RuntimeDependencies {
-		version := ""
-		if ctx.Dependencies.Runtime != nil {
-			version = ctx.Dependencies.Runtime[name]
-		}
-		if version == "" {
-			version = "latest"
-		}
-		entries = append(entries, chainEntry{name: name, version: version})
-	}
+	entries := buildChainEntries(ctx, extra)
 
 	if len(entries) == 0 {
-		// No-op when no runtime dependencies were declared.
+		// No-op when no runtime dependencies were declared and the scanner
+		// produced no auto-includes.
 		return nil
 	}
 
@@ -763,8 +815,10 @@ func (a *HomebrewRelocateAction) addChainEntriesToMachO(
 
 // fixElfRpathChain is the ELF mirror of fixDylibRpathChain. It walks
 // ctx.WorkDir/{bin,lib} for ELF binaries and, for each one, appends one
-// $ORIGIN-relative RPATH entry per declared runtime dependency, pointing
-// at $TSUKU_HOME/libs/<dep>-<version>/lib.
+// $ORIGIN-relative RPATH entry per declared runtime dependency (and per
+// auto-included entry from the SONAME completeness scan), pointing at
+// $TSUKU_HOME/libs/<dep>-<version>/lib. Author-declared entries appear
+// first in the resulting RPATH; auto-included entries follow.
 //
 // Path form: relative to the binary's directory (loaderDir), computed via
 // filepath.Rel after EvalSymlinks on both ends — the same machinery
@@ -785,29 +839,17 @@ func (a *HomebrewRelocateAction) addChainEntriesToMachO(
 // per-binary fixElfRpath pass that wipes stale HOMEBREW rpaths and sets
 // the $ORIGIN anchor), so the chain entries are appended to a clean
 // baseline rather than racing the wipe.
-func (a *HomebrewRelocateAction) fixElfRpathChain(ctx *ExecutionContext, installPath string, reporter progress.Reporter) error {
+func (a *HomebrewRelocateAction) fixElfRpathChain(ctx *ExecutionContext, installPath string, extra []chainEntry, reporter progress.Reporter) error {
 	// Only run on Linux
 	if runtime.GOOS != "linux" {
 		return nil
 	}
 
-	// Build the chain entry list from RuntimeDependencies (preserving order)
-	// with versions looked up in Runtime. RuntimeDependencies is the
-	// author-declared list — see ResolvedDeps.RuntimeDependencies docstring.
-	entries := make([]chainEntry, 0, len(ctx.Dependencies.RuntimeDependencies))
-	for _, name := range ctx.Dependencies.RuntimeDependencies {
-		version := ""
-		if ctx.Dependencies.Runtime != nil {
-			version = ctx.Dependencies.Runtime[name]
-		}
-		if version == "" {
-			version = "latest"
-		}
-		entries = append(entries, chainEntry{name: name, version: version})
-	}
+	entries := buildChainEntries(ctx, extra)
 
 	if len(entries) == 0 {
-		// No-op when no runtime dependencies were declared.
+		// No-op when no runtime dependencies were declared and the scanner
+		// produced no auto-includes.
 		return nil
 	}
 

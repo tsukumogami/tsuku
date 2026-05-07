@@ -79,6 +79,51 @@ func (i *Index) Size() int {
 	return total
 }
 
+// BuildFiltered is Build with a per-recipe skip predicate. It is the
+// pragmatic escape hatch for known-collision alternates — for example,
+// `libcurl-source` is a source-built variant maintained alongside the
+// canonical `libcurl` library recipe, and both ship the same
+// `lib/libcurl.so` SONAME. Build itself fails loudly on collisions
+// (intentional per the design), so callers that load the entire
+// registry into the index need a way to drop the alternate. The
+// recommended skip predicate matches recipes whose name ends in
+// `-source`; the long-term fix is to give those recipes non-colliding
+// outputs (or migrate them to a separate provider type), at which
+// point this helper can fold back into Build.
+//
+// skip is consulted before the parser walks the recipe; recipes for
+// which skip returns true contribute no entries to the index.
+func BuildFiltered(recipes []*recipe.Recipe, skip func(*recipe.Recipe) bool) (*Index, error) {
+	if skip == nil {
+		return Build(recipes)
+	}
+	filtered := make([]*recipe.Recipe, 0, len(recipes))
+	for _, r := range recipes {
+		if r == nil {
+			continue
+		}
+		if skip(r) {
+			continue
+		}
+		filtered = append(filtered, r)
+	}
+	return Build(filtered)
+}
+
+// IsKnownCollisionAlternate reports whether a recipe name is one of the
+// known *-source / *-alternate forms that intentionally ships the same
+// SONAME as a canonical sibling recipe. Callers that build the index
+// from the live registry should pass this to BuildFiltered to avoid the
+// loud-but-expected collision error.
+//
+// Currently the only entry is `libcurl-source` (a source-built variant
+// of `libcurl`). New entries should be added only when the alternate is
+// genuinely necessary — the long-term fix is to give such recipes
+// non-colliding outputs.
+func IsKnownCollisionAlternate(name string) bool {
+	return name == "libcurl-source"
+}
+
 // Build walks the supplied recipes, parses their `outputs` lists for
 // SONAME-shaped paths, and returns a single-valued
 // (platform, SONAME) -> Provider map.
