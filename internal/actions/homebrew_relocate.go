@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/tsukumogami/tsuku/internal/progress"
+	"github.com/tsukumogami/tsuku/internal/version"
 )
 
 // HomebrewRelocateAction replaces Homebrew placeholders in extracted bottles.
@@ -640,6 +641,56 @@ type chainEntry struct {
 	version string
 }
 
+// resolveRuntimeDepVersion returns the on-disk version of dep `name` for
+// chain emission. Resolution order:
+//
+//  1. ctx.Dependencies.Runtime[name] if it looks like a real version
+//     (non-empty and not the unresolved sentinel "latest"). This preserves
+//     the resolved version when the dep was carried through the runtime
+//     graph by the executor.
+//  2. Glob ctx.LibsDir/<name>-* and pick the highest installed version.
+//     Used when Runtime[name] is empty (auto-included deps that arrived as
+//     transitive runtime deps under another name) or the unresolved
+//     sentinel "latest" (declared deps where the executor hadn't pinned a
+//     version by chain-emit time). The tiebreaker uses semver-aware
+//     comparison via internal/version.SortVersionsDescending so multiple
+//     installed siblings produce a deterministic pick.
+//  3. Otherwise: ("", false). Callers must NOT emit an RPATH for an
+//     unresolved dep — historically the chain walk fell back to "latest",
+//     but $TSUKU_HOME/libs/<name>-latest does not exist on disk and the
+//     resulting RPATH made the binary fail at runtime with "cannot open
+//     shared object file."
+func resolveRuntimeDepVersion(ctx *ExecutionContext, name string) (string, bool) {
+	if ctx == nil || name == "" {
+		return "", false
+	}
+	if ctx.Dependencies.Runtime != nil {
+		if v := ctx.Dependencies.Runtime[name]; v != "" && v != "latest" {
+			return v, true
+		}
+	}
+	if ctx.LibsDir == "" {
+		return "", false
+	}
+	matches, _ := filepath.Glob(filepath.Join(ctx.LibsDir, name+"-*"))
+	if len(matches) == 0 {
+		return "", false
+	}
+	versions := make([]string, 0, len(matches))
+	for _, m := range matches {
+		v := strings.TrimPrefix(filepath.Base(m), name+"-")
+		if v == "" {
+			continue
+		}
+		versions = append(versions, v)
+	}
+	if len(versions) == 0 {
+		return "", false
+	}
+	sorted := version.SortVersionsDescending(versions)
+	return sorted[0], true
+}
+
 // buildChainEntries returns the union of author-declared chain entries (from
 // ctx.Dependencies.RuntimeDependencies, preserving the recipe's declared
 // order) and the auto-included entries the SONAME completeness scan
@@ -649,11 +700,20 @@ type chainEntry struct {
 // name collision; the declared version is what the recipe author asked
 // for).
 //
+// Each declared entry's version is resolved via resolveRuntimeDepVersion:
+// the executor's resolved Runtime map takes precedence, then a glob over
+// ctx.LibsDir/<name>-* picks the highest-installed sibling. A declared dep
+// that resolves to neither (no executor pin, no on-disk install) is
+// skipped with a warning rather than emitted as a known-bad "-latest"
+// path. Author-supplied extra entries are trusted: they already carry a
+// resolved version from the SONAME scan's resolveAutoIncludeVersion path
+// (which uses the same resolver).
+//
 // Splitting this helper out from fixDylibRpathChain / fixElfRpathChain
 // keeps the union semantics in one place: both chain walks consume the
 // same union and a future bug fix to the merge rule won't have to be
 // applied twice.
-func buildChainEntries(ctx *ExecutionContext, extra []chainEntry) []chainEntry {
+func buildChainEntries(ctx *ExecutionContext, extra []chainEntry, reporter progress.Reporter) []chainEntry {
 	if ctx == nil {
 		return nil
 	}
@@ -664,14 +724,15 @@ func buildChainEntries(ctx *ExecutionContext, extra []chainEntry) []chainEntry {
 			continue
 		}
 		seen[name] = true
-		version := ""
-		if ctx.Dependencies.Runtime != nil {
-			version = ctx.Dependencies.Runtime[name]
+		v, ok := resolveRuntimeDepVersion(ctx, name)
+		if !ok {
+			if reporter != nil {
+				reporter.Warn("   runtime dep %q has no resolved version and no installed sibling under %s; skipping RPATH chain entry",
+					name, ctx.LibsDir)
+			}
+			continue
 		}
-		if version == "" {
-			version = "latest"
-		}
-		entries = append(entries, chainEntry{name: name, version: version})
+		entries = append(entries, chainEntry{name: name, version: v})
 	}
 	for _, e := range extra {
 		if e.name == "" || seen[e.name] {
@@ -705,7 +766,7 @@ func (a *HomebrewRelocateAction) fixDylibRpathChain(ctx *ExecutionContext, insta
 		return nil
 	}
 
-	entries := buildChainEntries(ctx, extra)
+	entries := buildChainEntries(ctx, extra, reporter)
 
 	if len(entries) == 0 {
 		// No-op when no runtime dependencies were declared and the scanner
@@ -845,7 +906,7 @@ func (a *HomebrewRelocateAction) fixElfRpathChain(ctx *ExecutionContext, install
 		return nil
 	}
 
-	entries := buildChainEntries(ctx, extra)
+	entries := buildChainEntries(ctx, extra, reporter)
 
 	if len(entries) == 0 {
 		// No-op when no runtime dependencies were declared and the scanner

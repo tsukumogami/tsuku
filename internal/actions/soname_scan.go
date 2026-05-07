@@ -143,10 +143,10 @@ func runSonameCompletenessScan(ctx *ExecutionContext, reporter progress.Reporter
 	// Resolve each auto-included recipe to (name, version) for the chain
 	// walk. Version comes from ctx.Dependencies.Runtime if available
 	// (the dep is already resolved as a transitive runtime dep of the
-	// declared graph), otherwise we glob $LibsDir/<name>-* for an
-	// installed version. As a last resort we fall back to "latest" — the
-	// chain functions' EvalSymlinks-then-fallback logic handles a path
-	// that does not yet exist on disk.
+	// declared graph), otherwise we glob $LibsDir/<name>-* for the highest
+	// installed version. An auto-included entry that resolves to neither
+	// is skipped with a warning rather than emitted as a known-bad
+	// "-latest" path that does not exist on disk.
 	names := make([]string, 0, len(autoNames))
 	for name := range autoNames {
 		names = append(names, name)
@@ -154,8 +154,13 @@ func runSonameCompletenessScan(ctx *ExecutionContext, reporter progress.Reporter
 	sort.Strings(names)
 
 	for _, name := range names {
-		version := resolveAutoIncludeVersion(ctx, name)
-		result.AutoInclude = append(result.AutoInclude, chainEntry{name: name, version: version})
+		v, ok := resolveAutoIncludeVersion(ctx, name)
+		if !ok {
+			reporter.Warn("   auto-include skipped: %s has no resolved version and no installed sibling under %s",
+				name, ctx.LibsDir)
+			continue
+		}
+		result.AutoInclude = append(result.AutoInclude, chainEntry{name: name, version: v})
 	}
 
 	return result, nil
@@ -417,35 +422,16 @@ func isSystemSoname(platform sonameindex.Platform, soname string, systemSet map[
 	return systemSet[soname]
 }
 
-// resolveAutoIncludeVersion returns a version string for an auto-included
-// recipe. Order of resolution:
+// resolveAutoIncludeVersion returns a version string and ok flag for an
+// auto-included recipe. Resolution delegates to resolveRuntimeDepVersion
+// so the chain walk and the SONAME scan agree on which version of a dep
+// to pin into the emitted RPATH.
 //
-//  1. ctx.Dependencies.Runtime[name] if non-empty (dep is already
-//     transitively resolved as a runtime dep of the declared graph).
-//  2. Glob ctx.LibsDir/<name>-* and take the lexicographically-last match
-//     (latest installed version).
-//  3. Fall back to "latest".
-//
-// Step 2 covers the case where the auto-included dep was installed as a
-// transitive runtime dep of one of the declared deps (e.g. zlib was
-// pulled in by openssl) but is not in ctx.Dependencies.Runtime under its
-// own name.
-func resolveAutoIncludeVersion(ctx *ExecutionContext, name string) string {
-	if ctx.Dependencies.Runtime != nil {
-		if v := ctx.Dependencies.Runtime[name]; v != "" {
-			return v
-		}
-	}
-	if ctx.LibsDir != "" {
-		matches, _ := filepath.Glob(filepath.Join(ctx.LibsDir, name+"-*"))
-		if len(matches) > 0 {
-			sort.Strings(matches)
-			latest := matches[len(matches)-1]
-			version := strings.TrimPrefix(filepath.Base(latest), name+"-")
-			if version != "" {
-				return version
-			}
-		}
-	}
-	return "latest"
+// Returns ("", false) when neither the executor's Runtime map nor a glob
+// over ctx.LibsDir/<name>-* yields a real version. Callers must NOT emit
+// an RPATH for an unresolved entry — the historical "-latest" fallback
+// produced paths that did not exist on disk and broke binaries at
+// runtime ("cannot open shared object file").
+func resolveAutoIncludeVersion(ctx *ExecutionContext, name string) (string, bool) {
+	return resolveRuntimeDepVersion(ctx, name)
 }
