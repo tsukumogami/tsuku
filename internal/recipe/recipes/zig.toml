@@ -8,9 +8,12 @@ supported_libc = ["glibc", "musl"]
 [version]
 github_repo = "ziglang/zig"
 
+# Use zigmirror.hryx.net (community mirror listed on ziglang.org/download/community-mirrors.json)
+# instead of ziglang.org/download because the canonical CDN has been intermittently
+# unreachable in CI (#2384). The mirror serves byte-identical archives.
 [[steps]]
 action = "download_archive"
-url = "https://ziglang.org/download/{version}/zig-{arch}-{os}-{version}.tar.xz"
+url = "https://zigmirror.hryx.net/zig/zig-{arch}-{os}-{version}.tar.xz"
 strip_dirs = 1
 binaries = ["zig"]
 install_mode = "directory"
