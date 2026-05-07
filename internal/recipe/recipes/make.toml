@@ -67,16 +67,15 @@ outputs = ["bin/gmake"]
 when = { os = ["darwin"] }
 
 [verify]
-command = "make --version || gmake --version"
+command = "make --version"
 mode = "output"
 reason = """
-Different platforms install the binary under different names: Homebrew macOS installs \
-bin/gmake; Homebrew Linux glibc amd64 installs bin/make; system packages (linux arm64 \
-glibc, musl) install make. The fallback covers both names. Resolution depends on the \
-install path: the plan-based path resolves `make` via current/make on Linux \
-(per-step outputs) and falls back to current/gmake on darwin; the regular install path \
-on Linux currently relies on system /usr/bin/make to satisfy `make --version` because \
-metadata.binaries names bin/gmake (see metadata comment). Output mode verifies \
-availability rather than version match because system packages install at the \
-distribution's pinned version, not the recipe's pinned 4.4.1.
+`make` resolves on every supported target. Linux glibc amd64: per-step outputs \
+declare bin/make from the Homebrew bottle, so current/make is a working symlink. \
+Linux arm64 / musl: system packages (apt/dnf/zypper/apk) install /usr/bin/make. \
+macOS: Apple ships /usr/bin/make on every host; tsuku additionally installs \
+current/gmake from the Homebrew bottle, but `make --version` finds the system \
+binary via $PATH. Output mode verifies availability rather than version match \
+because system packages install at the distribution's pinned version, not the \
+recipe's pinned 4.4.1.
 """
