@@ -52,6 +52,6 @@
     }
   ],
   "verify": {
-    "command": "gmake --version"
+    "command": "make --version"
   }
 }
