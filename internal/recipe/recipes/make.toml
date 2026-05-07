@@ -3,8 +3,11 @@ name = "make"
 description = "GNU Make build automation tool"
 homepage = "https://www.gnu.org/software/make/"
 curated = true
-# Homebrew's make installs as gmake on macOS and amd64 Linux - see #1581
-binaries = ["bin/gmake"]
+# Homebrew's Linux bottles ship bin/make; macOS bottles ship bin/gmake (renamed
+# to avoid colliding with /usr/bin/make). Per-step outputs handle the platform
+# difference; metadata.binaries names the canonical binary used by the binary
+# index and `tsuku run make` lookup.
+binaries = ["bin/make"]
 
 # glibc Linux amd64: Homebrew bottles
 [[steps]]
@@ -15,7 +18,7 @@ when = { os = ["linux"], libc = ["glibc"], arch = "amd64" }
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-outputs = ["bin/gmake"]
+outputs = ["bin/make"]
 when = { os = ["linux"], libc = ["glibc"], arch = "amd64" }
 
 # glibc Linux arm64: System packages (Homebrew has no arm64_linux bottles for make)

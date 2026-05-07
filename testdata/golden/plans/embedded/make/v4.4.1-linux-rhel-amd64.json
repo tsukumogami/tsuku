@@ -98,7 +98,7 @@
       "params": {
         "install_mode": "directory",
         "outputs": [
-          "bin/gmake"
+          "bin/make"
         ]
       },
       "evaluable": true,
@@ -106,6 +106,6 @@
     }
   ],
   "verify": {
-    "command": "gmake --version"
+    "command": "make --version || gmake --version"
   }
 }
