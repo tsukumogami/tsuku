@@ -114,6 +114,19 @@ func (a *HomebrewRelocateAction) Execute(ctx *ExecutionContext, params map[strin
 		}
 	}
 
+	// Linux RPATH chain: the ELF mirror of fixDylibRpathChain. Emits one
+	// $ORIGIN-relative RPATH entry per declared runtime dependency, written
+	// via patchelf --force-rpath --set-rpath (DT_RPATH, not DT_RUNPATH —
+	// DT_RUNPATH has subtle resolution differences that break some tools'
+	// shared-library lookups, e.g. wget's libunistring). Runs after the
+	// per-binary fixElfRpath pass executed by relocatePlaceholders so the
+	// chain entries can be appended to the rpath that pass installed.
+	if runtime.GOOS == "linux" && len(ctx.Dependencies.RuntimeDependencies) > 0 {
+		if err := a.fixElfRpathChain(ctx, installPath, reporter); err != nil {
+			return fmt.Errorf("failed to fix ELF RPATH chain: %w", err)
+		}
+	}
+
 	// Library install-time chain. Kept as a separate helper from
 	// fixDylibRpathChain because the source field differs: the legacy
 	// helper walks ctx.Dependencies.InstallTime (populated from
@@ -748,10 +761,232 @@ func (a *HomebrewRelocateAction) addChainEntriesToMachO(
 	return nil
 }
 
-// computeChainRpaths is the path-computation half of the dylib RPATH chain.
-// It is split out from addChainEntriesToMachO so the @loader_path-relative
-// computation and the defense-in-depth post-check are unit-testable without
-// requiring Mach-O binaries or install_name_tool.
+// fixElfRpathChain is the ELF mirror of fixDylibRpathChain. It walks
+// ctx.WorkDir/{bin,lib} for ELF binaries and, for each one, appends one
+// $ORIGIN-relative RPATH entry per declared runtime dependency, pointing
+// at $TSUKU_HOME/libs/<dep>-<version>/lib.
+//
+// Path form: relative to the binary's directory (loaderDir), computed via
+// filepath.Rel after EvalSymlinks on both ends — the same machinery
+// fixDylibRpathChain uses. Each computed entry is post-checked:
+// filepath.Join(loaderDir, relPath) must resolve back inside ctx.LibsDir.
+// A failed check fails the install with a clear error before any patchelf
+// invocation for that entry.
+//
+// Patchelf primitive: --force-rpath --set-rpath '<colon-joined>' (writes
+// DT_RPATH). --add-rpath would write DT_RUNPATH instead, but DT_RUNPATH
+// has subtle resolution differences that break some shared-library
+// lookups (e.g., wget's libunistring). Because --set-rpath replaces the
+// entire RPATH rather than appending, this helper first reads the
+// existing RPATH (set by the per-binary fixElfRpath pass that ran via
+// relocatePlaceholders) and concatenates the new chain entries onto it.
+//
+// Order: this runs after relocatePlaceholders (which performs the
+// per-binary fixElfRpath pass that wipes stale HOMEBREW rpaths and sets
+// the $ORIGIN anchor), so the chain entries are appended to a clean
+// baseline rather than racing the wipe.
+func (a *HomebrewRelocateAction) fixElfRpathChain(ctx *ExecutionContext, installPath string, reporter progress.Reporter) error {
+	// Only run on Linux
+	if runtime.GOOS != "linux" {
+		return nil
+	}
+
+	// Build the chain entry list from RuntimeDependencies (preserving order)
+	// with versions looked up in Runtime. RuntimeDependencies is the
+	// author-declared list — see ResolvedDeps.RuntimeDependencies docstring.
+	entries := make([]chainEntry, 0, len(ctx.Dependencies.RuntimeDependencies))
+	for _, name := range ctx.Dependencies.RuntimeDependencies {
+		version := ""
+		if ctx.Dependencies.Runtime != nil {
+			version = ctx.Dependencies.Runtime[name]
+		}
+		if version == "" {
+			version = "latest"
+		}
+		entries = append(entries, chainEntry{name: name, version: version})
+	}
+
+	if len(entries) == 0 {
+		// No-op when no runtime dependencies were declared.
+		return nil
+	}
+
+	// Collect ELF binaries to patch: shared libraries in lib/ (library and
+	// tool recipes can both ship .so files) and executables in bin/ (tool
+	// case). Mirrors the {bin,lib} walk fixDylibRpathChain performs.
+	var binaries []string
+	for _, sub := range []string{"lib", "bin"} {
+		root := filepath.Join(ctx.WorkDir, sub)
+		if _, err := os.Stat(root); os.IsNotExist(err) {
+			continue
+		}
+		err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
+				return nil
+			}
+			if a.isELFBinary(path) {
+				binaries = append(binaries, path)
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("failed to walk %s directory: %w", sub, err)
+		}
+	}
+
+	if len(binaries) == 0 {
+		return nil
+	}
+
+	reporter.Log("   Chaining RPATHs for %d ELF file(s) with %d runtime dependency(ies)",
+		len(binaries), len(entries))
+
+	patchelfPath, err := a.findPatchelf(ctx)
+	if err != nil {
+		// Without patchelf the chain cannot be applied; surface a clear error
+		// so the install fails loudly rather than producing under-linked
+		// binaries that look fine until they run.
+		return fmt.Errorf("ELF RPATH chain requires patchelf: %w", err)
+	}
+
+	for _, binaryPath := range binaries {
+		if err := a.addChainEntriesToELF(patchelfPath, binaryPath, entries, ctx, reporter); err != nil {
+			return err
+		}
+	}
+
+	_ = installPath // reserved for future use (parallels fixDylibRpathChain)
+	return nil
+}
+
+// addChainEntriesToELF computes one $ORIGIN-relative RPATH per chain entry
+// for binaryPath, runs the defense-in-depth post-check, then appends those
+// entries onto whatever RPATH patchelf currently reports for the binary
+// and writes the combined string back via
+// patchelf --force-rpath --set-rpath '<colon-joined>'.
+//
+// The append-not-replace shape preserves the per-binary $ORIGIN baseline
+// installed by the earlier fixElfRpath pass (so a tool's bin/ binary that
+// was set to $ORIGIN/../lib still finds its own bottle-shipped libs after
+// the chain entries are added). Duplicate entries are collapsed.
+//
+// The post-check fails the install before the patch invocation if
+// filepath.Join(loaderDir, relPath) escapes ctx.LibsDir. Same defense-in-
+// depth contract as the macOS chain (see addChainEntriesToMachO).
+func (a *HomebrewRelocateAction) addChainEntriesToELF(
+	patchelfPath, binaryPath string,
+	entries []chainEntry,
+	ctx *ExecutionContext,
+	reporter progress.Reporter,
+) error {
+	loaderDir := filepath.Dir(binaryPath)
+
+	// Compute and validate every entry BEFORE any patching, so a single
+	// escaping entry fails the install before patchelf runs.
+	chainRpaths, err := computeChainRpathsWithPrefix(loaderDir, ctx.LibsDir, entries, filepath.Base(binaryPath), "$ORIGIN")
+	if err != nil {
+		return err
+	}
+
+	// Read the existing RPATH (set by the per-binary fixElfRpath pass).
+	// patchelf --print-rpath returns an empty line if no rpath is set, which
+	// is fine — the chain entries become the entire rpath in that case.
+	printCmd := exec.Command(patchelfPath, "--print-rpath", binaryPath)
+	printOutput, err := printCmd.Output()
+	if err != nil {
+		// --print-rpath fails on binaries patchelf can't parse (e.g., very
+		// small static archives). Treat the existing rpath as empty and let
+		// the --set-rpath below either succeed or fail with a clear error.
+		printOutput = nil
+	}
+	existingRpath := strings.TrimSpace(string(printOutput))
+
+	// Build the combined RPATH: existing entries first (so the per-binary
+	// $ORIGIN baseline keeps priority), chain entries appended, dedup-aware.
+	seen := make(map[string]bool)
+	var combined []string
+	if existingRpath != "" {
+		for _, p := range strings.Split(existingRpath, ":") {
+			p = strings.TrimSpace(p)
+			if p == "" || seen[p] {
+				continue
+			}
+			seen[p] = true
+			combined = append(combined, p)
+		}
+	}
+	for _, p := range chainRpaths {
+		if seen[p] {
+			continue
+		}
+		seen[p] = true
+		combined = append(combined, p)
+	}
+
+	if len(combined) == 0 {
+		// Nothing to write (no existing rpath, no chain entries — this
+		// should not happen because we early-returned on len(entries) == 0,
+		// but defensively skip the patchelf call if it does).
+		return nil
+	}
+
+	newRpath := strings.Join(combined, ":")
+
+	// Make file writable for the duration of the patch
+	info, err := os.Stat(binaryPath)
+	if err != nil {
+		return fmt.Errorf("failed to stat %s: %w", binaryPath, err)
+	}
+	originalMode := info.Mode()
+	if originalMode&0200 == 0 {
+		if err := os.Chmod(binaryPath, originalMode|0200); err != nil {
+			return fmt.Errorf("failed to make %s writable: %w", binaryPath, err)
+		}
+		defer func() { _ = os.Chmod(binaryPath, originalMode) }()
+	}
+
+	setCmd := exec.Command(patchelfPath, "--force-rpath", "--set-rpath", newRpath, binaryPath)
+	if output, err := setCmd.CombinedOutput(); err != nil {
+		// Some files in lib/ are static archives or non-dynamic objects that
+		// patchelf rejects with "not an ELF executable" or "no dynamic
+		// section". Skip those quietly; they have no rpath to chain into.
+		out := string(output)
+		if strings.Contains(out, "not an ELF") || strings.Contains(out, "no dynamic section") {
+			reporter.Log("   skipping %s: %s", filepath.Base(binaryPath), strings.TrimSpace(out))
+			return nil
+		}
+		return fmt.Errorf("patchelf --set-rpath failed for %s: %s: %w",
+			filepath.Base(binaryPath), strings.TrimSpace(out), err)
+	}
+
+	return nil
+}
+
+// isELFBinary reports whether path looks like an ELF binary by reading its
+// magic bytes (\x7fELF). Used to filter the chain walk to actual binaries
+// (so a script or text file in bin/ doesn't fail patchelf).
+func (a *HomebrewRelocateAction) isELFBinary(path string) bool {
+	f, err := os.Open(path)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+
+	magic := make([]byte, 4)
+	if _, err := f.Read(magic); err != nil {
+		return false
+	}
+	return bytes.Equal(magic, []byte{0x7f, 'E', 'L', 'F'})
+}
+
+// computeChainRpaths is the path-computation half of the dylib/ELF RPATH
+// chain. It is split out from addChainEntriesToMachO (and the ELF
+// counterpart) so the loader-relative computation and the defense-in-depth
+// post-check are unit-testable without requiring Mach-O / ELF binaries or
+// install_name_tool / patchelf.
 //
 // For each entry, it computes a relative path from loaderDir to
 // $LibsDir/<name>-<version>/lib via filepath.Rel over EvalSymlinks on both
@@ -762,7 +997,21 @@ func (a *HomebrewRelocateAction) addChainEntriesToMachO(
 //
 // labelForError is the file-name used in the error message ("which binary
 // did the bad entry come from?"); pass filepath.Base(binaryPath).
+//
+// Default prefix is "@loader_path" (macOS). Pass "$ORIGIN" via
+// computeChainRpathsWithPrefix for the ELF chain.
 func computeChainRpaths(loaderDir, libsDir string, entries []chainEntry, labelForError string) ([]string, error) {
+	return computeChainRpathsWithPrefix(loaderDir, libsDir, entries, labelForError, "@loader_path")
+}
+
+// computeChainRpathsWithPrefix is the platform-parameterized form of
+// computeChainRpaths. macOS calls in via the default-prefix wrapper above
+// ("@loader_path"); Linux passes "$ORIGIN" so the same Rel-over-EvalSymlinks
+// machinery and the same defense-in-depth post-check apply on both
+// platforms. The prefix is purely cosmetic — patchelf and install_name_tool
+// each have their own anchor token, but the relative path attached to the
+// anchor is computed identically.
+func computeChainRpathsWithPrefix(loaderDir, libsDir string, entries []chainEntry, labelForError, anchorPrefix string) ([]string, error) {
 	loaderDirReal, err := filepath.EvalSymlinks(loaderDir)
 	if err != nil {
 		// EvalSymlinks fails if a path component doesn't exist; for the
@@ -802,14 +1051,14 @@ func computeChainRpaths(loaderDir, libsDir string, entries []chainEntry, labelFo
 
 		// Defense-in-depth: filepath.Join(loaderDir, relPath) must resolve
 		// back inside libsDir. A failed check rejects the entry before
-		// any install_name_tool invocation.
+		// any install_name_tool / patchelf invocation.
 		resolvedBack := filepath.Clean(filepath.Join(loaderDir, relPath))
 		if !strings.HasPrefix(resolvedBack+string(os.PathSeparator), libsDirPrefix) && resolvedBack != libsDirClean {
 			return nil, fmt.Errorf("rpath chain entry %q for %s escapes libs dir: resolved path %q is not inside %q",
 				e.name, labelForError, resolvedBack, libsDirClean)
 		}
 
-		rpaths = append(rpaths, "@loader_path/"+filepath.ToSlash(relPath))
+		rpaths = append(rpaths, anchorPrefix+"/"+filepath.ToSlash(relPath))
 	}
 
 	return rpaths, nil
