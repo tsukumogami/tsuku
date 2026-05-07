@@ -613,7 +613,7 @@ func TestBuildChainEntries_DeclaredFirstThenExtra(t *testing.T) {
 		{name: "libevent", version: "999.0"}, // collision with declared — must be dropped
 		{name: "zlib", version: "1.3"},       // new — must be appended
 	}
-	got := buildChainEntries(ctx, extra)
+	got := buildChainEntries(ctx, extra, &recordingReporter{})
 	want := []chainEntry{
 		{name: "libevent", version: "2.1.12"},
 		{name: "ncurses", version: "6.5"},
@@ -621,6 +621,138 @@ func TestBuildChainEntries_DeclaredFirstThenExtra(t *testing.T) {
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("buildChainEntries = %+v, want %+v", got, want)
+	}
+}
+
+// TestResolveRuntimeDepVersion_ResolvedRuntimeWins exercises the happy
+// path: the executor pinned a real version into ctx.Dependencies.Runtime,
+// so the resolver returns it without touching the disk.
+func TestResolveRuntimeDepVersion_ResolvedRuntimeWins(t *testing.T) {
+	t.Parallel()
+	ctx := &ExecutionContext{
+		LibsDir: t.TempDir(), // present but irrelevant
+		Dependencies: ResolvedDeps{
+			Runtime: map[string]string{"libevent": "2.1.12"},
+		},
+	}
+	got, ok := resolveRuntimeDepVersion(ctx, "libevent")
+	if !ok {
+		t.Fatalf("resolveRuntimeDepVersion ok = false, want true")
+	}
+	if got != "2.1.12" {
+		t.Errorf("resolveRuntimeDepVersion = %q, want %q", got, "2.1.12")
+	}
+}
+
+// TestResolveRuntimeDepVersion_LatestSentinelFallsBackToDisk: an
+// unresolved "latest" sentinel in Runtime must NOT be returned verbatim
+// (that produced the libs/<dep>-latest bug); the resolver should glob
+// LibsDir and return the on-disk version.
+func TestResolveRuntimeDepVersion_LatestSentinelFallsBackToDisk(t *testing.T) {
+	t.Parallel()
+	libs := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(libs, "libevent-2.1.12", "lib"), 0755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	ctx := &ExecutionContext{
+		LibsDir: libs,
+		Dependencies: ResolvedDeps{
+			Runtime: map[string]string{"libevent": "latest"},
+		},
+	}
+	got, ok := resolveRuntimeDepVersion(ctx, "libevent")
+	if !ok {
+		t.Fatalf("resolveRuntimeDepVersion ok = false, want true")
+	}
+	if got != "2.1.12" {
+		t.Errorf("resolveRuntimeDepVersion = %q, want %q (latest must not be emitted)", got, "2.1.12")
+	}
+}
+
+// TestResolveRuntimeDepVersion_DiskFallbackPicksHighest: when multiple
+// installed siblings exist, the resolver picks the highest semver-aware
+// version so chain emission is deterministic.
+func TestResolveRuntimeDepVersion_DiskFallbackPicksHighest(t *testing.T) {
+	t.Parallel()
+	libs := t.TempDir()
+	for _, v := range []string{"2.1.12", "2.0.22", "2.1.8"} {
+		if err := os.MkdirAll(filepath.Join(libs, "libevent-"+v, "lib"), 0755); err != nil {
+			t.Fatalf("mkdir: %v", err)
+		}
+	}
+	ctx := &ExecutionContext{
+		LibsDir: libs,
+	}
+	got, ok := resolveRuntimeDepVersion(ctx, "libevent")
+	if !ok {
+		t.Fatalf("resolveRuntimeDepVersion ok = false, want true")
+	}
+	if got != "2.1.12" {
+		t.Errorf("resolveRuntimeDepVersion = %q, want %q (highest installed sibling)", got, "2.1.12")
+	}
+}
+
+// TestResolveRuntimeDepVersion_NoMatchReturnsFalse: when neither the
+// runtime map nor the disk yields a version, the resolver must return
+// (_, false). Callers must skip the entry rather than emit "-latest".
+func TestResolveRuntimeDepVersion_NoMatchReturnsFalse(t *testing.T) {
+	t.Parallel()
+	ctx := &ExecutionContext{
+		LibsDir: t.TempDir(), // empty
+	}
+	got, ok := resolveRuntimeDepVersion(ctx, "libevent")
+	if ok {
+		t.Errorf("resolveRuntimeDepVersion ok = true, want false (no source — must not emit -latest)")
+	}
+	if got != "" {
+		t.Errorf("resolveRuntimeDepVersion = %q, want \"\" on miss", got)
+	}
+}
+
+// TestBuildChainEntries_DeclaredFallsBackToDisk: a declared dep whose
+// Runtime entry is "latest" must be resolved against $LibsDir (not
+// emitted as libs/<dep>-latest, which does not exist on disk and was the
+// root cause of the chain-walk runtime failure).
+func TestBuildChainEntries_DeclaredFallsBackToDisk(t *testing.T) {
+	t.Parallel()
+	libs := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(libs, "libevent-2.1.12", "lib"), 0755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	ctx := &ExecutionContext{
+		LibsDir: libs,
+		Dependencies: ResolvedDeps{
+			RuntimeDependencies: []string{"libevent"},
+			Runtime:             map[string]string{"libevent": "latest"}, // unresolved sentinel
+		},
+	}
+	got := buildChainEntries(ctx, nil, &recordingReporter{})
+	want := []chainEntry{{name: "libevent", version: "2.1.12"}}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("buildChainEntries = %+v, want %+v (must not emit -latest)", got, want)
+	}
+}
+
+// TestBuildChainEntries_UnresolvedDepWarnsAndSkips: a declared dep with
+// no resolved version and no on-disk match must be skipped with a
+// warning. Emitting "-latest" would write a chain entry pointing at a
+// directory that does not exist, which broke binaries at runtime.
+func TestBuildChainEntries_UnresolvedDepWarnsAndSkips(t *testing.T) {
+	t.Parallel()
+	ctx := &ExecutionContext{
+		LibsDir: t.TempDir(), // empty
+		Dependencies: ResolvedDeps{
+			RuntimeDependencies: []string{"libevent"},
+			Runtime:             map[string]string{"libevent": "latest"},
+		},
+	}
+	rep := &recordingReporter{}
+	got := buildChainEntries(ctx, nil, rep)
+	if len(got) != 0 {
+		t.Errorf("buildChainEntries = %+v, want [] (entry must be skipped, never emit -latest)", got)
+	}
+	if !rep.hasWarnContaining("libevent") {
+		t.Errorf("expected a warning naming the skipped dep, got warns = %v", rep.warns)
 	}
 }
 
