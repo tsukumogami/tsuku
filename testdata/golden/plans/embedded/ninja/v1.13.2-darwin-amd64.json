@@ -6,6 +6,8 @@
     "os": "darwin",
     "arch": "amd64"
   },
+  "generated_at": "2026-05-07T22:55:37.483418565Z",
+  "recipe_source": "internal/recipe/recipes/ninja.toml",
   "deterministic": false,
   "dependencies": [
     {
@@ -102,7 +104,7 @@
         }
       ],
       "verify": {
-        "command": "gmake --version"
+        "command": "make --version"
       }
     },
     {
@@ -156,8 +158,7 @@
         }
       ],
       "verify": {
-        "command": "pkg-config --version",
-        "pattern": "{version}"
+        "command": "pkg-config --version"
       }
     },
     {
@@ -170,11 +171,11 @@
             "checksum": "9919392e0287cccc106dfbcbb46c7c1c3fa05d919567bb58d7eb16bca4116184",
             "checksum_algo": "sha256",
             "dest": "zig-x86_64-macos-0.15.1.tar.xz",
-            "url": "https://ziglang.org/download/0.15.1/zig-x86_64-macos-0.15.1.tar.xz"
+            "url": "https://zigmirror.hryx.net/zig/zig-x86_64-macos-0.15.1.tar.xz"
           },
           "evaluable": true,
           "deterministic": true,
-          "url": "https://ziglang.org/download/0.15.1/zig-x86_64-macos-0.15.1.tar.xz",
+          "url": "https://zigmirror.hryx.net/zig/zig-x86_64-macos-0.15.1.tar.xz",
           "checksum": "9919392e0287cccc106dfbcbb46c7c1c3fa05d919567bb58d7eb16bca4116184",
           "size": 55791880
         },
