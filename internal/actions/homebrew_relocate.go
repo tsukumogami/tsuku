@@ -813,12 +813,11 @@ func (a *HomebrewRelocateAction) fixDylibRpathChain(ctx *ExecutionContext, insta
 	}
 
 	for _, binaryPath := range binaries {
-		if err := a.addChainEntriesToMachO(installNameTool, binaryPath, entries, ctx, reporter); err != nil {
+		if err := a.addChainEntriesToMachO(installNameTool, binaryPath, entries, ctx, installPath, reporter); err != nil {
 			return err
 		}
 	}
 
-	_ = installPath // reserved for future use (legacy helper still consumes it)
 	return nil
 }
 
@@ -827,13 +826,21 @@ func (a *HomebrewRelocateAction) fixDylibRpathChain(ctx *ExecutionContext, insta
 // them via install_name_tool -add_rpath. The post-check fails the install
 // before the patch invocation if filepath.Join(loaderDir, relPath) escapes
 // ctx.LibsDir.
+//
+// The loader dir used for path computation is the binary's eventual install
+// location (rebased from ctx.WorkDir onto installPath), not its current
+// location in ctx.WorkDir. install_binaries moves the bottle into installPath
+// after this action runs; an RPATH computed from the WorkDir layout would
+// point at a directory that doesn't exist once the binary lands in its
+// final home (see futureLoaderDir for details).
 func (a *HomebrewRelocateAction) addChainEntriesToMachO(
 	installNameTool, binaryPath string,
 	entries []chainEntry,
 	ctx *ExecutionContext,
+	installPath string,
 	reporter progress.Reporter,
 ) error {
-	loaderDir := filepath.Dir(binaryPath)
+	loaderDir := futureLoaderDir(ctx.WorkDir, installPath, binaryPath)
 
 	// Compute and validate every entry BEFORE any patching, so a single
 	// escaping entry fails the install before any install_name_tool runs.
@@ -956,12 +963,11 @@ func (a *HomebrewRelocateAction) fixElfRpathChain(ctx *ExecutionContext, install
 	}
 
 	for _, binaryPath := range binaries {
-		if err := a.addChainEntriesToELF(patchelfPath, binaryPath, entries, ctx, reporter); err != nil {
+		if err := a.addChainEntriesToELF(patchelfPath, binaryPath, entries, ctx, installPath, reporter); err != nil {
 			return err
 		}
 	}
 
-	_ = installPath // reserved for future use (parallels fixDylibRpathChain)
 	return nil
 }
 
@@ -979,13 +985,19 @@ func (a *HomebrewRelocateAction) fixElfRpathChain(ctx *ExecutionContext, install
 // The post-check fails the install before the patch invocation if
 // filepath.Join(loaderDir, relPath) escapes ctx.LibsDir. Same defense-in-
 // depth contract as the macOS chain (see addChainEntriesToMachO).
+//
+// The loader dir used for path computation is the binary's eventual install
+// location (rebased from ctx.WorkDir onto installPath), not its current
+// location in ctx.WorkDir; install_binaries moves the bottle into
+// installPath after this action runs. See futureLoaderDir for details.
 func (a *HomebrewRelocateAction) addChainEntriesToELF(
 	patchelfPath, binaryPath string,
 	entries []chainEntry,
 	ctx *ExecutionContext,
+	installPath string,
 	reporter progress.Reporter,
 ) error {
-	loaderDir := filepath.Dir(binaryPath)
+	loaderDir := futureLoaderDir(ctx.WorkDir, installPath, binaryPath)
 
 	// Compute and validate every entry BEFORE any patching, so a single
 	// escaping entry fails the install before patchelf runs.
@@ -1083,6 +1095,40 @@ func (a *HomebrewRelocateAction) isELFBinary(path string) bool {
 		return false
 	}
 	return bytes.Equal(magic, []byte{0x7f, 'E', 'L', 'F'})
+}
+
+// futureLoaderDir returns the directory the binary will occupy after the
+// install completes — the same directory the runtime linker will use to
+// resolve $ORIGIN / @loader_path at load time. This is NOT
+// filepath.Dir(binaryPath): the bottle currently lives in ctx.WorkDir
+// (e.g., /tmp/action-validator-XXX/bin/tmux) and only moves to
+// $TSUKU_HOME/tools/<recipe>-<version>/bin/tmux when install_binaries
+// runs, after the relocate phase.
+//
+// Computing the chain RPATH from the WorkDir location produces the wrong
+// number of "..": the WorkDir-to-LibsDir hop and the install-location-to-
+// LibsDir hop have different depths. The WorkDir-relative path "happens
+// to work" inside /tmp because WorkDir and LibsDir are often siblings
+// there, but it breaks once the binary lands in its real home and tries
+// to resolve $ORIGIN / @loader_path against the install location.
+//
+// Rebasing strips ctx.WorkDir from the front of binaryPath (preserving
+// any sub-directory like "bin/" or "lib/") and joins the remainder onto
+// installPath, then takes the directory of the result. The rebased
+// directory does not need to exist on disk yet — computeChainRpaths uses
+// EvalSymlinks only on the LibsDir side (which does exist by the time
+// the chain runs) and falls back to the raw path for the loader side.
+//
+// If binaryPath is not under ctx.WorkDir (defensive: should not happen in
+// production because the chain walk lists binaries from inside WorkDir),
+// the function falls back to filepath.Dir(binaryPath) so the install does
+// not panic on an unexpected layout.
+func futureLoaderDir(workDir, installPath, binaryPath string) string {
+	rel, err := filepath.Rel(workDir, binaryPath)
+	if err != nil || strings.HasPrefix(rel, "..") {
+		return filepath.Dir(binaryPath)
+	}
+	return filepath.Dir(filepath.Join(installPath, rel))
 }
 
 // computeChainRpaths is the path-computation half of the dylib/ELF RPATH
@@ -1274,8 +1320,16 @@ func (a *HomebrewRelocateAction) fixLibraryInstallTimeChain(ctx *ExecutionContex
 	// and apply them. The path computation runs BEFORE any patching so a
 	// single escaping entry fails the install before any install_name_tool
 	// -add_rpath runs for that dylib.
+	//
+	// The loader dir used for the relative-path computation is the dylib's
+	// eventual install location (rebased from ctx.WorkDir onto installPath),
+	// not its current location in ctx.WorkDir. install_binaries moves the
+	// bottle into installPath after this action runs; the WorkDir-relative
+	// computation "happens to work" because both WorkDir and LibsDir are
+	// commonly siblings under /tmp during install, but the relative path
+	// it produces is wrong once the dylib lands in its real home.
 	for _, dylibPath := range dylibFiles {
-		loaderDir := filepath.Dir(dylibPath)
+		loaderDir := futureLoaderDir(ctx.WorkDir, installPath, dylibPath)
 		rpaths, err := computeChainRpaths(loaderDir, ctx.LibsDir, entries, filepath.Base(dylibPath))
 		if err != nil {
 			return err
@@ -1322,7 +1376,6 @@ func (a *HomebrewRelocateAction) fixLibraryInstallTimeChain(ctx *ExecutionContex
 		}
 	}
 
-	_ = installPath // reserved for future use
 	return nil
 }
 

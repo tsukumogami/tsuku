@@ -854,6 +854,13 @@ func TestFixElfRpathChain_WritesDTRpath(t *testing.T) {
 		t.Fatalf("copy fixture: %v", err)
 	}
 
+	// installPath is the eventual install location of this bottle
+	// ($TSUKU_HOME/tools/tmux-3.6a). The chain functions rebase the binary
+	// path onto installPath before computing the relative RPATH so the
+	// emitted $ORIGIN-relative path matches the directory the runtime
+	// linker will see at load time, not the WorkDir layout.
+	installPath := filepath.Join(tsukuHome, "tools", "tmux-3.6a")
+
 	action := &HomebrewRelocateAction{}
 	ctx := &ExecutionContext{
 		WorkDir: workDir,
@@ -867,7 +874,7 @@ func TestFixElfRpathChain_WritesDTRpath(t *testing.T) {
 		},
 	}
 
-	if err := action.fixElfRpathChain(ctx, "/unused", nil, progress.NoopReporter{}); err != nil {
+	if err := action.fixElfRpathChain(ctx, installPath, nil, progress.NoopReporter{}); err != nil {
 		t.Fatalf("fixElfRpathChain returned error: %v", err)
 	}
 
@@ -904,6 +911,152 @@ func TestFixElfRpathChain_WritesDTRpath(t *testing.T) {
 	}
 	if !strings.Contains(joined, "$ORIGIN") {
 		t.Errorf("DT_RPATH = %q, want it to contain '$ORIGIN' (anchor for relative resolution)", joined)
+	}
+
+	// Lock the exact $ORIGIN-relative shape so a regression to the
+	// WorkDir-relative computation (Bug 3) is caught here. The binary's
+	// install location is $tsukuHome/tools/tmux-3.6a/bin/tmux; the dep
+	// lib dir is $tsukuHome/libs/libevent-2.1.12/lib. From bin/ that's
+	// "../../../libs/libevent-2.1.12/lib" — three "..", not two. The
+	// pre-fix WorkDir-relative path was "../../libs/libevent-2.1.12/lib".
+	wantRel := "$ORIGIN/../../../libs/libevent-2.1.12/lib"
+	if !strings.Contains(joined, wantRel) {
+		t.Errorf("DT_RPATH = %q, want it to contain %q (relative to install location, not WorkDir)",
+			joined, wantRel)
+	}
+}
+
+// -- futureLoaderDir / install-location rebase (regression coverage for Bug 3) --
+
+// TestFutureLoaderDir_RebasesBinaryOntoInstallPath checks that the helper
+// strips ctx.WorkDir from the front of binaryPath and joins the remainder
+// onto installPath, yielding the directory the binary will occupy after
+// install_binaries moves the bottle. Cross-checks several layouts.
+func TestFutureLoaderDir_RebasesBinaryOntoInstallPath(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name        string
+		workDir     string
+		installPath string
+		binaryPath  string
+		want        string
+	}{
+		{
+			name:        "tool bin",
+			workDir:     "/tmp/work-XYZ",
+			installPath: "/home/u/.tsuku/tools/tmux-3.6a",
+			binaryPath:  "/tmp/work-XYZ/bin/tmux",
+			want:        "/home/u/.tsuku/tools/tmux-3.6a/bin",
+		},
+		{
+			name:        "library lib",
+			workDir:     "/tmp/work-XYZ",
+			installPath: "/home/u/.tsuku/libs/libevent-2.1.12",
+			binaryPath:  "/tmp/work-XYZ/lib/libevent_core-2.1.dylib",
+			want:        "/home/u/.tsuku/libs/libevent-2.1.12/lib",
+		},
+		{
+			name:        "nested subdir",
+			workDir:     "/tmp/w",
+			installPath: "/opt/install",
+			binaryPath:  "/tmp/w/libexec/bin/foo",
+			want:        "/opt/install/libexec/bin",
+		},
+		{
+			name:        "binary outside workDir falls back to filepath.Dir",
+			workDir:     "/tmp/w",
+			installPath: "/opt/install",
+			binaryPath:  "/elsewhere/bin/foo",
+			want:        "/elsewhere/bin",
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			got := futureLoaderDir(c.workDir, c.installPath, c.binaryPath)
+			if got != c.want {
+				t.Errorf("futureLoaderDir(%q, %q, %q) = %q, want %q",
+					c.workDir, c.installPath, c.binaryPath, got, c.want)
+			}
+		})
+	}
+}
+
+// TestComputeChainRpaths_UsesFutureInstallLocation is the focused regression
+// test for Bug 3: the chain functions must compute the relative RPATH
+// against the binary's eventual install location, not the WorkDir layout.
+//
+// The setup picks a layout where the WorkDir-relative path and the
+// install-location-relative path have a different number of ".." segments,
+// so a regression to the WorkDir-based computation produces a measurably
+// wrong rpath that this test catches.
+//
+// WorkDir layout: /tmp/<TMP>/work/bin/tmux  (depth from / = 4)
+// Install layout: /tmp/<TMP>/tools/tmux-3.6a/bin/tmux  (depth from / = 5)
+// LibsDir:        /tmp/<TMP>/libs/libevent-2.1.12/lib
+//
+// From WorkDir bin/, the rel-path to LibsDir is "../../libs/libevent-2.1.12/lib"
+// (two ".."). From install bin/, the rel-path is "../../../libs/libevent-2.1.12/lib"
+// (three ".."). The fix emits the install-relative path; pre-fix would
+// have emitted the WorkDir-relative path.
+func TestComputeChainRpaths_UsesFutureInstallLocation(t *testing.T) {
+	t.Parallel()
+
+	tsukuHome := t.TempDir()
+	libsDir := filepath.Join(tsukuHome, "libs")
+	workDir := filepath.Join(tsukuHome, "work")
+	binDir := filepath.Join(workDir, "bin")
+	if err := os.MkdirAll(binDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(libsDir, "libevent-2.1.12", "lib"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Install path lives at $tsukuHome/tools/tmux-3.6a — one directory
+	// deeper than $tsukuHome/work so the rel-paths from WorkDir and
+	// installPath have different ".." counts.
+	installPath := filepath.Join(tsukuHome, "tools", "tmux-3.6a")
+	binaryPath := filepath.Join(binDir, "tmux")
+
+	loaderDir := futureLoaderDir(workDir, installPath, binaryPath)
+	wantLoaderDir := filepath.Join(installPath, "bin")
+	if loaderDir != wantLoaderDir {
+		t.Fatalf("futureLoaderDir = %q, want %q", loaderDir, wantLoaderDir)
+	}
+
+	entries := []chainEntry{{name: "libevent", version: "2.1.12"}}
+	rpaths, err := computeChainRpathsWithPrefix(loaderDir, libsDir, entries, "tmux", "$ORIGIN")
+	if err != nil {
+		t.Fatalf("computeChainRpathsWithPrefix returned error: %v", err)
+	}
+	if len(rpaths) != 1 {
+		t.Fatalf("got %d rpaths, want 1", len(rpaths))
+	}
+
+	// Golden lock: the rpath must traverse three ".." segments to reach
+	// $tsukuHome from $tsukuHome/tools/tmux-3.6a/bin. Two ".." would be
+	// the WorkDir-relative answer (Bug 3 regression).
+	wantRpath := "$ORIGIN/" + filepath.ToSlash(filepath.Join("..", "..", "..", "libs", "libevent-2.1.12", "lib"))
+	if rpaths[0] != wantRpath {
+		t.Errorf("rpath = %q, want %q (install-location-relative; WorkDir-relative would have only two '..')",
+			rpaths[0], wantRpath)
+	}
+
+	// Cross-check: the WorkDir-relative computation would produce two
+	// "..", which would resolve back to a non-existent
+	// $tsukuHome/tools/tmux-3.6a/libs/... when joined with the eventual
+	// install-location loader dir. Catch that explicitly so a regression
+	// to filepath.Dir(binaryPath) shows up as a clear test failure.
+	rel := strings.TrimPrefix(rpaths[0], "$ORIGIN/")
+	resolved := filepath.Clean(filepath.Join(loaderDir, filepath.FromSlash(rel)))
+	wantResolved := filepath.Join(libsDir, "libevent-2.1.12", "lib")
+	if resolved != wantResolved {
+		t.Errorf("rpath resolves to %q from install-location loader %q, want %q",
+			resolved, loaderDir, wantResolved)
 	}
 }
 
