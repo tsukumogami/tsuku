@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 
 	"github.com/tsukumogami/tsuku/internal/progress"
@@ -113,12 +114,21 @@ func (a *HomebrewRelocateAction) Execute(ctx *ExecutionContext, params map[strin
 		}
 	}
 
-	// Legacy library install-time chain. The current path-emit form is
-	// absolute (not @loader_path-relative); Issue 4 will migrate it to the
-	// relative form used by fixDylibRpathChain. Kept as a separate helper
-	// so the Issue 4 diff is reviewable in isolation.
+	// Library install-time chain. Kept as a separate helper from
+	// fixDylibRpathChain because the source field differs: the legacy
+	// helper walks ctx.Dependencies.InstallTime (populated from
+	// metadata.dependencies, e.g. libevent declares dependencies =
+	// ["openssl"]), while fixDylibRpathChain reads
+	// ctx.Dependencies.RuntimeDependencies (populated from
+	// metadata.runtime_dependencies). Library recipes that use the legacy
+	// dependencies field do not flow through the new chain, so this helper
+	// remains the install-time entry point for them.
+	//
+	// As of Issue 4 the helper emits @loader_path-relative RPATHs (computed
+	// via the same computeChainRpaths machinery as fixDylibRpathChain),
+	// which makes installs portable across $TSUKU_HOME locations.
 	if runtime.GOOS == "darwin" && ctx.Recipe != nil && ctx.Recipe.Metadata.Type == "library" {
-		if err := a.fixLibraryInstallTimeChainLegacy(ctx, installPath, reporter); err != nil {
+		if err := a.fixLibraryInstallTimeChain(ctx, installPath, reporter); err != nil {
 			return fmt.Errorf("failed to fix library install-time chain: %w", err)
 		}
 	}
@@ -828,15 +838,28 @@ func (a *HomebrewRelocateAction) isMachOBinary(path string) bool {
 		bytes.Equal(magic, []byte{0xbe, 0xba, 0xfe, 0xca}) // Fat little-endian
 }
 
-// fixLibraryInstallTimeChainLegacy is the absolute-path install-time chain
-// that fixLibraryDylibRpaths used to perform for Type == "library" recipes.
-// It is preserved as-is (still emitting absolute paths) so Issue 3 can be
-// reviewed in isolation. Issue 4 migrates this helper to use the
-// @loader_path-relative form computed by addChainEntriesToMachO.
+// fixLibraryInstallTimeChain is the install-time chain for Type == "library"
+// recipes. It walks ctx.Dependencies.InstallTime (populated from the legacy
+// metadata.dependencies field) and adds one @loader_path-relative RPATH
+// entry per declared dep to each .dylib in the library's lib/ directory.
 //
-// TODO Issue 4: migrate to @loader_path-relative paths via filepath.Rel
-// over EvalSymlinks; keep the per-entry filepath.Join post-check.
-func (a *HomebrewRelocateAction) fixLibraryInstallTimeChainLegacy(ctx *ExecutionContext, installPath string, reporter progress.Reporter) error {
+// Path form: relative to the dylib's directory (loaderDir), computed via
+// filepath.Rel over EvalSymlinks on both ends — same machinery as
+// fixDylibRpathChain (computeChainRpaths). Each computed entry is post-
+// checked: filepath.Join(loaderDir, relPath) must resolve back inside
+// ctx.LibsDir. A failed check fails the install with a clear error before
+// any install_name_tool -add_rpath invocation for that entry.
+//
+// A trailing @loader_path entry is added so the dylib resolves sibling
+// libraries shipped in the same library bottle (e.g., libevent's
+// libevent_core.dylib references its own libevent.dylib via @rpath).
+//
+// This helper is kept separate from fixDylibRpathChain because the source
+// field differs: this one reads InstallTime (legacy `dependencies` field),
+// the other reads RuntimeDependencies (newer `runtime_dependencies` field).
+// They merge once every library recipe has been migrated to declare its
+// chain via runtime_dependencies — until then, both code paths are needed.
+func (a *HomebrewRelocateAction) fixLibraryInstallTimeChain(ctx *ExecutionContext, installPath string, reporter progress.Reporter) error {
 	// Only run on macOS
 	if runtime.GOOS != "darwin" {
 		return nil
@@ -854,7 +877,10 @@ func (a *HomebrewRelocateAction) fixLibraryInstallTimeChainLegacy(ctx *Execution
 		if err != nil {
 			return err
 		}
-		if !info.IsDir() && strings.HasSuffix(path, ".dylib") {
+		if info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
+			return nil
+		}
+		if strings.HasSuffix(path, ".dylib") {
 			dylibFiles = append(dylibFiles, path)
 		}
 		return nil
@@ -867,22 +893,24 @@ func (a *HomebrewRelocateAction) fixLibraryInstallTimeChainLegacy(ctx *Execution
 		return nil
 	}
 
-	// Build list of dependency library paths
-	var depLibPaths []string
-	if ctx.Dependencies.InstallTime != nil {
-		for depName, depVersion := range ctx.Dependencies.InstallTime {
-			// Dependency libraries are in $TSUKU_HOME/libs/depname-version/lib
-			depLibPath := filepath.Join(ctx.LibsDir, fmt.Sprintf("%s-%s", depName, depVersion), "lib")
-			depLibPaths = append(depLibPaths, depLibPath)
-		}
+	// Build chain entries from InstallTime, sorted by name for deterministic
+	// RPATH ordering. (Map iteration in Go is non-deterministic; without the
+	// sort, the emitted RPATHs would shuffle across runs and golden-fixture
+	// diffs would be noisy.)
+	entries := make([]chainEntry, 0, len(ctx.Dependencies.InstallTime))
+	for depName, depVersion := range ctx.Dependencies.InstallTime {
+		entries = append(entries, chainEntry{name: depName, version: depVersion})
 	}
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].name < entries[j].name
+	})
 
-	if len(depLibPaths) == 0 {
+	if len(entries) == 0 {
 		// No dependencies, nothing to add
 		return nil
 	}
 
-	reporter.Log("   Fixing dylib RPATHs for %d .dylib file(s) with %d dependencies", len(dylibFiles), len(depLibPaths))
+	reporter.Log("   Fixing dylib RPATHs for %d .dylib file(s) with %d dependencies", len(dylibFiles), len(entries))
 
 	installNameTool, err := exec.LookPath("install_name_tool")
 	if err != nil {
@@ -890,9 +918,18 @@ func (a *HomebrewRelocateAction) fixLibraryInstallTimeChainLegacy(ctx *Execution
 		return nil
 	}
 
-	// For each .dylib file, add RPATHs to all dependency lib directories
+	// For each .dylib file, compute the @loader_path-relative chain entries
+	// and apply them. The path computation runs BEFORE any patching so a
+	// single escaping entry fails the install before any install_name_tool
+	// -add_rpath runs for that dylib.
 	for _, dylibPath := range dylibFiles {
-		// Make file writable
+		loaderDir := filepath.Dir(dylibPath)
+		rpaths, err := computeChainRpaths(loaderDir, ctx.LibsDir, entries, filepath.Base(dylibPath))
+		if err != nil {
+			return err
+		}
+
+		// Make file writable for the duration of the patch
 		info, err := os.Stat(dylibPath)
 		if err != nil {
 			continue
@@ -907,17 +944,18 @@ func (a *HomebrewRelocateAction) fixLibraryInstallTimeChainLegacy(ctx *Execution
 			}(dylibPath, originalMode)
 		}
 
-		// Add RPATH for each dependency
-		for _, depPath := range depLibPaths {
-			rpathCmd := exec.Command(installNameTool, "-add_rpath", depPath, dylibPath)
+		// Add @loader_path-relative RPATH for each dependency
+		for _, rp := range rpaths {
+			rpathCmd := exec.Command(installNameTool, "-add_rpath", rp, dylibPath)
 			output, err := rpathCmd.CombinedOutput()
 			if err != nil && !strings.Contains(string(output), "would duplicate") {
 				reporter.Warn("   failed to add RPATH %s to %s: %s",
-					depPath, filepath.Base(dylibPath), strings.TrimSpace(string(output)))
+					rp, filepath.Base(dylibPath), strings.TrimSpace(string(output)))
 			}
 		}
 
-		// Also add @loader_path to find sibling libs in same directory
+		// Also add @loader_path so the dylib finds sibling libs in the same
+		// directory (e.g., libevent_core.dylib referencing libevent.dylib).
 		loaderPathCmd := exec.Command(installNameTool, "-add_rpath", "@loader_path", dylibPath)
 		output, err := loaderPathCmd.CombinedOutput()
 		if err != nil && !strings.Contains(string(output), "would duplicate") {
@@ -926,14 +964,13 @@ func (a *HomebrewRelocateAction) fixLibraryInstallTimeChainLegacy(ctx *Execution
 		}
 
 		// Re-sign the binary (required on macOS after modification)
-		codesign, err := exec.LookPath("codesign")
-		if err == nil {
+		if codesign, err := exec.LookPath("codesign"); err == nil {
 			signCmd := exec.Command(codesign, "-f", "-s", "-", dylibPath)
 			_ = signCmd.Run() // Best effort
 		}
 	}
 
-	_ = installPath // reserved for future use (Issue 4 migration)
+	_ = installPath // reserved for future use
 	return nil
 }
 
