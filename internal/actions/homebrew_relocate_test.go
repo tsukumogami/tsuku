@@ -392,7 +392,7 @@ func TestFixDylibRpathChain_NonDarwinIsNoOp(t *testing.T) {
 	}
 
 	// Calling on Linux returns nil immediately; the function does nothing.
-	err := action.fixDylibRpathChain(ctx, "/unused", progress.NoopReporter{})
+	err := action.fixDylibRpathChain(ctx, "/unused", nil, progress.NoopReporter{})
 	if err != nil {
 		t.Fatalf("fixDylibRpathChain on non-darwin = %v, want nil", err)
 	}
@@ -417,7 +417,7 @@ func TestFixDylibRpathChain_EmptyRuntimeDepsIsNoOp(t *testing.T) {
 		Dependencies: ResolvedDeps{}, // RuntimeDependencies is nil
 	}
 
-	err := action.fixDylibRpathChain(ctx, "/unused", progress.NoopReporter{})
+	err := action.fixDylibRpathChain(ctx, "/unused", nil, progress.NoopReporter{})
 	if err != nil {
 		t.Fatalf("fixDylibRpathChain with empty RuntimeDeps = %v, want nil", err)
 	}
@@ -736,7 +736,7 @@ func TestFixElfRpathChain_NonLinuxIsNoOp(t *testing.T) {
 		},
 	}
 
-	err := action.fixElfRpathChain(ctx, "/unused", progress.NoopReporter{})
+	err := action.fixElfRpathChain(ctx, "/unused", nil, progress.NoopReporter{})
 	if err != nil {
 		t.Fatalf("fixElfRpathChain on non-linux = %v, want nil", err)
 	}
@@ -761,7 +761,7 @@ func TestFixElfRpathChain_EmptyRuntimeDepsIsNoOp(t *testing.T) {
 		Dependencies: ResolvedDeps{}, // RuntimeDependencies is nil
 	}
 
-	err := action.fixElfRpathChain(ctx, "/unused", progress.NoopReporter{})
+	err := action.fixElfRpathChain(ctx, "/unused", nil, progress.NoopReporter{})
 	if err != nil {
 		t.Fatalf("fixElfRpathChain with empty RuntimeDeps = %v, want nil", err)
 	}
@@ -867,7 +867,7 @@ func TestFixElfRpathChain_WritesDTRpath(t *testing.T) {
 		},
 	}
 
-	if err := action.fixElfRpathChain(ctx, "/unused", progress.NoopReporter{}); err != nil {
+	if err := action.fixElfRpathChain(ctx, "/unused", nil, progress.NoopReporter{}); err != nil {
 		t.Fatalf("fixElfRpathChain returned error: %v", err)
 	}
 
