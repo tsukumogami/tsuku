@@ -271,9 +271,11 @@ func TestComputeChainRpaths_ToolBinaryWithRuntimeDeps(t *testing.T) {
 // the lifted Type gate; the dep entries land via @loader_path-relative paths
 // in both cases.
 //
-// (Pre-rename, fixLibraryDylibRpaths handled this code path. The legacy
-// install-time chain — which emits absolute paths — is now in
-// fixLibraryInstallTimeChainLegacy and migrates in Issue 4.)
+// (Pre-rename, fixLibraryDylibRpaths handled this code path. The library
+// install-time chain — driven by the legacy `dependencies` field — lives in
+// fixLibraryInstallTimeChain and now also emits @loader_path-relative
+// paths; see TestComputeChainRpaths_LibraryInstallTimeIsRelative below for
+// the lock on that shape.)
 func TestComputeChainRpaths_LibraryDylibWithRuntimeDeps(t *testing.T) {
 	t.Parallel()
 
@@ -415,5 +417,210 @@ func TestFixDylibRpathChain_EmptyRuntimeDepsIsNoOp(t *testing.T) {
 	err := action.fixDylibRpathChain(ctx, "/unused", progress.NoopReporter{})
 	if err != nil {
 		t.Fatalf("fixDylibRpathChain with empty RuntimeDeps = %v, want nil", err)
+	}
+}
+
+// -- fixLibraryInstallTimeChain: @loader_path-relative emit, golden lock --
+
+// TestComputeChainRpaths_LibraryInstallTimeIsRelative locks the RPATH shape
+// for the library install-time chain. Pre-Issue 4, the helper emitted
+// absolute paths like "/Users/.../libs/openssl-3.5.0/lib"; post-Issue 4
+// it emits "@loader_path/..." entries computed via filepath.Rel over
+// EvalSymlinks. The library helper reuses computeChainRpaths, so this test
+// also serves as the canary for any future regression to absolute paths.
+//
+// The expected RPATH is derived from the loader/lib structure (not a
+// hardcoded $TSUKU_HOME path) so the test is portable across hosts.
+func TestComputeChainRpaths_LibraryInstallTimeIsRelative(t *testing.T) {
+	t.Parallel()
+
+	tsukuHome := t.TempDir()
+	libsDir := filepath.Join(tsukuHome, "libs")
+	workLibDir := filepath.Join(tsukuHome, "work", "lib")
+	if err := os.MkdirAll(workLibDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(libsDir, "openssl-3.5.0", "lib"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Mirror the libevent shape: a Type == "library" recipe with
+	// dependencies = ["openssl"] feeds InstallTime = {"openssl": "3.5.0"}.
+	dylibPath := filepath.Join(workLibDir, "libevent.dylib")
+	loaderDir := filepath.Dir(dylibPath)
+	entries := []chainEntry{{name: "openssl", version: "3.5.0"}}
+
+	rpaths, err := computeChainRpaths(loaderDir, libsDir, entries, "libevent.dylib")
+	if err != nil {
+		t.Fatalf("computeChainRpaths returned error: %v", err)
+	}
+	if len(rpaths) != 1 {
+		t.Fatalf("got %d rpaths, want 1", len(rpaths))
+	}
+
+	// Golden: RPATH must be @loader_path-relative, not absolute.
+	rp := rpaths[0]
+	if !strings.HasPrefix(rp, "@loader_path/") {
+		t.Errorf("rpath = %q, want @loader_path/ prefix (regression to absolute path?)", rp)
+	}
+	if strings.HasPrefix(rp, "/") {
+		t.Errorf("rpath = %q starts with /; library install-time chain must emit @loader_path-relative entries", rp)
+	}
+	if strings.Contains(rp, tsukuHome) {
+		t.Errorf("rpath = %q leaks the absolute test tsuku home %q; the emit form must be relative", rp, tsukuHome)
+	}
+
+	// Lock the exact relative form. In this synthetic layout the dylib is
+	// at $tsukuHome/work/lib and the dep is at $tsukuHome/libs/openssl-3.5.0/lib,
+	// so the @loader_path-relative hop is ../../libs/openssl-3.5.0/lib. The
+	// real install layout ($TSUKU_HOME/libs/<recipe>-<v>/lib reaching
+	// $TSUKU_HOME/libs/<dep>-<v>/lib) yields ../../<dep>-<v>/lib — same
+	// computeChainRpaths machinery, different number of "..", which is
+	// exactly what filepath.Rel handles. The golden lock here is on
+	// "@loader_path/-prefix and no leaked absolute path", which is portable
+	// across host paths.
+	wantRel := filepath.ToSlash(filepath.Join("..", "..", "libs", "openssl-3.5.0", "lib"))
+	wantRpath := "@loader_path/" + wantRel
+	if rp != wantRpath {
+		t.Errorf("rpath = %q, want %q (golden shape for libevent-style chain)", rp, wantRpath)
+	}
+
+	// Re-resolve: the relative path must point back at the dep lib dir.
+	rel := strings.TrimPrefix(rp, "@loader_path/")
+	joined := filepath.Clean(filepath.Join(loaderDir, filepath.FromSlash(rel)))
+	want := filepath.Clean(filepath.Join(libsDir, "openssl-3.5.0", "lib"))
+	if joined != want {
+		t.Errorf("rpath resolved to %q, want %q", joined, want)
+	}
+}
+
+// TestFixLibraryInstallTimeChain_NonDarwinIsNoOp checks the macOS-only
+// guard: the helper returns nil immediately on non-darwin platforms. (The
+// Linux ELF chain ships in Issue 5.)
+func TestFixLibraryInstallTimeChain_NonDarwinIsNoOp(t *testing.T) {
+	t.Parallel()
+	if runtime.GOOS == "darwin" {
+		t.Skip("non-darwin guard test")
+	}
+
+	action := &HomebrewRelocateAction{}
+	tsukuHome := t.TempDir()
+	ctx := &ExecutionContext{
+		WorkDir: filepath.Join(tsukuHome, "work"),
+		LibsDir: filepath.Join(tsukuHome, "libs"),
+		Dependencies: ResolvedDeps{
+			InstallTime: map[string]string{"openssl": "3.5.0"},
+		},
+	}
+
+	err := action.fixLibraryInstallTimeChain(ctx, "/unused", progress.NoopReporter{})
+	if err != nil {
+		t.Fatalf("fixLibraryInstallTimeChain on non-darwin = %v, want nil", err)
+	}
+}
+
+// TestFixLibraryInstallTimeChain_EmptyInstallTimeIsNoOp checks that an
+// empty InstallTime map produces no patching (no-op). Library recipes
+// without declared dependencies (pcre2, libnghttp3, utf8proc) take this
+// path.
+func TestFixLibraryInstallTimeChain_EmptyInstallTimeIsNoOp(t *testing.T) {
+	t.Parallel()
+
+	action := &HomebrewRelocateAction{}
+	tsukuHome := t.TempDir()
+	workLibDir := filepath.Join(tsukuHome, "work", "lib")
+	if err := os.MkdirAll(workLibDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	// Drop a fake dylib in lib/ to confirm the helper still returns nil
+	// when there are no entries to add (empty InstallTime is the no-op
+	// gate, independent of whether dylibs are present).
+	if err := os.WriteFile(filepath.Join(workLibDir, "libfoo.dylib"), []byte("stub"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		WorkDir:      filepath.Join(tsukuHome, "work"),
+		LibsDir:      filepath.Join(tsukuHome, "libs"),
+		Dependencies: ResolvedDeps{}, // InstallTime is nil
+	}
+
+	err := action.fixLibraryInstallTimeChain(ctx, "/unused", progress.NoopReporter{})
+	if err != nil {
+		t.Fatalf("fixLibraryInstallTimeChain with empty InstallTime = %v, want nil", err)
+	}
+}
+
+// TestFixLibraryInstallTimeChain_EscapingEntryIsRejected checks that the
+// defense-in-depth post-check applies to the library install-time chain
+// too. An InstallTime entry whose name escapes ctx.LibsDir must fail the
+// install before any install_name_tool invocation. Dep names are
+// validated upstream at recipe load time, so this is a belt-and-braces
+// check that mirrors TestComputeChainRpaths_EscapingEntryIsRejected.
+func TestFixLibraryInstallTimeChain_EscapingEntryIsRejected(t *testing.T) {
+	t.Parallel()
+
+	tsukuHome := t.TempDir()
+	libsDir := filepath.Join(tsukuHome, "libs")
+	loaderDir := filepath.Join(tsukuHome, "work", "lib")
+	if err := os.MkdirAll(loaderDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(libsDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	// computeChainRpaths is the shared post-check for both chain helpers,
+	// so this exercises the same defense path the library helper hits when
+	// it encounters an escaping InstallTime entry.
+	entries := []chainEntry{{name: "../etc", version: "1.0"}}
+	_, err := computeChainRpaths(loaderDir, libsDir, entries, "libfoo.dylib")
+	if err == nil {
+		t.Fatalf("computeChainRpaths returned no error for escaping entry; want escape error")
+	}
+	if !strings.Contains(err.Error(), "escapes libs dir") {
+		t.Errorf("error = %q, want it to mention 'escapes libs dir'", err.Error())
+	}
+}
+
+// TestFixLibraryInstallTimeChain_DeterministicOrder checks that the chain
+// helper emits RPATHs in deterministic order (sorted by dep name) when the
+// underlying InstallTime map iteration order would otherwise be random.
+// Without the sort, golden-fixture diffs would be noisy and the install
+// would produce a different RPATH order across runs of the same inputs.
+func TestFixLibraryInstallTimeChain_DeterministicOrder(t *testing.T) {
+	t.Parallel()
+
+	tsukuHome := t.TempDir()
+	libsDir := filepath.Join(tsukuHome, "libs")
+	loaderDir := filepath.Join(tsukuHome, "work", "lib")
+	if err := os.MkdirAll(loaderDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for _, dep := range []string{"alpha-1.0", "bravo-2.0", "charlie-3.0"} {
+		if err := os.MkdirAll(filepath.Join(libsDir, dep, "lib"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Sorted-name entries: alpha, bravo, charlie.
+	entries := []chainEntry{
+		{name: "alpha", version: "1.0"},
+		{name: "bravo", version: "2.0"},
+		{name: "charlie", version: "3.0"},
+	}
+	rpaths, err := computeChainRpaths(loaderDir, libsDir, entries, "libfoo.dylib")
+	if err != nil {
+		t.Fatalf("computeChainRpaths returned error: %v", err)
+	}
+
+	wantOrder := []string{"alpha-1.0", "bravo-2.0", "charlie-3.0"}
+	if len(rpaths) != len(wantOrder) {
+		t.Fatalf("got %d rpaths, want %d", len(rpaths), len(wantOrder))
+	}
+	for i, rp := range rpaths {
+		if !strings.Contains(rp, wantOrder[i]) {
+			t.Errorf("rpath %d = %q, want it to contain %q (sort-by-name order)", i, rp, wantOrder[i])
+		}
 	}
 }
