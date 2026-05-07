@@ -1,0 +1,1 @@
+{"schema_version":1,"ecosystem":"rubygems","environment":"linux-glibc-x86_64","updated_at":"2026-05-07T08-49-26Z","failures":[{"package_id":"rubygems:sesh","category":"install_failed","message":"Error: recipe validation failed for 'sesh'\n  - metadata.homepage: homepage must start with https:// (got: http://rubygems.org/gems/sesh)","timestamp":"2026-05-07T08:49:16.188432899Z"}]}
