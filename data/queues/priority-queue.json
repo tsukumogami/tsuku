@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-07T06:07:12Z",
+  "updated_at": "2026-05-07T08:52:29Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 328,
-      "next_retry_at": "1734-01-26T02:57:36.289878332Z"
+      "failure_count": 330,
+      "next_retry_at": "1734-01-26T09:05:12.857631947Z"
     },
     {
       "name": "azqr",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 493,
@@ -42796,11 +42796,11 @@
       "name": "sesh",
       "source": "rubygems:sesh",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-05-07T03:57:02.498466735Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-05-07T16:52:29.712407755Z"
     },
     {
       "name": "sevenzip",
