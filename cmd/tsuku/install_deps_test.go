@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/progress"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/testutil"
 )
 
@@ -588,5 +590,66 @@ func TestInstallWithDependencies_NoStdoutEscape(t *testing.T) {
 	}
 	if len(buf) > 0 {
 		t.Errorf("unexpected bytes written to os.Stdout (%d bytes): %q", len(buf), buf)
+	}
+}
+
+// TestShouldInstallRuntimeDep verifies the platform-compatibility gate that
+// runs before each runtime_dependencies entry is forwarded to the recursive
+// installer. A recipe that excludes the current OS must be skipped silently
+// (the SONAME completeness scanner is the right surface for warning when a
+// NEEDED SONAME is uncovered). A platform-supported recipe must proceed.
+func TestShouldInstallRuntimeDep(t *testing.T) {
+	t.Parallel()
+
+	// Pick the OS opposite to the current runtime so the negative case
+	// works on both Linux and macOS CI.
+	otherOS := "darwin"
+	if runtime.GOOS == "darwin" {
+		otherOS = "linux"
+	}
+
+	tests := []struct {
+		name string
+		dep  *recipe.Recipe
+		want bool
+	}{
+		{
+			name: "nil recipe defers to recursive installer",
+			dep:  nil,
+			want: true,
+		},
+		{
+			name: "no platform constraints supports current runtime",
+			dep:  &recipe.Recipe{Metadata: recipe.MetadataSection{}},
+			want: true,
+		},
+		{
+			name: "recipe restricted to current OS supports current runtime",
+			dep: &recipe.Recipe{
+				Metadata: recipe.MetadataSection{
+					SupportedOS: []string{runtime.GOOS},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "recipe restricted to other OS skipped on current runtime",
+			dep: &recipe.Recipe{
+				Metadata: recipe.MetadataSection{
+					SupportedOS: []string{otherOS},
+				},
+			},
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := shouldInstallRuntimeDep(tt.dep)
+			if got != tt.want {
+				t.Errorf("shouldInstallRuntimeDep() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
