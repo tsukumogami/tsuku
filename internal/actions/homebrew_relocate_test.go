@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/progress"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 // -- homebrew_relocate.go: Dependencies, extractBottlePrefixes --
@@ -1057,6 +1058,228 @@ func TestComputeChainRpaths_UsesFutureInstallLocation(t *testing.T) {
 	if resolved != wantResolved {
 		t.Errorf("rpath resolves to %q from install-location loader %q, want %q",
 			resolved, loaderDir, wantResolved)
+	}
+}
+
+// -- resolveInstallPath / Execute()-level coverage (regression for Bug 4) --
+
+// TestResolveInstallPath_ToolFallback locks the contract that drives Bug 4:
+// when ctx.ToolInstallDir is empty (which is its state during the install
+// phase, before executor.SetToolInstallDir runs), the install path must
+// resolve to $TSUKU_HOME/tools/<recipe>-<version> rather than ctx.InstallDir
+// (workDir/.install). The chain RPATH computation rebases binary paths
+// onto this value via futureLoaderDir; getting it wrong reproduces the
+// WorkDir-shape RPATH that Bug 3 already fixed at the chain function.
+func TestResolveInstallPath_ToolFallback(t *testing.T) {
+	t.Parallel()
+
+	tsukuHome := t.TempDir()
+	toolsDir := filepath.Join(tsukuHome, "tools")
+	workDir := filepath.Join(tsukuHome, "work")
+	installDir := filepath.Join(workDir, ".install")
+
+	cases := []struct {
+		name           string
+		toolInstallDir string
+		toolsDir       string
+		recipeName     string
+		version        string
+		recipeType     string
+		want           string
+	}{
+		{
+			name:           "tool with empty ToolInstallDir falls back to ToolsDir+recipe-version",
+			toolInstallDir: "",
+			toolsDir:       toolsDir,
+			recipeName:     "tmux",
+			version:        "3.6a",
+			recipeType:     "", // empty defaults to "tool"
+			want:           filepath.Join(toolsDir, "tmux-3.6a"),
+		},
+		{
+			name:           "tool with explicit ToolInstallDir returns it unchanged",
+			toolInstallDir: filepath.Join(toolsDir, "tmux-3.6a"),
+			toolsDir:       toolsDir,
+			recipeName:     "tmux",
+			version:        "3.6a",
+			recipeType:     "tool",
+			want:           filepath.Join(toolsDir, "tmux-3.6a"),
+		},
+		{
+			name:           "library uses LibsDir + recipe-version regardless of ToolInstallDir",
+			toolInstallDir: filepath.Join(toolsDir, "should-not-be-used"),
+			toolsDir:       toolsDir,
+			recipeName:     "libevent",
+			version:        "2.1.12",
+			recipeType:     "library",
+			want:           filepath.Join(tsukuHome, "libs", "libevent-2.1.12"),
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			ctx := &ExecutionContext{
+				WorkDir:        workDir,
+				InstallDir:     installDir,
+				ToolInstallDir: c.toolInstallDir,
+				ToolsDir:       c.toolsDir,
+				LibsDir:        filepath.Join(tsukuHome, "libs"),
+				Version:        c.version,
+				Recipe: &recipe.Recipe{
+					Metadata: recipe.MetadataSection{
+						Name: c.recipeName,
+						Type: c.recipeType,
+					},
+				},
+			}
+			got := resolveInstallPath(ctx)
+			if got != c.want {
+				t.Errorf("resolveInstallPath() = %q, want %q", got, c.want)
+			}
+			// Cross-check the regression shape: the resolved path must NOT
+			// equal ctx.InstallDir (workDir/.install) for tools with a
+			// recipe and version, since that is the WorkDir-shape that
+			// produces the wrong chain RPATH.
+			if c.recipeType != "library" && got == installDir {
+				t.Errorf("resolveInstallPath() returned WorkDir-shape %q; chain RPATH would be wrong", got)
+			}
+		})
+	}
+}
+
+// TestHomebrewRelocateAction_Execute_ChainUsesEventualInstallLocation is the
+// higher-level regression test for Bug 4. It drives Execute() with the
+// context shape that the production caller (cmd/tsuku/install_deps.go +
+// executor.ExecutePlan) constructs during the install phase: ToolInstallDir
+// is empty, ToolsDir points at $TSUKU_HOME/tools, and Recipe carries the
+// tool name and version. The test asserts the DT_RPATH the chain function
+// writes is anchored at the eventual install location, not WorkDir.
+//
+// The Bug 3 regression test (TestComputeChainRpaths_UsesFutureInstallLocation,
+// TestFixElfRpathChain_WritesDTRpath) passes a synthetic installPath
+// directly to fixElfRpathChain and so does not exercise the Execute()
+// dispatch that decides what installPath to use. This test closes that gap.
+func TestHomebrewRelocateAction_Execute_ChainUsesEventualInstallLocation(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("DT_RPATH integration test runs on Linux only")
+	}
+	patchelfPath, err := exec.LookPath("patchelf")
+	if err != nil {
+		t.Skip("patchelf not on PATH; skipping Execute()-level chain RPATH test")
+	}
+
+	// Pick a real dynamically-linked ELF binary as a fixture.
+	srcCandidates := []string{"/bin/true", "/bin/ls"}
+	var srcBin string
+	for _, c := range srcCandidates {
+		if data, err := os.ReadFile(c); err == nil && len(data) >= 4 && string(data[:4]) == "\x7fELF" {
+			srcBin = c
+			break
+		}
+	}
+	if srcBin == "" {
+		t.Skip("no suitable ELF binary in /bin to use as test fixture")
+	}
+
+	// Layout: deliberately pick depths so the WorkDir-shape and install-shape
+	// RPATHs differ in the number of ".." segments. The eventual install path
+	// is $tsukuHome/tools/tmux-3.6a (two levels under $tsukuHome). The WorkDir
+	// staging path lives at $tsukuHome/staging/work so that ctx.InstallDir
+	// (workDir/.install) is three levels under $tsukuHome — a fallback to
+	// it would emit one extra ".." in the chain RPATH compared to the
+	// correct install-anchored shape.
+	tsukuHome := t.TempDir()
+	toolsDir := filepath.Join(tsukuHome, "tools")
+	libsDir := filepath.Join(tsukuHome, "libs")
+	workDir := filepath.Join(tsukuHome, "staging", "work")
+	binDir := filepath.Join(workDir, "bin")
+	installDir := filepath.Join(workDir, ".install")
+	for _, d := range []string{binDir, installDir, filepath.Join(libsDir, "libevent-2.1.12", "lib"), toolsDir} {
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	dstBin := filepath.Join(binDir, "tmux")
+	if err := copyTestFile(srcBin, dstBin, 0o755); err != nil {
+		t.Fatalf("copy fixture: %v", err)
+	}
+
+	// Construct the context shape the production caller uses during the
+	// install phase: ToolInstallDir is intentionally empty (the executor
+	// only sets it via SetToolInstallDir after this phase returns), and
+	// the Recipe carries the name + version the install path resolves
+	// against.
+	action := &HomebrewRelocateAction{}
+	ctx := &ExecutionContext{
+		WorkDir:        workDir,
+		InstallDir:     installDir,
+		ToolInstallDir: "", // Bug 4 trigger: empty during install phase
+		ToolsDir:       toolsDir,
+		LibsDir:        libsDir,
+		Version:        "3.6a",
+		OS:             runtime.GOOS,
+		Arch:           runtime.GOARCH,
+		// ExecPaths makes findPatchelf return the path we just resolved
+		// rather than searching the system again.
+		ExecPaths: []string{filepath.Dir(patchelfPath)},
+		Recipe: &recipe.Recipe{
+			Metadata: recipe.MetadataSection{
+				Name: "tmux",
+				Type: "tool",
+			},
+		},
+		Dependencies: ResolvedDeps{
+			Runtime:             map[string]string{"libevent": "2.1.12"},
+			RuntimeDependencies: []string{"libevent"},
+		},
+	}
+
+	if err := action.Execute(ctx, map[string]interface{}{"formula": "tmux"}); err != nil {
+		t.Fatalf("Execute() returned error: %v", err)
+	}
+
+	// Inspect the patched binary: the chain must have anchored the
+	// $ORIGIN-relative path at the install layout
+	// ($tsukuHome/tools/tmux-3.6a/bin), not the WorkDir layout
+	// ($tsukuHome/work/bin or $tsukuHome/work/.install/bin).
+	f, err := elf.Open(dstBin)
+	if err != nil {
+		t.Fatalf("elf.Open(%s): %v", dstBin, err)
+	}
+	defer func() { _ = f.Close() }()
+
+	rpaths, err := f.DynString(elf.DT_RPATH)
+	if err != nil {
+		t.Fatalf("DynString(DT_RPATH): %v", err)
+	}
+	if len(rpaths) == 0 {
+		t.Fatalf("DT_RPATH is empty; want the chain to have written an entry pointing at libevent's lib dir")
+	}
+	joined := strings.Join(rpaths, ":")
+
+	// Lock the install-shape RPATH. Layout depths:
+	//   binary at install: $tsukuHome/tools/tmux-3.6a/bin/tmux  → 4 segments under tsukuHome
+	//   target lib:        $tsukuHome/libs/libevent-2.1.12/lib  → 3 segments under tsukuHome
+	// From $tsukuHome/tools/tmux-3.6a/bin to $tsukuHome is "../../..", then
+	// down into libs/libevent-2.1.12/lib.
+	wantInstallRel := "$ORIGIN/../../../libs/libevent-2.1.12/lib"
+	if !strings.Contains(joined, wantInstallRel) {
+		t.Errorf("DT_RPATH = %q, want it to contain %q (anchored at the eventual install location)", joined, wantInstallRel)
+	}
+
+	// Bug 4 regression shape: if Execute() fell back to ctx.InstallDir
+	// ($tsukuHome/work/.install), the binary would be rebased onto
+	// $tsukuHome/work/.install/bin/tmux. From there, two ".." reach
+	// $tsukuHome/work/.install, three reach $tsukuHome/work, four reach
+	// $tsukuHome — which is "$ORIGIN/../../../../libs/libevent-2.1.12/lib".
+	// That four-".." form would only resolve correctly relative to the
+	// WorkDir layout, never on disk after install_binaries runs.
+	wrongWorkDirRel := "$ORIGIN/../../../../libs/libevent-2.1.12/lib"
+	if strings.Contains(joined, wrongWorkDirRel) {
+		t.Errorf("DT_RPATH = %q contains the WorkDir-shape RPATH %q; Execute() resolved the wrong installPath", joined, wrongWorkDirRel)
 	}
 }
 

@@ -50,39 +50,15 @@ func (a *HomebrewRelocateAction) Execute(ctx *ExecutionContext, params map[strin
 		formula = "bottle"
 	}
 
-	// Determine install path for placeholder replacement
-	// For libraries, use the final library installation path ($TSUKU_HOME/libs/recipename-version)
-	// Note: Use recipe name (not formula name) since that's where install_binaries puts the library
-	// For tools, use ToolInstallDir or InstallDir
-	var installPath string
+	// Determine install path: the directory the bottle will occupy after
+	// install_binaries moves it. Both placeholder replacement and the chain
+	// RPATH computation rely on this matching the eventual on-disk layout
+	// (not the WorkDir staging path).
 	reporter := ctx.GetReporter()
+	installPath := resolveInstallPath(ctx)
 	if ctx.Recipe != nil && ctx.Recipe.Metadata.Type == "library" {
-		// Library: use final library installation path
-		// If LibsDir is not set in context, compute it from TSUKU_HOME
-		libsDir := ctx.LibsDir
-		if libsDir == "" {
-			// Fallback: compute from TSUKU_HOME environment variable or default
-			tsukuHome := os.Getenv("TSUKU_HOME")
-			if tsukuHome == "" {
-				// Default to ~/.tsuku
-				homeDir, err := os.UserHomeDir()
-				if err == nil {
-					tsukuHome = filepath.Join(homeDir, ".tsuku")
-				}
-			}
-			libsDir = filepath.Join(tsukuHome, "libs")
-		}
-		// IMPORTANT: Use recipe name, not formula name!
-		// The actual installation goes to libs/recipename-version
-		recipeName := ctx.Recipe.Metadata.Name
-		installPath = filepath.Join(libsDir, recipeName+"-"+ctx.Version)
-		reporter.Status(fmt.Sprintf("   Relocating placeholders: %s (library, recipe: %s)", formula, recipeName))
+		reporter.Status(fmt.Sprintf("   Relocating placeholders: %s (library, recipe: %s)", formula, ctx.Recipe.Metadata.Name))
 	} else {
-		// Tool: use ToolInstallDir or InstallDir
-		installPath = ctx.ToolInstallDir
-		if installPath == "" {
-			installPath = ctx.InstallDir
-		}
 		reporter.Status(fmt.Sprintf("   Relocating placeholders: %s", formula))
 	}
 
@@ -172,6 +148,72 @@ func (a *HomebrewRelocateAction) Execute(ctx *ExecutionContext, params map[strin
 }
 
 // Note: homebrewPlaceholders is defined in homebrew.go
+
+// tsukuHomeDir resolves $TSUKU_HOME, falling back to ~/.tsuku. Returns an
+// empty string only if the home directory itself cannot be resolved (which
+// would mean nothing else in the install pipeline could work either).
+//
+// Used as a last-resort fallback in resolveInstallPath when neither LibsDir
+// nor ToolsDir is populated on the context — e.g., from synthetic test
+// contexts that bypass the production caller.
+func tsukuHomeDir() string {
+	if h := os.Getenv("TSUKU_HOME"); h != "" {
+		return h
+	}
+	if homeDir, err := os.UserHomeDir(); err == nil {
+		return filepath.Join(homeDir, ".tsuku")
+	}
+	return ""
+}
+
+// resolveInstallPath returns the directory the bottle will occupy on disk
+// after install_binaries moves it from WorkDir.
+//
+// For libraries this is $TSUKU_HOME/libs/<recipe>-<version>; for tools it
+// is $TSUKU_HOME/tools/<recipe>-<version>. The function uses the recipe
+// name (not the Homebrew formula name) so the path matches the directory
+// install_binaries actually creates.
+//
+// Tool path resolution prefers ctx.ToolInstallDir when set, but during the
+// install phase that field is empty — the executor only populates it via
+// SetToolInstallDir after the install phase returns. The fallback computes
+// the path from ctx.ToolsDir + recipe name + version, mirroring what
+// config.ToolDir would produce. Falling back to ctx.InstallDir (which is
+// WorkDir/.install) is wrong for the chain RPATH computation: it would
+// produce a $ORIGIN-relative path anchored at the WorkDir layout, not the
+// install layout, breaking shared-library resolution at runtime.
+func resolveInstallPath(ctx *ExecutionContext) string {
+	recipeName := ""
+	if ctx.Recipe != nil {
+		recipeName = ctx.Recipe.Metadata.Name
+	}
+
+	if ctx.Recipe != nil && ctx.Recipe.Metadata.Type == "library" {
+		libsDir := ctx.LibsDir
+		if libsDir == "" {
+			libsDir = filepath.Join(tsukuHomeDir(), "libs")
+		}
+		return filepath.Join(libsDir, recipeName+"-"+ctx.Version)
+	}
+
+	// Tool: prefer the executor-provided path, otherwise compute it.
+	if ctx.ToolInstallDir != "" {
+		return ctx.ToolInstallDir
+	}
+	if recipeName != "" && ctx.Version != "" {
+		toolsDir := ctx.ToolsDir
+		if toolsDir == "" {
+			toolsDir = filepath.Join(tsukuHomeDir(), "tools")
+		}
+		return filepath.Join(toolsDir, recipeName+"-"+ctx.Version)
+	}
+	// Last-resort fallback: reachable only when neither ToolInstallDir nor
+	// (ToolsDir + recipe name + version) is available. Placeholder
+	// replacement still works for the staging step, but the chain RPATH
+	// will be anchored at the WorkDir layout — callers should ensure the
+	// recipe carries a name and version before reaching this branch.
+	return ctx.InstallDir
+}
 
 // relocatePlaceholders replaces Homebrew placeholders in all files
 // For text files: direct replacement with install path
