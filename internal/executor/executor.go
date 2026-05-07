@@ -490,9 +490,18 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 	// over plan deps. When dependencies are installed before plan generation,
 	// plan.Dependencies will be empty but e.resolvedDeps will be populated.
 	resolvedDeps := e.resolvedDeps
-	if len(resolvedDeps.InstallTime) == 0 && len(resolvedDeps.Runtime) == 0 {
+	if len(resolvedDeps.InstallTime) == 0 && len(resolvedDeps.Runtime) == 0 && len(resolvedDeps.RuntimeDependencies) == 0 {
 		// Fall back to building from plan if no pre-resolved deps
 		resolvedDeps = buildResolvedDepsFromPlan(plan.Dependencies)
+	}
+
+	// Always carry the recipe's metadata-level runtime_dependencies into
+	// the execution context. The plan JSON does not encode this list, so
+	// the resolver-driven path (e.resolvedDeps) and the plan-fallback path
+	// both need to layer it back on from the recipe before downstream
+	// consumers (wrapper PATH, RPATH chain) read it.
+	if recipeForContext != nil && len(recipeForContext.Metadata.RuntimeDependencies) > 0 && len(resolvedDeps.RuntimeDependencies) == 0 {
+		resolvedDeps.RuntimeDependencies = append([]string{}, recipeForContext.Metadata.RuntimeDependencies...)
 	}
 
 	// Create execution context from plan

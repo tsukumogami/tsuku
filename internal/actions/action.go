@@ -7,6 +7,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/sonameindex"
 	"github.com/tsukumogami/tsuku/internal/version"
 )
 
@@ -37,6 +38,17 @@ type ExecutionContext struct {
 	CleanupActions          []CleanupAction   // Accumulated cleanup actions from post-install steps (e.g., shell.d files)
 	NoShellInit             bool              // When true, install_shell_init is skipped (--no-shell-init flag)
 	Reporter                progress.Reporter // Progress reporter for status and log output (optional, defaults to NoopReporter)
+
+	// SonameIndex is the (platform, SONAME) -> recipe index consulted by
+	// the homebrew action's relocate-phase SONAME completeness scanner.
+	// When non-nil, the scanner classifies every NEEDED SONAME against
+	// the index and produces a local []chainEntry of under-declared deps
+	// for the chain walk to auto-include. When nil the scanner is a
+	// no-op — the chain walk falls back to RuntimeDependencies-only.
+	//
+	// Populated at plan-generation time by callers that have a recipe
+	// registry handle. Tests construct a synthetic Index directly.
+	SonameIndex *sonameindex.Index
 }
 
 // CleanupAction describes a file-system cleanup operation to perform when

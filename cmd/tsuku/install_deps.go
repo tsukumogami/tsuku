@@ -147,6 +147,23 @@ func installEvalDepsCallback(deps []string, autoAccept bool) error {
 	return installEvalDeps(deps, autoAccept)
 }
 
+// shouldInstallRuntimeDep reports whether depRecipe applies to the current
+// runtime platform. A recipe with platform constraints (supported_os,
+// supported_arch, unsupported_platforms, supported_libc) that exclude the
+// current GOOS/GOARCH/libc must be skipped during the runtime_dependencies
+// walk: its source-build steps may lack platform when-clauses and would
+// fail with an unrelated error if the installer fell through to them.
+//
+// Returns true if depRecipe is nil so a missing recipe defers the decision
+// to the recursive installWithDependencies call (which will surface the
+// lookup error in its standard form).
+func shouldInstallRuntimeDep(depRecipe *recipe.Recipe) bool {
+	if depRecipe == nil {
+		return true
+	}
+	return depRecipe.SupportsPlatformRuntime()
+}
+
 func runInstallWithTelemetry(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client) error {
 	reporter := progress.NewTTYReporter(os.Stderr)
 	defer func() {
@@ -331,6 +348,15 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 
 		for _, dep := range r.Metadata.RuntimeDependencies {
 			reporter.Status(fmt.Sprintf("Resolving runtime dependency '%s'...", dep))
+			// Skip deps that don't apply to the current platform (e.g. a
+			// darwin-only dep declared by a cross-platform recipe). The skip
+			// is silent: the SONAME completeness scanner is the right surface
+			// for warning when the binary's NEEDED list references a SONAME
+			// that no platform-supported recipe ships.
+			depRecipe, depErr := loader.Get(dep, recipe.LoaderOptions{})
+			if depErr == nil && !shouldInstallRuntimeDep(depRecipe) {
+				continue
+			}
 			// Install runtime dependency as explicit (exposed, not hidden)
 			// No parent - these are top-level explicit installs
 			if err := installWithDependencies(dep, "", "", true, "", visited, telemetryClient, reporter); err != nil {
@@ -387,7 +413,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 
 	// Look up resolved dependency versions for variable expansion
 	// This mirrors the logic in installLibrary() for libraries
-	if len(r.Metadata.Dependencies) > 0 {
+	if len(r.Metadata.Dependencies) > 0 || len(r.Metadata.RuntimeDependencies) > 0 {
 		resolvedDeps := actions.ResolvedDeps{
 			InstallTime: make(map[string]string),
 		}
@@ -405,6 +431,15 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 					resolvedDeps.InstallTime[depName] = toolState.Version
 				}
 			}
+		}
+		// Carry the recipe's metadata-level runtime_dependencies through to
+		// the execution context so the homebrew action's relocate phase
+		// (RPATH chain) and wrapper-script PATH consumer can read the
+		// author-declared list verbatim. The executor populates this from
+		// the recipe metadata if we leave it empty here, but setting it at
+		// the call site keeps the wiring explicit in the install flow.
+		if len(r.Metadata.RuntimeDependencies) > 0 {
+			resolvedDeps.RuntimeDependencies = append([]string{}, r.Metadata.RuntimeDependencies...)
 		}
 		exec.SetResolvedDeps(resolvedDeps)
 	}

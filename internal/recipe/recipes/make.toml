@@ -53,6 +53,6 @@ outputs = ["bin/gmake"]
 when = { os = ["darwin"] }
 
 [verify]
-command = "make --version"
+command = "make --version || gmake --version"
 mode = "output"
-reason = "arm64 glibc installs make via system packages at a distribution version; output mode verifies availability across all platforms"
+reason = "Different platforms install the binary under different names: Homebrew bottles (linux amd64 glibc, darwin) install bin/gmake; system packages (linux arm64 glibc, musl) install make. The fallback covers both. Output mode verifies availability rather than version match because system packages install at the distribution's pinned version."

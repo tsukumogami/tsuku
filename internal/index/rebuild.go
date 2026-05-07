@@ -10,10 +10,12 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
+
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 // recipeMinimal is a minimal TOML struct used only during index rebuild to
-// extract binary names without importing the full internal/recipe package.
+// extract binary names without parsing the full recipe TOML schema.
 type recipeMinimal struct {
 	Metadata struct {
 		Binaries []string `toml:"binaries"`
@@ -143,22 +145,6 @@ func extractBinariesFromMinimal(r *recipeMinimal) []string {
 	return binaries
 }
 
-// isValidRecipeName returns true if the recipe name is safe to pass to URL or
-// path construction functions. Names containing '/', "..", or a null byte are
-// rejected to prevent path traversal in local-registry deployments.
-func isValidRecipeName(name string) bool {
-	if strings.Contains(name, "/") {
-		return false
-	}
-	if strings.Contains(name, "..") {
-		return false
-	}
-	if strings.ContainsRune(name, '\x00') {
-		return false
-	}
-	return true
-}
-
 // Rebuild regenerates the index from the recipe registry and installed state.
 //
 // It enumerates all known recipes via reg.ListAll (which reads the cached
@@ -191,7 +177,7 @@ func (idx *sqliteBinaryIndex) Rebuild(ctx context.Context, reg Registry, state S
 	var wg sync.WaitGroup
 	for _, name := range names {
 		// Validate name before passing to any URL or path construction.
-		if !isValidRecipeName(name) {
+		if !recipe.IsValidRecipeName(name) {
 			slog.Warn("index rebuild: invalid recipe name", "name", name)
 			continue
 		}

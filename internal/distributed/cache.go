@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 // DefaultCacheTTL is the default time before a directory listing is considered stale.
@@ -59,9 +61,14 @@ func NewCacheManager(baseDir string, ttl time.Duration) *CacheManager {
 	}
 }
 
-// validateRecipeName rejects recipe names containing path traversal or separator characters.
+// validateRecipeName rejects recipe names containing path traversal or
+// separator characters. It is a thin wrapper around recipe.IsValidRecipeName
+// that surfaces an error suitable for the cache manager's call sites.
 func validateRecipeName(name string) error {
-	if strings.Contains(name, "..") || strings.Contains(name, "/") || strings.Contains(name, string(os.PathSeparator)) {
+	if !recipe.IsValidRecipeName(name) {
+		return fmt.Errorf("invalid recipe name: %s", name)
+	}
+	if strings.Contains(name, string(os.PathSeparator)) {
 		return fmt.Errorf("invalid recipe name: %s", name)
 	}
 	return nil
