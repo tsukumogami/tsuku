@@ -956,15 +956,15 @@ func TestGitHubArchiveAction_resolveAssetName_NoWildcards(t *testing.T) {
 		OS:         "linux",
 		Arch:       "amd64",
 	}
-	name, err := action.resolveAssetName(ctx, map[string]any{
+	result, err := action.resolveAssetName(ctx, map[string]any{
 		"os_mapping":   map[string]any{"linux": "Linux"},
 		"arch_mapping": map[string]any{"amd64": "x86_64"},
 	}, "tool-{version}-{os}-{arch}.tar.gz", "owner/repo")
 	if err != nil {
 		t.Fatalf("resolveAssetName() error = %v", err)
 	}
-	if name != "tool-1.0.0-Linux-x86_64.tar.gz" {
-		t.Errorf("resolveAssetName() = %q, want %q", name, "tool-1.0.0-Linux-x86_64.tar.gz")
+	if result.assetName != "tool-1.0.0-Linux-x86_64.tar.gz" {
+		t.Errorf("resolveAssetName() = %q, want %q", result.assetName, "tool-1.0.0-Linux-x86_64.tar.gz")
 	}
 }
 
@@ -1440,12 +1440,12 @@ func TestGitHubArchiveAction_ResolveAssetName(t *testing.T) {
 		Arch:       "amd64",
 	}
 
-	name, err := action.resolveAssetName(ctx, map[string]any{}, "tool-{version}-{os}-{arch}.tar.gz", "owner/repo")
+	result, err := action.resolveAssetName(ctx, map[string]any{}, "tool-{version}-{os}-{arch}.tar.gz", "owner/repo")
 	if err != nil {
 		t.Fatalf("resolveAssetName() error: %v", err)
 	}
-	if name != "tool-1.0.0-linux-amd64.tar.gz" {
-		t.Errorf("resolveAssetName() = %q, want tool-1.0.0-linux-amd64.tar.gz", name)
+	if result.assetName != "tool-1.0.0-linux-amd64.tar.gz" {
+		t.Errorf("resolveAssetName() = %q, want tool-1.0.0-linux-amd64.tar.gz", result.assetName)
 	}
 }
 
@@ -1466,12 +1466,12 @@ func TestGitHubArchiveAction_ResolveAssetName_WithMappings(t *testing.T) {
 		"arch_mapping": map[string]any{"arm64": "aarch64"},
 	}
 
-	name, err := action.resolveAssetName(ctx, params, "tool-{os}-{arch}.tar.gz", "owner/repo")
+	result, err := action.resolveAssetName(ctx, params, "tool-{os}-{arch}.tar.gz", "owner/repo")
 	if err != nil {
 		t.Fatalf("resolveAssetName() error: %v", err)
 	}
-	if name != "tool-macOS-aarch64.tar.gz" {
-		t.Errorf("resolveAssetName() = %q, want tool-macOS-aarch64.tar.gz", name)
+	if result.assetName != "tool-macOS-aarch64.tar.gz" {
+		t.Errorf("resolveAssetName() = %q, want tool-macOS-aarch64.tar.gz", result.assetName)
 	}
 }
 

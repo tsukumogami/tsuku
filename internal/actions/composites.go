@@ -573,17 +573,25 @@ func (a *GitHubArchiveAction) Decompose(ctx *EvalContext, params map[string]inte
 	}
 
 	// Resolve asset name with mappings applied
-	assetName, err := a.resolveAssetName(ctx, params, assetPattern, repo)
+	resolved, err := a.resolveAssetName(ctx, params, assetPattern, repo)
 	if err != nil {
 		return nil, err
 	}
 
+	// If a fallback version was used, warn via the reporter and use the fallback tag in the URL.
+	versionTag := ctx.VersionTag
+	if resolved.fallbackVersionTag != "" {
+		ctx.GetReporter().Warn("version_fallback: installed %s instead of %s (no asset for %s)",
+			resolved.fallbackVersion, ctx.Version, ctx.Version)
+		versionTag = resolved.fallbackVersionTag
+	}
+
 	// Construct the fully-resolved download URL
-	url := fmt.Sprintf("https://github.com/%s/releases/download/%s/%s", repo, ctx.VersionTag, assetName)
+	url := fmt.Sprintf("https://github.com/%s/releases/download/%s/%s", repo, versionTag, resolved.assetName)
 
 	// Delegate to download action for checksum computation
 	// URL is already fully resolved, so no mappings needed
-	downloadStep, err := decomposeDownload(ctx, url, assetName, nil, nil)
+	downloadStep, err := decomposeDownload(ctx, url, resolved.assetName, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -597,7 +605,7 @@ func (a *GitHubArchiveAction) Decompose(ctx *EvalContext, params map[string]inte
 		{
 			Action: "extract",
 			Params: map[string]interface{}{
-				"archive":    assetName,
+				"archive":    resolved.assetName,
 				"format":     archiveFormat,
 				"strip_dirs": stripDirs,
 			},
@@ -618,8 +626,17 @@ func (a *GitHubArchiveAction) Decompose(ctx *EvalContext, params map[string]inte
 	}, nil
 }
 
+// resolveAssetNameResult holds the result of resolveAssetName.
+type resolveAssetNameResult struct {
+	assetName          string
+	fallbackVersion    string // non-empty when a preceding version was used
+	fallbackVersionTag string // non-empty when a preceding version was used
+}
+
 // resolveAssetName expands the asset pattern with variables and resolves wildcards.
-func (a *GitHubArchiveAction) resolveAssetName(ctx *EvalContext, params map[string]interface{}, assetPattern, repo string) (string, error) {
+// When the resolved version has no matching asset for a wildcard pattern, it retries
+// with preceding versions obtained from ListGitHubVersions.
+func (a *GitHubArchiveAction) resolveAssetName(ctx *EvalContext, params map[string]interface{}, assetPattern, repo string) (resolveAssetNameResult, error) {
 	// Build variable map for template expansion
 	vars := map[string]string{
 		"version": ctx.Version,
@@ -643,29 +660,68 @@ func (a *GitHubArchiveAction) resolveAssetName(ctx *EvalContext, params map[stri
 
 	assetName := ExpandVars(assetPattern, vars)
 
-	// Check if pattern contains wildcards - if so, resolve using GitHub API
-	if version.ContainsWildcards(assetName) {
-		if ctx.Resolver == nil {
-			return "", fmt.Errorf("resolver not available in context (required for wildcard patterns)")
-		}
-
-		apiCtx, cancel := context.WithTimeout(ctx.Context, 30*time.Second)
-		defer cancel()
-
-		assets, err := ctx.Resolver.FetchReleaseAssets(apiCtx, repo, ctx.VersionTag)
-		if err != nil {
-			return "", fmt.Errorf("failed to fetch release assets: %w", err)
-		}
-
-		matchedAsset, err := version.MatchAssetPattern(assetName, assets)
-		if err != nil {
-			return "", fmt.Errorf("asset pattern matching failed: %w", err)
-		}
-
-		assetName = matchedAsset
+	// Static pattern: no wildcards, return immediately.
+	if !version.ContainsWildcards(assetName) {
+		return resolveAssetNameResult{assetName: assetName}, nil
 	}
 
-	return assetName, nil
+	if ctx.Resolver == nil {
+		return resolveAssetNameResult{}, fmt.Errorf("resolver not available in context (required for wildcard patterns)")
+	}
+
+	apiCtx, cancel := context.WithTimeout(ctx.Context, 30*time.Second)
+	defer cancel()
+
+	assets, err := ctx.Resolver.FetchReleaseAssets(apiCtx, repo, ctx.VersionTag)
+	if err != nil {
+		return resolveAssetNameResult{}, fmt.Errorf("failed to fetch release assets: %w", err)
+	}
+
+	matchedAsset, matchErr := version.MatchAssetPattern(assetName, assets)
+	if matchErr == nil {
+		return resolveAssetNameResult{assetName: matchedAsset}, nil
+	}
+
+	// No match for the resolved version — try preceding versions.
+	allTags, listErr := ctx.Resolver.ListGitHubVersions(apiCtx, repo)
+	if listErr != nil {
+		return resolveAssetNameResult{}, fmt.Errorf("asset pattern matching failed: %w", matchErr)
+	}
+
+	// Skip tags until we pass the currently requested version, then try each one.
+	passedCurrent := false
+	for _, tag := range allTags {
+		normalizedTag := strings.TrimPrefix(tag, "v")
+		if normalizedTag == ctx.Version || tag == ctx.Version {
+			passedCurrent = true
+			continue
+		}
+		if !passedCurrent {
+			continue
+		}
+
+		fallbackVars := map[string]string{
+			"version": normalizedTag,
+			"os":      vars["os"],
+			"arch":    vars["arch"],
+		}
+		candidatePattern := ExpandVars(assetPattern, fallbackVars)
+
+		fallbackAssets, ferr := ctx.Resolver.FetchReleaseAssets(apiCtx, repo, tag)
+		if ferr != nil {
+			continue
+		}
+		matched, merr := version.MatchAssetPattern(candidatePattern, fallbackAssets)
+		if merr == nil {
+			return resolveAssetNameResult{
+				assetName:          matched,
+				fallbackVersion:    normalizedTag,
+				fallbackVersionTag: tag,
+			}, nil
+		}
+	}
+
+	return resolveAssetNameResult{}, fmt.Errorf("asset pattern matching failed: %w", matchErr)
 }
 
 // GitHubFileAction downloads pre-compiled binary files from GitHub releases
