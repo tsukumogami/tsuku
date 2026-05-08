@@ -144,8 +144,10 @@ func runPlanBasedInstall(planPath, toolName string) error {
 		printInfo()
 		printInfo("Installation successful!")
 		printInfo()
-		printInfof("To use the installed tool, add this to your shell profile:\n")
-		printInfof("  export PATH=\"%s:$PATH\"\n", cfg.CurrentDir)
+		if !isToolPathConfigured(cfg) {
+			printInfof("To use the installed tool, add this to your shell profile:\n")
+			printInfof("  export PATH=\"%s:$PATH\"\n", cfg.CurrentDir)
+		}
 	} else {
 		// System dependency validated successfully - no installation needed
 		printInfo()

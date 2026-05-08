@@ -671,7 +671,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		reporter.Log("Note: tsuku doesn't manage this dependency. It validated that it's installed.")
 	} else {
 		reporter.Log("✅ %s@%s", toolName, version)
-		if isExplicit && parent == "" {
+		if isExplicit && parent == "" && !isToolPathConfigured(cfg) {
 			reporter.DeferWarn("To use the installed tool, add this to your shell profile:\n  export PATH=\"%s:$PATH\"", cfg.CurrentDir)
 		}
 	}

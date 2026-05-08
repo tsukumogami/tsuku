@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/registry"
 )
 
@@ -485,5 +486,54 @@ func TestInstallJSONFlag(t *testing.T) {
 	}
 	if flag.DefValue != "false" {
 		t.Errorf("--json default = %q, want %q", flag.DefValue, "false")
+	}
+}
+
+func TestIsToolPathConfigured(t *testing.T) {
+	cfg := &config.Config{
+		HomeDir:    "/home/user/.tsuku",
+		CurrentDir: "/home/user/.tsuku/tools/current",
+	}
+
+	cases := []struct {
+		name string
+		path string
+		want bool
+	}{
+		{
+			name: "tools/current in PATH",
+			path: "/usr/bin:/home/user/.tsuku/tools/current:/bin",
+			want: true,
+		},
+		{
+			name: "bin dir in PATH",
+			path: "/usr/bin:/home/user/.tsuku/bin:/bin",
+			want: true,
+		},
+		{
+			name: "neither dir in PATH",
+			path: "/usr/bin:/bin",
+			want: false,
+		},
+		{
+			name: "empty PATH",
+			path: "",
+			want: false,
+		},
+		{
+			name: "both dirs in PATH",
+			path: "/home/user/.tsuku/bin:/home/user/.tsuku/tools/current:/usr/bin",
+			want: true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("PATH", tc.path)
+			got := isToolPathConfigured(cfg)
+			if got != tc.want {
+				t.Errorf("isToolPathConfigured() = %v, want %v (PATH=%q)", got, tc.want, tc.path)
+			}
+		})
 	}
 }
