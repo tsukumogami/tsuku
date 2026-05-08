@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-08T19:34:09Z",
+  "generated_at": "2026-05-08T20:21:37Z",
   "total_recipes": 1439,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 876,
+        "supported": 877,
         "total": 1439,
-        "pct": 60.87560806115357
+        "pct": 60.945100764419735
       },
       "glibc": {
         "supported": 1407,
@@ -3556,13 +3556,11 @@
       "name": "curl",
       "type": "tool",
       "platforms": {
-        "darwin": false,
+        "darwin": true,
         "glibc": true,
         "musl": true
       },
-      "gaps": [
-        "darwin"
-      ],
+      "gaps": null,
       "errors": null,
       "warnings": null
     },
