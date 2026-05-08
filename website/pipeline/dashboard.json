@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-08T17:52:49Z",
+  "generated_at": "2026-05-08T19:36:20Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 71,
-      "pending": 3838,
+      "failed": 67,
+      "pending": 3842,
       "success": 1368
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 71,
-        "pending": 3823,
+        "failed": 67,
+        "pending": 3827,
         "success": 1344
       }
     },
@@ -67,21 +67,21 @@
         "total": 1
       },
       "npm": {
-        "failed": 18,
-        "pending": 2,
+        "failed": 16,
+        "pending": 4,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 1,
+        "pending": 2,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 51,
-        "pending": 24,
+        "failed": 50,
+        "pending": 25,
         "success": 13,
         "total": 89
       }
@@ -403,24 +403,6 @@
       ],
       "failed": [
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 331,
-          "next_retry_at": "1734-01-27T18:04:11Z"
-        },
-        {
-          "id": "rubygems:cassandra",
-          "name": "cassandra",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 14,
-          "next_retry_at": "2026-05-08T19:23:51Z"
-        },
-        {
           "id": "rubygems:cdo",
           "name": "cdo",
           "ecosystem": "rubygems",
@@ -473,15 +455,6 @@
           "category": "install_failed",
           "failure_count": 13,
           "next_retry_at": "2026-05-09T09:10:54Z"
-        },
-        {
-          "id": "npm:datasette",
-          "name": "datasette",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 14,
-          "next_retry_at": "2026-05-08T19:23:51Z"
         },
         {
           "id": "rubygems:dict",
@@ -1004,15 +977,6 @@
           "category": "install_failed",
           "failure_count": 13,
           "next_retry_at": "2026-05-11T23:03:00Z"
-        },
-        {
-          "id": "pypi:tctl",
-          "name": "tctl",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 14,
-          "next_retry_at": "2026-05-08T19:23:51Z"
         },
         {
           "id": "pypi:vllm",
@@ -2877,6 +2841,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 331,
+          "next_retry_at": "1734-01-27T18:04:11Z"
+        },
+        {
           "id": "homebrew:azure-cli",
           "name": "azure-cli",
           "ecosystem": "homebrew",
@@ -4179,6 +4152,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:cassandra",
+          "name": "cassandra",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 14,
+          "next_retry_at": "2026-05-08T19:23:51Z"
         },
         {
           "id": "homebrew:cassandra-reaper",
@@ -6054,6 +6036,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:datasette",
+          "name": "datasette",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 14,
+          "next_retry_at": "2026-05-08T19:23:51Z"
         },
         {
           "id": "homebrew:datawire/blackbird/telepresence",
@@ -24772,6 +24763,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:tctl",
+          "name": "tctl",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 14,
+          "next_retry_at": "2026-05-08T19:23:51Z"
         },
         {
           "id": "homebrew:tdlib",
