@@ -25,7 +25,7 @@ type InboxReporter struct {
 	toolName   string
 	noticesDir string
 
-	mu       sync.Mutex
+	mu        sync.Mutex
 	immediate []string
 	deferred  []string
 }

@@ -110,17 +110,17 @@ type EvalConstraints struct {
 // EvalContext provides context during decomposition.
 // Used by composite actions to resolve parameters and compute checksums.
 type EvalContext struct {
-	Context       context.Context    // Context for cancellation
-	Version       string             // Resolved version (e.g., "1.29.3")
-	VersionTag    string             // Original version tag (e.g., "v1.29.3")
-	OS            string             // Target OS (runtime.GOOS)
-	Arch          string             // Target architecture (runtime.GOARCH)
-	Recipe        *recipe.Recipe     // Full recipe (for reference)
-	Resolver      *version.Resolver  // For API calls (asset resolution, etc.)
-	Downloader    Downloader         // For downloading files to compute checksums
-	DownloadCache *DownloadCache     // For caching downloaded files (optional)
-	Constraints   *EvalConstraints   // Version constraints for constrained evaluation (optional)
-	Reporter      progress.Reporter  // For emitting warnings during decomposition (optional)
+	Context       context.Context   // Context for cancellation
+	Version       string            // Resolved version (e.g., "1.29.3")
+	VersionTag    string            // Original version tag (e.g., "v1.29.3")
+	OS            string            // Target OS (runtime.GOOS)
+	Arch          string            // Target architecture (runtime.GOARCH)
+	Recipe        *recipe.Recipe    // Full recipe (for reference)
+	Resolver      *version.Resolver // For API calls (asset resolution, etc.)
+	Downloader    Downloader        // For downloading files to compute checksums
+	DownloadCache *DownloadCache    // For caching downloaded files (optional)
+	Constraints   *EvalConstraints  // Version constraints for constrained evaluation (optional)
+	Reporter      progress.Reporter // For emitting warnings during decomposition (optional)
 }
 
 // GetReporter returns the Reporter, or a NoopReporter when Reporter is nil.
