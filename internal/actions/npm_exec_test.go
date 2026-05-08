@@ -511,10 +511,10 @@ func TestNpmExecAction_Execute_NoPackageJSON(t *testing.T) {
 func TestCheckVersionConstraint(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		name      string
-		installed string
-		constraint string
-		wantErr   bool
+		name        string
+		installed   string
+		constraint  string
+		wantErr     bool
 		errContains string
 	}{
 		// Bare version: major-version-compatible semantics
