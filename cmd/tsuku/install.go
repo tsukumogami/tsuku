@@ -380,9 +380,33 @@ func isInteractive() bool {
 	return term.IsTerminal(int(os.Stdin.Fd()))
 }
 
+// isToolPathConfigured reports whether the user's PATH already contains
+// either $TSUKU_HOME/tools/current or $TSUKU_HOME/bin, indicating that
+// shell integration (via `tsuku hook install` or `eval $(tsuku shellenv)`)
+// is already set up.
+func isToolPathConfigured(cfg *config.Config) bool {
+	candidates := []string{
+		cfg.CurrentDir,
+		filepath.Join(cfg.HomeDir, "bin"),
+	}
+	pathEntries := filepath.SplitList(os.Getenv("PATH"))
+	for _, candidate := range candidates {
+		absCandidate, err := filepath.Abs(candidate)
+		if err != nil {
+			continue
+		}
+		for _, entry := range pathEntries {
+			absEntry, _ := filepath.Abs(entry)
+			if absEntry == absCandidate {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // suggestShellIntegration prints a one-time hint when shell integration
-// isn't set up. Checks if $TSUKU_HOME/tools/current is in PATH. Only
-// prints in interactive (TTY) mode and not in quiet/CI contexts.
+// isn't set up. Only prints in interactive (TTY) mode and not in quiet/CI contexts.
 func suggestShellIntegration() {
 	if quietFlag {
 		return
@@ -393,17 +417,8 @@ func suggestShellIntegration() {
 		return
 	}
 
-	currentDir := filepath.Join(cfg.HomeDir, "tools", "current")
-	absCurrentDir, err := filepath.Abs(currentDir)
-	if err != nil {
+	if isToolPathConfigured(cfg) {
 		return
-	}
-
-	for _, dir := range filepath.SplitList(os.Getenv("PATH")) {
-		absDir, _ := filepath.Abs(dir)
-		if absDir == absCurrentDir {
-			return // already in PATH
-		}
 	}
 
 	fmt.Fprintf(os.Stderr, "\nTip: enable shell integration for automatic update checks:\n")
