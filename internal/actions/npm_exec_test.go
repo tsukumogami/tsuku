@@ -508,6 +508,62 @@ func TestNpmExecAction_Execute_NoPackageJSON(t *testing.T) {
 	}
 }
 
+func TestCheckVersionConstraint(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name      string
+		installed string
+		constraint string
+		wantErr   bool
+		errContains string
+	}{
+		// Bare version: major-version-compatible semantics
+		{"bare_same_version", "25.9.0", "25.9.0", false, ""},
+		{"bare_newer_minor", "25.10.0", "25.9.0", false, ""},
+		{"bare_newer_patch", "25.9.1", "25.9.0", false, ""},
+		{"bare_older_minor_same_major", "25.0.0", "25.9.0", false, ""},
+		{"bare_higher_major", "26.1.0", "25.9.0", false, ""},
+		{"bare_much_higher_major", "30.0.0", "25.9.0", false, ""},
+		{"bare_lower_major", "24.9.0", "25.9.0", true, "does not match required version"},
+
+		// >= constraint
+		{"gte_satisfied", "20.10.0", ">=18.0.0", false, ""},
+		{"gte_exact", "18.0.0", ">=18.0.0", false, ""},
+		{"gte_not_satisfied", "17.0.0", ">=18.0.0", true, "does not satisfy constraint"},
+
+		// > constraint
+		{"gt_satisfied", "20.0.0", ">18.0.0", false, ""},
+		{"gt_not_satisfied", "18.0.0", ">18.0.0", true, "does not satisfy constraint"},
+
+		// 18.x constraint
+		{"dotx_match", "18.5.0", "18.x", false, ""},
+		{"dotx_mismatch", "20.0.0", "18.x", true, "major version mismatch"},
+
+		// Invalid inputs
+		{"invalid_installed", "notaversion", "25.0.0", true, "failed to parse node version"},
+		{"invalid_constraint", "25.0.0", "notaconstraint", true, "invalid version constraint"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := checkVersionConstraint(tc.installed, tc.constraint)
+			if tc.wantErr {
+				if err == nil {
+					t.Errorf("expected error containing %q, got nil", tc.errContains)
+					return
+				}
+				if tc.errContains != "" && !strings.Contains(err.Error(), tc.errContains) {
+					t.Errorf("error = %q, want error containing %q", err.Error(), tc.errContains)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("unexpected error: %v", err)
+				}
+			}
+		})
+	}
+}
+
 func TestNpmExecAction_Execute_MissingCommand(t *testing.T) {
 	t.Parallel()
 	action := &NpmExecAction{}

@@ -263,12 +263,21 @@ func validateNodeVersion(constraint string, execPaths ...string) error {
 
 	// Parse version (format: v20.10.0)
 	versionStr := strings.TrimPrefix(strings.TrimSpace(string(output)), "v")
-	installedMajor, installedMinor, installedPatch, err := parseVersion(versionStr)
+	return checkVersionConstraint(versionStr, constraint)
+}
+
+// checkVersionConstraint checks if installedVersion satisfies the constraint string.
+// Supports ">=18.0.0", ">18.0.0", "18.x", or bare versions like "20.10.0".
+//
+// Bare version constraints (e.g. "25.9.0") use major-version-compatible matching:
+// the installed major must be >= the required major. Node.js guarantees backward
+// compatibility, so a plan generated with Node 25.9.0 runs correctly on Node 26.x.
+func checkVersionConstraint(installedVersion, constraint string) error {
+	installedMajor, installedMinor, installedPatch, err := parseVersion(installedVersion)
 	if err != nil {
-		return fmt.Errorf("failed to parse node version %s: %w", versionStr, err)
+		return fmt.Errorf("failed to parse node version %s: %w", installedVersion, err)
 	}
 
-	// Parse constraint
 	constraint = strings.TrimSpace(constraint)
 
 	// Handle "18.x" format
@@ -278,7 +287,7 @@ func validateNodeVersion(constraint string, execPaths ...string) error {
 			return fmt.Errorf("invalid version constraint: %s", constraint)
 		}
 		if installedMajor != requiredMajor {
-			return fmt.Errorf("node.js %s does not match constraint %s (major version mismatch)", versionStr, constraint)
+			return fmt.Errorf("node.js %s does not match constraint %s (major version mismatch)", installedVersion, constraint)
 		}
 		return nil
 	}
@@ -293,7 +302,7 @@ func validateNodeVersion(constraint string, execPaths ...string) error {
 
 		if !versionGTE(installedMajor, installedMinor, installedPatch,
 			requiredMajor, requiredMinor, requiredPatch) {
-			return fmt.Errorf("node.js %s does not satisfy constraint %s", versionStr, constraint)
+			return fmt.Errorf("node.js %s does not satisfy constraint %s", installedVersion, constraint)
 		}
 		return nil
 	}
@@ -308,19 +317,21 @@ func validateNodeVersion(constraint string, execPaths ...string) error {
 
 		if !versionGT(installedMajor, installedMinor, installedPatch,
 			requiredMajor, requiredMinor, requiredPatch) {
-			return fmt.Errorf("node.js %s does not satisfy constraint %s", versionStr, constraint)
+			return fmt.Errorf("node.js %s does not satisfy constraint %s", installedVersion, constraint)
 		}
 		return nil
 	}
 
-	// Handle exact version match
-	requiredMajor, requiredMinor, requiredPatch, err := parseVersion(constraint)
+	// Bare version (e.g. "25.9.0"): use major-version-compatible matching.
+	// The stored version was captured at eval time; Node.js backward compatibility
+	// means any installed major >= required major is acceptable.
+	requiredMajor, _, _, err := parseVersion(constraint)
 	if err != nil {
 		return fmt.Errorf("invalid version constraint: %s", constraint)
 	}
 
-	if installedMajor != requiredMajor || installedMinor != requiredMinor || installedPatch != requiredPatch {
-		return fmt.Errorf("node.js %s does not match required version %s", versionStr, constraint)
+	if installedMajor < requiredMajor {
+		return fmt.Errorf("node.js %s does not match required version %s", installedVersion, constraint)
 	}
 
 	return nil
