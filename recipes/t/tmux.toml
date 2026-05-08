@@ -17,7 +17,12 @@ supported_os = ["linux"]
 # wired through plan generation / sandbox install (#2385). System packages
 # pull tmux's transitive lib chain in as a single distro-managed unit and
 # match the established pattern for tools that depend on multiple system
-# libraries (see make.toml).
+# libraries (see mesa-vulkan-drivers, vulkan-loader, nvidia-driver).
+#
+# TODO(#2381): once the chained-lib-dependencies / RPATH chain-walk
+# architecture lands, this recipe can revert to the Homebrew bottle path
+# (which gives version pinning) and re-enable macOS via runtime_dependencies =
+# ["libevent", "utf8proc", "ncurses"].
 
 [[steps]]
 action = "apt_install"
@@ -48,4 +53,5 @@ when = { os = ["linux"], libc = ["musl"] }
 [verify]
 command = "tmux -V"
 mode = "output"
-reason = "System packages install at the distribution's pinned tmux version, not the recipe's pinned version; output mode verifies availability across distro version drift."
+pattern = "tmux"
+reason = "System packages install at the distribution's pinned tmux version, not the recipe's pinned version; output mode + a 'tmux' substring pattern verifies availability and that the binary that ran is actually tmux (not a silently-broken ABI mismatch printing garbage), without locking to a specific version string."
