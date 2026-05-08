@@ -47,14 +47,37 @@ on:
       - 'go.mod'
 
 jobs:
-  # Consolidated Linux build essentials tests
-  # Each tool runs via tsuku install --sandbox for containerized execution.
-  # TLS test runs host-level (multi-recipe orchestration across ca-certs + curl).
-  # Pattern follows test-recipe.yml: --sandbox --force --json with result parsing.
+  # Each tool runs as a separate parallel matrix job so a single failure
+  # does not delay feedback on the others and each tool's pass/fail state
+  # appears as a distinct status check on the PR. The tradeoff is higher
+  # runner-minute consumption (~80 min across 10 jobs) vs. the old sequential
+  # approach (~25 min in one job), which is acceptable given the significant
+  # improvement to PR feedback latency.
+  #
+  # To add a new tool: insert one entry in the matrix list. No other changes needed.
   test-linux:
-    name: "Linux x86_64: build essentials"
+    name: "Linux x86_64: ${{ matrix.tool.name }}"
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        tool:
+          # Homebrew bottles (make excluded - see #1581)
+          # pngcrush tests dependency chain: pngcrush -> libpng -> zlib
+          - { name: pkg-config,      arg: "pkg-config" }
+          - { name: cmake,           arg: "cmake" }
+          - { name: gdbm,            arg: "gdbm" }
+          - { name: pngcrush,        arg: "pngcrush" }
+          # Source build recipes
+          - { name: libsixel-source, arg: "--recipe testdata/recipes/libsixel-source.toml" }
+          - { name: ninja,           arg: "ninja" }
+          - { name: sqlite-source,   arg: "--recipe testdata/recipes/sqlite-source.toml" }
+          - { name: git-source,      arg: "--recipe testdata/recipes/git-source.toml" }
+          # Binary install
+          - { name: zig,             arg: "zig" }
+          # TLS test (host-level, multi-recipe orchestration; no arg used)
+          - { name: tls-cacerts,     arg: "" }
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
@@ -67,105 +90,46 @@ jobs:
       - name: Build tsuku
         run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
 
-      - name: Test tools via sandbox
+      - name: "Test ${{ matrix.tool.name }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: |
-          TOTAL=0
-          PASSED=0
-          FAILED=()
-          RESULTS=""
-
-          sandbox_test() {
-              local name="$1"
-              shift
-              TOTAL=$((TOTAL + 1))
-              echo "::group::Sandbox: $name"
-              RESULT_FILE=".result-${name}.json"
-
-              ./tsuku install --sandbox --force "$@" \
-                --env GITHUB_TOKEN="$GITHUB_TOKEN" \
-                --json > "$RESULT_FILE" || true
-
-              if [ -f "$RESULT_FILE" ] && jq -e . "$RESULT_FILE" > /dev/null 2>&1; then
-                SANDBOX_PASSED=$(jq -r '.passed' "$RESULT_FILE")
-                # Sandbox JSON uses install_exit_code; error JSON uses exit_code
-                if jq -e '.install_exit_code' "$RESULT_FILE" > /dev/null 2>&1; then
-                  EXIT_CODE=$(jq -r '.install_exit_code' "$RESULT_FILE")
-                else
-                  EXIT_CODE=$(jq -r '.exit_code // 1' "$RESULT_FILE")
-                fi
-              else
-                SANDBOX_PASSED="false"
-                EXIT_CODE=1
-              fi
-
-              if [ "$SANDBOX_PASSED" = "true" ]; then
-                PASSED=$((PASSED + 1))
-                RESULTS="$RESULTS| $name | pass |\n"
-                echo "PASS: $name"
-              else
-                FAILED+=("$name")
-                RESULTS="$RESULTS| $name | **FAIL** (exit $EXIT_CODE) |\n"
-                echo "FAIL: $name (exit $EXIT_CODE)"
-                # Print error details and full JSON for debugging
-                if [ -f "$RESULT_FILE" ]; then
-                  ERROR_MSG=$(jq -r '.error // .message // "unknown"' "$RESULT_FILE")
-                  echo "Error: $ERROR_MSG"
-                  echo "Full result:"
-                  jq . "$RESULT_FILE"
-                fi
-              fi
-              echo "::endgroup::"
-          }
-
-          # Homebrew tools (make excluded - see #1581)
-          # pngcrush tests dependency chain: pngcrush -> libpng -> zlib
-          for tool in pkg-config cmake gdbm pngcrush; do
-            sandbox_test "$tool" "$tool"
-          done
-
-          # Source build recipes
-          sandbox_test "libsixel-source" --recipe testdata/recipes/libsixel-source.toml
-          sandbox_test "ninja" ninja
-          sandbox_test "sqlite-source" --recipe testdata/recipes/sqlite-source.toml
-          sandbox_test "git-source" --recipe testdata/recipes/git-source.toml
-
-          # Binary install
-          sandbox_test "zig" zig
-
-          # TLS test (host-level, multi-recipe orchestration)
-          echo "::group::TLS CA certs"
-          TOTAL=$((TOTAL + 1))
-          export TSUKU_HOME="${{ runner.temp }}/tsuku-tls"
-          if timeout 300 ./test/scripts/test-tls-cacerts.sh ./tsuku; then
-            PASSED=$((PASSED + 1))
-            RESULTS="$RESULTS| tls-cacerts | pass |\n"
-            echo "PASS: tls-cacerts"
+          if [ "${{ matrix.tool.name }}" = "tls-cacerts" ]; then
+            export TSUKU_HOME="${{ runner.temp }}/tsuku-tls"
+            timeout 300 ./test/scripts/test-tls-cacerts.sh ./tsuku
           else
-            FAILED+=("tls-cacerts")
-            RESULTS="$RESULTS| tls-cacerts | **FAIL** |\n"
-            echo "FAIL: tls-cacerts"
-          fi
-          echo "::endgroup::"
+            RESULT_FILE=".result-${{ matrix.tool.name }}.json"
+            read -ra ARGS <<< "${{ matrix.tool.arg }}"
+            ./tsuku install --sandbox --force "${ARGS[@]}" \
+              --env GITHUB_TOKEN="$GITHUB_TOKEN" \
+              --json > "$RESULT_FILE" || true
 
-          # Job summary
-          {
-            echo "### Linux Build Essentials Results"
-            echo ""
-            echo "Passed: $PASSED / $TOTAL"
-            echo ""
-            echo "| Tool | Status |"
-            echo "|------|--------|"
-            echo -e "$RESULTS"
-          } >> "$GITHUB_STEP_SUMMARY"
+            if [ -f "$RESULT_FILE" ] && jq -e . "$RESULT_FILE" > /dev/null 2>&1; then
+              SANDBOX_PASSED=$(jq -r '.passed' "$RESULT_FILE")
+              # Sandbox JSON uses install_exit_code; error JSON uses exit_code
+              if jq -e '.install_exit_code' "$RESULT_FILE" > /dev/null 2>&1; then
+                EXIT_CODE=$(jq -r '.install_exit_code' "$RESULT_FILE")
+              else
+                EXIT_CODE=$(jq -r '.exit_code // 1' "$RESULT_FILE")
+              fi
+            else
+              SANDBOX_PASSED="false"
+              EXIT_CODE=1
+            fi
 
-          if [ ${#FAILED[@]} -gt 0 ]; then
-            echo "::error::Failed: ${FAILED[*]}"
-            exit 1
+            if [ "$SANDBOX_PASSED" = "true" ]; then
+              echo "PASS: ${{ matrix.tool.name }}"
+            else
+              echo "FAIL: ${{ matrix.tool.name }} (exit $EXIT_CODE)"
+              if [ -f "$RESULT_FILE" ]; then
+                echo "Error: $(jq -r '.error // .message // "unknown"' "$RESULT_FILE")"
+                echo "Full result:"
+                jq . "$RESULT_FILE"
+              fi
+              exit 1
+            fi
           fi
-          echo "All Linux build essentials tests passed"
 
   # Test source build with zig cc in container without system gcc
   # This validates that configure_make falls back to zig when no gcc exists
