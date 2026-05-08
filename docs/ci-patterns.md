@@ -8,6 +8,8 @@ This document describes the two standard patterns for structuring CI test jobs i
 
 **GHA group serialization** -- Use when running multiple independent tool tests on the same runner type. Each tool gets its own `$TSUKU_HOME` for isolation, but they share a download cache and the runner's Go toolchain.
 
+**GHA matrix strategy** -- Use when per-tool pass/fail visibility as a distinct GitHub status check is a requirement (e.g., a suite where pinpointing which specific tool broke without opening the log is important). Matrix trades runner-minute efficiency for faster wall-clock time and cleaner failure attribution. Each matrix entry runs in parallel and appears as a separate check in the PR UI. Add `fail-fast: false` so a single failure doesn't cancel the rest.
+
 If you're testing different runner types (`ubuntu-latest` vs `macos-latest` vs a container image), those are genuinely different environments and should be separate jobs.
 
 ## The Four Runner Types
@@ -251,13 +253,23 @@ The reduction comes from batching N tool tests into 1 job per runner type, and b
 
 ## Adding a New Test
 
-### New tool on an existing runner
+### New tool on an existing serialized runner
 
 Add the tool to the relevant serialized loop. For example, to add a new homebrew tool test on Linux, add it to the `TOOLS` array in `build-essentials.yml`'s `test-homebrew-linux` job:
 
 ```yaml
 TOOLS=(pkg-config cmake gdbm pngcrush your-new-tool)
 ```
+
+### New tool on a matrix job
+
+For jobs that use `strategy.matrix` (like `build-essentials.yml`'s `test-linux`), add one entry to the matrix list:
+
+```yaml
+- { name: your-new-tool, arg: "your-new-tool" }
+```
+
+No other changes are needed.
 
 ### New family variant for an existing test
 
@@ -267,6 +279,8 @@ Add the family to the relevant `FAMILIES` array. Most container loop jobs alread
 
 If you need a runner that doesn't match any existing job (for example, a Windows runner or a specific container image), create a new job. But batch any tests that will run on that runner into a single job using the GHA group serialization pattern.
 
-### What NOT to do
+### When matrix is and isn't appropriate
 
-Don't add a new `strategy.matrix` entry to fan out tests that could run sequentially on the same runner. The matrix strategy is appropriate when tests need genuinely different environments (different OS, different architecture). It's not appropriate for "test tool A" and "test tool B" on the same `ubuntu-latest` runner.
+**Use matrix when** per-tool failure attribution matters more than runner-minute efficiency — for example, a suite where identifying exactly which tool broke without reading a log is important. Matrix trades ~3× more runner-minutes for parallel execution and distinct GitHub status checks per entry.
+
+**Don't use matrix when** tests run on the same runner and there's no need for per-test status checks. Use GHA group serialization instead, which shares runner setup overhead and stays within a single job.
