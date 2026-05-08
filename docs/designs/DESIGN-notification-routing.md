@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Accepted
 problem: |
   When tsuku runs in background auto-update mode, all warnings and non-fatal events
   from the install engine are silently dropped because the subprocess uses a reporter
@@ -34,7 +34,7 @@ rationale: |
 
 ## Status
 
-Planned
+Accepted
 
 ## Context and Problem Statement
 
