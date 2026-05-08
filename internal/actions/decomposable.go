@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/version"
 )
@@ -119,6 +120,15 @@ type EvalContext struct {
 	Downloader    Downloader        // For downloading files to compute checksums
 	DownloadCache *DownloadCache    // For caching downloaded files (optional)
 	Constraints   *EvalConstraints  // Version constraints for constrained evaluation (optional)
+	Reporter      progress.Reporter // For emitting warnings during decomposition (optional)
+}
+
+// GetReporter returns the Reporter, or a NoopReporter when Reporter is nil.
+func (c *EvalContext) GetReporter() progress.Reporter {
+	if c.Reporter != nil {
+		return c.Reporter
+	}
+	return progress.NoopReporter{}
 }
 
 // primitives is the set of primitive action names.

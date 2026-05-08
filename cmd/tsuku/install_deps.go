@@ -133,6 +133,7 @@ func getOrGeneratePlanWith(
 		DownloadCache:      downloadCache,
 		RecipeLoader:       cfg.RecipeLoader,
 		RequireEmbedded:    cfg.RequireEmbedded,
+		Reporter:           reporter,
 		AutoAcceptEvalDeps: true, // Auto-install eval-time dependencies during install
 		OnEvalDepsNeeded: func(deps []string, autoAccept bool) error {
 			return installEvalDeps(deps, autoAccept)

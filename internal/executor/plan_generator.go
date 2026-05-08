@@ -9,6 +9,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/platform"
+	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/version"
 )
@@ -63,6 +64,9 @@ type PlanConfig struct {
 	// When true, dependency resolution fails if a dependency is not in the embedded registry.
 	// Used with --require-embedded CLI flag to validate embedded recipe completeness.
 	RequireEmbedded bool
+	// Reporter receives warnings emitted during decomposition (e.g., version fallback).
+	// When nil, warnings are silently discarded.
+	Reporter progress.Reporter
 }
 
 // GeneratePlan evaluates a recipe and produces an installation plan.
@@ -194,6 +198,7 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		Downloader:    downloader,
 		DownloadCache: cfg.DownloadCache,
 		Constraints:   cfg.Constraints,
+		Reporter:      cfg.Reporter,
 	}
 
 	// Process each step

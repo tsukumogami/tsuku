@@ -13,10 +13,13 @@ import (
 // Kind constants classify what produced a notice.
 // KindUpdateResult is the zero value and represents all notices written before
 // the Kind field was introduced. KindAutoApplyResult identifies notices written
-// by the background auto-apply subprocess.
+// by the background auto-apply subprocess. KindVersionFallback and
+// KindShellInitChange are single-view notices removed after display.
 const (
 	KindUpdateResult    = ""
 	KindAutoApplyResult = "auto_apply_result"
+	KindVersionFallback = "version_fallback"
+	KindShellInitChange = "shell_init_change"
 )
 
 // Notice represents a failed auto-update for a single tool.
@@ -35,6 +38,9 @@ type Notice struct {
 	// is the zero value for backward compatibility: existing notice files on disk
 	// that have no "kind" key deserialize with Kind == "".
 	Kind string `json:"kind,omitempty"`
+	// Messages holds structured warning lines accumulated during an install run.
+	// Backward compatible: old files without this field deserialize with nil.
+	Messages []string `json:"messages,omitempty"`
 }
 
 // ReadNotice reads a single tool's notice file. Exported for use by apply.go.
@@ -46,7 +52,11 @@ func ReadNotice(noticesDir, toolName string) (*Notice, error) {
 // WriteNotice atomically writes a notice to the notices directory.
 // A new failure overwrites the previous notice for the same tool.
 // Creates the directory with os.MkdirAll if it does not exist.
+// Returns an error if notice.Tool contains path separators or equals "..".
 func WriteNotice(noticesDir string, notice *Notice) error {
+	if notice.Tool == ".." || strings.Contains(notice.Tool, "/") || strings.Contains(notice.Tool, "\\") {
+		return fmt.Errorf("invalid tool name %q: must not contain path separators", notice.Tool)
+	}
 	if err := os.MkdirAll(noticesDir, 0755); err != nil {
 		return fmt.Errorf("create notices directory: %w", err)
 	}

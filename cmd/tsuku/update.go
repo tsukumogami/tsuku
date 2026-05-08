@@ -181,7 +181,7 @@ Examples:
 						// Update diff visibility: warn when shell init content
 						// changed between versions. This surfaces silent supply-chain
 						// changes where an upstream binary alters its init output.
-						warnShellInitChanges(toolName, oldCleanupActions, vs.CleanupActions)
+						warnShellInitChanges(toolName, oldCleanupActions, vs.CleanupActions, reporter)
 					}
 				}
 			}
@@ -237,7 +237,7 @@ func updateOutcomeMessage(toolName, previousVersion, newVersion string) string {
 // actions for shell.d paths. When a matching path has different hashes, it
 // means the tool's shell init output changed during the update -- a signal
 // worth surfacing to the user.
-func warnShellInitChanges(toolName string, old, new []install.CleanupAction) {
+func warnShellInitChanges(toolName string, old, new []install.CleanupAction, reporter progress.Reporter) {
 	// Build a map of path -> content hash from old actions
 	oldHashes := make(map[string]string)
 	for _, ca := range old {
@@ -260,7 +260,7 @@ func warnShellInitChanges(toolName string, old, new []install.CleanupAction) {
 			if shell == "" {
 				shell = ca.Path
 			}
-			fmt.Fprintf(os.Stderr, "Warning: shell init changed for %s (%s)\n", toolName, shell)
+			reporter.Warn("shell init changed for %s (%s)", toolName, shell)
 		}
 	}
 }

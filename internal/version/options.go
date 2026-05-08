@@ -65,3 +65,13 @@ func WithGoProxyURL(url string) Option {
 		r.goProxyURL = url
 	}
 }
+
+// WithGitHubBaseURL overrides the GitHub API base URL. Intended for testing only.
+// Both apiURL and uploadURL are typically set to the test server's URL.
+func WithGitHubBaseURL(apiURL, uploadURL string) Option {
+	return func(r *Resolver) {
+		if client, err := r.client.WithEnterpriseURLs(apiURL, uploadURL); err == nil {
+			r.client = client
+		}
+	}
+}
