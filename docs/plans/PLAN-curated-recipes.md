@@ -112,8 +112,8 @@ These issues capture infrastructure and recipe gaps surfaced while authoring the
 | ~~_Resolved by switching all glibc + musl Linux to a uniform source build with `--disable-bzip2 --disable-readline --disable-shared --enable-static`. Static linking sidesteps the Linuxbrew bottle's hard-coded `libbz2.so.1.0` (RHEL ships only `libbz2.so.1`), the Alpine musl loader's missing search of `install_dir/lib`, and a Fedora-only segfault during dynamic-linker startup. macOS keeps the homebrew bottle and `install_mode = "directory"` publishes the full bottle layout (dylibs, .a, headers, pkg-config) so the homebrew git bottle's @rpath resolves `libpcre2-8.0.dylib`. Recipe marked `curated = true`._~~ | | |
 | ~~[#2336: feat(recipes): add macOS support to tmux and git recipes](https://github.com/tsukumogami/tsuku/issues/2336)~~ | ~~[#2333](https://github.com/tsukumogami/tsuku/issues/2333), [#2335](https://github.com/tsukumogami/tsuku/issues/2335)~~ | ~~testable~~ |
 | ~~_git's macOS support landed first (dropped `supported_os = ["linux"]` from `recipes/g/git.toml`, added darwin homebrew step wired to `runtime_dependencies = ["pcre2"]`). tmux's macOS support was deferred to #2377 because the tmux Homebrew bottle on Linux glibc needs `libutf8proc.so.3` / `libevent.so.7` / `libncursesw.so.6` from sibling Linuxbrew installs that tsuku did not chain into the binary's RPATH for tool recipes — an architectural gap, not a recipe gap. The architectural fix (chain-walk RPATH from `runtime_dependencies` for both Linux and macOS Homebrew bottles) shipped in #2381, and tmux migrated as the integration test in the same PR. Closed by #2381._~~ | | |
-| [#2338: fix(recipes): add macOS support to curl and resolve rhel sandbox verify failure](https://github.com/tsukumogami/tsuku/issues/2338) | None | testable |
-| _A first attempt at the curl darwin step (subsequently reverted) cleared eval and macOS install but surfaced a rhel-only sandbox verify failure on Linux: install completes (`install_exit_code = 0`) but `passed = false`. Same shape as the pcre2 rhel issue. Needs local reproduction since the workflow does not upload `.log-*.txt` artifacts._ | | |
+| ~~[#2338: fix(recipes): add macOS support to curl and resolve rhel sandbox verify failure](https://github.com/tsukumogami/tsuku/issues/2338)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Reproduced locally as `verify_exit_code: 139` (SIGSEGV on `curl --version` inside the rhel container). Same shape as #2335's pcre2 failure. Resolved by adding `--disable-shared --enable-static` to the linux source build's `configure_args`, which removes a layer of shared-library resolution between the binary and the sibling-installed openssl/zlib. Darwin support shipped in the same PR via the chain-walk RPATH machinery from #2381: dropped `supported_os = ["linux"]` and the redundant `[version]` block, declared `runtime_dependencies = ["libnghttp3", "libnghttp2", "libngtcp2", "libssh2", "brotli", "zstd"]` at the metadata level, added darwin homebrew + install_binaries steps mirroring `recipes/g/git.toml`._~~ | | |
 | [#2349: chore(version): remove deprecated source = "hashicorp" after release](https://github.com/tsukumogami/tsuku/issues/2349) | tsuku release containing [#2328](https://github.com/tsukumogami/tsuku/issues/2328) | testable |
 | _Second half of the deprecation introduced in #2328. Removes `(r *Resolver) ResolveHashiCorp`, the `"hashicorp"` source-name allowlist entries, and the deprecation warnings, after the next tsuku release ships and any external recipes have had a chance to migrate._ | | |
 
@@ -189,8 +189,8 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2325,I2327,I2328,I2330,I2331,I2333,I2335,I2336,I2365,I2368 done
-    class I2338,I2370 ready
+    class I2325,I2327,I2328,I2330,I2331,I2333,I2335,I2336,I2338,I2365,I2368 done
+    class I2370 ready
     class I2343,I2344,I2345,I2349 blocked
 ```
 
@@ -213,7 +213,6 @@ Wave 3 issues were fully independent of each other; each batch was scoped to a c
 
 **Wave 4 priority**: most issues are independent and can be worked in parallel. The exceptions:
 
-- **#2335 and #2338** share the same RHEL sandbox failure shape (install completes with `exit 0`, verify exits non-zero with no log artifact). Investigating one will likely produce the diagnostic capability needed for the other; consider taking them together.
 - **#2325, #2327, #2331** unblock Wave 5 recipe authoring rather than fixing existing recipes. After each lands (and is released for the code-change ones), the corresponding Wave 5 ticket can ship.
 - **#2330 (bazel)** depends on #2327 if the chosen approach uses the `bazel_nojdk-*` asset; otherwise independent.
 
