@@ -291,13 +291,19 @@ func generateArchCommands(packages []string, repositories []RepositoryConfig) []
 	// Arch doesn't commonly use third-party repositories in containers
 	// If needed, repository support can be added later
 
-	// Install packages
+	// Install packages with full system upgrade (-Syu, not -Sy) so installed
+	// packages and base-image system libs stay ABI-compatible: the base
+	// archlinux:base image lags the live repos, and -Sy alone triggers the
+	// Arch "partial upgrade" trap (#2385). Cost: 30-120s and ~50-200MB extra
+	// per cold-cache build. ContainerImageName does not hash BuildCommands,
+	// so existing cached arch images keep their old layers and only fresh
+	// builds pick this up.
 	if len(packages) > 0 {
 		sorted := make([]string, len(packages))
 		copy(sorted, packages)
 		sort.Strings(sorted)
 		pkgList := strings.Join(sorted, " ")
-		commands = append(commands, fmt.Sprintf("RUN pacman -Sy --noconfirm %s", pkgList))
+		commands = append(commands, fmt.Sprintf("RUN pacman -Syu --noconfirm %s", pkgList))
 	}
 
 	return commands
