@@ -8,9 +8,23 @@ supported_libc = ["glibc", "musl"]
 [version]
 github_repo = "ziglang/zig"
 
+# Use zigmirror.hryx.net (community mirror on the upstream-published list at
+# ziglang.org/download/community-mirrors.json) instead of ziglang.org/download
+# because the canonical CDN has been intermittently unreachable in CI (#2384).
+#
+# GitHub Releases is not a viable alternative: the ziglang/zig project only
+# publishes zig-bootstrap-<version>.tar.xz source archives on GitHub, not the
+# per-platform binaries this recipe needs (verified for 0.14.1 and 0.15.1 via
+# `gh release view <ver> -R ziglang/zig`).
+#
+# Mirror-selection heuristic for future maintainers if hryx becomes unreliable:
+# pick the next entry from community-mirrors.json that (a) is HTTPS, (b) is
+# reachable from GitHub-hosted CI runners, and (c) serves byte-identical
+# archives — the upstream MIRRORS.md spec requires this, and tsuku's pinned
+# checksums will catch any divergence at install time.
 [[steps]]
 action = "download_archive"
-url = "https://ziglang.org/download/{version}/zig-{arch}-{os}-{version}.tar.xz"
+url = "https://zigmirror.hryx.net/zig/zig-{arch}-{os}-{version}.tar.xz"
 strip_dirs = 1
 binaries = ["zig"]
 install_mode = "directory"
