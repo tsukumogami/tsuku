@@ -110,7 +110,6 @@
     }
   ],
   "verify": {
-    "command": "pkg-config --version",
-    "pattern": "{version}"
+    "command": "pkg-config --version"
   }
 }

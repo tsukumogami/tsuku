@@ -939,7 +939,7 @@ func (a *GitHubFileAction) Decompose(ctx *EvalContext, params map[string]interfa
 
 	// Resolve asset name with mappings applied (reuses GitHubArchiveAction helper)
 	ghArchive := &GitHubArchiveAction{}
-	assetName, err := ghArchive.resolveAssetName(ctx, params, assetPattern, repo)
+	resolved, err := ghArchive.resolveAssetName(ctx, params, assetPattern, repo)
 	if err != nil {
 		return nil, err
 	}
@@ -963,7 +963,7 @@ func (a *GitHubFileAction) Decompose(ctx *EvalContext, params map[string]interfa
 	expandedDownloadName := ExpandVars(downloadName, vars)
 
 	// Construct the fully-resolved download URL
-	url := fmt.Sprintf("https://github.com/%s/releases/download/%s/%s", repo, ctx.VersionTag, assetName)
+	url := fmt.Sprintf("https://github.com/%s/releases/download/%s/%s", repo, ctx.VersionTag, resolved.assetName)
 
 	// Delegate to download action for checksum computation
 	downloadStep, err := decomposeDownload(ctx, url, expandedDownloadName, nil, nil)
