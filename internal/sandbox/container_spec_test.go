@@ -160,11 +160,10 @@ func TestDeriveContainerSpec_BuildCommands(t *testing.T) {
 			},
 		},
 		{
-			name:     "arch - pacman packages",
+			// Asserts -Syu (not -Sy) to avoid the Arch partial-upgrade trap (#2385).
+			name:     "arch - pacman uses -Syu to avoid partial upgrades",
 			packages: map[string][]string{"pacman": {"git", "base-devel"}},
 			wantCommands: []string{
-				// -Syu (full system upgrade) avoids partial-upgrade ABI breaks
-				// when the base archlinux:base image lags the live package repos.
 				"RUN pacman -Syu --noconfirm base-devel git",
 			},
 		},

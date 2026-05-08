@@ -10,19 +10,19 @@ curated = true
 # on macOS via tsuku. darwin coverage is excluded until these deps are supported.
 supported_os = ["linux"]
 
-# Linux: install via system package manager. The Homebrew bottle path was
-# tried first but fails inside sandbox containers because the bottle's
-# NEEDED entries (libutf8proc.so.3, libevent-2.1.so.7, libncursesw.so.6)
-# resolve via the system loader, and runtime_dependencies are not yet
-# wired through plan generation / sandbox install (#2385). System packages
-# pull tmux's transitive lib chain in as a single distro-managed unit and
-# match the established pattern for tools that depend on multiple system
-# libraries (see mesa-vulkan-drivers, vulkan-loader, nvidia-driver).
+# Linux: install via system package manager (tactical workaround, #2385).
+# Was Homebrew bottle until #2385; reverted because the bottle's NEEDED
+# entries (libutf8proc, libevent, libncursesw) need a chained-lib RPATH
+# walk to resolve in sandbox containers, and that architecture isn't on
+# main yet. Same pattern as mesa-vulkan-drivers / vulkan-loader /
+# nvidia-driver. The five families below cover every Linux family tsuku
+# resolves (see internal/platform/family.go); other distros are rejected
+# at family-resolution time.
 #
-# TODO(#2381): once the chained-lib-dependencies / RPATH chain-walk
-# architecture lands, this recipe can revert to the Homebrew bottle path
-# (which gives version pinning) and re-enable macOS via runtime_dependencies =
-# ["libevent", "utf8proc", "ncurses"].
+# TODO(#2381): revert to Homebrew bottle + runtime_dependencies =
+# ["libevent", "utf8proc", "ncurses"] once `resolveRuntimeDepVersion`
+# lands in internal/actions/homebrew_relocate.go and ncurses.toml
+# declares type = "library".
 
 [[steps]]
 action = "apt_install"
@@ -53,5 +53,8 @@ when = { os = ["linux"], libc = ["musl"] }
 [verify]
 command = "tmux -V"
 mode = "output"
+# Literal-word substring (not a version regex): survives distro version drift
+# while still catching the case where some other binary aliased to `tmux` exits
+# 0 with non-tmux output.
 pattern = "tmux"
-reason = "System packages install at the distribution's pinned tmux version, not the recipe's pinned version; output mode + a 'tmux' substring pattern verifies availability and that the binary that ran is actually tmux (not a silently-broken ABI mismatch printing garbage), without locking to a specific version string."
+reason = "System packages install at the distribution's pinned tmux version, not the recipe's pinned version; output mode verifies availability and binary identity across distro version drift."

@@ -89,8 +89,10 @@ WORKDIR /home/testuser
 EOF
         ;;
     arch)
+        # -Syu (full system upgrade) keeps installed packages ABI-compatible
+        # with base-image system libs; matches sandbox/container_spec.go (#2385).
         cat >> "$DOCKERFILE" << 'EOF'
-RUN pacman -Sy --noconfirm ca-certificates
+RUN pacman -Syu --noconfirm ca-certificates
 RUN useradd -m -s /bin/bash testuser
 USER testuser
 WORKDIR /home/testuser
