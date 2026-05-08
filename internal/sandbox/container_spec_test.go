@@ -163,7 +163,9 @@ func TestDeriveContainerSpec_BuildCommands(t *testing.T) {
 			name:     "arch - pacman packages",
 			packages: map[string][]string{"pacman": {"git", "base-devel"}},
 			wantCommands: []string{
-				"RUN pacman -Sy --noconfirm base-devel git",
+				// -Syu (full system upgrade) avoids partial-upgrade ABI breaks
+				// when the base archlinux:base image lags the live package repos.
+				"RUN pacman -Syu --noconfirm base-devel git",
 			},
 		},
 		{

@@ -291,13 +291,24 @@ func generateArchCommands(packages []string, repositories []RepositoryConfig) []
 	// Arch doesn't commonly use third-party repositories in containers
 	// If needed, repository support can be added later
 
-	// Install packages
+	// Install packages.
+	//
+	// Use `pacman -Syu` (sync DB + full system upgrade) instead of `pacman -Sy`
+	// (DB-only) to avoid the well-known Arch "partial upgrade" trap: if the
+	// base archlinux:base image is older than the current package repos, then
+	// `-Sy` updates the DB to the latest manifests, and a subsequent install
+	// pulls newer versions of the requested packages while leaving their
+	// already-present system-lib dependencies at the older base-image versions.
+	// The result is unresolved symbols at runtime (e.g. pacman itself failing
+	// with `libcurl.so.4: undefined symbol: ngtcp2_crypto_get_path_challenge_…`).
+	// `-Syu` syncs everything in one step so installed packages and their
+	// runtime libs remain ABI-compatible.
 	if len(packages) > 0 {
 		sorted := make([]string, len(packages))
 		copy(sorted, packages)
 		sort.Strings(sorted)
 		pkgList := strings.Join(sorted, " ")
-		commands = append(commands, fmt.Sprintf("RUN pacman -Sy --noconfirm %s", pkgList))
+		commands = append(commands, fmt.Sprintf("RUN pacman -Syu --noconfirm %s", pkgList))
 	}
 
 	return commands
