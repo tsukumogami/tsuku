@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-08T17:50:34Z",
+  "generated_at": "2026-05-08T19:34:09Z",
   "total_recipes": 1439,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 875,
+        "supported": 876,
         "total": 1439,
-        "pct": 60.80611535788742
+        "pct": 60.87560806115357
       },
       "glibc": {
         "supported": 1407,
@@ -21,12 +21,12 @@
     },
     "by_category": {
       "library": {
-        "total": 152,
+        "total": 153,
         "musl_support": 150,
         "glibc_support": 150
       },
       "tool": {
-        "total": 1287,
+        "total": 1286,
         "musl_support": 1105,
         "glibc_support": 1257
       }
@@ -13932,7 +13932,7 @@
     },
     {
       "name": "ncurses",
-      "type": "tool",
+      "type": "library",
       "platforms": {
         "darwin": true,
         "glibc": false,
@@ -19149,13 +19149,11 @@
       "name": "tmux",
       "type": "tool",
       "platforms": {
-        "darwin": false,
+        "darwin": true,
         "glibc": true,
         "musl": true
       },
-      "gaps": [
-        "darwin"
-      ],
+      "gaps": null,
       "errors": null,
       "warnings": null
     },
