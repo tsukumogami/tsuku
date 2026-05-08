@@ -275,6 +275,58 @@ func TestKindOmitEmptyInJSON(t *testing.T) {
 	}
 }
 
+func TestMessagesDeserializeMissing(t *testing.T) {
+	// A JSON object with no "messages" key should deserialize with Messages == nil.
+	data := `{"tool":"mytool","attempted_version":"1.0","error":"fail","timestamp":"2024-01-01T00:00:00Z","shown":false}`
+	var n Notice
+	if err := json.Unmarshal([]byte(data), &n); err != nil {
+		t.Fatalf("Unmarshal: %v", err)
+	}
+	if n.Messages != nil {
+		t.Errorf("Messages = %v, want nil for JSON without messages field", n.Messages)
+	}
+}
+
+func TestMessagesRoundTrip(t *testing.T) {
+	dir := t.TempDir()
+	notice := &Notice{
+		Tool:             "mytool",
+		AttemptedVersion: "1.0",
+		Kind:             KindVersionFallback,
+		Messages:         []string{"line one", "line two"},
+		Timestamp:        time.Now().Truncate(time.Second),
+	}
+	if err := WriteNotice(dir, notice); err != nil {
+		t.Fatalf("WriteNotice: %v", err)
+	}
+	all, err := ReadAllNotices(dir)
+	if err != nil {
+		t.Fatalf("ReadAllNotices: %v", err)
+	}
+	if len(all) != 1 {
+		t.Fatalf("got %d notices, want 1", len(all))
+	}
+	if len(all[0].Messages) != 2 || all[0].Messages[0] != "line one" || all[0].Messages[1] != "line two" {
+		t.Errorf("Messages = %v, want [line one line two]", all[0].Messages)
+	}
+}
+
+func TestWriteNoticeRejectsPathTraversal(t *testing.T) {
+	dir := t.TempDir()
+	cases := []string{
+		"..",
+		"../etc",
+		"foo/bar",
+		"foo\\bar",
+	}
+	for _, tool := range cases {
+		err := WriteNotice(dir, &Notice{Tool: tool, Timestamp: time.Now()})
+		if err == nil {
+			t.Errorf("WriteNotice(%q) should have returned error, got nil", tool)
+		}
+	}
+}
+
 func TestReadAllSortedByTimestamp(t *testing.T) {
 	dir := t.TempDir()
 	now := time.Now()

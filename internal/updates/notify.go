@@ -66,6 +66,8 @@ func DisplayAvailableSummary(cfg *config.Config, userCfg *userconfig.Config, qui
 }
 
 // renderUnshownNotices reads and displays any unshown notices on stderr.
+// KindVersionFallback and KindShellInitChange notices are single-view: they are
+// removed after display. All other kinds use the Shown=true persistence convention.
 func renderUnshownNotices(noticesDir string) {
 	unshown, err := notices.ReadUnshownNotices(noticesDir)
 	if err != nil || len(unshown) == 0 {
@@ -80,15 +82,31 @@ func renderUnshownNotices(noticesDir string) {
 			// Self-update failure
 			fmt.Fprintf(os.Stderr, "\ntsuku self-update failed: %s\n", n.Error)
 			fmt.Fprintf(os.Stderr, "  Run 'tsuku self-update' to retry.\n")
+		} else if n.Kind == notices.KindVersionFallback {
+			fmt.Fprintf(os.Stderr, "\nWarning: %s\n", n.Tool)
+			for _, msg := range n.Messages {
+				fmt.Fprintf(os.Stderr, "  %s\n", msg)
+			}
+		} else if n.Kind == notices.KindShellInitChange {
+			fmt.Fprintf(os.Stderr, "\nNote: shell init changed for %s\n", n.Tool)
+			for _, msg := range n.Messages {
+				fmt.Fprintf(os.Stderr, "  %s\n", msg)
+			}
 		} else if n.Error == "" {
-			// Tool update success from background
+			// Tool update success from background (KindUpdateResult or KindAutoApplyResult)
 			fmt.Fprintf(os.Stderr, "\n%s has been updated to %s\n", n.Tool, n.AttemptedVersion)
 		} else {
 			// Tool update failure
 			fmt.Fprintf(os.Stderr, "\nUpdate failed: %s -> %s: %s\n", n.Tool, n.AttemptedVersion, n.Error)
 			fmt.Fprintf(os.Stderr, "  Run 'tsuku notices' for details, 'tsuku rollback %s' to revert.\n", n.Tool)
 		}
-		_ = notices.MarkShown(noticesDir, n.Tool)
+
+		// Single-view kinds are removed after display; others are marked shown.
+		if n.Kind == notices.KindVersionFallback || n.Kind == notices.KindShellInitChange {
+			_ = notices.RemoveNotice(noticesDir, n.Tool)
+		} else {
+			_ = notices.MarkShown(noticesDir, n.Tool)
+		}
 	}
 }
 
