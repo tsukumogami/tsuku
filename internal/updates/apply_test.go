@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/notices"
+	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/project"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
@@ -390,5 +392,122 @@ func TestMaybeAutoApplyProjectUndeclaredToolUnchanged(t *testing.T) {
 
 	if installedVersion != "14.0.0" {
 		t.Errorf("undeclared tool should use global pin, got installed=%q", installedVersion)
+	}
+}
+
+// setupBackgroundApplyTest creates a minimal temp directory with one pending cache entry
+// and state for background apply integration tests.
+func setupBackgroundApplyTest(t *testing.T, toolName string) (*config.Config, *userconfig.Config) {
+	t.Helper()
+	dir := t.TempDir()
+	cacheDir := filepath.Join(dir, "cache", "updates")
+	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	entry := &UpdateCheckEntry{
+		Tool:            toolName,
+		ActiveVersion:   "1.0.0",
+		Requested:       "",
+		LatestWithinPin: "1.1.0",
+		LatestOverall:   "1.1.0",
+		CheckedAt:       time.Now(),
+		ExpiresAt:       time.Now().Add(24 * time.Hour),
+	}
+	if err := WriteEntry(cacheDir, entry); err != nil {
+		t.Fatal(err)
+	}
+	stateDir := filepath.Join(dir, "tools")
+	if err := os.MkdirAll(stateDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	stateJSON := `{"installed":{"` + toolName + `":{"active_version":"1.0.0","versions":{"1.0.0":{"requested":""}}}}}`
+	if err := os.WriteFile(filepath.Join(dir, "state.json"), []byte(stateJSON), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cfg := &config.Config{HomeDir: dir, ToolsDir: stateDir}
+	t.Setenv("TSUKU_AUTO_UPDATE", "")
+	t.Setenv("CI", "")
+	return cfg, userconfig.DefaultConfig()
+}
+
+// TestBackgroundApplySuccessWritesNotice verifies the integration between
+// MaybeAutoApply and InboxReporter on the success-only path: apply.go writes
+// a KindAutoApplyResult notice; InboxReporter.Stop() returns early (no
+// messages) and leaves it untouched.
+func TestBackgroundApplySuccessWritesNotice(t *testing.T) {
+	cfg, userCfg := setupBackgroundApplyTest(t, "bg-success-tool")
+	noticesDir := notices.NoticesDir(cfg.HomeDir)
+
+	var reporters []*progress.InboxReporter
+	installFn := func(toolName, version, constraint string) error {
+		reporter := progress.NewInboxReporter(toolName, noticesDir)
+		reporters = append(reporters, reporter)
+		return nil // success, no warnings
+	}
+
+	MaybeAutoApply(cfg, userCfg, nil, installFn, nil)
+
+	// Mirror cmd_apply_updates.go: stop reporters after MaybeAutoApply.
+	for _, r := range reporters {
+		r.Stop()
+	}
+
+	n, err := notices.ReadNotice(noticesDir, "bg-success-tool")
+	if err != nil {
+		t.Fatalf("ReadNotice error: %v", err)
+	}
+	if n == nil {
+		t.Fatal("expected a notice on disk after successful background apply, got nil")
+	}
+	if n.Kind != notices.KindAutoApplyResult {
+		t.Errorf("notice Kind = %q, want %q", n.Kind, notices.KindAutoApplyResult)
+	}
+	if n.Error != "" {
+		t.Errorf("notice Error = %q, want empty", n.Error)
+	}
+	if len(n.Messages) != 0 {
+		t.Errorf("notice Messages = %v, want empty", n.Messages)
+	}
+}
+
+// TestBackgroundApplyWarningOverwritesSuccessNotice verifies the integration
+// between MaybeAutoApply and InboxReporter on the warning path: apply.go
+// writes the success notice first; InboxReporter.Stop() then overwrites it
+// with a KindVersionFallback notice containing the accumulated messages.
+func TestBackgroundApplyWarningOverwritesSuccessNotice(t *testing.T) {
+	cfg, userCfg := setupBackgroundApplyTest(t, "bg-fallback-tool")
+	noticesDir := notices.NoticesDir(cfg.HomeDir)
+
+	var reporters []*progress.InboxReporter
+	installFn := func(toolName, version, constraint string) error {
+		reporter := progress.NewInboxReporter(toolName, noticesDir)
+		reporters = append(reporters, reporter)
+		reporter.Warn("version_fallback: installed 1.0.9 instead of 1.1.0 (no asset for 1.1.0)")
+		return nil // success, but with a version-fallback warning
+	}
+
+	MaybeAutoApply(cfg, userCfg, nil, installFn, nil)
+
+	// Mirror cmd_apply_updates.go: stop reporters after MaybeAutoApply.
+	// Reporter.Stop() overwrites the success notice with the richer warning.
+	for _, r := range reporters {
+		r.Stop()
+	}
+
+	n, err := notices.ReadNotice(noticesDir, "bg-fallback-tool")
+	if err != nil {
+		t.Fatalf("ReadNotice error: %v", err)
+	}
+	if n == nil {
+		t.Fatal("expected a notice on disk after background apply with warnings, got nil")
+	}
+	if n.Kind != notices.KindVersionFallback {
+		t.Errorf("notice Kind = %q, want %q", n.Kind, notices.KindVersionFallback)
+	}
+	if len(n.Messages) == 0 {
+		t.Fatal("expected Messages to be populated, got empty")
+	}
+	if !strings.HasPrefix(n.Messages[0], "version_fallback:") {
+		t.Errorf("Messages[0] = %q, want prefix %q", n.Messages[0], "version_fallback:")
 	}
 }

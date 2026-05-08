@@ -5,6 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/notices"
+	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/updates"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
@@ -33,11 +35,25 @@ var applyUpdatesCmd = &cobra.Command{
 			return nil
 		}
 
+		noticesDir := notices.NoticesDir(cfg.HomeDir)
+		var reporters []*progress.InboxReporter
+
 		installFn := func(toolName, version, constraint string) error {
-			return runInstallWithTelemetry(toolName, version, constraint, false, "", nil)
+			reporter := progress.NewInboxReporter(toolName, noticesDir)
+			reporters = append(reporters, reporter)
+			return runInstallWithExternalReporter(toolName, version, constraint, false, "", nil, reporter)
 		}
 
 		updates.MaybeAutoApply(cfg, userCfg, nil, installFn, nil)
+
+		// Stop reporters after MaybeAutoApply has written success notices.
+		// Reporters with no accumulated messages return early, leaving the
+		// success notice intact. Reporters with warnings (e.g., version_fallback)
+		// overwrite the success notice with a richer notice.
+		for _, r := range reporters {
+			r.Stop()
+		}
+
 		return nil
 	},
 }

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/progress"
 )
 
 func TestWarnShellInitChanges_NoWarningWhenHashesMatch(t *testing.T) {
@@ -22,8 +23,9 @@ func TestWarnShellInitChanges_NoWarningWhenHashesMatch(t *testing.T) {
 	oldStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
+	reporter := progress.NewTTYReporter(os.Stderr)
 
-	warnShellInitChanges("tool", old, new)
+	warnShellInitChanges("tool", old, new, reporter)
 
 	w.Close()
 	os.Stderr = oldStderr
@@ -48,8 +50,9 @@ func TestWarnShellInitChanges_WarnsWhenHashChanges(t *testing.T) {
 	oldStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
+	reporter := progress.NewTTYReporter(os.Stderr)
 
-	warnShellInitChanges("tool", old, new)
+	warnShellInitChanges("tool", old, new, reporter)
 
 	w.Close()
 	os.Stderr = oldStderr
@@ -80,8 +83,9 @@ func TestWarnShellInitChanges_NoWarningForNewPaths(t *testing.T) {
 	oldStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
+	reporter := progress.NewTTYReporter(os.Stderr)
 
-	warnShellInitChanges("tool", old, new)
+	warnShellInitChanges("tool", old, new, reporter)
 
 	w.Close()
 	os.Stderr = oldStderr
@@ -104,8 +108,9 @@ func TestWarnShellInitChanges_SkipsActionsWithoutHash(t *testing.T) {
 	oldStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
+	reporter := progress.NewTTYReporter(os.Stderr)
 
-	warnShellInitChanges("tool", old, new)
+	warnShellInitChanges("tool", old, new, reporter)
 
 	w.Close()
 	os.Stderr = oldStderr
@@ -132,8 +137,9 @@ func TestWarnShellInitChanges_MultipleShellChanges(t *testing.T) {
 	oldStderr := os.Stderr
 	r, w, _ := os.Pipe()
 	os.Stderr = w
+	reporter := progress.NewTTYReporter(os.Stderr)
 
-	warnShellInitChanges("tool", old, new)
+	warnShellInitChanges("tool", old, new, reporter)
 
 	w.Close()
 	os.Stderr = oldStderr

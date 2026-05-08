@@ -145,8 +145,17 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, projectCfg *
 				tc.SendUpdateOutcome(telemetry.NewUpdateOutcomeSuccessEvent(
 					entry.Tool, previousVersion, entry.LatestWithinPin, "auto"))
 			}
-			// Success resets the failure counter by removing the notice
+			// Success resets the failure counter by removing any previous notice
 			_ = notices.RemoveNotice(noticesDir, entry.Tool)
+			// Write success notice so the next command can display it.
+			// InboxReporter.Stop() runs after this and overwrites with a richer
+			// notice only when warnings were accumulated during install.
+			_ = notices.WriteNotice(noticesDir, &notices.Notice{
+				Tool:             entry.Tool,
+				AttemptedVersion: entry.LatestWithinPin,
+				Kind:             notices.KindAutoApplyResult,
+				Timestamp:        time.Now(),
+			})
 			// Garbage collect old version directories
 			retention := userCfg.UpdatesVersionRetention()
 			_ = GarbageCollectVersions(cfg.ToolsDir, entry.Tool, entry.LatestWithinPin, previousVersion, retention, time.Now())
