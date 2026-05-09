@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-05-09T02:30:32Z",
+  "generated_at": "2026-05-09T02:32:04Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 67,
-      "pending": 3842,
-      "success": 1368
+      "failed": 65,
+      "pending": 3843,
+      "success": 1369
     },
     "by_tier": {
       "1": {
@@ -23,9 +23,9 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 67,
-        "pending": 3827,
-        "success": 1344
+        "failed": 65,
+        "pending": 3828,
+        "success": 1345
       }
     },
     "by_ecosystem": {
@@ -80,9 +80,9 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 50,
-        "pending": 25,
-        "success": 13,
+        "failed": 48,
+        "pending": 26,
+        "success": 14,
         "total": 89
       }
     },
@@ -403,22 +403,13 @@
       ],
       "failed": [
         {
-          "id": "rubygems:cdo",
-          "name": "cdo",
-          "ecosystem": "rubygems",
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 14,
-          "next_retry_at": "2026-05-08T20:57:33Z"
-        },
-        {
-          "id": "rubygems:chisel",
-          "name": "chisel",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 14,
-          "next_retry_at": "2026-05-08T22:57:19Z"
+          "failure_count": 332,
+          "next_retry_at": "1734-01-28T02:43:52Z"
         },
         {
           "id": "rubygems:chroma",
@@ -464,15 +455,6 @@
           "category": "install_failed",
           "failure_count": 14,
           "next_retry_at": "2026-05-09T10:56:33Z"
-        },
-        {
-          "id": "npm:dmd",
-          "name": "dmd",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 14,
-          "next_retry_at": "2026-05-08T22:57:19Z"
         },
         {
           "id": "rubygems:doggo",
@@ -698,6 +680,15 @@
           "category": "install_failed",
           "failure_count": 12,
           "next_retry_at": "2026-05-11T09:23:20Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 496,
+          "next_retry_at": "1734-01-28T02:43:52Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -977,15 +968,6 @@
           "category": "install_failed",
           "failure_count": 13,
           "next_retry_at": "2026-05-11T23:03:00Z"
-        },
-        {
-          "id": "pypi:vllm",
-          "name": "vllm",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 14,
-          "next_retry_at": "2026-05-08T22:57:19Z"
         },
         {
           "id": "npm:wartremover",
@@ -2841,15 +2823,6 @@
           "failure_count": 1
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 331,
-          "next_retry_at": "1734-01-27T18:04:11Z"
-        },
-        {
           "id": "homebrew:azure-cli",
           "name": "azure-cli",
           "ecosystem": "homebrew",
@@ -4254,6 +4227,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:cdo",
+          "name": "cdo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 14,
+          "next_retry_at": "2026-05-08T20:57:33Z"
+        },
+        {
           "id": "homebrew:ceres-solver",
           "name": "ceres-solver",
           "ecosystem": "homebrew",
@@ -4501,6 +4483,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:chisel",
+          "name": "chisel",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 14,
+          "next_retry_at": "2026-05-08T22:57:19Z"
         },
         {
           "id": "homebrew:chisel-tunnel",
@@ -6535,6 +6526,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:dmd",
+          "name": "dmd",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 14,
+          "next_retry_at": "2026-05-08T22:57:19Z"
         },
         {
           "id": "homebrew:dmg2img",
@@ -13229,15 +13229,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 495,
-          "next_retry_at": "1734-01-26T11:29:30Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -23428,13 +23419,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:solargraph",
-          "name": "solargraph",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:solc-select",
           "name": "solc-select",
           "ecosystem": "homebrew",
@@ -26636,6 +26620,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "pypi:vllm",
+          "name": "vllm",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 14,
+          "next_retry_at": "2026-05-08T22:57:19Z"
         },
         {
           "id": "homebrew:vmware-tanzu/carvel/vendir",
@@ -36236,6 +36229,13 @@
           "id": "homebrew:softhsm",
           "name": "softhsm",
           "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "rubygems:solargraph",
+          "name": "solargraph",
+          "ecosystem": "rubygems",
           "priority": 3,
           "failure_count": 0
         },
