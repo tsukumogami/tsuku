@@ -174,7 +174,7 @@ type MetadataSection struct {
 	Type                     string   `toml:"type"`                       // Recipe type: "tool" (default) or "library"
 	LLMValidation            string   `toml:"llm_validation,omitempty"`   // LLM validation status: "skipped" or empty
 	Curated                  bool     `toml:"curated,omitempty"`          // True for handcrafted recipes in ci.curated
-	Binaries                 []string `toml:"binaries,omitempty"`         // Explicit binary paths for homebrew recipes
+	Binaries                 []string `toml:"binaries,omitempty"`         // Explicit binary dest paths (each prefixed with bin/). Read by Recipe.ExtractBinaries and ExtractBinariesFromPlan when the recipe's actions don't decompose to install_binaries (homebrew, pipx_install).
 	// Satisfies maps an ecosystem (homebrew, npm, pypi, ...) to the list
 	// of package names this recipe satisfies in that ecosystem. The
 	// reserved key "aliases" (see AliasesKey) is special: it lists

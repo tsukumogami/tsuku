@@ -1,0 +1,25 @@
+[metadata]
+name = "azure-cli"
+description = "Microsoft Azure command-line interface"
+homepage = "https://learn.microsoft.com/cli/azure/"
+version_format = "semver"
+curated = true
+# musl excluded: azure-cli's transitive deps (cryptography, bcrypt, pynacl)
+# lack musllinux wheels and the bundled python-standalone has no compiler
+# chain.
+supported_libc = ["glibc"]
+# The pypi package installs a single binary named `az`, but the recipe is
+# named after the pypi package itself. Without this override the install
+# manager's fallback creates a wrapper named after the recipe and points
+# at a non-existent `bin/azure-cli` — Recipe.ExtractBinaries does not infer
+# pipx executables from the step parameters.
+binaries = ["bin/az"]
+
+[[steps]]
+action = "pipx_install"
+package = "azure-cli"
+executables = ["az"]
+
+[verify]
+command = "az --version"
+pattern = "{version}"

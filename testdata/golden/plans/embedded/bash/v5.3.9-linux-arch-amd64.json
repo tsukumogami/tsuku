@@ -108,5 +108,8 @@
   "verify": {
     "command": "bash --version",
     "pattern": "GNU bash, version {version}"
-  }
+  },
+  "binaries": [
+    "bin/bash"
+  ]
 }

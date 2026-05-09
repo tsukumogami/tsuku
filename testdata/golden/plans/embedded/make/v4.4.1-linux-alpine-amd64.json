@@ -22,5 +22,8 @@
   ],
   "verify": {
     "command": "make --version"
-  }
+  },
+  "binaries": [
+    "bin/gmake"
+  ]
 }

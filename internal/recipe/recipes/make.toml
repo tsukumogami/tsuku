@@ -11,7 +11,9 @@ curated = true
 # gap). It is set to bin/gmake because:
 #   - The plan-based install path (tsuku install --plan, what CI exercises in the
 #     Linux Containers matrix) reads per-step outputs via ExtractBinariesFromPlan
-#     and is platform-correct regardless of metadata.binaries.
+#     first and is platform-correct: Linux gets ["bin/make"] from the install_binaries
+#     step, darwin gets ["bin/gmake"] from its own step. metadata.binaries is the
+#     fallback used only when no install_binaries step registers anything.
 #   - The regular install path (tsuku install make) reads metadata.binaries via
 #     ExtractBinaries. With ["bin/gmake"]: darwin works (bottle ships bin/gmake),
 #     and Linux ends up with a dangling current/gmake symlink. Verify still passes

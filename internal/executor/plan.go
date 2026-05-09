@@ -58,6 +58,14 @@ type InstallationPlan struct {
 
 	// Metadata from the recipe (needed for install_binaries directory mode checks)
 	RecipeType string `json:"recipe_type,omitempty"` // "tool" or "library"
+
+	// Binaries mirrors recipe.Metadata.Binaries so the plan-based install
+	// path (--plan, used by sandbox CI) can name the wrapper scripts the
+	// same way the recipe-based install path does. ExtractBinariesFromPlan
+	// reads this field first; without it, recipes whose binary name differs
+	// from the recipe name (e.g., azure-cli installs `az`, httpie installs
+	// `http`) get a wrapper pointing at a non-existent path.
+	Binaries []string `json:"binaries,omitempty"`
 }
 
 // DependencyPlan represents a nested installation plan for a dependency.
@@ -199,6 +207,14 @@ func IsActionEvaluable(action string) bool {
 // bin/<toolname>, which is wrong when the installed binary has a different name
 // (e.g., argo-cd installs argocd, golang installs go/gofmt).
 //
+// Per-step install_binaries inference takes precedence over plan.Binaries because
+// it can be platform-conditional via `when` clauses (see make.toml, which ships
+// `bin/make` on Linux and `bin/gmake` on macOS). plan.Binaries (mirrored from
+// recipe.Metadata.Binaries) is the fallback for recipes whose actions don't
+// decompose to install_binaries — pipx_install, in particular, leaves no
+// install_binaries step in the plan, so its executables can't be inferred from
+// per-step params.
+//
 // Applies the same normalization as the install_binaries action:
 // - binaries mode: string "foo" → "bin/foo", string "src/foo" → "bin/foo"
 // - directory mode: paths kept as-is (e.g., "bin/cmake", "cargo/bin/cargo")
@@ -270,6 +286,9 @@ func ExtractBinariesFromPlan(plan *InstallationPlan) []string {
 				}
 			}
 		}
+	}
+	if len(binaries) == 0 {
+		return plan.Binaries
 	}
 	return binaries
 }

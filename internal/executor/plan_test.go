@@ -818,3 +818,62 @@ func TestDeterministicFieldInJSON(t *testing.T) {
 		t.Error("step.deterministic should be false")
 	}
 }
+
+func TestExtractBinariesFromPlan_PlanBinariesUsedWhenNoInstallBinariesStep(t *testing.T) {
+	// plan.Binaries (mirrored from recipe.Metadata.Binaries) is the fallback
+	// for recipes whose actions don't decompose to install_binaries —
+	// pipx_install in particular leaves no install_binaries step. azure-cli
+	// (binary `az`, recipe name `azure-cli`) ships the recipe-name override
+	// via metadata.binaries, and the plan path needs to honor it for sandbox
+	// CI to create the right wrapper.
+	plan := &InstallationPlan{
+		Binaries: []string{"bin/az"},
+		Steps: []ResolvedStep{
+			{Action: "pip_exec", Params: map[string]interface{}{}},
+		},
+	}
+	got := ExtractBinariesFromPlan(plan)
+	want := []string{"bin/az"}
+	if len(got) != len(want) || got[0] != want[0] {
+		t.Errorf("ExtractBinariesFromPlan() = %v, want %v", got, want)
+	}
+}
+
+func TestExtractBinariesFromPlan_PerStepPrecedenceOverPlanBinaries(t *testing.T) {
+	// Per-step install_binaries inference wins over plan.Binaries because
+	// install_binaries can be platform-conditional via `when` clauses (see
+	// make.toml: `bin/make` on Linux, `bin/gmake` on darwin), while
+	// metadata.binaries is global. Preserving per-step priority keeps
+	// platform-conditional recipes correct on the plan path.
+	plan := &InstallationPlan{
+		Binaries: []string{"bin/gmake"},
+		Steps: []ResolvedStep{
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{
+					"outputs": []interface{}{"make"},
+				},
+			},
+		},
+	}
+	got := ExtractBinariesFromPlan(plan)
+	want := []string{"bin/make"}
+	if len(got) != len(want) || got[0] != want[0] {
+		t.Errorf("ExtractBinariesFromPlan() = %v, want %v", got, want)
+	}
+}
+
+func TestExtractBinariesFromPlan_EmptyWhenNothingRegistered(t *testing.T) {
+	// No install_binaries step and no plan.Binaries → empty result, which
+	// triggers the install manager's bin/<toolName> fallback. Preserving the
+	// pre-fix behavior for recipes that don't opt into either mechanism.
+	plan := &InstallationPlan{
+		Steps: []ResolvedStep{
+			{Action: "pip_exec", Params: map[string]interface{}{}},
+		},
+	}
+	got := ExtractBinariesFromPlan(plan)
+	if len(got) != 0 {
+		t.Errorf("ExtractBinariesFromPlan() = %v, want empty", got)
+	}
+}

@@ -4,7 +4,24 @@ description = "Radically simple IT automation"
 homepage = "https://www.ansible.com"
 version_format = "semver"
 curated = true
+# musl excluded: ansible-core's transitive deps (cryptography, cffi) lack
+# musllinux wheels and the bundled python-standalone has no compiler chain.
 supported_libc = ["glibc"]
+# Each pipx executable needs its own wrapper in $TSUKU_HOME/tools/current —
+# Recipe.ExtractBinaries does not infer pipx executables from the step
+# parameters, so without this override only `ansible` (matching the recipe
+# name) gets exposed and `ansible-playbook`, `ansible-galaxy`, etc. don't.
+binaries = [
+    "bin/ansible",
+    "bin/ansible-config",
+    "bin/ansible-console",
+    "bin/ansible-doc",
+    "bin/ansible-galaxy",
+    "bin/ansible-inventory",
+    "bin/ansible-playbook",
+    "bin/ansible-pull",
+    "bin/ansible-vault",
+]
 
 [[steps]]
 action = "pipx_install"

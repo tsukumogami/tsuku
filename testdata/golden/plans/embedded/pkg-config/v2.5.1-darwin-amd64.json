@@ -56,5 +56,8 @@
   ],
   "verify": {
     "command": "pkg-config --version"
-  }
+  },
+  "binaries": [
+    "bin/pkg-config"
+  ]
 }
