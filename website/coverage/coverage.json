@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-05-08T20:21:37Z",
-  "total_recipes": 1439,
+  "generated_at": "2026-05-09T02:30:51Z",
+  "total_recipes": 1440,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 877,
-        "total": 1439,
-        "pct": 60.945100764419735
+        "supported": 878,
+        "total": 1440,
+        "pct": 60.97222222222223
       },
       "glibc": {
         "supported": 1407,
-        "total": 1439,
-        "pct": 97.77623349548298
+        "total": 1440,
+        "pct": 97.70833333333333
       },
       "musl": {
         "supported": 1255,
-        "total": 1439,
-        "pct": 87.2133425990271
+        "total": 1440,
+        "pct": 87.15277777777779
       }
     },
     "by_category": {
@@ -26,7 +26,7 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1286,
+        "total": 1287,
         "musl_support": 1105,
         "glibc_support": 1257
       }
@@ -17813,6 +17813,21 @@
       "warnings": [
         "recipe 'softhsm' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "solargraph",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": false,
+        "musl": false
+      },
+      "gaps": [
+        "glibc",
+        "musl"
+      ],
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "sonobuoy",
