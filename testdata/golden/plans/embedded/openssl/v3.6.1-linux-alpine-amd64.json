@@ -24,5 +24,8 @@
     "command": "openssl version",
     "pattern": "OpenSSL {version}"
   },
-  "recipe_type": "library"
+  "recipe_type": "library",
+  "binaries": [
+    "bin/openssl"
+  ]
 }

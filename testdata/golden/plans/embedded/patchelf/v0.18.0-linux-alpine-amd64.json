@@ -23,5 +23,8 @@
   "verify": {
     "command": "patchelf --version",
     "pattern": "patchelf {version}"
-  }
+  },
+  "binaries": [
+    "bin/patchelf"
+  ]
 }
