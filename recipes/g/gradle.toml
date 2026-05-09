@@ -1,0 +1,58 @@
+[metadata]
+name = "gradle"
+description = "Build automation tool for JVM-based projects"
+homepage = "https://gradle.org/"
+version_format = "semver"
+curated = true
+# `gradle` is a shell-script launcher that locates a sibling `lib/` of JARs
+# and delegates to `java`, so the same archive works on every supported
+# platform — Linux glibc, Linux musl, darwin amd64, darwin arm64. The
+# openjdk dependency is what selects the right per-platform JDK; its own
+# `install_binaries` step exposes `bin/java` (among others) in
+# $TSUKU_HOME/bin so gradle's launcher script finds `java` via PATH.
+#
+# Declared as `dependencies` rather than `runtime_dependencies` so the
+# dep lands in the generated plan's Dependencies tree (consumed by the
+# plan-driven `--sandbox` test-recipe path). The resolver routes
+# `runtime_dependencies` to a separate `RuntimeDependencies` slice that
+# the plan does not carry, so a runtime_dependencies-only declaration
+# would leave the sandbox install without `java` and verify would fail.
+# Declaring both fields trips the circular-dependency check in
+# install_deps.go, which marks visited after the first install pass.
+dependencies = ["openjdk"]
+
+# Gradle's own GitHub releases ship only source archives; the binary
+# distributions live at services.gradle.org. We still use github_releases
+# as the version source so the GitHub provider's milestone-tag filter
+# (#2325) skips `-Mn` pre-releases like `9.6.0-M1`.
+[version]
+source = "github_releases"
+github_repo = "gradle/gradle"
+tag_prefix = "v"
+
+# Linux glibc and musl — pure JVM payload, identical archive on both.
+[[steps]]
+action = "download_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
+url = "https://services.gradle.org/distributions/gradle-{version}-bin.zip"
+strip_dirs = 1
+install_mode = "directory"
+binaries = ["bin/gradle"]
+
+# macOS — same archive.
+[[steps]]
+action = "download_archive"
+when = { os = ["darwin"] }
+url = "https://services.gradle.org/distributions/gradle-{version}-bin.zip"
+strip_dirs = 1
+install_mode = "directory"
+binaries = ["bin/gradle"]
+
+[verify]
+command = "gradle --version"
+# `gradle --version` boots the JVM and prints a banner whose second line
+# is `Gradle {version}`. Matching that line confirms (a) the launcher
+# script ran, (b) `java` was reachable via the openjdk recipe's
+# `install_binaries` symlink at $TSUKU_HOME/bin/java, and (c) the
+# bundled distribution version matches what was resolved.
+pattern = "Gradle {version}"

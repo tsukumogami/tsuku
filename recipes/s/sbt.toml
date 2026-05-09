@@ -1,0 +1,65 @@
+[metadata]
+name = "sbt"
+description = "Build tool for Scala and Java projects"
+homepage = "https://www.scala-sbt.org/"
+version_format = "semver"
+curated = true
+# `sbt` is a shell-script launcher around `sbt-launch.jar` that delegates
+# to `java`, so the same archive works on every supported platform —
+# Linux glibc, Linux musl, darwin amd64, darwin arm64. The openjdk
+# dependency selects the right per-platform JDK; its own
+# `install_binaries` step exposes `bin/java` in $TSUKU_HOME/bin so
+# sbt's launcher script finds `java` via PATH.
+#
+# Declared as `dependencies` rather than `runtime_dependencies` so the
+# dep lands in the generated plan's Dependencies tree (consumed by the
+# plan-driven `--sandbox` test-recipe path). See gradle.toml for the
+# full rationale; declaring both fields trips a circular-dependency
+# check in install_deps.go, and `runtime_dependencies` alone is not
+# carried into the sandbox plan.
+dependencies = ["openjdk"]
+
+# github_releases as version source so the GitHub provider's milestone-tag
+# filter (#2325) skips `-Mn` pre-releases like `2.0.0-M5`.
+[version]
+source = "github_releases"
+github_repo = "sbt/sbt"
+tag_prefix = "v"
+
+# Linux musl (Alpine): sbt's `bin/sbt` launcher has `#!/usr/bin/env bash`
+# and uses bash-only features. Alpine's minimal image only ships ash,
+# so install bash via apk before laying down the sbt distribution.
+# (Gradle's launcher is POSIX-sh-compatible and doesn't need this.)
+[[steps]]
+action = "apk_install"
+packages = ["bash"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# Linux glibc and musl — pure JVM payload, identical archive on both.
+[[steps]]
+action = "download_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
+url = "https://github.com/sbt/sbt/releases/download/v{version}/sbt-{version}.tgz"
+strip_dirs = 1
+install_mode = "directory"
+binaries = ["bin/sbt"]
+
+# macOS — same archive.
+[[steps]]
+action = "download_archive"
+when = { os = ["darwin"] }
+url = "https://github.com/sbt/sbt/releases/download/v{version}/sbt-{version}.tgz"
+strip_dirs = 1
+install_mode = "directory"
+binaries = ["bin/sbt"]
+
+[verify]
+command = "sbt --version"
+# `sbt --version` has a fast path that prints `sbt runner version:
+# {version}` and `sbt script version: {version}` directly from the
+# launcher without booting the JVM. Matching the runner-version line
+# confirms the launcher ran (which on Alpine requires the apk-installed
+# bash from the step above) and that the bundled version matches the
+# resolved one. It does not exercise java itself; that is what the
+# openjdk dependency's own `java --version` verify covers.
+pattern = "sbt runner version: {version}"
