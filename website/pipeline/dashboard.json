@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-09T14:58:54Z",
+  "generated_at": "2026-05-09T15:00:05Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -431,15 +431,6 @@
           "next_retry_at": "2026-05-16T05:55:56Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 335,
-          "next_retry_at": "1734-01-28T13:31:06Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -557,6 +548,15 @@
           "next_retry_at": "2026-05-16T11:02:35Z"
         },
         {
+          "id": "npm:datasette",
+          "name": "datasette",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 15,
+          "next_retry_at": "2026-05-16T14:59:23Z"
+        },
+        {
           "id": "rubygems:dict",
           "name": "dict",
           "ecosystem": "rubygems",
@@ -566,13 +566,13 @@
           "next_retry_at": "2026-05-16T13:18:23Z"
         },
         {
-          "id": "rubygems:dug",
-          "name": "dug",
+          "id": "rubygems:doggo",
+          "name": "doggo",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 13,
-          "next_retry_at": "2026-05-09T14:51:15Z"
+          "failure_count": 15,
+          "next_retry_at": "2026-05-16T14:59:23Z"
         },
         {
           "id": "rubygems:exiv2",
@@ -762,15 +762,6 @@
           "category": "install_failed",
           "failure_count": 12,
           "next_retry_at": "2026-05-11T09:23:20Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 499,
-          "next_retry_at": "1734-01-28T13:31:06Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -1140,6 +1131,15 @@
           "category": "install_failed",
           "failure_count": 15,
           "next_retry_at": "2026-05-16T11:02:35Z"
+        },
+        {
+          "id": "pypi:vllm",
+          "name": "vllm",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 15,
+          "next_retry_at": "2026-05-16T14:59:23Z"
         },
         {
           "id": "npm:wartremover",
@@ -2966,6 +2966,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 335,
+          "next_retry_at": "1734-01-28T13:31:06Z"
         },
         {
           "id": "homebrew:azure-cli",
@@ -6093,15 +6102,6 @@
           "failure_count": 0
         },
         {
-          "id": "npm:datasette",
-          "name": "datasette",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 14,
-          "next_retry_at": "2026-05-08T19:23:51Z"
-        },
-        {
           "id": "homebrew:datawire/blackbird/telepresence",
           "name": "datawire/blackbird/telepresence",
           "ecosystem": "homebrew",
@@ -6755,15 +6755,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:doggo",
-          "name": "doggo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 14,
-          "next_retry_at": "2026-05-09T13:12:00Z"
-        },
-        {
           "id": "homebrew:dokku/repo/dokku",
           "name": "dokku/repo/dokku",
           "ecosystem": "homebrew",
@@ -7028,6 +7019,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:dug",
+          "name": "dug",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 13,
+          "next_retry_at": "2026-05-09T14:51:15Z"
         },
         {
           "id": "homebrew:dumbpipe",
@@ -13320,6 +13320,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 499,
+          "next_retry_at": "1734-01-28T13:31:06Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -26625,15 +26634,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "pypi:vllm",
-          "name": "vllm",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 14,
-          "next_retry_at": "2026-05-08T22:57:19Z"
         },
         {
           "id": "homebrew:vmware-tanzu/carvel/vendir",
