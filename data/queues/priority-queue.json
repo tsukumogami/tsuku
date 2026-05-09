@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-09T02:45:03Z",
+  "updated_at": "2026-05-09T05:55:56Z",
   "entries": [
     {
       "name": "node",
@@ -2886,11 +2886,11 @@
       "name": "ascii",
       "source": "crates.io:ascii",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-05-08T10:34:00.116072677Z"
+      "failure_count": 15,
+      "next_retry_at": "2026-05-16T05:55:56.274510801Z"
     },
     {
       "name": "asciidoc",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 332,
-      "next_retry_at": "1734-01-28T02:43:52.857236325Z"
+      "failure_count": 333,
+      "next_retry_at": "1734-01-28T06:08:39.419734993Z"
     },
     {
       "name": "azqr",
@@ -7356,11 +7356,11 @@
       "name": "chisel",
       "source": "rubygems:chisel",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-05-08T22:57:19.642831029Z"
+      "failure_count": 15,
+      "next_retry_at": "2026-05-16T05:55:56.274510801Z"
     },
     {
       "name": "chisel-tunnel",
@@ -7436,11 +7436,11 @@
       "name": "chroma",
       "source": "rubygems:chroma",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-05-09T02:37:23.359358929Z"
+      "failure_count": 15,
+      "next_retry_at": "2026-05-16T05:55:56.274510801Z"
     },
     {
       "name": "chromaprint",
@@ -8626,7 +8626,7 @@
       "name": "cog",
       "source": "rubygems:cog",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
@@ -12396,7 +12396,7 @@
       "name": "e2b",
       "source": "npm:e2b",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 496,
-      "next_retry_at": "1734-01-28T02:43:52.857236325Z"
+      "failure_count": 497,
+      "next_retry_at": "1734-01-28T06:08:39.419734993Z"
     },
     {
       "name": "libaacs",
@@ -31296,11 +31296,11 @@
       "name": "multimarkdown",
       "source": "rubygems:multimarkdown",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-05-07T19:24:06.875713815Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-05-16T05:55:56.274510801Z"
     },
     {
       "name": "multitail",
@@ -40536,11 +40536,11 @@
       "name": "rename",
       "source": "rubygems:rename",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-05-08T02:22:57.915259779Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-05-11T21:55:56.274510801Z"
     },
     {
       "name": "render",
