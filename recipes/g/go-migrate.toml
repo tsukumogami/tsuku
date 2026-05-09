@@ -4,6 +4,9 @@ description = "Database migration CLI"
 homepage = "https://github.com/golang-migrate/migrate"
 version_format = "semver"
 
+[metadata.satisfies]
+aliases = ["migrate"]
+
 [[steps]]
 action = "github_archive"
 repo = "golang-migrate/migrate"

@@ -213,6 +213,26 @@ the implicit set.
 See [references/dependencies-reference.md](references/dependencies-reference.md)
 for library dependencies, build environment setup, and resolution order.
 
+## Aliases
+
+If a recipe's canonical name differs from the binary users actually invoke, declare an alias under `[metadata.satisfies]`:
+
+```toml
+[metadata.satisfies]
+aliases = ["rg"]  # users type "tsuku install rg", gets ripgrep
+```
+
+This enables `tsuku install <alias>` to resolve transparently to the canonical recipe with no picker or error (single-satisfier path). The canonical recipe name is unchanged.
+
+**When to add an alias:**
+- The project name is long but the binary is short (`ripgrep` → `rg`, `neovim` → `nvim`)
+- The recipe has a `-cli` suffix to disambiguate from a server/library, but users only type the bare command (`cilium-cli` → `cilium`)
+- The upstream tarball or project name differs from what users type (`golang` → `go`)
+
+**When not to add an alias:**
+- The alias could match multiple recipes (use multi-satisfier instead)
+- The alias is already the canonical name
+
 ## Distributed Recipes (.tsuku-recipes/)
 
 Distribute recipes from any GitHub repo without contributing to the central registry.

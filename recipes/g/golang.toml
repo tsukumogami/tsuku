@@ -5,6 +5,9 @@ homepage = "https://go.dev/"
 version_format = "semver"
 curated = true
 
+[metadata.satisfies]
+aliases = ["go"]
+
 [version]
 github_repo = "golang/go"
 

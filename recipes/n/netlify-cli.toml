@@ -4,6 +4,9 @@ description = "Netlify command line tool"
 homepage = "https://www.netlify.com/products/cli/"
 version_format = "semver"
 
+[metadata.satisfies]
+aliases = ["netlify"]
+
 [[steps]]
 action = "npm_install"
 package = "netlify-cli"

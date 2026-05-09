@@ -5,6 +5,9 @@ homepage = "https://github.com/BurntSushi/ripgrep"
 version_format = "semver"
 curated = true
 
+[metadata.satisfies]
+aliases = ["rg"]
+
 # Linux amd64: statically linked musl binary (works on glibc and musl)
 [[steps]]
 action = "github_archive"

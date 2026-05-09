@@ -5,6 +5,9 @@ homepage = "https://aws.amazon.com/cli/"
 version_format = "semver"
 curated = true
 
+[metadata.satisfies]
+aliases = ["aws"]
+
 [version]
 github_repo = "aws/aws-cli"
 

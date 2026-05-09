@@ -5,6 +5,9 @@ homepage = "https://clementtsang.github.io/bottom/"
 version_format = "semver"
 supported_libc = ["glibc"]
 
+[metadata.satisfies]
+aliases = ["btm"]
+
 [[steps]]
 action = "github_archive"
 repo = "ClementTsang/bottom"

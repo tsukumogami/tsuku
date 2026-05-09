@@ -5,6 +5,9 @@ homepage = "https://cilium.io"
 version_format = "semver"
 curated = true
 
+[metadata.satisfies]
+aliases = ["cilium"]
+
 # Linux: statically linked Go binary works on glibc and musl
 [[steps]]
 action = "github_archive"

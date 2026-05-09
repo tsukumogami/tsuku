@@ -4,6 +4,9 @@ description = "CSV/JSON/tabular data processor"
 homepage = "https://github.com/johnkerl/miller"
 version_format = "semver"
 
+[metadata.satisfies]
+aliases = ["mlr"]
+
 [[steps]]
 action = "github_archive"
 repo = "johnkerl/miller"

@@ -5,6 +5,9 @@ homepage = "https://helix-editor.com/"
 version_format = "semver"
 supported_libc = ["glibc"]
 
+[metadata.satisfies]
+aliases = ["hx"]
+
 [[steps]]
 action = "github_archive"
 repo = "helix-editor/helix"

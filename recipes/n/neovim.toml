@@ -5,6 +5,9 @@ homepage = "https://neovim.io"
 version_format = "semver"
 curated = true
 
+[metadata.satisfies]
+aliases = ["nvim"]
+
 [version]
 github_repo = "neovim/neovim"
 tag_prefix = "v"
