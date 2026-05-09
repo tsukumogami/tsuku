@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-05-09T15:09:10Z",
-  "total_recipes": 1441,
+  "generated_at": "2026-05-09T15:17:12Z",
+  "total_recipes": 1444,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 879,
-        "total": 1441,
-        "pct": 60.99930603747398
+        "supported": 882,
+        "total": 1444,
+        "pct": 61.08033240997231
       },
       "glibc": {
-        "supported": 1408,
-        "total": 1441,
-        "pct": 97.70992366412213
+        "supported": 1411,
+        "total": 1444,
+        "pct": 97.71468144044321
       },
       "musl": {
-        "supported": 1253,
-        "total": 1441,
-        "pct": 86.95350451075642
+        "supported": 1255,
+        "total": 1444,
+        "pct": 86.91135734072022
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1288,
-        "musl_support": 1103,
-        "glibc_support": 1258
+        "total": 1291,
+        "musl_support": 1105,
+        "glibc_support": 1261
       }
     }
   },
@@ -1106,6 +1106,20 @@
       "warnings": [
         "recipe 'aztfexport' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "azure-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": false
+      },
+      "gaps": [
+        "musl"
+      ],
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "azure-dev",
@@ -7467,6 +7481,18 @@
       "warnings": [
         "recipe 'gputils' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "gradle",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "grafana-alloy",
@@ -17192,6 +17218,18 @@
       "warnings": [
         "recipe 'sbcl' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "sbt",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "scaleway-cli",
