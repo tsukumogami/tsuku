@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-09T05:55:56Z",
+  "updated_at": "2026-05-09T08:00:09Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 333,
@@ -4446,11 +4446,11 @@
       "name": "basis_universal",
       "source": "crates.io:basis_universal",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-05-08T12:06:27.57659054Z"
+      "failure_count": 15,
+      "next_retry_at": "2026-05-16T08:00:09.189573503Z"
     },
     {
       "name": "bastet",
@@ -7036,11 +7036,11 @@
       "name": "chainsaw",
       "source": "npm:chainsaw",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-05-08T10:34:00.116072677Z"
+      "failure_count": 15,
+      "next_retry_at": "2026-05-16T08:00:09.189573503Z"
     },
     {
       "name": "chamber",
@@ -8626,11 +8626,11 @@
       "name": "cog",
       "source": "rubygems:cog",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-05-09T05:42:06.41994722Z"
+      "failure_count": 16,
+      "next_retry_at": "2026-05-16T08:00:09.189573503Z"
     },
     {
       "name": "coin3d",
@@ -9156,7 +9156,7 @@
       "name": "cowsay",
       "source": "rubygems:cowsay",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 497,
@@ -41346,11 +41346,11 @@
       "name": "rsync",
       "source": "rubygems:rsync",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-05-08T04:28:13.655251853Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-05-12T00:00:09.189573503Z"
     },
     {
       "name": "rsyslog",
@@ -42166,11 +42166,11 @@
       "name": "scalingo",
       "source": "rubygems:scalingo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-05-08T06:02:49.993366394Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-05-12T00:00:09.189573503Z"
     },
     {
       "name": "scamper",
@@ -42796,11 +42796,11 @@
       "name": "sesh",
       "source": "rubygems:sesh",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-05-07T16:52:29.712407755Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-05-10T00:00:09.189573503Z"
     },
     {
       "name": "sevenzip",
@@ -44106,11 +44106,11 @@
       "name": "snappy",
       "source": "rubygems:snappy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-05-07T15:16:47.114342823Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-05-09T16:00:09.189573503Z"
     },
     {
       "name": "sngrep",
