@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-05-09T15:07:40Z",
+  "generated_at": "2026-05-09T15:12:05Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
       "failed": 84,
-      "pending": 3823,
-      "success": 1370
+      "pending": 3821,
+      "success": 1372
     },
     "by_tier": {
       "1": {
@@ -24,8 +24,8 @@
         "blocked": 16,
         "excluded": 6,
         "failed": 84,
-        "pending": 3808,
-        "success": 1346
+        "pending": 3806,
+        "success": 1348
       }
     },
     "by_ecosystem": {
@@ -55,8 +55,8 @@
       },
       "homebrew": {
         "blocked": 22,
-        "pending": 3730,
-        "success": 1131,
+        "pending": 3728,
+        "success": 1133,
         "total": 4883
       },
       "manual": {
@@ -10116,13 +10116,6 @@
         {
           "id": "homebrew:grace",
           "name": "grace",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "homebrew:gradle",
-          "name": "gradle",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -22217,13 +22210,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:sbt",
-          "name": "sbt",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:sby",
           "name": "sby",
           "ecosystem": "homebrew",
@@ -31643,6 +31629,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:gradle",
+          "name": "gradle",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:grafana-alloy",
           "name": "grafana-alloy",
           "ecosystem": "homebrew",
@@ -35946,6 +35939,13 @@
         {
           "id": "homebrew:sbcl",
           "name": "sbcl",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
+          "id": "homebrew:sbt",
+          "name": "sbt",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
@@ -40830,6 +40830,11 @@
       "validation_status": "valid"
     },
     {
+      "name": "gradle",
+      "source": "homebrew:gradle",
+      "validation_status": "valid"
+    },
+    {
       "name": "gron",
       "source": "github:tomnomnom/gron",
       "validation_status": "valid"
@@ -41442,6 +41447,11 @@
     {
       "name": "rustup",
       "source": "homebrew:rustup",
+      "validation_status": "valid"
+    },
+    {
+      "name": "sbt",
+      "source": "homebrew:sbt",
       "validation_status": "valid"
     },
     {
