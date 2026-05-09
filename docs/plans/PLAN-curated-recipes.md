@@ -125,8 +125,8 @@ Recipes that depend on a Wave 4 *code change* require a tsuku release containing
 
 | Issue | Dependencies | Complexity |
 |-------|--------------|------------|
-| [#2343: feat(recipes): author maven recipe](https://github.com/tsukumogami/tsuku/issues/2343) | [#2327](https://github.com/tsukumogami/tsuku/issues/2327) | testable |
-| _Recipe-only change. Maven ships a single platform-agnostic Apache distribution; the recipe needs an openjdk runtime dependency so `mvn --version` can verify._ | | |
+| ~~[#2343: feat(recipes): author maven recipe](https://github.com/tsukumogami/tsuku/issues/2343)~~ | ~~[#2327](https://github.com/tsukumogami/tsuku/issues/2327)~~ | ~~testable~~ |
+| ~~_Authored `recipes/m/maven.toml` using a single platform-agnostic `download_archive` step against the Apache distribution tarball; pinned to the latest stable 3.9.x via `apache/maven` GitHub tags filtered by semver. `runtime_dependencies = ["openjdk"]` at metadata level wires the wrapper-script generator for `tsuku install <name>` flows; step-level `dependencies = ["openjdk"]` mirrors that on the download_archive step so `--sandbox` and `--plan` flows install openjdk first. Apache's `bin/mvn` derives JAVA_HOME from `which javac` once openjdk's binaries are on PATH at verify time._~~ | | |
 | [#2344: feat(recipes): author gradle and sbt recipes](https://github.com/tsukumogami/tsuku/issues/2344) | [#2327](https://github.com/tsukumogami/tsuku/issues/2327), tsuku release containing [#2325](https://github.com/tsukumogami/tsuku/issues/2325) | testable |
 | _Both upstreams use `-Mn` milestone tags that #2325 now filters as prereleases (released in the binary), and both need the openjdk runtime dependency from #2327 for verify._ | | |
 | [#2345: feat(recipes): author ansible and azure-cli recipes](https://github.com/tsukumogami/tsuku/issues/2345) | tsuku release containing [#2331](https://github.com/tsukumogami/tsuku/issues/2331) | testable |
@@ -189,8 +189,8 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2325,I2327,I2328,I2330,I2331,I2333,I2335,I2336,I2338,I2365,I2368,I2370 done
-    class I2343,I2344,I2345,I2349 blocked
+    class I2325,I2327,I2328,I2330,I2331,I2333,I2335,I2336,I2338,I2343,I2365,I2368,I2370 done
+    class I2344,I2345,I2349 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan
