@@ -818,3 +818,48 @@ func TestDeterministicFieldInJSON(t *testing.T) {
 		t.Error("step.deterministic should be false")
 	}
 }
+
+func TestExtractBinariesFromPlan_PlanLevelBinariesTakePrecedence(t *testing.T) {
+	// plan.Binaries (mirrored from recipe.Metadata.Binaries) overrides any
+	// per-step inference. This is the path that makes pipx_install recipes
+	// like azure-cli (binary `az`, recipe name `azure-cli`) work in the
+	// sandbox: pipx_install decomposes to pip_exec, not install_binaries,
+	// so without the override the plan extractor returns empty and the
+	// install manager creates a wrapper named after the recipe.
+	plan := &InstallationPlan{
+		Binaries: []string{"bin/az"},
+		Steps: []ResolvedStep{
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{
+					"outputs": []interface{}{"azure-cli"},
+				},
+			},
+		},
+	}
+	got := ExtractBinariesFromPlan(plan)
+	want := []string{"bin/az"}
+	if len(got) != len(want) || got[0] != want[0] {
+		t.Errorf("ExtractBinariesFromPlan() = %v, want %v", got, want)
+	}
+}
+
+func TestExtractBinariesFromPlan_FallsThroughWhenPlanBinariesEmpty(t *testing.T) {
+	// When plan.Binaries is empty, the extractor uses the existing per-step
+	// install_binaries inference unchanged.
+	plan := &InstallationPlan{
+		Steps: []ResolvedStep{
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{
+					"outputs": []interface{}{"foo"},
+				},
+			},
+		},
+	}
+	got := ExtractBinariesFromPlan(plan)
+	want := []string{"bin/foo"}
+	if len(got) != len(want) || got[0] != want[0] {
+		t.Errorf("ExtractBinariesFromPlan() = %v, want %v", got, want)
+	}
+}

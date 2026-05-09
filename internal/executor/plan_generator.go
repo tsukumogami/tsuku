@@ -302,6 +302,7 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		Steps:         steps,
 		Verify:        verify,
 		RecipeType:    string(e.recipe.Metadata.Type),
+		Binaries:      e.recipe.Metadata.Binaries,
 	}, nil
 }
 
