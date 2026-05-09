@@ -168,8 +168,5 @@
     "command": "openssl version",
     "pattern": "OpenSSL {version}"
   },
-  "recipe_type": "library",
-  "binaries": [
-    "bin/openssl"
-  ]
+  "recipe_type": "library"
 }

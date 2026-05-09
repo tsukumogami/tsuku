@@ -290,6 +290,15 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		}
 	}
 
+	// Skip Binaries for libraries — system-package actions (apk_install, etc.)
+	// install to system paths, not $TSUKU_HOME/tools/<name>-<ver>/bin/, so honoring
+	// metadata.binaries would create wrappers pointing at non-existent paths. The
+	// pre-existing fallback (bin/<toolName> wrapper) is still used for libraries.
+	var planBinaries []string
+	if !e.recipe.IsLibrary() {
+		planBinaries = e.recipe.Metadata.Binaries
+	}
+
 	return &InstallationPlan{
 		FormatVersion: PlanFormatVersion,
 		Tool:          e.recipe.Metadata.Name,
@@ -302,7 +311,7 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		Steps:         steps,
 		Verify:        verify,
 		RecipeType:    string(e.recipe.Metadata.Type),
-		Binaries:      e.recipe.Metadata.Binaries,
+		Binaries:      planBinaries,
 	}, nil
 }
 
