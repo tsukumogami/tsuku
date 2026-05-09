@@ -1,0 +1,46 @@
+[metadata]
+name = "maven"
+description = "Apache Maven build tool for Java projects"
+homepage = "https://maven.apache.org/"
+version_format = "semver"
+curated = true
+# Maven is pure-JVM; the `mvn` script needs `java` on PATH at runtime.
+# Declaring openjdk as a runtime dependency triggers tsuku's wrapper-script
+# generator to prepend `$TSUKU_HOME/tools/openjdk-<version>/bin` to PATH
+# before exec'ing `mvn`, so Apache's `bin/mvn` finds java via its
+# existing PATH walk without any JAVA_HOME plumbing.
+runtime_dependencies = ["openjdk"]
+
+[metadata.satisfies]
+homebrew = ["maven"]
+
+# Apache publishes maven tags on github.com/apache/maven with a `maven-`
+# prefix. The 4.0.0 series is currently in release-candidate stages
+# (maven-4.0.0-rc-5 and earlier); semver `version_format` filters those
+# prereleases out so the resolver lands on the latest stable 3.9.x tag.
+[version]
+github_repo = "apache/maven"
+tag_prefix = "maven-"
+
+# Apache Maven ships a single platform-agnostic Apache distribution
+# tarball that works on every OS and architecture (it's a pure-JVM
+# application). One step covers linux/{amd64,arm64} (glibc + musl) and
+# darwin/{amd64,arm64}.
+[[steps]]
+action = "download_archive"
+url = "https://archive.apache.org/dist/maven/maven-3/{version}/binaries/apache-maven-{version}-bin.tar.gz"
+strip_dirs = 1
+install_mode = "directory"
+binaries = ["bin/mvn", "bin/mvnDebug"]
+# Step-level `dependencies` mirrors metadata `runtime_dependencies` so the
+# install planner installs openjdk first when sandbox/--plan flows are
+# used (those skip the metadata-level read). Apache's `bin/mvn` script
+# derives JAVA_HOME from `which javac` when JAVA_HOME is unset, so once
+# openjdk's `bin/javac` is on PATH at verify time, mvn finds Java without
+# any explicit env-var plumbing.
+dependencies = ["openjdk"]
+when = { os = ["linux", "darwin"], libc = ["glibc", "musl"] }
+
+[verify]
+command = "mvn --version"
+pattern = "Apache Maven {version}"
