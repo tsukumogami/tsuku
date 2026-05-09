@@ -207,18 +207,19 @@ func IsActionEvaluable(action string) bool {
 // bin/<toolname>, which is wrong when the installed binary has a different name
 // (e.g., argo-cd installs argocd, golang installs go/gofmt).
 //
-// plan.Binaries (mirrored from recipe.Metadata.Binaries) takes precedence —
-// it's the canonical override for actions like pipx_install that don't decompose
-// to install_binaries steps and therefore can't be inferred from per-step params.
+// Per-step install_binaries inference takes precedence over plan.Binaries because
+// it can be platform-conditional via `when` clauses (see make.toml, which ships
+// `bin/make` on Linux and `bin/gmake` on macOS). plan.Binaries (mirrored from
+// recipe.Metadata.Binaries) is the fallback for recipes whose actions don't
+// decompose to install_binaries — pipx_install, in particular, leaves no
+// install_binaries step in the plan, so its executables can't be inferred from
+// per-step params.
 //
 // Applies the same normalization as the install_binaries action:
 // - binaries mode: string "foo" → "bin/foo", string "src/foo" → "bin/foo"
 // - directory mode: paths kept as-is (e.g., "bin/cmake", "cargo/bin/cargo")
 // - map {src, dest}: uses dest directly
 func ExtractBinariesFromPlan(plan *InstallationPlan) []string {
-	if len(plan.Binaries) > 0 {
-		return plan.Binaries
-	}
 	var binaries []string
 	seen := make(map[string]bool)
 	for _, step := range plan.Steps {
@@ -285,6 +286,9 @@ func ExtractBinariesFromPlan(plan *InstallationPlan) []string {
 				}
 			}
 		}
+	}
+	if len(binaries) == 0 {
+		return plan.Binaries
 	}
 	return binaries
 }
