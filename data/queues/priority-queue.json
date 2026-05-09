@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-09T13:18:23Z",
+  "updated_at": "2026-05-09T14:59:24Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 335,
@@ -10236,11 +10236,11 @@
       "name": "datasette",
       "source": "npm:datasette",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-05-08T19:23:51.8480048Z"
+      "failure_count": 15,
+      "next_retry_at": "2026-05-16T14:59:23.943903388Z"
     },
     {
       "name": "datawire/blackbird/telepresence",
@@ -11566,11 +11566,11 @@
       "name": "doggo",
       "source": "rubygems:doggo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-05-09T13:12:00.29678522Z"
+      "failure_count": 15,
+      "next_retry_at": "2026-05-16T14:59:23.943903388Z"
     },
     {
       "name": "dokku/repo/dokku",
@@ -12116,7 +12116,7 @@
       "name": "dug",
       "source": "rubygems:dug",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 13,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 499,
@@ -50306,11 +50306,11 @@
       "name": "vllm",
       "source": "pypi:vllm",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-05-08T22:57:19.642831029Z"
+      "failure_count": 15,
+      "next_retry_at": "2026-05-16T14:59:23.943903388Z"
     },
     {
       "name": "vmware-tanzu/carvel/vendir",
