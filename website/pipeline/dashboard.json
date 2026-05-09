@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-05-09T15:03:13Z",
+  "generated_at": "2026-05-09T15:07:40Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
       "failed": 84,
-      "pending": 3824,
-      "success": 1369
+      "pending": 3823,
+      "success": 1370
     },
     "by_tier": {
       "1": {
@@ -24,8 +24,8 @@
         "blocked": 16,
         "excluded": 6,
         "failed": 84,
-        "pending": 3809,
-        "success": 1345
+        "pending": 3808,
+        "success": 1346
       }
     },
     "by_ecosystem": {
@@ -55,8 +55,8 @@
       },
       "homebrew": {
         "blocked": 22,
-        "pending": 3731,
-        "success": 1130,
+        "pending": 3730,
+        "success": 1131,
         "total": 4883
       },
       "manual": {
@@ -15237,13 +15237,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "homebrew:maven",
-          "name": "maven",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
         },
         {
           "id": "homebrew:mavsdk",
@@ -33948,6 +33941,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:maven",
+          "name": "maven",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:mbpoll",
           "name": "mbpoll",
           "ecosystem": "homebrew",
@@ -41117,6 +41117,11 @@
     {
       "name": "maturin",
       "source": "crates.io:maturin",
+      "validation_status": "valid"
+    },
+    {
+      "name": "maven",
+      "source": "homebrew:maven",
       "validation_status": "valid"
     },
     {
