@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-05-09T15:12:05Z",
+  "generated_at": "2026-05-09T15:21:19Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
       "failed": 84,
-      "pending": 3821,
-      "success": 1372
+      "pending": 3820,
+      "success": 1373
     },
     "by_tier": {
       "1": {
@@ -24,8 +24,8 @@
         "blocked": 16,
         "excluded": 6,
         "failed": 84,
-        "pending": 3806,
-        "success": 1348
+        "pending": 3805,
+        "success": 1349
       }
     },
     "by_ecosystem": {
@@ -55,8 +55,8 @@
       },
       "homebrew": {
         "blocked": 22,
-        "pending": 3728,
-        "success": 1133,
+        "pending": 3727,
+        "success": 1134,
         "total": 4883
       },
       "manual": {
@@ -2975,13 +2975,6 @@
           "category": "install_failed",
           "failure_count": 335,
           "next_retry_at": "1734-01-28T13:31:06Z"
-        },
-        {
-          "id": "homebrew:azure-cli",
-          "name": "azure-cli",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -28760,6 +28753,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:azure-cli",
+          "name": "azure-cli",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:azure-dev",
           "name": "azure-dev",
           "ecosystem": "homebrew",
@@ -40247,6 +40247,11 @@
     {
       "name": "azcopy",
       "source": "homebrew:azcopy",
+      "validation_status": "valid"
+    },
+    {
+      "name": "azure-cli",
+      "source": "homebrew:azure-cli",
       "validation_status": "valid"
     },
     {
