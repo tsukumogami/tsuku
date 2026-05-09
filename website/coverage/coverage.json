@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-05-09T15:01:59Z",
-  "total_recipes": 1440,
+  "generated_at": "2026-05-09T15:09:10Z",
+  "total_recipes": 1441,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 878,
-        "total": 1440,
-        "pct": 60.97222222222223
+        "supported": 879,
+        "total": 1441,
+        "pct": 60.99930603747398
       },
       "glibc": {
-        "supported": 1407,
-        "total": 1440,
-        "pct": 97.70833333333333
+        "supported": 1408,
+        "total": 1441,
+        "pct": 97.70992366412213
       },
       "musl": {
-        "supported": 1252,
-        "total": 1440,
-        "pct": 86.94444444444444
+        "supported": 1253,
+        "total": 1441,
+        "pct": 86.95350451075642
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1287,
-        "musl_support": 1102,
-        "glibc_support": 1257
+        "total": 1288,
+        "musl_support": 1103,
+        "glibc_support": 1258
       }
     }
   },
@@ -12896,6 +12896,18 @@
       "warnings": [
         "recipe 'maturin' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "maven",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "mbpoll",
