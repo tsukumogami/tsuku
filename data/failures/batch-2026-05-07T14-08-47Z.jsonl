@@ -1,0 +1,10 @@
+{"schema_version":1,"recipe":"solargraph","platform":"linux-debian-glibc-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-05-07T14:08:47Z"}
+{"schema_version":1,"recipe":"solargraph","platform":"linux-rhel-glibc-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-05-07T14:08:47Z"}
+{"schema_version":1,"recipe":"solargraph","platform":"linux-arch-glibc-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-05-07T14:08:47Z"}
+{"schema_version":1,"recipe":"solargraph","platform":"linux-suse-glibc-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-05-07T14:08:47Z"}
+{"schema_version":1,"recipe":"solargraph","platform":"linux-alpine-musl-x86_64","exit_code":6,"category":"generation_failed","timestamp":"2026-05-07T14:08:47Z"}
+{"schema_version":1,"recipe":"solargraph","platform":"linux-debian-glibc-arm64","exit_code":6,"category":"generation_failed","timestamp":"2026-05-07T14:08:47Z"}
+{"schema_version":1,"recipe":"solargraph","platform":"linux-rhel-glibc-arm64","exit_code":6,"category":"generation_failed","timestamp":"2026-05-07T14:08:47Z"}
+{"schema_version":1,"recipe":"solargraph","platform":"linux-suse-glibc-arm64","exit_code":6,"category":"generation_failed","timestamp":"2026-05-07T14:08:47Z"}
+{"schema_version":1,"recipe":"solargraph","platform":"linux-alpine-musl-arm64","exit_code":6,"category":"generation_failed","timestamp":"2026-05-07T14:08:47Z"}
+{"schema_version":1,"recipe":"solargraph","platform":"darwin-arm64","exit_code":6,"category":"generation_failed","timestamp":"2026-05-07T14:08:47Z"}
