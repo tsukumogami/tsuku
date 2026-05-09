@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-08T20:22:14Z",
+  "updated_at": "2026-05-09T02:31:09Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 331,
-      "next_retry_at": "1734-01-27T18:04:11.704382864Z"
+      "failure_count": 332,
+      "next_retry_at": "1734-01-28T02:43:52.857236325Z"
     },
     {
       "name": "azqr",
@@ -6806,7 +6806,7 @@
       "name": "cdo",
       "source": "rubygems:cdo",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
@@ -7356,7 +7356,7 @@
       "name": "chisel",
       "source": "rubygems:chisel",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
@@ -11186,7 +11186,7 @@
       "name": "dmd",
       "source": "npm:dmd",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 495,
-      "next_retry_at": "1734-01-26T11:29:30.259567015Z"
+      "failure_count": 496,
+      "next_retry_at": "1734-01-28T02:43:52.857236325Z"
     },
     {
       "name": "libaacs",
@@ -44276,7 +44276,7 @@
       "name": "solargraph",
       "source": "rubygems:solargraph",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -50306,7 +50306,7 @@
       "name": "vllm",
       "source": "pypi:vllm",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
