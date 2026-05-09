@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-09T19:04:30Z",
+  "updated_at": "2026-05-09T20:55:39Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 336,
-      "next_retry_at": "1734-01-28T17:13:31.212034347Z"
+      "failure_count": 337,
+      "next_retry_at": "1734-01-28T21:08:22.571962641Z"
     },
     {
       "name": "azqr",
@@ -14536,11 +14536,11 @@
       "name": "flash",
       "source": "rubygems:flash",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 13,
-      "next_retry_at": "2026-05-09T19:03:35.394494682Z"
+      "failure_count": 14,
+      "next_retry_at": "2026-05-16T20:55:39.426738449Z"
     },
     {
       "name": "flashrom",
@@ -16906,7 +16906,7 @@
       "name": "gitingest",
       "source": "rubygems:gitingest",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 13,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 500,
-      "next_retry_at": "1734-01-28T17:13:31.212034347Z"
+      "failure_count": 502,
+      "next_retry_at": "1734-01-28T21:08:22.571962641Z"
     },
     {
       "name": "libaacs",
