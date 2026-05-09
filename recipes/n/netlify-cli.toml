@@ -3,6 +3,7 @@ name = "netlify-cli"
 description = "Netlify command line tool"
 homepage = "https://www.netlify.com/products/cli/"
 version_format = "semver"
+supported_libc = ["glibc"]
 
 [metadata.satisfies]
 aliases = ["netlify"]

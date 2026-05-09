@@ -341,6 +341,10 @@ jobs:
               if [ "$family" = "alpine" ] && grep -q 'supported_libc' "$recipe_path" && ! grep 'supported_libc' "$recipe_path" | grep -q '"musl"'; then
                 continue
               fi
+              # Skip musl/alpine if recipe marks linux/amd64/musl as unsupported
+              if [ "$family" = "alpine" ] && grep 'unsupported_platforms' "$recipe_path" 2>/dev/null | grep -q '"linux/amd64/musl"'; then
+                continue
+              fi
               RESULT_FILE=".result-${recipe_name}-${family}.json"
 
               echo "::group::$recipe_name on $family (x86_64)"
@@ -504,6 +508,10 @@ jobs:
             for family in "${FAMILIES[@]}"; do
               # Skip musl/alpine if recipe only supports glibc
               if [ "$family" = "alpine" ] && grep -q 'supported_libc' "$recipe_path" && ! grep 'supported_libc' "$recipe_path" | grep -q '"musl"'; then
+                continue
+              fi
+              # Skip musl/alpine if recipe marks linux/arm64/musl as unsupported
+              if [ "$family" = "alpine" ] && grep 'unsupported_platforms' "$recipe_path" 2>/dev/null | grep -q '"linux/arm64/musl"'; then
                 continue
               fi
               RESULT_FILE=".result-${recipe_name}-${family}.json"

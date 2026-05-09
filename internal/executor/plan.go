@@ -209,14 +209,20 @@ func ExtractBinariesFromPlan(plan *InstallationPlan) []string {
 	for _, step := range plan.Steps {
 		// npm_exec and pipx_install create bin/<exe> symlinks themselves; extract
 		// their executables so the install manager creates tools/current/ symlinks.
-		if step.Action == "npm_exec" || step.Action == "pipx_install" {
-			exes, ok := step.Params["executables"].([]interface{})
-			if !ok {
-				continue
+		if step.Action == "npm_exec" || step.Action == "pip_exec" {
+			var names []string
+			switch v := step.Params["executables"].(type) {
+			case []string:
+				names = v
+			case []interface{}:
+				for _, item := range v {
+					if s, ok := item.(string); ok {
+						names = append(names, s)
+					}
+				}
 			}
-			for _, exe := range exes {
-				name, ok := exe.(string)
-				if !ok || seen[name] {
+			for _, name := range names {
+				if seen[name] {
 					continue
 				}
 				seen[name] = true
