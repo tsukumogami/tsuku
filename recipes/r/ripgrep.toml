@@ -4,6 +4,11 @@ description = "Recursively search directories for a regex pattern"
 homepage = "https://github.com/BurntSushi/ripgrep"
 version_format = "semver"
 curated = true
+# Upstream publishes musl x86_64 but not musl aarch64
+unsupported_platforms = ["linux/arm64/musl"]
+
+[metadata.satisfies]
+aliases = ["rg"]
 
 # Linux amd64: statically linked musl binary (works on glibc and musl)
 [[steps]]

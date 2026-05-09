@@ -4,6 +4,9 @@ description = "Template-free customization of Kubernetes YAML"
 homepage = "https://kustomize.io/"
 version_format = "semver"
 
+[metadata.satisfies]
+aliases = ["kustomize"]
+
 [[steps]]
 action = "github_archive"
 repo = "kubernetes-sigs/kustomize"

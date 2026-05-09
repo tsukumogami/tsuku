@@ -4,6 +4,10 @@ description = "Hyperextensible Vim-based text editor"
 homepage = "https://neovim.io"
 version_format = "semver"
 curated = true
+supported_libc = ["glibc"]
+
+[metadata.satisfies]
+aliases = ["nvim"]
 
 [version]
 github_repo = "neovim/neovim"

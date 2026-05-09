@@ -4,6 +4,9 @@ description = "Scan git repos for secrets"
 homepage = "https://github.com/gitleaks/gitleaks"
 version_format = "semver"
 
+[metadata.satisfies]
+aliases = ["gitleaks"]
+
 [[steps]]
 action = "github_archive"
 repo = "gitleaks/gitleaks"

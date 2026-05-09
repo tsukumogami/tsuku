@@ -133,8 +133,8 @@ Recipes that depend on a Wave 4 *code change* require a tsuku release containing
 | _Both pin to a python-3.10-compatible pypi release using the new pipx version-constraint feature in #2331. Recipe authors using the new constraint syntax need a tsuku binary that knows about it._ | | |
 | ~~[#2346: feat(recipes): author gcloud recipe](https://github.com/tsukumogami/tsuku/issues/2346)~~ | ~~tsuku release containing [#2328](https://github.com/tsukumogami/tsuku/issues/2328)~~ | ~~testable~~ |
 | ~~_Bundled into #2328: the gcloud recipe ships in the same PR as the `http_json` mechanism, so there is no release gap to bridge. The recipe references `[version] source = "http_json"` which the same tsuku binary introduces._~~ | | |
-| [#2370: feat(recipes): declare single-satisfier aliases for canonical recipes whose binary differs from the recipe name](https://github.com/tsukumogami/tsuku/issues/2370) | tsuku release containing [#2368](https://github.com/tsukumogami/tsuku/issues/2368) | testable |
-| _Adds `aliases = [...]` arrays to ~14 existing recipes whose binary name differs from the recipe name: project-name vs binary-name (ripgrep→rg, neovim→nvim, bottom→btm, httpie→http, miller→mlr, helix→hx), `-cli` suffix recipes (awscli→aws, cilium-cli→cilium, etc.), and distro renames (golang→go). Each alias is single-satisfier so resolution is transparent — no picker, no error. Recipe-only change but needs a tsuku binary that knows the new schema field._ | | |
+| ~~[#2370: feat(recipes): declare single-satisfier aliases for canonical recipes whose binary differs from the recipe name](https://github.com/tsukumogami/tsuku/issues/2370)~~ | ~~tsuku release containing [#2368](https://github.com/tsukumogami/tsuku/issues/2368)~~ | ~~testable~~ |
+| ~~_Adds `[metadata.satisfies] aliases = [...]` to 14 existing recipes: ripgrep→rg, neovim→nvim, bottom→btm, httpie→http, miller→mlr, helix→hx (project-name vs binary-name); awscli→aws, cilium-cli→cilium, kustomize-cli→kustomize, scaleway-cli→scw, netlify-cli→netlify, gitleaks-cli→gitleaks, go-migrate→migrate (`-cli` suffix and distro renames); golang→go. Each alias is single-satisfier so `tsuku install <alias>` resolves transparently. Updates the recipe-author skill with alias authoring guidance._~~ | | |
 
 ## Dependency Graph
 
@@ -189,8 +189,7 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2325,I2327,I2328,I2330,I2331,I2333,I2335,I2336,I2338,I2365,I2368 done
-    class I2370 ready
+    class I2325,I2327,I2328,I2330,I2331,I2333,I2335,I2336,I2338,I2365,I2368,I2370 done
     class I2343,I2344,I2345,I2349 blocked
 ```
 
@@ -222,6 +221,6 @@ Wave 3 issues were fully independent of each other; each batch was scoped to a c
 - **#2344 (gradle, sbt)** needs #2327 *and* a tsuku release containing #2325. Among Wave 5, this is the one that can be cut as soon as #2325 ships in a tagged release and #2327 lands.
 - **#2345 (ansible, azure-cli)** is gated by a release containing #2331.
 - **#2346 (gcloud)** is gated by a release containing #2328.
-- **#2370 (single-satisfier alias declarations)** is gated by a release containing #2368. Recipe-only batch but the new `aliases` schema field needs a tsuku binary that knows how to read it.
+- **#2370 (single-satisfier alias declarations)** is done. 14 recipes updated with `[metadata.satisfies] aliases` declarations.
 
 The "tsuku release" gate exists because recipes that use new tsuku features (custom version sources, recipe-level constraint syntax) need a tsuku binary that knows about those features. Recipes that only depend on bug-fix behavior changes (like #2325's stricter prerelease filter) don't strictly need a release, but in practice we prefer one so the recipe doesn't have to work around stale tsuku binaries in users' caches.

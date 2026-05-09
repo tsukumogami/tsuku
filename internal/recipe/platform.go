@@ -150,6 +150,14 @@ func (r *Recipe) SupportsPlatformWithLibc(targetOS, targetArch, targetLibc strin
 		return true
 	}
 
+	// Check os/arch/libc denylist entries (e.g., "linux/arm64/musl")
+	if targetLibc != "" {
+		libcTuple := fmt.Sprintf("%s/%s/%s", targetOS, targetArch, targetLibc)
+		if containsString(r.Metadata.UnsupportedPlatforms, libcTuple) {
+			return false
+		}
+	}
+
 	// Empty supported_libc means all libc types allowed
 	if len(r.Metadata.SupportedLibc) == 0 {
 		return true
@@ -240,6 +248,26 @@ func (r *Recipe) ValidatePlatformConstraints() (warnings []PlatformConstraintWar
 
 	// Check for no-op exclusions (warning in strict mode)
 	for _, unsupported := range r.Metadata.UnsupportedPlatforms {
+		parts := strings.SplitN(unsupported, "/", 3)
+		if len(parts) == 3 {
+			// os/arch/libc format: validate os/arch is reachable, libc is valid
+			baseKey := parts[0] + "/" + parts[1]
+			if !allowedPlatforms[baseKey] {
+				warnings = append(warnings, PlatformConstraintWarning{
+					Message: fmt.Sprintf(
+						"unsupported_platforms contains '%s' which is not in (supported_os × supported_arch); this constraint has no effect",
+						unsupported,
+					),
+				})
+			} else if !slices.Contains(platform.ValidLibcTypes, parts[2]) {
+				return warnings, fmt.Errorf(
+					"unsupported_platforms contains '%s' with invalid libc '%s'; must be one of: %v",
+					unsupported, parts[2], platform.ValidLibcTypes,
+				)
+			}
+			// Don't remove base platform from allowedPlatforms: only the specific libc is blocked
+			continue
+		}
 		if !allowedPlatforms[unsupported] {
 			warnings = append(warnings, PlatformConstraintWarning{
 				Message: fmt.Sprintf(

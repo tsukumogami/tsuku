@@ -4,6 +4,9 @@ description = "Scaleway CLI"
 homepage = "https://github.com/scaleway/scaleway-cli"
 version_format = "semver"
 
+[metadata.satisfies]
+aliases = ["scw"]
+
 [[steps]]
 action = "github_file"
 repo = "scaleway/scaleway-cli"

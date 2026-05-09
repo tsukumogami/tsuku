@@ -303,6 +303,11 @@ jobs:
                 echo "SKIP: $recipe_name on $family (supported_libc excludes musl)"
                 continue
               fi
+              # Skip musl/alpine if recipe marks linux/amd64/musl as unsupported
+              if [ "$family" = "alpine" ] && grep 'unsupported_platforms' "$recipe_path" 2>/dev/null | grep -q '"linux/amd64/musl"'; then
+                echo "SKIP: $recipe_name on $family (unsupported_platforms excludes linux/amd64/musl)"
+                continue
+              fi
               TOTAL=$((TOTAL + 1))
               RESULT_FILE=".result-${recipe_name}-${family}.json"
               LOG_FILE=".log-${recipe_name}-${family}.txt"
@@ -334,6 +339,10 @@ jobs:
             for family in "${FAMILIES[@]}"; do
               # Skip musl/alpine if recipe only supports glibc
               if [ "$family" = "alpine" ] && grep -q 'supported_libc' "$recipe_path" && ! grep 'supported_libc' "$recipe_path" | grep -q '"musl"'; then
+                continue
+              fi
+              # Skip musl/alpine if recipe marks linux/amd64/musl as unsupported
+              if [ "$family" = "alpine" ] && grep 'unsupported_platforms' "$recipe_path" 2>/dev/null | grep -q '"linux/amd64/musl"'; then
                 continue
               fi
               RESULT_FILE=".result-${recipe_name}-${family}.json"
@@ -463,6 +472,11 @@ jobs:
                 echo "SKIP: $recipe_name on $family (supported_libc excludes musl)"
                 continue
               fi
+              # Skip musl/alpine if recipe marks linux/arm64/musl as unsupported
+              if [ "$family" = "alpine" ] && grep 'unsupported_platforms' "$recipe_path" 2>/dev/null | grep -q '"linux/arm64/musl"'; then
+                echo "SKIP: $recipe_name on $family (unsupported_platforms excludes linux/arm64/musl)"
+                continue
+              fi
               TOTAL=$((TOTAL + 1))
               RESULT_FILE=".result-${recipe_name}-${family}.json"
               LOG_FILE=".log-${recipe_name}-${family}.txt"
@@ -494,6 +508,10 @@ jobs:
             for family in "${FAMILIES[@]}"; do
               # Skip musl/alpine if recipe only supports glibc
               if [ "$family" = "alpine" ] && grep -q 'supported_libc' "$recipe_path" && ! grep 'supported_libc' "$recipe_path" | grep -q '"musl"'; then
+                continue
+              fi
+              # Skip musl/alpine if recipe marks linux/arm64/musl as unsupported
+              if [ "$family" = "alpine" ] && grep 'unsupported_platforms' "$recipe_path" 2>/dev/null | grep -q '"linux/arm64/musl"'; then
                 continue
               fi
               RESULT_FILE=".result-${recipe_name}-${family}.json"
