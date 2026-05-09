@@ -7,19 +7,17 @@ curated = true
 # `sbt` is a shell-script launcher around `sbt-launch.jar` that delegates
 # to `java`, so the same archive works on every supported platform —
 # Linux glibc, Linux musl, darwin amd64, darwin arm64. The openjdk
-# dependency selects the right per-platform JDK and exposes `java` via
-# the openjdk recipe's install_binaries symlink in $TSUKU_HOME/bin so
-# sbt's launcher script finds it via PATH.
+# dependency selects the right per-platform JDK; its own
+# `install_binaries` step exposes `bin/java` in $TSUKU_HOME/bin so
+# sbt's launcher script finds `java` via PATH.
 #
-# `dependencies` ensures openjdk lands in the generated plan's
-# Dependencies tree, which is what plan-driven installs (including the
-# `--sandbox` test-recipe path) honor — the resolver routes
-# `runtime_dependencies` only to its own slice for wrapper-PATH
-# construction, not into the plan's installable tree.
-# `runtime_dependencies` records the semantic relationship and lets the
-# regular install path wrap `bin/sbt` with a PATH override too.
+# Declared as `dependencies` rather than `runtime_dependencies` so the
+# dep lands in the generated plan's Dependencies tree (consumed by the
+# plan-driven `--sandbox` test-recipe path). See gradle.toml for the
+# full rationale; declaring both fields trips a circular-dependency
+# check in install_deps.go, and `runtime_dependencies` alone is not
+# carried into the sandbox plan.
 dependencies = ["openjdk"]
-runtime_dependencies = ["openjdk"]
 
 # github_releases as version source so the GitHub provider's milestone-tag
 # filter (#2325) skips `-Mn` pre-releases like `2.0.0-M5`.

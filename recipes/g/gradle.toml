@@ -7,19 +7,19 @@ curated = true
 # `gradle` is a shell-script launcher that locates a sibling `lib/` of JARs
 # and delegates to `java`, so the same archive works on every supported
 # platform — Linux glibc, Linux musl, darwin amd64, darwin arm64. The
-# openjdk dependency is what selects the right per-platform JDK and
-# exposes `java` via the openjdk recipe's install_binaries symlink in
-# $TSUKU_HOME/bin so gradle's launcher script finds it via PATH.
+# openjdk dependency is what selects the right per-platform JDK; its own
+# `install_binaries` step exposes `bin/java` (among others) in
+# $TSUKU_HOME/bin so gradle's launcher script finds `java` via PATH.
 #
-# `dependencies` ensures openjdk lands in the generated plan's
-# Dependencies tree, which is what plan-driven installs (including the
-# `--sandbox` test-recipe path) honor — the resolver routes
-# `runtime_dependencies` only to its own slice for wrapper-PATH
-# construction, not into the plan's installable tree.
-# `runtime_dependencies` records the semantic relationship and lets the
-# regular install path wrap `bin/gradle` with a PATH override too.
+# Declared as `dependencies` rather than `runtime_dependencies` so the
+# dep lands in the generated plan's Dependencies tree (consumed by the
+# plan-driven `--sandbox` test-recipe path). The resolver routes
+# `runtime_dependencies` to a separate `RuntimeDependencies` slice that
+# the plan does not carry, so a runtime_dependencies-only declaration
+# would leave the sandbox install without `java` and verify would fail.
+# Declaring both fields trips the circular-dependency check in
+# install_deps.go, which marks visited after the first install pass.
 dependencies = ["openjdk"]
-runtime_dependencies = ["openjdk"]
 
 # Gradle's own GitHub releases ship only source archives; the binary
 # distributions live at services.gradle.org. We still use github_releases
@@ -52,8 +52,7 @@ binaries = ["bin/gradle"]
 command = "gradle --version"
 # `gradle --version` boots the JVM and prints a banner whose second line
 # is `Gradle {version}`. Matching that line confirms (a) the launcher
-# script ran, (b) `java` was reachable from PATH — either the
-# regular-install wrapper PATH or, on the plan-driven --sandbox path,
-# the openjdk recipe's `install_binaries` symlink in $TSUKU_HOME/bin —
-# and (c) the bundled distribution version matches what was resolved.
+# script ran, (b) `java` was reachable via the openjdk recipe's
+# `install_binaries` symlink at $TSUKU_HOME/bin/java, and (c) the
+# bundled distribution version matches what was resolved.
 pattern = "Gradle {version}"
