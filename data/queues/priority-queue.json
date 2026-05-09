@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-09T15:02:09Z",
+  "updated_at": "2026-05-09T15:06:29Z",
   "entries": [
     {
       "name": "node",
@@ -29076,8 +29076,8 @@
       "name": "maven",
       "source": "homebrew:maven",
       "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
+      "status": "success",
+      "confidence": "curated",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
       "next_retry_at": null
