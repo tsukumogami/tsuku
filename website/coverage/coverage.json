@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-09T02:30:51Z",
+  "generated_at": "2026-05-09T15:01:59Z",
   "total_recipes": 1440,
   "summary": {
     "by_platform": {
@@ -14,9 +14,9 @@
         "pct": 97.70833333333333
       },
       "musl": {
-        "supported": 1255,
+        "supported": 1252,
         "total": 1440,
-        "pct": 87.15277777777779
+        "pct": 86.94444444444444
       }
     },
     "by_category": {
@@ -27,7 +27,7 @@
       },
       "tool": {
         "total": 1287,
-        "musl_support": 1105,
+        "musl_support": 1102,
         "glibc_support": 1257
       }
     }
@@ -1055,9 +1055,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
@@ -13977,9 +13979,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": [
         "recipe 'neovim' has platform-specific actions without libc when clauses and no musl fallback"
@@ -14021,9 +14025,11 @@
       "platforms": {
         "darwin": true,
         "glibc": true,
-        "musl": true
+        "musl": false
       },
-      "gaps": null,
+      "gaps": [
+        "musl"
+      ],
       "errors": null,
       "warnings": null
     },
