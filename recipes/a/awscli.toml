@@ -4,6 +4,7 @@ description = "Official Amazon AWS command-line interface"
 homepage = "https://aws.amazon.com/cli/"
 version_format = "semver"
 curated = true
+supported_libc = ["glibc"]
 
 [metadata.satisfies]
 aliases = ["aws"]
