@@ -15,5 +15,5 @@
   gem = "solargraph"
 
 [verify]
-  command = "{install_dir}/.gem/bin/solargraph --version"
+  command = "{install_dir}/bin/solargraph --version"
   pattern = ""
