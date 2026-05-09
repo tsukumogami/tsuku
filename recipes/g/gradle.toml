@@ -1,0 +1,59 @@
+[metadata]
+name = "gradle"
+description = "Build automation tool for JVM-based projects"
+homepage = "https://gradle.org/"
+version_format = "semver"
+curated = true
+# `gradle` is a shell-script launcher that locates a sibling `lib/` of JARs
+# and delegates to `java`, so the same archive works on every supported
+# platform — Linux glibc, Linux musl, darwin amd64, darwin arm64. The
+# openjdk dependency is what selects the right per-platform JDK and
+# exposes `java` via the openjdk recipe's install_binaries symlink in
+# $TSUKU_HOME/bin so gradle's launcher script finds it via PATH.
+#
+# `dependencies` ensures openjdk lands in the generated plan's
+# Dependencies tree, which is what plan-driven installs (including the
+# `--sandbox` test-recipe path) honor — the resolver routes
+# `runtime_dependencies` only to its own slice for wrapper-PATH
+# construction, not into the plan's installable tree.
+# `runtime_dependencies` records the semantic relationship and lets the
+# regular install path wrap `bin/gradle` with a PATH override too.
+dependencies = ["openjdk"]
+runtime_dependencies = ["openjdk"]
+
+# Gradle's own GitHub releases ship only source archives; the binary
+# distributions live at services.gradle.org. We still use github_releases
+# as the version source so the GitHub provider's milestone-tag filter
+# (#2325) skips `-Mn` pre-releases like `9.6.0-M1`.
+[version]
+source = "github_releases"
+github_repo = "gradle/gradle"
+tag_prefix = "v"
+
+# Linux glibc and musl — pure JVM payload, identical archive on both.
+[[steps]]
+action = "download_archive"
+when = { os = ["linux"], libc = ["glibc", "musl"] }
+url = "https://services.gradle.org/distributions/gradle-{version}-bin.zip"
+strip_dirs = 1
+install_mode = "directory"
+binaries = ["bin/gradle"]
+
+# macOS — same archive.
+[[steps]]
+action = "download_archive"
+when = { os = ["darwin"] }
+url = "https://services.gradle.org/distributions/gradle-{version}-bin.zip"
+strip_dirs = 1
+install_mode = "directory"
+binaries = ["bin/gradle"]
+
+[verify]
+command = "gradle --version"
+# `gradle --version` boots the JVM and prints a banner whose second line
+# is `Gradle {version}`. Matching that line confirms (a) the launcher
+# script ran, (b) `java` was reachable from PATH — either the
+# regular-install wrapper PATH or, on the plan-driven --sandbox path,
+# the openjdk recipe's `install_binaries` symlink in $TSUKU_HOME/bin —
+# and (c) the bundled distribution version matches what was resolved.
+pattern = "Gradle {version}"

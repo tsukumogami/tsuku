@@ -127,8 +127,8 @@ Recipes that depend on a Wave 4 *code change* require a tsuku release containing
 |-------|--------------|------------|
 | ~~[#2343: feat(recipes): author maven recipe](https://github.com/tsukumogami/tsuku/issues/2343)~~ | ~~[#2327](https://github.com/tsukumogami/tsuku/issues/2327)~~ | ~~testable~~ |
 | ~~_Authored `recipes/m/maven.toml` using a single platform-agnostic `download_archive` step against the Apache distribution tarball; pinned to the latest stable 3.9.x via `apache/maven` GitHub tags filtered by semver. `runtime_dependencies = ["openjdk"]` at metadata level wires the wrapper-script generator for `tsuku install <name>` flows; step-level `dependencies = ["openjdk"]` mirrors that on the download_archive step so `--sandbox` and `--plan` flows install openjdk first. Apache's `bin/mvn` derives JAVA_HOME from `which javac` once openjdk's binaries are on PATH at verify time._~~ | | |
-| [#2344: feat(recipes): author gradle and sbt recipes](https://github.com/tsukumogami/tsuku/issues/2344) | [#2327](https://github.com/tsukumogami/tsuku/issues/2327), tsuku release containing [#2325](https://github.com/tsukumogami/tsuku/issues/2325) | testable |
-| _Both upstreams use `-Mn` milestone tags that #2325 now filters as prereleases (released in the binary), and both need the openjdk runtime dependency from #2327 for verify._ | | |
+| ~~[#2344: feat(recipes): author gradle and sbt recipes](https://github.com/tsukumogami/tsuku/issues/2344)~~ | ~~[#2327](https://github.com/tsukumogami/tsuku/issues/2327), tsuku release containing [#2325](https://github.com/tsukumogami/tsuku/issues/2325)~~ | ~~testable~~ |
+| ~~_Both upstreams use `-Mn` milestone tags that #2325 now filters as prereleases (released in the binary), and both need the openjdk runtime dependency from #2327 for verify._~~ | | |
 | [#2345: feat(recipes): author ansible and azure-cli recipes](https://github.com/tsukumogami/tsuku/issues/2345) | tsuku release containing [#2331](https://github.com/tsukumogami/tsuku/issues/2331) | testable |
 | _Both pin to a python-3.10-compatible pypi release using the new pipx version-constraint feature in #2331. Recipe authors using the new constraint syntax need a tsuku binary that knows about it._ | | |
 | ~~[#2346: feat(recipes): author gcloud recipe](https://github.com/tsukumogami/tsuku/issues/2346)~~ | ~~tsuku release containing [#2328](https://github.com/tsukumogami/tsuku/issues/2328)~~ | ~~testable~~ |
@@ -189,8 +189,8 @@ graph TD
     classDef tracksDesign fill:#FFE0B2,stroke:#F57C00,color:#000
     classDef tracksPlan fill:#FFE0B2,stroke:#F57C00,color:#000
 
-    class I2325,I2327,I2328,I2330,I2331,I2333,I2335,I2336,I2338,I2343,I2365,I2368,I2370 done
-    class I2344,I2345,I2349 blocked
+    class I2325,I2327,I2328,I2330,I2331,I2333,I2335,I2336,I2338,I2343,I2344,I2365,I2368,I2370 done
+    class I2345,I2349 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design, Orange = tracks-design/tracks-plan
@@ -218,7 +218,7 @@ Wave 3 issues were fully independent of each other; each batch was scoped to a c
 **Wave 5 priority**: every Wave 5 ticket is small (one or two recipes per ticket), independent of the other Wave 5 tickets, and gated only by its own Wave 4 prereqs. Order is determined by which Wave 4 prereq lands first:
 
 - **#2343 (maven)** ships as soon as #2327 (openjdk recipe) lands. No tsuku release dependency since #2327 is recipe-only.
-- **#2344 (gradle, sbt)** needs #2327 *and* a tsuku release containing #2325. Among Wave 5, this is the one that can be cut as soon as #2325 ships in a tagged release and #2327 lands.
+- ~~**#2344 (gradle, sbt)** needs #2327 *and* a tsuku release containing #2325. Among Wave 5, this is the one that can be cut as soon as #2325 ships in a tagged release and #2327 lands.~~ — landed: both recipes use `dependencies = ["openjdk"]` so the dep lands in the generated plan's Dependencies tree (consumed by the plan-driven `--sandbox` test-recipe path; openjdk's own `install_binaries` step exposes `bin/java` in `$TSUKU_HOME/bin/` where the launcher scripts find it). `github_releases` as the version source so the #2325 milestone-tag filter resolves stable releases (gradle 9.5.0, sbt 1.12.11). sbt also adds an `apk_install = ["bash"]` step on musl since its launcher requires bash.
 - **#2345 (ansible, azure-cli)** is gated by a release containing #2331.
 - **#2346 (gcloud)** is gated by a release containing #2328.
 - **#2370 (single-satisfier alias declarations)** is done. 14 recipes updated with `[metadata.satisfies] aliases` declarations.
