@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-09T11:02:35Z",
+  "updated_at": "2026-05-09T13:18:23Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 334,
-      "next_retry_at": "1734-01-28T09:37:47.364856543Z"
+      "failure_count": 335,
+      "next_retry_at": "1734-01-28T13:31:06.392994083Z"
     },
     {
       "name": "azqr",
@@ -10876,11 +10876,11 @@
       "name": "dict",
       "source": "rubygems:dict",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-05-09T10:56:33.15850744Z"
+      "failure_count": 16,
+      "next_retry_at": "2026-05-16T13:18:23.247769891Z"
     },
     {
       "name": "diesel",
@@ -11566,7 +11566,7 @@
       "name": "doggo",
       "source": "rubygems:doggo",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
@@ -12966,7 +12966,7 @@
       "name": "ent",
       "source": "npm:ent",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 498,
-      "next_retry_at": "1734-01-28T09:37:47.364856543Z"
+      "failure_count": 499,
+      "next_retry_at": "1734-01-28T13:31:06.392994083Z"
     },
     {
       "name": "libaacs",
@@ -44586,11 +44586,11 @@
       "name": "spek",
       "source": "rubygems:spek",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-05-09T10:25:04.219632351Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-05-09T15:18:23.247769891Z"
     },
     {
       "name": "sphinx-doc",
@@ -45996,11 +45996,11 @@
       "name": "swag",
       "source": "rubygems:swag",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 1,
-      "next_retry_at": "2026-05-09T10:25:04.219632351Z"
+      "failure_count": 2,
+      "next_retry_at": "2026-05-09T15:18:23.247769891Z"
     },
     {
       "name": "swagger-codegen",
