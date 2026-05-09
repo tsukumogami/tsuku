@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-09T15:10:31Z",
+  "updated_at": "2026-05-09T15:18:04Z",
   "entries": [
     {
       "name": "node",
@@ -3996,8 +3996,8 @@
       "name": "azure-cli",
       "source": "homebrew:azure-cli",
       "priority": 3,
-      "status": "pending",
-      "confidence": "auto",
+      "status": "success",
+      "confidence": "curated",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
       "next_retry_at": null
