@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-10T11:57:12Z",
+  "updated_at": "2026-05-10T13:19:24Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 340,
@@ -19736,11 +19736,11 @@
       "name": "hasura-cli",
       "source": "npm:hasura-cli",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 13,
-      "next_retry_at": "2026-05-09T22:43:28.489453388Z"
+      "failure_count": 14,
+      "next_retry_at": "2026-05-17T13:19:24.168189437Z"
     },
     {
       "name": "hatari",
@@ -20486,11 +20486,11 @@
       "name": "htmldoc",
       "source": "rubygems:htmldoc",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 13,
-      "next_retry_at": "2026-05-10T11:00:39.906725412Z"
+      "failure_count": 14,
+      "next_retry_at": "2026-05-17T13:19:24.168189437Z"
     },
     {
       "name": "htmlhint",
@@ -20626,7 +20626,7 @@
       "name": "httpx",
       "source": "rubygems:httpx",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 13,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 508,
