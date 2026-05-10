@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-10T02:49:27Z",
+  "generated_at": "2026-05-10T07:31:56Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -37848,13 +37848,68 @@
     }
   ],
   "failures": {
-    "generation_failed": 955,
-    "install_failed": 3120,
+    "generation_failed": 956,
+    "install_failed": 3125,
     "missing_dep": 68,
     "network_error": 8,
     "recipe_not_found": 74
   },
   "failure_details": [
+    {
+      "id": "pypi-2026-05-10T07-27-10Z-lib3mf",
+      "package": "lib3mf",
+      "ecosystem": "pypi",
+      "category": "install_failed",
+      "subcategory": "verify_pattern_mismatch",
+      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\n✅ python-standalone@20260508\nInstalled python-standalone\n   Package: lib3mf@2.5.0\n   Executables: [lib3mf]\n   Using python: /home/runner/.tsuku/tools/python-standalone-20260508/bin/python3\nwarning:    Package contains native addons (may have platform-specific behavior)\n   Creating venv: /tmp/action-validator-1240592750/.install/venvs/lib3mf\n   Installing 1 packages with hash verification\n❌ lib3mf@2.5.0\nIns",
+      "batch_id": "2026-05-10T07-27-10Z",
+      "timestamp": "2026-05-10T07:27:10.97446151Z"
+    },
+    {
+      "id": "rubygems-2026-05-10T07-27-00Z-gsl",
+      "package": "gsl",
+      "ecosystem": "rubygems",
+      "category": "install_failed",
+      "message": "Error: recipe validation failed for 'gsl'\n  - metadata.homepage: homepage must start with https:// (got: http://github.com/SciRuby/rb-gsl)",
+      "batch_id": "2026-05-10T07-27-10Z",
+      "timestamp": "2026-05-10T07:27:00.734920023Z"
+    },
+    {
+      "id": "npm-2026-05-10T07-26-54Z-ent",
+      "package": "ent",
+      "ecosystem": "npm",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\n✅ gcc-libs@15.2.0\n✅ nodejs@26.1.0\nInstalled nodejs\n   Package: ent@2.2.2\n   Executables: [ent]\n   Using npm: /home/runner/.tsuku/tools/nodejs-26.1.0/bin/npm\n   Installing: npm install ent@2.2.2 in /tmp/action-validator-737191131/.install\n❌ ent@2.2.2\nInstallation failed: step 1 (npm_exec) failed: expected executable ent not found at /tmp/action-validator-737191131/.install/node_modules/.bin/ent",
+      "batch_id": "2026-05-10T07-27-10Z",
+      "timestamp": "2026-05-10T07:26:54.356139064Z"
+    },
+    {
+      "id": "crates.io-2026-05-10T07-26-36Z-bindgen",
+      "package": "bindgen",
+      "ecosystem": "crates.io",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\n   Output: install: creating uninstall script at /tmp/action-validator-2456820691/.install/lib/rustlib/uninstall.sh\ninstall: installing component 'rustc'\ninstall: installing component 'rust-std-x86_64-unknown-linux-gnu'\ninstall: installing component 'rust-docs'\ninstall: installing component 'rust-docs-json-preview'\ninstall: installing component 'cargo'\ninstall: installing component 'rustfmt-preview'\ninstall: installing component 'rust-",
+      "batch_id": "2026-05-10T07-27-10Z",
+      "timestamp": "2026-05-10T07:26:36.895999262Z"
+    },
+    {
+      "id": "homebrew-2026-05-10T07-25-20Z-task",
+      "package": "task",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\n✅ patchelf@0.18.0",
+      "batch_id": "2026-05-10T07-27-10Z",
+      "timestamp": "2026-05-10T07:25:20.064997259Z"
+    },
+    {
+      "id": "github-2026-05-10T07-25-16Z-hub",
+      "package": "hub",
+      "ecosystem": "github",
+      "category": "generation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'hub' resolved to github (github/hub), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "2026-05-10T07-27-10Z",
+      "timestamp": "2026-05-10T07:25:16.041948575Z"
+    },
     {
       "id": "pypi-2026-05-10T02-46-11Z-lib3mf",
       "package": "lib3mf",
@@ -39640,71 +39695,15 @@
       "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'hub' resolved to github (github/hub), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
       "batch_id": "2026-05-05T22-04-01Z",
       "timestamp": "2026-05-05T22:01:31.386462747Z"
-    },
-    {
-      "id": "npm-2026-05-05T20-09-52Z-webdav",
-      "package": "webdav",
-      "ecosystem": "npm",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\n✅ gcc-libs@15.2.0\n✅ nodejs@26.0.0\nInstalled nodejs\n   Package: webdav@5.10.0\n   Executables: [webdav]\n   Using npm: /home/runner/.tsuku/tools/nodejs-26.0.0/bin/npm\n   Installing: npm install webdav@5.10.0 in /tmp/action-validator-4276547737/.install\n❌ webdav@5.10.0\nInstallation failed: step 1 (npm_exec) failed: expected executable webdav not found at /tmp/action-validator-4276547737/.install/node_modules/.bin/webdav",
-      "batch_id": "2026-05-05T20-09-52Z",
-      "timestamp": "2026-05-05T20:09:52.156819799Z"
-    },
-    {
-      "id": "rubygems-2026-05-05T20-09-33Z-pastel",
-      "package": "pastel",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "subcategory": "rate_limited",
-      "message": "Installing eval-time dependencies: [ruby]\nInstalling ruby...\n✅ libyaml@0.2.5\n✅ ruby@4.0.3\nInstalled ruby\n   Gem: pastel@0.8.0\n   Executables: [pastel]\n   Using bundler: /home/runner/.tsuku/tools/ruby-4.0.3/bin/bundle\n   Installing 2 gem(s) with lockfile enforcement\n   Lockfile bundler version: 4.0.6\n   Running: bundle config set --local path /tmp/action-validator-4294279029/.install \u0026\u0026 bundle install\n❌ pastel@0.8.0\nInstallation failed: step 1 (gem_exec) failed: expected executable pastel n",
-      "batch_id": "2026-05-05T20-09-52Z",
-      "timestamp": "2026-05-05T20:09:33.57676191Z"
-    },
-    {
-      "id": "pypi-2026-05-05T20-09-19Z-lib3mf",
-      "package": "lib3mf",
-      "ecosystem": "pypi",
-      "category": "install_failed",
-      "subcategory": "verify_pattern_mismatch",
-      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\n✅ python-standalone@20260504\nInstalled python-standalone\n   Package: lib3mf@2.5.0\n   Executables: [lib3mf]\n   Using python: /home/runner/.tsuku/tools/python-standalone-20260504/bin/python3\nwarning:    Package contains native addons (may have platform-specific behavior)\n   Creating venv: /tmp/action-validator-2605138564/.install/venvs/lib3mf\n   Installing 1 packages with hash verification\n❌ lib3mf@2.5.0\nIns",
-      "batch_id": "2026-05-05T20-09-52Z",
-      "timestamp": "2026-05-05T20:09:19.474646406Z"
-    },
-    {
-      "id": "crates.io-2026-05-05T20-09-07Z-bindgen",
-      "package": "bindgen",
-      "ecosystem": "crates.io",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\n   Output: install: creating uninstall script at /tmp/action-validator-3979471410/.install/lib/rustlib/uninstall.sh\ninstall: installing component 'rustc'\ninstall: installing component 'rust-std-x86_64-unknown-linux-gnu'\ninstall: installing component 'rust-docs'\ninstall: installing component 'rust-docs-json-preview'\ninstall: installing component 'cargo'\ninstall: installing component 'rustfmt-preview'\ninstall: installing component 'rust-",
-      "batch_id": "2026-05-05T20-09-52Z",
-      "timestamp": "2026-05-05T20:09:07.556575531Z"
-    },
-    {
-      "id": "homebrew-2026-05-05T20-07-51Z-task",
-      "package": "task",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\n✅ patchelf@0.18.0",
-      "batch_id": "2026-05-05T20-09-52Z",
-      "timestamp": "2026-05-05T20:07:51.064202822Z"
-    },
-    {
-      "id": "github-2026-05-05T20-07-47Z-hub",
-      "package": "hub",
-      "ecosystem": "github",
-      "category": "generation_failed",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'hub' resolved to github (github/hub), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
-      "batch_id": "2026-05-05T20-09-52Z",
-      "timestamp": "2026-05-05T20:07:47.112213927Z"
     }
   ],
   "health": {
     "ecosystems": {
       "crates.io": {
         "breaker_state": "open",
-        "failures": 592,
-        "last_failure": "2026-05-10T02:47:41Z",
-        "opens_at": "2026-05-10T03:47:41Z"
+        "failures": 593,
+        "last_failure": "2026-05-10T07:29:01Z",
+        "opens_at": "2026-05-10T08:29:01Z"
       },
       "default": {
         "breaker_state": "closed",
@@ -39712,37 +39711,37 @@
       },
       "github": {
         "breaker_state": "open",
-        "failures": 595,
-        "last_failure": "2026-05-10T02:47:41Z",
-        "opens_at": "2026-05-10T03:47:41Z"
+        "failures": 596,
+        "last_failure": "2026-05-10T07:29:01Z",
+        "opens_at": "2026-05-10T08:29:01Z"
       },
       "homebrew": {
         "breaker_state": "open",
-        "failures": 556,
-        "last_failure": "2026-05-10T02:47:41Z",
-        "opens_at": "2026-05-10T03:47:41Z"
+        "failures": 557,
+        "last_failure": "2026-05-10T07:29:01Z",
+        "opens_at": "2026-05-10T08:29:01Z"
       },
       "npm": {
         "breaker_state": "open",
-        "failures": 295,
-        "last_failure": "2026-05-10T02:47:41Z",
-        "opens_at": "2026-05-10T03:47:41Z"
+        "failures": 296,
+        "last_failure": "2026-05-10T07:29:01Z",
+        "opens_at": "2026-05-10T08:29:01Z"
       },
       "pypi": {
         "breaker_state": "open",
-        "failures": 563,
-        "last_failure": "2026-05-10T02:47:41Z",
-        "opens_at": "2026-05-10T03:47:41Z"
+        "failures": 564,
+        "last_failure": "2026-05-10T07:29:01Z",
+        "opens_at": "2026-05-10T08:29:01Z"
       },
       "rubygems": {
         "breaker_state": "open",
-        "failures": 12,
-        "last_failure": "2026-05-10T02:47:41Z",
-        "opens_at": "2026-05-10T03:47:41Z"
+        "failures": 13,
+        "last_failure": "2026-05-10T07:29:01Z",
+        "opens_at": "2026-05-10T08:29:01Z"
       }
     },
     "last_run": {
-      "batch_id": "2026-05-10T02-47-46Z",
+      "batch_id": "2026-05-10T07-29-07Z",
       "ecosystems": {
         "crates.io": 1,
         "github": 1,
@@ -39751,7 +39750,7 @@
         "pypi": 1,
         "rubygems": 1
       },
-      "timestamp": "2026-05-10T02:47:46Z",
+      "timestamp": "2026-05-10T07:29:07Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39772,7 +39771,7 @@
       "total": 1,
       "recipes_merged": 1
     },
-    "runs_since_last_success": 18
+    "runs_since_last_success": 19
   },
   "runs": [
     {
