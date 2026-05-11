@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-11T19:04:09Z",
+  "updated_at": "2026-05-11T20:54:32Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 346,
-      "next_retry_at": "1734-01-30T16:52:05.742748744Z"
+      "failure_count": 347,
+      "next_retry_at": "1734-01-30T21:07:15.310232031Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 520,
-      "next_retry_at": "1734-01-30T16:52:05.742748744Z"
+      "failure_count": 522,
+      "next_retry_at": "1734-01-30T21:07:15.310232031Z"
     },
     {
       "name": "libaacs",
@@ -28546,11 +28546,11 @@
       "name": "mailcatcher",
       "source": "rubygems:mailcatcher",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-05-11T16:07:23.366767452Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-05-18T20:54:32.165007839Z"
     },
     {
       "name": "mailhog",
@@ -29546,7 +29546,7 @@
       "name": "medusa",
       "source": "rubygems:medusa",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 12,
@@ -39116,7 +39116,7 @@
       "name": "q",
       "source": "npm:q",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 13,
@@ -39796,7 +39796,7 @@
       "name": "quickjs",
       "source": "rubygems:quickjs",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 8,
