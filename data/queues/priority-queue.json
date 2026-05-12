@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-12T17:15:36Z",
+  "updated_at": "2026-05-12T19:54:09Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 352,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 530,
@@ -33126,11 +33126,11 @@
       "name": "nut",
       "source": "rubygems:nut",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-05-12T12:07:41.741120887Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-05-19T19:54:08.813566085Z"
     },
     {
       "name": "nuxi",
@@ -35596,7 +35596,7 @@
       "name": "parallel",
       "source": "rubygems:parallel",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 9,
@@ -50766,11 +50766,11 @@
       "name": "wartremover",
       "source": "npm:wartremover",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 13,
-      "next_retry_at": "2026-05-12T16:30:28.984121513Z"
+      "failure_count": 14,
+      "next_retry_at": "2026-05-19T19:54:08.813566085Z"
     },
     {
       "name": "wasm-bindgen",
