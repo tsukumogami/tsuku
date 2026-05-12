@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-12T02:52:41Z",
+  "generated_at": "2026-05-12T02:54:05Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 77,
-      "pending": 3827,
+      "failed": 76,
+      "pending": 3828,
       "success": 1373
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 77,
-        "pending": 3812,
+        "failed": 76,
+        "pending": 3813,
         "success": 1349
       }
     },
@@ -74,7 +74,8 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -428,15 +429,6 @@
           "category": "install_failed",
           "failure_count": 15,
           "next_retry_at": "2026-05-16T05:55:56Z"
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 348,
-          "next_retry_at": "1734-01-31T00:16:04Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -808,15 +800,6 @@
           "next_retry_at": "2026-05-18T13:53:30Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 524,
-          "next_retry_at": "1734-01-31T00:16:04Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -880,13 +863,13 @@
           "next_retry_at": "2026-05-19T00:03:21Z"
         },
         {
-          "id": "rubygems:mktorrent",
-          "name": "mktorrent",
+          "id": "rubygems:meli",
+          "name": "meli",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-05-12T02:40:42Z"
+          "failure_count": 12,
+          "next_retry_at": "2026-05-19T02:53:24Z"
         },
         {
           "id": "npm:mongoose",
@@ -1049,6 +1032,15 @@
           "category": "install_failed",
           "failure_count": 14,
           "next_retry_at": "2026-05-18T22:10:16Z"
+        },
+        {
+          "id": "npm:q",
+          "name": "q",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 14,
+          "next_retry_at": "2026-05-19T02:53:24Z"
         },
         {
           "id": "rubygems:redis",
@@ -2902,6 +2894,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 348,
+          "next_retry_at": "1734-01-31T00:16:04Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -13199,6 +13200,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 524,
+          "next_retry_at": "1734-01-31T00:16:04Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -15394,15 +15404,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:meli",
-          "name": "meli",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-05-11T21:13:20Z"
-        },
-        {
           "id": "rubygems:memcached",
           "name": "memcached",
           "ecosystem": "rubygems",
@@ -15795,6 +15796,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:mktorrent",
+          "name": "mktorrent",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-05-12T02:40:42Z"
         },
         {
           "id": "homebrew:mkvtomp4",
@@ -20456,15 +20466,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:q",
-          "name": "q",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 13,
-          "next_retry_at": "2026-05-11T19:33:50Z"
         },
         {
           "id": "homebrew:qalculate-gtk",
