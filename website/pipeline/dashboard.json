@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-12T06:22:12Z",
+  "generated_at": "2026-05-12T09:43:04Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -37848,13 +37848,69 @@
     }
   ],
   "failures": {
-    "generation_failed": 977,
-    "install_failed": 3230,
+    "generation_failed": 978,
+    "install_failed": 3235,
     "missing_dep": 68,
     "network_error": 8,
     "recipe_not_found": 74
   },
   "failure_details": [
+    {
+      "id": "pypi-2026-05-12T09-40-42Z-lib3mf",
+      "package": "lib3mf",
+      "ecosystem": "pypi",
+      "category": "install_failed",
+      "subcategory": "verify_pattern_mismatch",
+      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\n✅ python-standalone@20260510\nInstalled python-standalone\n   Package: lib3mf@2.5.0\n   Executables: [lib3mf]\n   Using python: /home/runner/.tsuku/tools/python-standalone-20260510/bin/python3\nwarning:    Package contains native addons (may have platform-specific behavior)\n   Creating venv: /tmp/action-validator-1702157943/.install/venvs/lib3mf\n   Installing 1 packages with hash verification\n❌ lib3mf@2.5.0\nIns",
+      "batch_id": "2026-05-12T09-40-42Z",
+      "timestamp": "2026-05-12T09:40:42.122373525Z"
+    },
+    {
+      "id": "npm-2026-05-12T09-40-28Z-sigstore",
+      "package": "sigstore",
+      "ecosystem": "npm",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\n✅ gcc-libs@15.2.0\n✅ nodejs@26.1.0\nInstalled nodejs\n   Package: sigstore@4.1.0\n   Executables: [sigstore]\n   Using npm: /home/runner/.tsuku/tools/nodejs-26.1.0/bin/npm\n   Installing: npm install sigstore@4.1.0 in /tmp/action-validator-3725556669/.install\n❌ sigstore@4.1.0\nInstallation failed: step 1 (npm_exec) failed: expected executable sigstore not found at /tmp/action-validator-3725556669/.install/node_modules/.bin/sigstore",
+      "batch_id": "2026-05-12T09-40-42Z",
+      "timestamp": "2026-05-12T09:40:28.560687724Z"
+    },
+    {
+      "id": "rubygems-2026-05-12T09-39-40Z-mktorrent",
+      "package": "mktorrent",
+      "ecosystem": "rubygems",
+      "category": "install_failed",
+      "subcategory": "rate_limited",
+      "message": "Installing eval-time dependencies: [ruby]\nInstalling ruby...\n✅ libyaml@0.2.5\n✅ ruby@4.0.4\nInstalled ruby\n   Gem: mktorrent@1.7.0\n   Executables: [mktorrent]\n   Using bundler: /home/runner/.tsuku/tools/ruby-4.0.4/bin/bundle\n   Installing 3 gem(s) with lockfile enforcement\n   Lockfile bundler version: 4.0.10\n   Running: bundle config set --local path /tmp/action-validator-4292304721/.install \u0026\u0026 bundle install\n❌ mktorrent@1.7.0\nInstallation failed: step 1 (gem_exec) failed: expected executabl",
+      "batch_id": "2026-05-12T09-40-42Z",
+      "timestamp": "2026-05-12T09:39:40.647856262Z"
+    },
+    {
+      "id": "crates.io-2026-05-12T09-39-10Z-bindgen",
+      "package": "bindgen",
+      "ecosystem": "crates.io",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\n   Output: install: creating uninstall script at /tmp/action-validator-2016231363/.install/lib/rustlib/uninstall.sh\ninstall: installing component 'rustc'\ninstall: installing component 'rust-std-x86_64-unknown-linux-gnu'\ninstall: installing component 'rust-docs'\ninstall: installing component 'rust-docs-json-preview'\ninstall: installing component 'cargo'\ninstall: installing component 'rustfmt-preview'\ninstall: installing component 'rust-",
+      "batch_id": "2026-05-12T09-40-42Z",
+      "timestamp": "2026-05-12T09:39:10.807300055Z"
+    },
+    {
+      "id": "homebrew-2026-05-12T09-37-53Z-task",
+      "package": "task",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\n✅ patchelf@0.18.0",
+      "batch_id": "2026-05-12T09-40-42Z",
+      "timestamp": "2026-05-12T09:37:53.174262807Z"
+    },
+    {
+      "id": "github-2026-05-12T09-37-19Z-hub",
+      "package": "hub",
+      "ecosystem": "github",
+      "category": "generation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'hub' resolved to github (github/hub), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "2026-05-12T09-40-42Z",
+      "timestamp": "2026-05-12T09:37:19.901820915Z"
+    },
     {
       "id": "rubygems-2026-05-12T06-18-04Z-memcached",
       "package": "memcached",
@@ -39632,69 +39688,15 @@
       "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'hub' resolved to github (github/hub), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
       "batch_id": "2026-05-09T09-22-27Z",
       "timestamp": "2026-05-09T09:19:24.69784252Z"
-    },
-    {
-      "id": "rubygems-2026-05-09T07-57-03Z-snappy",
-      "package": "snappy",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Error: recipe validation failed for 'snappy'\n  - metadata.homepage: homepage must start with https:// (got: http://github.com/miyucy/snappy)",
-      "batch_id": "2026-05-09T07-57-03Z",
-      "timestamp": "2026-05-09T07:57:03.123504132Z"
-    },
-    {
-      "id": "rubygems-2026-05-09T07-56-56Z-sesh",
-      "package": "sesh",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Error: recipe validation failed for 'sesh'\n  - metadata.homepage: homepage must start with https:// (got: http://rubygems.org/gems/sesh)",
-      "batch_id": "2026-05-09T07-57-03Z",
-      "timestamp": "2026-05-09T07:56:56.64035666Z"
-    },
-    {
-      "id": "rubygems-2026-05-09T07-56-50Z-scalingo",
-      "package": "scalingo",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Gem: scalingo@3.6.0\n   Executables: [scalingo]\n   Using bundler: /home/runner/.tsuku/tools/ruby-4.0.3/bin/bundle\n   Installing 20 gem(s) with lockfile enforcement\n   Lockfile bundler version: 4.0.6\n   Running: bundle config set --local path /tmp/action-validator-891125148/.install \u0026\u0026 bundle install\n❌ scalingo@3.6.0\nInstallation failed: step 1 (gem_exec) failed: expected executable scalingo not found at /tmp/action-validator-891125148/.install/ruby/4.0.0/bin/scalingo",
-      "batch_id": "2026-05-09T07-57-03Z",
-      "timestamp": "2026-05-09T07:56:50.450461133Z"
-    },
-    {
-      "id": "rubygems-2026-05-09T07-56-23Z-rsync",
-      "package": "rsync",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Error: recipe validation failed for 'rsync'\n  - metadata.homepage: homepage must start with https:// (got: http://github.com/jbussdieker/ruby-rsync)",
-      "batch_id": "2026-05-09T07-57-03Z",
-      "timestamp": "2026-05-09T07:56:23.511414935Z"
-    },
-    {
-      "id": "rubygems-2026-05-09T07-56-17Z-cowsay",
-      "package": "cowsay",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Gem: cowsay@0.3.0\n   Executables: [cowsay]\n   Using bundler: /home/runner/.tsuku/tools/ruby-4.0.3/bin/bundle\n   Installing 1 gem(s) with lockfile enforcement\n   Lockfile bundler version: 4.0.6\n   Running: bundle config set --local path /tmp/action-validator-1042841633/.install \u0026\u0026 bundle install\n   Gem installed successfully\n   Created 1 self-contained wrapper(s)",
-      "batch_id": "2026-05-09T07-57-03Z",
-      "timestamp": "2026-05-09T07:56:17.004878083Z"
-    },
-    {
-      "id": "rubygems-2026-05-09T07-56-08Z-cog",
-      "package": "cog",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [ruby]\nInstalling ruby...\n✅ libyaml@0.2.5\n✅ ruby@4.0.3\nInstalled ruby\n   Gem: cog@1.0.0\n   Executables: [cog]\n   Using bundler: /home/runner/.tsuku/tools/ruby-4.0.3/bin/bundle\n   Installing 10 gem(s) with lockfile enforcement\n   Lockfile bundler version: 4.0.6\n   Running: bundle config set --local path /tmp/action-validator-2690152082/.install \u0026\u0026 bundle install\n   Gem installed successfully\n   Created 1 self-contained wrapper(s)",
-      "batch_id": "2026-05-09T07-57-03Z",
-      "timestamp": "2026-05-09T07:56:08.101777821Z"
     }
   ],
   "health": {
     "ecosystems": {
       "crates.io": {
         "breaker_state": "open",
-        "failures": 614,
-        "last_failure": "2026-05-12T06:20:12Z",
-        "opens_at": "2026-05-12T07:20:12Z"
+        "failures": 615,
+        "last_failure": "2026-05-12T09:42:30Z",
+        "opens_at": "2026-05-12T10:42:30Z"
       },
       "default": {
         "breaker_state": "closed",
@@ -39702,37 +39704,37 @@
       },
       "github": {
         "breaker_state": "open",
-        "failures": 617,
-        "last_failure": "2026-05-12T06:20:12Z",
-        "opens_at": "2026-05-12T07:20:12Z"
+        "failures": 618,
+        "last_failure": "2026-05-12T09:42:30Z",
+        "opens_at": "2026-05-12T10:42:30Z"
       },
       "homebrew": {
         "breaker_state": "open",
-        "failures": 578,
-        "last_failure": "2026-05-12T06:20:12Z",
-        "opens_at": "2026-05-12T07:20:12Z"
+        "failures": 579,
+        "last_failure": "2026-05-12T09:42:30Z",
+        "opens_at": "2026-05-12T10:42:30Z"
       },
       "npm": {
         "breaker_state": "open",
-        "failures": 317,
-        "last_failure": "2026-05-12T06:20:12Z",
-        "opens_at": "2026-05-12T07:20:12Z"
+        "failures": 318,
+        "last_failure": "2026-05-12T09:42:30Z",
+        "opens_at": "2026-05-12T10:42:30Z"
       },
       "pypi": {
         "breaker_state": "open",
-        "failures": 585,
-        "last_failure": "2026-05-12T06:20:12Z",
-        "opens_at": "2026-05-12T07:20:12Z"
+        "failures": 586,
+        "last_failure": "2026-05-12T09:42:30Z",
+        "opens_at": "2026-05-12T10:42:30Z"
       },
       "rubygems": {
         "breaker_state": "open",
-        "failures": 34,
-        "last_failure": "2026-05-12T06:20:12Z",
-        "opens_at": "2026-05-12T07:20:12Z"
+        "failures": 35,
+        "last_failure": "2026-05-12T09:42:30Z",
+        "opens_at": "2026-05-12T10:42:30Z"
       }
     },
     "last_run": {
-      "batch_id": "2026-05-12T06-20-18Z",
+      "batch_id": "2026-05-12T09-42-36Z",
       "ecosystems": {
         "crates.io": 1,
         "github": 1,
@@ -39741,7 +39743,7 @@
         "pypi": 1,
         "rubygems": 1
       },
-      "timestamp": "2026-05-12T06:20:18Z",
+      "timestamp": "2026-05-12T09:42:36Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39762,7 +39764,7 @@
       "total": 1,
       "recipes_merged": 1
     },
-    "runs_since_last_success": 44
+    "runs_since_last_success": 45
   },
   "runs": [
     {
