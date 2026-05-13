@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-12T23:05:30Z",
+  "updated_at": "2026-05-13T00:10:57Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 353,
-      "next_retry_at": "1734-01-31T21:37:20.879939548Z"
+      "failure_count": 354,
+      "next_retry_at": "1734-02-01T00:23:40.291775698Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 532,
-      "next_retry_at": "1734-01-31T21:37:20.879939548Z"
+      "failure_count": 534,
+      "next_retry_at": "1734-02-01T00:23:40.291775698Z"
     },
     {
       "name": "libaacs",
@@ -35716,11 +35716,11 @@
       "name": "pastel",
       "source": "rubygems:pastel",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 9,
-      "next_retry_at": "2026-05-12T20:13:09.99268364Z"
+      "failure_count": 10,
+      "next_retry_at": "2026-05-20T00:10:57.146551506Z"
     },
     {
       "name": "patchelf",
@@ -36616,7 +36616,7 @@
       "name": "pidof",
       "source": "rubygems:pidof",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 9,
