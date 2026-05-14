@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-14T20:34:10Z",
+  "generated_at": "2026-05-14T20:35:27Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 90,
-      "pending": 3814,
+      "failed": 88,
+      "pending": 3816,
       "success": 1373
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 90,
-        "pending": 3799,
+        "failed": 88,
+        "pending": 3801,
         "success": 1349
       }
     },
@@ -68,12 +68,14 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
+        "failed": 19,
+        "pending": 1,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -427,15 +429,6 @@
           "category": "install_failed",
           "failure_count": 15,
           "next_retry_at": "2026-05-16T05:55:56Z"
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 370,
-          "next_retry_at": "1734-02-02T19:17:25Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -807,15 +800,6 @@
           "next_retry_at": "2026-05-18T13:53:30Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 550,
-          "next_retry_at": "1734-02-02T19:17:25Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -1158,6 +1142,15 @@
           "next_retry_at": "2026-05-15T19:58:00Z"
         },
         {
+          "id": "rubygems:spek",
+          "name": "spek",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-05-15T04:34:41Z"
+        },
+        {
           "id": "rubygems:swag",
           "name": "swag",
           "ecosystem": "rubygems",
@@ -1174,15 +1167,6 @@
           "category": "install_failed",
           "failure_count": 15,
           "next_retry_at": "2026-05-16T11:02:35Z"
-        },
-        {
-          "id": "rubygems:terminator",
-          "name": "terminator",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 1,
-          "next_retry_at": "2026-05-14T20:04:42Z"
         },
         {
           "id": "pypi:vllm",
@@ -3018,6 +3002,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 370,
+          "next_retry_at": "1734-02-02T19:17:25Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -13315,6 +13308,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 550,
+          "next_retry_at": "1734-02-02T19:17:25Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -23587,15 +23589,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:spek",
-          "name": "spek",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-05-14T18:11:17Z"
-        },
-        {
           "id": "homebrew:sphinx-doc",
           "name": "sphinx-doc",
           "ecosystem": "homebrew",
@@ -24896,6 +24889,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:terminator",
+          "name": "terminator",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 1,
+          "next_retry_at": "2026-05-14T20:04:42Z"
         },
         {
           "id": "homebrew:termscp",
