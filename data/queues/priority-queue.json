@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-14T11:58:00Z",
+  "updated_at": "2026-05-14T14:11:18Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 366,
-      "next_retry_at": "1734-02-02T09:52:17.674229337Z"
+      "failure_count": 368,
+      "next_retry_at": "1734-02-02T14:24:00.978323914Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 546,
-      "next_retry_at": "1734-02-02T09:52:17.674229337Z"
+      "failure_count": 548,
+      "next_retry_at": "1734-02-02T14:24:00.978323914Z"
     },
     {
       "name": "libaacs",
@@ -44586,11 +44586,11 @@
       "name": "spek",
       "source": "rubygems:spek",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-05-09T15:18:23.247769891Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-05-14T18:11:17.833099722Z"
     },
     {
       "name": "sphinx-doc",
