@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-15T09:52:56Z",
+  "generated_at": "2026-05-15T09:53:47Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 88,
-      "pending": 3816,
+      "failed": 90,
+      "pending": 3814,
       "success": 1373
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 88,
-        "pending": 3801,
+        "failed": 90,
+        "pending": 3799,
         "success": 1349
       }
     },
@@ -68,14 +68,12 @@
         "total": 1
       },
       "npm": {
-        "failed": 19,
-        "pending": 1,
+        "failed": 20,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -429,6 +427,15 @@
           "category": "install_failed",
           "failure_count": 15,
           "next_retry_at": "2026-05-16T05:55:56Z"
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 376,
+          "next_retry_at": "1734-02-03T10:05:53Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -800,6 +807,15 @@
           "next_retry_at": "2026-05-18T13:53:30Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 556,
+          "next_retry_at": "1734-02-03T10:05:53Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -1142,13 +1158,13 @@
           "next_retry_at": "2026-05-15T19:58:00Z"
         },
         {
-          "id": "rubygems:swag",
-          "name": "swag",
+          "id": "rubygems:spek",
+          "name": "spek",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-05-15T08:03:16Z"
+          "failure_count": 5,
+          "next_retry_at": "2026-05-16T01:53:10Z"
         },
         {
           "id": "pypi:tctl",
@@ -3002,15 +3018,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 374,
-          "next_retry_at": "1734-02-03T03:12:36Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -13308,15 +13315,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 554,
-          "next_retry_at": "1734-02-03T03:12:36Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -23589,15 +23587,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:spek",
-          "name": "spek",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-05-15T04:34:41Z"
-        },
-        {
           "id": "homebrew:sphinx-doc",
           "name": "sphinx-doc",
           "ecosystem": "homebrew",
@@ -24401,6 +24390,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:swag",
+          "name": "swag",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-05-15T08:03:16Z"
         },
         {
           "id": "homebrew:swagger-codegen",
