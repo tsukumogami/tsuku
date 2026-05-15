@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-15T12:01:09Z",
+  "updated_at": "2026-05-15T14:08:38Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 376,
-      "next_retry_at": "1734-02-03T10:05:53.638069411Z"
+      "failure_count": 378,
+      "next_retry_at": "1734-02-03T14:21:21.180958588Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 556,
-      "next_retry_at": "1734-02-03T10:05:53.638069411Z"
+      "failure_count": 558,
+      "next_retry_at": "1734-02-03T14:21:21.180958588Z"
     },
     {
       "name": "libaacs",
@@ -46966,11 +46966,11 @@
       "name": "terminator",
       "source": "rubygems:terminator",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-05-15T10:41:02.94178507Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-05-15T22:08:38.035734396Z"
     },
     {
       "name": "termscp",
