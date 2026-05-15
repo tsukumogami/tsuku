@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-15T02:59:53Z",
+  "updated_at": "2026-05-15T06:41:03Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 374,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 554,
@@ -44586,7 +44586,7 @@
       "name": "spek",
       "source": "rubygems:spek",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -46966,11 +46966,11 @@
       "name": "terminator",
       "source": "rubygems:terminator",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 2,
-      "next_retry_at": "2026-05-15T00:16:07.92912742Z"
+      "failure_count": 3,
+      "next_retry_at": "2026-05-15T10:41:02.94178507Z"
     },
     {
       "name": "termscp",
@@ -47646,7 +47646,7 @@
       "name": "tin",
       "source": "rubygems:tin",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
