@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-15T18:27:58Z",
+  "generated_at": "2026-05-15T18:29:21Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 90,
-      "pending": 3814,
+      "failed": 92,
+      "pending": 3812,
       "success": 1373
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 90,
-        "pending": 3799,
+        "failed": 92,
+        "pending": 3797,
         "success": 1349
       }
     },
@@ -68,14 +68,12 @@
         "total": 1
       },
       "npm": {
-        "failed": 19,
-        "pending": 1,
+        "failed": 20,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -429,6 +427,15 @@
           "category": "install_failed",
           "failure_count": 15,
           "next_retry_at": "2026-05-16T05:55:56Z"
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 380,
+          "next_retry_at": "1734-02-03T18:41:19Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -798,6 +805,15 @@
           "category": "install_failed",
           "failure_count": 13,
           "next_retry_at": "2026-05-18T13:53:30Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 560,
+          "next_retry_at": "1734-02-03T18:41:19Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -1178,13 +1194,13 @@
           "next_retry_at": "2026-05-15T22:08:38Z"
         },
         {
-          "id": "rubygems:tin",
-          "name": "tin",
+          "id": "rubygems:tldr",
+          "name": "tldr",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 2,
-          "next_retry_at": "2026-05-15T18:18:16Z"
+          "failure_count": 1,
+          "next_retry_at": "2026-05-15T19:28:36Z"
         },
         {
           "id": "pypi:vllm",
@@ -3020,15 +3036,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 378,
-          "next_retry_at": "1734-02-03T14:21:21Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -13324,15 +13331,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 558,
-          "next_retry_at": "1734-02-03T14:21:21Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -25210,6 +25208,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:tin",
+          "name": "tin",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 2,
+          "next_retry_at": "2026-05-15T18:18:16Z"
+        },
+        {
           "id": "homebrew:tintin",
           "name": "tintin",
           "ecosystem": "homebrew",
@@ -25257,14 +25264,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:tldr",
-          "name": "tldr",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 0
         },
         {
           "id": "homebrew:tlrc",
