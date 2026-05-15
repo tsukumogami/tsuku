@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-15T20:22:16Z",
+  "updated_at": "2026-05-15T22:04:23Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 380,
-      "next_retry_at": "1734-02-03T18:41:19.802772503Z"
+      "failure_count": 382,
+      "next_retry_at": "1734-02-03T22:17:06.802014942Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 560,
-      "next_retry_at": "1734-02-03T18:41:19.802772503Z"
+      "failure_count": 562,
+      "next_retry_at": "1734-02-03T22:17:06.802014942Z"
     },
     {
       "name": "libaacs",
@@ -44106,11 +44106,11 @@
       "name": "snappy",
       "source": "rubygems:snappy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-05-15T19:58:00.558571382Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-05-18T14:04:23.65679075Z"
     },
     {
       "name": "sngrep",
