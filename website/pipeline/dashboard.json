@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-15T00:02:35Z",
+  "generated_at": "2026-05-15T00:03:59Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 90,
-      "pending": 3814,
+      "failed": 89,
+      "pending": 3815,
       "success": 1373
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 90,
-        "pending": 3799,
+        "failed": 89,
+        "pending": 3800,
         "success": 1349
       }
     },
@@ -68,19 +68,21 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
+        "failed": 19,
+        "pending": 1,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 64,
-        "pending": 10,
+        "failed": 65,
+        "pending": 9,
         "success": 14,
         "total": 89
       }
@@ -427,15 +429,6 @@
           "category": "install_failed",
           "failure_count": 15,
           "next_retry_at": "2026-05-16T05:55:56Z"
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 372,
-          "next_retry_at": "1734-02-02T22:28:51Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -807,15 +800,6 @@
           "next_retry_at": "2026-05-18T13:53:30Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 552,
-          "next_retry_at": "1734-02-02T22:28:51Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -1165,6 +1149,15 @@
           "category": "install_failed",
           "failure_count": 4,
           "next_retry_at": "2026-05-15T04:34:41Z"
+        },
+        {
+          "id": "rubygems:swag",
+          "name": "swag",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-05-15T08:03:16Z"
         },
         {
           "id": "pypi:tctl",
@@ -3018,6 +3011,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 372,
+          "next_retry_at": "1734-02-02T22:28:51Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -13313,6 +13315,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 552,
+          "next_retry_at": "1734-02-02T22:28:51Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -24390,15 +24401,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:swag",
-          "name": "swag",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-05-14T21:07:09Z"
         },
         {
           "id": "homebrew:swagger-codegen",
