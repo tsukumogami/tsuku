@@ -1,0 +1,36 @@
+{
+  "topic": "install-state-abstraction",
+  "decisions": [
+    {
+      "id": 1,
+      "question": "What architectural shape best reduces the blast radius of cross-cutting changes in the install pipeline?",
+      "status": "complete",
+      "complexity": "critical",
+      "chosen": "Composite C-then-B (Candidate C now; Candidate B as charter follow-up)",
+      "confidence": "medium",
+      "report_file": "wip/design_install-state-abstraction_decision_1_report.md"
+    },
+    {
+      "id": 2,
+      "question": "Should state.json semantic operations be hidden behind named operations rather than exposed via mgr.GetState().UpdateTool(...)?",
+      "status": "complete",
+      "complexity": "standard",
+      "chosen": "(b) semantic methods on Manager (under Decision 1 = C)",
+      "confidence": "high",
+      "report_file": "wip/design_install-state-abstraction_decision_2_report.md"
+    },
+    {
+      "id": 3,
+      "question": "Does any restructure include InstallLibrary, or do libraries stay parallel?",
+      "status": "complete",
+      "complexity": "standard",
+      "chosen": "(b) bring libraries along via ctx threading + (d) wire library events onto the bus (under Decision 1 = C)",
+      "confidence": "medium",
+      "report_file": "wip/design_install-state-abstraction_decision_3_report.md"
+    }
+  ],
+  "cross_validation": "passed",
+  "cross_validation_notes": "Decision 1's chose Composite C-then-B. Decision 2 collapses to (b) — semantic methods on Manager. Decision 3 collapses to (b)+(d) — ctx threads through InstallLibrary AND library lifecycle events go on the bus. Apparent conflict between Decision 1's recommendation of D3=(a) and Decision 3's verdict of D3=(b) under C was a labeling difference; both substantively agree that ctx covers libraries.",
+  "round": 0,
+  "mode": "auto"
+}
