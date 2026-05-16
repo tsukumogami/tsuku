@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-16T08:07:36Z",
+  "generated_at": "2026-05-16T08:08:45Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 77,
-      "pending": 3827,
+      "failed": 78,
+      "pending": 3826,
       "success": 1373
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 77,
-        "pending": 3812,
+        "failed": 78,
+        "pending": 3811,
         "success": 1349
       }
     },
@@ -74,8 +74,7 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -413,31 +412,31 @@
           "next_retry_at": "2026-05-23T06:01:01Z"
         },
         {
-          "id": "crates.io:basis_universal",
-          "name": "basis_universal",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 15,
-          "next_retry_at": "2026-05-16T08:00:09Z"
-        },
-        {
-          "id": "npm:chainsaw",
-          "name": "chainsaw",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 15,
-          "next_retry_at": "2026-05-16T08:00:09Z"
-        },
-        {
-          "id": "rubygems:cog",
-          "name": "cog",
+          "id": "rubygems:arturo",
+          "name": "arturo",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 16,
-          "next_retry_at": "2026-05-16T08:00:09Z"
+          "next_retry_at": "2026-05-23T08:08:06Z"
+        },
+        {
+          "id": "crates.io:ascii",
+          "name": "ascii",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 16,
+          "next_retry_at": "2026-05-23T08:08:06Z"
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 386,
+          "next_retry_at": "1734-02-04T08:20:49Z"
         },
         {
           "id": "npm:countdown",
@@ -717,6 +716,15 @@
           "category": "install_failed",
           "failure_count": 13,
           "next_retry_at": "2026-05-18T13:53:30Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 566,
+          "next_retry_at": "1734-02-04T08:20:49Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -2287,29 +2295,11 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:arturo",
-          "name": "arturo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 15,
-          "next_retry_at": "2026-05-16T02:45:03Z"
-        },
-        {
           "id": "homebrew:arxiv_latex_cleaner",
           "name": "arxiv_latex_cleaner",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "crates.io:ascii",
-          "name": "ascii",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 15,
-          "next_retry_at": "2026-05-16T05:55:56Z"
         },
         {
           "id": "homebrew:asciidoc",
@@ -2923,15 +2913,6 @@
           "failure_count": 1
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 384,
-          "next_retry_at": "1734-02-04T03:00:26Z"
-        },
-        {
           "id": "homebrew:azure-storage-common-cpp",
           "name": "azure-storage-common-cpp",
           "ecosystem": "homebrew",
@@ -3175,6 +3156,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "crates.io:basis_universal",
+          "name": "basis_universal",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 15,
+          "next_retry_at": "2026-05-16T08:00:09Z"
         },
         {
           "id": "homebrew:bastet",
@@ -4415,6 +4405,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:chainsaw",
+          "name": "chainsaw",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 15,
+          "next_retry_at": "2026-05-16T08:00:09Z"
+        },
+        {
           "id": "homebrew:changie",
           "name": "changie",
           "ecosystem": "homebrew",
@@ -5236,6 +5235,15 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:cog",
+          "name": "cog",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 16,
+          "next_retry_at": "2026-05-16T08:00:09Z"
         },
         {
           "id": "homebrew:coin3d",
@@ -13288,15 +13296,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 564,
-          "next_retry_at": "1734-02-04T03:00:26Z"
         },
         {
           "id": "homebrew:libaacs",
