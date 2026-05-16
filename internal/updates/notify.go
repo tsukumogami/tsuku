@@ -68,6 +68,10 @@ func DisplayAvailableSummary(cfg *config.Config, userCfg *userconfig.Config, qui
 // renderUnshownNotices reads and displays any unshown notices on stderr.
 // KindVersionFallback and KindShellInitChange notices are single-view: they are
 // removed after display. All other kinds use the Shown=true persistence convention.
+//
+// Notice.Verb selects the user-facing message: install/update/rollback/remove.
+// Empty Verb falls back to the legacy "updated to" / "Update failed" phrasing
+// so notice files written before this field was introduced still render.
 func renderUnshownNotices(noticesDir string) {
 	unshown, err := notices.ReadUnshownNotices(noticesDir)
 	if err != nil || len(unshown) == 0 {
@@ -75,30 +79,21 @@ func renderUnshownNotices(noticesDir string) {
 	}
 
 	for _, n := range unshown {
-		if n.Tool == SelfToolName && n.Error == "" {
-			// Self-update success
-			fmt.Fprintf(os.Stderr, "\ntsuku has been updated to %s\n", n.AttemptedVersion)
-		} else if n.Tool == SelfToolName {
-			// Self-update failure
-			fmt.Fprintf(os.Stderr, "\ntsuku self-update failed: %s\n", n.Error)
-			fmt.Fprintf(os.Stderr, "  Run 'tsuku self-update' to retry.\n")
-		} else if n.Kind == notices.KindVersionFallback {
+		switch {
+		case n.Kind == notices.KindVersionFallback:
 			fmt.Fprintf(os.Stderr, "\nWarning: %s\n", n.Tool)
 			for _, msg := range n.Messages {
 				fmt.Fprintf(os.Stderr, "  %s\n", msg)
 			}
-		} else if n.Kind == notices.KindShellInitChange {
+		case n.Kind == notices.KindShellInitChange:
 			fmt.Fprintf(os.Stderr, "\nNote: shell init changed for %s\n", n.Tool)
 			for _, msg := range n.Messages {
 				fmt.Fprintf(os.Stderr, "  %s\n", msg)
 			}
-		} else if n.Error == "" {
-			// Tool update success from background (KindUpdateResult or KindAutoApplyResult)
-			fmt.Fprintf(os.Stderr, "\n%s has been updated to %s\n", n.Tool, n.AttemptedVersion)
-		} else {
-			// Tool update failure
-			fmt.Fprintf(os.Stderr, "\nUpdate failed: %s -> %s: %s\n", n.Tool, n.AttemptedVersion, n.Error)
-			fmt.Fprintf(os.Stderr, "  Run 'tsuku notices' for details, 'tsuku rollback %s' to revert.\n", n.Tool)
+		case n.Tool == SelfToolName:
+			renderSelfUpdateNotice(n)
+		default:
+			renderToolNotice(n)
 		}
 
 		// Single-view kinds are removed after display; others are marked shown.
@@ -107,6 +102,57 @@ func renderUnshownNotices(noticesDir string) {
 		} else {
 			_ = notices.MarkShown(noticesDir, n.Tool)
 		}
+	}
+}
+
+// renderSelfUpdateNotice formats the user-facing message for a tsuku
+// self-update notice. Self-update uses the same verb vocabulary as
+// regular tool notices but with custom phrasing for the success case
+// (the binary itself was updated, not a tool under $TSUKU_HOME).
+func renderSelfUpdateNotice(n notices.Notice) {
+	if n.Error == "" {
+		// Empty Verb is treated as update for backward compat.
+		fmt.Fprintf(os.Stderr, "\ntsuku has been updated to %s\n", n.AttemptedVersion)
+		return
+	}
+	fmt.Fprintf(os.Stderr, "\ntsuku self-update failed: %s\n", n.Error)
+	fmt.Fprintf(os.Stderr, "  Run 'tsuku self-update' to retry.\n")
+}
+
+// renderToolNotice formats the user-facing message for a tool-lifecycle
+// notice. The Verb field selects phrasing; empty Verb falls back to
+// today's "updated to" / "Update failed" wording.
+func renderToolNotice(n notices.Notice) {
+	if n.Error == "" {
+		switch n.Verb {
+		case notices.VerbInstall:
+			fmt.Fprintf(os.Stderr, "\n%s has been installed (%s)\n", n.Tool, n.AttemptedVersion)
+		case notices.VerbRollback:
+			fmt.Fprintf(os.Stderr, "\n%s has been rolled back to %s\n", n.Tool, n.AttemptedVersion)
+		case notices.VerbRemove:
+			// Successful remove is reported via RemoveNotice, not WriteNotice,
+			// so this branch shouldn't normally fire. Render nothing to keep
+			// the output clean if a notice with Verb=remove and no Error
+			// somehow gets written.
+		default: // VerbUpdate or empty (legacy)
+			fmt.Fprintf(os.Stderr, "\n%s has been updated to %s\n", n.Tool, n.AttemptedVersion)
+		}
+		return
+	}
+	// Failure path: per-verb framing.
+	switch n.Verb {
+	case notices.VerbInstall:
+		fmt.Fprintf(os.Stderr, "\nInstall failed: %s -> %s: %s\n", n.Tool, n.AttemptedVersion, n.Error)
+		fmt.Fprintf(os.Stderr, "  Run 'tsuku notices' for details.\n")
+	case notices.VerbRollback:
+		fmt.Fprintf(os.Stderr, "\nRollback failed: %s -> %s: %s\n", n.Tool, n.AttemptedVersion, n.Error)
+		fmt.Fprintf(os.Stderr, "  Run 'tsuku notices' for details.\n")
+	case notices.VerbRemove:
+		fmt.Fprintf(os.Stderr, "\nRemove failed: %s %s: %s\n", n.Tool, n.AttemptedVersion, n.Error)
+		fmt.Fprintf(os.Stderr, "  Run 'tsuku notices' for details.\n")
+	default: // VerbUpdate or empty (legacy)
+		fmt.Fprintf(os.Stderr, "\nUpdate failed: %s -> %s: %s\n", n.Tool, n.AttemptedVersion, n.Error)
+		fmt.Fprintf(os.Stderr, "  Run 'tsuku notices' for details, 'tsuku rollback %s' to revert.\n", n.Tool)
 	}
 }
 
