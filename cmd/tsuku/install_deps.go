@@ -218,26 +218,8 @@ func installWithDependencies(ctx context.Context, toolName, reqVersion, versionC
 	}
 
 	if isInstalled {
-		// Update state
-		err := mgr.GetState().UpdateTool(toolName, func(ts *install.ToolState) {
-			if isExplicit {
-				ts.IsExplicit = true
-			}
-			if parent != "" {
-				// Add parent to RequiredBy if not present
-				found := false
-				for _, r := range ts.RequiredBy {
-					if r == parent {
-						found = true
-						break
-					}
-				}
-				if !found {
-					ts.RequiredBy = append(ts.RequiredBy, parent)
-				}
-			}
-		})
-		if err != nil {
+		// Update state via semantic Manager methods.
+		if err := recordInstallRelationship(mgr, toolName, parent, isExplicit); err != nil {
 			reporter.Warn("failed to update state for %s: %v", toolName, err)
 		}
 
@@ -471,24 +453,7 @@ func installWithDependencies(ctx context.Context, toolName, reqVersion, versionC
 	}
 	if mgr.IsVersionInstalled(toolName, planVersion) {
 		reporter.Status(fmt.Sprintf("%s@%s is already installed", toolName, planVersion))
-		err = mgr.GetState().UpdateTool(toolName, func(ts *install.ToolState) {
-			if isExplicit {
-				ts.IsExplicit = true
-			}
-			if parent != "" {
-				found := false
-				for _, r := range ts.RequiredBy {
-					if r == parent {
-						found = true
-						break
-					}
-				}
-				if !found {
-					ts.RequiredBy = append(ts.RequiredBy, parent)
-				}
-			}
-		})
-		if err != nil {
+		if err := recordInstallRelationship(mgr, toolName, parent, isExplicit); err != nil {
 			reporter.Warn("failed to update state: %v", err)
 		}
 		setInstalledInIndex(toolName, true)
@@ -579,37 +544,20 @@ func installWithDependencies(ctx context.Context, toolName, reqVersion, versionC
 		}
 
 		// Update state with explicit flag, parent, dependencies, and cleanup actions
-		err = mgr.GetState().UpdateTool(toolName, func(ts *install.ToolState) {
-			if isExplicit {
-				ts.IsExplicit = true
-			}
-			if parent != "" {
-				// Add parent to RequiredBy if not present
-				found := false
-				for _, r := range ts.RequiredBy {
-					if r == parent {
-						found = true
-						break
-					}
-				}
-				if !found {
-					ts.RequiredBy = append(ts.RequiredBy, parent)
-				}
-			}
-			// Record dependencies in state for dependency tree display and uninstall warnings
-			ts.InstallDependencies = mapKeys(resolvedDeps.InstallTime)
-			ts.RuntimeDependencies = mapKeys(resolvedDeps.Runtime)
-
-			// Store cleanup actions from post-install phase in the version state
-			if len(postInstallCleanup) > 0 && ts.Versions != nil {
-				if vs, ok := ts.Versions[version]; ok {
-					vs.CleanupActions = convertCleanupActions(postInstallCleanup)
-					ts.Versions[version] = vs
-				}
-			}
-		})
-		if err != nil {
+		// via semantic Manager methods.
+		if err := recordInstallRelationship(mgr, toolName, parent, isExplicit); err != nil {
 			reporter.Warn("failed to update state: %v", err)
+		}
+		if err := mgr.SetInstallDependencies(toolName, mapKeys(resolvedDeps.InstallTime)); err != nil {
+			reporter.Warn("failed to record install dependencies: %v", err)
+		}
+		if err := mgr.SetRuntimeDependencies(toolName, mapKeys(resolvedDeps.Runtime)); err != nil {
+			reporter.Warn("failed to record runtime dependencies: %v", err)
+		}
+		if len(postInstallCleanup) > 0 {
+			if err := mgr.RecordCleanup(toolName, convertCleanupActions(postInstallCleanup)); err != nil {
+				reporter.Warn("failed to record cleanup actions: %v", err)
+			}
 		}
 	}
 
@@ -711,6 +659,22 @@ func resolveRuntimeDeps(r *recipe.Recipe, mgr *install.Manager, reporter progres
 	}
 
 	return result
+}
+
+// recordInstallRelationship records the explicit-install and required-by
+// relationship for a tool via Manager's semantic methods. When isExplicit
+// is true, MarkExplicit sets IsExplicit and, if parent is non-empty,
+// appends parent to RequiredBy. When isExplicit is false but parent is
+// non-empty, only the required-by edge is recorded via AddRequiredBy.
+// Both branches are no-ops when there is nothing to record.
+func recordInstallRelationship(mgr *install.Manager, toolName, parent string, isExplicit bool) error {
+	if isExplicit {
+		return mgr.MarkExplicit(toolName, parent)
+	}
+	if parent != "" {
+		return mgr.GetState().AddRequiredBy(toolName, parent)
+	}
+	return nil
 }
 
 // mapKeys returns the keys of a map as a slice (for display)
