@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-16T09:55:55Z",
+  "updated_at": "2026-05-16T11:08:33Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 386,
-      "next_retry_at": "1734-02-04T08:20:49.775615818Z"
+      "failure_count": 387,
+      "next_retry_at": "1734-02-04T11:21:16.162147339Z"
     },
     {
       "name": "azqr",
@@ -5826,11 +5826,11 @@
       "name": "bullet",
       "source": "rubygems:bullet",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 15,
-      "next_retry_at": "2026-05-16T02:45:03.666959735Z"
+      "failure_count": 16,
+      "next_retry_at": "2026-05-23T11:08:33.016923147Z"
     },
     {
       "name": "bulletty",
@@ -9116,7 +9116,7 @@
       "name": "countdown",
       "source": "npm:countdown",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 15,
@@ -9326,7 +9326,7 @@
       "name": "cql",
       "source": "rubygems:cql",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 15,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 566,
-      "next_retry_at": "1734-02-04T08:20:49.775615818Z"
+      "failure_count": 568,
+      "next_retry_at": "1734-02-04T11:21:16.162147339Z"
     },
     {
       "name": "libaacs",
@@ -40406,7 +40406,7 @@
       "name": "redis",
       "source": "rubygems:redis",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 9,
@@ -46686,7 +46686,7 @@
       "name": "tctl",
       "source": "pypi:tctl",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 15,
