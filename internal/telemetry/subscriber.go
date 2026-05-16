@@ -13,8 +13,8 @@ import (
 //   - Updated         -> UpdateOutcomeSuccess
 //   - RolledBack      -> UpdateOutcomeRollback (explicit rollback by user)
 //   - UpdateFailed    -> UpdateOutcomeFailure; AND UpdateOutcomeRollback when
-//                        ActiveAfter == FromVersion && FromVersion != ""
-//                        (automatic recovery succeeded)
+//     ActiveAfter == FromVersion && FromVersion != ""
+//     (automatic recovery succeeded)
 //
 // Other lifecycle events (Installed, Removed, InstallFailed, RemoveFailed,
 // RollbackFailed) do not have parallel outcome events in today's

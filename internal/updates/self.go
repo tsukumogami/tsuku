@@ -20,8 +20,8 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/httputil"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/log"
-	"github.com/tsukumogami/tsuku/internal/notices"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 	"github.com/tsukumogami/tsuku/internal/version"
 )
@@ -80,7 +80,12 @@ func isAllDigits(s string) bool {
 // CheckAndApplySelf checks for a newer tsuku release and applies it if auto-apply
 // is enabled. Dev builds are skipped. The check result is always cached regardless
 // of whether an update is applied.
-func CheckAndApplySelf(ctx context.Context, cfg *config.Config, userCfg *userconfig.Config, cacheDir string, resolver *version.Resolver) error {
+//
+// bus may be nil; when non-nil, success and failure publish Updated /
+// UpdateFailed events with Tool == SelfToolName and the provided
+// Source. The notices subscriber writes a self-update notice and the
+// telemetry subscriber emits an UpdateOutcome event.
+func CheckAndApplySelf(ctx context.Context, cfg *config.Config, userCfg *userconfig.Config, cacheDir string, resolver *version.Resolver, bus *installevents.Bus, src installevents.Source) error {
 	if !userCfg.UpdatesSelfUpdate() {
 		return nil
 	}
@@ -146,22 +151,35 @@ func CheckAndApplySelf(ctx context.Context, cfg *config.Config, userCfg *usercon
 	}
 
 	assetName := fmt.Sprintf("tsuku-%s-%s", runtime.GOOS, runtime.GOARCH)
-	noticesDir := notices.NoticesDir(cfg.HomeDir)
 
 	if applyErr := ApplySelfUpdate(ctx, exePath, latest.Tag, assetName); applyErr != nil {
 		log.Default().Debug("self-update apply failed", "error", applyErr)
-		return nil // Best-effort, don't propagate
+		// Publish UpdateFailed so the notices subscriber writes a
+		// failure notice (new behavior — self-update failures were
+		// silent before). Best-effort: return nil to match prior
+		// behavior that doesn't propagate the apply error.
+		bus.Publish(installevents.UpdateFailed{
+			Tool:             SelfToolName,
+			AttemptedVersion: normalizedLatest,
+			FromVersion:      normalizedCurrent,
+			ActiveAfter:      normalizedCurrent,
+			Err:              applyErr,
+			Source:           src,
+			Timestamp:        time.Now(),
+		})
+		return nil
 	}
 
-	// Write success notice
-	notice := &notices.Notice{
-		Tool:             SelfToolName,
-		AttemptedVersion: normalizedLatest,
-		Error:            "",
-		Timestamp:        time.Now(),
-		Shown:            false,
-	}
-	_ = notices.WriteNotice(noticesDir, notice)
+	// Publish Updated. The notices subscriber writes the
+	// self-update success notice; the telemetry subscriber emits an
+	// UpdateOutcomeSuccess event.
+	bus.Publish(installevents.Updated{
+		Tool:        SelfToolName,
+		FromVersion: normalizedCurrent,
+		ToVersion:   normalizedLatest,
+		Source:      src,
+		Timestamp:   time.Now(),
+	})
 
 	return nil
 }

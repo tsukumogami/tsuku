@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 )
@@ -80,7 +81,7 @@ Examples:
 		var removeErr error
 		if targetVersion != "" {
 			// Remove specific version
-			removeErr = mgr.RemoveVersion(toolName, targetVersion)
+			removeErr = mgr.RemoveVersion(toolName, targetVersion, installevents.SourceManual)
 			if removeErr == nil {
 				// If no active version remains, mark as not installed in the index.
 				toolState, stateErr := mgr.GetState().GetToolState(toolName)
@@ -90,7 +91,7 @@ Examples:
 			}
 		} else {
 			// Remove all versions
-			removeErr = mgr.RemoveAllVersions(toolName)
+			removeErr = mgr.RemoveAllVersions(toolName, installevents.SourceManual)
 			if removeErr == nil {
 				setInstalledInIndex(toolName, false)
 			}
@@ -152,7 +153,7 @@ func cleanupOrphans(mgr *install.Manager, toolName string) {
 	}
 
 	printInfof("Auto-removing orphaned dependency: %s\n", toolName)
-	if err := mgr.Remove(toolName); err != nil {
+	if err := mgr.Remove(toolName, installevents.SourceManual); err != nil {
 		printInfof("Warning: failed to auto-remove %s: %v\n", toolName, err)
 		return
 	}

@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
-	"github.com/tsukumogami/tsuku/internal/notices"
+	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 )
@@ -134,12 +133,11 @@ Examples:
 		// the outcome appearing on a separate stdout line. See #2280/#2359.
 		reporter := progress.NewTTYReporter(os.Stderr)
 
-		if err := runInstallWithExternalReporter(toolName, reqVersion, "", true, "", telemetryClient, reporter); err != nil {
+		if err := runInstallWithExternalReporter(toolName, reqVersion, "", true, "", telemetryClient, reporter, installevents.SourceManual); err != nil {
 			reporter.Stop()
-			if telemetryClient != nil {
-				telemetryClient.SendUpdateOutcome(telemetry.NewUpdateOutcomeFailureEvent(
-					toolName, reqVersion, telemetry.ClassifyError(err), "manual"))
-			}
+			// UpdateFailed event was already published from Manager.Install
+			// via the bus; the telemetry subscriber emitted the
+			// UpdateOutcomeFailure event. No direct telemetry call needed.
 			exitWithCode(ExitInstallFailed)
 		}
 
@@ -187,26 +185,14 @@ Examples:
 			}
 		}
 
-		// Send telemetry event for update
+		// Send action telemetry for update. The UpdateOutcomeSuccess
+		// event is emitted automatically by the telemetry subscriber when
+		// Manager.Install publishes Updated via the bus; the notices
+		// subscriber writes the success notice. The action event below is
+		// distinct from outcome telemetry and stays.
 		if telemetryClient != nil && newVersion != "" {
 			event := telemetry.NewUpdateEvent(toolName, previousVersion, newVersion)
 			telemetryClient.Send(event)
-			// Also emit outcome event for reliability tracking
-			telemetryClient.SendUpdateOutcome(telemetry.NewUpdateOutcomeSuccessEvent(
-				toolName, previousVersion, newVersion, "manual"))
-		}
-
-		// Clear failure notice; write success notice when version changed.
-		noticesDir := notices.NoticesDir(cfg.HomeDir)
-		_ = notices.RemoveNotice(noticesDir, toolName)
-		if newVersion != "" && newVersion != previousVersion {
-			_ = notices.WriteNotice(noticesDir, &notices.Notice{
-				Tool:             toolName,
-				AttemptedVersion: newVersion,
-				Error:            "",
-				Timestamp:        time.Now(),
-				Shown:            false,
-			})
 		}
 	},
 }
@@ -340,13 +326,11 @@ func runUpdateAll(cmd *cobra.Command) {
 		// outcome line, consistent with the single-tool path.
 		toolReporter := progress.NewTTYReporter(os.Stderr)
 
-		if err := runInstallWithExternalReporter(tool.Name, requested, "", true, "", telemetryClient, toolReporter); err != nil {
+		if err := runInstallWithExternalReporter(tool.Name, requested, "", true, "", telemetryClient, toolReporter, installevents.SourceManual); err != nil {
 			toolReporter.Log("failed to update %s: %v", tool.Name, err)
 			toolReporter.Stop()
-			if telemetryClient != nil {
-				telemetryClient.SendUpdateOutcome(telemetry.NewUpdateOutcomeFailureEvent(
-					tool.Name, requested, telemetry.ClassifyError(err), "manual-batch"))
-			}
+			// UpdateFailed was published from Manager.Install; the
+			// telemetry subscriber emitted the outcome event.
 			failed++
 			continue
 		}
@@ -381,18 +365,9 @@ func runUpdateAll(cmd *cobra.Command) {
 			updated++
 		}
 
-		// Clear failure notice; write success notice when version changed.
-		noticesDir := notices.NoticesDir(cfg.HomeDir)
-		_ = notices.RemoveNotice(noticesDir, tool.Name)
-		if newVersion != previousVersion {
-			_ = notices.WriteNotice(noticesDir, &notices.Notice{
-				Tool:             tool.Name,
-				AttemptedVersion: newVersion,
-				Error:            "",
-				Timestamp:        time.Now(),
-				Shown:            false,
-			})
-		}
+		// The notices subscriber already wrote the success notice via
+		// Manager.Install's published Updated event. No direct
+		// WriteNotice / RemoveNotice calls needed here.
 
 		toolReporter.Stop()
 		toolReporter.FlushDeferred()

@@ -19,6 +19,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/discover"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/llm"
 	"github.com/tsukumogami/tsuku/internal/llm/addon"
 	"github.com/tsukumogami/tsuku/internal/log"
@@ -407,7 +408,7 @@ func offerToolchainInstall(info *toolchain.Info, ecosystem string, autoApprove b
 		}
 	}
 
-	if err := runInstallWithTelemetry(info.TsukuRecipe, "", "", false, "create", nil); err != nil {
+	if err := runInstallWithTelemetry(info.TsukuRecipe, "", "", false, "create", nil, installevents.SourceManual); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: failed to install required toolchain '%s': %v\n", info.TsukuRecipe, err)
 		return false
 	}

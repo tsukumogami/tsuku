@@ -175,9 +175,9 @@ func TestPublish_ReentrantPreservesCausalOrder(t *testing.T) {
 	bus.Publish(Installed{Tool: "first", Version: "1", Source: SourceManual})
 
 	want := []string{
-		"installed:first",   // top-level
-		"updated:second",    // queued from inside first
-		"updated:third",     // queued from inside first (or queued during second)
+		"installed:first", // top-level
+		"updated:second",  // queued from inside first
+		"updated:third",   // queued from inside first (or queued during second)
 	}
 	if len(seen) < len(want) {
 		t.Fatalf("expected at least %d events, got %d: %v", len(want), len(seen), seen)
@@ -192,9 +192,8 @@ func TestPublish_ReentrantPreservesCausalOrder(t *testing.T) {
 }
 
 type orderingSub struct {
-	bus    *Bus
-	seen   *[]string
-	pubBoth bool
+	bus  *Bus
+	seen *[]string
 }
 
 func (o *orderingSub) Handle(event Event) {
@@ -297,7 +296,7 @@ func TestPublish_NilEventDropped(t *testing.T) {
 	}
 }
 
-// 12. All eight event types implement the sealed Event interface and
+//  12. All eight event types implement the sealed Event interface and
 //     report Source consistently via GetSource().
 func TestAllEventTypes_ImplementInterface(t *testing.T) {
 	tests := []struct {

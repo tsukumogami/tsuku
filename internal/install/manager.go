@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/progress"
 )
 
@@ -20,6 +21,7 @@ type Manager struct {
 	config   *config.Config
 	state    *StateManager
 	reporter progress.Reporter
+	bus      *installevents.Bus // may be nil; nil-safe Publish is a no-op
 }
 
 // SetReporter sets the progress reporter used for status and log output during
@@ -37,22 +39,40 @@ func (m *Manager) getReporter() progress.Reporter {
 	return progress.NoopReporter{}
 }
 
-// New creates a new install manager
-func New(cfg *config.Config) *Manager {
-	return &Manager{
+// Option configures a Manager at construction time.
+type Option func(*Manager)
+
+// WithEventBus wires the install lifecycle event bus into the Manager.
+// When set, Install / Rollback / Remove* publish events on success and
+// failure. A Manager constructed without WithEventBus has a nil bus,
+// and Publish on nil is a no-op — production code paths always wire
+// the bus; tests pass nil for unit cases that don't care about events.
+func WithEventBus(bus *installevents.Bus) Option {
+	return func(m *Manager) { m.bus = bus }
+}
+
+// New creates a new install manager. Pass install.WithEventBus(bus) to
+// enable lifecycle event publishing.
+func New(cfg *config.Config, opts ...Option) *Manager {
+	m := &Manager{
 		config: cfg,
 		state:  NewStateManager(cfg),
 	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
 }
 
 // InstallOptions controls how a tool is installed
 type InstallOptions struct {
-	CreateSymlinks      bool              // Whether to create symlinks in current/
-	IsHidden            bool              // Mark as hidden execution dependency
-	Binaries            []string          // List of binary names this tool provides
-	RuntimeDependencies map[string]string // Runtime deps: name -> version (for wrapper scripts)
-	RequestedVersion    string            // What user originally requested ("17", "@lts", "")
-	Plan                *Plan             // Installation plan to store (if generated)
+	CreateSymlinks      bool                 // Whether to create symlinks in current/
+	IsHidden            bool                 // Mark as hidden execution dependency
+	Binaries            []string             // List of binary names this tool provides
+	RuntimeDependencies map[string]string    // Runtime deps: name -> version (for wrapper scripts)
+	RequestedVersion    string               // What user originally requested ("17", "@lts", "")
+	Plan                *Plan                // Installation plan to store (if generated)
+	Source              installevents.Source // What triggered this install (manual / auto / project-auto)
 }
 
 // DefaultInstallOptions returns the default installation options
@@ -60,13 +80,17 @@ func DefaultInstallOptions() InstallOptions {
 	return InstallOptions{
 		CreateSymlinks: true,
 		IsHidden:       false,
+		Source:         installevents.SourceManual,
 	}
 }
 
 // Install copies a tool from the work directory to the permanent location
-// and creates a symlink in current/
-func (m *Manager) Install(name, version, workDir string) error {
-	return m.InstallWithOptions(name, version, workDir, DefaultInstallOptions())
+// and creates a symlink in current/. Source tags the event published on
+// success or failure; SourceManual is the default for direct CLI calls.
+func (m *Manager) Install(name, version, workDir string, src installevents.Source) error {
+	opts := DefaultInstallOptions()
+	opts.Source = src
+	return m.InstallWithOptions(name, version, workDir, opts)
 }
 
 // InstallWithOptions copies a tool from the work directory to the permanent location
@@ -75,7 +99,36 @@ func (m *Manager) Install(name, version, workDir string) error {
 // Installation is atomic: files are first copied to a staging directory, then
 // atomically renamed to the final location. This ensures the tool directory is
 // either fully installed or not present at all - never partially installed.
-func (m *Manager) InstallWithOptions(name, version, workDir string, opts InstallOptions) error {
+//
+// Publishes a lifecycle event on return:
+//   - prior ActiveVersion == "" and err == nil -> Installed
+//   - prior ActiveVersion != "" and err == nil -> Updated
+//   - prior ActiveVersion == "" and err != nil -> InstallFailed
+//   - prior ActiveVersion != "" and err != nil -> UpdateFailed (with ActiveAfter
+//     set to the prior version, since state.UpdateTool uses atomic rename
+//     and state is unchanged on error)
+//
+// Publish-after-state invariant: the publish runs from a deferred closure that
+// reads the named return error AFTER the state-mutating block completes, so
+// any subscriber observing state inside Handle sees the post-write value.
+func (m *Manager) InstallWithOptions(name, version, workDir string, opts InstallOptions) (err error) {
+	// Snapshot the prior ActiveVersion so the publish closure can pick
+	// between Installed/Updated and InstallFailed/UpdateFailed. Failure
+	// to read state means we publish as if no prior version existed,
+	// which matches today's observable behavior for a fresh-install
+	// failure on a broken state file.
+	var priorActiveVersion string
+	if prior, _ := m.state.GetToolState(name); prior != nil {
+		priorActiveVersion = prior.ActiveVersion
+	}
+
+	// publish-after-state: this defer runs after the body returns and
+	// after state.UpdateTool has either committed (success) or returned
+	// an error (state untouched per atomic rename).
+	defer func() {
+		m.publishInstallOutcome(name, version, priorActiveVersion, opts.Source, err)
+	}()
+
 	// Ensure directories exist
 	if err := m.config.EnsureDirectories(); err != nil {
 		return err
@@ -165,7 +218,7 @@ func (m *Manager) InstallWithOptions(name, version, workDir string, opts Install
 
 	// Update state with multi-version support
 	// Note: IsExplicit and RequiredBy are handled by the caller (main.go)
-	err := m.state.UpdateTool(name, func(ts *ToolState) {
+	err = m.state.UpdateTool(name, func(ts *ToolState) {
 		// Initialize Versions map if needed
 		if ts.Versions == nil {
 			ts.Versions = make(map[string]VersionState)
@@ -208,6 +261,106 @@ func (m *Manager) InstallWithOptions(name, version, workDir string, opts Install
 // GetState returns the state manager
 func (m *Manager) GetState() *StateManager {
 	return m.state
+}
+
+// publishInstallOutcome publishes the install lifecycle event for a
+// completed InstallWithOptions call. err is the function's return
+// value; priorActiveVersion is the ActiveVersion observed before the
+// install ran.
+//
+// Selection rules:
+//   - err == nil and priorActiveVersion == ""    -> Installed
+//   - err == nil and priorActiveVersion != ""    -> Updated
+//   - err != nil and priorActiveVersion == ""    -> InstallFailed
+//   - err != nil and priorActiveVersion != ""    -> UpdateFailed
+//
+// On UpdateFailed, ActiveAfter equals priorActiveVersion because
+// state.UpdateTool uses an atomic rename — a failed install leaves
+// state pointing at the prior version, no explicit rollback needed.
+func (m *Manager) publishInstallOutcome(name, version, priorActiveVersion string, source installevents.Source, err error) {
+	if m.bus == nil {
+		return
+	}
+	now := time.Now()
+	if err == nil {
+		if priorActiveVersion == "" {
+			m.bus.Publish(installevents.Installed{
+				Tool:      name,
+				Version:   version,
+				Source:    source,
+				Timestamp: now,
+			})
+		} else {
+			m.bus.Publish(installevents.Updated{
+				Tool:        name,
+				FromVersion: priorActiveVersion,
+				ToVersion:   version,
+				Source:      source,
+				Timestamp:   now,
+			})
+		}
+		return
+	}
+	if priorActiveVersion == "" {
+		m.bus.Publish(installevents.InstallFailed{
+			Tool:             name,
+			AttemptedVersion: version,
+			Err:              err,
+			Source:           source,
+			Timestamp:        now,
+		})
+		return
+	}
+	m.bus.Publish(installevents.UpdateFailed{
+		Tool:             name,
+		AttemptedVersion: version,
+		FromVersion:      priorActiveVersion,
+		ActiveAfter:      priorActiveVersion, // atomic rename leaves state untouched on error
+		Err:              err,
+		Source:           source,
+		Timestamp:        now,
+	})
+}
+
+// Rollback reverts a tool to a prior installed version and publishes
+// either RolledBack (success) or RollbackFailed (failure). Unlike
+// Activate, Rollback is a user-visible lifecycle operation; explicit
+// `tsuku rollback` calls this method. Internal auto-rollback after
+// a failed update does NOT call Rollback — that flow leaves state
+// untouched and is reported via UpdateFailed.ActiveAfter.
+//
+// Publish-after-state invariant: the publish is the last line before
+// return; the Activate call has either committed state or returned an
+// error before the publish fires.
+func (m *Manager) Rollback(name, toVersion string, src installevents.Source) error {
+	fromVersion := ""
+	if prior, _ := m.state.GetToolState(name); prior != nil {
+		fromVersion = prior.ActiveVersion
+	}
+
+	if err := m.Activate(name, toVersion); err != nil {
+		if m.bus != nil {
+			m.bus.Publish(installevents.RollbackFailed{
+				Tool:             name,
+				AttemptedVersion: toVersion,
+				FromVersion:      fromVersion,
+				Err:              err,
+				Source:           src,
+				Timestamp:        time.Now(),
+			})
+		}
+		return err
+	}
+	if m.bus != nil {
+		m.bus.Publish(installevents.RolledBack{
+			Tool:        name,
+			FromVersion: fromVersion,
+			ToVersion:   toVersion,
+			Source:      src,
+			Timestamp:   time.Now(),
+		})
+	}
+	return nil
 }
 
 // stagingDir returns the path to the staging directory for atomic installation.

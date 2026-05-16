@@ -8,7 +8,6 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/log"
-	"github.com/tsukumogami/tsuku/internal/notices"
 	"github.com/tsukumogami/tsuku/internal/project"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
@@ -58,7 +57,6 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, projectCfg *
 	}
 
 	cacheDir := CacheDir(cfg.HomeDir)
-	noticesDir := notices.NoticesDir(cfg.HomeDir)
 
 	// Read cached check entries
 	entries, err := ReadAllEntries(cacheDir)
@@ -141,57 +139,36 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, projectCfg *
 		results = append(results, ar)
 
 		if applyErr == nil {
-			if tc != nil {
-				tc.SendUpdateOutcome(telemetry.NewUpdateOutcomeSuccessEvent(
-					entry.Tool, previousVersion, entry.LatestWithinPin, "auto"))
-			}
-			// Success resets the failure counter by removing any previous notice
-			_ = notices.RemoveNotice(noticesDir, entry.Tool)
-			// Write success notice so the next command can display it.
-			// InboxReporter.Stop() runs after this and overwrites with a richer
-			// notice only when warnings were accumulated during install.
-			_ = notices.WriteNotice(noticesDir, &notices.Notice{
-				Tool:             entry.Tool,
-				AttemptedVersion: entry.LatestWithinPin,
-				Kind:             notices.KindAutoApplyResult,
-				Timestamp:        time.Now(),
-			})
-			// Garbage collect old version directories
+			// Telemetry success event and the on-disk success notice are
+			// emitted from install.Manager via the install lifecycle bus
+			// when applyUpdate runs the install through Manager.Install.
+			// This loop no longer writes them directly.
+			//
+			// Garbage-collect old version directories (the design's notice
+			// store reconciliation handles notices; tool directories are
+			// a separate concern).
 			retention := userCfg.UpdatesVersionRetention()
 			_ = GarbageCollectVersions(cfg.ToolsDir, entry.Tool, entry.LatestWithinPin, previousVersion, retention, time.Now())
 		}
 
 		if applyErr != nil {
-			// Emit failure event
-			if tc != nil {
-				tc.SendUpdateOutcome(telemetry.NewUpdateOutcomeFailureEvent(
-					entry.Tool, entry.LatestWithinPin, telemetry.ClassifyError(applyErr), "auto"))
-			}
-
-			// Auto-rollback: activate previous version
+			// Manager.Install has already published UpdateFailed (or
+			// InstallFailed) via the bus; the telemetry and notices
+			// subscribers receive it. This loop no longer emits telemetry
+			// or writes notices directly.
+			//
+			// Defensive symlink restore: Manager.Install's failure leaves
+			// state.json untouched (atomic rename), but a partial symlink
+			// update could have left current/ pointing at a now-deleted
+			// new-version directory. Activate(previousVersion) re-creates
+			// the symlinks for the prior version. Activate is internal;
+			// no additional bus event is published.
 			if previousVersion != "" {
 				if rollbackErr := mgr.Activate(entry.Tool, previousVersion); rollbackErr != nil {
 					log.Default().Debug("auto-apply: rollback failed",
 						"tool", entry.Tool, "error", rollbackErr)
-				} else {
-					if tc != nil {
-						tc.SendUpdateOutcome(telemetry.NewUpdateOutcomeRollbackEvent(
-							entry.Tool, previousVersion, entry.LatestWithinPin, "auto"))
-					}
 				}
 			}
-
-			// Write failure notice for display on the next command invocation.
-			// Shown=false ensures the notice surfaces on the next command.
-			notice := &notices.Notice{
-				Tool:             entry.Tool,
-				AttemptedVersion: entry.LatestWithinPin,
-				Error:            applyErr.Error(),
-				Timestamp:        time.Now(),
-				Shown:            false,
-				Kind:             notices.KindAutoApplyResult,
-			}
-			_ = notices.WriteNotice(noticesDir, notice)
 		}
 
 		// Remove consumed cache entry regardless of success/failure

@@ -56,8 +56,8 @@ type Bus struct {
 
 	// Diagnostic counters incremented when events are dropped. Reading
 	// is protected by mu. Used by package tests; not exposed externally.
-	depthDrops      int
-	queueDrops      int
+	depthDrops       int
+	queueDrops       int
 	emptySourceDrops int
 }
 

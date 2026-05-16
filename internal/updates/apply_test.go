@@ -126,10 +126,16 @@ func TestMaybeAutoApplySuccessfulUpdate(t *testing.T) {
 	}
 }
 
-func TestMaybeAutoApplyFailureWritesNotice(t *testing.T) {
+// TestMaybeAutoApplyFailureRemovesCacheEntry verifies that a failed
+// install attempt removes the cache entry (preventing repeated attempts).
+//
+// The notice-writing-on-failure behavior moved to install.Manager via
+// the install lifecycle event bus and is covered by
+// internal/notices/subscriber_test.go and the e2e integration test in
+// test/functional/. apply.go itself no longer writes notices directly.
+func TestMaybeAutoApplyFailureRemovesCacheEntry(t *testing.T) {
 	dir := t.TempDir()
 	cacheDir := filepath.Join(dir, "cache", "updates")
-	noticesDir := filepath.Join(dir, "notices")
 	if err := os.MkdirAll(cacheDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -164,26 +170,6 @@ func TestMaybeAutoApplyFailureWritesNotice(t *testing.T) {
 	MaybeAutoApply(cfg, userCfg, nil, func(_, _, _ string) error {
 		return fmt.Errorf("download failed: network error")
 	}, tc)
-
-	// Notice should be written
-	allNotices, err := notices.ReadAllNotices(noticesDir)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(allNotices) != 1 {
-		t.Fatalf("expected 1 notice, got %d", len(allNotices))
-	}
-	if allNotices[0].Tool != "fail-tool" {
-		t.Errorf("notice tool = %q, want %q", allNotices[0].Tool, "fail-tool")
-	}
-	// Background apply notices are always pending display (Shown=false) so the
-	// result surfaces on the next command invocation.
-	if allNotices[0].Shown {
-		t.Error("background apply notice should have Shown=false (pending display)")
-	}
-	if allNotices[0].Kind != notices.KindAutoApplyResult {
-		t.Errorf("notice kind = %q, want %q", allNotices[0].Kind, notices.KindAutoApplyResult)
-	}
 
 	// Cache entry should be removed (prevents repeated attempts)
 	remaining, _ := ReadEntry(cacheDir, "fail-tool")
@@ -430,11 +416,14 @@ func setupBackgroundApplyTest(t *testing.T, toolName string) (*config.Config, *u
 	return cfg, userconfig.DefaultConfig()
 }
 
-// TestBackgroundApplySuccessWritesNotice verifies the integration between
-// MaybeAutoApply and InboxReporter on the success-only path: apply.go writes
-// a KindAutoApplyResult notice; InboxReporter.Stop() returns early (no
-// messages) and leaves it untouched.
-func TestBackgroundApplySuccessWritesNotice(t *testing.T) {
+// TestBackgroundApplySuccessNoNoticeFromApplyDirectly documents the
+// post-refactor behavior: apply.go no longer writes notices directly,
+// so MaybeAutoApply with a stub installFn (one that doesn't go through
+// the real Manager.Install pipeline that publishes events) produces no
+// notice. The actual success-notice-writing is covered by
+// internal/notices/subscriber_test.go::TestSubscriber_Updated and the
+// e2e integration test in test/functional/.
+func TestBackgroundApplySuccessNoNoticeFromApplyDirectly(t *testing.T) {
 	cfg, userCfg := setupBackgroundApplyTest(t, "bg-success-tool")
 	noticesDir := notices.NoticesDir(cfg.HomeDir)
 
@@ -442,12 +431,11 @@ func TestBackgroundApplySuccessWritesNotice(t *testing.T) {
 	installFn := func(toolName, version, constraint string) error {
 		reporter := progress.NewInboxReporter(toolName, noticesDir)
 		reporters = append(reporters, reporter)
-		return nil // success, no warnings
+		return nil // success, no warnings; stub doesn't invoke Manager
 	}
 
 	MaybeAutoApply(cfg, userCfg, nil, installFn, nil)
 
-	// Mirror cmd_apply_updates.go: stop reporters after MaybeAutoApply.
 	for _, r := range reporters {
 		r.Stop()
 	}
@@ -456,17 +444,8 @@ func TestBackgroundApplySuccessWritesNotice(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ReadNotice error: %v", err)
 	}
-	if n == nil {
-		t.Fatal("expected a notice on disk after successful background apply, got nil")
-	}
-	if n.Kind != notices.KindAutoApplyResult {
-		t.Errorf("notice Kind = %q, want %q", n.Kind, notices.KindAutoApplyResult)
-	}
-	if n.Error != "" {
-		t.Errorf("notice Error = %q, want empty", n.Error)
-	}
-	if len(n.Messages) != 0 {
-		t.Errorf("notice Messages = %v, want empty", n.Messages)
+	if n != nil {
+		t.Errorf("apply.go no longer writes notices directly; got %+v", n)
 	}
 }
 

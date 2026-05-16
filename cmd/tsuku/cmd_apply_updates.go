@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/notices"
 	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/updates"
@@ -41,7 +42,7 @@ var applyUpdatesCmd = &cobra.Command{
 		installFn := func(toolName, version, constraint string) error {
 			reporter := progress.NewInboxReporter(toolName, noticesDir)
 			reporters = append(reporters, reporter)
-			return runInstallWithExternalReporter(toolName, version, constraint, false, "", nil, reporter)
+			return runInstallWithExternalReporter(toolName, version, constraint, false, "", nil, reporter, installevents.SourceAuto)
 		}
 
 		updates.MaybeAutoApply(cfg, userCfg, nil, installFn, nil)

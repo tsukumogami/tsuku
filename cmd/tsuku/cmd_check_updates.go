@@ -56,7 +56,12 @@ var checkUpdatesCmd = &cobra.Command{
 			os.Stderr = devNull
 		}
 
-		return updates.RunUpdateCheck(ctx, cfg, userCfg, &cmdRecipeLoader{})
+		// Wire the install lifecycle bus so the self-update branch
+		// inside RunUpdateCheck publishes Updated/UpdateFailed with
+		// Tool == "tsuku". A nil telemetry client passes nil to the
+		// subscriber, which falls through to a no-op.
+		bus := newEventBus(cfg, nil)
+		return updates.RunUpdateCheck(ctx, cfg, userCfg, &cmdRecipeLoader{}, bus)
 	},
 }
 

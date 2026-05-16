@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 )
 
@@ -31,7 +32,9 @@ a temporary fix for a broken release, not a permanent pin change.`,
 			exitWithCode(ExitGeneral)
 		}
 
-		mgr := install.New(cfg)
+		tc := telemetry.NewClient()
+		bus := newEventBus(cfg, tc)
+		mgr := install.New(cfg, install.WithEventBus(bus))
 		state, err := mgr.GetState().Load()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error loading state: %v\n", err)
@@ -59,14 +62,14 @@ a temporary fix for a broken release, not a permanent pin change.`,
 		}
 
 		currentVersion := ts.ActiveVersion
-		if err := mgr.Activate(toolName, ts.PreviousVersion); err != nil {
+		// Manager.Rollback publishes RolledBack (or RollbackFailed) on
+		// the event bus; the telemetry subscriber translates that to
+		// UpdateOutcomeRollback, and the notices subscriber writes a
+		// "rolled back to V" notice. No direct calls needed here.
+		if err := mgr.Rollback(toolName, ts.PreviousVersion, installevents.SourceManual); err != nil {
 			fmt.Fprintf(os.Stderr, "Error rolling back %s: %v\n", toolName, err)
 			exitWithCode(ExitGeneral)
 		}
-
-		tc := telemetry.NewClient()
-		tc.SendUpdateOutcome(telemetry.NewUpdateOutcomeRollbackEvent(
-			toolName, ts.PreviousVersion, currentVersion, "manual"))
 
 		printInfof("Rolled back %s from %s to %s\n", toolName, currentVersion, ts.PreviousVersion)
 		printInfo("Note: auto-update may re-apply this update on the next cycle.")

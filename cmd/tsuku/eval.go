@@ -11,6 +11,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
+	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
@@ -355,5 +356,5 @@ func runInstallTool(toolName string) error {
 
 	// Use the same install mechanism as the install command
 	// Pass nil for telemetry client since this is an internal operation
-	return runInstallWithTelemetry(toolName, "", "", false, "", nil)
+	return runInstallWithTelemetry(toolName, "", "", false, "", nil, installevents.SourceManual)
 }

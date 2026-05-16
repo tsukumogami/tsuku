@@ -6,13 +6,12 @@ import (
 	"fmt"
 	"os"
 	"runtime"
-	"time"
 
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
-	"github.com/tsukumogami/tsuku/internal/notices"
+	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/shellenv"
@@ -165,13 +164,13 @@ func shouldInstallRuntimeDep(depRecipe *recipe.Recipe) bool {
 	return depRecipe.SupportsPlatformRuntime()
 }
 
-func runInstallWithTelemetry(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client) error {
+func runInstallWithTelemetry(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client, src installevents.Source) error {
 	reporter := progress.NewTTYReporter(os.Stderr)
 	defer func() {
 		reporter.Stop()
 		reporter.FlushDeferred()
 	}()
-	return installWithDependencies(toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client, reporter)
+	return installWithDependencies(toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client, reporter, src)
 }
 
 // runInstallWithExternalReporter runs the install flow using a caller-provided
@@ -179,17 +178,21 @@ func runInstallWithTelemetry(toolName, reqVersion, versionConstraint string, isE
 // this when the caller needs to emit a permanent outcome line via the same
 // reporter after the install completes, so TTY spinner replacement works
 // correctly without mixing output streams.
-func runInstallWithExternalReporter(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client, reporter progress.Reporter) error {
-	return installWithDependencies(toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client, reporter)
+func runInstallWithExternalReporter(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client, reporter progress.Reporter, src installevents.Source) error {
+	return installWithDependencies(toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client, reporter, src)
 }
 
-func installWithDependencies(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, visited map[string]bool, telemetryClient *telemetry.Client, reporter progress.Reporter) error {
-	// Initialize manager for state updates
+func installWithDependencies(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, visited map[string]bool, telemetryClient *telemetry.Client, reporter progress.Reporter, src installevents.Source) error {
+	// Initialize manager for state updates. The event bus dispatches
+	// lifecycle events to the notices and telemetry subscribers; src
+	// tags every event so subscribers can distinguish manual / auto /
+	// project-auto triggers.
 	cfg, err := config.DefaultConfig()
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
-	mgr := install.New(cfg)
+	bus := newEventBus(cfg, telemetryClient)
+	mgr := install.New(cfg, install.WithEventBus(bus))
 	mgr.SetReporter(reporter)
 
 	// If explicit install, check if tool is hidden and just expose it
@@ -297,7 +300,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 
 	// Check if this is a library recipe
 	if r.IsLibrary() {
-		return installLibrary(toolName, reqVersion, mgr, telemetryClient, reporter)
+		return installLibrary(toolName, reqVersion, mgr, telemetryClient, reporter, src)
 	}
 
 	// Check and display system dependency instructions (for explicit installs only)
@@ -336,7 +339,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 			reporter.Status(fmt.Sprintf("Resolving dependency '%s'...", dep))
 			// Install dependency (not explicit, parent is current tool)
 			// Dependencies don't have version constraints and are tracked for telemetry
-			if err := installWithDependencies(dep, "", "", false, toolName, visited, telemetryClient, reporter); err != nil {
+			if err := installWithDependencies(dep, "", "", false, toolName, visited, telemetryClient, reporter, src); err != nil {
 				return fmt.Errorf("failed to install dependency '%s': %w", dep, err)
 			}
 		}
@@ -360,7 +363,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 			}
 			// Install runtime dependency as explicit (exposed, not hidden)
 			// No parent - these are top-level explicit installs
-			if err := installWithDependencies(dep, "", "", true, "", visited, telemetryClient, reporter); err != nil {
+			if err := installWithDependencies(dep, "", "", true, "", visited, telemetryClient, reporter, src); err != nil {
 				return fmt.Errorf("failed to install runtime dependency '%s': %w", dep, err)
 			}
 		}
@@ -544,6 +547,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 			reporter.Status(fmt.Sprintf("Runtime dependencies: %v", mapKeys(runtimeDeps)))
 		}
 
+		installOpts.Source = src
 		if err := mgr.InstallWithOptions(toolName, version, exec.WorkDir(), installOpts); err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to install to permanent location: %v\n", err)
 			return err
@@ -749,37 +753,11 @@ func isSystemDependencyPlan(plan *executor.InstallationPlan) bool {
 	return true
 }
 
-// clearAndRecordInstallSuccess checks whether toolName had a failure notice and,
-// if so, removes it and writes a success notice with the tool's current active version.
-// Best-effort: silently ignores errors so notice management never fails an install.
+// clearAndRecordInstallSuccess is a no-op kept for source compatibility
+// with existing callers in install.go. With the install lifecycle event
+// bus in place, Manager.Install publishes Installed/Updated on success
+// and the notices subscriber writes a fresh notice that atomically
+// overwrites any prior failure record — no separate clear step needed.
 func clearAndRecordInstallSuccess(toolName string) {
-	cfg, err := config.DefaultConfig()
-	if err != nil {
-		return
-	}
-	noticesDir := notices.NoticesDir(cfg.HomeDir)
-	existing, err := notices.ReadNotice(noticesDir, toolName)
-	if err != nil || existing == nil || existing.Error == "" {
-		return
-	}
-	var activeVersion string
-	mgr := install.New(cfg)
-	if tools, err := mgr.List(); err == nil {
-		for _, t := range tools {
-			if t.Name == toolName && t.IsActive {
-				activeVersion = t.Version
-				break
-			}
-		}
-	}
-	_ = notices.RemoveNotice(noticesDir, toolName)
-	if activeVersion != "" {
-		_ = notices.WriteNotice(noticesDir, &notices.Notice{
-			Tool:             toolName,
-			AttemptedVersion: activeVersion,
-			Error:            "",
-			Timestamp:        time.Now(),
-			Shown:            false,
-		})
-	}
+	_ = toolName
 }
