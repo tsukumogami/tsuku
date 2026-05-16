@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/notices"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
@@ -127,6 +128,99 @@ func TestDisplayNotifications_SuccessNotice(t *testing.T) {
 
 	if !bytes.Contains(output, []byte("tsuku has been updated to 0.8.0")) {
 		t.Errorf("expected success notice, got %q", output)
+	}
+}
+
+// A queued background-success notice for a tool whose installed version no longer
+// matches the announced version must be suppressed and removed, so the user is
+// never told "niwa has been updated to 0.10.4" when 0.11.0 is what's installed.
+func TestDisplayNotifications_StaleSuccessNoticeDropped(t *testing.T) {
+	dir := t.TempDir()
+	noticesDir := notices.NoticesDir(dir)
+	setupCacheDirs(t, dir)
+	cfg := &config.Config{HomeDir: dir}
+	userCfg := userconfig.DefaultConfig()
+
+	clearSuppressEnv(t)
+	mockTTY(t, true)
+
+	mgr := install.NewStateManager(cfg)
+	if err := mgr.UpdateTool("niwa", func(ts *install.ToolState) {
+		ts.ActiveVersion = "0.11.0"
+		ts.IsExplicit = true
+	}); err != nil {
+		t.Fatalf("seed state: %v", err)
+	}
+
+	stale := &notices.Notice{
+		Tool:             "niwa",
+		AttemptedVersion: "0.10.4",
+		Timestamp:        time.Now(),
+		Shown:            false,
+		Kind:             notices.KindAutoApplyResult,
+	}
+	if err := notices.WriteNotice(noticesDir, stale); err != nil {
+		t.Fatalf("write stale notice: %v", err)
+	}
+
+	output := captureStderr(t, func() {
+		DisplayNotifications(cfg, userCfg, false, nil)
+	})
+
+	if bytes.Contains(output, []byte("niwa has been updated to 0.10.4")) {
+		t.Errorf("stale success notice should not render, got %q", output)
+	}
+
+	if got, _ := notices.ReadNotice(noticesDir, "niwa"); got != nil {
+		t.Errorf("stale notice file should be removed, got %+v", got)
+	}
+}
+
+// A background-success notice whose announced version matches the installed
+// version should still render exactly once and be marked Shown.
+func TestDisplayNotifications_FreshSuccessNoticeRendered(t *testing.T) {
+	dir := t.TempDir()
+	noticesDir := notices.NoticesDir(dir)
+	setupCacheDirs(t, dir)
+	cfg := &config.Config{HomeDir: dir}
+	userCfg := userconfig.DefaultConfig()
+
+	clearSuppressEnv(t)
+	mockTTY(t, true)
+
+	mgr := install.NewStateManager(cfg)
+	if err := mgr.UpdateTool("niwa", func(ts *install.ToolState) {
+		ts.ActiveVersion = "0.11.1"
+		ts.IsExplicit = true
+	}); err != nil {
+		t.Fatalf("seed state: %v", err)
+	}
+
+	fresh := &notices.Notice{
+		Tool:             "niwa",
+		AttemptedVersion: "0.11.1",
+		Timestamp:        time.Now(),
+		Shown:            false,
+		Kind:             notices.KindAutoApplyResult,
+	}
+	if err := notices.WriteNotice(noticesDir, fresh); err != nil {
+		t.Fatalf("write fresh notice: %v", err)
+	}
+
+	output := captureStderr(t, func() {
+		DisplayNotifications(cfg, userCfg, false, nil)
+	})
+
+	if !bytes.Contains(output, []byte("niwa has been updated to 0.11.1")) {
+		t.Errorf("fresh success notice should render, got %q", output)
+	}
+
+	got, _ := notices.ReadNotice(noticesDir, "niwa")
+	if got == nil {
+		t.Fatal("fresh notice should persist with Shown=true, got nil")
+	}
+	if !got.Shown {
+		t.Error("fresh notice should be marked Shown=true after render")
 	}
 }
 

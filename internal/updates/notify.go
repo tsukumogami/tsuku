@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/notices"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
@@ -40,7 +41,7 @@ func DisplayNotifications(cfg *config.Config, userCfg *userconfig.Config, quiet 
 	}
 
 	// 2. Render unshown notices (from prior runs: self-update, tool failures)
-	renderUnshownNotices(noticesDir)
+	renderUnshownNotices(noticesDir, cfg)
 
 	// 3. Render available-update summary (when auto_apply is disabled)
 	if userCfg != nil && !userCfg.UpdatesAutoApplyEnabled() {
@@ -68,11 +69,21 @@ func DisplayAvailableSummary(cfg *config.Config, userCfg *userconfig.Config, qui
 // renderUnshownNotices reads and displays any unshown notices on stderr.
 // KindVersionFallback and KindShellInitChange notices are single-view: they are
 // removed after display. All other kinds use the Shown=true persistence convention.
-func renderUnshownNotices(noticesDir string) {
+//
+// Tool-update success notices are dropped (not rendered, file removed) when the
+// AttemptedVersion no longer matches the tool's currently installed ActiveVersion.
+// This prevents a stale background auto-apply notice from announcing a version that
+// isn't actually installed once the user (or a later auto-apply) has moved past it.
+func renderUnshownNotices(noticesDir string, cfg *config.Config) {
 	unshown, err := notices.ReadUnshownNotices(noticesDir)
 	if err != nil || len(unshown) == 0 {
 		return
 	}
+
+	// Loaded lazily on first non-self tool success notice. nil while not loaded;
+	// stays nil if loading fails (we fall back to rendering as today rather than
+	// hiding everything because of a state read error).
+	var stateMgr *install.StateManager
 
 	for _, n := range unshown {
 		if n.Tool == SelfToolName && n.Error == "" {
@@ -93,7 +104,15 @@ func renderUnshownNotices(noticesDir string) {
 				fmt.Fprintf(os.Stderr, "  %s\n", msg)
 			}
 		} else if n.Error == "" {
-			// Tool update success from background (KindUpdateResult or KindAutoApplyResult)
+			// Tool update success from background (KindUpdateResult or KindAutoApplyResult).
+			// Skip if the announced version no longer matches what's installed.
+			if stateMgr == nil {
+				stateMgr = install.NewStateManager(cfg)
+			}
+			if isStaleSuccessNotice(stateMgr, n) {
+				_ = notices.RemoveNotice(noticesDir, n.Tool)
+				continue
+			}
 			fmt.Fprintf(os.Stderr, "\n%s has been updated to %s\n", n.Tool, n.AttemptedVersion)
 		} else {
 			// Tool update failure
@@ -108,6 +127,23 @@ func renderUnshownNotices(noticesDir string) {
 			_ = notices.MarkShown(noticesDir, n.Tool)
 		}
 	}
+}
+
+// isStaleSuccessNotice reports whether a tool-update success notice announces a
+// version that doesn't match the tool's currently installed ActiveVersion.
+// Returns false if state can't be read — we'd rather show a possibly-stale
+// banner than hide a fresh one because state.json was momentarily unreadable.
+func isStaleSuccessNotice(sm *install.StateManager, n notices.Notice) bool {
+	ts, err := sm.GetToolState(n.Tool)
+	if err != nil {
+		return false
+	}
+	if ts == nil {
+		// Notice exists for a tool not in state — there's nothing real to
+		// reconcile against, so treat it as stale.
+		return true
+	}
+	return ts.ActiveVersion != n.AttemptedVersion
 }
 
 // renderAvailableSummary counts tools with available updates from cache entries
