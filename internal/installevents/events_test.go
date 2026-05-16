@@ -93,3 +93,22 @@ func TestSrcKey_DoesNotCollideWithForeignKey(t *testing.T) {
 		t.Fatalf("SourceFromContext(ctx) = %q, want %q after foreign key probe", got, SourceManual)
 	}
 }
+
+// TestLibraryEvents_ImplementEvent verifies at runtime (and indirectly
+// at compile time via the type assertion) that the four library event
+// types satisfy the sealed Event interface and round-trip Source via
+// GetSource. The compile-time guarantee is what matters: subscribers
+// gain exhaustive type-switch coverage.
+func TestLibraryEvents_ImplementEvent(t *testing.T) {
+	events := []Event{
+		LibraryInstalled{Library: "libyaml", Version: "0.2.5", Source: SourceManual},
+		LibraryRemoved{Library: "libyaml", Version: "0.2.5", Source: SourceManual},
+		LibraryInstallFailed{Library: "libyaml", AttemptedVersion: "0.2.5", Source: SourceManual},
+		LibraryRemoveFailed{Library: "libyaml", AttemptedVersion: "0.2.5", Source: SourceManual},
+	}
+	for _, e := range events {
+		if got := e.GetSource(); got != SourceManual {
+			t.Errorf("%T.GetSource() = %q, want %q", e, got, SourceManual)
+		}
+	}
+}

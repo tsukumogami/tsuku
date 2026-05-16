@@ -196,3 +196,71 @@ type RemoveFailed struct {
 
 func (RemoveFailed) isInstallEvent()     {}
 func (e RemoveFailed) GetSource() Source { return e.Source }
+
+// LibraryInstalled reports a successful library install. Libraries are
+// distinct from tools: they live under $TSUKU_HOME/libs/, are tracked
+// via UsedBy rather than RequiredBy, and have no Activate or Updated
+// semantics — each install is a fresh placement.
+//
+// Subscribers branch on the type rather than a Kind discriminator so the
+// compile-time type switch stays exhaustive across the tool/library
+// boundary. The dedicated library events are documented in
+// docs/designs/DESIGN-install-state-abstraction.md (Library Bus Vocabulary).
+type LibraryInstalled struct {
+	Library   string
+	Version   string
+	Source    Source
+	Timestamp time.Time
+}
+
+func (LibraryInstalled) isInstallEvent()     {}
+func (e LibraryInstalled) GetSource() Source { return e.Source }
+
+// LibraryRemoved reports a successful library removal. Version is the
+// specific version removed; ActiveAfter is the next-still-installed
+// version if any, "" if the library was fully removed. The shape
+// mirrors Removed for tools so subscriber-side handling stays uniform.
+//
+// No production code path mutates State.Libs for a remove today; the
+// event type is defined now so subscribers and renderers compose
+// unchanged when a future library-remove flow lands. See
+// internal/install/library.go for the deferral note.
+type LibraryRemoved struct {
+	Library     string
+	Version     string
+	ActiveAfter string
+	Source      Source
+	Timestamp   time.Time
+}
+
+func (LibraryRemoved) isInstallEvent()     {}
+func (e LibraryRemoved) GetSource() Source { return e.Source }
+
+// LibraryInstallFailed reports a failed library install attempt. The
+// shape mirrors InstallFailed for tools — same fields, same error
+// sanitization expectations at the subscriber boundary.
+type LibraryInstallFailed struct {
+	Library          string
+	AttemptedVersion string
+	Err              error
+	Source           Source
+	Timestamp        time.Time
+}
+
+func (LibraryInstallFailed) isInstallEvent()     {}
+func (e LibraryInstallFailed) GetSource() Source { return e.Source }
+
+// LibraryRemoveFailed reports a failed library-remove attempt. As with
+// LibraryRemoved, no production code path emits this today; the type is
+// defined in the same batch so future remove flows have the verbs they
+// need without a follow-up bus-vocabulary expansion.
+type LibraryRemoveFailed struct {
+	Library          string
+	AttemptedVersion string
+	Err              error
+	Source           Source
+	Timestamp        time.Time
+}
+
+func (LibraryRemoveFailed) isInstallEvent()     {}
+func (e LibraryRemoveFailed) GetSource() Source { return e.Source }

@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/installevents"
 )
 
 // LibraryInstallOptions controls how a library is installed
@@ -22,13 +24,39 @@ type LibraryInstallOptions struct {
 // - Do not create symlinks in current/
 // - Track used_by instead of required_by
 //
-// ctx is reserved for cancellation hooks and (in Issue 4) for Source
-// extraction at library publish callsites. Library lifecycle events are
-// not yet published on the bus -- that lands in Issue 4.
-func (m *Manager) InstallLibrary(ctx context.Context, name, version, workDir string, opts LibraryInstallOptions) error {
+// Publishes on the install lifecycle bus:
+//   - err == nil -> LibraryInstalled
+//   - err != nil -> LibraryInstallFailed
+//
+// Source is extracted from ctx at publish time via
+// installevents.SourceFromContext; callers must wrap ctx with
+// installevents.WithSource before invoking. An empty Source causes the
+// bus to drop the event with a diagnostic log line.
+//
+// Publish-after-state invariant: the publish runs from a deferred
+// closure reading the named return error AFTER m.state.UpdateLibrary
+// has either committed or returned an error. Mirrors the Manager.Install
+// pattern.
+//
+// Library remove events (LibraryRemoved / LibraryRemoveFailed) are not
+// published from this file. No production code path mutates State.Libs
+// for a remove today; StateManager.RemoveLibraryVersion exists but is
+// only exercised by tests. When a library-remove flow lands, it should
+// emit those events from the same publish-after-state pattern.
+func (m *Manager) InstallLibrary(ctx context.Context, name, version, workDir string, opts LibraryInstallOptions) (err error) {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
+
+	// publish-after-state: this defer runs after the body returns and
+	// after m.state.UpdateLibrary has either committed (success) or
+	// returned an error (state untouched). Source is read from ctx at
+	// publish time so a forgotten WithSource call surfaces as a bus
+	// drop rather than a silent attribution loss.
+	src := installevents.SourceFromContext(ctx)
+	defer func() {
+		m.publishLibraryInstallOutcome(name, version, src, err)
+	}()
 
 	// Ensure directories exist
 	if err := m.config.EnsureDirectories(); err != nil {
@@ -77,6 +105,41 @@ func (m *Manager) InstallLibrary(ctx context.Context, name, version, workDir str
 	}
 
 	return nil
+}
+
+// publishLibraryInstallOutcome publishes the library install lifecycle
+// event for a completed InstallLibrary call. err is the function's
+// named return value at the moment the deferred publish fires.
+//
+// Selection rules:
+//   - err == nil -> LibraryInstalled
+//   - err != nil -> LibraryInstallFailed
+//
+// Unlike tools, libraries have no Updated variant: each install is a
+// fresh placement under libs/<name>-<version>/. A re-install of the
+// same version still publishes LibraryInstalled — it is the lifecycle
+// "this version is now present" event.
+func (m *Manager) publishLibraryInstallOutcome(name, version string, source installevents.Source, err error) {
+	if m.bus == nil {
+		return
+	}
+	now := time.Now()
+	if err == nil {
+		m.bus.Publish(installevents.LibraryInstalled{
+			Library:   name,
+			Version:   version,
+			Source:    source,
+			Timestamp: now,
+		})
+		return
+	}
+	m.bus.Publish(installevents.LibraryInstallFailed{
+		Library:          name,
+		AttemptedVersion: version,
+		Err:              err,
+		Source:           source,
+		Timestamp:        now,
+	})
 }
 
 // IsLibraryInstalled checks if a specific library version is already installed

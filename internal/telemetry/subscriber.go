@@ -6,23 +6,28 @@ import (
 
 // Subscriber translates installevents into telemetry outcome events.
 //
-// Today's telemetry pipeline only defines outcome events for the update
-// flow (UpdateOutcomeSuccess / Failure / Rollback). The subscriber maps
-// install-bus events to those outcome types:
+// Today's telemetry pipeline defines outcome events for the update flow
+// (UpdateOutcomeSuccess / Failure / Rollback) and the library flow
+// (LibraryInstallOutcomeSuccess / Failure and the remove variants).
+// The subscriber maps install-bus events to those outcome types:
 //
-//   - Updated         -> UpdateOutcomeSuccess
-//   - RolledBack      -> UpdateOutcomeRollback (explicit rollback by user)
-//   - UpdateFailed    -> UpdateOutcomeFailure; AND UpdateOutcomeRollback when
+//   - Updated              -> UpdateOutcomeSuccess
+//   - RolledBack           -> UpdateOutcomeRollback (explicit rollback by user)
+//   - UpdateFailed         -> UpdateOutcomeFailure; AND UpdateOutcomeRollback when
 //     ActiveAfter == FromVersion && FromVersion != ""
 //     (automatic recovery succeeded)
+//   - LibraryInstalled     -> LibraryInstallOutcomeSuccess
+//   - LibraryInstallFailed -> LibraryInstallOutcomeFailure
+//   - LibraryRemoved       -> LibraryRemoveOutcomeSuccess
+//   - LibraryRemoveFailed  -> LibraryRemoveOutcomeFailure
 //
 // Other lifecycle events (Installed, Removed, InstallFailed, RemoveFailed,
 // RollbackFailed) do not have parallel outcome events in today's
 // telemetry schema; the subscriber leaves them untouched. CLI commands
 // continue to emit their existing action events (NewInstallEvent,
 // NewRemoveEvent) directly via Client.Send. A future telemetry expansion
-// can introduce per-verb outcome events and extend this subscriber
-// without changing the bus contract.
+// can introduce per-verb outcome events for tools and extend this
+// subscriber without changing the bus contract.
 type Subscriber struct {
 	client outcomeSender
 }
@@ -32,6 +37,7 @@ type Subscriber struct {
 // with a recording mock without spinning up an HTTP server.
 type outcomeSender interface {
 	SendUpdateOutcome(event UpdateOutcomeEvent)
+	SendLibraryOutcome(event LibraryOutcomeEvent)
 }
 
 // NewSubscriber returns a Subscriber that emits via client. A nil
@@ -78,6 +84,22 @@ func (s *Subscriber) Handle(event installevents.Event) {
 			s.client.SendUpdateOutcome(NewUpdateOutcomeRollbackEvent(
 				e.Tool, e.FromVersion, e.AttemptedVersion, trigger))
 		}
+
+	case installevents.LibraryInstalled:
+		s.client.SendLibraryOutcome(NewLibraryInstallOutcomeSuccessEvent(
+			e.Library, e.Version, trigger))
+
+	case installevents.LibraryInstallFailed:
+		s.client.SendLibraryOutcome(NewLibraryInstallOutcomeFailureEvent(
+			e.Library, e.AttemptedVersion, ClassifyError(e.Err), trigger))
+
+	case installevents.LibraryRemoved:
+		s.client.SendLibraryOutcome(NewLibraryRemoveOutcomeSuccessEvent(
+			e.Library, e.Version, trigger))
+
+	case installevents.LibraryRemoveFailed:
+		s.client.SendLibraryOutcome(NewLibraryRemoveOutcomeFailureEvent(
+			e.Library, e.AttemptedVersion, ClassifyError(e.Err), trigger))
 
 	case installevents.Installed,
 		installevents.Removed,
