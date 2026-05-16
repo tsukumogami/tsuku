@@ -42,7 +42,7 @@ var applyUpdatesCmd = &cobra.Command{
 		installFn := func(toolName, version, constraint string) error {
 			reporter := progress.NewInboxReporter(toolName, noticesDir)
 			reporters = append(reporters, reporter)
-			return runInstallWithExternalReporter(toolName, version, constraint, false, "", nil, reporter, installevents.SourceAuto)
+			return runInstallWithReporter(toolName, version, constraint, false, "", nil, reporter, installevents.SourceAuto)
 		}
 
 		updates.MaybeAutoApply(cfg, userCfg, nil, installFn, nil)

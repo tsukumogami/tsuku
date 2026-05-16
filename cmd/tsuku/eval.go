@@ -356,5 +356,5 @@ func runInstallTool(toolName string) error {
 
 	// Use the same install mechanism as the install command
 	// Pass nil for telemetry client since this is an internal operation
-	return runInstallWithTelemetry(toolName, "", "", false, "", nil, installevents.SourceManual)
+	return runInstall(toolName, "", "", false, "", nil, installevents.SourceManual)
 }

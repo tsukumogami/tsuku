@@ -14,7 +14,7 @@ import (
 )
 
 // InstallFunc is the callback type for the install flow.
-// Injected by cmd/tsuku/main.go wrapping runInstallWithTelemetry.
+// Injected by cmd/tsuku/main.go wrapping runInstall.
 // Parameters: toolName, version (the resolved version to install), constraint (the Requested pin).
 type InstallFunc func(toolName, version, constraint string) error
 

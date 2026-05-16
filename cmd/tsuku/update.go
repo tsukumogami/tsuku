@@ -87,7 +87,7 @@ Examples:
 		// directly from the recorded provider. This avoids recipe shadowing
 		// where a local or central recipe with the same name would take
 		// priority in the chain. The recipe is cached in the loader so
-		// runInstallWithTelemetry can find it.
+		// runInstall can find it.
 		state, _ := mgr.GetState().Load()
 		if r, err := loadRecipeForTool(context.Background(), toolName, state, cfg); err == nil && r != nil {
 			loader.CacheRecipe(toolName, r)
@@ -133,7 +133,7 @@ Examples:
 		// the outcome appearing on a separate stdout line. See #2280/#2359.
 		reporter := progress.NewTTYReporter(os.Stderr)
 
-		if err := runInstallWithExternalReporter(toolName, reqVersion, "", true, "", telemetryClient, reporter, installevents.SourceManual); err != nil {
+		if err := runInstallWithReporter(toolName, reqVersion, "", true, "", telemetryClient, reporter, installevents.SourceManual); err != nil {
 			reporter.Stop()
 			// UpdateFailed event was already published from Manager.Install
 			// via the bus; the telemetry subscriber emitted the
@@ -326,7 +326,7 @@ func runUpdateAll(cmd *cobra.Command) {
 		// outcome line, consistent with the single-tool path.
 		toolReporter := progress.NewTTYReporter(os.Stderr)
 
-		if err := runInstallWithExternalReporter(tool.Name, requested, "", true, "", telemetryClient, toolReporter, installevents.SourceManual); err != nil {
+		if err := runInstallWithReporter(tool.Name, requested, "", true, "", telemetryClient, toolReporter, installevents.SourceManual); err != nil {
 			toolReporter.Log("failed to update %s: %v", tool.Name, err)
 			toolReporter.Stop()
 			// UpdateFailed was published from Manager.Install; the

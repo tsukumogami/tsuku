@@ -164,7 +164,7 @@ func shouldInstallRuntimeDep(depRecipe *recipe.Recipe) bool {
 	return depRecipe.SupportsPlatformRuntime()
 }
 
-func runInstallWithTelemetry(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client, src installevents.Source) error {
+func runInstall(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client, src installevents.Source) error {
 	reporter := progress.NewTTYReporter(os.Stderr)
 	defer func() {
 		reporter.Stop()
@@ -173,12 +173,12 @@ func runInstallWithTelemetry(toolName, reqVersion, versionConstraint string, isE
 	return installWithDependencies(toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client, reporter, src)
 }
 
-// runInstallWithExternalReporter runs the install flow using a caller-provided
+// runInstallWithReporter runs the install flow using a caller-provided
 // reporter. The caller owns the reporter lifecycle (Stop/FlushDeferred). Use
 // this when the caller needs to emit a permanent outcome line via the same
 // reporter after the install completes, so TTY spinner replacement works
 // correctly without mixing output streams.
-func runInstallWithExternalReporter(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client, reporter progress.Reporter, src installevents.Source) error {
+func runInstallWithReporter(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client, reporter progress.Reporter, src installevents.Source) error {
 	return installWithDependencies(toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client, reporter, src)
 }
 
