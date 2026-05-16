@@ -11,7 +11,6 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
-	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/shellenv"
@@ -164,13 +163,13 @@ func shouldInstallRuntimeDep(depRecipe *recipe.Recipe) bool {
 	return depRecipe.SupportsPlatformRuntime()
 }
 
-func runInstall(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client, src installevents.Source) error {
+func runInstall(ctx context.Context, toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client) error {
 	reporter := progress.NewTTYReporter(os.Stderr)
 	defer func() {
 		reporter.Stop()
 		reporter.FlushDeferred()
 	}()
-	return installWithDependencies(toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client, reporter, src)
+	return installWithDependencies(ctx, toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client, reporter)
 }
 
 // runInstallWithReporter runs the install flow using a caller-provided
@@ -178,11 +177,11 @@ func runInstall(toolName, reqVersion, versionConstraint string, isExplicit bool,
 // this when the caller needs to emit a permanent outcome line via the same
 // reporter after the install completes, so TTY spinner replacement works
 // correctly without mixing output streams.
-func runInstallWithReporter(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client, reporter progress.Reporter, src installevents.Source) error {
-	return installWithDependencies(toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client, reporter, src)
+func runInstallWithReporter(ctx context.Context, toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client, reporter progress.Reporter) error {
+	return installWithDependencies(ctx, toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client, reporter)
 }
 
-func installWithDependencies(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, visited map[string]bool, telemetryClient *telemetry.Client, reporter progress.Reporter, src installevents.Source) error {
+func installWithDependencies(ctx context.Context, toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, visited map[string]bool, telemetryClient *telemetry.Client, reporter progress.Reporter) error {
 	// Initialize manager for state updates. The event bus dispatches
 	// lifecycle events to the notices and telemetry subscribers; src
 	// tags every event so subscribers can distinguish manual / auto /
@@ -197,7 +196,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 
 	// If explicit install, check if tool is hidden and just expose it
 	if isExplicit && parent == "" {
-		wasHidden, err := install.CheckAndExposeHidden(mgr, toolName)
+		wasHidden, err := install.CheckAndExposeHidden(ctx, mgr, toolName)
 		if err != nil {
 			reporter.Warn("failed to check hidden status: %v", err)
 		}
@@ -300,7 +299,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 
 	// Check if this is a library recipe
 	if r.IsLibrary() {
-		return installLibrary(toolName, reqVersion, mgr, telemetryClient, reporter, src)
+		return installLibrary(ctx, toolName, reqVersion, mgr, telemetryClient, reporter)
 	}
 
 	// Check and display system dependency instructions (for explicit installs only)
@@ -339,7 +338,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 			reporter.Status(fmt.Sprintf("Resolving dependency '%s'...", dep))
 			// Install dependency (not explicit, parent is current tool)
 			// Dependencies don't have version constraints and are tracked for telemetry
-			if err := installWithDependencies(dep, "", "", false, toolName, visited, telemetryClient, reporter, src); err != nil {
+			if err := installWithDependencies(ctx, dep, "", "", false, toolName, visited, telemetryClient, reporter); err != nil {
 				return fmt.Errorf("failed to install dependency '%s': %w", dep, err)
 			}
 		}
@@ -363,7 +362,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 			}
 			// Install runtime dependency as explicit (exposed, not hidden)
 			// No parent - these are top-level explicit installs
-			if err := installWithDependencies(dep, "", "", true, "", visited, telemetryClient, reporter, src); err != nil {
+			if err := installWithDependencies(ctx, dep, "", "", true, "", visited, telemetryClient, reporter); err != nil {
 				return fmt.Errorf("failed to install runtime dependency '%s': %w", dep, err)
 			}
 		}
@@ -547,8 +546,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 			reporter.Status(fmt.Sprintf("Runtime dependencies: %v", mapKeys(runtimeDeps)))
 		}
 
-		installOpts.Source = src
-		if err := mgr.InstallWithOptions(toolName, version, exec.WorkDir(), installOpts); err != nil {
+		if err := mgr.InstallWithOptions(ctx, toolName, version, exec.WorkDir(), installOpts); err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to install to permanent location: %v\n", err)
 			return err
 		}

@@ -77,11 +77,13 @@ Examples:
 			}
 		}
 
-		// Perform removal
+		// Perform removal. Wrap globalCtx with SourceManual once so the
+		// publish callsites in Manager extract the right Source from ctx.
+		ctx := installevents.WithSource(globalCtx, installevents.SourceManual)
 		var removeErr error
 		if targetVersion != "" {
 			// Remove specific version
-			removeErr = mgr.RemoveVersion(toolName, targetVersion, installevents.SourceManual)
+			removeErr = mgr.RemoveVersion(ctx, toolName, targetVersion)
 			if removeErr == nil {
 				// If no active version remains, mark as not installed in the index.
 				toolState, stateErr := mgr.GetState().GetToolState(toolName)
@@ -91,7 +93,7 @@ Examples:
 			}
 		} else {
 			// Remove all versions
-			removeErr = mgr.RemoveAllVersions(toolName, installevents.SourceManual)
+			removeErr = mgr.RemoveAllVersions(ctx, toolName)
 			if removeErr == nil {
 				setInstalledInIndex(toolName, false)
 			}
@@ -153,7 +155,9 @@ func cleanupOrphans(mgr *install.Manager, toolName string) {
 	}
 
 	printInfof("Auto-removing orphaned dependency: %s\n", toolName)
-	if err := mgr.Remove(toolName, installevents.SourceManual); err != nil {
+	// RemoveAllVersions is the modern equivalent of the deprecated Remove and
+	// removes every installed version of the orphaned dependency.
+	if err := mgr.RemoveAllVersions(installevents.WithSource(globalCtx, installevents.SourceManual), toolName); err != nil {
 		printInfof("Warning: failed to auto-remove %s: %v\n", toolName, err)
 		return
 	}

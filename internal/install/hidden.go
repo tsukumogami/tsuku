@@ -1,6 +1,7 @@
 package install
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/tsukumogami/tsuku/internal/config"
@@ -14,9 +15,12 @@ func HiddenInstallOptions() InstallOptions {
 	}
 }
 
-// ExposeHidden exposes a previously hidden tool by creating symlinks
-// This is called when user explicitly requests a tool that's already installed as hidden
-func ExposeHidden(mgr *Manager, toolName string) error {
+// ExposeHidden exposes a previously hidden tool by creating symlinks.
+// This is called when the user explicitly requests a tool that's already
+// installed as hidden. ctx is accepted so future cancellation hooks can be
+// added incrementally; callers should pass the request-scoped ctx with
+// installevents.WithSource set so any downstream publish callsites see it.
+func ExposeHidden(ctx context.Context, mgr *Manager, toolName string) error {
 	sm := mgr.state
 
 	state, err := sm.Load()
@@ -34,7 +38,7 @@ func ExposeHidden(mgr *Manager, toolName string) error {
 	}
 
 	// Create symlinks for all binaries this tool provides
-	if err := mgr.createSymlinksForBinaries(toolName, toolState.Version, toolState.Binaries); err != nil {
+	if err := mgr.createSymlinksForBinaries(ctx, toolName, toolState.Version, toolState.Binaries); err != nil {
 		return fmt.Errorf("failed to create symlinks: %w", err)
 	}
 

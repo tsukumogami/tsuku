@@ -8,7 +8,49 @@
 // rationale and reaction tables.
 package installevents
 
-import "time"
+import (
+	"context"
+	"time"
+)
+
+// srcKey is the unexported context-key type used by WithSource and
+// SourceFromContext. Declaring it as an unexported struct{} prevents
+// collisions with keys defined in other packages: only this package can
+// produce a value of this type, so context.WithValue lookups using this
+// key are guaranteed not to clash with anything outside installevents.
+type srcKey struct{}
+
+// WithSource returns a new context carrying src so it can be retrieved
+// downstream via SourceFromContext. The install pipeline reads Source
+// from ctx at publish callsites rather than threading it as a positional
+// parameter through every method.
+//
+// Context is normally reserved for request-scoped cancellation and
+// deadlines, not for "configuration". Source is an exception: it is
+// request-scoped metadata that travels with the request (a single CLI
+// invocation or background trigger) and is consumed by code several
+// layers below the entry point. Threading it as a parameter at every
+// layer added churn without improving clarity; carrying it on ctx
+// matches the way Source is logically scoped.
+func WithSource(ctx context.Context, src Source) context.Context {
+	return context.WithValue(ctx, srcKey{}, src)
+}
+
+// SourceFromContext returns the Source previously stored on ctx by
+// WithSource. If ctx carries no Source (or is nil), it returns the
+// empty Source value. Callers that publish events MUST set Source on
+// the context before invoking the pipeline; the bus drops empty-Source
+// events with a diagnostic log line so missing WithSource calls surface
+// quickly.
+func SourceFromContext(ctx context.Context) Source {
+	if ctx == nil {
+		return ""
+	}
+	if v, ok := ctx.Value(srcKey{}).(Source); ok {
+		return v
+	}
+	return ""
+}
 
 // Source identifies what triggered a lifecycle operation. Values are
 // first-party identifiers chosen by tsuku code; they must remain

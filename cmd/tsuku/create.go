@@ -408,7 +408,7 @@ func offerToolchainInstall(info *toolchain.Info, ecosystem string, autoApprove b
 		}
 	}
 
-	if err := runInstall(info.TsukuRecipe, "", "", false, "create", nil, installevents.SourceManual); err != nil {
+	if err := runInstall(installevents.WithSource(globalCtx, installevents.SourceManual), info.TsukuRecipe, "", "", false, "create", nil); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: failed to install required toolchain '%s': %v\n", info.TsukuRecipe, err)
 		return false
 	}

@@ -1,6 +1,7 @@
 package install
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"testing"
@@ -152,7 +153,7 @@ func TestE2E_RemovedFlowsToNoticeStore(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := mgr.RemoveAllVersions("gh", installevents.SourceManual); err != nil {
+	if err := mgr.RemoveAllVersions(installevents.WithSource(context.Background(), installevents.SourceManual), "gh"); err != nil {
 		t.Fatalf("RemoveAllVersions: %v", err)
 	}
 

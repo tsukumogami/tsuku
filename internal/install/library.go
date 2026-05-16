@@ -1,6 +1,7 @@
 package install
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -20,7 +21,15 @@ type LibraryInstallOptions struct {
 // - Are installed to libs/ instead of tools/
 // - Do not create symlinks in current/
 // - Track used_by instead of required_by
-func (m *Manager) InstallLibrary(name, version, workDir string, opts LibraryInstallOptions) error {
+//
+// ctx is reserved for cancellation hooks and (in Issue 4) for Source
+// extraction at library publish callsites. Library lifecycle events are
+// not yet published on the bus -- that lands in Issue 4.
+func (m *Manager) InstallLibrary(ctx context.Context, name, version, workDir string, opts LibraryInstallOptions) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
 	// Ensure directories exist
 	if err := m.config.EnsureDirectories(); err != nil {
 		return err

@@ -8,6 +8,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/shellenv"
 )
@@ -103,8 +104,11 @@ func runPlanBasedInstall(planPath, toolName string) error {
 		// different name (e.g., argo-cd installs argocd, golang installs go).
 		installOpts.Binaries = executor.ExtractBinariesFromPlan(plan)
 
-		// Install to permanent location
-		if err := mgr.InstallWithOptions(effectiveToolName, plan.Version, exec.WorkDir(), installOpts); err != nil {
+		// Install to permanent location.
+		// Plan-based installs are always user-initiated via `tsuku install --plan`, so tag
+		// every event with SourceManual.
+		installCtx := installevents.WithSource(globalCtx, installevents.SourceManual)
+		if err := mgr.InstallWithOptions(installCtx, effectiveToolName, plan.Version, exec.WorkDir(), installOpts); err != nil {
 			return fmt.Errorf("failed to install to permanent location: %w", err)
 		}
 

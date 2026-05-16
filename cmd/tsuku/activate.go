@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/installevents"
 )
 
 var activateCmd = &cobra.Command{
@@ -42,8 +43,10 @@ func runActivate(cmd *cobra.Command, args []string) {
 	// Create manager
 	mgr := install.New(cfg)
 
-	// Activate the version
-	if err := mgr.Activate(toolName, version); err != nil {
+	// Activate the version. Activate does not publish a lifecycle event itself,
+	// but its Source-tagged ctx is still threaded for cancellation and to
+	// keep the API contract uniform with the rest of Manager.
+	if err := mgr.Activate(installevents.WithSource(globalCtx, installevents.SourceManual), toolName, version); err != nil {
 		printError(err)
 		exitWithCode(ExitGeneral)
 	}

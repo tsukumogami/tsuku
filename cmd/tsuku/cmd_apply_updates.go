@@ -39,10 +39,14 @@ var applyUpdatesCmd = &cobra.Command{
 		noticesDir := notices.NoticesDir(cfg.HomeDir)
 		var reporters []*progress.InboxReporter
 
+		// Background auto-apply: tag every event with SourceAuto on the
+		// context once so all downstream callsites read it via
+		// installevents.SourceFromContext.
+		ctx := installevents.WithSource(globalCtx, installevents.SourceAuto)
 		installFn := func(toolName, version, constraint string) error {
 			reporter := progress.NewInboxReporter(toolName, noticesDir)
 			reporters = append(reporters, reporter)
-			return runInstallWithReporter(toolName, version, constraint, false, "", nil, reporter, installevents.SourceAuto)
+			return runInstallWithReporter(ctx, toolName, version, constraint, false, "", nil, reporter)
 		}
 
 		updates.MaybeAutoApply(cfg, userCfg, nil, installFn, nil)

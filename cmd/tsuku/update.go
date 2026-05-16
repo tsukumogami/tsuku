@@ -133,7 +133,7 @@ Examples:
 		// the outcome appearing on a separate stdout line. See #2280/#2359.
 		reporter := progress.NewTTYReporter(os.Stderr)
 
-		if err := runInstallWithReporter(toolName, reqVersion, "", true, "", telemetryClient, reporter, installevents.SourceManual); err != nil {
+		if err := runInstallWithReporter(installevents.WithSource(globalCtx, installevents.SourceManual), toolName, reqVersion, "", true, "", telemetryClient, reporter); err != nil {
 			reporter.Stop()
 			// UpdateFailed event was already published from Manager.Install
 			// via the bus; the telemetry subscriber emitted the
@@ -326,7 +326,7 @@ func runUpdateAll(cmd *cobra.Command) {
 		// outcome line, consistent with the single-tool path.
 		toolReporter := progress.NewTTYReporter(os.Stderr)
 
-		if err := runInstallWithReporter(tool.Name, requested, "", true, "", telemetryClient, toolReporter, installevents.SourceManual); err != nil {
+		if err := runInstallWithReporter(installevents.WithSource(globalCtx, installevents.SourceManual), tool.Name, requested, "", true, "", telemetryClient, toolReporter); err != nil {
 			toolReporter.Log("failed to update %s: %v", tool.Name, err)
 			toolReporter.Stop()
 			// UpdateFailed was published from Manager.Install; the

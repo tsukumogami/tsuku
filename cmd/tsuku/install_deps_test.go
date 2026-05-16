@@ -548,7 +548,7 @@ func TestInstallWithDependencies_BorrowedReporter_NoStop(t *testing.T) {
 	visited := make(map[string]bool)
 
 	// isExplicit=false, reqVersion="" triggers the short-circuit for installed tools.
-	err := installWithDependencies("gh", "", "", false, "parent-tool", visited, nil, reporter, installevents.SourceManual)
+	err := installWithDependencies(installevents.WithSource(context.Background(), installevents.SourceManual), "gh", "", "", false, "parent-tool", visited, nil, reporter)
 	if err != nil {
 		t.Fatalf("installWithDependencies() unexpected error = %v", err)
 	}
@@ -581,7 +581,7 @@ func TestInstallWithDependencies_NoStdoutEscape(t *testing.T) {
 	reporter := &countingReporter{}
 	visited := make(map[string]bool)
 
-	callErr := installWithDependencies("gh", "", "", false, "parent-tool", visited, nil, reporter, installevents.SourceManual)
+	callErr := installWithDependencies(installevents.WithSource(context.Background(), installevents.SourceManual), "gh", "", "", false, "parent-tool", visited, nil, reporter)
 
 	w.Close()
 	buf, _ := io.ReadAll(r)
