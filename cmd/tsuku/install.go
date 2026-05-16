@@ -190,7 +190,11 @@ Exit codes for project install:
 			// Now install the generated recipe.
 			telemetryClient := telemetry.NewClient()
 			telemetry.ShowNoticeIfNeeded()
-			if err := runInstall(installevents.WithSource(globalCtx, installevents.SourceManual), toolName, "", "", true, "", telemetryClient); err != nil {
+			if err := runInstall(installevents.WithSource(globalCtx, installevents.SourceManual), installArgs{
+				Tool:            toolName,
+				IsExplicit:      true,
+				TelemetryClient: telemetryClient,
+			}); err != nil {
 				handleInstallError(err)
 			}
 			clearAndRecordInstallSuccess(toolName)
@@ -267,7 +271,13 @@ Exit codes for project install:
 				// in installWithDependencies can find it during the install flow.
 				loader.CacheRecipe(dArgs.RecipeName, r)
 
-				if err := runInstall(installevents.WithSource(globalCtx, installevents.SourceManual), dArgs.RecipeName, resolveVersion, versionConstraint, true, "", telemetryClient); err != nil {
+				if err := runInstall(installevents.WithSource(globalCtx, installevents.SourceManual), installArgs{
+					Tool:              dArgs.RecipeName,
+					ReqVersion:        resolveVersion,
+					VersionConstraint: versionConstraint,
+					IsExplicit:        true,
+					TelemetryClient:   telemetryClient,
+				}); err != nil {
 					handleInstallError(err)
 				}
 				clearAndRecordInstallSuccess(dArgs.RecipeName)
@@ -341,7 +351,13 @@ Exit codes for project install:
 				}
 			}
 
-			if err := runInstall(installevents.WithSource(globalCtx, installevents.SourceManual), toolName, resolveVersion, versionConstraint, true, "", telemetryClient); err != nil {
+			if err := runInstall(installevents.WithSource(globalCtx, installevents.SourceManual), installArgs{
+				Tool:              toolName,
+				ReqVersion:        resolveVersion,
+				VersionConstraint: versionConstraint,
+				IsExplicit:        true,
+				TelemetryClient:   telemetryClient,
+			}); err != nil {
 				handleInstallError(err)
 			}
 			clearAndRecordInstallSuccess(toolName)
@@ -476,7 +492,11 @@ func runRecipeBasedInstall(recipePath, toolName string) error {
 	loader.CacheRecipe(toolName, r)
 
 	// Use the normal installation flow with the cached recipe
-	if err := runInstall(installevents.WithSource(globalCtx, installevents.SourceManual), toolName, "", "", true, "", telemetryClient); err != nil {
+	if err := runInstall(installevents.WithSource(globalCtx, installevents.SourceManual), installArgs{
+		Tool:            toolName,
+		IsExplicit:      true,
+		TelemetryClient: telemetryClient,
+	}); err != nil {
 		return err
 	}
 
@@ -674,7 +694,11 @@ func tryDiscoveryFallback(toolName string) *discover.DiscoveryResult {
 
 	telemetryClient := telemetry.NewClient()
 	telemetry.ShowNoticeIfNeeded()
-	if err := runInstall(installevents.WithSource(globalCtx, installevents.SourceManual), toolName, "", "", true, "", telemetryClient); err != nil {
+	if err := runInstall(installevents.WithSource(globalCtx, installevents.SourceManual), installArgs{
+		Tool:            toolName,
+		IsExplicit:      true,
+		TelemetryClient: telemetryClient,
+	}); err != nil {
 		handleInstallError(err)
 	}
 	return result

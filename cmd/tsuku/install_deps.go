@@ -163,13 +163,32 @@ func shouldInstallRuntimeDep(depRecipe *recipe.Recipe) bool {
 	return depRecipe.SupportsPlatformRuntime()
 }
 
-func runInstall(ctx context.Context, toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client) error {
+// installArgs carries the per-invocation inputs threaded through the
+// install pipeline. Bundling these into a struct lets the recursive
+// dependency walk derive child invocations via a copy-and-override
+// pattern (`sub := args; sub.Tool = dep; ...`) instead of forwarding
+// 10 positional parameters by hand. Request-scoped metadata that is
+// orthogonal to a single install -- the cancellation context, the
+// installevents.Source tag carried on ctx, and the visited-set used
+// to detect cyclic dep walks -- is passed alongside `args`, not on it.
+type installArgs struct {
+	Tool              string
+	ReqVersion        string
+	VersionConstraint string
+	IsExplicit        bool
+	Parent            string
+	Reporter          progress.Reporter
+	TelemetryClient   *telemetry.Client
+}
+
+func runInstall(ctx context.Context, args installArgs) error {
 	reporter := progress.NewTTYReporter(os.Stderr)
 	defer func() {
 		reporter.Stop()
 		reporter.FlushDeferred()
 	}()
-	return installWithDependencies(ctx, toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client, reporter)
+	args.Reporter = reporter
+	return installWithDependencies(ctx, args, make(map[string]bool))
 }
 
 // runInstallWithReporter runs the install flow using a caller-provided
@@ -177,11 +196,19 @@ func runInstall(ctx context.Context, toolName, reqVersion, versionConstraint str
 // this when the caller needs to emit a permanent outcome line via the same
 // reporter after the install completes, so TTY spinner replacement works
 // correctly without mixing output streams.
-func runInstallWithReporter(ctx context.Context, toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client, reporter progress.Reporter) error {
-	return installWithDependencies(ctx, toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client, reporter)
+func runInstallWithReporter(ctx context.Context, args installArgs) error {
+	return installWithDependencies(ctx, args, make(map[string]bool))
 }
 
-func installWithDependencies(ctx context.Context, toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, visited map[string]bool, telemetryClient *telemetry.Client, reporter progress.Reporter) error {
+func installWithDependencies(ctx context.Context, args installArgs, visited map[string]bool) error {
+	toolName := args.Tool
+	reqVersion := args.ReqVersion
+	versionConstraint := args.VersionConstraint
+	isExplicit := args.IsExplicit
+	parent := args.Parent
+	reporter := args.Reporter
+	telemetryClient := args.TelemetryClient
+
 	// Initialize manager for state updates. The event bus dispatches
 	// lifecycle events to the notices and telemetry subscribers; src
 	// tags every event so subscribers can distinguish manual / auto /
@@ -318,10 +345,27 @@ func installWithDependencies(ctx context.Context, toolName, reqVersion, versionC
 
 		for _, dep := range r.Metadata.Dependencies {
 			reporter.Status(fmt.Sprintf("Resolving dependency '%s'...", dep))
-			// Install dependency (not explicit, parent is current tool)
-			// Dependencies don't have version constraints and are tracked for telemetry
-			if err := installWithDependencies(ctx, dep, "", "", false, toolName, visited, telemetryClient, reporter); err != nil {
+			// Install dependency (not explicit, parent is current tool).
+			// Dependencies don't have version constraints and are tracked
+			// for telemetry. Construct the sub-call by copy-and-override on
+			// the parent args rather than threading positional parameters.
+			sub := args
+			sub.Tool = dep
+			sub.IsExplicit = false
+			sub.Parent = toolName
+			sub.ReqVersion = ""
+			sub.VersionConstraint = ""
+			if err := installWithDependencies(ctx, sub, visited); err != nil {
 				return fmt.Errorf("failed to install dependency '%s': %w", dep, err)
+			}
+			// Cooperative cancellation: when ctx is canceled mid-walk, stop
+			// before processing the next dep so we don't begin a fresh
+			// install that will itself observe the cancellation later. The
+			// recursive call above may have completed cleanly even with a
+			// canceled ctx (e.g. the short-circuit path for an already-
+			// installed tool); this check ensures we don't continue past it.
+			if cerr := ctx.Err(); cerr != nil {
+				return fmt.Errorf("install canceled: %w", cerr)
 			}
 		}
 	}
@@ -342,10 +386,21 @@ func installWithDependencies(ctx context.Context, toolName, reqVersion, versionC
 			if depErr == nil && !shouldInstallRuntimeDep(depRecipe) {
 				continue
 			}
-			// Install runtime dependency as explicit (exposed, not hidden)
-			// No parent - these are top-level explicit installs
-			if err := installWithDependencies(ctx, dep, "", "", true, "", visited, telemetryClient, reporter); err != nil {
+			// Install runtime dependency as explicit (exposed, not hidden).
+			// No parent -- these are top-level explicit installs.
+			sub := args
+			sub.Tool = dep
+			sub.IsExplicit = true
+			sub.Parent = ""
+			sub.ReqVersion = ""
+			sub.VersionConstraint = ""
+			if err := installWithDependencies(ctx, sub, visited); err != nil {
 				return fmt.Errorf("failed to install runtime dependency '%s': %w", dep, err)
+			}
+			// Cooperative cancellation between iterations -- see the matching
+			// check in the install-dependencies loop above.
+			if cerr := ctx.Err(); cerr != nil {
+				return fmt.Errorf("install canceled: %w", cerr)
 			}
 		}
 	}

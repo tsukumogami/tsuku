@@ -46,7 +46,12 @@ var applyUpdatesCmd = &cobra.Command{
 		installFn := func(toolName, version, constraint string) error {
 			reporter := progress.NewInboxReporter(toolName, noticesDir)
 			reporters = append(reporters, reporter)
-			return runInstallWithReporter(ctx, toolName, version, constraint, false, "", nil, reporter)
+			return runInstallWithReporter(ctx, installArgs{
+				Tool:              toolName,
+				ReqVersion:        version,
+				VersionConstraint: constraint,
+				Reporter:          reporter,
+			})
 		}
 
 		updates.MaybeAutoApply(cfg, userCfg, nil, installFn, nil)

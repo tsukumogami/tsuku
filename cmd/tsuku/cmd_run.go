@@ -153,7 +153,12 @@ func (i *runInstaller) Install(ctx context.Context, recipeName, version string) 
 	// `tsuku run` triggers auto-installation when the project config (or the
 	// user-elected consent mode) approves it. Tag every event published by
 	// the install pipeline with SourceProjectAuto.
-	return runInstall(installevents.WithSource(ctx, installevents.SourceProjectAuto), recipeName, version, version, true, "", nil)
+	return runInstall(installevents.WithSource(ctx, installevents.SourceProjectAuto), installArgs{
+		Tool:              recipeName,
+		ReqVersion:        version,
+		VersionConstraint: version,
+		IsExplicit:        true,
+	})
 }
 
 // resolveMode applies the four-step priority chain to determine the active

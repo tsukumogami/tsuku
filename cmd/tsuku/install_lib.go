@@ -48,7 +48,12 @@ func installLibrary(ctx context.Context, libName, reqVersion string, mgr *instal
 		for _, dep := range r.Metadata.Dependencies {
 			reporter.Status(fmt.Sprintf("Resolving dependency '%s'...", dep))
 			// Install dependency (not explicit, parent is current library)
-			if err := installWithDependencies(ctx, dep, "", "", false, libName, visited, telemetryClient, reporter); err != nil {
+			if err := installWithDependencies(ctx, installArgs{
+				Tool:            dep,
+				Parent:          libName,
+				Reporter:        reporter,
+				TelemetryClient: telemetryClient,
+			}, visited); err != nil {
 				return fmt.Errorf("failed to install dependency '%s': %w", dep, err)
 			}
 		}
