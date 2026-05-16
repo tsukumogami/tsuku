@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   Notice files under $TSUKU_HOME/notices/ drift from state.json because every
   install-state mutation writes them directly (background auto-apply, manual
@@ -42,7 +42,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context and Problem Statement
 
