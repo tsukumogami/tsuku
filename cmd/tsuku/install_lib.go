@@ -8,6 +8,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
@@ -18,7 +19,7 @@ import (
 // installLibrary handles installation of library recipes
 // Libraries are installed to $TSUKU_HOME/libs/{name}-{version}/ and track used_by
 // Note: used_by tracking is handled by the caller after tool installation completes
-func installLibrary(libName, reqVersion string, mgr *install.Manager, telemetryClient *telemetry.Client, reporter progress.Reporter) error {
+func installLibrary(libName, reqVersion string, mgr *install.Manager, telemetryClient *telemetry.Client, reporter progress.Reporter, src installevents.Source) error {
 	// Load recipe
 	r, err := loader.Get(libName, recipe.LoaderOptions{})
 	if err != nil {
@@ -43,7 +44,7 @@ func installLibrary(libName, reqVersion string, mgr *install.Manager, telemetryC
 		for _, dep := range r.Metadata.Dependencies {
 			reporter.Status(fmt.Sprintf("Resolving dependency '%s'...", dep))
 			// Install dependency (not explicit, parent is current library)
-			if err := installWithDependencies(dep, "", "", false, libName, visited, telemetryClient, reporter); err != nil {
+			if err := installWithDependencies(dep, "", "", false, libName, visited, telemetryClient, reporter, src); err != nil {
 				return fmt.Errorf("failed to install dependency '%s': %w", dep, err)
 			}
 		}

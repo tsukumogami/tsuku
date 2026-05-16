@@ -14,6 +14,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/discover"
 	"github.com/tsukumogami/tsuku/internal/executor"
+	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/registry"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
@@ -189,7 +190,7 @@ Exit codes for project install:
 			// Now install the generated recipe.
 			telemetryClient := telemetry.NewClient()
 			telemetry.ShowNoticeIfNeeded()
-			if err := runInstallWithTelemetry(toolName, "", "", true, "", telemetryClient); err != nil {
+			if err := runInstall(toolName, "", "", true, "", telemetryClient, installevents.SourceManual); err != nil {
 				handleInstallError(err)
 			}
 			clearAndRecordInstallSuccess(toolName)
@@ -266,7 +267,7 @@ Exit codes for project install:
 				// in installWithDependencies can find it during the install flow.
 				loader.CacheRecipe(dArgs.RecipeName, r)
 
-				if err := runInstallWithTelemetry(dArgs.RecipeName, resolveVersion, versionConstraint, true, "", telemetryClient); err != nil {
+				if err := runInstall(dArgs.RecipeName, resolveVersion, versionConstraint, true, "", telemetryClient, installevents.SourceManual); err != nil {
 					handleInstallError(err)
 				}
 				clearAndRecordInstallSuccess(dArgs.RecipeName)
@@ -340,7 +341,7 @@ Exit codes for project install:
 				}
 			}
 
-			if err := runInstallWithTelemetry(toolName, resolveVersion, versionConstraint, true, "", telemetryClient); err != nil {
+			if err := runInstall(toolName, resolveVersion, versionConstraint, true, "", telemetryClient, installevents.SourceManual); err != nil {
 				handleInstallError(err)
 			}
 			clearAndRecordInstallSuccess(toolName)
@@ -475,7 +476,7 @@ func runRecipeBasedInstall(recipePath, toolName string) error {
 	loader.CacheRecipe(toolName, r)
 
 	// Use the normal installation flow with the cached recipe
-	if err := runInstallWithTelemetry(toolName, "", "", true, "", telemetryClient); err != nil {
+	if err := runInstall(toolName, "", "", true, "", telemetryClient, installevents.SourceManual); err != nil {
 		return err
 	}
 
@@ -673,7 +674,7 @@ func tryDiscoveryFallback(toolName string) *discover.DiscoveryResult {
 
 	telemetryClient := telemetry.NewClient()
 	telemetry.ShowNoticeIfNeeded()
-	if err := runInstallWithTelemetry(toolName, "", "", true, "", telemetryClient); err != nil {
+	if err := runInstall(toolName, "", "", true, "", telemetryClient, installevents.SourceManual); err != nil {
 		handleInstallError(err)
 	}
 	return result

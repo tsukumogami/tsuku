@@ -8,12 +8,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/shellenv"
 )
 
 // Remove removes an installed tool (legacy method - removes active version only)
 // Deprecated: Use RemoveVersion or RemoveAllVersions instead
-func (m *Manager) Remove(name string) error {
+func (m *Manager) Remove(name string, src installevents.Source) error {
 	// 1. Find installed version
 	tools, err := m.List()
 	if err != nil {
@@ -29,30 +30,78 @@ func (m *Manager) Remove(name string) error {
 	}
 
 	if version == "" {
-		return fmt.Errorf("tool %s is not installed", name)
+		err := fmt.Errorf("tool %s is not installed", name)
+		m.publishRemoveOutcome(name, "", "", src, err)
+		return err
 	}
 
 	// 2. Remove tool directory
 	toolDir := m.config.ToolDir(name, version)
 	if err := os.RemoveAll(toolDir); err != nil {
-		return fmt.Errorf("failed to remove tool directory: %w", err)
+		err = fmt.Errorf("failed to remove tool directory: %w", err)
+		m.publishRemoveOutcome(name, version, "", src, err)
+		return err
 	}
 
 	// 3. Remove symlink if it points to this tool
 	symlinkPath := m.config.CurrentSymlink(name)
 	if _, err := os.Lstat(symlinkPath); err == nil {
 		if err := os.Remove(symlinkPath); err != nil {
-			return fmt.Errorf("failed to remove symlink: %w", err)
+			err = fmt.Errorf("failed to remove symlink: %w", err)
+			m.publishRemoveOutcome(name, version, "", src, err)
+			return err
 		}
 	}
 
+	m.publishRemoveOutcome(name, version, "", src, nil)
 	return nil
+}
+
+// publishRemoveOutcome publishes Removed (success) or RemoveFailed
+// (failure) on m.bus. publish-after-state invariant: callers invoke
+// this AFTER state-mutating work has either committed or failed.
+func (m *Manager) publishRemoveOutcome(name, version, activeAfter string, src installevents.Source, err error) {
+	if m.bus == nil {
+		return
+	}
+	now := time.Now()
+	if err != nil {
+		m.bus.Publish(installevents.RemoveFailed{
+			Tool:             name,
+			AttemptedVersion: version,
+			Err:              err,
+			Source:           src,
+			Timestamp:        now,
+		})
+		return
+	}
+	m.bus.Publish(installevents.Removed{
+		Tool:        name,
+		Version:     version,
+		ActiveAfter: activeAfter,
+		Source:      src,
+		Timestamp:   now,
+	})
 }
 
 // RemoveVersion removes a specific version of a tool.
 // If the removed version was active, switches to the most recently installed remaining version.
 // If this was the last version, removes the tool entirely from state.
-func (m *Manager) RemoveVersion(name, version string) error {
+func (m *Manager) RemoveVersion(name, version string, src installevents.Source) (err error) {
+	defer func() {
+		// publish-after-state: state mutations above have either committed
+		// or failed before this defer runs. ActiveAfter is recomputed
+		// from current state so a successful Remove that switched the
+		// active version reports the new active.
+		var activeAfter string
+		if err == nil {
+			if ts, _ := m.state.GetToolState(name); ts != nil {
+				activeAfter = ts.ActiveVersion
+			}
+		}
+		m.publishRemoveOutcome(name, version, activeAfter, src, err)
+	}()
+
 	// Validate version string to prevent path traversal attacks
 	if err := ValidateVersionString(version); err != nil {
 		return fmt.Errorf("invalid version: %w", err)
@@ -142,7 +191,12 @@ func (m *Manager) RemoveVersion(name, version string) error {
 }
 
 // RemoveAllVersions removes all versions of a tool.
-func (m *Manager) RemoveAllVersions(name string) error {
+func (m *Manager) RemoveAllVersions(name string, src installevents.Source) (err error) {
+	defer func() {
+		// publish-after-state: state has either been fully cleared or
+		// left intact. ActiveAfter is empty on success (tool fully gone).
+		m.publishRemoveOutcome(name, "", "", src, err)
+	}()
 	// Get tool state
 	toolState, err := m.state.GetToolState(name)
 	if err != nil {

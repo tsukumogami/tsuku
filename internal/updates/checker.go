@@ -8,6 +8,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
@@ -24,7 +25,12 @@ type RecipeLoader interface {
 // It acquires an advisory flock to prevent concurrent checks, re-checks sentinel
 // freshness after lock acquisition (double-check pattern), iterates tools, and
 // writes per-tool cache files.
-func RunUpdateCheck(ctx context.Context, cfg *config.Config, userCfg *userconfig.Config, loader RecipeLoader) error {
+//
+// bus may be nil; when non-nil, the self-update path publishes
+// Updated / UpdateFailed events with Tool == SelfToolName so the
+// notices and telemetry subscribers can react. Pass SourceAuto since
+// RunUpdateCheck is always the background trigger path.
+func RunUpdateCheck(ctx context.Context, cfg *config.Config, userCfg *userconfig.Config, loader RecipeLoader, bus *installevents.Bus) error {
 	cacheDir := CacheDir(cfg.HomeDir)
 	interval := userCfg.UpdatesCheckInterval()
 
@@ -85,7 +91,7 @@ func RunUpdateCheck(ctx context.Context, cfg *config.Config, userCfg *userconfig
 	}
 
 	// Check for tsuku self-update (separate from managed tools)
-	if err := CheckAndApplySelf(ctx, cfg, userCfg, cacheDir, res); err != nil {
+	if err := CheckAndApplySelf(ctx, cfg, userCfg, cacheDir, res, bus, installevents.SourceAuto); err != nil {
 		log.Default().Debug("self-update check", "error", err)
 	}
 

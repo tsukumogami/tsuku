@@ -130,6 +130,109 @@ func TestDisplayNotifications_SuccessNotice(t *testing.T) {
 	}
 }
 
+// renderToolNotice should select per-verb phrasing for success notices.
+// Empty Verb falls back to today's "updated to" wording for backward
+// compatibility with notice files written before the field existed.
+func TestRenderToolNotice_SuccessPhrasing(t *testing.T) {
+	cases := []struct {
+		name string
+		verb string
+		want string
+	}{
+		{"install", notices.VerbInstall, "niwa has been installed (1.0.0)"},
+		{"update", notices.VerbUpdate, "niwa has been updated to 1.0.0"},
+		{"rollback", notices.VerbRollback, "niwa has been rolled back to 1.0.0"},
+		{"legacy empty verb", "", "niwa has been updated to 1.0.0"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			n := notices.Notice{
+				Tool:             "niwa",
+				AttemptedVersion: "1.0.0",
+				Verb:             tc.verb,
+			}
+			output := captureStderr(t, func() {
+				renderToolNotice(n)
+			})
+			if !bytes.Contains(output, []byte(tc.want)) {
+				t.Errorf("verb=%q output = %q, want substring %q", tc.verb, output, tc.want)
+			}
+		})
+	}
+}
+
+// renderToolNotice should select per-verb framing for failure notices.
+func TestRenderToolNotice_FailurePhrasing(t *testing.T) {
+	cases := []struct {
+		name string
+		verb string
+		want string
+	}{
+		{"install", notices.VerbInstall, "Install failed: niwa -> 1.0.0: boom"},
+		{"update", notices.VerbUpdate, "Update failed: niwa -> 1.0.0: boom"},
+		{"rollback", notices.VerbRollback, "Rollback failed: niwa -> 1.0.0: boom"},
+		{"remove", notices.VerbRemove, "Remove failed: niwa 1.0.0: boom"},
+		{"legacy empty verb", "", "Update failed: niwa -> 1.0.0: boom"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			n := notices.Notice{
+				Tool:             "niwa",
+				AttemptedVersion: "1.0.0",
+				Error:            "boom",
+				Verb:             tc.verb,
+			}
+			output := captureStderr(t, func() {
+				renderToolNotice(n)
+			})
+			if !bytes.Contains(output, []byte(tc.want)) {
+				t.Errorf("verb=%q output = %q, want substring %q", tc.verb, output, tc.want)
+			}
+		})
+	}
+}
+
+// Successful Remove notices are not rendered — Removed events drive
+// RemoveNotice on disk, so renderToolNotice should produce no output
+// for Verb=remove with empty Error.
+func TestRenderToolNotice_RemoveSuccessNotRendered(t *testing.T) {
+	n := notices.Notice{
+		Tool:             "niwa",
+		AttemptedVersion: "1.0.0",
+		Verb:             notices.VerbRemove,
+	}
+	output := captureStderr(t, func() {
+		renderToolNotice(n)
+	})
+	if len(bytes.TrimSpace(output)) != 0 {
+		t.Errorf("successful Remove notice must not render; got %q", output)
+	}
+}
+
+// Self-update phrasing is special: the binary itself was updated.
+func TestRenderSelfUpdateNotice(t *testing.T) {
+	successOut := captureStderr(t, func() {
+		renderSelfUpdateNotice(notices.Notice{Tool: SelfToolName, AttemptedVersion: "1.0.0"})
+	})
+	if !bytes.Contains(successOut, []byte("tsuku has been updated to 1.0.0")) {
+		t.Errorf("self-update success: got %q", successOut)
+	}
+
+	failOut := captureStderr(t, func() {
+		renderSelfUpdateNotice(notices.Notice{
+			Tool:             SelfToolName,
+			AttemptedVersion: "1.0.0",
+			Error:            "network down",
+		})
+	})
+	if !bytes.Contains(failOut, []byte("tsuku self-update failed: network down")) {
+		t.Errorf("self-update failure: got %q", failOut)
+	}
+	if !bytes.Contains(failOut, []byte("Run 'tsuku self-update' to retry")) {
+		t.Errorf("self-update failure should include retry hint; got %q", failOut)
+	}
+}
+
 func TestDisplayNotifications_AvailableSummary(t *testing.T) {
 	dir := t.TempDir()
 	cacheDir := filepath.Join(dir, "cache", "updates")

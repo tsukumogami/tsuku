@@ -13,6 +13,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/autoinstall"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/index"
+	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/project"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/updates"
@@ -150,7 +151,7 @@ type runInstaller struct{}
 
 func (i *runInstaller) Install(ctx context.Context, recipeName, version string) error {
 	_ = ctx // install pipeline uses globalCtx internally
-	return runInstallWithTelemetry(recipeName, version, version, true, "", nil)
+	return runInstall(recipeName, version, version, true, "", nil, installevents.SourceProjectAuto)
 }
 
 // resolveMode applies the four-step priority chain to determine the active

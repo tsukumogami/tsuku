@@ -169,6 +169,21 @@ func TestRemoveNoticeNonExistent(t *testing.T) {
 	}
 }
 
+// RemoveNotice must reject the same path-traversal patterns WriteNotice
+// rejects. Defense in depth against future call sites that might
+// construct tool names from less-trusted input.
+func TestRemoveNoticeRejectsPathTraversal(t *testing.T) {
+	dir := t.TempDir()
+	bad := []string{"..", "foo/bar", "foo\\bar"}
+	for _, name := range bad {
+		t.Run(name, func(t *testing.T) {
+			if err := RemoveNotice(dir, name); err == nil {
+				t.Errorf("RemoveNotice(%q) should reject the name, got nil error", name)
+			}
+		})
+	}
+}
+
 func TestWriteOverwritesPrevious(t *testing.T) {
 	dir := t.TempDir()
 

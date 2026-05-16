@@ -41,7 +41,23 @@ type Notice struct {
 	// Messages holds structured warning lines accumulated during an install run.
 	// Backward compatible: old files without this field deserialize with nil.
 	Messages []string `json:"messages,omitempty"`
+	// Verb identifies which lifecycle operation produced this notice
+	// ("install", "update", "rollback", "remove"). Drives per-verb
+	// rendering in internal/updates/notify.go. Backward compatible:
+	// old files without this field deserialize with "" and the
+	// renderer falls back to the legacy "updated to" phrasing.
+	Verb string `json:"verb,omitempty"`
 }
+
+// Verb constants name the lifecycle operations a Notice can describe.
+// They double as the rendered verb in user-facing messages, so the
+// renderer reads Notice.Verb directly to select phrasing.
+const (
+	VerbInstall  = "install"
+	VerbUpdate   = "update"
+	VerbRollback = "rollback"
+	VerbRemove   = "remove"
+)
 
 // ReadNotice reads a single tool's notice file. Exported for use by apply.go.
 // Returns (nil, nil) if the file does not exist.
@@ -141,7 +157,12 @@ func MarkShown(noticesDir, toolName string) error {
 
 // RemoveNotice deletes a tool's notice file.
 // Returns nil if the file does not exist.
+// Rejects tool names with path separators or equal to ".." to match
+// WriteNotice's validation; defense-in-depth against future call sites.
 func RemoveNotice(noticesDir, toolName string) error {
+	if toolName == ".." || strings.Contains(toolName, "/") || strings.Contains(toolName, "\\") {
+		return fmt.Errorf("invalid tool name %q: must not contain path separators", toolName)
+	}
 	path := filepath.Join(noticesDir, toolName+".json")
 	err := os.Remove(path)
 	if err != nil && !os.IsNotExist(err) {

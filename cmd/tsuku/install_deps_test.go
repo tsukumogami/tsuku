@@ -15,6 +15,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/notices"
 	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
@@ -535,7 +536,7 @@ func setupGhInstalled(t *testing.T) string {
 
 // TestInstallWithDependencies_BorrowedReporter_NoStop verifies that calling
 // installWithDependencies does not call reporter.Stop(). Stop is the caller's
-// responsibility (runInstallWithTelemetry owns the defer); recursive calls
+// responsibility (runInstall owns the defer); recursive calls
 // must not close the reporter prematurely.
 func TestInstallWithDependencies_BorrowedReporter_NoStop(t *testing.T) {
 	// t.Parallel() is intentionally omitted: setupGhInstalled uses t.Setenv,
@@ -547,7 +548,7 @@ func TestInstallWithDependencies_BorrowedReporter_NoStop(t *testing.T) {
 	visited := make(map[string]bool)
 
 	// isExplicit=false, reqVersion="" triggers the short-circuit for installed tools.
-	err := installWithDependencies("gh", "", "", false, "parent-tool", visited, nil, reporter)
+	err := installWithDependencies("gh", "", "", false, "parent-tool", visited, nil, reporter, installevents.SourceManual)
 	if err != nil {
 		t.Fatalf("installWithDependencies() unexpected error = %v", err)
 	}
@@ -580,7 +581,7 @@ func TestInstallWithDependencies_NoStdoutEscape(t *testing.T) {
 	reporter := &countingReporter{}
 	visited := make(map[string]bool)
 
-	callErr := installWithDependencies("gh", "", "", false, "parent-tool", visited, nil, reporter)
+	callErr := installWithDependencies("gh", "", "", false, "parent-tool", visited, nil, reporter, installevents.SourceManual)
 
 	w.Close()
 	buf, _ := io.ReadAll(r)
@@ -636,32 +637,12 @@ func TestClearAndRecordInstallSuccess_SuccessNoticeExisting(t *testing.T) {
 	}
 }
 
-func TestClearAndRecordInstallSuccess_FailureNoticeCleared(t *testing.T) {
-	dir := t.TempDir()
-	t.Setenv("TSUKU_HOME", dir)
-
-	// Write a failure notice.
-	noticesDir := notices.NoticesDir(dir)
-	_ = notices.WriteNotice(noticesDir, &notices.Notice{
-		Tool:             "infisical",
-		AttemptedVersion: "0.43.79",
-		Error:            "install infisical@0.43.79: download failed",
-		Timestamp:        time.Now(),
-		Shown:            false,
-	})
-
-	// Without a real state.json, List() returns empty so activeVersion="".
-	// The function should still clear the failure notice.
-	clearAndRecordInstallSuccess("infisical")
-
-	all, err := notices.ReadAllNotices(noticesDir)
-	if err != nil {
-		t.Fatalf("ReadAllNotices: %v", err)
-	}
-	if len(all) != 0 {
-		t.Errorf("expected failure notice to be removed, got %d notices", len(all))
-	}
-}
+// TestClearAndRecordInstallSuccess_FailureNoticeCleared is removed: the
+// clear-failure-notice-on-success behavior moved to internal/notices.Subscriber,
+// which atomically overwrites a prior failure record when Manager.Install
+// publishes Installed/Updated. The behavior is covered by
+// internal/notices/subscriber_test.go::TestSubscriber_SuccessClearsConsecutiveFailures
+// and TestSubscriber_Installed/Updated.
 
 // TestShouldInstallRuntimeDep verifies the platform-compatibility gate that
 // runs before each runtime_dependencies entry is forwarded to the recursive

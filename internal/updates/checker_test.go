@@ -121,7 +121,7 @@ func TestRunUpdateCheckDoubleCheck(t *testing.T) {
 	loader := &testRecipeLoader{recipes: map[string]*recipe.Recipe{}}
 
 	// Should return immediately due to fresh sentinel (double-check)
-	err := RunUpdateCheck(context.Background(), cfg, userCfg, loader)
+	err := RunUpdateCheck(context.Background(), cfg, userCfg, loader, nil)
 	if err != nil {
 		t.Fatalf("RunUpdateCheck should succeed with fresh sentinel: %v", err)
 	}
@@ -150,7 +150,7 @@ func TestRunUpdateCheckWritesEntries(t *testing.T) {
 	userCfg := userconfig.DefaultConfig()
 	loader := &testRecipeLoader{recipes: map[string]*recipe.Recipe{}}
 
-	err := RunUpdateCheck(context.Background(), cfg, userCfg, loader)
+	err := RunUpdateCheck(context.Background(), cfg, userCfg, loader, nil)
 	if err != nil {
 		t.Fatalf("RunUpdateCheck: %v", err)
 	}
