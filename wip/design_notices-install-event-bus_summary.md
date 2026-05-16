@@ -37,6 +37,9 @@ User wants the full workflow driven to Accepted status if possible. Flag any dec
 **Architecture review:** 12 recommendations applied — defined Logger, named auto-apply subprocess wiring explicitly, merged Phase 4+5 to avoid broken intermediate, specified Source defaults, downgraded options struct to Source param for Activate/Remove*, clarified InstallLibrary out-of-scope.
 **Security pass 2:** 6 DESIGN-CHANGE items applied — config-bound logger destination (no caller-passed Logger), queue-size cap, error sanitization (newline normalization + 512-byte truncation), publish-after-state invariant documented, init()-rejection trust-boundary caveat, subscriber-locality contract.
 
+## Revision after first review (2026-05-16)
+User pushed back on event granularity. Reasoning: notices and telemetry have different needs, and the previous 3-event vocabulary (Activated/InstallFailed/Removed with Source carrying verb intent) forced both subscribers to infer verb from field shape. New vocabulary is verb-per-event (8 typed events: Installed/Updated/RolledBack/Removed + Failed variants) with Source as an orthogonal tag. Telemetry refactor expanded into scope: `internal/telemetry` becomes a subscriber, replacing direct `tc.SendUpdateOutcome` calls in `apply.go`. `Manager.Install` now owns its own failure-recovery (auto-rollback inside a failed update happens inside Install, so failure events carry post-recovery state in `ActiveAfter`).
+
 ## Current Status
-**Phase:** 6 - Finalize (doc validated, ready to commit and open PR)
+**Phase:** 6 - Finalize (revised doc, ready to commit follow-up)
 **Last Updated:** 2026-05-16
