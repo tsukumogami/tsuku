@@ -1,0 +1,54 @@
+{
+  "topic": "notices-install-event-bus",
+  "decisions": [
+    {
+      "id": 1,
+      "question": "Event vocabulary, payload shape, and self-update treatment: what discrete events does the bus carry, what fields do they include, and does tsuku self-update use the same event family as tool updates?",
+      "status": "complete",
+      "complexity": "critical",
+      "notes": "Drives every subscriber and every publisher. Includes the notices-subscriber reaction table (what file mutation each event causes). Trade-off space: minimal (Updated{tool,from,to,err}) vs expressive (Started/Succeeded/Failed/Rolled-Back/Removed/Cancelled with rich payloads). Self-update is structurally similar (tool ID 'tsuku') but lives outside state.json — needs an explicit answer.",
+      "chosen": "Three events (Activated, InstallFailed, Removed) in new internal/installevents package; Source enum (SourceInstall, SourceManualUpdate, SourceAutoUpdate, SourceRollback, SourceSelf); Activate publishes only on state-change (rollback after failed install is a no-op state-wise, so it emits nothing); self-update reuses Activated with Tool=\"tsuku\" and InstallFailed for new failure visibility; InboxReporter warnings (KindVersionFallback, KindShellInitChange) stay outside the bus.",
+      "confidence": "high",
+      "report_file": "wip/design_notices-install-event-bus_decision_1_report.md"
+    },
+    {
+      "id": 2,
+      "question": "Bus delivery semantics: synchronous (publisher blocks until all subscribers run) vs synchronous-with-recover (subscribers cannot panic the publisher) vs asynchronous (fire-and-forget on a goroutine).",
+      "status": "complete",
+      "complexity": "standard",
+      "notes": "User constraint: notices remain best-effort, subscriber failure must not block install success. Includes sub-question of subscriber-ordering determinism and re-entrancy policy (subscriber publishing more events).",
+      "chosen": "synchronous-with-recover; deterministic registration-order; queue-and-flush re-entrancy; errors swallowed-and-logged; named subscribers",
+      "confidence": "high",
+      "report_file": "wip/design_notices-install-event-bus_decision_2_report.md"
+    },
+    {
+      "id": 3,
+      "question": "Where does Publish() get called: a thin shim wrapping state.json mutations vs explicit Publish at each install/update/remove/rollback site vs defer-based instrumentation at function entry.",
+      "status": "complete",
+      "complexity": "standard",
+      "notes": "Same outcome (event emitted) but vastly different maintainability and audit cost. State.json shim auto-covers all mutations but couples bus to storage layer; explicit calls are auditable but easy to forget; defer is clever but error-prone with early-return paths.",
+      "chosen": "Explicit Publish at each lifecycle site (~6 functions: Manager.InstallWithOptions, Manager.Activate, Manager.RemoveVersion, Manager.RemoveAllVersions, auto-apply loop, Manager.Remove)",
+      "confidence": "high",
+      "assumption_to_validate": "Decision 1 chose lifecycle vocabulary (Installed/Activated/Removed/ApplyFailed), not state-mutation vocabulary. If state-mutation vocabulary won, option 1 becomes viable - re-evaluate.",
+      "report_file": "wip/design_notices-install-event-bus_decision_3_report.md"
+    },
+    {
+      "id": 4,
+      "question": "Subscriber registration mechanism: single Register() call from cmd/tsuku/main.go (and equivalents like the auto-apply subprocess entrypoint) vs per-package init() functions that self-register vs explicit constructor-injected subscriber list.",
+      "status": "complete",
+      "complexity": "standard",
+      "notes": "Trade-off: discoverability (one file vs scattered init) vs import cycles (does subscriber package need to import bus, or vice versa?). Affects how a reader answers 'what runs on an install-succeeded event?'",
+      "chosen": "Single explicit wiring helper in cmd/tsuku (bus.New() + per-subscriber Subscribe(name, sub) calls in one file). Auto-apply subprocess is the same binary with a hidden subcommand, so single wiring point covers both entry points trivially.",
+      "confidence": "high",
+      "report_file": "wip/design_notices-install-event-bus_decision_4_report.md"
+    }
+  ],
+  "cross_validation": "passed",
+  "round": 0,
+  "all_decisions_complete": true,
+  "cross_validation_notes": [
+    "Decision 3 assumed vocabulary names (Installed/Activated/Removed/ApplyFailed); Decision 1 chose (Activated/InstallFailed/Removed). Different names, same publisher set. No restart.",
+    "Decision 1 introduced a Source enum that requires Manager.Install/Activate/Remove* signature changes (~10 call sites). Decision 3 didn't flag this. Documented in Decision Outcome.",
+    "Self-update path (updates.CheckAndApplySelf) is a 7th publisher in addition to the ~6 from Decision 3. Documented in Decision Outcome."
+  ]
+}

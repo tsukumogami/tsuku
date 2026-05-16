@@ -29,6 +29,14 @@
 ## Operator note
 User wants the full workflow driven to Accepted status if possible. Flag any decisions where I want them to weigh in rather than deciding silently.
 
+## Security Review (Phase 5)
+**Outcome:** Option 2 — document considerations
+**Summary:** Low-severity, security-benign design. Two hardening items folded in: extend `..`/separator validation to `RemoveNotice`, and cap bus re-entrancy (depth 16 + queue size 1024).
+
+## Phase 6 Reviews
+**Architecture review:** 12 recommendations applied — defined Logger, named auto-apply subprocess wiring explicitly, merged Phase 4+5 to avoid broken intermediate, specified Source defaults, downgraded options struct to Source param for Activate/Remove*, clarified InstallLibrary out-of-scope.
+**Security pass 2:** 6 DESIGN-CHANGE items applied — config-bound logger destination (no caller-passed Logger), queue-size cap, error sanitization (newline normalization + 512-byte truncation), publish-after-state invariant documented, init()-rejection trust-boundary caveat, subscriber-locality contract.
+
 ## Current Status
-**Phase:** 0 - Setup complete (skeleton written, ready for Phase 1)
+**Phase:** 6 - Finalize (doc validated, ready to commit and open PR)
 **Last Updated:** 2026-05-16
