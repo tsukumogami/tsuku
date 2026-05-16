@@ -66,7 +66,8 @@ a temporary fix for a broken release, not a permanent pin change.`,
 		// the event bus; the telemetry subscriber translates that to
 		// UpdateOutcomeRollback, and the notices subscriber writes a
 		// "rolled back to V" notice. No direct calls needed here.
-		if err := mgr.Rollback(toolName, ts.PreviousVersion, installevents.SourceManual); err != nil {
+		ctx := installevents.WithSource(globalCtx, installevents.SourceManual)
+		if err := mgr.Rollback(ctx, toolName, ts.PreviousVersion); err != nil {
 			fmt.Fprintf(os.Stderr, "Error rolling back %s: %v\n", toolName, err)
 			exitWithCode(ExitGeneral)
 		}

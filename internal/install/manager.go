@@ -1,6 +1,7 @@
 package install
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -66,13 +67,12 @@ func New(cfg *config.Config, opts ...Option) *Manager {
 
 // InstallOptions controls how a tool is installed
 type InstallOptions struct {
-	CreateSymlinks      bool                 // Whether to create symlinks in current/
-	IsHidden            bool                 // Mark as hidden execution dependency
-	Binaries            []string             // List of binary names this tool provides
-	RuntimeDependencies map[string]string    // Runtime deps: name -> version (for wrapper scripts)
-	RequestedVersion    string               // What user originally requested ("17", "@lts", "")
-	Plan                *Plan                // Installation plan to store (if generated)
-	Source              installevents.Source // What triggered this install (manual / auto / project-auto)
+	CreateSymlinks      bool              // Whether to create symlinks in current/
+	IsHidden            bool              // Mark as hidden execution dependency
+	Binaries            []string          // List of binary names this tool provides
+	RuntimeDependencies map[string]string // Runtime deps: name -> version (for wrapper scripts)
+	RequestedVersion    string            // What user originally requested ("17", "@lts", "")
+	Plan                *Plan             // Installation plan to store (if generated)
 }
 
 // DefaultInstallOptions returns the default installation options
@@ -80,17 +80,17 @@ func DefaultInstallOptions() InstallOptions {
 	return InstallOptions{
 		CreateSymlinks: true,
 		IsHidden:       false,
-		Source:         installevents.SourceManual,
 	}
 }
 
 // Install copies a tool from the work directory to the permanent location
-// and creates a symlink in current/. Source tags the event published on
-// success or failure; SourceManual is the default for direct CLI calls.
-func (m *Manager) Install(name, version, workDir string, src installevents.Source) error {
+// and creates a symlink in current/. The Source that tags the event
+// published on success or failure is read from ctx via
+// installevents.SourceFromContext; callers must wrap ctx with
+// installevents.WithSource before invoking the install pipeline.
+func (m *Manager) Install(ctx context.Context, name, version, workDir string) error {
 	opts := DefaultInstallOptions()
-	opts.Source = src
-	return m.InstallWithOptions(name, version, workDir, opts)
+	return m.InstallWithOptions(ctx, name, version, workDir, opts)
 }
 
 // InstallWithOptions copies a tool from the work directory to the permanent location
@@ -111,7 +111,12 @@ func (m *Manager) Install(name, version, workDir string, src installevents.Sourc
 // Publish-after-state invariant: the publish runs from a deferred closure that
 // reads the named return error AFTER the state-mutating block completes, so
 // any subscriber observing state inside Handle sees the post-write value.
-func (m *Manager) InstallWithOptions(name, version, workDir string, opts InstallOptions) (err error) {
+func (m *Manager) InstallWithOptions(ctx context.Context, name, version, workDir string, opts InstallOptions) (err error) {
+	// Honor ctx cancellation before any state-touching work begins.
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
 	// Snapshot the prior ActiveVersion so the publish closure can pick
 	// between Installed/Updated and InstallFailed/UpdateFailed. Failure
 	// to read state means we publish as if no prior version existed,
@@ -124,9 +129,13 @@ func (m *Manager) InstallWithOptions(name, version, workDir string, opts Install
 
 	// publish-after-state: this defer runs after the body returns and
 	// after state.UpdateTool has either committed (success) or returned
-	// an error (state untouched per atomic rename).
+	// an error (state untouched per atomic rename). Source is read from
+	// ctx at publish time -- callers must set it via WithSource before
+	// invoking; an empty Source causes the bus to drop the event with a
+	// diagnostic log line.
+	src := installevents.SourceFromContext(ctx)
 	defer func() {
-		m.publishInstallOutcome(name, version, priorActiveVersion, opts.Source, err)
+		m.publishInstallOutcome(name, version, priorActiveVersion, src, err)
 	}()
 
 	// Ensure directories exist
@@ -176,6 +185,14 @@ func (m *Manager) InstallWithOptions(name, version, workDir string, opts Install
 		return fmt.Errorf("failed to remove existing installation: %w", err)
 	}
 
+	// Final cancellation check immediately before the atomic-rename
+	// window. After this point the on-disk state has changed and the
+	// caller will see the post-rename outcome regardless of cancellation.
+	if err := ctx.Err(); err != nil {
+		os.RemoveAll(stagingDir)
+		return err
+	}
+
 	// Atomically rename staging directory to final location
 	// This is the critical atomic operation that ensures consistency
 	if err := os.Rename(stagingDir, toolDir); err != nil {
@@ -189,10 +206,10 @@ func (m *Manager) InstallWithOptions(name, version, workDir string, opts Install
 		var symlinkErr error
 		if len(opts.RuntimeDependencies) > 0 {
 			// Tool has runtime deps - create wrapper scripts
-			symlinkErr = m.createWrappersForBinaries(name, version, opts.Binaries, opts.RuntimeDependencies)
+			symlinkErr = m.createWrappersForBinaries(ctx, name, version, opts.Binaries, opts.RuntimeDependencies)
 		} else {
 			// No runtime deps - use symlinks (faster)
-			symlinkErr = m.createSymlinksForBinaries(name, version, opts.Binaries)
+			symlinkErr = m.createSymlinksForBinaries(ctx, name, version, opts.Binaries)
 		}
 
 		// If symlink/wrapper creation failed, rollback the installation
@@ -331,14 +348,20 @@ func (m *Manager) publishInstallOutcome(name, version, priorActiveVersion string
 //
 // Publish-after-state invariant: the publish is the last line before
 // return; the Activate call has either committed state or returned an
-// error before the publish fires.
-func (m *Manager) Rollback(name, toVersion string, src installevents.Source) error {
+// error before the publish fires. Source is read from ctx; callers must
+// wrap ctx with installevents.WithSource before invoking.
+func (m *Manager) Rollback(ctx context.Context, name, toVersion string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
 	fromVersion := ""
 	if prior, _ := m.state.GetToolState(name); prior != nil {
 		fromVersion = prior.ActiveVersion
 	}
 
-	if err := m.Activate(name, toVersion); err != nil {
+	src := installevents.SourceFromContext(ctx)
+	if err := m.Activate(ctx, name, toVersion); err != nil {
 		if m.bus != nil {
 			m.bus.Publish(installevents.RollbackFailed{
 				Tool:             name,
@@ -385,7 +408,11 @@ var ErrVersionNotInstalled = errors.New("version not installed")
 
 // Activate switches the active version of a tool.
 // It updates symlinks and the active_version in state.json.
-func (m *Manager) Activate(name, version string) error {
+func (m *Manager) Activate(ctx context.Context, name, version string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
 	// Validate version string to prevent path traversal attacks
 	if err := ValidateVersionString(version); err != nil {
 		return fmt.Errorf("invalid version: %w", err)
@@ -424,7 +451,7 @@ func (m *Manager) Activate(name, version string) error {
 		binaries = []string{filepath.Join("bin", name)}
 	}
 
-	if err := m.createSymlinksForBinaries(name, version, binaries); err != nil {
+	if err := m.createSymlinksForBinaries(ctx, name, version, binaries); err != nil {
 		return fmt.Errorf("failed to update symlinks: %w", err)
 	}
 
@@ -459,14 +486,17 @@ func (m *Manager) versionNotInstalledError(name, requested string, state *ToolSt
 }
 
 // createSymlink creates or updates the symlink in current/ to point to the latest version
-// This assumes the binary name matches the tool name and lives in bin/ (legacy behavior)
-func (m *Manager) createSymlink(name, version string) error {
-	return m.createBinarySymlink(name, version, filepath.Join("bin", name))
+// This assumes the binary name matches the tool name and lives in bin/ (legacy behavior).
+// ctx is accepted for future cancellation hooks; current callers honor cancellation at higher layers.
+func (m *Manager) createSymlink(ctx context.Context, name, version string) error {
+	return m.createBinarySymlink(ctx, name, version, filepath.Join("bin", name))
 }
 
 // createBinarySymlink creates a symlink for a specific binary atomically.
 // The atomic update prevents race conditions during version switching.
-func (m *Manager) createBinarySymlink(toolName, version, binaryPath string) error {
+// ctx is accepted for future cancellation hooks.
+func (m *Manager) createBinarySymlink(ctx context.Context, toolName, version, binaryPath string) error {
+	_ = ctx
 	// For directory-mode installs, binaryPath is relative to tool root (e.g., "cargo/bin/cargo", "zig")
 	// Extract basename for the symlink name in current/ (e.g., "cargo", "zig")
 	binaryName := filepath.Base(binaryPath)
@@ -488,15 +518,16 @@ func (m *Manager) createBinarySymlink(toolName, version, binaryPath string) erro
 	return nil
 }
 
-// createSymlinksForBinaries creates symlinks for all binaries provided by a tool
-func (m *Manager) createSymlinksForBinaries(toolName, version string, binaries []string) error {
+// createSymlinksForBinaries creates symlinks for all binaries provided by a tool.
+// ctx is accepted for future cancellation hooks.
+func (m *Manager) createSymlinksForBinaries(ctx context.Context, toolName, version string, binaries []string) error {
 	if len(binaries) == 0 {
 		// Fallback to old behavior if no binaries specified
-		return m.createSymlink(toolName, version)
+		return m.createSymlink(ctx, toolName, version)
 	}
 
 	for _, binary := range binaries {
-		if err := m.createBinarySymlink(toolName, version, binary); err != nil {
+		if err := m.createBinarySymlink(ctx, toolName, version, binary); err != nil {
 			return fmt.Errorf("failed to create symlink for %s: %w", binary, err)
 		}
 	}
@@ -506,14 +537,15 @@ func (m *Manager) createSymlinksForBinaries(toolName, version string, binaries [
 
 // createWrappersForBinaries creates wrapper scripts for all binaries provided by a tool.
 // Wrapper scripts prepend runtime dependency bin directories to PATH before exec'ing the real binary.
-func (m *Manager) createWrappersForBinaries(toolName, version string, binaries []string, runtimeDeps map[string]string) error {
+// ctx is accepted for future cancellation hooks.
+func (m *Manager) createWrappersForBinaries(ctx context.Context, toolName, version string, binaries []string, runtimeDeps map[string]string) error {
 	if len(binaries) == 0 {
 		// Fallback: create wrapper for tool with same name as binary
-		return m.createBinaryWrapper(toolName, version, filepath.Join("bin", toolName), runtimeDeps)
+		return m.createBinaryWrapper(ctx, toolName, version, filepath.Join("bin", toolName), runtimeDeps)
 	}
 
 	for _, binary := range binaries {
-		if err := m.createBinaryWrapper(toolName, version, binary, runtimeDeps); err != nil {
+		if err := m.createBinaryWrapper(ctx, toolName, version, binary, runtimeDeps); err != nil {
 			return fmt.Errorf("failed to create wrapper for %s: %w", binary, err)
 		}
 	}
@@ -523,7 +555,9 @@ func (m *Manager) createWrappersForBinaries(toolName, version string, binaries [
 
 // createBinaryWrapper creates a wrapper script for a specific binary.
 // The wrapper prepends runtime dependency paths to PATH and exec's the real binary.
-func (m *Manager) createBinaryWrapper(toolName, version, binaryPath string, runtimeDeps map[string]string) error {
+// ctx is accepted for future cancellation hooks.
+func (m *Manager) createBinaryWrapper(ctx context.Context, toolName, version, binaryPath string, runtimeDeps map[string]string) error {
+	_ = ctx
 	// Validate binaryPath
 	if binaryPath == "" || binaryPath == "." || binaryPath == ".." {
 		return fmt.Errorf("invalid binary path: %q", binaryPath)
@@ -570,7 +604,7 @@ func (m *Manager) createBinaryWrapper(toolName, version, binaryPath string, runt
 	// Include all installed library lib/ directories to cover transitive
 	// dependencies (e.g., fontconfig -> freetype -> libpng). The dynamic
 	// linker needs all shared libraries in the chain to be discoverable.
-	libPathAdditions := m.collectLibraryPaths()
+	libPathAdditions := m.collectLibraryPaths(ctx)
 
 	// Generate wrapper script content
 	content := generateWrapperScript(targetPath, pathAdditions, libPathAdditions)
@@ -596,7 +630,9 @@ func (m *Manager) createBinaryWrapper(toolName, version, binaryPath string, runt
 // collectLibraryPaths scans $TSUKU_HOME/libs/ for installed libraries and returns
 // their lib/ subdirectory paths. This covers both direct and transitive library
 // dependencies, since the dynamic linker needs all shared libraries in the chain.
-func (m *Manager) collectLibraryPaths() []string {
+// ctx is accepted for future cancellation hooks.
+func (m *Manager) collectLibraryPaths(ctx context.Context) []string {
+	_ = ctx
 	libsDir := m.config.LibsDir
 	entries, err := os.ReadDir(libsDir)
 	if err != nil {

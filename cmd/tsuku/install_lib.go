@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"runtime"
 
@@ -8,7 +9,6 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
-	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
@@ -18,8 +18,12 @@ import (
 
 // installLibrary handles installation of library recipes
 // Libraries are installed to $TSUKU_HOME/libs/{name}-{version}/ and track used_by
-// Note: used_by tracking is handled by the caller after tool installation completes
-func installLibrary(libName, reqVersion string, mgr *install.Manager, telemetryClient *telemetry.Client, reporter progress.Reporter, src installevents.Source) error {
+// Note: used_by tracking is handled by the caller after tool installation completes.
+// Source flows via ctx; library lifecycle events are not yet published on the bus
+// (Issue 4 adds the four library event types). The Source extraction in
+// installevents.SourceFromContext at the publish callsite is set up by callers
+// who wrap globalCtx with installevents.WithSource.
+func installLibrary(ctx context.Context, libName, reqVersion string, mgr *install.Manager, telemetryClient *telemetry.Client, reporter progress.Reporter) error {
 	// Load recipe
 	r, err := loader.Get(libName, recipe.LoaderOptions{})
 	if err != nil {
@@ -44,7 +48,12 @@ func installLibrary(libName, reqVersion string, mgr *install.Manager, telemetryC
 		for _, dep := range r.Metadata.Dependencies {
 			reporter.Status(fmt.Sprintf("Resolving dependency '%s'...", dep))
 			// Install dependency (not explicit, parent is current library)
-			if err := installWithDependencies(dep, "", "", false, libName, visited, telemetryClient, reporter, src); err != nil {
+			if err := installWithDependencies(ctx, installArgs{
+				Tool:            dep,
+				Parent:          libName,
+				Reporter:        reporter,
+				TelemetryClient: telemetryClient,
+			}, visited); err != nil {
 				return fmt.Errorf("failed to install dependency '%s': %w", dep, err)
 			}
 		}
@@ -146,7 +155,7 @@ func installLibrary(libName, reqVersion string, mgr *install.Manager, telemetryC
 	// tool installation completes, since we need the tool's version for proper tracking
 	opts := install.LibraryInstallOptions{}
 
-	if err := mgr.InstallLibrary(libName, version, exec.WorkDir(), opts); err != nil {
+	if err := mgr.InstallLibrary(ctx, libName, version, exec.WorkDir(), opts); err != nil {
 		return fmt.Errorf("failed to install library to permanent location: %w", err)
 	}
 

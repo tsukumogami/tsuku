@@ -548,7 +548,11 @@ func TestInstallWithDependencies_BorrowedReporter_NoStop(t *testing.T) {
 	visited := make(map[string]bool)
 
 	// isExplicit=false, reqVersion="" triggers the short-circuit for installed tools.
-	err := installWithDependencies("gh", "", "", false, "parent-tool", visited, nil, reporter, installevents.SourceManual)
+	err := installWithDependencies(installevents.WithSource(context.Background(), installevents.SourceManual), installArgs{
+		Tool:     "gh",
+		Parent:   "parent-tool",
+		Reporter: reporter,
+	}, visited)
 	if err != nil {
 		t.Fatalf("installWithDependencies() unexpected error = %v", err)
 	}
@@ -581,7 +585,11 @@ func TestInstallWithDependencies_NoStdoutEscape(t *testing.T) {
 	reporter := &countingReporter{}
 	visited := make(map[string]bool)
 
-	callErr := installWithDependencies("gh", "", "", false, "parent-tool", visited, nil, reporter, installevents.SourceManual)
+	callErr := installWithDependencies(installevents.WithSource(context.Background(), installevents.SourceManual), installArgs{
+		Tool:     "gh",
+		Parent:   "parent-tool",
+		Reporter: reporter,
+	}, visited)
 
 	w.Close()
 	buf, _ := io.ReadAll(r)
@@ -702,5 +710,83 @@ func TestShouldInstallRuntimeDep(t *testing.T) {
 				t.Errorf("shouldInstallRuntimeDep() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+// TestCancelDuringDepWalk verifies that installWithDependencies aborts its
+// dependency walk between iterations when the context is canceled. The test
+// constructs a synthetic recipe whose first dependency is already installed
+// (the gh short-circuit path, exercised by setupGhInstalled) and whose
+// second dependency name is invalid -- if the loop iterated to the second
+// dep, it would fail loudly with a recipe-not-found error, polluting the
+// observable error. With the cancellation check in place, the loop must
+// stop after the first dep, returning an error that wraps context.Canceled
+// without touching the second dep.
+//
+// Test infrastructure constraint: real recipe installs require network +
+// executor and cannot run in a unit-test setting. The already-installed
+// short-circuit through gh is the standard path for exercising the dep walk
+// without leaving the package.
+func TestCancelDuringDepWalk(t *testing.T) {
+	// setupGhInstalled uses t.Setenv, which is incompatible with t.Parallel.
+
+	setupGhInstalled(t)
+
+	// Swap the package-level loader for a fresh in-memory loader so we can
+	// register a synthetic parent recipe with two install-time dependencies.
+	origLoader := loader
+	t.Cleanup(func() { loader = origLoader })
+	loader = recipe.NewLoader()
+
+	const parentTool = "cancel-walk-parent"
+	const secondDep = "cancel-walk-second-should-not-be-reached"
+	// Synthetic recipe: a single download_file step plus a non-empty verify
+	// command satisfy the validator. The step is never executed because the
+	// cancellation check fires before plan generation.
+	loader.CacheRecipe(parentTool, &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:         parentTool,
+			Dependencies: []string{"gh", secondDep},
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "download_file",
+				Params: map[string]any{
+					"url": "https://example.invalid/never-fetched.tar.gz",
+				},
+			},
+		},
+		Verify: &recipe.VerifySection{
+			Command: "true",
+		},
+	})
+
+	// Pre-cancel the context. The first iteration installs gh, which short-
+	// circuits (gh is already installed). The post-iteration ctx.Err() check
+	// then fires, returning the cancellation error before the loop advances
+	// to secondDep -- which has no recipe registered and would surface a
+	// recipe-not-found error if the loop continued.
+	ctx, cancel := context.WithCancel(installevents.WithSource(context.Background(), installevents.SourceManual))
+	cancel()
+
+	reporter := &countingReporter{}
+	visited := make(map[string]bool)
+
+	err := installWithDependencies(ctx, installArgs{
+		Tool:     parentTool,
+		Reporter: reporter,
+	}, visited)
+	if err == nil {
+		t.Fatalf("installWithDependencies() succeeded; want cancellation error")
+	}
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("installWithDependencies() error = %v; want wraps context.Canceled", err)
+	}
+
+	// secondDep must not appear in the visited set: if the loop had advanced
+	// to it, visited[secondDep] would have been set inside the recursive
+	// call before the recipe lookup failed.
+	if visited[secondDep] {
+		t.Errorf("visited[%q] = true; want false (second dep must not be reached after cancellation)", secondDep)
 	}
 }

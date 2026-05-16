@@ -1,6 +1,7 @@
 package install
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -10,9 +11,18 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/testutil"
 )
+
+// testCtx returns a context with SourceManual set; tests in this package
+// all run synchronously and don't care about cancellation, but the bus
+// requires a non-empty Source even though manager_test cases construct
+// Manager without WithEventBus.
+func testCtx() context.Context {
+	return installevents.WithSource(context.Background(), installevents.SourceManual)
+}
 
 // installTestReporter records Log/Status calls for assertion in install package tests.
 type installTestReporter struct {
@@ -276,7 +286,7 @@ func TestCreateBinaryWrapper_LibraryDependency(t *testing.T) {
 	// Runtime deps map includes gettext (which is a library)
 	runtimeDeps := map[string]string{"gettext": "0.22.5"}
 
-	err := mgr.createBinaryWrapper("fontconfig", "2.15.0", "bin/fc-list", runtimeDeps)
+	err := mgr.createBinaryWrapper(testCtx(), "fontconfig", "2.15.0", "bin/fc-list", runtimeDeps)
 	if err != nil {
 		t.Fatalf("createBinaryWrapper() error = %v", err)
 	}
@@ -343,7 +353,7 @@ func TestCreateBinaryWrapper_MixedDependencies(t *testing.T) {
 		"nodejs":  "20.10.0",
 	}
 
-	err := mgr.createBinaryWrapper("mytool", "1.0.0", "bin/mytool", runtimeDeps)
+	err := mgr.createBinaryWrapper(testCtx(), "mytool", "1.0.0", "bin/mytool", runtimeDeps)
 	if err != nil {
 		t.Fatalf("createBinaryWrapper() error = %v", err)
 	}
@@ -451,7 +461,7 @@ func TestCreateBinaryWrapper_Success(t *testing.T) {
 		"nodejs": "20.10.0",
 	}
 
-	err := mgr.createBinaryWrapper("mytool", "1.0.0", "bin/mytool", runtimeDeps)
+	err := mgr.createBinaryWrapper(testCtx(), "mytool", "1.0.0", "bin/mytool", runtimeDeps)
 	if err != nil {
 		t.Fatalf("createBinaryWrapper() error = %v", err)
 	}
@@ -505,7 +515,7 @@ func TestCreateBinaryWrapper_InvalidBinaryPath(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := mgr.createBinaryWrapper("tool", "1.0.0", tc.binaryPath, nil)
+			err := mgr.createBinaryWrapper(testCtx(), "tool", "1.0.0", tc.binaryPath, nil)
 			if err == nil {
 				t.Errorf("expected error for invalid binary path %q", tc.binaryPath)
 			}
@@ -539,7 +549,7 @@ func TestCreateBinaryWrapper_DeterministicOrder(t *testing.T) {
 
 	var contents []string
 	for i := 0; i < 5; i++ {
-		err := mgr.createBinaryWrapper("mytool", "1.0.0", "bin/mytool", runtimeDeps)
+		err := mgr.createBinaryWrapper(testCtx(), "mytool", "1.0.0", "bin/mytool", runtimeDeps)
 		if err != nil {
 			t.Fatalf("createBinaryWrapper() error = %v", err)
 		}
@@ -600,7 +610,7 @@ func TestCreateWrappersForBinaries_MultipleBinaries(t *testing.T) {
 
 	runtimeDeps := map[string]string{"nodejs": "20.0.0"}
 
-	err := mgr.createWrappersForBinaries("multitool", "1.0.0", binaries, runtimeDeps)
+	err := mgr.createWrappersForBinaries(testCtx(), "multitool", "1.0.0", binaries, runtimeDeps)
 	if err != nil {
 		t.Fatalf("createWrappersForBinaries() error = %v", err)
 	}
@@ -640,7 +650,7 @@ func TestCreateWrappersForBinaries_FallbackToToolName(t *testing.T) {
 	runtimeDeps := map[string]string{"python": "3.11.0"}
 
 	// Call with empty binaries slice - should fallback to bin/simpletool
-	err := mgr.createWrappersForBinaries("simpletool", "1.0.0", nil, runtimeDeps)
+	err := mgr.createWrappersForBinaries(testCtx(), "simpletool", "1.0.0", nil, runtimeDeps)
 	if err != nil {
 		t.Fatalf("createWrappersForBinaries() error = %v", err)
 	}
@@ -677,7 +687,7 @@ func TestCreateBinaryWrapper_AtomicWrite(t *testing.T) {
 	runtimeDeps := map[string]string{"dep": "1.0.0"}
 
 	// Create new wrapper (should atomically replace)
-	err := mgr.createBinaryWrapper("atomictool", "1.0.0", "bin/atomictool", runtimeDeps)
+	err := mgr.createBinaryWrapper(testCtx(), "atomictool", "1.0.0", "bin/atomictool", runtimeDeps)
 	if err != nil {
 		t.Fatalf("createBinaryWrapper() error = %v", err)
 	}
@@ -718,7 +728,7 @@ func TestCreateBinaryWrapper_NoDeps(t *testing.T) {
 	}
 
 	// Create wrapper with nil runtime deps
-	err := mgr.createBinaryWrapper("nodeptool", "1.0.0", "bin/nodeptool", nil)
+	err := mgr.createBinaryWrapper(testCtx(), "nodeptool", "1.0.0", "bin/nodeptool", nil)
 	if err != nil {
 		t.Fatalf("createBinaryWrapper() error = %v", err)
 	}
@@ -756,7 +766,7 @@ func TestCreateBinaryWrapper_EmptyDeps(t *testing.T) {
 	}
 
 	// Create wrapper with empty runtime deps map
-	err := mgr.createBinaryWrapper("emptydeptool", "1.0.0", "bin/emptydeptool", map[string]string{})
+	err := mgr.createBinaryWrapper(testCtx(), "emptydeptool", "1.0.0", "bin/emptydeptool", map[string]string{})
 	if err != nil {
 		t.Fatalf("createBinaryWrapper() error = %v", err)
 	}
@@ -788,7 +798,7 @@ func TestCreateWrappersForBinaries_ErrorPropagation(t *testing.T) {
 	runtimeDeps := map[string]string{"nodejs": "20.0.0"}
 
 	// This should fail because current dir doesn't exist
-	err := mgr.createWrappersForBinaries("failtool", "1.0.0", []string{"bin/tool"}, runtimeDeps)
+	err := mgr.createWrappersForBinaries(testCtx(), "failtool", "1.0.0", []string{"bin/tool"}, runtimeDeps)
 	if err == nil {
 		t.Error("createWrappersForBinaries() should fail when current dir doesn't exist")
 	}
@@ -814,7 +824,7 @@ func TestCreateBinaryWrapper_WriteError(t *testing.T) {
 
 	runtimeDeps := map[string]string{"dep": "1.0.0"}
 
-	err := mgr.createBinaryWrapper("writefail", "1.0.0", "bin/writefail", runtimeDeps)
+	err := mgr.createBinaryWrapper(testCtx(), "writefail", "1.0.0", "bin/writefail", runtimeDeps)
 	if err == nil {
 		t.Error("createBinaryWrapper() should fail when current dir doesn't exist")
 	}
@@ -852,7 +862,7 @@ func TestInstallWithOptions_WithRuntimeDeps(t *testing.T) {
 		RuntimeDependencies: map[string]string{"nodejs": "20.10.0"},
 	}
 
-	err := mgr.InstallWithOptions("mytool", "1.0.0", workDir, opts)
+	err := mgr.InstallWithOptions(testCtx(), "mytool", "1.0.0", workDir, opts)
 	if err != nil {
 		t.Fatalf("InstallWithOptions() error = %v", err)
 	}
@@ -918,7 +928,7 @@ func TestInstallWithOptions_NoRuntimeDeps(t *testing.T) {
 		// No RuntimeDependencies - should use symlinks
 	}
 
-	err := mgr.InstallWithOptions("simpletool", "1.0.0", workDir, opts)
+	err := mgr.InstallWithOptions(testCtx(), "simpletool", "1.0.0", workDir, opts)
 	if err != nil {
 		t.Fatalf("InstallWithOptions() error = %v", err)
 	}
@@ -965,7 +975,7 @@ func TestInstallWithOptions_MultipleBinariesWithDeps(t *testing.T) {
 		RuntimeDependencies: map[string]string{"python": "3.11.0"},
 	}
 
-	err := mgr.InstallWithOptions("multitool", "1.0.0", workDir, opts)
+	err := mgr.InstallWithOptions(testCtx(), "multitool", "1.0.0", workDir, opts)
 	if err != nil {
 		t.Fatalf("InstallWithOptions() error = %v", err)
 	}
@@ -1011,7 +1021,7 @@ func TestInstallWithOptions_HiddenTool(t *testing.T) {
 		Binaries:       []string{"bin/hiddentool"},
 	}
 
-	err := mgr.InstallWithOptions("hiddentool", "1.0.0", workDir, opts)
+	err := mgr.InstallWithOptions(testCtx(), "hiddentool", "1.0.0", workDir, opts)
 	if err != nil {
 		t.Fatalf("InstallWithOptions() error = %v", err)
 	}
@@ -1064,7 +1074,7 @@ func TestInstallWithOptions_NoBinariesFallback(t *testing.T) {
 		// No Binaries specified - should fallback to bin/toolname
 	}
 
-	err := mgr.InstallWithOptions("fallbacktool", "1.0.0", workDir, opts)
+	err := mgr.InstallWithOptions(testCtx(), "fallbacktool", "1.0.0", workDir, opts)
 	if err != nil {
 		t.Fatalf("InstallWithOptions() error = %v", err)
 	}
@@ -1120,7 +1130,7 @@ func TestInstallWithOptions_NoBinariesWithRuntimeDeps(t *testing.T) {
 		// No Binaries specified - should fallback to bin/toolname and create wrapper
 	}
 
-	err := mgr.InstallWithOptions("depfallback", "1.0.0", workDir, opts)
+	err := mgr.InstallWithOptions(testCtx(), "depfallback", "1.0.0", workDir, opts)
 	if err != nil {
 		t.Fatalf("InstallWithOptions() error = %v", err)
 	}
@@ -1171,7 +1181,7 @@ func TestActivate_Success(t *testing.T) {
 	}
 
 	// Activate version 2.0.0
-	err = mgr.Activate("mytool", "2.0.0")
+	err = mgr.Activate(testCtx(), "mytool", "2.0.0")
 	if err != nil {
 		t.Fatalf("Activate() error = %v", err)
 	}
@@ -1203,7 +1213,7 @@ func TestActivate_ToolNotInstalled(t *testing.T) {
 
 	mgr := New(cfg)
 
-	err := mgr.Activate("nonexistent", "1.0.0")
+	err := mgr.Activate(testCtx(), "nonexistent", "1.0.0")
 	if err == nil {
 		t.Error("Activate() should error for non-existent tool")
 	}
@@ -1232,7 +1242,7 @@ func TestActivate_VersionNotInstalled(t *testing.T) {
 	}
 
 	// Try to activate non-existent version
-	err = mgr.Activate("mytool", "3.0.0")
+	err = mgr.Activate(testCtx(), "mytool", "3.0.0")
 	if err == nil {
 		t.Error("Activate() should error for non-existent version")
 	}
@@ -1271,7 +1281,7 @@ func TestActivate_AlreadyActive(t *testing.T) {
 	}
 
 	// Activate same version (should be no-op)
-	err = mgr.Activate("mytool", "1.0.0")
+	err = mgr.Activate(testCtx(), "mytool", "1.0.0")
 	if err != nil {
 		t.Errorf("Activate() should succeed for already active version, got: %v", err)
 	}
@@ -1295,7 +1305,7 @@ func TestActivate_InvalidVersion(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := mgr.Activate("sometool", tc.version)
+			err := mgr.Activate(testCtx(), "sometool", tc.version)
 			if err == nil {
 				t.Error("Activate() should error for invalid version")
 			}
@@ -1326,7 +1336,7 @@ func TestActivate_MissingDirectory(t *testing.T) {
 	}
 
 	// Try to activate version without creating the directory
-	err = mgr.Activate("mytool", "2.0.0")
+	err = mgr.Activate(testCtx(), "mytool", "2.0.0")
 	if err == nil {
 		t.Error("Activate() should error for missing directory")
 	}
@@ -1370,7 +1380,7 @@ func TestActivate_MultipleBinaries(t *testing.T) {
 	}
 
 	// Activate version 2.0.0
-	err = mgr.Activate("multitool", "2.0.0")
+	err = mgr.Activate(testCtx(), "multitool", "2.0.0")
 	if err != nil {
 		t.Fatalf("Activate() error = %v", err)
 	}
@@ -1421,7 +1431,7 @@ func TestActivate_FallbackToBinaryName(t *testing.T) {
 	}
 
 	// Activate version 2.0.0
-	err = mgr.Activate("legacytool", "2.0.0")
+	err = mgr.Activate(testCtx(), "legacytool", "2.0.0")
 	if err != nil {
 		t.Fatalf("Activate() error = %v", err)
 	}
@@ -1520,7 +1530,7 @@ func TestInstallWithOptions_PreservesExistingVersions(t *testing.T) {
 		RequestedVersion: "2",
 	}
 
-	err = mgr.InstallWithOptions("mytool", "2.0.0", workDir, opts)
+	err = mgr.InstallWithOptions(testCtx(), "mytool", "2.0.0", workDir, opts)
 	if err != nil {
 		t.Fatalf("InstallWithOptions() error = %v", err)
 	}
@@ -1590,7 +1600,7 @@ func TestInstallWithOptions_RecordsMetadata(t *testing.T) {
 	}
 
 	beforeInstall := time.Now()
-	err := mgr.InstallWithOptions("mytool", "21.0.5", workDir, opts)
+	err := mgr.InstallWithOptions(testCtx(), "mytool", "21.0.5", workDir, opts)
 	if err != nil {
 		t.Fatalf("InstallWithOptions() error = %v", err)
 	}
@@ -1643,7 +1653,7 @@ func TestInstallWithOptions_NewVersionBecomesActive(t *testing.T) {
 
 	// Install version 1
 	opts1 := InstallOptions{CreateSymlinks: true, Binaries: []string{"bin/mytool"}}
-	if err := mgr.InstallWithOptions("mytool", "1.0.0", workDir1, opts1); err != nil {
+	if err := mgr.InstallWithOptions(testCtx(), "mytool", "1.0.0", workDir1, opts1); err != nil {
 		t.Fatalf("InstallWithOptions(v1) error = %v", err)
 	}
 
@@ -1667,7 +1677,7 @@ func TestInstallWithOptions_NewVersionBecomesActive(t *testing.T) {
 
 	// Install version 2
 	opts2 := InstallOptions{CreateSymlinks: true, Binaries: []string{"bin/mytool"}}
-	if err := mgr.InstallWithOptions("mytool", "2.0.0", workDir2, opts2); err != nil {
+	if err := mgr.InstallWithOptions(testCtx(), "mytool", "2.0.0", workDir2, opts2); err != nil {
 		t.Fatalf("InstallWithOptions(v2) error = %v", err)
 	}
 
@@ -1710,7 +1720,7 @@ func TestInstallWithOptions_AtomicInstallation(t *testing.T) {
 		Binaries:       []string{"bin/atomictool"},
 	}
 
-	err := mgr.InstallWithOptions("atomictool", "1.0.0", workDir, opts)
+	err := mgr.InstallWithOptions(testCtx(), "atomictool", "1.0.0", workDir, opts)
 	if err != nil {
 		t.Fatalf("InstallWithOptions() error = %v", err)
 	}
@@ -1767,7 +1777,7 @@ func TestInstallWithOptions_CleansUpStaleStagingDir(t *testing.T) {
 		Binaries:       []string{"bin/stalecleanup"},
 	}
 
-	err := mgr.InstallWithOptions("stalecleanup", "1.0.0", workDir, opts)
+	err := mgr.InstallWithOptions(testCtx(), "stalecleanup", "1.0.0", workDir, opts)
 	if err != nil {
 		t.Fatalf("InstallWithOptions() error = %v", err)
 	}
@@ -1808,7 +1818,7 @@ func TestInstallWithOptions_ReinstallSameVersion(t *testing.T) {
 		Binaries:       []string{"bin/reinstall"},
 	}
 
-	if err := mgr.InstallWithOptions("reinstall", "1.0.0", workDir1, opts); err != nil {
+	if err := mgr.InstallWithOptions(testCtx(), "reinstall", "1.0.0", workDir1, opts); err != nil {
 		t.Fatalf("first install failed: %v", err)
 	}
 
@@ -1824,7 +1834,7 @@ func TestInstallWithOptions_ReinstallSameVersion(t *testing.T) {
 		t.Fatalf("failed to create binary: %v", err)
 	}
 
-	if err := mgr.InstallWithOptions("reinstall", "1.0.0", workDir2, opts); err != nil {
+	if err := mgr.InstallWithOptions(testCtx(), "reinstall", "1.0.0", workDir2, opts); err != nil {
 		t.Fatalf("reinstall failed: %v", err)
 	}
 
@@ -1871,7 +1881,7 @@ func TestInstallWithOptions_RollbackOnSymlinkFailure(t *testing.T) {
 		Binaries:       []string{"bin/rollbacktest"},
 	}
 
-	err := mgr.InstallWithOptions("rollbacktest", "1.0.0", workDir, opts)
+	err := mgr.InstallWithOptions(testCtx(), "rollbacktest", "1.0.0", workDir, opts)
 	if err == nil {
 		t.Fatal("InstallWithOptions() should fail when symlink creation fails")
 	}
@@ -1957,7 +1967,7 @@ func TestManagerInstallWithOptions_NoStdoutEscape(t *testing.T) {
 		os.Stdout = origStdout
 	}()
 
-	installErr := mgr.InstallWithOptions("mytool", "1.0.0", workDir, InstallOptions{
+	installErr := mgr.InstallWithOptions(testCtx(), "mytool", "1.0.0", workDir, InstallOptions{
 		CreateSymlinks: false,
 		Binaries:       []string{"bin/mytool"},
 	})

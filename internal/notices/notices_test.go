@@ -342,6 +342,65 @@ func TestWriteNoticeRejectsPathTraversal(t *testing.T) {
 	}
 }
 
+// WriteNotice and RemoveNotice must accept the lib--<library> form so
+// library lifecycle events can produce on-disk notices.
+func TestNoticeName_AcceptsLibraryPrefix(t *testing.T) {
+	dir := t.TempDir()
+	if err := WriteNotice(dir, &Notice{
+		Tool: "lib--libyaml", AttemptedVersion: "0.2.5",
+		Verb: VerbInstall, Timestamp: time.Now(),
+	}); err != nil {
+		t.Fatalf("WriteNotice(lib--libyaml) returned %v, want nil", err)
+	}
+	got, err := ReadNotice(dir, "lib--libyaml")
+	if err != nil || got == nil {
+		t.Fatalf("ReadNotice(lib--libyaml) = (%v, %v), want non-nil notice", got, err)
+	}
+	if got.AttemptedVersion != "0.2.5" {
+		t.Errorf("AttemptedVersion = %q, want 0.2.5", got.AttemptedVersion)
+	}
+	if err := RemoveNotice(dir, "lib--libyaml"); err != nil {
+		t.Errorf("RemoveNotice(lib--libyaml) returned %v, want nil", err)
+	}
+}
+
+// Notice names must not contain the "--" sequence outside the leading
+// LibraryNoticePrefix. This defends against a future caller producing a
+// name like "foo--bar" that would look like a library notice to the
+// renderer.
+func TestNoticeName_RejectsMidNameDoubleDash(t *testing.T) {
+	dir := t.TempDir()
+	cases := []string{
+		"foo--bar",
+		"my--tool",
+		"lib--libyaml--evil",
+	}
+	for _, name := range cases {
+		t.Run(name, func(t *testing.T) {
+			err := WriteNotice(dir, &Notice{Tool: name, Timestamp: time.Now()})
+			if err == nil {
+				t.Errorf("WriteNotice(%q) should reject the name, got nil error", name)
+			}
+			if err := RemoveNotice(dir, name); err == nil {
+				t.Errorf("RemoveNotice(%q) should reject the name, got nil error", name)
+			}
+		})
+	}
+}
+
+// Empty names and the bare prefix must both be rejected.
+func TestNoticeName_RejectsEmptyAndBarePrefix(t *testing.T) {
+	dir := t.TempDir()
+	cases := []string{"", "lib--"}
+	for _, name := range cases {
+		t.Run(name, func(t *testing.T) {
+			if err := WriteNotice(dir, &Notice{Tool: name, Timestamp: time.Now()}); err == nil {
+				t.Errorf("WriteNotice(%q) should reject, got nil", name)
+			}
+		})
+	}
+}
+
 func TestReadAllSortedByTimestamp(t *testing.T) {
 	dir := t.TempDir()
 	now := time.Now()

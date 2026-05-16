@@ -428,6 +428,86 @@ func NewUpdateOutcomeRollbackEvent(recipe, versionPrevious, versionTarget, trigg
 	return e
 }
 
+// LibraryOutcomeEvent represents a telemetry event for library lifecycle
+// outcomes. Libraries are tracked separately from tools (UpdateOutcomeEvent)
+// because their lifecycle has different semantics — no Activate, no
+// version-update path today — and analytics consumers benefit from a
+// distinct Action namespace they can filter on without parsing.
+type LibraryOutcomeEvent struct {
+	Action        string `json:"action"`     // "library_install_outcome_success", "library_install_outcome_failure", "library_remove_outcome_success", "library_remove_outcome_failure"
+	Library       string `json:"library"`    // Library name
+	Version       string `json:"version"`    // Version installed or attempted
+	Trigger       string `json:"trigger"`    // "auto", "manual", or "project-auto"
+	ErrorType     string `json:"error_type"` // Error taxonomy value; empty on success
+	OS            string `json:"os"`
+	Arch          string `json:"arch"`
+	TsukuVersion  string `json:"tsuku_version"`
+	SchemaVersion string `json:"schema_version"`
+}
+
+const libraryOutcomeSchemaVersion = "1"
+
+func newBaseLibraryOutcomeEvent() LibraryOutcomeEvent {
+	return LibraryOutcomeEvent{
+		OS:            runtime.GOOS,
+		Arch:          runtime.GOARCH,
+		TsukuVersion:  buildinfo.Version(),
+		SchemaVersion: libraryOutcomeSchemaVersion,
+	}
+}
+
+// NewLibraryInstallOutcomeSuccessEvent creates a library outcome event for
+// a successful install. trigger is the Source value as a string ("manual",
+// "auto", or "project-auto").
+func NewLibraryInstallOutcomeSuccessEvent(library, version, trigger string) LibraryOutcomeEvent {
+	e := newBaseLibraryOutcomeEvent()
+	e.Action = "library_install_outcome_success"
+	e.Library = library
+	e.Version = version
+	e.Trigger = trigger
+	return e
+}
+
+// NewLibraryInstallOutcomeFailureEvent creates a library outcome event for
+// a failed install. errorType is a fixed taxonomy value from ClassifyError;
+// raw error strings never cross the wire.
+func NewLibraryInstallOutcomeFailureEvent(library, version, errorType, trigger string) LibraryOutcomeEvent {
+	e := newBaseLibraryOutcomeEvent()
+	e.Action = "library_install_outcome_failure"
+	e.Library = library
+	e.Version = version
+	e.ErrorType = errorType
+	e.Trigger = trigger
+	return e
+}
+
+// NewLibraryRemoveOutcomeSuccessEvent creates a library outcome event for
+// a successful remove. Defined alongside the install variants so future
+// library-remove flows have the constructor they need without an
+// additional telemetry-schema commit.
+func NewLibraryRemoveOutcomeSuccessEvent(library, version, trigger string) LibraryOutcomeEvent {
+	e := newBaseLibraryOutcomeEvent()
+	e.Action = "library_remove_outcome_success"
+	e.Library = library
+	e.Version = version
+	e.Trigger = trigger
+	return e
+}
+
+// NewLibraryRemoveOutcomeFailureEvent creates a library outcome event for
+// a failed remove. As with the success variant, defined now so the
+// subscriber's type-switch compiles exhaustively over the library event
+// vocabulary.
+func NewLibraryRemoveOutcomeFailureEvent(library, version, errorType, trigger string) LibraryOutcomeEvent {
+	e := newBaseLibraryOutcomeEvent()
+	e.Action = "library_remove_outcome_failure"
+	e.Library = library
+	e.Version = version
+	e.ErrorType = errorType
+	e.Trigger = trigger
+	return e
+}
+
 // ClassifyError maps a Go error to one of the fixed error taxonomy values.
 // It uses string matching on the error message. Raw error strings are never
 // transmitted; only taxonomy values cross the wire.

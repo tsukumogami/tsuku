@@ -1,12 +1,18 @@
 package install
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/testutil"
 )
+
+func libraryTestCtx() context.Context {
+	return installevents.WithSource(context.Background(), installevents.SourceManual)
+}
 
 func TestManager_InstallLibrary(t *testing.T) {
 	cfg, cleanup := testutil.NewTestConfig(t)
@@ -32,7 +38,7 @@ func TestManager_InstallLibrary(t *testing.T) {
 
 	// Install library
 	opts := LibraryInstallOptions{}
-	err := mgr.InstallLibrary("libyaml", "0.2.5", workDir, opts)
+	err := mgr.InstallLibrary(libraryTestCtx(), "libyaml", "0.2.5", workDir, opts)
 	if err != nil {
 		t.Fatalf("InstallLibrary() error = %v", err)
 	}
@@ -76,7 +82,7 @@ func TestManager_InstallLibrary_WithUsedBy(t *testing.T) {
 	opts := LibraryInstallOptions{
 		ToolNameVersion: "ruby-3.4.0",
 	}
-	err := mgr.InstallLibrary("libyaml", "0.2.5", workDir, opts)
+	err := mgr.InstallLibrary(libraryTestCtx(), "libyaml", "0.2.5", workDir, opts)
 	if err != nil {
 		t.Fatalf("InstallLibrary() error = %v", err)
 	}

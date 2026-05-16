@@ -11,7 +11,6 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
-	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/shellenv"
@@ -164,13 +163,32 @@ func shouldInstallRuntimeDep(depRecipe *recipe.Recipe) bool {
 	return depRecipe.SupportsPlatformRuntime()
 }
 
-func runInstall(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client, src installevents.Source) error {
+// installArgs carries the per-invocation inputs threaded through the
+// install pipeline. Bundling these into a struct lets the recursive
+// dependency walk derive child invocations via a copy-and-override
+// pattern (`sub := args; sub.Tool = dep; ...`) instead of forwarding
+// 10 positional parameters by hand. Request-scoped metadata that is
+// orthogonal to a single install -- the cancellation context, the
+// installevents.Source tag carried on ctx, and the visited-set used
+// to detect cyclic dep walks -- is passed alongside `args`, not on it.
+type installArgs struct {
+	Tool              string
+	ReqVersion        string
+	VersionConstraint string
+	IsExplicit        bool
+	Parent            string
+	Reporter          progress.Reporter
+	TelemetryClient   *telemetry.Client
+}
+
+func runInstall(ctx context.Context, args installArgs) error {
 	reporter := progress.NewTTYReporter(os.Stderr)
 	defer func() {
 		reporter.Stop()
 		reporter.FlushDeferred()
 	}()
-	return installWithDependencies(toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client, reporter, src)
+	args.Reporter = reporter
+	return installWithDependencies(ctx, args, make(map[string]bool))
 }
 
 // runInstallWithReporter runs the install flow using a caller-provided
@@ -178,11 +196,19 @@ func runInstall(toolName, reqVersion, versionConstraint string, isExplicit bool,
 // this when the caller needs to emit a permanent outcome line via the same
 // reporter after the install completes, so TTY spinner replacement works
 // correctly without mixing output streams.
-func runInstallWithReporter(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client, reporter progress.Reporter, src installevents.Source) error {
-	return installWithDependencies(toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client, reporter, src)
+func runInstallWithReporter(ctx context.Context, args installArgs) error {
+	return installWithDependencies(ctx, args, make(map[string]bool))
 }
 
-func installWithDependencies(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, visited map[string]bool, telemetryClient *telemetry.Client, reporter progress.Reporter, src installevents.Source) error {
+func installWithDependencies(ctx context.Context, args installArgs, visited map[string]bool) error {
+	toolName := args.Tool
+	reqVersion := args.ReqVersion
+	versionConstraint := args.VersionConstraint
+	isExplicit := args.IsExplicit
+	parent := args.Parent
+	reporter := args.Reporter
+	telemetryClient := args.TelemetryClient
+
 	// Initialize manager for state updates. The event bus dispatches
 	// lifecycle events to the notices and telemetry subscribers; src
 	// tags every event so subscribers can distinguish manual / auto /
@@ -197,7 +223,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 
 	// If explicit install, check if tool is hidden and just expose it
 	if isExplicit && parent == "" {
-		wasHidden, err := install.CheckAndExposeHidden(mgr, toolName)
+		wasHidden, err := install.CheckAndExposeHidden(ctx, mgr, toolName)
 		if err != nil {
 			reporter.Warn("failed to check hidden status: %v", err)
 		}
@@ -219,26 +245,8 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	}
 
 	if isInstalled {
-		// Update state
-		err := mgr.GetState().UpdateTool(toolName, func(ts *install.ToolState) {
-			if isExplicit {
-				ts.IsExplicit = true
-			}
-			if parent != "" {
-				// Add parent to RequiredBy if not present
-				found := false
-				for _, r := range ts.RequiredBy {
-					if r == parent {
-						found = true
-						break
-					}
-				}
-				if !found {
-					ts.RequiredBy = append(ts.RequiredBy, parent)
-				}
-			}
-		})
-		if err != nil {
+		// Update state via semantic Manager methods.
+		if err := recordInstallRelationship(mgr, toolName, parent, isExplicit); err != nil {
 			reporter.Warn("failed to update state for %s: %v", toolName, err)
 		}
 
@@ -300,7 +308,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 
 	// Check if this is a library recipe
 	if r.IsLibrary() {
-		return installLibrary(toolName, reqVersion, mgr, telemetryClient, reporter, src)
+		return installLibrary(ctx, toolName, reqVersion, mgr, telemetryClient, reporter)
 	}
 
 	// Check and display system dependency instructions (for explicit installs only)
@@ -337,10 +345,27 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 
 		for _, dep := range r.Metadata.Dependencies {
 			reporter.Status(fmt.Sprintf("Resolving dependency '%s'...", dep))
-			// Install dependency (not explicit, parent is current tool)
-			// Dependencies don't have version constraints and are tracked for telemetry
-			if err := installWithDependencies(dep, "", "", false, toolName, visited, telemetryClient, reporter, src); err != nil {
+			// Install dependency (not explicit, parent is current tool).
+			// Dependencies don't have version constraints and are tracked
+			// for telemetry. Construct the sub-call by copy-and-override on
+			// the parent args rather than threading positional parameters.
+			sub := args
+			sub.Tool = dep
+			sub.IsExplicit = false
+			sub.Parent = toolName
+			sub.ReqVersion = ""
+			sub.VersionConstraint = ""
+			if err := installWithDependencies(ctx, sub, visited); err != nil {
 				return fmt.Errorf("failed to install dependency '%s': %w", dep, err)
+			}
+			// Cooperative cancellation: when ctx is canceled mid-walk, stop
+			// before processing the next dep so we don't begin a fresh
+			// install that will itself observe the cancellation later. The
+			// recursive call above may have completed cleanly even with a
+			// canceled ctx (e.g. the short-circuit path for an already-
+			// installed tool); this check ensures we don't continue past it.
+			if cerr := ctx.Err(); cerr != nil {
+				return fmt.Errorf("install canceled: %w", cerr)
 			}
 		}
 	}
@@ -361,10 +386,21 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 			if depErr == nil && !shouldInstallRuntimeDep(depRecipe) {
 				continue
 			}
-			// Install runtime dependency as explicit (exposed, not hidden)
-			// No parent - these are top-level explicit installs
-			if err := installWithDependencies(dep, "", "", true, "", visited, telemetryClient, reporter, src); err != nil {
+			// Install runtime dependency as explicit (exposed, not hidden).
+			// No parent -- these are top-level explicit installs.
+			sub := args
+			sub.Tool = dep
+			sub.IsExplicit = true
+			sub.Parent = ""
+			sub.ReqVersion = ""
+			sub.VersionConstraint = ""
+			if err := installWithDependencies(ctx, sub, visited); err != nil {
 				return fmt.Errorf("failed to install runtime dependency '%s': %w", dep, err)
+			}
+			// Cooperative cancellation between iterations -- see the matching
+			// check in the install-dependencies loop above.
+			if cerr := ctx.Err(); cerr != nil {
+				return fmt.Errorf("install canceled: %w", cerr)
 			}
 		}
 	}
@@ -472,24 +508,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	}
 	if mgr.IsVersionInstalled(toolName, planVersion) {
 		reporter.Status(fmt.Sprintf("%s@%s is already installed", toolName, planVersion))
-		err = mgr.GetState().UpdateTool(toolName, func(ts *install.ToolState) {
-			if isExplicit {
-				ts.IsExplicit = true
-			}
-			if parent != "" {
-				found := false
-				for _, r := range ts.RequiredBy {
-					if r == parent {
-						found = true
-						break
-					}
-				}
-				if !found {
-					ts.RequiredBy = append(ts.RequiredBy, parent)
-				}
-			}
-		})
-		if err != nil {
+		if err := recordInstallRelationship(mgr, toolName, parent, isExplicit); err != nil {
 			reporter.Warn("failed to update state: %v", err)
 		}
 		setInstalledInIndex(toolName, true)
@@ -547,8 +566,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 			reporter.Status(fmt.Sprintf("Runtime dependencies: %v", mapKeys(runtimeDeps)))
 		}
 
-		installOpts.Source = src
-		if err := mgr.InstallWithOptions(toolName, version, exec.WorkDir(), installOpts); err != nil {
+		if err := mgr.InstallWithOptions(ctx, toolName, version, exec.WorkDir(), installOpts); err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to install to permanent location: %v\n", err)
 			return err
 		}
@@ -581,37 +599,20 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		}
 
 		// Update state with explicit flag, parent, dependencies, and cleanup actions
-		err = mgr.GetState().UpdateTool(toolName, func(ts *install.ToolState) {
-			if isExplicit {
-				ts.IsExplicit = true
-			}
-			if parent != "" {
-				// Add parent to RequiredBy if not present
-				found := false
-				for _, r := range ts.RequiredBy {
-					if r == parent {
-						found = true
-						break
-					}
-				}
-				if !found {
-					ts.RequiredBy = append(ts.RequiredBy, parent)
-				}
-			}
-			// Record dependencies in state for dependency tree display and uninstall warnings
-			ts.InstallDependencies = mapKeys(resolvedDeps.InstallTime)
-			ts.RuntimeDependencies = mapKeys(resolvedDeps.Runtime)
-
-			// Store cleanup actions from post-install phase in the version state
-			if len(postInstallCleanup) > 0 && ts.Versions != nil {
-				if vs, ok := ts.Versions[version]; ok {
-					vs.CleanupActions = convertCleanupActions(postInstallCleanup)
-					ts.Versions[version] = vs
-				}
-			}
-		})
-		if err != nil {
+		// via semantic Manager methods.
+		if err := recordInstallRelationship(mgr, toolName, parent, isExplicit); err != nil {
 			reporter.Warn("failed to update state: %v", err)
+		}
+		if err := mgr.SetInstallDependencies(toolName, mapKeys(resolvedDeps.InstallTime)); err != nil {
+			reporter.Warn("failed to record install dependencies: %v", err)
+		}
+		if err := mgr.SetRuntimeDependencies(toolName, mapKeys(resolvedDeps.Runtime)); err != nil {
+			reporter.Warn("failed to record runtime dependencies: %v", err)
+		}
+		if len(postInstallCleanup) > 0 {
+			if err := mgr.RecordCleanup(toolName, convertCleanupActions(postInstallCleanup)); err != nil {
+				reporter.Warn("failed to record cleanup actions: %v", err)
+			}
 		}
 	}
 
@@ -713,6 +714,22 @@ func resolveRuntimeDeps(r *recipe.Recipe, mgr *install.Manager, reporter progres
 	}
 
 	return result
+}
+
+// recordInstallRelationship records the explicit-install and required-by
+// relationship for a tool via Manager's semantic methods. When isExplicit
+// is true, MarkExplicit sets IsExplicit and, if parent is non-empty,
+// appends parent to RequiredBy. When isExplicit is false but parent is
+// non-empty, only the required-by edge is recorded via AddRequiredBy.
+// Both branches are no-ops when there is nothing to record.
+func recordInstallRelationship(mgr *install.Manager, toolName, parent string, isExplicit bool) error {
+	if isExplicit {
+		return mgr.MarkExplicit(toolName, parent)
+	}
+	if parent != "" {
+		return mgr.GetState().AddRequiredBy(toolName, parent)
+	}
+	return nil
 }
 
 // mapKeys returns the keys of a map as a slice (for display)

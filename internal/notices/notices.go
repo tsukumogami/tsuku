@@ -65,13 +65,27 @@ func ReadNotice(noticesDir, toolName string) (*Notice, error) {
 	return readNotice(noticesDir, toolName)
 }
 
+// LibraryNoticePrefix is the leading sentinel used in library notice
+// filenames. Library notices are stored as
+// $TSUKU_HOME/notices/lib--<library>.json so they do not collide with
+// tool notices when a tool and library share a name. Tool names cannot
+// contain the "--" sequence after validation in WriteNotice, so the
+// prefix is unambiguous: any file whose stem starts with lib-- is a
+// library notice, and any stem that does not is a tool notice.
+const LibraryNoticePrefix = "lib--"
+
 // WriteNotice atomically writes a notice to the notices directory.
 // A new failure overwrites the previous notice for the same tool.
 // Creates the directory with os.MkdirAll if it does not exist.
-// Returns an error if notice.Tool contains path separators or equals "..".
+// Returns an error if notice.Tool contains path separators, equals "..",
+// or otherwise fails the notice-name validation (see isValidNoticeName).
+//
+// Library notices set notice.Tool to "lib--<library>"; the validation
+// accepts the leading lib-- prefix as a single sentinel and forbids any
+// further "--" sequence inside the name.
 func WriteNotice(noticesDir string, notice *Notice) error {
-	if notice.Tool == ".." || strings.Contains(notice.Tool, "/") || strings.Contains(notice.Tool, "\\") {
-		return fmt.Errorf("invalid tool name %q: must not contain path separators", notice.Tool)
+	if err := validateNoticeName(notice.Tool); err != nil {
+		return err
 	}
 	if err := os.MkdirAll(noticesDir, 0755); err != nil {
 		return fmt.Errorf("create notices directory: %w", err)
@@ -157,16 +171,60 @@ func MarkShown(noticesDir, toolName string) error {
 
 // RemoveNotice deletes a tool's notice file.
 // Returns nil if the file does not exist.
-// Rejects tool names with path separators or equal to ".." to match
+// Rejects names with path separators or equal to ".." to match
 // WriteNotice's validation; defense-in-depth against future call sites.
+// Library notice names (lib--<library>) are accepted symmetrically.
 func RemoveNotice(noticesDir, toolName string) error {
-	if toolName == ".." || strings.Contains(toolName, "/") || strings.Contains(toolName, "\\") {
-		return fmt.Errorf("invalid tool name %q: must not contain path separators", toolName)
+	if err := validateNoticeName(toolName); err != nil {
+		return err
 	}
 	path := filepath.Join(noticesDir, toolName+".json")
 	err := os.Remove(path)
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("remove notice for %s: %w", toolName, err)
+	}
+	return nil
+}
+
+// validateNoticeName enforces the on-disk notice filename contract:
+//
+//   - empty names are rejected (nothing to write)
+//   - path-separator chars and ".." are rejected (defense against
+//     directory traversal — same surface WriteNotice has always guarded)
+//   - the "--" sequence is rejected anywhere except as the leading
+//     LibraryNoticePrefix sentinel
+//
+// Tool names cannot contain "--" because tsuku's tool naming convention
+// is single-hyphen kebab-case ("aws-cli", "gh", "cargo-audit"); the
+// validation tightens that into a checked invariant so a future
+// caller cannot accidentally produce a name like "foo--bar.json" that
+// looks like a library notice to the renderer.
+//
+// Library names (the substring after "lib--") follow the same single-
+// hyphen rule and must not themselves contain "--", path separators,
+// or "..".
+func validateNoticeName(name string) error {
+	if name == "" {
+		return fmt.Errorf("invalid notice name: must not be empty")
+	}
+	if name == ".." || strings.Contains(name, "/") || strings.Contains(name, "\\") {
+		return fmt.Errorf("invalid notice name %q: must not contain path separators", name)
+	}
+	if strings.HasPrefix(name, LibraryNoticePrefix) {
+		lib := strings.TrimPrefix(name, LibraryNoticePrefix)
+		if lib == "" {
+			return fmt.Errorf("invalid notice name %q: library name after %q prefix must not be empty", name, LibraryNoticePrefix)
+		}
+		if strings.Contains(lib, "--") {
+			return fmt.Errorf("invalid notice name %q: library name must not contain %q outside the leading prefix", name, "--")
+		}
+		if lib == ".." || strings.Contains(lib, "/") || strings.Contains(lib, "\\") {
+			return fmt.Errorf("invalid notice name %q: library segment must not contain path separators", name)
+		}
+		return nil
+	}
+	if strings.Contains(name, "--") {
+		return fmt.Errorf("invalid notice name %q: %q is reserved for the library prefix", name, "--")
 	}
 	return nil
 }

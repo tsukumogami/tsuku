@@ -150,8 +150,15 @@ Exit codes:
 type runInstaller struct{}
 
 func (i *runInstaller) Install(ctx context.Context, recipeName, version string) error {
-	_ = ctx // install pipeline uses globalCtx internally
-	return runInstall(recipeName, version, version, true, "", nil, installevents.SourceProjectAuto)
+	// `tsuku run` triggers auto-installation when the project config (or the
+	// user-elected consent mode) approves it. Tag every event published by
+	// the install pipeline with SourceProjectAuto.
+	return runInstall(installevents.WithSource(ctx, installevents.SourceProjectAuto), installArgs{
+		Tool:              recipeName,
+		ReqVersion:        version,
+		VersionConstraint: version,
+		IsExplicit:        true,
+	})
 }
 
 // resolveMode applies the four-step priority chain to determine the active

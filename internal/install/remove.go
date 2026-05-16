@@ -1,6 +1,7 @@
 package install
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,9 +13,18 @@ import (
 	"github.com/tsukumogami/tsuku/internal/shellenv"
 )
 
-// Remove removes an installed tool (legacy method - removes active version only)
-// Deprecated: Use RemoveVersion or RemoveAllVersions instead
-func (m *Manager) Remove(name string, src installevents.Source) error {
+// Remove removes an installed tool (legacy method - removes active version only).
+// Source is read from ctx via installevents.SourceFromContext; callers must
+// wrap ctx with installevents.WithSource before invoking.
+//
+// Deprecated: Use RemoveVersion or RemoveAllVersions instead.
+func (m *Manager) Remove(ctx context.Context, name string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
+	src := installevents.SourceFromContext(ctx)
+
 	// 1. Find installed version
 	tools, err := m.List()
 	if err != nil {
@@ -87,7 +97,14 @@ func (m *Manager) publishRemoveOutcome(name, version, activeAfter string, src in
 // RemoveVersion removes a specific version of a tool.
 // If the removed version was active, switches to the most recently installed remaining version.
 // If this was the last version, removes the tool entirely from state.
-func (m *Manager) RemoveVersion(name, version string, src installevents.Source) (err error) {
+// Source is read from ctx via installevents.SourceFromContext; callers must
+// wrap ctx with installevents.WithSource before invoking.
+func (m *Manager) RemoveVersion(ctx context.Context, name, version string) (err error) {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
+	src := installevents.SourceFromContext(ctx)
 	defer func() {
 		// publish-after-state: state mutations above have either committed
 		// or failed before this defer runs. ActiveAfter is recomputed
@@ -124,7 +141,7 @@ func (m *Manager) RemoveVersion(name, version string, src installevents.Source) 
 
 	// Execute cleanup actions before removing the directory.
 	// Collect other versions' cleanup paths so we don't delete shared resources.
-	affectedShells := m.executeCleanupActions(name, version, versionState.CleanupActions, toolState)
+	affectedShells := m.executeCleanupActions(ctx, name, version, versionState.CleanupActions, toolState)
 
 	// Remove version directory
 	toolDir := m.config.ToolDir(name, version)
@@ -182,7 +199,7 @@ func (m *Manager) RemoveVersion(name, version string, src installevents.Source) 
 		if len(binaries) == 0 {
 			binaries = []string{filepath.Join("bin", name)}
 		}
-		if err := m.createSymlinksForBinaries(name, newActiveVersion, binaries); err != nil {
+		if err := m.createSymlinksForBinaries(ctx, name, newActiveVersion, binaries); err != nil {
 			return fmt.Errorf("failed to update symlinks: %w", err)
 		}
 	}
@@ -191,7 +208,14 @@ func (m *Manager) RemoveVersion(name, version string, src installevents.Source) 
 }
 
 // RemoveAllVersions removes all versions of a tool.
-func (m *Manager) RemoveAllVersions(name string, src installevents.Source) (err error) {
+// Source is read from ctx via installevents.SourceFromContext; callers must
+// wrap ctx with installevents.WithSource before invoking.
+func (m *Manager) RemoveAllVersions(ctx context.Context, name string) (err error) {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
+	src := installevents.SourceFromContext(ctx)
 	defer func() {
 		// publish-after-state: state has either been fully cleared or
 		// left intact. ActiveAfter is empty on success (tool fully gone).
@@ -298,7 +322,9 @@ func getMostRecentVersion(versions map[string]VersionState) string {
 // executeCleanupActions runs cleanup actions for a version being removed.
 // It skips any cleanup path that another version of the same tool also references
 // (multi-version safety). Returns the set of shell names affected for cache rebuild.
-func (m *Manager) executeCleanupActions(name, version string, actions []CleanupAction, toolState *ToolState) map[string]bool {
+// ctx is accepted for future cancellation hooks.
+func (m *Manager) executeCleanupActions(ctx context.Context, name, version string, actions []CleanupAction, toolState *ToolState) map[string]bool {
+	_ = ctx
 	if len(actions) == 0 {
 		return nil
 	}

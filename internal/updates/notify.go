@@ -3,6 +3,7 @@ package updates
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/config"
@@ -90,6 +91,8 @@ func renderUnshownNotices(noticesDir string) {
 			for _, msg := range n.Messages {
 				fmt.Fprintf(os.Stderr, "  %s\n", msg)
 			}
+		case strings.HasPrefix(n.Tool, notices.LibraryNoticePrefix):
+			renderLibraryNotice(n)
 		case n.Tool == SelfToolName:
 			renderSelfUpdateNotice(n)
 		default:
@@ -117,6 +120,37 @@ func renderSelfUpdateNotice(n notices.Notice) {
 	}
 	fmt.Fprintf(os.Stderr, "\ntsuku self-update failed: %s\n", n.Error)
 	fmt.Fprintf(os.Stderr, "  Run 'tsuku self-update' to retry.\n")
+}
+
+// renderLibraryNotice formats the user-facing message for a library
+// lifecycle notice. Library notices are stored with the lib-- prefix
+// on disk so they do not collide with tool notices; the renderer strips
+// the prefix before display. The Verb field selects phrasing; library
+// installs have no Updated variant today, so VerbUpdate and an empty
+// Verb both render as install.
+func renderLibraryNotice(n notices.Notice) {
+	library := strings.TrimPrefix(n.Tool, notices.LibraryNoticePrefix)
+	if n.Error == "" {
+		switch n.Verb {
+		case notices.VerbRemove:
+			// Successful library remove is reported via RemoveNotice,
+			// not WriteNotice, so this branch shouldn't normally fire.
+			// Stay quiet to keep output clean if a stray success notice
+			// with VerbRemove appears.
+		default: // VerbInstall or empty (legacy / future-compat)
+			fmt.Fprintf(os.Stderr, "\n%s library has been installed (%s)\n", library, n.AttemptedVersion)
+		}
+		return
+	}
+	// Failure path: per-verb framing.
+	switch n.Verb {
+	case notices.VerbRemove:
+		fmt.Fprintf(os.Stderr, "\nLibrary remove failed: %s %s: %s\n", library, n.AttemptedVersion, n.Error)
+		fmt.Fprintf(os.Stderr, "  Run 'tsuku notices' for details.\n")
+	default: // VerbInstall or empty
+		fmt.Fprintf(os.Stderr, "\nLibrary install failed: %s -> %s: %s\n", library, n.AttemptedVersion, n.Error)
+		fmt.Fprintf(os.Stderr, "  Run 'tsuku notices' for details.\n")
+	}
 }
 
 // renderToolNotice formats the user-facing message for a tool-lifecycle

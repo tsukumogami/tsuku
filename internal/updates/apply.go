@@ -1,12 +1,14 @@
 package updates
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/project"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
@@ -164,7 +166,11 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, projectCfg *
 			// the symlinks for the prior version. Activate is internal;
 			// no additional bus event is published.
 			if previousVersion != "" {
-				if rollbackErr := mgr.Activate(entry.Tool, previousVersion); rollbackErr != nil {
+				// Background defensive rollback runs under SourceAuto:
+				// the bus requires a non-empty Source even though Activate
+				// does not publish a lifecycle event itself.
+				rollbackCtx := installevents.WithSource(context.Background(), installevents.SourceAuto)
+				if rollbackErr := mgr.Activate(rollbackCtx, entry.Tool, previousVersion); rollbackErr != nil {
 					log.Default().Debug("auto-apply: rollback failed",
 						"tool", entry.Tool, "error", rollbackErr)
 				}

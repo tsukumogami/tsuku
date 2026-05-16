@@ -227,7 +227,13 @@ func runProjectInstall(cmd *cobra.Command) {
 			loader.CacheRecipe(dArgs.RecipeName, r)
 
 			// Install using bare recipe name
-			installErr := runInstall(dArgs.RecipeName, resolveVersion, constraint, true, "", telemetryClient, installevents.SourceManual)
+			installErr := runInstall(installevents.WithSource(globalCtx, installevents.SourceManual), installArgs{
+				Tool:              dArgs.RecipeName,
+				ReqVersion:        resolveVersion,
+				VersionConstraint: constraint,
+				IsExplicit:        true,
+				TelemetryClient:   telemetryClient,
+			})
 			if installErr != nil {
 				results = append(results, projectToolResult{Name: t.Name, Status: "failed", Error: installErr})
 				continue
@@ -247,7 +253,13 @@ func runProjectInstall(cmd *cobra.Command) {
 			results = append(results, projectToolResult{Name: t.Name, Status: "installed"})
 		} else {
 			// Standard install path (unchanged)
-			err := runInstall(t.Name, resolveVersion, constraint, true, "", telemetryClient, installevents.SourceManual)
+			err := runInstall(installevents.WithSource(globalCtx, installevents.SourceManual), installArgs{
+				Tool:              t.Name,
+				ReqVersion:        resolveVersion,
+				VersionConstraint: constraint,
+				IsExplicit:        true,
+				TelemetryClient:   telemetryClient,
+			})
 			if err != nil {
 				results = append(results, projectToolResult{Name: t.Name, Status: "failed", Error: err})
 			} else {

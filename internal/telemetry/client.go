@@ -205,6 +205,25 @@ func (c *Client) SendUpdateOutcome(event UpdateOutcomeEvent) {
 	go c.sendJSON(event)
 }
 
+// SendLibraryOutcome sends a library outcome event asynchronously.
+// Mirrors SendUpdateOutcome: never blocks, never returns errors. Libraries
+// emit their own outcome shape rather than reusing UpdateOutcomeEvent so
+// downstream analytics can branch on Action without parsing tool/library
+// semantics out of an overloaded field.
+func (c *Client) SendLibraryOutcome(event LibraryOutcomeEvent) {
+	if c.disabled {
+		return
+	}
+
+	if c.debug {
+		data, _ := json.Marshal(event)
+		fmt.Fprintf(os.Stderr, "[telemetry] %s\n", data)
+		return
+	}
+
+	go c.sendJSON(event)
+}
+
 // sendJSON performs the actual HTTP request for any event type.
 func (c *Client) sendJSON(event interface{}) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)

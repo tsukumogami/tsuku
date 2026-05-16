@@ -1,6 +1,7 @@
 package install
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -9,6 +10,10 @@ import (
 	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/testutil"
 )
+
+func removeTestCtx() context.Context {
+	return installevents.WithSource(context.Background(), installevents.SourceManual)
+}
 
 // TestRemoveVersion_Single tests removing a single version when multiple are installed.
 func TestRemoveVersion_Single(t *testing.T) {
@@ -51,7 +56,7 @@ func TestRemoveVersion_Single(t *testing.T) {
 	}
 
 	// Remove version 1.0.0 (not active)
-	err = mgr.RemoveVersion("mytool", "1.0.0", installevents.SourceManual)
+	err = mgr.RemoveVersion(removeTestCtx(), "mytool", "1.0.0")
 	if err != nil {
 		t.Fatalf("RemoveVersion() error = %v", err)
 	}
@@ -126,7 +131,7 @@ func TestRemoveVersion_ActiveSwitchesToMostRecent(t *testing.T) {
 	}
 
 	// Remove active version (2.0.0)
-	err = mgr.RemoveVersion("mytool", "2.0.0", installevents.SourceManual)
+	err = mgr.RemoveVersion(removeTestCtx(), "mytool", "2.0.0")
 	if err != nil {
 		t.Fatalf("RemoveVersion() error = %v", err)
 	}
@@ -196,7 +201,7 @@ func TestRemoveVersion_LastVersion(t *testing.T) {
 	}
 
 	// Remove the only version
-	err = mgr.RemoveVersion("mytool", "1.0.0", installevents.SourceManual)
+	err = mgr.RemoveVersion(removeTestCtx(), "mytool", "1.0.0")
 	if err != nil {
 		t.Fatalf("RemoveVersion() error = %v", err)
 	}
@@ -241,7 +246,7 @@ func TestRemoveVersion_NotInstalled(t *testing.T) {
 	}
 
 	// Try to remove non-existent version
-	err = mgr.RemoveVersion("mytool", "2.0.0", installevents.SourceManual)
+	err = mgr.RemoveVersion(removeTestCtx(), "mytool", "2.0.0")
 	if err == nil {
 		t.Error("RemoveVersion should error for non-existent version")
 	}
@@ -271,7 +276,7 @@ func TestRemoveVersion_InvalidVersion(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := mgr.RemoveVersion("sometool", tc.version, installevents.SourceManual)
+			err := mgr.RemoveVersion(removeTestCtx(), "sometool", tc.version)
 			if err == nil {
 				t.Error("RemoveVersion should error for invalid version")
 			}
@@ -318,7 +323,7 @@ func TestRemoveAllVersions(t *testing.T) {
 	}
 
 	// Remove all versions
-	err = mgr.RemoveAllVersions("mytool", installevents.SourceManual)
+	err = mgr.RemoveAllVersions(removeTestCtx(), "mytool")
 	if err != nil {
 		t.Fatalf("RemoveAllVersions() error = %v", err)
 	}
@@ -353,7 +358,7 @@ func TestRemoveAllVersions_ToolNotInstalled(t *testing.T) {
 
 	mgr := New(cfg)
 
-	err := mgr.RemoveAllVersions("nonexistent", installevents.SourceManual)
+	err := mgr.RemoveAllVersions(removeTestCtx(), "nonexistent")
 	if err == nil {
 		t.Error("RemoveAllVersions should error for non-existent tool")
 	}
@@ -444,7 +449,7 @@ func TestRemoveVersion_EmptyBinariesFallback(t *testing.T) {
 	}
 
 	// Remove active version (2.0.0) - should switch to 1.0.0
-	err = mgr.RemoveVersion("legacytool", "2.0.0", installevents.SourceManual)
+	err = mgr.RemoveVersion(removeTestCtx(), "legacytool", "2.0.0")
 	if err != nil {
 		t.Fatalf("RemoveVersion() error = %v", err)
 	}
@@ -521,7 +526,7 @@ func TestRemoveVersion_ExecutesCleanupActions(t *testing.T) {
 	}
 
 	// Remove the tool
-	err = mgr.RemoveVersion("mytool", "1.0.0", installevents.SourceManual)
+	err = mgr.RemoveVersion(removeTestCtx(), "mytool", "1.0.0")
 	if err != nil {
 		t.Fatalf("RemoveVersion() error = %v", err)
 	}
@@ -588,7 +593,7 @@ func TestRemoveVersion_CleanupMultiVersionSafety(t *testing.T) {
 	}
 
 	// Remove v1 -- v2 still references the same cleanup path, so file should survive
-	err = mgr.RemoveVersion("mytool", "1.0.0", installevents.SourceManual)
+	err = mgr.RemoveVersion(removeTestCtx(), "mytool", "1.0.0")
 	if err != nil {
 		t.Fatalf("RemoveVersion() error = %v", err)
 	}
@@ -634,7 +639,7 @@ func TestRemoveVersion_LegacyNoCleanupActions(t *testing.T) {
 	}
 
 	// Remove should succeed without errors
-	err = mgr.RemoveVersion("oldtool", "1.0.0", installevents.SourceManual)
+	err = mgr.RemoveVersion(removeTestCtx(), "oldtool", "1.0.0")
 	if err != nil {
 		t.Fatalf("RemoveVersion() error = %v", err)
 	}
@@ -706,7 +711,7 @@ func TestRemoveAllVersions_ExecutesCleanupActions(t *testing.T) {
 		t.Fatalf("failed to create symlink: %v", err)
 	}
 
-	err = mgr.RemoveAllVersions("mytool", installevents.SourceManual)
+	err = mgr.RemoveAllVersions(removeTestCtx(), "mytool")
 	if err != nil {
 		t.Fatalf("RemoveAllVersions() error = %v", err)
 	}
@@ -758,7 +763,7 @@ func TestRemoveVersion_CleanupFailureDoesNotBlockRemoval(t *testing.T) {
 	}
 
 	// Should succeed despite cleanup pointing to non-existent file
-	err = mgr.RemoveVersion("mytool", "1.0.0", installevents.SourceManual)
+	err = mgr.RemoveVersion(removeTestCtx(), "mytool", "1.0.0")
 	if err != nil {
 		t.Fatalf("RemoveVersion() should not fail on cleanup errors, got: %v", err)
 	}
@@ -832,7 +837,7 @@ func TestRemoveVersion_MultipleBinaries(t *testing.T) {
 	}
 
 	// Remove the tool
-	err = mgr.RemoveVersion("multitool", "1.0.0", installevents.SourceManual)
+	err = mgr.RemoveVersion(removeTestCtx(), "multitool", "1.0.0")
 	if err != nil {
 		t.Fatalf("RemoveVersion() error = %v", err)
 	}

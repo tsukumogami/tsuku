@@ -285,3 +285,131 @@ func TestKindFor_AutoMapsToKindAutoApplyResult(t *testing.T) {
 		t.Errorf("kindFor(SourceProjectAuto) = %q, want %q", got, KindUpdateResult)
 	}
 }
+
+// LibraryInstalled writes a notice under the lib-- prefix with Verb=install.
+func TestSubscriber_LibraryInstalled(t *testing.T) {
+	dir := t.TempDir()
+	s := NewSubscriber(dir)
+
+	s.Handle(installevents.LibraryInstalled{
+		Library: "libyaml", Version: "0.2.5",
+		Source: installevents.SourceManual, Timestamp: time.Now(),
+	})
+
+	got, err := ReadNotice(dir, LibraryNoticePrefix+"libyaml")
+	if err != nil || got == nil {
+		t.Fatalf("expected notice at %qlibyaml, got err=%v notice=%v", LibraryNoticePrefix, err, got)
+	}
+	if got.Verb != VerbInstall {
+		t.Errorf("Verb = %q, want %q", got.Verb, VerbInstall)
+	}
+	if got.AttemptedVersion != "0.2.5" {
+		t.Errorf("AttemptedVersion = %q, want 0.2.5", got.AttemptedVersion)
+	}
+	if got.Shown {
+		t.Error("Shown must be false")
+	}
+	if got.Error != "" {
+		t.Errorf("Error = %q, want empty on success", got.Error)
+	}
+}
+
+// LibraryInstallFailed writes a failure notice with sanitized error and
+// the consecutive-failures counter starting at 1.
+func TestSubscriber_LibraryInstallFailed(t *testing.T) {
+	dir := t.TempDir()
+	s := NewSubscriber(dir)
+
+	s.Handle(installevents.LibraryInstallFailed{
+		Library: "libyaml", AttemptedVersion: "0.2.5",
+		Err:    errors.New("download failed"),
+		Source: installevents.SourceManual,
+	})
+
+	got, _ := ReadNotice(dir, LibraryNoticePrefix+"libyaml")
+	if got == nil {
+		t.Fatal("expected notice")
+	}
+	if got.Error != "download failed" {
+		t.Errorf("Error = %q, want %q", got.Error, "download failed")
+	}
+	if got.ConsecutiveFailures != 1 {
+		t.Errorf("ConsecutiveFailures = %d, want 1", got.ConsecutiveFailures)
+	}
+}
+
+// LibraryRemoved removes any prior notice for the library.
+func TestSubscriber_LibraryRemoved(t *testing.T) {
+	dir := t.TempDir()
+	s := NewSubscriber(dir)
+
+	if err := WriteNotice(dir, &Notice{
+		Tool: LibraryNoticePrefix + "libyaml", AttemptedVersion: "0.2.5",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	s.Handle(installevents.LibraryRemoved{
+		Library: "libyaml", Version: "0.2.5",
+		Source: installevents.SourceManual,
+	})
+
+	got, _ := ReadNotice(dir, LibraryNoticePrefix+"libyaml")
+	if got != nil {
+		t.Errorf("expected notice to be removed, got %+v", got)
+	}
+}
+
+// LibraryRemoveFailed writes a failure notice with Verb=remove.
+func TestSubscriber_LibraryRemoveFailed(t *testing.T) {
+	dir := t.TempDir()
+	s := NewSubscriber(dir)
+
+	s.Handle(installevents.LibraryRemoveFailed{
+		Library: "libyaml", AttemptedVersion: "0.2.5",
+		Err:    errors.New("permission denied"),
+		Source: installevents.SourceManual,
+	})
+
+	got, _ := ReadNotice(dir, LibraryNoticePrefix+"libyaml")
+	if got == nil {
+		t.Fatal("expected notice")
+	}
+	if got.Verb != VerbRemove {
+		t.Errorf("Verb = %q, want %q", got.Verb, VerbRemove)
+	}
+}
+
+// Library events must not touch tool notices that happen to share a name.
+func TestSubscriber_LibraryEventsDoNotCollideWithToolNotices(t *testing.T) {
+	dir := t.TempDir()
+	s := NewSubscriber(dir)
+
+	// Pre-seed a tool notice named "libyaml" (unusual but possible).
+	if err := WriteNotice(dir, &Notice{
+		Tool: "libyaml", AttemptedVersion: "tool-1.0", Verb: VerbInstall,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	s.Handle(installevents.LibraryInstalled{
+		Library: "libyaml", Version: "0.2.5",
+		Source: installevents.SourceManual,
+	})
+
+	tool, _ := ReadNotice(dir, "libyaml")
+	if tool == nil {
+		t.Fatal("tool notice 'libyaml' was removed by library event")
+	}
+	if tool.AttemptedVersion != "tool-1.0" {
+		t.Errorf("tool notice mutated: AttemptedVersion = %q, want tool-1.0", tool.AttemptedVersion)
+	}
+
+	lib, _ := ReadNotice(dir, LibraryNoticePrefix+"libyaml")
+	if lib == nil {
+		t.Fatal("library notice 'lib--libyaml' was not written")
+	}
+	if lib.AttemptedVersion != "0.2.5" {
+		t.Errorf("library notice AttemptedVersion = %q, want 0.2.5", lib.AttemptedVersion)
+	}
+}

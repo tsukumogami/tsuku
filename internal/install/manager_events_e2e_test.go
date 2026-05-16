@@ -1,7 +1,9 @@
 package install
 
 import (
+	"context"
 	"errors"
+	"os"
 	"strings"
 	"testing"
 
@@ -152,7 +154,7 @@ func TestE2E_RemovedFlowsToNoticeStore(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := mgr.RemoveAllVersions("gh", installevents.SourceManual); err != nil {
+	if err := mgr.RemoveAllVersions(installevents.WithSource(context.Background(), installevents.SourceManual), "gh"); err != nil {
 		t.Fatalf("RemoveAllVersions: %v", err)
 	}
 
@@ -194,5 +196,152 @@ func (c *capturingTelemetrySub) Handle(event installevents.Event) {
 				action: "update_outcome_rollback", tool: e.Tool, trigger: string(e.Source),
 			})
 		}
+	case installevents.LibraryInstalled:
+		c.received = append(c.received, capturedOutcome{
+			action: "library_install_outcome_success", tool: e.Library, trigger: string(e.Source),
+		})
+	case installevents.LibraryInstallFailed:
+		c.received = append(c.received, capturedOutcome{
+			action: "library_install_outcome_failure", tool: e.Library, trigger: string(e.Source),
+		})
+	case installevents.LibraryRemoved:
+		c.received = append(c.received, capturedOutcome{
+			action: "library_remove_outcome_success", tool: e.Library, trigger: string(e.Source),
+		})
+	case installevents.LibraryRemoveFailed:
+		c.received = append(c.received, capturedOutcome{
+			action: "library_remove_outcome_failure", tool: e.Library, trigger: string(e.Source),
+		})
+	}
+}
+
+// TestE2E_LibraryInstalledFlowsToNoticeAndTelemetry exercises the full
+// chain Manager.InstallLibrary -> bus -> notices subscriber -> notice
+// file AND -> telemetry subscriber -> outcome event. Acceptance for
+// Issue 4: a library install produces (a) a notice at lib--<library>.json
+// with Verb: install, the right AttemptedVersion, and Shown: false, and
+// (b) a library install outcome telemetry event with trigger: <source>.
+func TestE2E_LibraryInstalledFlowsToNoticeAndTelemetry(t *testing.T) {
+	cfg, cleanup := newTestConfig(t)
+	defer cleanup()
+	// InstallLibrary calls EnsureDirectories which MkdirAll's every
+	// configured directory. Fill in the fields newTestConfig leaves
+	// empty so EnsureDirectories doesn't choke on empty paths. Only
+	// LibsDir is semantically required by InstallLibrary itself.
+	cfg.LibsDir = cfg.HomeDir + "/libs"
+	cfg.RecipesDir = cfg.HomeDir + "/recipes"
+	cfg.RegistryDir = cfg.HomeDir + "/registry"
+	cfg.AppsDir = cfg.HomeDir + "/apps"
+	cfg.CacheDir = cfg.HomeDir + "/cache"
+	cfg.VersionCacheDir = cfg.HomeDir + "/cache/versions"
+	cfg.DownloadCacheDir = cfg.HomeDir + "/cache/downloads"
+	cfg.CargoRegistryCacheDir = cfg.HomeDir + "/cache/cargo-registry"
+	cfg.KeyCacheDir = cfg.HomeDir + "/cache/keys"
+	cfg.TapCacheDir = cfg.HomeDir + "/cache/taps"
+
+	// Build a fake workDir containing an .install directory; that's the
+	// only filesystem layout InstallLibrary requires.
+	workDir := t.TempDir()
+	installDir := workDir + "/.install"
+	if err := os.MkdirAll(installDir+"/lib", 0755); err != nil {
+		t.Fatal(err)
+	}
+	// Place a small file so copyDir has something to do.
+	if err := os.WriteFile(installDir+"/lib/libyaml.so.0.2.5", []byte("not a real library"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	noticesDir := notices.NoticesDir(cfg.HomeDir)
+	telemetrySub := &capturingTelemetrySub{}
+
+	bus := installevents.NewBusForTest(log.NewNoop())
+	bus.Subscribe("notices", notices.NewSubscriber(noticesDir))
+	bus.Subscribe("telemetry", telemetrySub)
+
+	mgr := New(cfg, WithEventBus(bus))
+
+	ctx := installevents.WithSource(context.Background(), installevents.SourceManual)
+	if err := mgr.InstallLibrary(ctx, "libyaml", "0.2.5", workDir, LibraryInstallOptions{}); err != nil {
+		t.Fatalf("InstallLibrary: %v", err)
+	}
+
+	// Notice store check at the lib-- prefix.
+	n, readErr := notices.ReadNotice(noticesDir, notices.LibraryNoticePrefix+"libyaml")
+	if readErr != nil {
+		t.Fatalf("ReadNotice error: %v", readErr)
+	}
+	if n == nil {
+		t.Fatal("expected library notice on disk after LibraryInstalled publish, got nil")
+	}
+	if n.Verb != notices.VerbInstall {
+		t.Errorf("notice Verb = %q, want %q", n.Verb, notices.VerbInstall)
+	}
+	if n.AttemptedVersion != "0.2.5" {
+		t.Errorf("notice AttemptedVersion = %q, want 0.2.5", n.AttemptedVersion)
+	}
+	if n.Shown {
+		t.Error("notice should be Shown=false")
+	}
+
+	// Telemetry check.
+	if len(telemetrySub.received) != 1 {
+		t.Fatalf("expected 1 library telemetry event, got %d (%+v)", len(telemetrySub.received), telemetrySub.received)
+	}
+	got := telemetrySub.received[0]
+	if got.action != "library_install_outcome_success" {
+		t.Errorf("telemetry action = %q, want library_install_outcome_success", got.action)
+	}
+	if got.tool != "libyaml" {
+		t.Errorf("telemetry library = %q, want libyaml", got.tool)
+	}
+	if got.trigger != string(installevents.SourceManual) {
+		t.Errorf("telemetry trigger = %q, want %q", got.trigger, installevents.SourceManual)
+	}
+}
+
+// TestE2E_LibraryInstallFailedFlowsToNoticeAndTelemetry exercises the
+// failure path: when copyDir or state update fails, the deferred
+// publish closure fires LibraryInstallFailed instead of LibraryInstalled.
+// Drives the publish point directly because constructing a real failure
+// in InstallLibrary needs filesystem orchestration beyond this test's
+// surface.
+func TestE2E_LibraryInstallFailedFlowsToNoticeAndTelemetry(t *testing.T) {
+	cfg, cleanup := newTestConfig(t)
+	defer cleanup()
+
+	noticesDir := notices.NoticesDir(cfg.HomeDir)
+	telemetrySub := &capturingTelemetrySub{}
+
+	bus := installevents.NewBusForTest(log.NewNoop())
+	bus.Subscribe("notices", notices.NewSubscriber(noticesDir))
+	bus.Subscribe("telemetry", telemetrySub)
+
+	mgr := New(cfg, WithEventBus(bus))
+
+	mgr.publishLibraryInstallOutcome("libyaml", "0.2.5", installevents.SourceAuto,
+		errors.New("download failed: HTTP 503"))
+
+	n, _ := notices.ReadNotice(noticesDir, notices.LibraryNoticePrefix+"libyaml")
+	if n == nil {
+		t.Fatal("expected library notice on disk after LibraryInstallFailed")
+	}
+	if n.Verb != notices.VerbInstall {
+		t.Errorf("notice Verb = %q, want %q", n.Verb, notices.VerbInstall)
+	}
+	if !strings.Contains(n.Error, "download failed: HTTP 503") {
+		t.Errorf("notice Error should contain source error; got %q", n.Error)
+	}
+	if n.ConsecutiveFailures != 1 {
+		t.Errorf("notice ConsecutiveFailures = %d, want 1", n.ConsecutiveFailures)
+	}
+
+	if len(telemetrySub.received) != 1 {
+		t.Fatalf("expected 1 library telemetry event, got %d", len(telemetrySub.received))
+	}
+	if telemetrySub.received[0].action != "library_install_outcome_failure" {
+		t.Errorf("telemetry action = %q, want library_install_outcome_failure", telemetrySub.received[0].action)
+	}
+	if telemetrySub.received[0].trigger != string(installevents.SourceAuto) {
+		t.Errorf("telemetry trigger = %q, want %q", telemetrySub.received[0].trigger, installevents.SourceAuto)
 	}
 }

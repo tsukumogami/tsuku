@@ -69,6 +69,22 @@ func (s *Subscriber) Handle(event installevents.Event) {
 		_ = s.writeFailure(e.Tool, e.AttemptedVersion, VerbRollback, e.Err, e.Source, e.Timestamp)
 	case installevents.RemoveFailed:
 		_ = s.writeFailure(e.Tool, e.AttemptedVersion, VerbRemove, e.Err, e.Source, e.Timestamp)
+
+	case installevents.LibraryInstalled:
+		_ = WriteNotice(s.dir, &Notice{
+			Tool:             LibraryNoticePrefix + e.Library,
+			AttemptedVersion: e.Version,
+			Verb:             VerbInstall,
+			Kind:             kindFor(e.Source),
+			Timestamp:        e.Timestamp,
+			Shown:            false,
+		})
+	case installevents.LibraryRemoved:
+		_ = RemoveNotice(s.dir, LibraryNoticePrefix+e.Library)
+	case installevents.LibraryInstallFailed:
+		_ = s.writeFailure(LibraryNoticePrefix+e.Library, e.AttemptedVersion, VerbInstall, e.Err, e.Source, e.Timestamp)
+	case installevents.LibraryRemoveFailed:
+		_ = s.writeFailure(LibraryNoticePrefix+e.Library, e.AttemptedVersion, VerbRemove, e.Err, e.Source, e.Timestamp)
 	}
 }
 

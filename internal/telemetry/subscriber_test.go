@@ -7,13 +7,21 @@ import (
 	"github.com/tsukumogami/tsuku/internal/installevents"
 )
 
-// recordingSender captures every UpdateOutcomeEvent passed to it.
+// recordingSender captures every outcome event passed to it. The
+// library outcome stream is recorded separately because the two event
+// shapes have different schemas; tests inspect the slice matching the
+// flow under test.
 type recordingSender struct {
-	events []UpdateOutcomeEvent
+	events    []UpdateOutcomeEvent
+	libEvents []LibraryOutcomeEvent
 }
 
 func (r *recordingSender) SendUpdateOutcome(event UpdateOutcomeEvent) {
 	r.events = append(r.events, event)
+}
+
+func (r *recordingSender) SendLibraryOutcome(event LibraryOutcomeEvent) {
+	r.libEvents = append(r.libEvents, event)
 }
 
 // subscriberFromSender constructs a Subscriber wired to a custom
@@ -208,4 +216,112 @@ func TestSubscriber_NoOutcomeMappingEventsAreIgnored(t *testing.T) {
 // production wiring through NewSubscriber(c *Client) works.
 func TestClientImplementsOutcomeSender(t *testing.T) {
 	var _ outcomeSender = (*Client)(nil)
+}
+
+// LibraryInstalled -> LibraryInstallOutcomeSuccess
+func TestSubscriber_LibraryInstalled(t *testing.T) {
+	rec := &recordingSender{}
+	sub := subscriberFromSender(rec)
+
+	sub.Handle(installevents.LibraryInstalled{
+		Library: "libyaml", Version: "0.2.5",
+		Source: installevents.SourceManual,
+	})
+	if len(rec.libEvents) != 1 {
+		t.Fatalf("expected 1 library event, got %d", len(rec.libEvents))
+	}
+	got := rec.libEvents[0]
+	if got.Action != "library_install_outcome_success" {
+		t.Errorf("Action = %q, want library_install_outcome_success", got.Action)
+	}
+	if got.Library != "libyaml" || got.Version != "0.2.5" || got.Trigger != "manual" {
+		t.Errorf("event = %+v, want library=libyaml version=0.2.5 trigger=manual", got)
+	}
+	if got.ErrorType != "" {
+		t.Errorf("ErrorType = %q, want empty on success", got.ErrorType)
+	}
+}
+
+// LibraryInstallFailed -> LibraryInstallOutcomeFailure with classified error
+func TestSubscriber_LibraryInstallFailed(t *testing.T) {
+	rec := &recordingSender{}
+	sub := subscriberFromSender(rec)
+
+	sub.Handle(installevents.LibraryInstallFailed{
+		Library: "libyaml", AttemptedVersion: "0.2.5",
+		Err:    errors.New("download failed: HTTP 503"),
+		Source: installevents.SourceAuto,
+	})
+	if len(rec.libEvents) != 1 {
+		t.Fatalf("expected 1 library event, got %d", len(rec.libEvents))
+	}
+	got := rec.libEvents[0]
+	if got.Action != "library_install_outcome_failure" {
+		t.Errorf("Action = %q, want library_install_outcome_failure", got.Action)
+	}
+	if got.ErrorType != ErrorTypeDownloadFailed {
+		t.Errorf("ErrorType = %q, want %q", got.ErrorType, ErrorTypeDownloadFailed)
+	}
+	if got.Trigger != "auto" {
+		t.Errorf("Trigger = %q, want auto", got.Trigger)
+	}
+}
+
+// LibraryRemoved -> LibraryRemoveOutcomeSuccess
+func TestSubscriber_LibraryRemoved(t *testing.T) {
+	rec := &recordingSender{}
+	sub := subscriberFromSender(rec)
+
+	sub.Handle(installevents.LibraryRemoved{
+		Library: "libyaml", Version: "0.2.5",
+		Source: installevents.SourceManual,
+	})
+	if len(rec.libEvents) != 1 {
+		t.Fatalf("expected 1 library event, got %d", len(rec.libEvents))
+	}
+	if rec.libEvents[0].Action != "library_remove_outcome_success" {
+		t.Errorf("Action = %q, want library_remove_outcome_success", rec.libEvents[0].Action)
+	}
+}
+
+// LibraryRemoveFailed -> LibraryRemoveOutcomeFailure
+func TestSubscriber_LibraryRemoveFailed(t *testing.T) {
+	rec := &recordingSender{}
+	sub := subscriberFromSender(rec)
+
+	sub.Handle(installevents.LibraryRemoveFailed{
+		Library: "libyaml", AttemptedVersion: "0.2.5",
+		Err:    errors.New("permission denied"),
+		Source: installevents.SourceManual,
+	})
+	if len(rec.libEvents) != 1 {
+		t.Fatalf("expected 1 library event, got %d", len(rec.libEvents))
+	}
+	if rec.libEvents[0].Action != "library_remove_outcome_failure" {
+		t.Errorf("Action = %q, want library_remove_outcome_failure", rec.libEvents[0].Action)
+	}
+	if rec.libEvents[0].ErrorType != ErrorTypePermissionFailed {
+		t.Errorf("ErrorType = %q, want %q", rec.libEvents[0].ErrorType, ErrorTypePermissionFailed)
+	}
+}
+
+// Library events must not leak into the tool-outcome stream and vice versa.
+func TestSubscriber_LibraryEventsAreIsolatedFromToolOutcomeStream(t *testing.T) {
+	rec := &recordingSender{}
+	sub := subscriberFromSender(rec)
+
+	sub.Handle(installevents.LibraryInstalled{
+		Library: "libyaml", Version: "0.2.5", Source: installevents.SourceManual,
+	})
+	sub.Handle(installevents.Updated{
+		Tool: "ruby", FromVersion: "3.3.0", ToVersion: "3.4.0",
+		Source: installevents.SourceManual,
+	})
+
+	if len(rec.libEvents) != 1 {
+		t.Errorf("library stream = %d events, want 1", len(rec.libEvents))
+	}
+	if len(rec.events) != 1 {
+		t.Errorf("update stream = %d events, want 1", len(rec.events))
+	}
 }

@@ -1,6 +1,7 @@
 package install
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -11,6 +12,10 @@ import (
 	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/log"
 )
+
+func eventsTestCtx() context.Context {
+	return installevents.WithSource(context.Background(), installevents.SourceManual)
+}
 
 // seedInstalledTool writes a tool directory containing a bin/<tool>
 // stub so Activate's directory-exists check passes.
@@ -87,7 +92,7 @@ func TestManager_Rollback_PublishesRolledBack(t *testing.T) {
 	bus := newBusWithSubscriber("rec", rec)
 	mgr := New(cfg, WithEventBus(bus))
 
-	if err := mgr.Rollback("rb-tool", "1.0.0", installevents.SourceManual); err != nil {
+	if err := mgr.Rollback(eventsTestCtx(), "rb-tool", "1.0.0"); err != nil {
 		t.Fatalf("Rollback() = %v, want nil", err)
 	}
 
@@ -134,7 +139,7 @@ func TestManager_Rollback_PublishesRollbackFailed(t *testing.T) {
 	mgr := New(cfg, WithEventBus(bus))
 
 	// 0.9.0 is not installed; Activate should fail.
-	err := mgr.Rollback("rb-tool", "0.9.0", installevents.SourceManual)
+	err := mgr.Rollback(eventsTestCtx(), "rb-tool", "0.9.0")
 	if err == nil {
 		t.Fatal("Rollback() to non-installed version = nil, want error")
 	}
@@ -167,7 +172,7 @@ func TestManager_RemoveAllVersions_PublishesRemoved(t *testing.T) {
 	bus := newBusWithSubscriber("rec", rec)
 	mgr := New(cfg, WithEventBus(bus))
 
-	if err := mgr.RemoveAllVersions("gone-tool", installevents.SourceManual); err != nil {
+	if err := mgr.RemoveAllVersions(eventsTestCtx(), "gone-tool"); err != nil {
 		t.Fatalf("RemoveAllVersions() = %v, want nil", err)
 	}
 
@@ -214,7 +219,7 @@ func TestManager_PublishAfterStateInvariant_Rollback(t *testing.T) {
 	mgr := New(cfg, WithEventBus(bus))
 	probe.mgr = mgr
 
-	if err := mgr.Rollback("inv-tool", "1.0.0", installevents.SourceManual); err != nil {
+	if err := mgr.Rollback(eventsTestCtx(), "inv-tool", "1.0.0"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -244,7 +249,7 @@ func TestManager_NilBusIsSafe(t *testing.T) {
 	}
 
 	mgr := New(cfg) // no WithEventBus
-	if err := mgr.RemoveAllVersions("nil-bus-tool", installevents.SourceManual); err != nil {
+	if err := mgr.RemoveAllVersions(eventsTestCtx(), "nil-bus-tool"); err != nil {
 		t.Fatalf("RemoveAllVersions on nil-bus Manager = %v, want nil", err)
 	}
 }
