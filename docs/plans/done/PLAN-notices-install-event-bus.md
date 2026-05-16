@@ -1,8 +1,8 @@
 ---
 schema: plan/v1
-status: Draft
+status: Done
 execution_mode: single-pr
-upstream: docs/designs/DESIGN-notices-install-event-bus.md
+upstream: docs/designs/current/DESIGN-notices-install-event-bus.md
 milestone: "Notices Install Event Bus"
 issue_count: 4
 ---
@@ -11,7 +11,7 @@ issue_count: 4
 
 ## Status
 
-Draft
+Done
 
 ## Scope Summary
 

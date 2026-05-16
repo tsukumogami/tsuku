@@ -4,7 +4,7 @@
 // RolledBack, Removed) and outcome (success or *Failed). The Source enum
 // is an orthogonal trigger tag.
 //
-// See docs/designs/DESIGN-notices-install-event-bus.md for the full
+// See docs/designs/current/DESIGN-notices-install-event-bus.md for the full
 // rationale and reaction tables.
 package installevents
 
