@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Accepted
 problem: |
   The install pipeline accumulates cross-cutting concerns at a cadence of roughly one new
   orthogonal parameter every 4-6 weeks, and three in-tree workarounds (nine package-level
@@ -42,7 +42,7 @@ upstream: docs/designs/current/DESIGN-notices-install-event-bus.md
 
 ## Status
 
-Planned
+Accepted
 
 ## Upstream Design Reference
 
