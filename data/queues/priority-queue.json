@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-17T07:37:57Z",
+  "updated_at": "2026-05-17T09:10:40Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 391,
-      "next_retry_at": "1734-02-05T03:08:38.939629966Z"
+      "failure_count": 393,
+      "next_retry_at": "1734-02-05T09:23:22.893673998Z"
     },
     {
       "name": "azqr",
@@ -11566,11 +11566,11 @@
       "name": "doggo",
       "source": "rubygems:doggo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 15,
-      "next_retry_at": "2026-05-16T14:59:23.943903388Z"
+      "failure_count": 16,
+      "next_retry_at": "2026-05-24T09:10:39.748449806Z"
     },
     {
       "name": "dokku/repo/dokku",
@@ -19496,7 +19496,7 @@
       "name": "haproxy",
       "source": "rubygems:haproxy",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 574,
-      "next_retry_at": "1734-02-05T03:08:38.939629966Z"
+      "failure_count": 576,
+      "next_retry_at": "1734-02-05T09:23:22.893673998Z"
     },
     {
       "name": "libaacs",
