@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-17T15:01:11Z",
+  "updated_at": "2026-05-17T17:04:57Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 394,
-      "next_retry_at": "1734-02-05T13:34:37.219904705Z"
+      "failure_count": 395,
+      "next_retry_at": "1734-02-05T17:17:40.598656209Z"
     },
     {
       "name": "azqr",
@@ -16906,11 +16906,11 @@
       "name": "gitingest",
       "source": "rubygems:gitingest",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-05-16T22:47:02.443739054Z"
+      "failure_count": 15,
+      "next_retry_at": "2026-05-24T17:04:57.453432017Z"
     },
     {
       "name": "gitlab-ci-linter",
@@ -20786,7 +20786,7 @@
       "name": "hydra",
       "source": "rubygems:hydra",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
@@ -23566,7 +23566,7 @@
       "name": "kew",
       "source": "npm:kew",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 578,
-      "next_retry_at": "1734-02-05T13:34:37.219904705Z"
+      "failure_count": 580,
+      "next_retry_at": "1734-02-05T17:17:40.598656209Z"
     },
     {
       "name": "libaacs",
