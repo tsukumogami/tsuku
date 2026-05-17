@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-17T11:10:14Z",
+  "updated_at": "2026-05-17T13:21:54Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 393,
-      "next_retry_at": "1734-02-05T09:23:22.893673998Z"
+      "failure_count": 394,
+      "next_retry_at": "1734-02-05T13:34:37.219904705Z"
     },
     {
       "name": "azqr",
@@ -13386,11 +13386,11 @@
       "name": "exiv2",
       "source": "rubygems:exiv2",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-05-16T19:04:29.771070021Z"
+      "failure_count": 15,
+      "next_retry_at": "2026-05-24T13:21:54.074680513Z"
     },
     {
       "name": "exoscale/tap/exoscale-cli",
@@ -19736,7 +19736,7 @@
       "name": "hasura-cli",
       "source": "npm:hasura-cli",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
@@ -20056,7 +20056,7 @@
       "name": "hercules",
       "source": "rubygems:hercules",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
@@ -20486,7 +20486,7 @@
       "name": "htmldoc",
       "source": "rubygems:htmldoc",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 576,
-      "next_retry_at": "1734-02-05T09:23:22.893673998Z"
+      "failure_count": 578,
+      "next_retry_at": "1734-02-05T13:34:37.219904705Z"
     },
     {
       "name": "libaacs",
