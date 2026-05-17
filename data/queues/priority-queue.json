@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-17T09:10:40Z",
+  "updated_at": "2026-05-17T11:10:14Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 393,
@@ -12116,11 +12116,11 @@
       "name": "dug",
       "source": "rubygems:dug",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-05-16T17:00:48.066810155Z"
+      "failure_count": 15,
+      "next_retry_at": "2026-05-24T11:10:14.513383467Z"
     },
     {
       "name": "dumbpipe",
@@ -12966,11 +12966,11 @@
       "name": "ent",
       "source": "npm:ent",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 15,
-      "next_retry_at": "2026-05-17T07:30:26.961134519Z"
+      "failure_count": 16,
+      "next_retry_at": "2026-05-24T11:10:14.513383467Z"
     },
     {
       "name": "ente-cli",
@@ -18186,7 +18186,7 @@
       "name": "got",
       "source": "npm:got",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 576,
