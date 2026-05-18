@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-18T21:17:27Z",
+  "updated_at": "2026-05-18T23:06:08Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 400,
-      "next_retry_at": "1734-02-06T20:09:59.490036756Z"
+      "failure_count": 401,
+      "next_retry_at": "1734-02-06T23:18:51.489826595Z"
     },
     {
       "name": "azqr",
@@ -23966,11 +23966,11 @@
       "name": "kor",
       "source": "rubygems:kor",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-05-18T06:45:07.887971964Z"
+      "failure_count": 15,
+      "next_retry_at": "2026-05-25T23:06:08.344602403Z"
     },
     {
       "name": "kosli-cli",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 590,
-      "next_retry_at": "1734-02-06T20:09:59.490036756Z"
+      "failure_count": 592,
+      "next_retry_at": "1734-02-06T23:18:51.489826595Z"
     },
     {
       "name": "libaacs",
@@ -29486,7 +29486,7 @@
       "name": "mdv",
       "source": "rubygems:mdv",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 13,
@@ -38126,7 +38126,7 @@
       "name": "protoc-gen-js",
       "source": "npm:protoc-gen-js",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
