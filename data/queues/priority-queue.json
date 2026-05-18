@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-18T15:32:50Z",
+  "updated_at": "2026-05-18T18:12:41Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 399,
@@ -21326,11 +21326,11 @@
       "name": "imgproxy",
       "source": "rubygems:imgproxy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-05-17T21:06:22.263956409Z"
+      "failure_count": 15,
+      "next_retry_at": "2026-05-25T18:12:41.27951897Z"
     },
     {
       "name": "imlib2",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 588,
@@ -26066,7 +26066,7 @@
       "name": "libnotify",
       "source": "rubygems:libnotify",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 13,
@@ -28896,11 +28896,11 @@
       "name": "markdown-toc",
       "source": "npm:markdown-toc",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-05-18T06:45:07.887971964Z"
+      "failure_count": 15,
+      "next_retry_at": "2026-05-25T18:12:41.27951897Z"
     },
     {
       "name": "markdownlint-cli",
