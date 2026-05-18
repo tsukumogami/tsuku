@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-18T03:05:38Z",
+  "generated_at": "2026-05-18T03:06:55Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -74,14 +74,15 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 52,
-        "pending": 22,
+        "failed": 53,
+        "pending": 21,
         "success": 14,
         "total": 89
       }
@@ -430,15 +431,6 @@
           "next_retry_at": "2026-05-23T08:08:06Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 397,
-          "next_retry_at": "1734-02-06T00:16:11Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -700,6 +692,15 @@
           "next_retry_at": "2026-05-25T00:03:28Z"
         },
         {
+          "id": "rubygems:htmldoc",
+          "name": "htmldoc",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 15,
+          "next_retry_at": "2026-05-25T03:06:16Z"
+        },
+        {
           "id": "npm:kew",
           "name": "kew",
           "ecosystem": "npm",
@@ -718,6 +719,15 @@
           "next_retry_at": "2026-05-18T06:45:07Z"
         },
         {
+          "id": "npm:lcm",
+          "name": "lcm",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 15,
+          "next_retry_at": "2026-05-25T03:06:16Z"
+        },
+        {
           "id": "rubygems:lemon",
           "name": "lemon",
           "ecosystem": "rubygems",
@@ -734,15 +744,6 @@
           "category": "install_failed",
           "failure_count": 13,
           "next_retry_at": "2026-05-18T13:53:30Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 584,
-          "next_retry_at": "1734-02-06T00:16:11Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -2893,6 +2894,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 397,
+          "next_retry_at": "1734-02-06T00:16:11Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -11060,15 +11070,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:htmldoc",
-          "name": "htmldoc",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 14,
-          "next_retry_at": "2026-05-17T13:19:24Z"
-        },
-        {
           "id": "homebrew:htmlhint",
           "name": "htmlhint",
           "ecosystem": "homebrew",
@@ -13134,15 +13135,6 @@
           "failure_count": 0
         },
         {
-          "id": "npm:lcm",
-          "name": "lcm",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 14,
-          "next_retry_at": "2026-05-17T21:06:22Z"
-        },
-        {
           "id": "homebrew:ldid",
           "name": "ldid",
           "ecosystem": "homebrew",
@@ -13260,6 +13252,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 584,
+          "next_retry_at": "1734-02-06T00:16:11Z"
         },
         {
           "id": "homebrew:libaacs",
