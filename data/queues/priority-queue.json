@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-17T22:00:31Z",
+  "updated_at": "2026-05-18T00:03:28Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 396,
-      "next_retry_at": "1734-02-05T21:07:02.168734488Z"
+      "failure_count": 397,
+      "next_retry_at": "1734-02-06T00:16:11.804858379Z"
     },
     {
       "name": "azqr",
@@ -20056,11 +20056,11 @@
       "name": "hercules",
       "source": "rubygems:hercules",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-05-17T11:57:12.740164237Z"
+      "failure_count": 15,
+      "next_retry_at": "2026-05-25T00:03:28.659634187Z"
     },
     {
       "name": "heremaps/olp-cli/olp",
@@ -21416,7 +21416,7 @@
       "name": "influxdb",
       "source": "rubygems:influxdb",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
@@ -21756,7 +21756,7 @@
       "name": "ipfs",
       "source": "rubygems:ipfs",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 582,
-      "next_retry_at": "1734-02-05T21:07:02.168734488Z"
+      "failure_count": 584,
+      "next_retry_at": "1734-02-06T00:16:11.804858379Z"
     },
     {
       "name": "libaacs",
@@ -28556,7 +28556,7 @@
       "name": "mailhog",
       "source": "npm:mailhog",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
