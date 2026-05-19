@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-19T22:21:03Z",
+  "generated_at": "2026-05-19T22:22:19Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 71,
-      "pending": 3833,
+      "failed": 73,
+      "pending": 3831,
       "success": 1373
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 71,
-        "pending": 3818,
+        "failed": 73,
+        "pending": 3816,
         "success": 1349
       }
     },
@@ -68,14 +68,13 @@
         "total": 1
       },
       "npm": {
-        "failed": 18,
-        "pending": 2,
+        "failed": 19,
+        "pending": 1,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -429,6 +428,15 @@
           "category": "install_failed",
           "failure_count": 16,
           "next_retry_at": "2026-05-23T08:08:06Z"
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 405,
+          "next_retry_at": "1734-02-07T22:34:22Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -800,6 +808,15 @@
           "next_retry_at": "2026-05-26T05:04:35Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 600,
+          "next_retry_at": "1734-02-07T22:34:22Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -863,6 +880,15 @@
           "next_retry_at": "2026-05-26T20:52:54Z"
         },
         {
+          "id": "rubygems:meli",
+          "name": "meli",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 13,
+          "next_retry_at": "2026-05-26T22:21:39Z"
+        },
+        {
           "id": "npm:mongoose",
           "name": "mongoose",
           "ecosystem": "npm",
@@ -879,15 +905,6 @@
           "category": "install_failed",
           "failure_count": 16,
           "next_retry_at": "2026-05-23T06:01:01Z"
-        },
-        {
-          "id": "rubygems:nyan",
-          "name": "nyan",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-05-19T21:24:37Z"
         },
         {
           "id": "rubygems:ocp",
@@ -2849,15 +2866,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 404,
-          "next_retry_at": "1734-02-07T19:18:56Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -13155,15 +13163,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 598,
-          "next_retry_at": "1734-02-07T19:18:56Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -15359,15 +15358,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:meli",
-          "name": "meli",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-05-19T02:53:24Z"
-        },
-        {
           "id": "rubygems:memcached",
           "name": "memcached",
           "ecosystem": "rubygems",
@@ -17242,6 +17232,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:nyan",
+          "name": "nyan",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-05-19T21:24:37Z"
         },
         {
           "id": "homebrew:nyancat",
