@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-23T13:25:56Z",
+  "updated_at": "2026-05-23T15:05:32Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 431,
-      "next_retry_at": "1734-02-11T10:08:32.594765604Z"
+      "failure_count": 434,
+      "next_retry_at": "1734-02-11T15:18:15.462794466Z"
     },
     {
       "name": "azqr",
@@ -4446,11 +4446,11 @@
       "name": "basis_universal",
       "source": "crates.io:basis_universal",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 16,
-      "next_retry_at": "2026-05-23T09:55:54.934564196Z"
+      "failure_count": 17,
+      "next_retry_at": "2026-05-30T15:05:32.317570274Z"
     },
     {
       "name": "bastet",
@@ -4836,11 +4836,11 @@
       "name": "bettercap",
       "source": "rubygems:bettercap",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 16,
-      "next_retry_at": "2026-05-23T09:55:54.934564196Z"
+      "failure_count": 17,
+      "next_retry_at": "2026-05-30T15:05:32.317570274Z"
     },
     {
       "name": "bfg",
@@ -5896,7 +5896,7 @@
       "name": "bup",
       "source": "rubygems:bup",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 16,
@@ -6606,7 +6606,7 @@
       "name": "cassandra",
       "source": "rubygems:cassandra",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 16,
@@ -9116,7 +9116,7 @@
       "name": "countdown",
       "source": "npm:countdown",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 16,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 628,
-      "next_retry_at": "1734-02-11T10:08:32.594765604Z"
+      "failure_count": 631,
+      "next_retry_at": "1734-02-11T15:18:15.462794466Z"
     },
     {
       "name": "libaacs",
@@ -46686,7 +46686,7 @@
       "name": "tctl",
       "source": "pypi:tctl",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 16,
