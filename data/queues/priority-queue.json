@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-23T00:13:41Z",
+  "updated_at": "2026-05-23T04:45:14Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 427,
-      "next_retry_at": "1734-02-10T22:24:47.880562824Z"
+      "failure_count": 429,
+      "next_retry_at": "1734-02-11T04:57:57.003560936Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 624,
-      "next_retry_at": "1734-02-10T22:24:47.880562824Z"
+      "failure_count": 626,
+      "next_retry_at": "1734-02-11T04:57:57.003560936Z"
     },
     {
       "name": "libaacs",
@@ -45996,11 +45996,11 @@
       "name": "swag",
       "source": "rubygems:swag",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-05-16T04:01:09.385639544Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-05-24T12:45:13.858336744Z"
     },
     {
       "name": "swagger-codegen",
