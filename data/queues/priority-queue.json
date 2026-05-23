@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-23T19:29:38Z",
+  "updated_at": "2026-05-23T20:54:33Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 435,
-      "next_retry_at": "1734-02-11T18:18:55.547456373Z"
+      "failure_count": 436,
+      "next_retry_at": "1734-02-11T21:07:16.526242559Z"
     },
     {
       "name": "azqr",
@@ -6806,11 +6806,11 @@
       "name": "cdo",
       "source": "rubygems:cdo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 16,
-      "next_retry_at": "2026-05-23T17:08:18.406057109Z"
+      "failure_count": 17,
+      "next_retry_at": "2026-05-30T20:54:33.381018367Z"
     },
     {
       "name": "cdogs-sdl",
@@ -7436,7 +7436,7 @@
       "name": "chroma",
       "source": "rubygems:chroma",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 16,
@@ -11186,7 +11186,7 @@
       "name": "dmd",
       "source": "npm:dmd",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 16,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 632,
-      "next_retry_at": "1734-02-11T18:18:55.547456373Z"
+      "failure_count": 633,
+      "next_retry_at": "1734-02-11T21:07:16.526242559Z"
     },
     {
       "name": "libaacs",
