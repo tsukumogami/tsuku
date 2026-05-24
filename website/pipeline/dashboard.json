@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-24T23:02:05Z",
+  "generated_at": "2026-05-24T23:03:18Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 84,
-      "pending": 3820,
+      "failed": 85,
+      "pending": 3819,
       "success": 1373
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 84,
-        "pending": 3805,
+        "failed": 85,
+        "pending": 3804,
         "success": 1349
       }
     },
@@ -74,8 +74,7 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -431,6 +430,15 @@
           "next_retry_at": "2026-05-30T13:25:56Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 442,
+          "next_retry_at": "1734-02-12T23:15:24Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -638,6 +646,15 @@
           "next_retry_at": "2026-05-31T20:59:37Z"
         },
         {
+          "id": "rubygems:glassfish",
+          "name": "glassfish",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 16,
+          "next_retry_at": "2026-05-31T23:02:41Z"
+        },
+        {
           "id": "npm:got",
           "name": "got",
           "ecosystem": "npm",
@@ -645,15 +662,6 @@
           "category": "install_failed",
           "failure_count": 16,
           "next_retry_at": "2026-05-31T17:04:47Z"
-        },
-        {
-          "id": "rubygems:haproxy",
-          "name": "haproxy",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 15,
-          "next_retry_at": "2026-05-24T22:00:31Z"
         },
         {
           "id": "npm:hasura-cli",
@@ -737,15 +745,6 @@
           "next_retry_at": "2026-05-25T21:17:27Z"
         },
         {
-          "id": "npm:kew",
-          "name": "kew",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 15,
-          "next_retry_at": "2026-05-24T22:00:31Z"
-        },
-        {
           "id": "rubygems:kor",
           "name": "kor",
           "ecosystem": "rubygems",
@@ -780,6 +779,15 @@
           "category": "install_failed",
           "failure_count": 14,
           "next_retry_at": "2026-05-26T05:04:35Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 645,
+          "next_retry_at": "1734-02-12T23:15:24Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -2966,15 +2974,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 441,
-          "next_retry_at": "1734-02-12T19:45:23Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -9595,15 +9594,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:glassfish",
-          "name": "glassfish",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 15,
-          "next_retry_at": "2026-05-24T19:24:38Z"
-        },
-        {
           "id": "homebrew:glaze",
           "name": "glaze",
           "ecosystem": "homebrew",
@@ -10654,6 +10644,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:haproxy",
+          "name": "haproxy",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 15,
+          "next_retry_at": "2026-05-24T22:00:31Z"
         },
         {
           "id": "homebrew:harbor-cli",
@@ -12660,6 +12659,15 @@
           "failure_count": 0
         },
         {
+          "id": "npm:kew",
+          "name": "kew",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 15,
+          "next_retry_at": "2026-05-24T22:00:31Z"
+        },
+        {
           "id": "homebrew:keychain",
           "name": "keychain",
           "ecosystem": "homebrew",
@@ -13288,15 +13296,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 643,
-          "next_retry_at": "1734-02-12T19:45:23Z"
         },
         {
           "id": "homebrew:libaacs",
