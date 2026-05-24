@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-24T09:26:54Z",
+  "updated_at": "2026-05-24T11:19:54Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 438,
-      "next_retry_at": "1734-02-12T08:00:41.197584875Z"
+      "failure_count": 439,
+      "next_retry_at": "1734-02-12T11:32:37.619453645Z"
     },
     {
       "name": "azqr",
@@ -10876,11 +10876,11 @@
       "name": "dict",
       "source": "rubygems:dict",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 17,
-      "next_retry_at": "2026-05-24T07:37:56.864899459Z"
+      "failure_count": 18,
+      "next_retry_at": "2026-05-31T11:19:54.474229453Z"
     },
     {
       "name": "diesel",
@@ -12116,7 +12116,7 @@
       "name": "dug",
       "source": "rubygems:dug",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 15,
@@ -12966,7 +12966,7 @@
       "name": "ent",
       "source": "npm:ent",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 16,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 637,
-      "next_retry_at": "1734-02-12T08:00:41.197584875Z"
+      "failure_count": 639,
+      "next_retry_at": "1734-02-12T11:32:37.619453645Z"
     },
     {
       "name": "libaacs",
