@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-24T03:04:05Z",
+  "updated_at": "2026-05-24T07:47:58Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 437,
-      "next_retry_at": "1734-02-12T00:14:43.848325183Z"
+      "failure_count": 438,
+      "next_retry_at": "1734-02-12T08:00:41.197584875Z"
     },
     {
       "name": "azqr",
@@ -9156,11 +9156,11 @@
       "name": "cowsay",
       "source": "rubygems:cowsay",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 17,
-      "next_retry_at": "2026-05-23T23:57:52.670064214Z"
+      "failure_count": 18,
+      "next_retry_at": "2026-05-31T07:47:58.052360683Z"
     },
     {
       "name": "cp2k",
@@ -10876,7 +10876,7 @@
       "name": "dict",
       "source": "rubygems:dict",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 17,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 635,
-      "next_retry_at": "1734-02-12T00:14:43.848325183Z"
+      "failure_count": 637,
+      "next_retry_at": "1734-02-12T08:00:41.197584875Z"
     },
     {
       "name": "libaacs",
