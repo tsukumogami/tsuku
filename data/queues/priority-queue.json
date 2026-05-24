@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-24T15:08:37Z",
+  "updated_at": "2026-05-24T17:04:47Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 440,
@@ -13386,11 +13386,11 @@
       "name": "exiv2",
       "source": "rubygems:exiv2",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 15,
-      "next_retry_at": "2026-05-24T13:21:54.074680513Z"
+      "failure_count": 16,
+      "next_retry_at": "2026-05-31T17:04:47.10482248Z"
     },
     {
       "name": "exoscale/tap/exoscale-cli",
@@ -18186,11 +18186,11 @@
       "name": "got",
       "source": "npm:got",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 15,
-      "next_retry_at": "2026-05-24T15:01:11.002556017Z"
+      "failure_count": 16,
+      "next_retry_at": "2026-05-31T17:04:47.10482248Z"
     },
     {
       "name": "gotests",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 641,
@@ -46966,7 +46966,7 @@
       "name": "terminator",
       "source": "rubygems:terminator",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
