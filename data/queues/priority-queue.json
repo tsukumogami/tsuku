@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-24T00:02:01Z",
+  "updated_at": "2026-05-24T03:04:05Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 437,
@@ -8626,11 +8626,11 @@
       "name": "cog",
       "source": "rubygems:cog",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 17,
-      "next_retry_at": "2026-05-23T22:49:42.03149152Z"
+      "failure_count": 18,
+      "next_retry_at": "2026-05-31T03:04:05.228289088Z"
     },
     {
       "name": "coin3d",
@@ -9326,7 +9326,7 @@
       "name": "cql",
       "source": "rubygems:cql",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 16,
@@ -11186,11 +11186,11 @@
       "name": "dmd",
       "source": "npm:dmd",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 16,
-      "next_retry_at": "2026-05-23T20:49:13.968151222Z"
+      "failure_count": 17,
+      "next_retry_at": "2026-05-31T03:04:05.228289088Z"
     },
     {
       "name": "dmg2img",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 635,
