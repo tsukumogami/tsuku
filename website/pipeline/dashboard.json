@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-25T15:55:58Z",
+  "generated_at": "2026-05-25T15:57:03Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 82,
-      "pending": 3822,
+      "failed": 84,
+      "pending": 3820,
       "success": 1373
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 82,
-        "pending": 3807,
+        "failed": 84,
+        "pending": 3805,
         "success": 1349
       }
     },
@@ -68,14 +68,13 @@
         "total": 1
       },
       "npm": {
-        "failed": 18,
-        "pending": 2,
+        "failed": 19,
+        "pending": 1,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -431,6 +430,15 @@
           "next_retry_at": "2026-05-30T13:25:56Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 444,
+          "next_retry_at": "1734-02-13T16:09:04Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -692,13 +700,13 @@
           "next_retry_at": "2026-06-01T12:34:07Z"
         },
         {
-          "id": "rubygems:hyperkit",
-          "name": "hyperkit",
+          "id": "rubygems:htmldoc",
+          "name": "htmldoc",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 15,
-          "next_retry_at": "2026-05-25T15:32:50Z"
+          "failure_count": 16,
+          "next_retry_at": "2026-06-01T15:56:21Z"
         },
         {
           "id": "rubygems:imgproxy",
@@ -771,6 +779,15 @@
           "category": "install_failed",
           "failure_count": 14,
           "next_retry_at": "2026-05-26T05:04:35Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 649,
+          "next_retry_at": "1734-02-13T16:09:04Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -2948,15 +2965,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 443,
-          "next_retry_at": "1734-02-13T09:14:24Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -11124,15 +11132,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:htmldoc",
-          "name": "htmldoc",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 15,
-          "next_retry_at": "2026-05-25T03:06:16Z"
-        },
-        {
           "id": "homebrew:htmlhint",
           "name": "htmlhint",
           "ecosystem": "homebrew",
@@ -11296,6 +11295,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:hyperkit",
+          "name": "hyperkit",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 15,
+          "next_retry_at": "2026-05-25T15:32:50Z"
         },
         {
           "id": "homebrew:hypre",
@@ -13279,15 +13287,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 647,
-          "next_retry_at": "1734-02-13T09:14:24Z"
         },
         {
           "id": "homebrew:libaacs",
