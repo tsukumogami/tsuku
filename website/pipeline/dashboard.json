@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-26T09:56:51Z",
+  "generated_at": "2026-05-26T09:58:06Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 84,
-      "pending": 3820,
+      "failed": 82,
+      "pending": 3822,
       "success": 1373
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 84,
-        "pending": 3805,
+        "failed": 82,
+        "pending": 3807,
         "success": 1349
       }
     },
@@ -68,13 +68,14 @@
         "total": 1
       },
       "npm": {
-        "failed": 19,
-        "pending": 1,
+        "failed": 18,
+        "pending": 2,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -430,15 +431,6 @@
           "next_retry_at": "2026-05-30T13:25:56Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 447,
-          "next_retry_at": "1734-02-14T05:21:45Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -772,6 +764,15 @@
           "next_retry_at": "2026-06-01T04:12:27Z"
         },
         {
+          "id": "rubygems:kor",
+          "name": "kor",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 16,
+          "next_retry_at": "2026-06-02T09:57:21Z"
+        },
+        {
           "id": "npm:lcm",
           "name": "lcm",
           "ecosystem": "npm",
@@ -779,24 +780,6 @@
           "category": "install_failed",
           "failure_count": 16,
           "next_retry_at": "2026-06-01T12:34:07Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 655,
-          "next_retry_at": "1734-02-14T05:21:45Z"
-        },
-        {
-          "id": "rubygems:libnotify",
-          "name": "libnotify",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 14,
-          "next_retry_at": "2026-05-26T08:37:40Z"
         },
         {
           "id": "rubygems:lsof",
@@ -1015,6 +998,15 @@
           "next_retry_at": "2026-05-28T21:33:05Z"
         },
         {
+          "id": "npm:pocketbase",
+          "name": "pocketbase",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 16,
+          "next_retry_at": "2026-06-02T09:57:21Z"
+        },
+        {
           "id": "rubygems:progress",
           "name": "progress",
           "ecosystem": "rubygems",
@@ -1022,15 +1014,6 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-05-28T23:08:48Z"
-        },
-        {
-          "id": "npm:protoc-gen-js",
-          "name": "protoc-gen-js",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 15,
-          "next_retry_at": "2026-05-26T08:37:40Z"
         },
         {
           "id": "npm:q",
@@ -2965,6 +2948,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 447,
+          "next_retry_at": "1734-02-14T05:21:45Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -12828,15 +12820,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:kor",
-          "name": "kor",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 15,
-          "next_retry_at": "2026-05-25T23:06:08Z"
-        },
-        {
           "id": "homebrew:kotlin",
           "name": "kotlin",
           "ecosystem": "homebrew",
@@ -13289,6 +13272,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 655,
+          "next_retry_at": "1734-02-14T05:21:45Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -13618,6 +13610,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:libnotify",
+          "name": "libnotify",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 14,
+          "next_retry_at": "2026-05-26T08:37:40Z"
         },
         {
           "id": "homebrew:libolm",
@@ -19452,15 +19453,6 @@
           "failure_count": 0
         },
         {
-          "id": "npm:pocketbase",
-          "name": "pocketbase",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 15,
-          "next_retry_at": "2026-05-26T00:20:09Z"
-        },
-        {
           "id": "homebrew:poco",
           "name": "poco",
           "ecosystem": "homebrew",
@@ -19928,6 +19920,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:protoc-gen-js",
+          "name": "protoc-gen-js",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 15,
+          "next_retry_at": "2026-05-26T08:37:40Z"
         },
         {
           "id": "homebrew:protonpass/tap/pass-cli",
