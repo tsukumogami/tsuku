@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-26T00:17:13Z",
+  "updated_at": "2026-05-26T05:09:02Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 446,
-      "next_retry_at": "1734-02-13T23:18:40.100733602Z"
+      "failure_count": 447,
+      "next_retry_at": "1734-02-14T05:21:45.078591644Z"
     },
     {
       "name": "azqr",
@@ -21756,11 +21756,11 @@
       "name": "ipfs",
       "source": "rubygems:ipfs",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 15,
-      "next_retry_at": "2026-05-25T21:17:27.661648498Z"
+      "failure_count": 16,
+      "next_retry_at": "2026-06-02T05:09:01.933367452Z"
     },
     {
       "name": "ipinfo-cli",
@@ -25056,7 +25056,7 @@
       "name": "lemon",
       "source": "rubygems:lemon",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 15,
@@ -25116,7 +25116,7 @@
       "name": "less",
       "source": "rubygems:less",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 653,
-      "next_retry_at": "1734-02-13T23:18:40.100733602Z"
+      "failure_count": 655,
+      "next_retry_at": "1734-02-14T05:21:45.078591644Z"
     },
     {
       "name": "libaacs",
@@ -37216,7 +37216,7 @@
       "name": "pocketbase",
       "source": "npm:pocketbase",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 15,
