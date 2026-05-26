@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-26T19:25:17Z",
+  "updated_at": "2026-05-26T21:49:28Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 448,
-      "next_retry_at": "1734-02-14T17:00:31.261987532Z"
+      "failure_count": 449,
+      "next_retry_at": "1734-02-14T22:02:10.954361561Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 657,
-      "next_retry_at": "1734-02-14T17:00:31.261987532Z"
+      "failure_count": 659,
+      "next_retry_at": "1734-02-14T22:02:10.954361561Z"
     },
     {
       "name": "libaacs",
@@ -26066,11 +26066,11 @@
       "name": "libnotify",
       "source": "rubygems:libnotify",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-05-26T08:37:40.550547589Z"
+      "failure_count": 15,
+      "next_retry_at": "2026-06-02T21:49:27.809137369Z"
     },
     {
       "name": "libogg",
@@ -29546,7 +29546,7 @@
       "name": "medusa",
       "source": "rubygems:medusa",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
@@ -43656,7 +43656,7 @@
       "name": "sigstore",
       "source": "npm:sigstore",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 15,
