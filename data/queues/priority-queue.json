@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-26T21:49:28Z",
+  "updated_at": "2026-05-26T23:14:00Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 449,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 659,
@@ -28016,11 +28016,11 @@
       "name": "lsof",
       "source": "rubygems:lsof",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-05-26T12:16:10.63650709Z"
+      "failure_count": 15,
+      "next_retry_at": "2026-06-02T23:14:00.027243409Z"
     },
     {
       "name": "lspmux",
@@ -29596,7 +29596,7 @@
       "name": "meli",
       "source": "rubygems:meli",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 13,
@@ -39116,11 +39116,11 @@
       "name": "q",
       "source": "npm:q",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 15,
-      "next_retry_at": "2026-05-26T16:23:58.374265621Z"
+      "failure_count": 16,
+      "next_retry_at": "2026-06-02T23:14:00.027243409Z"
     },
     {
       "name": "qalculate-gtk",
