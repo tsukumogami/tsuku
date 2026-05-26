@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-26T05:08:31Z",
+  "generated_at": "2026-05-26T05:09:46Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -74,15 +74,14 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 60,
-        "pending": 14,
+        "failed": 59,
+        "pending": 15,
         "success": 14,
         "total": 89
       }
@@ -431,6 +430,15 @@
           "next_retry_at": "2026-05-30T13:25:56Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 447,
+          "next_retry_at": "1734-02-14T05:21:45Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -746,6 +754,15 @@
           "next_retry_at": "2026-06-02T00:17:13Z"
         },
         {
+          "id": "rubygems:ipfs",
+          "name": "ipfs",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 16,
+          "next_retry_at": "2026-06-02T05:09:01Z"
+        },
+        {
           "id": "npm:kew",
           "name": "kew",
           "ecosystem": "npm",
@@ -764,22 +781,13 @@
           "next_retry_at": "2026-06-01T12:34:07Z"
         },
         {
-          "id": "rubygems:lemon",
-          "name": "lemon",
-          "ecosystem": "rubygems",
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 15,
-          "next_retry_at": "2026-05-26T00:20:09Z"
-        },
-        {
-          "id": "rubygems:less",
-          "name": "less",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 14,
-          "next_retry_at": "2026-05-26T05:04:35Z"
+          "failure_count": 655,
+          "next_retry_at": "1734-02-14T05:21:45Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -1005,15 +1013,6 @@
           "category": "install_failed",
           "failure_count": 11,
           "next_retry_at": "2026-05-28T21:33:05Z"
-        },
-        {
-          "id": "npm:pocketbase",
-          "name": "pocketbase",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 15,
-          "next_retry_at": "2026-05-26T00:20:09Z"
         },
         {
           "id": "rubygems:progress",
@@ -2966,15 +2965,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 446,
-          "next_retry_at": "1734-02-13T23:18:40Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -11760,15 +11750,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:ipfs",
-          "name": "ipfs",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 15,
-          "next_retry_at": "2026-05-25T21:17:27Z"
-        },
-        {
           "id": "homebrew:ipopt",
           "name": "ipopt",
           "ecosystem": "homebrew",
@@ -13234,6 +13215,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:lemon",
+          "name": "lemon",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 15,
+          "next_retry_at": "2026-05-26T00:20:09Z"
+        },
+        {
           "id": "homebrew:leoafarias/fvm/fvm",
           "name": "leoafarias/fvm/fvm",
           "ecosystem": "homebrew",
@@ -13253,6 +13243,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:less",
+          "name": "less",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 14,
+          "next_retry_at": "2026-05-26T05:04:35Z"
         },
         {
           "id": "homebrew:lesspipe",
@@ -13288,15 +13287,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 653,
-          "next_retry_at": "1734-02-13T23:18:40Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -19460,6 +19450,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:pocketbase",
+          "name": "pocketbase",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 15,
+          "next_retry_at": "2026-05-26T00:20:09Z"
         },
         {
           "id": "homebrew:poco",
