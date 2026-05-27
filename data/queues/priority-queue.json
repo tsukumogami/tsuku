@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-27T03:38:08Z",
+  "updated_at": "2026-05-27T08:08:20Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 450,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 661,
@@ -29486,11 +29486,11 @@
       "name": "mdv",
       "source": "rubygems:mdv",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-05-26T19:06:13.762754981Z"
+      "failure_count": 15,
+      "next_retry_at": "2026-06-03T08:08:20.269762134Z"
     },
     {
       "name": "mecab",
@@ -30426,7 +30426,7 @@
       "name": "mktorrent",
       "source": "rubygems:mktorrent",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 13,
@@ -43656,11 +43656,11 @@
       "name": "sigstore",
       "source": "npm:sigstore",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 15,
-      "next_retry_at": "2026-05-26T20:52:54.26954561Z"
+      "failure_count": 16,
+      "next_retry_at": "2026-06-03T08:08:20.269762134Z"
     },
     {
       "name": "sile",
