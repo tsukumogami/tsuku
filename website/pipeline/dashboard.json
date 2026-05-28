@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-28T18:16:41Z",
+  "generated_at": "2026-05-28T18:17:58Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 79,
-      "pending": 3825,
+      "failed": 81,
+      "pending": 3823,
       "success": 1373
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 79,
-        "pending": 3810,
+        "failed": 81,
+        "pending": 3808,
         "success": 1349
       }
     },
@@ -68,14 +68,12 @@
         "total": 1
       },
       "npm": {
-        "failed": 19,
-        "pending": 1,
+        "failed": 20,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -429,6 +427,15 @@
           "category": "install_failed",
           "failure_count": 18,
           "next_retry_at": "2026-05-30T13:25:56Z"
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 458,
+          "next_retry_at": "1734-02-16T18:30:00Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -800,6 +807,15 @@
           "next_retry_at": "2026-06-02T19:25:17Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 672,
+          "next_retry_at": "1734-02-16T18:30:00Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -953,13 +969,13 @@
           "next_retry_at": "2026-06-04T14:43:11Z"
         },
         {
-          "id": "rubygems:pidof",
-          "name": "pidof",
+          "id": "rubygems:nyan",
+          "name": "nyan",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-05-28T17:37:34Z"
+          "failure_count": 13,
+          "next_retry_at": "2026-06-04T18:17:17Z"
         },
         {
           "id": "rubygems:pioneer",
@@ -2921,15 +2937,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 456,
-          "next_retry_at": "1734-02-16T11:13:13Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -13227,15 +13234,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 670,
-          "next_retry_at": "1734-02-16T11:13:13Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -17244,15 +17242,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:nyan",
-          "name": "nyan",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-05-27T23:17:19Z"
-        },
-        {
           "id": "homebrew:nyancat",
           "name": "nyancat",
           "ecosystem": "homebrew",
@@ -19167,6 +19156,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:pidof",
+          "name": "pidof",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-05-28T17:37:34Z"
         },
         {
           "id": "homebrew:pie",
