@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-28T21:13:45Z",
+  "generated_at": "2026-05-28T21:15:03Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 81,
-      "pending": 3823,
+      "failed": 79,
+      "pending": 3825,
       "success": 1373
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 81,
-        "pending": 3808,
+        "failed": 79,
+        "pending": 3810,
         "success": 1349
       }
     },
@@ -68,12 +68,14 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
+        "failed": 19,
+        "pending": 1,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -427,15 +429,6 @@
           "category": "install_failed",
           "failure_count": 18,
           "next_retry_at": "2026-05-30T13:25:56Z"
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 458,
-          "next_retry_at": "1734-02-16T18:30:00Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -807,15 +800,6 @@
           "next_retry_at": "2026-06-02T19:25:17Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 672,
-          "next_retry_at": "1734-02-16T18:30:00Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -978,13 +962,13 @@
           "next_retry_at": "2026-06-04T18:17:17Z"
         },
         {
-          "id": "rubygems:pioneer",
-          "name": "pioneer",
+          "id": "rubygems:ocp",
+          "name": "ocp",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-05-28T19:58:16Z"
+          "failure_count": 13,
+          "next_retry_at": "2026-06-04T21:14:23Z"
         },
         {
           "id": "rubygems:pngcheck",
@@ -2937,6 +2921,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 458,
+          "next_retry_at": "1734-02-16T18:30:00Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -13234,6 +13227,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 672,
+          "next_retry_at": "1734-02-16T18:30:00Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -17333,15 +17335,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:ocp",
-          "name": "ocp",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-05-28T03:07:38Z"
-        },
-        {
           "id": "homebrew:ocrmypdf",
           "name": "ocrmypdf",
           "ecosystem": "homebrew",
@@ -19221,6 +19214,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:pioneer",
+          "name": "pioneer",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-05-28T19:58:16Z"
         },
         {
           "id": "homebrew:pip-audit",
