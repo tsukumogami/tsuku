@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-27T23:22:53Z",
+  "updated_at": "2026-05-28T02:58:39Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 453,
-      "next_retry_at": "1734-02-15T21:21:19.322512373Z"
+      "failure_count": 454,
+      "next_retry_at": "1734-02-16T03:11:21.864920605Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 666,
-      "next_retry_at": "1734-02-15T21:21:19.322512373Z"
+      "failure_count": 668,
+      "next_retry_at": "1734-02-16T03:11:21.864920605Z"
     },
     {
       "name": "libaacs",
@@ -31996,11 +31996,11 @@
       "name": "neo4j",
       "source": "rubygems:neo4j",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-05-27T12:29:37.910766028Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-06-04T02:58:38.719696413Z"
     },
     {
       "name": "neo4j-mcp",
