@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-29T07:01:16Z",
+  "generated_at": "2026-05-29T07:02:37Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 79,
-      "pending": 3825,
+      "failed": 80,
+      "pending": 3824,
       "success": 1373
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 79,
-        "pending": 3810,
+        "failed": 80,
+        "pending": 3809,
         "success": 1349
       }
     },
@@ -68,21 +68,19 @@
         "total": 1
       },
       "npm": {
-        "failed": 19,
-        "pending": 1,
+        "failed": 20,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 55,
-        "pending": 19,
+        "failed": 54,
+        "pending": 20,
         "success": 14,
         "total": 89
       }
@@ -429,6 +427,15 @@
           "category": "install_failed",
           "failure_count": 18,
           "next_retry_at": "2026-05-30T13:25:56Z"
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 462,
+          "next_retry_at": "1734-02-17T07:14:36Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -800,6 +807,15 @@
           "next_retry_at": "2026-06-02T19:25:17Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 676,
+          "next_retry_at": "1734-02-17T07:14:36Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -989,6 +1005,15 @@
           "next_retry_at": "2026-06-05T03:02:32Z"
         },
         {
+          "id": "rubygems:pdftohtml",
+          "name": "pdftohtml",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-06-05T07:01:53Z"
+        },
+        {
           "id": "npm:pocketbase",
           "name": "pocketbase",
           "ecosystem": "npm",
@@ -1014,24 +1039,6 @@
           "category": "install_failed",
           "failure_count": 16,
           "next_retry_at": "2026-06-02T23:14:00Z"
-        },
-        {
-          "id": "rubygems:quickjs",
-          "name": "quickjs",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-05-29T03:07:12Z"
-        },
-        {
-          "id": "rubygems:re2",
-          "name": "re2",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-05-29T07:00:32Z"
         },
         {
           "id": "rubygems:redis",
@@ -2921,15 +2928,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 460,
-          "next_retry_at": "1734-02-16T23:33:14Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -13227,15 +13225,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 674,
-          "next_retry_at": "1734-02-16T23:33:14Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -18816,15 +18805,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:pdftohtml",
-          "name": "pdftohtml",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 11,
-          "next_retry_at": "2026-05-28T14:21:10Z"
-        },
-        {
           "id": "homebrew:pdm",
           "name": "pdm",
           "ecosystem": "homebrew",
@@ -20970,6 +20950,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:quickjs",
+          "name": "quickjs",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-05-29T03:07:12Z"
+        },
+        {
           "id": "homebrew:quilt",
           "name": "quilt",
           "ecosystem": "homebrew",
@@ -21255,6 +21244,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:re2",
+          "name": "re2",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 10,
+          "next_retry_at": "2026-05-29T07:00:32Z"
         },
         {
           "id": "homebrew:readsb",
