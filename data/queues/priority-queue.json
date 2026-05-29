@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-29T03:02:33Z",
+  "updated_at": "2026-05-29T07:01:54Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 460,
-      "next_retry_at": "1734-02-16T23:33:14.170138215Z"
+      "failure_count": 462,
+      "next_retry_at": "1734-02-17T07:14:36.823318126Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 674,
-      "next_retry_at": "1734-02-16T23:33:14.170138215Z"
+      "failure_count": 676,
+      "next_retry_at": "1734-02-17T07:14:36.823318126Z"
     },
     {
       "name": "libaacs",
@@ -35986,11 +35986,11 @@
       "name": "pdftohtml",
       "source": "rubygems:pdftohtml",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 11,
-      "next_retry_at": "2026-05-28T14:21:10.58873927Z"
+      "failure_count": 12,
+      "next_retry_at": "2026-06-05T07:01:53.678093934Z"
     },
     {
       "name": "pdftoipe",
@@ -39796,7 +39796,7 @@
       "name": "quickjs",
       "source": "rubygems:quickjs",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 10,
@@ -40296,7 +40296,7 @@
       "name": "re2",
       "source": "rubygems:re2",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 10,
