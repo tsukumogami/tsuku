@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-30T17:08:34Z",
+  "updated_at": "2026-05-30T18:16:36Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 474,
-      "next_retry_at": "1734-02-18T15:23:38.118814891Z"
+      "failure_count": 476,
+      "next_retry_at": "1734-02-18T18:29:19.045770369Z"
     },
     {
       "name": "azqr",
@@ -5826,11 +5826,11 @@
       "name": "bullet",
       "source": "rubygems:bullet",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 17,
-      "next_retry_at": "2026-05-30T16:12:31.795813407Z"
+      "failure_count": 18,
+      "next_retry_at": "2026-06-06T18:16:35.900546177Z"
     },
     {
       "name": "bulletty",
@@ -5896,7 +5896,7 @@
       "name": "bup",
       "source": "rubygems:bup",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 17,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 688,
-      "next_retry_at": "1734-02-18T15:23:38.118814891Z"
+      "failure_count": 690,
+      "next_retry_at": "1734-02-18T18:29:19.045770369Z"
     },
     {
       "name": "libaacs",
