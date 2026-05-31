@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-31T03:37:32Z",
+  "generated_at": "2026-05-31T03:38:44Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -74,15 +74,14 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 59,
-        "pending": 15,
+        "failed": 58,
+        "pending": 16,
         "success": 14,
         "total": 89
       }
@@ -431,6 +430,15 @@
           "next_retry_at": "2026-06-06T15:10:54Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 478,
+          "next_retry_at": "1734-02-19T03:50:48Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -494,22 +502,13 @@
           "next_retry_at": "2026-06-06T20:14:47Z"
         },
         {
-          "id": "rubygems:chroma",
-          "name": "chroma",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 17,
-          "next_retry_at": "2026-05-31T00:02:00Z"
-        },
-        {
-          "id": "rubygems:cog",
-          "name": "cog",
+          "id": "rubygems:chisel",
+          "name": "chisel",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 18,
-          "next_retry_at": "2026-05-31T03:04:05Z"
+          "next_retry_at": "2026-06-07T03:38:05Z"
         },
         {
           "id": "npm:countdown",
@@ -546,15 +545,6 @@
           "category": "install_failed",
           "failure_count": 18,
           "next_retry_at": "2026-05-31T11:19:54Z"
-        },
-        {
-          "id": "npm:dmd",
-          "name": "dmd",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 17,
-          "next_retry_at": "2026-05-31T03:04:05Z"
         },
         {
           "id": "rubygems:doggo",
@@ -780,6 +770,15 @@
           "category": "install_failed",
           "failure_count": 15,
           "next_retry_at": "2026-06-02T19:25:17Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 692,
+          "next_retry_at": "1734-02-19T03:50:48Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -2950,15 +2949,6 @@
           "failure_count": 1
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 477,
-          "next_retry_at": "1734-02-18T22:19:06Z"
-        },
-        {
           "id": "homebrew:azure-storage-common-cpp",
           "name": "azure-storage-common-cpp",
           "ecosystem": "homebrew",
@@ -4551,15 +4541,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:chisel",
-          "name": "chisel",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 17,
-          "next_retry_at": "2026-05-30T21:59:00Z"
-        },
-        {
           "id": "homebrew:chisel-tunnel",
           "name": "chisel-tunnel",
           "ecosystem": "homebrew",
@@ -4593,6 +4574,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:chroma",
+          "name": "chroma",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 17,
+          "next_retry_at": "2026-05-31T00:02:00Z"
         },
         {
           "id": "homebrew:chromaprint",
@@ -5209,6 +5199,15 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:cog",
+          "name": "cog",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 18,
+          "next_retry_at": "2026-05-31T03:04:05Z"
         },
         {
           "id": "homebrew:coin3d",
@@ -6583,6 +6582,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:dmd",
+          "name": "dmd",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 17,
+          "next_retry_at": "2026-05-31T03:04:05Z"
         },
         {
           "id": "homebrew:dmg2img",
@@ -13270,15 +13278,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 691,
-          "next_retry_at": "1734-02-18T22:19:06Z"
         },
         {
           "id": "homebrew:libaacs",
