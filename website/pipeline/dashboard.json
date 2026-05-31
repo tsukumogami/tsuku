@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-31T09:02:19Z",
+  "generated_at": "2026-05-31T09:03:41Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 82,
-      "pending": 3822,
+      "failed": 81,
+      "pending": 3823,
       "success": 1373
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 82,
-        "pending": 3807,
+        "failed": 81,
+        "pending": 3808,
         "success": 1349
       }
     },
@@ -74,7 +74,8 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -430,15 +431,6 @@
           "next_retry_at": "2026-06-06T15:10:54Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 478,
-          "next_retry_at": "1734-02-19T03:50:48Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -511,6 +503,15 @@
           "next_retry_at": "2026-06-07T03:38:05Z"
         },
         {
+          "id": "rubygems:chroma",
+          "name": "chroma",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 18,
+          "next_retry_at": "2026-06-07T09:02:56Z"
+        },
+        {
           "id": "npm:countdown",
           "name": "countdown",
           "ecosystem": "npm",
@@ -520,15 +521,6 @@
           "next_retry_at": "2026-06-06T23:16:05Z"
         },
         {
-          "id": "rubygems:cowsay",
-          "name": "cowsay",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 18,
-          "next_retry_at": "2026-05-31T07:47:58Z"
-        },
-        {
           "id": "rubygems:cql",
           "name": "cql",
           "ecosystem": "rubygems",
@@ -536,6 +528,15 @@
           "category": "install_failed",
           "failure_count": 17,
           "next_retry_at": "2026-05-31T09:26:53Z"
+        },
+        {
+          "id": "npm:datasette",
+          "name": "datasette",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 18,
+          "next_retry_at": "2026-06-07T09:02:56Z"
         },
         {
           "id": "rubygems:dict",
@@ -770,15 +771,6 @@
           "category": "install_failed",
           "failure_count": 15,
           "next_retry_at": "2026-06-02T19:25:17Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 692,
-          "next_retry_at": "1734-02-19T03:50:48Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -2949,6 +2941,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 478,
+          "next_retry_at": "1734-02-19T03:50:48Z"
+        },
+        {
           "id": "homebrew:azure-storage-common-cpp",
           "name": "azure-storage-common-cpp",
           "ecosystem": "homebrew",
@@ -4576,15 +4577,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:chroma",
-          "name": "chroma",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 17,
-          "next_retry_at": "2026-05-31T00:02:00Z"
-        },
-        {
           "id": "homebrew:chromaprint",
           "name": "chromaprint",
           "ecosystem": "homebrew",
@@ -5490,6 +5482,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:cowsay",
+          "name": "cowsay",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 18,
+          "next_retry_at": "2026-05-31T07:47:58Z"
+        },
+        {
           "id": "homebrew:cp2k",
           "name": "cp2k",
           "ecosystem": "homebrew",
@@ -6083,15 +6084,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:datasette",
-          "name": "datasette",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 17,
-          "next_retry_at": "2026-05-30T21:59:00Z"
         },
         {
           "id": "homebrew:datawire/blackbird/telepresence",
@@ -13278,6 +13270,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 692,
+          "next_retry_at": "1734-02-19T03:50:48Z"
         },
         {
           "id": "homebrew:libaacs",
