@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-31T03:38:05Z",
+  "updated_at": "2026-05-31T09:02:57Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 478,
@@ -7436,11 +7436,11 @@
       "name": "chroma",
       "source": "rubygems:chroma",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 17,
-      "next_retry_at": "2026-05-31T00:02:00.703100991Z"
+      "failure_count": 18,
+      "next_retry_at": "2026-06-07T09:02:56.78599794Z"
     },
     {
       "name": "chromaprint",
@@ -9156,7 +9156,7 @@
       "name": "cowsay",
       "source": "rubygems:cowsay",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 18,
@@ -10236,11 +10236,11 @@
       "name": "datasette",
       "source": "npm:datasette",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 17,
-      "next_retry_at": "2026-05-30T21:59:00.47382344Z"
+      "failure_count": 18,
+      "next_retry_at": "2026-06-07T09:02:56.78599794Z"
     },
     {
       "name": "datawire/blackbird/telepresence",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 692,
