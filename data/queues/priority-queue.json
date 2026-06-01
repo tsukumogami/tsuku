@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-05-31T23:09:58Z",
+  "updated_at": "2026-06-01T03:51:20Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 482,
-      "next_retry_at": "1734-02-19T21:16:36.711030583Z"
+      "failure_count": 483,
+      "next_retry_at": "1734-02-20T04:04:03.642540987Z"
     },
     {
       "name": "azqr",
@@ -16906,11 +16906,11 @@
       "name": "gitingest",
       "source": "rubygems:gitingest",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 16,
-      "next_retry_at": "2026-05-31T20:59:37.521413578Z"
+      "failure_count": 17,
+      "next_retry_at": "2026-06-08T03:51:20.497316795Z"
     },
     {
       "name": "gitlab-ci-linter",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 700,
-      "next_retry_at": "1734-02-19T21:16:36.711030583Z"
+      "failure_count": 702,
+      "next_retry_at": "1734-02-20T04:04:03.642540987Z"
     },
     {
       "name": "libaacs",
