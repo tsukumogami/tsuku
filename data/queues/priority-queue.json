@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-01T09:44:51Z",
+  "updated_at": "2026-06-01T16:03:55Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 483,
-      "next_retry_at": "1734-02-20T04:04:03.642540987Z"
+      "failure_count": 484,
+      "next_retry_at": "1734-02-20T16:16:37.792977842Z"
     },
     {
       "name": "azqr",
@@ -18966,11 +18966,11 @@
       "name": "gsl",
       "source": "rubygems:gsl",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 16,
-      "next_retry_at": "2026-06-01T04:12:27.759783294Z"
+      "failure_count": 17,
+      "next_retry_at": "2026-06-08T16:03:54.64775365Z"
     },
     {
       "name": "gsmartcontrol",
@@ -20056,7 +20056,7 @@
       "name": "hercules",
       "source": "rubygems:hercules",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 16,
@@ -20486,7 +20486,7 @@
       "name": "htmldoc",
       "source": "rubygems:htmldoc",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 16,
@@ -24896,7 +24896,7 @@
       "name": "lcm",
       "source": "npm:lcm",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 16,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 702,
-      "next_retry_at": "1734-02-20T04:04:03.642540987Z"
+      "failure_count": 704,
+      "next_retry_at": "1734-02-20T16:16:37.792977842Z"
     },
     {
       "name": "libaacs",
