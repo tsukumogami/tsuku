@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-03T13:22:16Z",
+  "updated_at": "2026-06-03T18:29:11Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 490,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 716,
@@ -26066,11 +26066,11 @@
       "name": "libnotify",
       "source": "rubygems:libnotify",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 15,
-      "next_retry_at": "2026-06-02T21:49:27.809137369Z"
+      "failure_count": 16,
+      "next_retry_at": "2026-06-10T18:29:10.675138059Z"
     },
     {
       "name": "libogg",
@@ -29596,7 +29596,7 @@
       "name": "meli",
       "source": "rubygems:meli",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 14,
@@ -38126,11 +38126,11 @@
       "name": "protoc-gen-js",
       "source": "npm:protoc-gen-js",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 16,
-      "next_retry_at": "2026-06-02T19:25:17.439489885Z"
+      "failure_count": 17,
+      "next_retry_at": "2026-06-10T18:29:10.675138059Z"
     },
     {
       "name": "protolint",
