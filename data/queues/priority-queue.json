@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-03T21:54:39Z",
+  "updated_at": "2026-06-03T23:48:00Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 491,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 718,
@@ -28546,11 +28546,11 @@
       "name": "mailcatcher",
       "source": "rubygems:mailcatcher",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 15,
-      "next_retry_at": "2026-06-03T03:38:08.692475442Z"
+      "failure_count": 16,
+      "next_retry_at": "2026-06-10T23:48:00.456268509Z"
     },
     {
       "name": "mailhog",
@@ -31296,7 +31296,7 @@
       "name": "multimarkdown",
       "source": "rubygems:multimarkdown",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 13,
@@ -39116,11 +39116,11 @@
       "name": "q",
       "source": "npm:q",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 16,
-      "next_retry_at": "2026-06-02T23:14:00.027243409Z"
+      "failure_count": 17,
+      "next_retry_at": "2026-06-10T23:48:00.456268509Z"
     },
     {
       "name": "qalculate-gtk",
@@ -50986,7 +50986,7 @@
       "name": "webdav",
       "source": "npm:webdav",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 15,
