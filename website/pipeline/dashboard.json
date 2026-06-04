@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-06-04T20:07:58Z",
+  "generated_at": "2026-06-04T20:09:18Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 80,
-      "pending": 3824,
+      "failed": 79,
+      "pending": 3825,
       "success": 1373
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 80,
-        "pending": 3809,
+        "failed": 79,
+        "pending": 3810,
         "success": 1349
       }
     },
@@ -74,7 +74,8 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -428,15 +429,6 @@
           "category": "install_failed",
           "failure_count": 19,
           "next_retry_at": "2026-06-06T15:10:54Z"
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 494,
-          "next_retry_at": "1734-02-23T18:11:34Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -808,15 +800,6 @@
           "next_retry_at": "2026-06-10T13:22:16Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 724,
-          "next_retry_at": "1734-02-23T18:11:34Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -916,6 +899,15 @@
           "next_retry_at": "2026-06-09T23:51:08Z"
         },
         {
+          "id": "rubygems:multimarkdown",
+          "name": "multimarkdown",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 14,
+          "next_retry_at": "2026-06-11T20:08:36Z"
+        },
+        {
           "id": "crates.io:numpy",
           "name": "numpy",
           "ecosystem": "crates.io",
@@ -923,15 +915,6 @@
           "category": "install_failed",
           "failure_count": 18,
           "next_retry_at": "2026-06-06T11:29:53Z"
-        },
-        {
-          "id": "rubygems:nyan",
-          "name": "nyan",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 13,
-          "next_retry_at": "2026-06-04T18:17:17Z"
         },
         {
           "id": "rubygems:ocp",
@@ -1121,6 +1104,15 @@
           "category": "install_failed",
           "failure_count": 17,
           "next_retry_at": "2026-06-11T15:00:23Z"
+        },
+        {
+          "id": "npm:webdav",
+          "name": "webdav",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 16,
+          "next_retry_at": "2026-06-11T20:08:36Z"
         }
       ],
       "pending": [
@@ -2929,6 +2921,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 494,
+          "next_retry_at": "1734-02-23T18:11:34Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -13226,6 +13227,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 724,
+          "next_retry_at": "1734-02-23T18:11:34Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -16261,15 +16271,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:multimarkdown",
-          "name": "multimarkdown",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 13,
-          "next_retry_at": "2026-06-03T23:22:53Z"
-        },
-        {
           "id": "homebrew:mupdf",
           "name": "mupdf",
           "ecosystem": "homebrew",
@@ -17277,6 +17278,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:nyan",
+          "name": "nyan",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 13,
+          "next_retry_at": "2026-06-04T18:17:17Z"
         },
         {
           "id": "homebrew:nyancat",
@@ -26980,15 +26990,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:webdav",
-          "name": "webdav",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 15,
-          "next_retry_at": "2026-06-03T23:22:53Z"
         },
         {
           "id": "rubygems:webhook",
