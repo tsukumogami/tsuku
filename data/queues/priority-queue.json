@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-05T19:58:23Z",
+  "updated_at": "2026-06-05T21:30:50Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 501,
-      "next_retry_at": "1734-02-24T18:11:36.588162448Z"
+      "failure_count": 503,
+      "next_retry_at": "1734-02-24T21:43:33.055267109Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 732,
-      "next_retry_at": "1734-02-24T18:11:36.588162448Z"
+      "failure_count": 734,
+      "next_retry_at": "1734-02-24T21:43:33.055267109Z"
     },
     {
       "name": "libaacs",
@@ -35986,11 +35986,11 @@
       "name": "pdftohtml",
       "source": "rubygems:pdftohtml",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-06-05T07:01:53.678093934Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-06-12T21:30:49.910042917Z"
     },
     {
       "name": "pdftoipe",
@@ -37956,7 +37956,7 @@
       "name": "progress",
       "source": "rubygems:progress",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 12,
