@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-05T00:11:56Z",
+  "updated_at": "2026-06-05T05:21:10Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 495,
-      "next_retry_at": "1734-02-23T22:39:58.0210377Z"
+      "failure_count": 497,
+      "next_retry_at": "1734-02-24T05:33:53.543608406Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 726,
-      "next_retry_at": "1734-02-23T22:39:58.0210377Z"
+      "failure_count": 728,
+      "next_retry_at": "1734-02-24T05:33:53.543608406Z"
     },
     {
       "name": "libaacs",
@@ -32876,11 +32876,11 @@
       "name": "notifiers",
       "source": "rubygems:notifiers",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 13,
-      "next_retry_at": "2026-06-04T11:00:30.565529661Z"
+      "failure_count": 14,
+      "next_retry_at": "2026-06-12T05:21:10.398384214Z"
     },
     {
       "name": "notion-mcp-server",
@@ -35716,7 +35716,7 @@
       "name": "pastel",
       "source": "rubygems:pastel",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 12,
