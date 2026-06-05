@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-06-05T00:11:19Z",
+  "generated_at": "2026-06-05T00:12:37Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 81,
-      "pending": 3823,
+      "failed": 79,
+      "pending": 3825,
       "success": 1373
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 81,
-        "pending": 3808,
+        "failed": 79,
+        "pending": 3810,
         "success": 1349
       }
     },
@@ -68,12 +68,14 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
+        "failed": 19,
+        "pending": 1,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -427,15 +429,6 @@
           "category": "install_failed",
           "failure_count": 19,
           "next_retry_at": "2026-06-06T15:10:54Z"
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 495,
-          "next_retry_at": "1734-02-23T22:39:58Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -807,15 +800,6 @@
           "next_retry_at": "2026-06-10T13:22:16Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 726,
-          "next_retry_at": "1734-02-23T22:39:58Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -933,6 +917,15 @@
           "next_retry_at": "2026-06-11T22:27:14Z"
         },
         {
+          "id": "rubygems:nkf",
+          "name": "nkf",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 14,
+          "next_retry_at": "2026-06-12T00:11:56Z"
+        },
+        {
           "id": "crates.io:numpy",
           "name": "numpy",
           "ecosystem": "crates.io",
@@ -940,15 +933,6 @@
           "category": "install_failed",
           "failure_count": 18,
           "next_retry_at": "2026-06-06T11:29:53Z"
-        },
-        {
-          "id": "rubygems:parallel",
-          "name": "parallel",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-06-04T23:20:31Z"
         },
         {
           "id": "rubygems:pastel",
@@ -2937,6 +2921,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 495,
+          "next_retry_at": "1734-02-23T22:39:58Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -13234,6 +13227,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 726,
+          "next_retry_at": "1734-02-23T22:39:58Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -16913,15 +16915,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:nkf",
-          "name": "nkf",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 13,
-          "next_retry_at": "2026-06-04T07:00:21Z"
-        },
-        {
           "id": "homebrew:nload",
           "name": "nload",
           "ecosystem": "homebrew",
@@ -18675,6 +18668,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:parallel",
+          "name": "parallel",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 12,
+          "next_retry_at": "2026-06-04T23:20:31Z"
         },
         {
           "id": "homebrew:pari",
