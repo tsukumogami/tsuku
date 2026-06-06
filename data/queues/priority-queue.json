@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-05T23:14:11Z",
+  "updated_at": "2026-06-06T02:59:34Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 503,
-      "next_retry_at": "1734-02-24T21:43:33.055267109Z"
+      "failure_count": 505,
+      "next_retry_at": "1734-02-25T03:12:17.67902251Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 734,
-      "next_retry_at": "1734-02-24T21:43:33.055267109Z"
+      "failure_count": 736,
+      "next_retry_at": "1734-02-25T03:12:17.67902251Z"
     },
     {
       "name": "libaacs",
@@ -36726,11 +36726,11 @@
       "name": "pioneer",
       "source": "rubygems:pioneer",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-06-05T14:05:55.890722022Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-06-13T02:59:34.533798318Z"
     },
     {
       "name": "pioneers",
@@ -40296,7 +40296,7 @@
       "name": "re2",
       "source": "rubygems:re2",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 11,
