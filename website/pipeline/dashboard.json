@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-06T23:07:39Z",
+  "generated_at": "2026-06-06T23:09:01Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -431,15 +431,6 @@
           "next_retry_at": "2026-06-13T17:16:45Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 513,
-          "next_retry_at": "1734-02-25T21:21:57Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -467,13 +458,13 @@
           "next_retry_at": "2026-06-13T21:09:13Z"
         },
         {
-          "id": "rubygems:cassandra",
-          "name": "cassandra",
+          "id": "rubygems:bup",
+          "name": "bup",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 18,
-          "next_retry_at": "2026-06-06T22:06:23Z"
+          "failure_count": 19,
+          "next_retry_at": "2026-06-13T23:08:17Z"
         },
         {
           "id": "rubygems:cdo",
@@ -483,6 +474,15 @@
           "category": "install_failed",
           "failure_count": 18,
           "next_retry_at": "2026-06-06T23:16:05Z"
+        },
+        {
+          "id": "npm:chainsaw",
+          "name": "chainsaw",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 19,
+          "next_retry_at": "2026-06-13T23:08:17Z"
         },
         {
           "id": "rubygems:chisel",
@@ -791,15 +791,6 @@
           "next_retry_at": "2026-06-10T13:22:16Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 744,
-          "next_retry_at": "1734-02-25T21:21:57Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -1086,6 +1077,15 @@
           "category": "install_failed",
           "failure_count": 17,
           "next_retry_at": "2026-06-11T08:26:17Z"
+        },
+        {
+          "id": "pypi:tctl",
+          "name": "tctl",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 19,
+          "next_retry_at": "2026-06-13T23:08:17Z"
         },
         {
           "id": "pypi:vllm",
@@ -2923,6 +2923,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 513,
+          "next_retry_at": "1734-02-25T21:21:57Z"
+        },
+        {
           "id": "homebrew:azure-storage-common-cpp",
           "name": "azure-storage-common-cpp",
           "ecosystem": "homebrew",
@@ -3897,15 +3906,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:bup",
-          "name": "bup",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 18,
-          "next_retry_at": "2026-06-06T20:14:47Z"
-        },
-        {
           "id": "homebrew:burp",
           "name": "burp",
           "ecosystem": "homebrew",
@@ -4193,6 +4193,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:cassandra",
+          "name": "cassandra",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 18,
+          "next_retry_at": "2026-06-06T22:06:23Z"
+        },
+        {
           "id": "homebrew:cassandra-reaper",
           "name": "cassandra-reaper",
           "ecosystem": "homebrew",
@@ -4368,15 +4377,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:chainsaw",
-          "name": "chainsaw",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 18,
-          "next_retry_at": "2026-06-06T20:14:47Z"
         },
         {
           "id": "homebrew:changie",
@@ -13234,6 +13234,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 744,
+          "next_retry_at": "1734-02-25T21:21:57Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -24733,15 +24742,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:tctl",
-          "name": "tctl",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 18,
-          "next_retry_at": "2026-06-06T20:14:47Z"
         },
         {
           "id": "homebrew:tdlib",
