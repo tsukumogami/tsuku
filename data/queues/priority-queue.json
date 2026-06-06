@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-06T11:31:06Z",
+  "updated_at": "2026-06-06T13:34:56Z",
   "entries": [
     {
       "name": "node",
@@ -636,11 +636,11 @@
       "name": "numpy",
       "source": "crates.io:numpy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 18,
-      "next_retry_at": "2026-06-06T11:29:53.549104166Z"
+      "failure_count": 19,
+      "next_retry_at": "2026-06-13T13:34:56.590372018Z"
     },
     {
       "name": "p11-kit",
@@ -1906,11 +1906,11 @@
       "name": "amp",
       "source": "rubygems:amp",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 19,
-      "next_retry_at": "2026-06-06T11:29:53.549104166Z"
+      "failure_count": 20,
+      "next_retry_at": "2026-06-13T13:34:56.590372018Z"
     },
     {
       "name": "amplify",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 507,
-      "next_retry_at": "1734-02-25T09:43:51.227461909Z"
+      "failure_count": 509,
+      "next_retry_at": "1734-02-25T13:47:39.73559621Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 738,
-      "next_retry_at": "1734-02-25T09:43:51.227461909Z"
+      "failure_count": 740,
+      "next_retry_at": "1734-02-25T13:47:39.73559621Z"
     },
     {
       "name": "libaacs",
@@ -42166,7 +42166,7 @@
       "name": "scalingo",
       "source": "rubygems:scalingo",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 10,
