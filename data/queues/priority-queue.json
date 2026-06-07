@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-07T11:14:58Z",
+  "updated_at": "2026-06-07T13:53:55Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 515,
-      "next_retry_at": "1734-02-26T09:24:19.524048095Z"
+      "failure_count": 516,
+      "next_retry_at": "1734-02-26T14:06:37.926347712Z"
     },
     {
       "name": "azqr",
@@ -8626,11 +8626,11 @@
       "name": "cog",
       "source": "rubygems:cog",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 19,
-      "next_retry_at": "2026-06-07T10:20:45.018149672Z"
+      "failure_count": 20,
+      "next_retry_at": "2026-06-14T13:53:54.78112352Z"
     },
     {
       "name": "coin3d",
@@ -9156,7 +9156,7 @@
       "name": "cowsay",
       "source": "rubygems:cowsay",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 19,
@@ -11186,7 +11186,7 @@
       "name": "dmd",
       "source": "npm:dmd",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 18,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 746,
-      "next_retry_at": "1734-02-26T09:24:19.524048095Z"
+      "failure_count": 748,
+      "next_retry_at": "1734-02-26T14:06:37.926347712Z"
     },
     {
       "name": "libaacs",
