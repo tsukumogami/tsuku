@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-06-08T08:58:49Z",
+  "generated_at": "2026-06-08T09:00:40Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 80,
-      "pending": 3824,
+      "failed": 79,
+      "pending": 3825,
       "success": 1373
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 80,
-        "pending": 3809,
+        "failed": 79,
+        "pending": 3810,
         "success": 1349
       }
     },
@@ -74,7 +74,8 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -430,15 +431,6 @@
           "next_retry_at": "2026-06-13T17:16:45Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 519,
-          "next_retry_at": "1734-02-27T04:01:10Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -628,13 +620,13 @@
           "next_retry_at": "2026-06-15T03:48:27Z"
         },
         {
-          "id": "rubygems:gitingest",
-          "name": "gitingest",
+          "id": "rubygems:flash",
+          "name": "flash",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 17,
-          "next_retry_at": "2026-06-08T03:51:20Z"
+          "failure_count": 18,
+          "next_retry_at": "2026-06-15T08:59:23Z"
         },
         {
           "id": "rubygems:glassfish",
@@ -644,6 +636,15 @@
           "category": "install_failed",
           "failure_count": 17,
           "next_retry_at": "2026-06-08T09:44:50Z"
+        },
+        {
+          "id": "npm:got",
+          "name": "got",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 18,
+          "next_retry_at": "2026-06-15T08:59:23Z"
         },
         {
           "id": "rubygems:gsl",
@@ -788,15 +789,6 @@
           "category": "install_failed",
           "failure_count": 16,
           "next_retry_at": "2026-06-10T13:22:16Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 754,
-          "next_retry_at": "1734-02-27T04:01:10Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -2929,6 +2921,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 519,
+          "next_retry_at": "1734-02-27T04:01:10Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -8240,15 +8241,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:flash",
-          "name": "flash",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 17,
-          "next_retry_at": "2026-06-07T23:09:58Z"
-        },
-        {
           "id": "homebrew:flashrom",
           "name": "flashrom",
           "ecosystem": "homebrew",
@@ -9474,6 +9466,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:gitingest",
+          "name": "gitingest",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 17,
+          "next_retry_at": "2026-06-08T03:51:20Z"
+        },
+        {
           "id": "homebrew:gitlab-ci-local",
           "name": "gitlab-ci-local",
           "ecosystem": "homebrew",
@@ -9934,15 +9935,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:got",
-          "name": "got",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 17,
-          "next_retry_at": "2026-06-07T23:09:58Z"
         },
         {
           "id": "homebrew:gpa",
@@ -13242,6 +13234,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 754,
+          "next_retry_at": "1734-02-27T04:01:10Z"
         },
         {
           "id": "homebrew:libaacs",
