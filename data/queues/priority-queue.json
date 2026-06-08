@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-08T17:29:01Z",
+  "updated_at": "2026-06-08T20:19:03Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 520,
-      "next_retry_at": "1734-02-27T13:26:29.670810307Z"
+      "failure_count": 521,
+      "next_retry_at": "1734-02-27T20:31:46.282122638Z"
     },
     {
       "name": "azqr",
@@ -18966,11 +18966,11 @@
       "name": "gsl",
       "source": "rubygems:gsl",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 17,
-      "next_retry_at": "2026-06-08T16:03:54.64775365Z"
+      "failure_count": 18,
+      "next_retry_at": "2026-06-15T20:19:03.136898446Z"
     },
     {
       "name": "gsmartcontrol",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 756,
-      "next_retry_at": "1734-02-27T13:26:29.670810307Z"
+      "failure_count": 758,
+      "next_retry_at": "1734-02-27T20:31:46.282122638Z"
     },
     {
       "name": "libaacs",
