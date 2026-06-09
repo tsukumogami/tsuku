@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-09T09:44:55Z",
+  "updated_at": "2026-06-09T12:41:26Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 524,
@@ -20626,11 +20626,11 @@
       "name": "httpx",
       "source": "rubygems:httpx",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 17,
-      "next_retry_at": "2026-06-09T05:36:44.973693249Z"
+      "failure_count": 18,
+      "next_retry_at": "2026-06-16T12:41:26.433238445Z"
     },
     {
       "name": "httpyac",
@@ -20786,7 +20786,7 @@
       "name": "hydra",
       "source": "rubygems:hydra",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 17,
@@ -24896,11 +24896,11 @@
       "name": "lcm",
       "source": "npm:lcm",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 17,
-      "next_retry_at": "2026-06-09T00:28:21.247631494Z"
+      "failure_count": 18,
+      "next_retry_at": "2026-06-16T12:41:26.433238445Z"
     },
     {
       "name": "lcov",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 762,
@@ -28556,7 +28556,7 @@
       "name": "mailhog",
       "source": "npm:mailhog",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 17,
