@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-08T22:31:33Z",
+  "updated_at": "2026-06-09T00:10:47Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 521,
-      "next_retry_at": "1734-02-27T20:31:46.282122638Z"
+      "failure_count": 523,
+      "next_retry_at": "1734-02-28T00:23:30.054370982Z"
     },
     {
       "name": "azqr",
@@ -19496,11 +19496,11 @@
       "name": "haproxy",
       "source": "rubygems:haproxy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 17,
-      "next_retry_at": "2026-06-08T20:23:41.170731163Z"
+      "failure_count": 18,
+      "next_retry_at": "2026-06-16T00:10:46.90914679Z"
     },
     {
       "name": "harbor-cli",
@@ -20056,7 +20056,7 @@
       "name": "hercules",
       "source": "rubygems:hercules",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 17,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 758,
-      "next_retry_at": "1734-02-27T20:31:46.282122638Z"
+      "failure_count": 760,
+      "next_retry_at": "1734-02-28T00:23:30.054370982Z"
     },
     {
       "name": "libaacs",
