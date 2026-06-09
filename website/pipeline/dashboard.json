@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-06-09T20:24:23Z",
+  "generated_at": "2026-06-09T20:25:50Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 81,
-      "pending": 3823,
+      "failed": 82,
+      "pending": 3822,
       "success": 1373
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 81,
-        "pending": 3808,
+        "failed": 82,
+        "pending": 3807,
         "success": 1349
       }
     },
@@ -74,8 +74,7 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -431,6 +430,15 @@
           "next_retry_at": "2026-06-13T17:16:45Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 526,
+          "next_retry_at": "1734-02-28T20:37:42Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -728,15 +736,6 @@
           "next_retry_at": "2026-06-16T18:07:10Z"
         },
         {
-          "id": "rubygems:imgproxy",
-          "name": "imgproxy",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 17,
-          "next_retry_at": "2026-06-09T18:45:32Z"
-        },
-        {
           "id": "rubygems:influxdb",
           "name": "influxdb",
           "ecosystem": "rubygems",
@@ -800,6 +799,15 @@
           "next_retry_at": "2026-06-10T13:22:16Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 766,
+          "next_retry_at": "1734-02-28T20:37:42Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -834,15 +842,6 @@
           "category": "install_failed",
           "failure_count": 18,
           "next_retry_at": "2026-06-16T18:07:10Z"
-        },
-        {
-          "id": "npm:markdown-toc",
-          "name": "markdown-toc",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 17,
-          "next_retry_at": "2026-06-09T18:45:32Z"
         },
         {
           "id": "rubygems:mdv",
@@ -1086,6 +1085,15 @@
           "category": "install_failed",
           "failure_count": 12,
           "next_retry_at": "2026-06-15T22:31:33Z"
+        },
+        {
+          "id": "rubygems:rename",
+          "name": "rename",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 11,
+          "next_retry_at": "2026-06-16T20:24:58Z"
         },
         {
           "id": "npm:sigstore",
@@ -2939,15 +2947,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 525,
-          "next_retry_at": "1734-02-28T16:13:23Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -11530,6 +11529,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:imgproxy",
+          "name": "imgproxy",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 17,
+          "next_retry_at": "2026-06-09T18:45:32Z"
+        },
+        {
           "id": "homebrew:imlib2",
           "name": "imlib2",
           "ecosystem": "homebrew",
@@ -13243,15 +13251,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 764,
-          "next_retry_at": "1734-02-28T16:13:23Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -15062,6 +15061,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:markdown-toc",
+          "name": "markdown-toc",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 17,
+          "next_retry_at": "2026-06-09T18:45:32Z"
         },
         {
           "id": "homebrew:markdownlint-cli",
@@ -21326,15 +21334,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:rename",
-          "name": "rename",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 10,
-          "next_retry_at": "2026-06-06T07:47:53Z"
         },
         {
           "id": "homebrew:renode/tap/renode",
