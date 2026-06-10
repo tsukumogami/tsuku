@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-10T19:40:56Z",
+  "updated_at": "2026-06-10T22:06:22Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 529,
-      "next_retry_at": "1734-03-01T16:53:59.854462979Z"
+      "failure_count": 531,
+      "next_retry_at": "1734-03-01T22:19:05.299547359Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 772,
-      "next_retry_at": "1734-03-01T16:53:59.854462979Z"
+      "failure_count": 774,
+      "next_retry_at": "1734-03-01T22:19:05.299547359Z"
     },
     {
       "name": "libaacs",
@@ -26066,11 +26066,11 @@
       "name": "libnotify",
       "source": "rubygems:libnotify",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 16,
-      "next_retry_at": "2026-06-10T18:29:10.675138059Z"
+      "failure_count": 17,
+      "next_retry_at": "2026-06-17T22:06:22.154323167Z"
     },
     {
       "name": "libogg",
@@ -28016,7 +28016,7 @@
       "name": "lsof",
       "source": "rubygems:lsof",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 16,
