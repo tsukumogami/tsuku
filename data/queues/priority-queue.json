@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-09T22:29:29Z",
+  "updated_at": "2026-06-10T00:18:10Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 526,
-      "next_retry_at": "1734-02-28T20:37:42.124346828Z"
+      "failure_count": 527,
+      "next_retry_at": "1734-03-01T00:30:53.633481602Z"
     },
     {
       "name": "azqr",
@@ -21416,11 +21416,11 @@
       "name": "influxdb",
       "source": "rubygems:influxdb",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 17,
-      "next_retry_at": "2026-06-09T21:54:06.161939504Z"
+      "failure_count": 18,
+      "next_retry_at": "2026-06-17T00:18:10.48825741Z"
     },
     {
       "name": "influxdb-cli",
@@ -21756,7 +21756,7 @@
       "name": "ipfs",
       "source": "rubygems:ipfs",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 17,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 766,
-      "next_retry_at": "1734-02-28T20:37:42.124346828Z"
+      "failure_count": 768,
+      "next_retry_at": "1734-03-01T00:30:53.633481602Z"
     },
     {
       "name": "libaacs",
@@ -30826,7 +30826,7 @@
       "name": "mongoose",
       "source": "npm:mongoose",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 17,
