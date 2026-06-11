@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-06-11T12:50:18Z",
+  "generated_at": "2026-06-11T12:51:49Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 81,
-      "pending": 3823,
+      "failed": 83,
+      "pending": 3821,
       "success": 1373
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 81,
-        "pending": 3808,
+        "failed": 83,
+        "pending": 3806,
         "success": 1349
       }
     },
@@ -68,14 +68,13 @@
         "total": 1
       },
       "npm": {
-        "failed": 18,
-        "pending": 2,
+        "failed": 19,
+        "pending": 1,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -429,6 +428,15 @@
           "category": "install_failed",
           "failure_count": 20,
           "next_retry_at": "2026-06-13T17:16:45Z"
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 533,
+          "next_retry_at": "1734-03-02T13:03:41Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -800,6 +808,15 @@
           "next_retry_at": "2026-06-17T19:40:55Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 778,
+          "next_retry_at": "1734-03-02T13:03:41Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -845,13 +862,13 @@
           "next_retry_at": "2026-06-16T22:29:29Z"
         },
         {
-          "id": "rubygems:meli",
-          "name": "meli",
+          "id": "rubygems:mdv",
+          "name": "mdv",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 15,
-          "next_retry_at": "2026-06-11T11:57:42Z"
+          "failure_count": 17,
+          "next_retry_at": "2026-06-18T12:50:58Z"
         },
         {
           "id": "rubygems:memcached",
@@ -2939,15 +2956,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 532,
-          "next_retry_at": "1734-03-02T04:00:24Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -13245,15 +13253,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 776,
-          "next_retry_at": "1734-03-02T04:00:24Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -15393,15 +15392,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:mdv",
-          "name": "mdv",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 16,
-          "next_retry_at": "2026-06-11T03:48:39Z"
-        },
-        {
           "id": "homebrew:mecab",
           "name": "mecab",
           "ecosystem": "homebrew",
@@ -15465,6 +15455,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:meli",
+          "name": "meli",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 15,
+          "next_retry_at": "2026-06-11T11:57:42Z"
         },
         {
           "id": "homebrew:mender-artifact",
