@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-11T08:51:04Z",
+  "updated_at": "2026-06-11T12:50:58Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 532,
-      "next_retry_at": "1734-03-02T04:00:24.565514918Z"
+      "failure_count": 533,
+      "next_retry_at": "1734-03-02T13:03:41.230281183Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 776,
-      "next_retry_at": "1734-03-02T04:00:24.565514918Z"
+      "failure_count": 778,
+      "next_retry_at": "1734-03-02T13:03:41.230281183Z"
     },
     {
       "name": "libaacs",
@@ -29486,11 +29486,11 @@
       "name": "mdv",
       "source": "rubygems:mdv",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 16,
-      "next_retry_at": "2026-06-11T03:48:39.985901666Z"
+      "failure_count": 17,
+      "next_retry_at": "2026-06-18T12:50:58.085056991Z"
     },
     {
       "name": "mecab",
@@ -29596,7 +29596,7 @@
       "name": "meli",
       "source": "rubygems:meli",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 15,
