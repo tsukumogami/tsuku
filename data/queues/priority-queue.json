@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-10T23:46:53Z",
+  "updated_at": "2026-06-11T03:47:41Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 531,
-      "next_retry_at": "1734-03-01T22:19:05.299547359Z"
+      "failure_count": 532,
+      "next_retry_at": "1734-03-02T04:00:24.565514918Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 774,
-      "next_retry_at": "1734-03-01T22:19:05.299547359Z"
+      "failure_count": 776,
+      "next_retry_at": "1734-03-02T04:00:24.565514918Z"
     },
     {
       "name": "libaacs",
@@ -28546,7 +28546,7 @@
       "name": "mailcatcher",
       "source": "rubygems:mailcatcher",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 16,
@@ -39116,7 +39116,7 @@
       "name": "q",
       "source": "npm:q",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 17,
@@ -42166,11 +42166,11 @@
       "name": "scalingo",
       "source": "rubygems:scalingo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 10,
-      "next_retry_at": "2026-06-06T13:31:25.536040667Z"
+      "failure_count": 11,
+      "next_retry_at": "2026-06-18T03:47:41.420290726Z"
     },
     {
       "name": "scamper",
