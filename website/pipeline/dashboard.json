@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-06-12T08:30:30Z",
+  "generated_at": "2026-06-12T08:32:02Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 82,
-      "pending": 3822,
+      "failed": 84,
+      "pending": 3820,
       "success": 1373
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 82,
-        "pending": 3807,
+        "failed": 84,
+        "pending": 3805,
         "success": 1349
       }
     },
@@ -68,14 +68,12 @@
         "total": 1
       },
       "npm": {
-        "failed": 19,
-        "pending": 1,
+        "failed": 20,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -429,6 +427,15 @@
           "category": "install_failed",
           "failure_count": 20,
           "next_retry_at": "2026-06-13T17:16:45Z"
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 536,
+          "next_retry_at": "1734-03-03T08:43:48Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -800,6 +807,15 @@
           "next_retry_at": "2026-06-17T19:40:55Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 784,
+          "next_retry_at": "1734-03-03T08:43:48Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -908,13 +924,13 @@
           "next_retry_at": "2026-06-19T03:44:50Z"
         },
         {
-          "id": "rubygems:notifiers",
-          "name": "notifiers",
+          "id": "rubygems:neo4j",
+          "name": "neo4j",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 14,
-          "next_retry_at": "2026-06-12T05:21:10Z"
+          "failure_count": 15,
+          "next_retry_at": "2026-06-19T08:31:05Z"
         },
         {
           "id": "crates.io:numpy",
@@ -2948,15 +2964,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 535,
-          "next_retry_at": "1734-03-03T00:06:16Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -13254,15 +13261,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 782,
-          "next_retry_at": "1734-03-03T00:06:16Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -16662,15 +16660,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:neo4j",
-          "name": "neo4j",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 14,
-          "next_retry_at": "2026-06-11T22:27:14Z"
-        },
-        {
           "id": "homebrew:neocmakelsp",
           "name": "neocmakelsp",
           "ecosystem": "homebrew",
@@ -17119,6 +17108,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:notifiers",
+          "name": "notifiers",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 14,
+          "next_retry_at": "2026-06-12T05:21:10Z"
         },
         {
           "id": "homebrew:notion-mcp-server",
