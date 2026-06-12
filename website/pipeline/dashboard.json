@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-06-12T19:10:41Z",
+  "generated_at": "2026-06-12T19:12:01Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 83,
-      "pending": 3821,
+      "failed": 81,
+      "pending": 3823,
       "success": 1373
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 83,
-        "pending": 3806,
+        "failed": 81,
+        "pending": 3808,
         "success": 1349
       }
     },
@@ -68,12 +68,14 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
+        "failed": 19,
+        "pending": 1,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -427,15 +429,6 @@
           "category": "install_failed",
           "failure_count": 20,
           "next_retry_at": "2026-06-13T17:16:45Z"
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 538,
-          "next_retry_at": "1734-03-03T16:35:57Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -807,15 +800,6 @@
           "next_retry_at": "2026-06-17T19:40:55Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 786,
-          "next_retry_at": "1734-03-03T16:35:57Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -960,13 +944,13 @@
           "next_retry_at": "2026-06-13T13:34:56Z"
         },
         {
-          "id": "rubygems:parallel",
-          "name": "parallel",
+          "id": "rubygems:nut",
+          "name": "nut",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 13,
-          "next_retry_at": "2026-06-12T17:58:53Z"
+          "failure_count": 15,
+          "next_retry_at": "2026-06-19T19:11:10Z"
         },
         {
           "id": "rubygems:pastel",
@@ -2955,6 +2939,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 538,
+          "next_retry_at": "1734-03-03T16:35:57Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -13252,6 +13245,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 786,
+          "next_retry_at": "1734-03-03T16:35:57Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -17232,15 +17234,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:nut",
-          "name": "nut",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 14,
-          "next_retry_at": "2026-06-12T09:48:22Z"
-        },
-        {
           "id": "homebrew:nuxi",
           "name": "nuxi",
           "ecosystem": "homebrew",
@@ -18675,6 +18668,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:parallel",
+          "name": "parallel",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 13,
+          "next_retry_at": "2026-06-12T17:58:53Z"
         },
         {
           "id": "homebrew:pari",
