@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-12T21:50:14Z",
+  "updated_at": "2026-06-12T23:22:58Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 540,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 788,
@@ -33386,11 +33386,11 @@
       "name": "ocp",
       "source": "rubygems:ocp",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
-      "next_retry_at": "2026-06-12T15:58:49.025474985Z"
+      "failure_count": 15,
+      "next_retry_at": "2026-06-19T23:22:57.673934355Z"
     },
     {
       "name": "ocrmypdf",
@@ -36616,7 +36616,7 @@
       "name": "pidof",
       "source": "rubygems:pidof",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 13,
