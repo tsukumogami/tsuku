@@ -20,8 +20,64 @@ Downloads and extracts a GitHub release asset matching a pattern.
 | `install_mode` | string | No | `"binaries"` (default), `"directory"`, `"directory_wrapped"` |
 | `os_mapping` | map | No | Remap OS names (e.g., `{ darwin = "macOS" }`) |
 | `arch_mapping` | map | No | Remap arch names (e.g., `{ amd64 = "x86_64" }`) |
+| `checksum_asset` | string | No | Sibling release asset filename for SHA256 verification (ergonomic default) |
+| `checksum_url` | string | No | Full URL to checksum file (escape hatch for off-release checksums) |
 
 Platform: All. Decomposes to: download_file + extract + install_binaries.
+
+#### Upstream checksum verification
+
+`checksum_asset` is the ergonomic default: name the filename and the composite
+constructs the sibling URL against the same release tag as the asset itself
+(`https://github.com/<repo>/releases/download/<tag>/<asset>`). The recipe stays
+versionless — each install of each version fetches the version-appropriate
+checksum file:
+
+```toml
+# Per-asset .sha256 (one checksum per platform asset)
+[[steps]]
+action = "github_archive"
+repo = "EmbarkStudios/cargo-deny"
+asset_pattern = "cargo-deny-{version}-{arch}-{os}.tar.gz"
+checksum_asset = "cargo-deny-{version}-{arch}-{os}.tar.gz.sha256"
+binaries = ["cargo-deny"]
+
+# Multi-line SHA256SUMS manifest (one file lists every platform asset)
+[[steps]]
+action = "github_archive"
+repo = "openai/codex"
+asset_pattern = "codex-package-{arch}-{os}.tar.gz"
+checksum_asset = "codex-package_SHA256SUMS"
+binaries = ["bin/codex"]
+```
+
+`checksum_url` is the escape hatch when the checksum file lives off-release
+(typically third-party mirrors). Use placeholders for per-version resolution:
+
+```toml
+[[steps]]
+action = "github_archive"
+repo = "oven-sh/bun"
+asset_pattern = "bun-linux-{arch}.zip"
+checksum_url = "https://example.com/v{version}/bun-checksums.txt"
+binaries = ["bun"]
+```
+
+Rules:
+
+- `checksum_url` and `checksum_asset` are mutually exclusive on a single step.
+- `checksum_asset` is `github_archive`-only (`download_archive` has no sibling
+  anchor — use `checksum_url` there).
+- `checksum_asset` is not supported with wildcard `asset_pattern` (the sibling
+  URL needs the resolved asset name).
+- `checksum_url` with no `{version}` placeholder against a version-templated
+  `asset_pattern` produces a Preflight warning — the static-checksum-with-
+  versioned-asset combination would fetch the same file for every version.
+
+Both formats (per-asset single-line `<hex>  <filename>` and multi-line
+`SHA256SUMS` manifests) are auto-detected from file content. Plan generation
+fetches and validates the upstream checksum; mismatch fails plan generation
+early rather than at install-time verify.
 
 ### github_file
 
@@ -65,8 +121,22 @@ Downloads, extracts, and installs binaries in a single composite action.
 | `install_mode` | string | No | Install mode |
 | `os_mapping` | map | No | Remap OS names |
 | `arch_mapping` | map | No | Remap arch names |
+| `checksum_url` | string | No | Full URL to checksum file (per-asset .sha256 or multi-line SHA256SUMS) |
 
 Platform: All. Decomposes to: download_file + extract + install_binaries.
+
+`checksum_url` accepts the same `{version}`/`{os}`/`{arch}` placeholders as
+`url`. `download_archive` does NOT support `checksum_asset` — the action's URL
+is fully recipe-supplied with no sibling-asset anchor. Use `checksum_url` with
+explicit placeholders for per-version resolution:
+
+```toml
+[[steps]]
+action = "download_archive"
+url = "https://releases.hashicorp.com/terraform/{version}/terraform_{version}_{os}_{arch}.zip"
+checksum_url = "https://releases.hashicorp.com/terraform/{version}/terraform_{version}_SHA256SUMS"
+binaries = ["terraform"]
+```
 
 ### fossil_archive
 
