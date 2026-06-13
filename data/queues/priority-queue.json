@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-12T23:22:58Z",
+  "updated_at": "2026-06-13T03:34:28Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 540,
-      "next_retry_at": "1734-03-03T22:02:57.5839648Z"
+      "failure_count": 542,
+      "next_retry_at": "1734-03-04T03:47:11.124114115Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 788,
-      "next_retry_at": "1734-03-03T22:02:57.5839648Z"
+      "failure_count": 790,
+      "next_retry_at": "1734-03-04T03:47:11.124114115Z"
     },
     {
       "name": "libaacs",
@@ -35596,11 +35596,11 @@
       "name": "parallel",
       "source": "rubygems:parallel",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 13,
-      "next_retry_at": "2026-06-12T17:58:53.442938256Z"
+      "failure_count": 14,
+      "next_retry_at": "2026-06-20T03:34:27.978889923Z"
     },
     {
       "name": "pari",
@@ -36726,7 +36726,7 @@
       "name": "pioneer",
       "source": "rubygems:pioneer",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 13,
