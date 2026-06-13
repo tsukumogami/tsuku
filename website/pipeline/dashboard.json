@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-06-13T18:14:13Z",
+  "generated_at": "2026-06-13T19:17:22Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 81,
-      "pending": 3823,
-      "success": 1373
+      "failed": 79,
+      "pending": 3824,
+      "success": 1374
     },
     "by_tier": {
       "1": {
@@ -23,9 +23,9 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 81,
-        "pending": 3808,
-        "success": 1349
+        "failed": 79,
+        "pending": 3809,
+        "success": 1350
       }
     },
     "by_ecosystem": {
@@ -40,8 +40,8 @@
       "crates.io": {
         "excluded": 5,
         "failed": 2,
-        "pending": 75,
-        "success": 23,
+        "pending": 74,
+        "success": 24,
         "total": 105
       },
       "github": {
@@ -68,12 +68,14 @@
         "total": 1
       },
       "npm": {
-        "failed": 20,
+        "failed": 19,
+        "pending": 1,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -409,15 +411,6 @@
           "category": "install_failed",
           "failure_count": 21,
           "next_retry_at": "2026-06-20T16:25:51Z"
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 548,
-          "next_retry_at": "1734-03-04T18:26:15Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -787,15 +780,6 @@
           "category": "install_failed",
           "failure_count": 17,
           "next_retry_at": "2026-06-17T19:40:55Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 796,
-          "next_retry_at": "1734-03-04T18:26:15Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -2955,6 +2939,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 548,
+          "next_retry_at": "1734-03-04T18:26:15Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -5189,13 +5182,6 @@
           "id": "homebrew:codespell",
           "name": "codespell",
           "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "crates.io:codex",
-          "name": "codex",
-          "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
         },
@@ -13250,6 +13236,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 796,
+          "next_retry_at": "1734-03-04T18:26:15Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -29682,6 +29677,13 @@
           "failure_count": 0
         },
         {
+          "id": "crates.io:codex",
+          "name": "codex",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:codex-acp",
           "name": "codex-acp",
           "ecosystem": "homebrew",
@@ -40460,6 +40462,11 @@
     {
       "name": "cocoapods",
       "source": "homebrew:cocoapods",
+      "validation_status": "valid"
+    },
+    {
+      "name": "codex",
+      "source": "crates.io:codex",
       "validation_status": "valid"
     },
     {
