@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-05-27T12:12:56Z",
-  "total_recipes": 1444,
+  "generated_at": "2026-06-13T19:15:55Z",
+  "total_recipes": 1445,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 882,
-        "total": 1444,
-        "pct": 61.08033240997231
+        "supported": 883,
+        "total": 1445,
+        "pct": 61.10726643598616
       },
       "glibc": {
-        "supported": 1411,
-        "total": 1444,
-        "pct": 97.71468144044321
+        "supported": 1412,
+        "total": 1445,
+        "pct": 97.71626297577855
       },
       "musl": {
-        "supported": 1255,
-        "total": 1444,
-        "pct": 86.91135734072022
+        "supported": 1256,
+        "total": 1445,
+        "pct": 86.9204152249135
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1291,
-        "musl_support": 1105,
-        "glibc_support": 1261
+        "total": 1292,
+        "musl_support": 1106,
+        "glibc_support": 1262
       }
     }
   },
@@ -3105,6 +3105,20 @@
       "errors": null,
       "warnings": [
         "recipe 'coder' has platform-specific actions without libc when clauses and no musl fallback"
+      ]
+    },
+    {
+      "name": "codex",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": [
+        "recipe 'codex' has platform-specific actions without libc when clauses and no musl fallback"
       ]
     },
     {
