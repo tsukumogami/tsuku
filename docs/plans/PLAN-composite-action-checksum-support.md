@@ -164,17 +164,21 @@ Decision D-A2.
 
 ---
 
-### Issue 4: feat(composites): Preflight mutual-exclusion and field-scope guards
+### Issue 4: feat(composites): Preflight mutual-exclusion, scope guards, and static-checksum warning
 
 **Complexity**: simple
 
-**Goal**: Add three Preflight checks per DESIGN Decision D-A2:
+**Goal**: Add four Preflight checks per DESIGN Decision D-A2:
 (a) reject when both `checksum_url` and `checksum_asset` are
 set on a single `github_archive` step; (b) reject
 `checksum_asset` on `github_archive` when `asset_pattern`
 contains wildcards (sibling URL cannot be constructed before
 asset resolution); (c) reject `checksum_asset` on
-`download_archive` entirely (the field is github_archive-only).
+`download_archive` entirely (the field is github_archive-only);
+(d) WARN when `checksum_url` has no `{version}` placeholder
+while `asset_pattern`/`url` is version-templated — the static-
+checksum-with-versioned-asset combination would surface every
+version bump as a hash mismatch.
 
 **Acceptance Criteria**:
 - [ ] `github_archive.Preflight` errors with
@@ -187,9 +191,15 @@ asset resolution); (c) reject `checksum_asset` on
 - [ ] `download_archive.Preflight` errors with
       `"checksum_asset is github_archive-only; use checksum_url on download_archive"`
       when `checksum_asset` is set
-- [ ] Unit tests cover all three rejections and the happy paths
-      they protect (only checksum_url; only checksum_asset; both
-      absent)
+- [ ] Both composites warn (not error) with
+      `"checksum_url has no {version} placeholder but asset_pattern is version-templated; each install will fetch the same checksum file regardless of version — likely a recipe authoring mistake"`
+      when `checksum_url` lacks `{version}` while `asset_pattern`
+      (`github_archive`) or `url` (`download_archive`) contains
+      `{version}`
+- [ ] Unit tests cover all four checks and the happy paths
+      they protect (only checksum_url with {version}; only
+      checksum_asset; both absent; warning suppressed when both
+      sides are versionless)
 
 **Dependencies**: Issue 2, Issue 3
 

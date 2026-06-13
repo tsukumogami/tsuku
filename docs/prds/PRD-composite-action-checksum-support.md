@@ -128,8 +128,16 @@ recipe benefits.
 - **R4.** `checksum_asset` and `checksum_url` placeholder
   expansion uses the same template variables as `asset_pattern`
   / `url`: `{version}`, `{os}`, `{arch}`. OS and arch mappings
-  apply identically.
-- **R5.** The checksum-verification path recognizes two checksum
+  apply identically. The recipe stays versionless; placeholder
+  expansion at install time produces a per-version URL that
+  resolves against the same release tag as the asset itself.
+  For `checksum_asset`, the sibling URL is constructed against
+  the resolved version tag (not a static one), so a versionless
+  recipe fetches a different checksum file for each version
+  install — the recipe is never "pinned" against any specific
+  version's hash file.
+- **R5.** The checksum-verification path fetches the resolved
+  per-version checksum file at install time and recognizes two
   file shapes:
   - **Per-asset single-line**, format `<hex>[  <filename>]` —
     one line, optional filename. Existing behavior.

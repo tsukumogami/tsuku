@@ -214,11 +214,11 @@ URL; they will pass the resolved value from the composite's
 `Decompose` (empty string when the recipe author did not set
 either checksum field).
 
-### Decision D-A2: Composite Preflight grows two field validations
+### Decision D-A2: Composite Preflight grows three field validations
 
 `GitHubArchiveAction.Preflight` (composites.go:343-381) and
 `DownloadArchiveAction.Preflight` (composites.go:72-101) each
-gain two checks:
+gain three checks (two errors + one warning):
 
 - Reject if both `checksum_url` AND `checksum_asset` are set
   (D5 mutual exclusion). Error: `"checksum_url and
@@ -229,6 +229,19 @@ gain two checks:
   URL cannot be constructed without the resolved asset name.
   Error: `"checksum_asset is not supported with wildcard
   asset_pattern; use checksum_url instead"`.
+- Warn if `checksum_url` is set WITHOUT `{version}` placeholder
+  while `asset_pattern` (`github_archive`) or `url`
+  (`download_archive`) contains `{version}`. The static-
+  checksum-with-versioned-asset combination would fetch the
+  same checksum file for every version install, surfacing every
+  version bump as a hash mismatch rather than a successful
+  upgrade. Warning, not error, because the rare recipe where
+  upstream publishes one signing artifact across versions is
+  legitimate and should not be blocked. Warning text:
+  `"checksum_url has no {version} placeholder but
+  asset_pattern is version-templated; each install will fetch
+  the same checksum file regardless of version — likely a
+  recipe authoring mistake"`.
 
 `download_archive` does NOT accept `checksum_asset` (per PRD
 R3 / D3); Preflight rejects the field with `"checksum_asset

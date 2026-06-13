@@ -4,9 +4,12 @@ status: Accepted
 problem: |
   Recipes that download tarballs from GitHub releases via the
   github_archive and download_archive composite actions cannot
-  pin against upstream-published checksum files, because the
-  composites do not forward the checksum_url field to the
-  primitive download action they decompose into.
+  verify against the version-specific checksum file the upstream
+  publishes alongside each release, because the composites do not
+  forward the checksum_url field to the primitive download action
+  they decompose into. The recipe stays versionless; what is
+  missing is per-install-time fetch-and-verify of the matching
+  upstream checksum.
 outcome: |
   A recipe author writes one composite-action step that names an
   upstream checksum (sibling release asset or full URL) and tsuku
