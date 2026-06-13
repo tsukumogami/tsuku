@@ -123,6 +123,162 @@ func TestDownloadArchiveAction_Decompose(t *testing.T) {
 	}
 }
 
+// TestDownloadArchiveAction_Decompose_ChecksumURL exercises the checksum_url
+// forwarding wired in by Issue 2. Without a Downloader configured, no plan-
+// time fetch happens, so the test only confirms the field plumbing (the
+// composite reads checksum_url and the helper accepts it without error);
+// the install-time validation path is exercised by integration tests.
+func TestDownloadArchiveAction_Decompose_ChecksumURL(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	ctx := &EvalContext{
+		Version: "1.2.3", VersionTag: "v1.2.3", OS: "linux", Arch: "amd64",
+	}
+
+	// No checksum_url: shape byte-identical to pre-change behavior.
+	stepsNo, err := action.Decompose(ctx, map[string]interface{}{
+		"url":            "https://example.com/tool-{version}.tar.gz",
+		"archive_format": "tar.gz",
+		"binaries":       []interface{}{"tool"},
+	})
+	if err != nil {
+		t.Fatalf("control case error: %v", err)
+	}
+	if _, ok := stepsNo[0].Params["checksum_url"]; ok {
+		t.Errorf("control case should NOT carry checksum_url; got: %v", stepsNo[0].Params)
+	}
+
+	// With checksum_url: the parameter is accepted (Decompose does not error).
+	// The composite itself does not propagate checksum_url to the decomposed
+	// download_file step — DownloadAction.Decompose consumes it at plan time
+	// when a Downloader is available. Here we just confirm no error.
+	_, err = action.Decompose(ctx, map[string]interface{}{
+		"url":            "https://example.com/tool-{version}.tar.gz",
+		"archive_format": "tar.gz",
+		"binaries":       []interface{}{"tool"},
+		"checksum_url":   "https://example.com/v{version}/SHA256SUMS",
+	})
+	if err != nil {
+		t.Fatalf("checksum_url case error: %v", err)
+	}
+}
+
+// TestGitHubArchiveAction_Decompose_ChecksumFields exercises Issue 2 and
+// Issue 3 plumbing: both checksum_url (escape hatch) and checksum_asset
+// (ergonomic default) are accepted on github_archive without error. With no
+// Downloader configured, the plan-time validation path no-ops; the test
+// confirms the parameter handling.
+func TestGitHubArchiveAction_Decompose_ChecksumFields(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	ctx := &EvalContext{
+		Version: "1.2.3", VersionTag: "v1.2.3", OS: "linux", Arch: "amd64",
+	}
+
+	base := map[string]interface{}{
+		"repo":          "example/tool",
+		"asset_pattern": "tool-{version}-{os}-{arch}.tar.gz",
+		"binaries":      []interface{}{"tool"},
+	}
+
+	// Control: no checksum field, existing behavior.
+	stepsNo, err := action.Decompose(ctx, base)
+	if err != nil {
+		t.Fatalf("control case error: %v", err)
+	}
+	if _, ok := stepsNo[0].Params["checksum_url"]; ok {
+		t.Errorf("control case should NOT carry checksum_url; got: %v", stepsNo[0].Params)
+	}
+
+	// With checksum_url: parameter accepted.
+	paramsURL := map[string]interface{}{
+		"checksum_url": "https://example.com/v{version}/checksums.txt",
+	}
+	for k, v := range base {
+		paramsURL[k] = v
+	}
+	_, err = action.Decompose(ctx, paramsURL)
+	if err != nil {
+		t.Fatalf("checksum_url case error: %v", err)
+	}
+
+	// With checksum_asset: parameter accepted; sibling-URL construction
+	// happens inside resolveGitHubArchiveChecksumURL.
+	paramsAsset := map[string]interface{}{
+		"checksum_asset": "tool-checksums-{version}.txt",
+	}
+	for k, v := range base {
+		paramsAsset[k] = v
+	}
+	_, err = action.Decompose(ctx, paramsAsset)
+	if err != nil {
+		t.Fatalf("checksum_asset case error: %v", err)
+	}
+}
+
+// TestResolveGitHubArchiveChecksumURL covers the helper introduced by Issue 3
+// for sibling-URL construction at the composite layer (keeping the primitive
+// download action GitHub-agnostic).
+func TestResolveGitHubArchiveChecksumURL(t *testing.T) {
+	t.Parallel()
+	ctx := &EvalContext{Version: "1.2.3", OS: "linux", Arch: "amd64"}
+
+	tests := []struct {
+		name      string
+		params    map[string]interface{}
+		repo      string
+		tag       string
+		wantURL   string
+	}{
+		{
+			name:    "neither field set returns empty",
+			params:  map[string]interface{}{},
+			repo:    "example/tool",
+			tag:     "v1.2.3",
+			wantURL: "",
+		},
+		{
+			name:    "checksum_asset constructs sibling URL on same release",
+			params:  map[string]interface{}{"checksum_asset": "SHA256SUMS"},
+			repo:    "example/tool",
+			tag:     "v1.2.3",
+			wantURL: "https://github.com/example/tool/releases/download/v1.2.3/SHA256SUMS",
+		},
+		{
+			name:    "checksum_asset with placeholders expands against ctx",
+			params:  map[string]interface{}{"checksum_asset": "tool-{version}.sha256"},
+			repo:    "example/tool",
+			tag:     "v1.2.3",
+			wantURL: "https://github.com/example/tool/releases/download/v1.2.3/tool-1.2.3.sha256",
+		},
+		{
+			name:    "checksum_url with placeholders expands",
+			params:  map[string]interface{}{"checksum_url": "https://example.com/v{version}/checksums-{os}-{arch}.txt"},
+			repo:    "example/tool",
+			tag:     "v1.2.3",
+			wantURL: "https://example.com/v1.2.3/checksums-linux-amd64.txt",
+		},
+		{
+			name: "checksum_asset takes precedence over checksum_url (Preflight enforces mutual exclusion separately)",
+			params: map[string]interface{}{
+				"checksum_asset": "SHA256SUMS",
+				"checksum_url":   "https://example.com/ignored.txt",
+			},
+			repo:    "example/tool",
+			tag:     "v1.2.3",
+			wantURL: "https://github.com/example/tool/releases/download/v1.2.3/SHA256SUMS",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := resolveGitHubArchiveChecksumURL(ctx, tt.params, tt.repo, tt.tag)
+			if got != tt.wantURL {
+				t.Errorf("resolveGitHubArchiveChecksumURL = %q, want %q", got, tt.wantURL)
+			}
+		})
+	}
+}
+
 func TestGitHubFileAction_Decompose(t *testing.T) {
 	t.Parallel()
 	action := &GitHubFileAction{}

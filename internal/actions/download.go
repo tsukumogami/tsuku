@@ -178,6 +178,31 @@ func (a *DownloadAction) Decompose(ctx *EvalContext, params map[string]interface
 			_ = ctx.DownloadCache.Save(downloadURL, result.AssetPath, result.Checksum)
 		}
 		_ = result.Cleanup()
+
+		// If the caller supplied an upstream checksum source (per-asset .sha256
+		// or multi-line SHA256SUMS manifest), fetch it and validate the
+		// plan-time-computed checksum against the upstream-declared value.
+		// Mismatch fails plan generation — the install would have failed at
+		// verify time anyway; failing here surfaces the problem earlier.
+		if checksumURL, ok := GetString(params, "checksum_url"); ok && checksumURL != "" {
+			checksumURL = ExpandVars(checksumURL, vars)
+			csResult, err := ctx.Downloader.Download(ctx.Context, checksumURL)
+			if err != nil {
+				return nil, fmt.Errorf("failed to fetch upstream checksum file %s: %w", checksumURL, err)
+			}
+			upstreamHash, parseErr := ReadChecksumFile(csResult.AssetPath, dest)
+			_ = csResult.Cleanup()
+			if parseErr != nil {
+				return nil, fmt.Errorf("failed to parse upstream checksum file %s: %w", checksumURL, parseErr)
+			}
+			upstreamHash = strings.ToLower(strings.TrimSpace(upstreamHash))
+			if upstreamHash != checksum {
+				return nil, fmt.Errorf(
+					"upstream checksum mismatch for %s:\n  upstream (%s): %s\n  computed:      %s",
+					dest, checksumURL, upstreamHash, checksum,
+				)
+			}
+		}
 	}
 
 	// Build download_file step

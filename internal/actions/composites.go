@@ -22,9 +22,15 @@ var _ Decomposable = (*GitHubArchiveAction)(nil)
 //   - dest: destination filename (can contain placeholders)
 //   - osMapping: optional OS name mapping (e.g., darwin -> macos)
 //   - archMapping: optional architecture mapping (e.g., amd64 -> x64)
+//   - checksumURL: optional URL to an upstream-published checksum file
+//     (per-asset .sha256 or multi-line SHA256SUMS manifest). When non-empty,
+//     DownloadAction.Decompose fetches it at plan time and validates the
+//     computed checksum against the upstream-declared value; mismatch fails
+//     plan generation. Empty string disables upstream-checksum verification
+//     (the existing behavior for recipes without checksum_url).
 //
 // Returns the download_file step produced by DownloadAction.Decompose().
-func decomposeDownload(ctx *EvalContext, url, dest string, osMapping, archMapping map[string]string) (Step, error) {
+func decomposeDownload(ctx *EvalContext, url, dest string, osMapping, archMapping map[string]string, checksumURL string) (Step, error) {
 	downloadParams := map[string]interface{}{
 		"url": url,
 	}
@@ -46,6 +52,9 @@ func decomposeDownload(ctx *EvalContext, url, dest string, osMapping, archMappin
 			m[k] = v
 		}
 		downloadParams["arch_mapping"] = m
+	}
+	if checksumURL != "" {
+		downloadParams["checksum_url"] = checksumURL
 	}
 
 	downloadAction := &DownloadAction{}
@@ -284,8 +293,13 @@ func (a *DownloadArchiveAction) Decompose(ctx *EvalContext, params map[string]in
 	osMapping, _ := GetMapStringString(params, "os_mapping")
 	archMapping, _ := GetMapStringString(params, "arch_mapping")
 
+	// Extract optional checksum_url for upstream-pinned verification.
+	// download_archive does not support checksum_asset — the action's URL is
+	// fully recipe-supplied with no sibling-asset anchor to resolve against.
+	checksumURL, _ := GetString(params, "checksum_url")
+
 	// Delegate to download action for URL resolution and checksum computation
-	downloadStep, err := decomposeDownload(ctx, url, "", osMapping, archMapping)
+	downloadStep, err := decomposeDownload(ctx, url, "", osMapping, archMapping, checksumURL)
 	if err != nil {
 		return nil, err
 	}
@@ -589,9 +603,14 @@ func (a *GitHubArchiveAction) Decompose(ctx *EvalContext, params map[string]inte
 	// Construct the fully-resolved download URL
 	url := fmt.Sprintf("https://github.com/%s/releases/download/%s/%s", repo, versionTag, resolved.assetName)
 
+	// Resolve optional upstream checksum source. Issue 3 will add
+	// checksum_asset → sibling URL construction here; for now only the
+	// explicit checksum_url field is consumed.
+	checksumURL := resolveGitHubArchiveChecksumURL(ctx, params, repo, versionTag)
+
 	// Delegate to download action for checksum computation
 	// URL is already fully resolved, so no mappings needed
-	downloadStep, err := decomposeDownload(ctx, url, resolved.assetName, nil, nil)
+	downloadStep, err := decomposeDownload(ctx, url, resolved.assetName, nil, nil, checksumURL)
 	if err != nil {
 		return nil, err
 	}
@@ -624,6 +643,43 @@ func (a *GitHubArchiveAction) Decompose(ctx *EvalContext, params map[string]inte
 			},
 		},
 	}, nil
+}
+
+// resolveGitHubArchiveChecksumURL extracts and resolves the upstream-checksum
+// source for a github_archive step at composite-Decompose time.
+//
+// Precedence (mutual exclusion is enforced in Preflight, not here):
+//   - checksum_asset is the ergonomic default for GitHub releases. When set,
+//     the helper constructs a sibling release URL of the form
+//     https://github.com/<repo>/releases/download/<versionTag>/<asset>, using
+//     the same version tag the asset itself is fetched from. The recipe
+//     stays versionless: each install of each version fetches a different
+//     checksum file alongside the version's archive.
+//   - checksum_url is the escape hatch for off-release checksum hosting.
+//     When set, the value is template-expanded against the standard
+//     {version}/{os}/{arch} variables.
+//
+// Returns the empty string when neither field is set — the existing
+// no-upstream-checksum behavior.
+func resolveGitHubArchiveChecksumURL(ctx *EvalContext, params map[string]interface{}, repo, versionTag string) string {
+	if asset, ok := GetString(params, "checksum_asset"); ok && asset != "" {
+		vars := map[string]string{
+			"version": ctx.Version,
+			"os":      ctx.OS,
+			"arch":    ctx.Arch,
+		}
+		expandedAsset := ExpandVars(asset, vars)
+		return fmt.Sprintf("https://github.com/%s/releases/download/%s/%s", repo, versionTag, expandedAsset)
+	}
+	if url, ok := GetString(params, "checksum_url"); ok && url != "" {
+		vars := map[string]string{
+			"version": ctx.Version,
+			"os":      ctx.OS,
+			"arch":    ctx.Arch,
+		}
+		return ExpandVars(url, vars)
+	}
+	return ""
 }
 
 // resolveAssetNameResult holds the result of resolveAssetName.
@@ -965,8 +1021,10 @@ func (a *GitHubFileAction) Decompose(ctx *EvalContext, params map[string]interfa
 	// Construct the fully-resolved download URL
 	url := fmt.Sprintf("https://github.com/%s/releases/download/%s/%s", repo, ctx.VersionTag, resolved.assetName)
 
-	// Delegate to download action for checksum computation
-	downloadStep, err := decomposeDownload(ctx, url, expandedDownloadName, nil, nil)
+	// Delegate to download action for checksum computation. github_file does
+	// not yet support upstream checksum forwarding — PRD R1/R2 scoped the
+	// new fields to github_archive and download_archive.
+	downloadStep, err := decomposeDownload(ctx, url, expandedDownloadName, nil, nil, "")
 	if err != nil {
 		return nil, err
 	}
