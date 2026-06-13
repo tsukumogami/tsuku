@@ -1,4 +1,12 @@
-name: Validate Design Docs
+name: Validate Design Doc Location
+
+# The frontmatter (FC01-03), required-sections (FC04/FC15), and issues-table
+# (FC05/FC06) checks moved to the shirabe engine (see validate-docs.yml). What
+# remains here is the status-vs-directory location check, whose engine form
+# (L07) is a whole-tree lifecycle check not yet adopted; it stays on the bash
+# script until the lifecycle workflow is adopted, so the rule is never enforced
+# in two places nor in zero.
+
 on:
   pull_request:
 
@@ -7,18 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
-        with:
-          fetch-depth: 0  # Full history needed for grandfathering based on file creation date
 
       - name: Find all design docs
         id: find
         run: |
-          # Find all DESIGN-*.md files anywhere in the repo
           FILES=$(find . -name 'DESIGN-*.md' -type f | sed 's|^\./||' | sort)
           echo "files<<EOF" >> $GITHUB_OUTPUT
           echo "$FILES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-
           if [ -n "$FILES" ]; then
             echo "Found design docs:"
             echo "$FILES"
@@ -26,19 +30,19 @@ jobs:
             echo "No DESIGN-*.md files found"
           fi
 
-      - name: Validate design docs
+      - name: Validate design doc location
         if: steps.find.outputs.files != ''
         run: |
           FAILED=0
           while IFS= read -r file; do
             [ -z "$file" ] && continue
-            if ! .github/scripts/validate-design-doc.sh -q "$file"; then
+            if ! .github/scripts/checks/status-directory.sh "$file"; then
               FAILED=1
             fi
           done <<< "${{ steps.find.outputs.files }}"
 
           if [ "$FAILED" -eq 1 ]; then
-            echo "One or more design docs failed validation"
+            echo "One or more design docs are in the wrong directory for their status"
             exit 1
           fi
-          echo "All design docs valid"
+          echo "All design doc locations valid"
