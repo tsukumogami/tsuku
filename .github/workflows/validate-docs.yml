@@ -3,8 +3,12 @@ name: Validate doc formats
 # Adopts shirabe's reusable per-file document validator, replacing the synced
 # bash checks for frontmatter (FC01-03), required sections (FC04/FC15), and the
 # issues-table row rules (FC05/FC06). The reusable workflow builds the shirabe
-# binary at the pinned ref and runs `shirabe validate` over the docs changed in
-# the PR, so the engine is the single definition site for these rules.
+# binary at the referenced ref and runs `shirabe validate` over the docs changed
+# in the PR, so the engine is the single definition site for these rules.
+#
+# Pinned to @main so this repo always runs the current engine without per-release
+# pin bumps. The validator is per-file and changed-files-only, so a new engine
+# check only ever affects PRs that touch docs.
 
 on:
   pull_request:
@@ -13,4 +17,4 @@ on:
 
 jobs:
   validate:
-    uses: tsukumogami/shirabe/.github/workflows/validate-docs.yml@v0.11.0
+    uses: tsukumogami/shirabe/.github/workflows/validate-docs.yml@main
