@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-13T12:31:07Z",
+  "updated_at": "2026-06-13T15:07:10Z",
   "entries": [
     {
       "name": "node",
@@ -636,7 +636,7 @@
       "name": "numpy",
       "source": "crates.io:numpy",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 19,
@@ -1906,7 +1906,7 @@
       "name": "amp",
       "source": "rubygems:amp",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 20,
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 544,
-      "next_retry_at": "1734-03-04T10:46:28.526441207Z"
+      "failure_count": 546,
+      "next_retry_at": "1734-03-04T15:19:53.595022272Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 792,
-      "next_retry_at": "1734-03-04T10:46:28.526441207Z"
+      "failure_count": 794,
+      "next_retry_at": "1734-03-04T15:19:53.595022272Z"
     },
     {
       "name": "libaacs",
@@ -36726,11 +36726,11 @@
       "name": "pioneer",
       "source": "rubygems:pioneer",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 13,
-      "next_retry_at": "2026-06-13T02:59:34.533798318Z"
+      "failure_count": 14,
+      "next_retry_at": "2026-06-20T15:07:10.44979808Z"
     },
     {
       "name": "pioneers",
