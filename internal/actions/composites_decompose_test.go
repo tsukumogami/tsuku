@@ -224,11 +224,11 @@ func TestResolveGitHubArchiveChecksumURL(t *testing.T) {
 	ctx := &EvalContext{Version: "1.2.3", OS: "linux", Arch: "amd64"}
 
 	tests := []struct {
-		name      string
-		params    map[string]interface{}
-		repo      string
-		tag       string
-		wantURL   string
+		name    string
+		params  map[string]interface{}
+		repo    string
+		tag     string
+		wantURL string
 	}{
 		{
 			name:    "neither field set returns empty",
