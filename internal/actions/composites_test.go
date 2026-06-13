@@ -754,6 +754,155 @@ func TestDownloadArchiveAction_VerificationEnforcement(t *testing.T) {
 	}
 }
 
+// -- composites.go: Preflight checksum_url / checksum_asset validation (Issue 4) --
+
+func TestGitHubArchiveAction_Preflight_ChecksumMutualExclusion(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	result := action.Preflight(map[string]interface{}{
+		"repo":           "example/tool",
+		"asset_pattern":  "tool-{version}.tar.gz",
+		"checksum_url":   "https://example.com/v{version}/sha256",
+		"checksum_asset": "SHA256SUMS",
+	})
+	found := false
+	for _, e := range result.Errors {
+		if strings.Contains(e, "checksum_url and checksum_asset are mutually exclusive") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected mutual-exclusion error, got errors: %v", result.Errors)
+	}
+}
+
+func TestGitHubArchiveAction_Preflight_ChecksumAssetWithWildcard(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	result := action.Preflight(map[string]interface{}{
+		"repo":           "example/tool",
+		"asset_pattern":  "tool-{version}-{os}-{arch}-*.tar.gz",
+		"checksum_asset": "SHA256SUMS",
+	})
+	found := false
+	for _, e := range result.Errors {
+		if strings.Contains(e, "checksum_asset is not supported with wildcard asset_pattern") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected wildcard-guard error, got errors: %v", result.Errors)
+	}
+}
+
+func TestDownloadArchiveAction_Preflight_ChecksumAssetRejected(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	result := action.Preflight(map[string]interface{}{
+		"url":            "https://example.com/v{version}/tool.tar.gz",
+		"checksum_asset": "SHA256SUMS",
+	})
+	found := false
+	for _, e := range result.Errors {
+		if strings.Contains(e, "checksum_asset is github_archive-only") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected github_archive-only error, got: %v", result.Errors)
+	}
+}
+
+func TestGitHubArchiveAction_Preflight_StaticChecksumWarning(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+	// Versioned asset_pattern + non-versioned checksum_url => warning
+	result := action.Preflight(map[string]interface{}{
+		"repo":          "example/tool",
+		"asset_pattern": "tool-{version}-{os}-{arch}.tar.gz",
+		"checksum_url":  "https://example.com/static-checksums.txt",
+	})
+	found := false
+	for _, w := range result.Warnings {
+		if strings.Contains(w, "checksum_url has no {version} placeholder") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected static-checksum warning, got warnings: %v", result.Warnings)
+	}
+
+	// Versioned both => no warning
+	result2 := action.Preflight(map[string]interface{}{
+		"repo":          "example/tool",
+		"asset_pattern": "tool-{version}-{os}-{arch}.tar.gz",
+		"checksum_url":  "https://example.com/v{version}/checksums.txt",
+	})
+	for _, w := range result2.Warnings {
+		if strings.Contains(w, "checksum_url has no {version} placeholder") {
+			t.Errorf("did not expect warning when both versioned, got: %v", result2.Warnings)
+		}
+	}
+}
+
+func TestDownloadArchiveAction_Preflight_StaticChecksumWarning(t *testing.T) {
+	t.Parallel()
+	action := &DownloadArchiveAction{}
+	result := action.Preflight(map[string]interface{}{
+		"url":          "https://example.com/v{version}/tool.tar.gz",
+		"checksum_url": "https://example.com/static.sha256",
+	})
+	found := false
+	for _, w := range result.Warnings {
+		if strings.Contains(w, "checksum_url has no {version} placeholder") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected static-checksum warning, got warnings: %v", result.Warnings)
+	}
+}
+
+func TestGitHubArchiveAction_Preflight_ChecksumHappyPaths(t *testing.T) {
+	t.Parallel()
+	action := &GitHubArchiveAction{}
+
+	// Only checksum_url
+	r1 := action.Preflight(map[string]interface{}{
+		"repo":          "example/tool",
+		"asset_pattern": "tool-{version}-{os}.tar.gz",
+		"checksum_url":  "https://example.com/v{version}/SHA256SUMS",
+	})
+	for _, e := range r1.Errors {
+		if strings.Contains(e, "checksum") {
+			t.Errorf("checksum_url-only happy path produced checksum error: %v", e)
+		}
+	}
+
+	// Only checksum_asset
+	r2 := action.Preflight(map[string]interface{}{
+		"repo":           "example/tool",
+		"asset_pattern":  "tool-{version}-{os}.tar.gz",
+		"checksum_asset": "SHA256SUMS",
+	})
+	for _, e := range r2.Errors {
+		if strings.Contains(e, "checksum") {
+			t.Errorf("checksum_asset-only happy path produced checksum error: %v", e)
+		}
+	}
+
+	// Neither set
+	r3 := action.Preflight(map[string]interface{}{
+		"repo":          "example/tool",
+		"asset_pattern": "tool-{version}.tar.gz",
+	})
+	for _, e := range r3.Errors {
+		if strings.Contains(e, "checksum") {
+			t.Errorf("no-checksum happy path produced checksum error: %v", e)
+		}
+	}
+}
+
 // -- composites.go: GitHubArchiveAction.Preflight additional warning paths --
 
 func TestGitHubArchiveAction_Preflight_ValidMinimal(t *testing.T) {

@@ -107,6 +107,23 @@ func (a *DownloadArchiveAction) Preflight(params map[string]interface{}) *Prefli
 		}
 	}
 
+	// ERROR: checksum_asset is github_archive-only. download_archive's URL is
+	// fully recipe-supplied with no sibling-asset anchor to resolve against.
+	if _, hasChecksumAsset := GetString(params, "checksum_asset"); hasChecksumAsset {
+		result.AddError("checksum_asset is github_archive-only; use checksum_url on download_archive")
+	}
+
+	// WARNING: checksum_url with no {version} placeholder against a version-
+	// templated url is almost always a mistake — every version install would
+	// fetch the same checksum file and surface every version bump as a hash
+	// mismatch. Rare legitimate cases exist (upstream publishes one signing
+	// artifact across versions), so this is a warning not an error.
+	if checksumURL, hasChecksumURL := GetString(params, "checksum_url"); hasChecksumURL && checksumURL != "" {
+		if containsPlaceholder(url, "version") && !containsPlaceholder(checksumURL, "version") {
+			result.AddWarning("checksum_url has no {version} placeholder but url is version-templated; each install will fetch the same checksum file regardless of version — likely a recipe authoring mistake")
+		}
+	}
+
 	return result
 }
 
@@ -389,6 +406,34 @@ func (a *GitHubArchiveAction) Preflight(params map[string]interface{}) *Prefligh
 		detectedFormat := DetectArchiveFormat(assetPattern)
 		if detectedFormat != "" && detectedFormat == archiveFormat {
 			result.AddWarning("archive_format can be inferred from asset_pattern; consider removing redundant parameter")
+		}
+	}
+
+	// ERROR: checksum_url and checksum_asset are mutually exclusive on a
+	// single step. The two fields cover the same verification slot from
+	// different angles (ergonomic default vs escape hatch); having both set
+	// is ambiguous, and the precedence resolution would surprise the next
+	// reader. Force the author to choose one.
+	checksumURL, hasChecksumURL := GetString(params, "checksum_url")
+	checksumAsset, hasChecksumAsset := GetString(params, "checksum_asset")
+	if hasChecksumURL && checksumURL != "" && hasChecksumAsset && checksumAsset != "" {
+		result.AddError("checksum_url and checksum_asset are mutually exclusive on a single step; use one")
+	}
+
+	// ERROR: checksum_asset with a wildcard asset_pattern cannot construct the
+	// sibling URL — the asset name needs to resolve before the sibling URL
+	// can be built. Authors hitting this case should use checksum_url with
+	// explicit placeholders.
+	if hasChecksumAsset && checksumAsset != "" && version.ContainsWildcards(assetPattern) {
+		result.AddError("checksum_asset is not supported with wildcard asset_pattern; use checksum_url instead")
+	}
+
+	// WARNING: see download_archive Preflight — the static-checksum-with-
+	// versioned-asset combination almost always indicates a recipe authoring
+	// mistake.
+	if hasChecksumURL && checksumURL != "" {
+		if containsPlaceholder(assetPattern, "version") && !containsPlaceholder(checksumURL, "version") {
+			result.AddWarning("checksum_url has no {version} placeholder but asset_pattern is version-templated; each install will fetch the same checksum file regardless of version — likely a recipe authoring mistake")
 		}
 	}
 
