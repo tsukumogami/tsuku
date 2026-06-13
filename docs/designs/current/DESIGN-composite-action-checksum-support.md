@@ -1,6 +1,6 @@
 ---
 schema: design/v1
-status: Accepted
+status: Current
 problem: |
   github_archive and download_archive composites pass nil for the
   checksum slot when delegating to download, so recipes that use
@@ -33,7 +33,7 @@ upstream: docs/prds/PRD-composite-action-checksum-support.md
 
 ## Status
 
-Accepted
+Current
 
 This DESIGN settles the PRD's Decision D4 (manifest format
 auto-detection vs explicit field) and the seven implementation

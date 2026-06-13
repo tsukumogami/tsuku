@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Done
 problem: |
   github_archive and download_archive composite actions cannot
   forward upstream checksum verification to their decomposed
@@ -31,7 +31,7 @@ motivating_context: |
 
 ## Status
 
-Accepted
+Done
 
 ## Problem Statement
 

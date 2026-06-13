@@ -1,6 +1,6 @@
 ---
 schema: brief/v1
-status: Accepted
+status: Done
 problem: |
   Recipes that download tarballs from GitHub releases via the
   github_archive and download_archive composite actions cannot
@@ -27,7 +27,7 @@ motivating_context: |
 
 ## Status
 
-Accepted
+Done
 
 The downstream PRD owns turning these journeys into requirements,
 including the field-shape decision (one field vs two) and the
