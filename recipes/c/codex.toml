@@ -1,0 +1,25 @@
+[metadata]
+name = "codex"
+description = "Codex CLI — OpenAI's AI coding assistant for the terminal"
+homepage = "https://github.com/openai/codex"
+version_format = "semver"
+curated = true
+
+[version]
+github_repo = "openai/codex"
+tag_prefix = "rust-v"
+
+[[steps]]
+action = "github_archive"
+repo = "openai/codex"
+asset_pattern = "codex-package-{arch}-{os}.tar.gz"
+checksum_asset = "codex-package_SHA256SUMS"
+strip_dirs = 0
+install_mode = "directory"
+binaries = ["bin/codex"]
+os_mapping = { darwin = "apple-darwin", linux = "unknown-linux-musl" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "codex --version"
+pattern = "{version}"
