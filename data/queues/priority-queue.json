@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-14T00:12:18Z",
+  "updated_at": "2026-06-14T05:37:25Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 551,
@@ -5896,11 +5896,11 @@
       "name": "bup",
       "source": "rubygems:bup",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 19,
-      "next_retry_at": "2026-06-13T23:08:17.161762431Z"
+      "failure_count": 20,
+      "next_retry_at": "2026-06-21T05:37:25.513831219Z"
     },
     {
       "name": "burp",
@@ -6606,7 +6606,7 @@
       "name": "cassandra",
       "source": "rubygems:cassandra",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 19,
@@ -6806,7 +6806,7 @@
       "name": "cdo",
       "source": "rubygems:cdo",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 19,
@@ -7036,11 +7036,11 @@
       "name": "chainsaw",
       "source": "npm:chainsaw",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 19,
-      "next_retry_at": "2026-06-13T23:08:17.161762431Z"
+      "failure_count": 20,
+      "next_retry_at": "2026-06-21T05:37:25.513831219Z"
     },
     {
       "name": "chamber",
@@ -9116,7 +9116,7 @@
       "name": "countdown",
       "source": "npm:countdown",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 19,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 799,
@@ -46686,11 +46686,11 @@
       "name": "tctl",
       "source": "pypi:tctl",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 19,
-      "next_retry_at": "2026-06-13T23:08:17.161762431Z"
+      "failure_count": 20,
+      "next_retry_at": "2026-06-21T05:37:25.513831219Z"
     },
     {
       "name": "tdlib",
@@ -50306,7 +50306,7 @@
       "name": "vllm",
       "source": "pypi:vllm",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 19,
