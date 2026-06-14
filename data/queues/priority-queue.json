@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-14T05:37:25Z",
+  "updated_at": "2026-06-14T09:37:33Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 551,
-      "next_retry_at": "1734-03-05T00:25:01.411491551Z"
+      "failure_count": 552,
+      "next_retry_at": "1734-03-05T09:50:16.49192271Z"
     },
     {
       "name": "azqr",
@@ -6606,11 +6606,11 @@
       "name": "cassandra",
       "source": "rubygems:cassandra",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 19,
-      "next_retry_at": "2026-06-14T00:20:57.252229727Z"
+      "failure_count": 20,
+      "next_retry_at": "2026-06-21T09:37:33.346698518Z"
     },
     {
       "name": "cassandra-reaper",
@@ -7356,7 +7356,7 @@
       "name": "chisel",
       "source": "rubygems:chisel",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 19,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 799,
-      "next_retry_at": "1734-03-05T00:25:01.411491551Z"
+      "failure_count": 800,
+      "next_retry_at": "1734-03-05T09:50:16.49192271Z"
     },
     {
       "name": "libaacs",
