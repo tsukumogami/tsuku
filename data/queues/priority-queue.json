@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-14T09:37:33Z",
+  "updated_at": "2026-06-14T12:07:45Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 552,
@@ -6806,11 +6806,11 @@
       "name": "cdo",
       "source": "rubygems:cdo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 19,
-      "next_retry_at": "2026-06-14T05:32:53.366772604Z"
+      "failure_count": 20,
+      "next_retry_at": "2026-06-21T12:07:45.095302254Z"
     },
     {
       "name": "cdogs-sdl",
@@ -7436,7 +7436,7 @@
       "name": "chroma",
       "source": "rubygems:chroma",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 19,
@@ -9116,11 +9116,11 @@
       "name": "countdown",
       "source": "npm:countdown",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 19,
-      "next_retry_at": "2026-06-14T05:32:53.366772604Z"
+      "failure_count": 20,
+      "next_retry_at": "2026-06-21T12:07:45.095302254Z"
     },
     {
       "name": "coursier",
@@ -10236,7 +10236,7 @@
       "name": "datasette",
       "source": "npm:datasette",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 19,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 800,
@@ -50306,11 +50306,11 @@
       "name": "vllm",
       "source": "pypi:vllm",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 19,
-      "next_retry_at": "2026-06-14T05:32:53.366772604Z"
+      "failure_count": 20,
+      "next_retry_at": "2026-06-21T12:07:45.095302254Z"
     },
     {
       "name": "vmware-tanzu/carvel/vendir",
