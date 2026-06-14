@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-14T15:55:40Z",
+  "updated_at": "2026-06-14T17:25:31Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 553,
-      "next_retry_at": "1734-03-05T14:16:49.863221712Z"
+      "failure_count": 554,
+      "next_retry_at": "1734-03-05T17:38:14.112453636Z"
     },
     {
       "name": "azqr",
@@ -8626,11 +8626,11 @@
       "name": "cog",
       "source": "rubygems:cog",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 20,
-      "next_retry_at": "2026-06-14T13:53:54.78112352Z"
+      "failure_count": 21,
+      "next_retry_at": "2026-06-21T17:25:30.967229444Z"
     },
     {
       "name": "coin3d",
@@ -9326,7 +9326,7 @@
       "name": "cql",
       "source": "rubygems:cql",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 19,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 801,
-      "next_retry_at": "1734-03-05T14:16:49.863221712Z"
+      "failure_count": 803,
+      "next_retry_at": "1734-03-05T17:38:14.112453636Z"
     },
     {
       "name": "libaacs",
