@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-14T23:13:11Z",
+  "updated_at": "2026-06-15T04:05:02Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 555,
-      "next_retry_at": "1734-03-05T21:29:06.736884918Z"
+      "failure_count": 556,
+      "next_retry_at": "1734-03-06T04:17:45.028809358Z"
     },
     {
       "name": "azqr",
@@ -11566,11 +11566,11 @@
       "name": "doggo",
       "source": "rubygems:doggo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 19,
-      "next_retry_at": "2026-06-14T21:16:18.207068398Z"
+      "failure_count": 20,
+      "next_retry_at": "2026-06-22T04:05:01.883585166Z"
     },
     {
       "name": "dokku/repo/dokku",
@@ -13386,7 +13386,7 @@
       "name": "exiv2",
       "source": "rubygems:exiv2",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 18,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 805,
-      "next_retry_at": "1734-03-05T21:29:06.736884918Z"
+      "failure_count": 807,
+      "next_retry_at": "1734-03-06T04:17:45.028809358Z"
     },
     {
       "name": "libaacs",
