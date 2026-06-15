@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-15T10:30:17Z",
+  "updated_at": "2026-06-15T16:26:40Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 556,
-      "next_retry_at": "1734-03-06T04:17:45.028809358Z"
+      "failure_count": 557,
+      "next_retry_at": "1734-03-06T16:39:23.537990183Z"
     },
     {
       "name": "azqr",
@@ -13386,11 +13386,11 @@
       "name": "exiv2",
       "source": "rubygems:exiv2",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 18,
-      "next_retry_at": "2026-06-15T03:48:27.082278516Z"
+      "failure_count": 19,
+      "next_retry_at": "2026-06-22T16:26:40.392765991Z"
     },
     {
       "name": "exoscale/tap/exoscale-cli",
@@ -16906,7 +16906,7 @@
       "name": "gitingest",
       "source": "rubygems:gitingest",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 18,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 807,
-      "next_retry_at": "1734-03-06T04:17:45.028809358Z"
+      "failure_count": 809,
+      "next_retry_at": "1734-03-06T16:39:23.537990183Z"
     },
     {
       "name": "libaacs",
