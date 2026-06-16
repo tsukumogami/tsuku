@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-06-16T23:29:48Z",
+  "generated_at": "2026-06-16T23:31:05Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 75,
-      "pending": 3828,
+      "failed": 76,
+      "pending": 3827,
       "success": 1374
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 75,
-        "pending": 3813,
+        "failed": 76,
+        "pending": 3812,
         "success": 1350
       }
     },
@@ -74,8 +74,7 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -431,6 +430,15 @@
           "next_retry_at": "2026-06-20T20:21:43Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 561,
+          "next_retry_at": "1734-03-07T23:42:57Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -701,13 +709,13 @@
           "next_retry_at": "2026-06-23T21:48:47Z"
         },
         {
-          "id": "rubygems:imgproxy",
-          "name": "imgproxy",
+          "id": "rubygems:httpx",
+          "name": "httpx",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 18,
-          "next_retry_at": "2026-06-16T22:29:29Z"
+          "failure_count": 19,
+          "next_retry_at": "2026-06-23T23:30:14Z"
         },
         {
           "id": "rubygems:influxdb",
@@ -773,6 +781,15 @@
           "next_retry_at": "2026-06-17T19:40:55Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 817,
+          "next_retry_at": "1734-03-07T23:42:57Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -798,15 +815,6 @@
           "category": "install_failed",
           "failure_count": 17,
           "next_retry_at": "2026-06-18T08:51:04Z"
-        },
-        {
-          "id": "npm:markdown-toc",
-          "name": "markdown-toc",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 18,
-          "next_retry_at": "2026-06-16T22:29:29Z"
         },
         {
           "id": "rubygems:mdv",
@@ -2885,15 +2893,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 560,
-          "next_retry_at": "1734-03-07T18:24:30Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -11110,15 +11109,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:httpx",
-          "name": "httpx",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 18,
-          "next_retry_at": "2026-06-16T12:41:26Z"
-        },
-        {
           "id": "homebrew:httpyac",
           "name": "httpyac",
           "ecosystem": "homebrew",
@@ -11494,6 +11484,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:imgproxy",
+          "name": "imgproxy",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 18,
+          "next_retry_at": "2026-06-16T22:29:29Z"
         },
         {
           "id": "homebrew:imlib2",
@@ -13209,15 +13208,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 815,
-          "next_retry_at": "1734-03-07T18:24:30Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -15037,6 +15027,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:markdown-toc",
+          "name": "markdown-toc",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 18,
+          "next_retry_at": "2026-06-16T22:29:29Z"
         },
         {
           "id": "homebrew:markdownlint-cli",
