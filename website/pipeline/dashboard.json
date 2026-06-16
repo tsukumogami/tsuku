@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-06-16T12:58:48Z",
+  "generated_at": "2026-06-16T13:00:07Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 79,
-      "pending": 3824,
+      "failed": 76,
+      "pending": 3827,
       "success": 1374
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 79,
-        "pending": 3809,
+        "failed": 76,
+        "pending": 3812,
         "success": 1350
       }
     },
@@ -68,20 +68,21 @@
         "total": 1
       },
       "npm": {
-        "failed": 19,
-        "pending": 1,
+        "failed": 18,
+        "pending": 2,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 54,
-        "pending": 20,
+        "failed": 53,
+        "pending": 21,
         "success": 14,
         "total": 89
       }
@@ -430,15 +431,6 @@
           "next_retry_at": "2026-06-20T20:21:43Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 559,
-          "next_retry_at": "1734-03-07T07:45:17Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -673,6 +665,15 @@
           "next_retry_at": "2026-06-23T07:32:34Z"
         },
         {
+          "id": "rubygems:haproxy",
+          "name": "haproxy",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 19,
+          "next_retry_at": "2026-06-23T12:59:17Z"
+        },
+        {
           "id": "npm:hasura-cli",
           "name": "hasura-cli",
           "ecosystem": "npm",
@@ -680,24 +681,6 @@
           "category": "install_failed",
           "failure_count": 19,
           "next_retry_at": "2026-06-23T01:51:56Z"
-        },
-        {
-          "id": "rubygems:htmldoc",
-          "name": "htmldoc",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 18,
-          "next_retry_at": "2026-06-16T09:44:55Z"
-        },
-        {
-          "id": "rubygems:httpx",
-          "name": "httpx",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 18,
-          "next_retry_at": "2026-06-16T12:41:26Z"
         },
         {
           "id": "rubygems:hydra",
@@ -745,6 +728,15 @@
           "next_retry_at": "2026-06-17T05:23:10Z"
         },
         {
+          "id": "npm:kew",
+          "name": "kew",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 19,
+          "next_retry_at": "2026-06-23T12:59:17Z"
+        },
+        {
           "id": "rubygems:kor",
           "name": "kor",
           "ecosystem": "rubygems",
@@ -752,15 +744,6 @@
           "category": "install_failed",
           "failure_count": 18,
           "next_retry_at": "2026-06-17T10:01:37Z"
-        },
-        {
-          "id": "npm:lcm",
-          "name": "lcm",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 18,
-          "next_retry_at": "2026-06-16T12:41:26Z"
         },
         {
           "id": "rubygems:lemon",
@@ -779,15 +762,6 @@
           "category": "install_failed",
           "failure_count": 17,
           "next_retry_at": "2026-06-17T19:40:55Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 813,
-          "next_retry_at": "1734-03-07T07:45:17Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -2920,6 +2894,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 559,
+          "next_retry_at": "1734-03-07T07:45:17Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -10576,15 +10559,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:haproxy",
-          "name": "haproxy",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 18,
-          "next_retry_at": "2026-06-16T00:10:46Z"
-        },
-        {
           "id": "homebrew:harbor-cli",
           "name": "harbor-cli",
           "ecosystem": "homebrew",
@@ -11098,6 +11072,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:htmldoc",
+          "name": "htmldoc",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 18,
+          "next_retry_at": "2026-06-16T09:44:55Z"
+        },
+        {
           "id": "homebrew:htmlhint",
           "name": "htmlhint",
           "ecosystem": "homebrew",
@@ -11152,6 +11135,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:httpx",
+          "name": "httpx",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 18,
+          "next_retry_at": "2026-06-16T12:41:26Z"
         },
         {
           "id": "homebrew:httpyac",
@@ -12598,15 +12590,6 @@
           "failure_count": 0
         },
         {
-          "id": "npm:kew",
-          "name": "kew",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 18,
-          "next_retry_at": "2026-06-16T05:10:07Z"
-        },
-        {
           "id": "homebrew:keychain",
           "name": "keychain",
           "ecosystem": "homebrew",
@@ -13118,6 +13101,15 @@
           "failure_count": 0
         },
         {
+          "id": "npm:lcm",
+          "name": "lcm",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 18,
+          "next_retry_at": "2026-06-16T12:41:26Z"
+        },
+        {
           "id": "homebrew:ldid",
           "name": "ldid",
           "ecosystem": "homebrew",
@@ -13235,6 +13227,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 813,
+          "next_retry_at": "1734-03-07T07:45:17Z"
         },
         {
           "id": "homebrew:libaacs",
