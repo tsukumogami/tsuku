@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-16T01:51:56Z",
+  "updated_at": "2026-06-16T07:32:35Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 558,
-      "next_retry_at": "1734-03-06T23:21:25.855478234Z"
+      "failure_count": 559,
+      "next_retry_at": "1734-03-07T07:45:17.924157834Z"
     },
     {
       "name": "azqr",
@@ -18966,11 +18966,11 @@
       "name": "gsl",
       "source": "rubygems:gsl",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 18,
-      "next_retry_at": "2026-06-15T20:19:03.136898446Z"
+      "failure_count": 19,
+      "next_retry_at": "2026-06-23T07:32:34.778933642Z"
     },
     {
       "name": "gsmartcontrol",
@@ -20056,7 +20056,7 @@
       "name": "hercules",
       "source": "rubygems:hercules",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 18,
@@ -23566,7 +23566,7 @@
       "name": "kew",
       "source": "npm:kew",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 18,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 811,
-      "next_retry_at": "1734-03-06T23:21:25.855478234Z"
+      "failure_count": 813,
+      "next_retry_at": "1734-03-07T07:45:17.924157834Z"
     },
     {
       "name": "libaacs",
