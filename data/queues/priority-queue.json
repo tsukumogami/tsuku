@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-16T07:32:35Z",
+  "updated_at": "2026-06-16T12:59:17Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 559,
@@ -19496,11 +19496,11 @@
       "name": "haproxy",
       "source": "rubygems:haproxy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 18,
-      "next_retry_at": "2026-06-16T00:10:46.90914679Z"
+      "failure_count": 19,
+      "next_retry_at": "2026-06-23T12:59:17.355518872Z"
     },
     {
       "name": "harbor-cli",
@@ -20486,7 +20486,7 @@
       "name": "htmldoc",
       "source": "rubygems:htmldoc",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 18,
@@ -20626,7 +20626,7 @@
       "name": "httpx",
       "source": "rubygems:httpx",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 18,
@@ -23566,11 +23566,11 @@
       "name": "kew",
       "source": "npm:kew",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 18,
-      "next_retry_at": "2026-06-16T05:10:07.90035105Z"
+      "failure_count": 19,
+      "next_retry_at": "2026-06-23T12:59:17.355518872Z"
     },
     {
       "name": "keychain",
@@ -24896,7 +24896,7 @@
       "name": "lcm",
       "source": "npm:lcm",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 18,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 813,
