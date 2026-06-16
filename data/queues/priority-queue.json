@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-16T21:48:48Z",
+  "updated_at": "2026-06-16T23:30:15Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 560,
-      "next_retry_at": "1734-03-07T18:24:30.420816916Z"
+      "failure_count": 561,
+      "next_retry_at": "1734-03-07T23:42:57.999653359Z"
     },
     {
       "name": "azqr",
@@ -20626,11 +20626,11 @@
       "name": "httpx",
       "source": "rubygems:httpx",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 18,
-      "next_retry_at": "2026-06-16T12:41:26.433238445Z"
+      "failure_count": 19,
+      "next_retry_at": "2026-06-23T23:30:14.854429167Z"
     },
     {
       "name": "httpyac",
@@ -21326,7 +21326,7 @@
       "name": "imgproxy",
       "source": "rubygems:imgproxy",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 18,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 815,
-      "next_retry_at": "1734-03-07T18:24:30.420816916Z"
+      "failure_count": 817,
+      "next_retry_at": "1734-03-07T23:42:57.999653359Z"
     },
     {
       "name": "libaacs",
@@ -28896,7 +28896,7 @@
       "name": "markdown-toc",
       "source": "npm:markdown-toc",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 18,
