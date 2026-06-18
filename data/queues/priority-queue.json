@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-18T08:49:59Z",
+  "updated_at": "2026-06-18T12:30:17Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 565,
-      "next_retry_at": "1734-03-09T03:57:10.899796606Z"
+      "failure_count": 566,
+      "next_retry_at": "1734-03-09T12:43:00.715216248Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 825,
-      "next_retry_at": "1734-03-09T03:57:10.899796606Z"
+      "failure_count": 827,
+      "next_retry_at": "1734-03-09T12:43:00.715216248Z"
     },
     {
       "name": "libaacs",
@@ -28016,11 +28016,11 @@
       "name": "lsof",
       "source": "rubygems:lsof",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 17,
-      "next_retry_at": "2026-06-17T23:46:53.054106727Z"
+      "failure_count": 18,
+      "next_retry_at": "2026-06-25T12:30:17.569992056Z"
     },
     {
       "name": "lspmux",
@@ -28546,7 +28546,7 @@
       "name": "mailcatcher",
       "source": "rubygems:mailcatcher",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 17,
@@ -39116,7 +39116,7 @@
       "name": "q",
       "source": "npm:q",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 18,
