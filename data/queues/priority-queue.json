@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-18T19:32:48Z",
+  "updated_at": "2026-06-18T22:11:38Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 567,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 829,
@@ -29546,11 +29546,11 @@
       "name": "medusa",
       "source": "rubygems:medusa",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 17,
-      "next_retry_at": "2026-06-18T17:00:06.193882145Z"
+      "failure_count": 18,
+      "next_retry_at": "2026-06-25T22:11:38.484446441Z"
     },
     {
       "name": "megacmd",
@@ -29596,7 +29596,7 @@
       "name": "meli",
       "source": "rubygems:meli",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 16,
@@ -29606,7 +29606,7 @@
       "name": "memcached",
       "source": "rubygems:memcached",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 16,
@@ -43656,11 +43656,11 @@
       "name": "sigstore",
       "source": "npm:sigstore",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 18,
-      "next_retry_at": "2026-06-18T17:00:06.193882145Z"
+      "failure_count": 19,
+      "next_retry_at": "2026-06-25T22:11:38.484446441Z"
     },
     {
       "name": "sile",
@@ -50766,7 +50766,7 @@
       "name": "wartremover",
       "source": "npm:wartremover",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 18,
