@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-06-18T16:35:41Z",
+  "generated_at": "2026-06-18T16:37:15Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 77,
-      "pending": 3826,
+      "failed": 76,
+      "pending": 3827,
       "success": 1374
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 77,
-        "pending": 3811,
+        "failed": 76,
+        "pending": 3812,
         "success": 1350
       }
     },
@@ -74,7 +74,8 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -428,15 +429,6 @@
           "category": "install_failed",
           "failure_count": 21,
           "next_retry_at": "2026-06-20T20:21:43Z"
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 566,
-          "next_retry_at": "1734-03-09T12:43:00Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -808,15 +800,6 @@
           "next_retry_at": "2026-06-25T03:44:27Z"
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 827,
-          "next_retry_at": "1734-03-09T12:43:00Z"
-        },
-        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -835,6 +818,15 @@
           "next_retry_at": "2026-06-25T12:30:17Z"
         },
         {
+          "id": "rubygems:mailcatcher",
+          "name": "mailcatcher",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 18,
+          "next_retry_at": "2026-06-25T16:36:22Z"
+        },
+        {
           "id": "npm:mailhog",
           "name": "mailhog",
           "ecosystem": "npm",
@@ -851,15 +843,6 @@
           "category": "install_failed",
           "failure_count": 19,
           "next_retry_at": "2026-06-24T13:03:57Z"
-        },
-        {
-          "id": "rubygems:mdv",
-          "name": "mdv",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 17,
-          "next_retry_at": "2026-06-18T12:50:58Z"
         },
         {
           "id": "rubygems:medusa",
@@ -1049,6 +1032,15 @@
           "category": "install_failed",
           "failure_count": 19,
           "next_retry_at": "2026-06-25T08:49:58Z"
+        },
+        {
+          "id": "npm:q",
+          "name": "q",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 19,
+          "next_retry_at": "2026-06-25T16:36:22Z"
         },
         {
           "id": "npm:sigstore",
@@ -2902,6 +2894,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 566,
+          "next_retry_at": "1734-03-09T12:43:00Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -13192,6 +13193,15 @@
           "failure_count": 1
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 827,
+          "next_retry_at": "1734-03-09T12:43:00Z"
+        },
+        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -14813,15 +14823,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:mailcatcher",
-          "name": "mailcatcher",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 17,
-          "next_retry_at": "2026-06-18T08:51:04Z"
-        },
-        {
           "id": "homebrew:mailsy",
           "name": "mailsy",
           "ecosystem": "homebrew",
@@ -15338,6 +15339,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:mdv",
+          "name": "mdv",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 17,
+          "next_retry_at": "2026-06-18T12:50:58Z"
         },
         {
           "id": "homebrew:mecab",
@@ -20449,15 +20459,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:q",
-          "name": "q",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 18,
-          "next_retry_at": "2026-06-18T08:51:04Z"
         },
         {
           "id": "homebrew:qalculate-gtk",
