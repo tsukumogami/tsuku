@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-18T22:11:38Z",
+  "updated_at": "2026-06-19T00:33:29Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 567,
-      "next_retry_at": "1734-03-09T19:45:31.244704233Z"
+      "failure_count": 568,
+      "next_retry_at": "1734-03-10T00:46:11.973821818Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 829,
-      "next_retry_at": "1734-03-09T19:45:31.244704233Z"
+      "failure_count": 831,
+      "next_retry_at": "1734-03-10T00:46:11.973821818Z"
     },
     {
       "name": "libaacs",
@@ -29596,11 +29596,11 @@
       "name": "meli",
       "source": "rubygems:meli",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 16,
-      "next_retry_at": "2026-06-18T19:41:47.888170968Z"
+      "failure_count": 17,
+      "next_retry_at": "2026-06-26T00:33:28.828597626Z"
     },
     {
       "name": "memcached",
@@ -30426,7 +30426,7 @@
       "name": "mktorrent",
       "source": "rubygems:mktorrent",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 16,
