@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-21T18:27:45Z",
+  "generated_at": "2026-06-21T18:29:00Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -431,15 +431,6 @@
           "next_retry_at": "2026-06-27T23:12:10Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 587,
-          "next_retry_at": "1734-03-12T16:49:29Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -503,13 +494,22 @@
           "next_retry_at": "2026-06-28T14:11:17Z"
         },
         {
-          "id": "rubygems:cog",
-          "name": "cog",
+          "id": "rubygems:chisel",
+          "name": "chisel",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 21,
-          "next_retry_at": "2026-06-21T17:25:30Z"
+          "next_retry_at": "2026-06-28T18:28:12Z"
+        },
+        {
+          "id": "npm:countdown",
+          "name": "countdown",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 21,
+          "next_retry_at": "2026-06-28T18:28:12Z"
         },
         {
           "id": "rubygems:cowsay",
@@ -771,15 +771,6 @@
           "category": "install_failed",
           "failure_count": 18,
           "next_retry_at": "2026-06-25T03:44:27Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 852,
-          "next_retry_at": "1734-03-12T16:49:29Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -1050,6 +1041,15 @@
           "category": "install_failed",
           "failure_count": 21,
           "next_retry_at": "2026-06-28T14:11:17Z"
+        },
+        {
+          "id": "pypi:vllm",
+          "name": "vllm",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 21,
+          "next_retry_at": "2026-06-28T18:28:12Z"
         },
         {
           "id": "npm:wartremover",
@@ -2878,6 +2878,15 @@
           "failure_count": 1
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 587,
+          "next_retry_at": "1734-03-12T16:49:29Z"
+        },
+        {
           "id": "homebrew:azure-storage-common-cpp",
           "name": "azure-storage-common-cpp",
           "ecosystem": "homebrew",
@@ -4470,15 +4479,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:chisel",
-          "name": "chisel",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 20,
-          "next_retry_at": "2026-06-21T14:04:06Z"
-        },
-        {
           "id": "homebrew:chisel-tunnel",
           "name": "chisel-tunnel",
           "ecosystem": "homebrew",
@@ -5132,6 +5132,15 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:cog",
+          "name": "cog",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 21,
+          "next_retry_at": "2026-06-21T17:25:30Z"
+        },
+        {
           "id": "homebrew:coin3d",
           "name": "coin3d",
           "ecosystem": "homebrew",
@@ -5389,15 +5398,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "npm:countdown",
-          "name": "countdown",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 20,
-          "next_retry_at": "2026-06-21T12:07:45Z"
         },
         {
           "id": "homebrew:coursier",
@@ -13200,6 +13200,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 852,
+          "next_retry_at": "1734-03-12T16:49:29Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -26596,15 +26605,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "pypi:vllm",
-          "name": "vllm",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 20,
-          "next_retry_at": "2026-06-21T12:07:45Z"
         },
         {
           "id": "homebrew:vmware-tanzu/carvel/vendir",
