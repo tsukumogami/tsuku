@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-21T04:00:12Z",
+  "updated_at": "2026-06-21T09:20:24Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 584,
@@ -5826,11 +5826,11 @@
       "name": "bullet",
       "source": "rubygems:bullet",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 20,
-      "next_retry_at": "2026-06-21T00:12:18.266267359Z"
+      "failure_count": 21,
+      "next_retry_at": "2026-06-28T09:20:23.704757739Z"
     },
     {
       "name": "bulletty",
@@ -5896,7 +5896,7 @@
       "name": "bup",
       "source": "rubygems:bup",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 20,
@@ -7036,7 +7036,7 @@
       "name": "chainsaw",
       "source": "npm:chainsaw",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 20,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 849,
@@ -46686,7 +46686,7 @@
       "name": "tctl",
       "source": "pypi:tctl",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 20,
