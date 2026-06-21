@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-21T18:28:12Z",
+  "updated_at": "2026-06-21T20:29:53Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 587,
-      "next_retry_at": "1734-03-12T16:49:29.26086113Z"
+      "failure_count": 588,
+      "next_retry_at": "1734-03-12T20:42:36.515055488Z"
     },
     {
       "name": "azqr",
@@ -7436,11 +7436,11 @@
       "name": "chroma",
       "source": "rubygems:chroma",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 20,
-      "next_retry_at": "2026-06-21T15:55:40.202993649Z"
+      "failure_count": 21,
+      "next_retry_at": "2026-06-28T20:29:53.369831296Z"
     },
     {
       "name": "chromaprint",
@@ -9156,7 +9156,7 @@
       "name": "cowsay",
       "source": "rubygems:cowsay",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 21,
@@ -11186,7 +11186,7 @@
       "name": "dmd",
       "source": "npm:dmd",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 20,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 852,
-      "next_retry_at": "1734-03-12T16:49:29.26086113Z"
+      "failure_count": 853,
+      "next_retry_at": "1734-03-12T20:42:36.515055488Z"
     },
     {
       "name": "libaacs",
