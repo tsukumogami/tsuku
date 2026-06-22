@@ -35,7 +35,7 @@ func TestDeriveContainerSpec(t *testing.T) {
 			name:          "debian family - apt",
 			packages:      map[string][]string{"apt": {"curl", "jq"}},
 			wantFamily:    "debian",
-			wantBaseImage: "docker.io/library/debian:bookworm-slim@sha256:98f4b71de414932439ac6ac690d7060df1f27161073c5036a7553723881bffbe",
+			wantBaseImage: "docker.io/library/debian:trixie-slim@sha256:4e401d95de7083948053197a9c3913343cd06b706bf15eb6a0c3ccd26f436a0e",
 			wantErr:       false,
 		},
 		{
