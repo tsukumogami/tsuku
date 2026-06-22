@@ -79,7 +79,16 @@ func renderUnshownNotices(noticesDir string) {
 		return
 	}
 
-	for _, n := range unshown {
+	// Background auto-apply success notices surface here under an unrelated
+	// foreground command (they were not shown inline at apply time, unlike
+	// foreground successes which are now written Shown=true). Group them under
+	// one header so they read as background activity rather than the current
+	// command's own output. Everything else (failures, self-update, library,
+	// single-view kinds) renders individually below.
+	background, rest := partitionBackgroundSuccess(unshown)
+	renderBackgroundSuccess(noticesDir, background)
+
+	for _, n := range rest {
 		switch {
 		case n.Kind == notices.KindVersionFallback:
 			fmt.Fprintf(os.Stderr, "\nWarning: %s\n", n.Tool)
@@ -105,6 +114,55 @@ func renderUnshownNotices(noticesDir string) {
 		} else {
 			_ = notices.MarkShown(noticesDir, n.Tool)
 		}
+	}
+}
+
+// partitionBackgroundSuccess splits unshown notices into background auto-apply
+// successes and everything else. A background success is a tool-level success
+// notice (no Error) tagged KindAutoApplyResult — i.e. produced by the
+// background auto-apply subprocess, which prints nothing inline. Library and
+// self-update notices are excluded so they keep their existing per-notice
+// rendering. Factored out so #2409's failure-placement work can reuse the same
+// partition for its own head-of-output block.
+func partitionBackgroundSuccess(in []notices.Notice) (background, rest []notices.Notice) {
+	for _, n := range in {
+		if isBackgroundSuccess(n) {
+			background = append(background, n)
+		} else {
+			rest = append(rest, n)
+		}
+	}
+	return background, rest
+}
+
+// isBackgroundSuccess reports whether a notice is a background auto-apply
+// success for a regular tool (the batch that otherwise prints bare lines at the
+// head of an unrelated command).
+func isBackgroundSuccess(n notices.Notice) bool {
+	return n.Error == "" &&
+		n.Kind == notices.KindAutoApplyResult &&
+		n.Tool != SelfToolName &&
+		!strings.HasPrefix(n.Tool, notices.LibraryNoticePrefix)
+}
+
+// renderBackgroundSuccess prints the grouped "Background updates applied:"
+// block and marks each notice shown. A no-op when there are no background
+// successes.
+func renderBackgroundSuccess(noticesDir string, ns []notices.Notice) {
+	if len(ns) == 0 {
+		return
+	}
+	fmt.Fprintf(os.Stderr, "\nBackground updates applied:\n")
+	for _, n := range ns {
+		switch n.Verb {
+		case notices.VerbInstall:
+			fmt.Fprintf(os.Stderr, "  %s installed (%s)\n", n.Tool, n.AttemptedVersion)
+		case notices.VerbRollback:
+			fmt.Fprintf(os.Stderr, "  %s rolled back to %s\n", n.Tool, n.AttemptedVersion)
+		default: // VerbUpdate or empty (legacy)
+			fmt.Fprintf(os.Stderr, "  %s -> %s\n", n.Tool, n.AttemptedVersion)
+		}
+		_ = notices.MarkShown(noticesDir, n.Tool)
 	}
 }
 
