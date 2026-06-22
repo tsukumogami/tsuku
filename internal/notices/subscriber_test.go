@@ -31,8 +31,11 @@ func TestSubscriber_Installed(t *testing.T) {
 	if got.Error != "" {
 		t.Errorf("Error must be empty for success, got %q", got.Error)
 	}
-	if got.Shown {
-		t.Error("Shown must be false")
+	// Foreground (SourceManual) success is reported inline at op time, so its
+	// notice is written Shown=true: it must not re-banner on the next command,
+	// but ReadAllNotices still surfaces it once in `tsuku notices`.
+	if !got.Shown {
+		t.Error("foreground success must be written Shown=true")
 	}
 }
 
@@ -306,8 +309,10 @@ func TestSubscriber_LibraryInstalled(t *testing.T) {
 	if got.AttemptedVersion != "0.2.5" {
 		t.Errorf("AttemptedVersion = %q, want 0.2.5", got.AttemptedVersion)
 	}
-	if got.Shown {
-		t.Error("Shown must be false")
+	// Foreground (SourceManual) library install is reported inline, so the
+	// notice is written Shown=true (no next-command re-banner).
+	if !got.Shown {
+		t.Error("foreground library success must be written Shown=true")
 	}
 	if got.Error != "" {
 		t.Errorf("Error = %q, want empty on success", got.Error)
@@ -411,5 +416,48 @@ func TestSubscriber_LibraryEventsDoNotCollideWithToolNotices(t *testing.T) {
 	}
 	if lib.AttemptedVersion != "0.2.5" {
 		t.Errorf("library notice AttemptedVersion = %q, want 0.2.5", lib.AttemptedVersion)
+	}
+}
+
+// shownForSuccess: only background auto-apply (SourceAuto) success stays
+// unshown so it surfaces (grouped) on the next command; foreground sources
+// (manual, project-auto) are written Shown=true because they reported inline.
+func TestShownForSuccess(t *testing.T) {
+	cases := []struct {
+		source installevents.Source
+		want   bool
+	}{
+		{installevents.SourceManual, true},
+		{installevents.SourceProjectAuto, true},
+		{installevents.SourceAuto, false},
+	}
+	for _, c := range cases {
+		if got := shownForSuccess(c.source); got != c.want {
+			t.Errorf("shownForSuccess(%q) = %v, want %v", c.source, got, c.want)
+		}
+	}
+}
+
+// A background auto-apply success must be written Shown=false so renderUnshown
+// surfaces it (under the "Background updates applied:" header), unlike a
+// foreground success.
+func TestSubscriber_AutoSuccessStaysUnshown(t *testing.T) {
+	dir := t.TempDir()
+	s := NewSubscriber(dir)
+
+	s.Handle(installevents.Updated{
+		Tool: "bun", FromVersion: "1.3.13", ToVersion: "1.3.14",
+		Source: installevents.SourceAuto, Timestamp: time.Now(),
+	})
+
+	got, _ := ReadNotice(dir, "bun")
+	if got == nil {
+		t.Fatal("expected notice")
+	}
+	if got.Shown {
+		t.Error("background auto-apply success must be written Shown=false")
+	}
+	if got.Kind != KindAutoApplyResult {
+		t.Errorf("Kind = %q, want %q", got.Kind, KindAutoApplyResult)
 	}
 }

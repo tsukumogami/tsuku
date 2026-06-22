@@ -279,8 +279,11 @@ func TestE2E_LibraryInstalledFlowsToNoticeAndTelemetry(t *testing.T) {
 	if n.AttemptedVersion != "0.2.5" {
 		t.Errorf("notice AttemptedVersion = %q, want 0.2.5", n.AttemptedVersion)
 	}
-	if n.Shown {
-		t.Error("notice should be Shown=false")
+	// Foreground (SourceManual) library install is reported inline, so its
+	// success notice is written Shown=true: it must not re-banner on the next
+	// command, while `tsuku notices` (ReadAllNotices) still surfaces it once.
+	if !n.Shown {
+		t.Error("foreground library success should be written Shown=true")
 	}
 
 	// Telemetry check.

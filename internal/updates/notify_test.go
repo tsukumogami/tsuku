@@ -331,3 +331,49 @@ func captureStderr(t *testing.T, fn func()) []byte {
 	os.Stderr = old
 	return buf.Bytes()
 }
+
+// Background auto-apply successes (KindAutoApplyResult) must be grouped under a
+// single "Background updates applied:" header with indented per-tool lines,
+// instead of bare lines that read like the current command's own output (#2422).
+func TestDisplayNotifications_BackgroundSuccessGrouped(t *testing.T) {
+	dir := t.TempDir()
+	noticesDir := notices.NoticesDir(dir)
+	setupCacheDirs(t, dir)
+	cfg := &config.Config{HomeDir: dir}
+	userCfg := userconfig.DefaultConfig()
+
+	clearSuppressEnv(t)
+	mockTTY(t, true)
+
+	_ = notices.WriteNotice(noticesDir, &notices.Notice{
+		Tool: "bun", AttemptedVersion: "1.3.14", Verb: notices.VerbUpdate,
+		Kind: notices.KindAutoApplyResult, Timestamp: time.Now(), Shown: false,
+	})
+	_ = notices.WriteNotice(noticesDir, &notices.Notice{
+		Tool: "ripgrep", AttemptedVersion: "14.0.0", Verb: notices.VerbInstall,
+		Kind: notices.KindAutoApplyResult, Timestamp: time.Now(), Shown: false,
+	})
+
+	output := captureStderr(t, func() {
+		DisplayNotifications(cfg, userCfg, false, nil)
+	})
+
+	if !bytes.Contains(output, []byte("Background updates applied:")) {
+		t.Errorf("expected grouped header, got %q", output)
+	}
+	if !bytes.Contains(output, []byte("  bun -> 1.3.14")) {
+		t.Errorf("expected indented update line, got %q", output)
+	}
+	if !bytes.Contains(output, []byte("  ripgrep installed (14.0.0)")) {
+		t.Errorf("expected indented install line, got %q", output)
+	}
+	// Bare per-tool phrasing must NOT appear for grouped background successes.
+	if bytes.Contains(output, []byte("bun has been updated to")) {
+		t.Errorf("background success should not use the bare banner phrasing, got %q", output)
+	}
+
+	after, _ := notices.ReadUnshownNotices(noticesDir)
+	if len(after) != 0 {
+		t.Errorf("grouped notices should be marked shown, %d remain", len(after))
+	}
+}

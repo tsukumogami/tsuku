@@ -39,7 +39,7 @@ func (s *Subscriber) Handle(event installevents.Event) {
 			Verb:             VerbInstall,
 			Kind:             kindFor(e.Source),
 			Timestamp:        e.Timestamp,
-			Shown:            false,
+			Shown:            shownForSuccess(e.Source),
 		})
 	case installevents.Updated:
 		_ = WriteNotice(s.dir, &Notice{
@@ -48,7 +48,7 @@ func (s *Subscriber) Handle(event installevents.Event) {
 			Verb:             VerbUpdate,
 			Kind:             kindFor(e.Source),
 			Timestamp:        e.Timestamp,
-			Shown:            false,
+			Shown:            shownForSuccess(e.Source),
 		})
 	case installevents.RolledBack:
 		_ = WriteNotice(s.dir, &Notice{
@@ -57,7 +57,7 @@ func (s *Subscriber) Handle(event installevents.Event) {
 			Verb:             VerbRollback,
 			Kind:             kindFor(e.Source),
 			Timestamp:        e.Timestamp,
-			Shown:            false,
+			Shown:            shownForSuccess(e.Source),
 		})
 	case installevents.Removed:
 		_ = RemoveNotice(s.dir, e.Tool)
@@ -77,7 +77,7 @@ func (s *Subscriber) Handle(event installevents.Event) {
 			Verb:             VerbInstall,
 			Kind:             kindFor(e.Source),
 			Timestamp:        e.Timestamp,
-			Shown:            false,
+			Shown:            shownForSuccess(e.Source),
 		})
 	case installevents.LibraryRemoved:
 		_ = RemoveNotice(s.dir, LibraryNoticePrefix+e.Library)
@@ -122,6 +122,24 @@ func kindFor(source installevents.Source) string {
 		return KindAutoApplyResult
 	}
 	return KindUpdateResult
+}
+
+// shownForSuccess reports whether a success notice for the given source should
+// be marked Shown at write time. Foreground operations — SourceManual (tsuku
+// install/update/rollback/self-update) and SourceProjectAuto (the `tsuku run`
+// autoinstall path, which runs the same foreground install pipeline with the
+// reporter active) — report their result inline at the time they run. Their
+// success notice must therefore NOT re-surface as a head-of-output banner on the
+// next command, so it is written Shown=true: ReadUnshownNotices skips it (no
+// banner), while ReadAllNotices still returns it so `tsuku notices` keeps the
+// one-shot record. Only background auto-apply (SourceAuto) produces no inline
+// output, so its success notice stays Shown=false and surfaces — grouped under
+// the "Background updates applied:" header — on the next command.
+//
+// Failure notices are never routed through this helper; they always persist
+// Shown=false until resolved.
+func shownForSuccess(source installevents.Source) bool {
+	return source != installevents.SourceAuto
 }
 
 // sanitizeError makes an error string safe to persist to a notice
