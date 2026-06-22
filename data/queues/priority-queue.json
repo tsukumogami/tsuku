@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-21T22:19:24Z",
+  "updated_at": "2026-06-22T00:17:06Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 588,
-      "next_retry_at": "1734-03-12T20:42:36.515055488Z"
+      "failure_count": 589,
+      "next_retry_at": "1734-03-13T00:29:48.776665671Z"
     },
     {
       "name": "azqr",
@@ -9156,11 +9156,11 @@
       "name": "cowsay",
       "source": "rubygems:cowsay",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 21,
-      "next_retry_at": "2026-06-21T19:28:53.110071243Z"
+      "failure_count": 22,
+      "next_retry_at": "2026-06-29T00:17:05.631441479Z"
     },
     {
       "name": "cp2k",
@@ -10876,7 +10876,7 @@
       "name": "dict",
       "source": "rubygems:dict",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 21,
@@ -12396,7 +12396,7 @@
       "name": "e2b",
       "source": "npm:e2b",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 20,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 853,
-      "next_retry_at": "1734-03-12T20:42:36.515055488Z"
+      "failure_count": 855,
+      "next_retry_at": "1734-03-13T00:29:48.776665671Z"
     },
     {
       "name": "libaacs",
