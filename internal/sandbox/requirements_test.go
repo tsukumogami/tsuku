@@ -323,7 +323,7 @@ func TestComputeSandboxRequirements_TargetFamily(t *testing.T) {
 		wantImage    string
 	}{
 		{"empty defaults to debian", "", containerimages.DefaultImage()},
-		{"debian", "debian", "docker.io/library/debian:bookworm-slim@sha256:98f4b71de414932439ac6ac690d7060df1f27161073c5036a7553723881bffbe"},
+		{"debian", "debian", "docker.io/library/debian:trixie-slim@sha256:4e401d95de7083948053197a9c3913343cd06b706bf15eb6a0c3ccd26f436a0e"},
 		{"alpine", "alpine", "docker.io/library/alpine:3.21@sha256:c3f8e73fdb79deaebaa2037150150191b9dcbfba68b4a46d70103204c53f4709"},
 		{"rhel", "rhel", "docker.io/library/fedora:41@sha256:f1a3fab47bcb3c3ddf3135d5ee7ba8b7b25f2e809a47440936212a3a50957f3d"},
 		{"arch", "arch", "docker.io/library/archlinux:base@sha256:e25a13ea0e2a36df12f3593fe4bc1063605cfd2ab46c704f72c9e1c3514138ce"},
