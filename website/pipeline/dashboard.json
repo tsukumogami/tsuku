@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-06-22T00:16:27Z",
+  "generated_at": "2026-06-22T00:17:52Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 74,
-      "pending": 3829,
+      "failed": 75,
+      "pending": 3828,
       "success": 1374
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 74,
-        "pending": 3814,
+        "failed": 75,
+        "pending": 3813,
         "success": 1350
       }
     },
@@ -74,8 +74,7 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -431,6 +430,15 @@
           "next_retry_at": "2026-06-27T23:12:10Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 589,
+          "next_retry_at": "1734-03-13T00:29:48Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -530,6 +538,15 @@
           "next_retry_at": "2026-06-28T18:28:12Z"
         },
         {
+          "id": "rubygems:cowsay",
+          "name": "cowsay",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 22,
+          "next_retry_at": "2026-06-29T00:17:05Z"
+        },
+        {
           "id": "npm:datasette",
           "name": "datasette",
           "ecosystem": "npm",
@@ -537,15 +554,6 @@
           "category": "install_failed",
           "failure_count": 21,
           "next_retry_at": "2026-06-28T22:19:23Z"
-        },
-        {
-          "id": "rubygems:dict",
-          "name": "dict",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 21,
-          "next_retry_at": "2026-06-21T23:13:11Z"
         },
         {
           "id": "rubygems:doggo",
@@ -564,15 +572,6 @@
           "category": "install_failed",
           "failure_count": 19,
           "next_retry_at": "2026-06-22T10:30:17Z"
-        },
-        {
-          "id": "npm:e2b",
-          "name": "e2b",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 20,
-          "next_retry_at": "2026-06-21T23:13:11Z"
         },
         {
           "id": "npm:ent",
@@ -771,6 +770,15 @@
           "category": "install_failed",
           "failure_count": 18,
           "next_retry_at": "2026-06-25T03:44:27Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 855,
+          "next_retry_at": "1734-03-13T00:29:48Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -2876,15 +2884,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 588,
-          "next_retry_at": "1734-03-12T20:42:36Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -5403,15 +5402,6 @@
           "failure_count": 1
         },
         {
-          "id": "rubygems:cowsay",
-          "name": "cowsay",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 21,
-          "next_retry_at": "2026-06-21T19:28:53Z"
-        },
-        {
           "id": "homebrew:cp2k",
           "name": "cp2k",
           "ecosystem": "homebrew",
@@ -6359,6 +6349,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:dict",
+          "name": "dict",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 21,
+          "next_retry_at": "2026-06-21T23:13:11Z"
+        },
+        {
           "id": "crates.io:diesel",
           "name": "diesel",
           "ecosystem": "crates.io",
@@ -7087,6 +7086,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:e2b",
+          "name": "e2b",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 20,
+          "next_retry_at": "2026-06-21T23:13:11Z"
         },
         {
           "id": "homebrew:eask-cli",
@@ -13200,15 +13208,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 853,
-          "next_retry_at": "1734-03-12T20:42:36Z"
         },
         {
           "id": "homebrew:libaacs",
