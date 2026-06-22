@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-06-22T17:36:01Z",
+  "generated_at": "2026-06-22T17:37:20Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 75,
-      "pending": 3828,
+      "failed": 74,
+      "pending": 3829,
       "success": 1374
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 75,
-        "pending": 3813,
+        "failed": 74,
+        "pending": 3814,
         "success": 1350
       }
     },
@@ -74,7 +74,8 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
@@ -430,15 +431,6 @@
           "next_retry_at": "2026-06-27T23:12:10Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 590,
-          "next_retry_at": "1734-03-13T13:08:07Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -583,13 +575,22 @@
           "next_retry_at": "2026-06-29T06:35:01Z"
         },
         {
-          "id": "rubygems:exiv2",
-          "name": "exiv2",
+          "id": "rubygems:doggo",
+          "name": "doggo",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 19,
-          "next_retry_at": "2026-06-22T16:26:40Z"
+          "failure_count": 21,
+          "next_retry_at": "2026-06-29T17:36:35Z"
+        },
+        {
+          "id": "npm:e2b",
+          "name": "e2b",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 21,
+          "next_retry_at": "2026-06-29T17:36:35Z"
         },
         {
           "id": "rubygems:flash",
@@ -770,15 +771,6 @@
           "category": "install_failed",
           "failure_count": 18,
           "next_retry_at": "2026-06-25T03:44:27Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 857,
-          "next_retry_at": "1734-03-13T13:08:07Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -2884,6 +2876,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 590,
+          "next_retry_at": "1734-03-13T13:08:07Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -6641,15 +6642,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:doggo",
-          "name": "doggo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 20,
-          "next_retry_at": "2026-06-22T04:05:01Z"
-        },
-        {
           "id": "homebrew:dokku/repo/dokku",
           "name": "dokku/repo/dokku",
           "ecosystem": "homebrew",
@@ -7077,15 +7069,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:e2b",
-          "name": "e2b",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 20,
-          "next_retry_at": "2026-06-21T23:13:11Z"
         },
         {
           "id": "homebrew:eask-cli",
@@ -7606,6 +7589,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:exiv2",
+          "name": "exiv2",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 19,
+          "next_retry_at": "2026-06-22T16:26:40Z"
         },
         {
           "id": "homebrew:exoscale/tap/exoscale-cli",
@@ -13208,6 +13200,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 857,
+          "next_retry_at": "1734-03-13T13:08:07Z"
         },
         {
           "id": "homebrew:libaacs",
