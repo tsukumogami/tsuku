@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-22T17:36:35Z",
+  "updated_at": "2026-06-22T20:51:02Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 590,
-      "next_retry_at": "1734-03-13T13:08:07.716038621Z"
+      "failure_count": 591,
+      "next_retry_at": "1734-03-13T21:03:45.60354439Z"
     },
     {
       "name": "azqr",
@@ -12116,11 +12116,11 @@
       "name": "dug",
       "source": "rubygems:dug",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 19,
-      "next_retry_at": "2026-06-22T10:30:17.320051069Z"
+      "failure_count": 20,
+      "next_retry_at": "2026-06-29T20:51:02.458320198Z"
     },
     {
       "name": "dumbpipe",
@@ -14536,7 +14536,7 @@
       "name": "flash",
       "source": "rubygems:flash",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 19,
@@ -18186,7 +18186,7 @@
       "name": "got",
       "source": "npm:got",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 19,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 857,
-      "next_retry_at": "1734-03-13T13:08:07.716038621Z"
+      "failure_count": 859,
+      "next_retry_at": "1734-03-13T21:03:45.60354439Z"
     },
     {
       "name": "libaacs",
