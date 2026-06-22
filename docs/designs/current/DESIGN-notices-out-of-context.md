@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   tsuku's deferred-notice system flushes all unshown success notices at the head of
   the next foreground command (PersistentPreRun -> renderUnshownNotices), rendering
@@ -33,7 +33,7 @@ rationale: |
 
 ## Status
 
-Planned
+Current
 
 Resolves tsukumogami/tsuku#2422.
 
