@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-22T22:52:02Z",
+  "generated_at": "2026-06-22T22:53:20Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -74,14 +74,15 @@
         "total": 75
       },
       "pypi": {
-        "failed": 3,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 51,
-        "pending": 23,
+        "failed": 52,
+        "pending": 22,
         "success": 14,
         "total": 89
       }
@@ -430,15 +431,6 @@
           "next_retry_at": "2026-06-27T23:12:10Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 591,
-          "next_retry_at": "1734-03-13T21:03:45Z"
-        },
-        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -610,6 +602,24 @@
           "next_retry_at": "2026-06-29T17:36:35Z"
         },
         {
+          "id": "npm:ent",
+          "name": "ent",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 21,
+          "next_retry_at": "2026-06-29T22:52:38Z"
+        },
+        {
+          "id": "rubygems:exiv2",
+          "name": "exiv2",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 20,
+          "next_retry_at": "2026-06-29T22:52:38Z"
+        },
+        {
           "id": "rubygems:gitingest",
           "name": "gitingest",
           "ecosystem": "rubygems",
@@ -770,15 +780,6 @@
           "category": "install_failed",
           "failure_count": 18,
           "next_retry_at": "2026-06-25T03:44:27Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 859,
-          "next_retry_at": "1734-03-13T21:03:45Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -2884,6 +2885,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 591,
+          "next_retry_at": "1734-03-13T21:03:45Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -7383,15 +7393,6 @@
           "failure_count": 1
         },
         {
-          "id": "npm:ent",
-          "name": "ent",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 20,
-          "next_retry_at": "2026-06-22T10:30:17Z"
-        },
-        {
           "id": "homebrew:env0/terratag/terratag",
           "name": "env0/terratag/terratag",
           "ecosystem": "homebrew",
@@ -7579,15 +7580,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "rubygems:exiv2",
-          "name": "exiv2",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 19,
-          "next_retry_at": "2026-06-22T16:26:40Z"
         },
         {
           "id": "homebrew:exoscale/tap/exoscale-cli",
@@ -13208,6 +13200,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 859,
+          "next_retry_at": "1734-03-13T21:03:45Z"
         },
         {
           "id": "homebrew:libaacs",
