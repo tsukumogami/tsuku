@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-23T12:06:03Z",
+  "updated_at": "2026-06-23T15:04:19Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 593,
-      "next_retry_at": "1734-03-14T08:50:59.372737229Z"
+      "failure_count": 594,
+      "next_retry_at": "1734-03-14T15:17:02.318629461Z"
     },
     {
       "name": "azqr",
@@ -19496,7 +19496,7 @@
       "name": "haproxy",
       "source": "rubygems:haproxy",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 19,
@@ -23566,7 +23566,7 @@
       "name": "kew",
       "source": "npm:kew",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 19,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 863,
-      "next_retry_at": "1734-03-14T08:50:59.372737229Z"
+      "failure_count": 865,
+      "next_retry_at": "1734-03-14T15:17:02.318629461Z"
     },
     {
       "name": "libaacs",
@@ -37956,11 +37956,11 @@
       "name": "progress",
       "source": "rubygems:progress",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 13,
-      "next_retry_at": "2026-06-13T09:31:08.082237717Z"
+      "failure_count": 14,
+      "next_retry_at": "2026-06-30T15:04:19.173405269Z"
     },
     {
       "name": "proj",
