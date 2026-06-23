@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-23T00:11:23Z",
+  "updated_at": "2026-06-23T05:06:26Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 592,
@@ -16906,11 +16906,11 @@
       "name": "gitingest",
       "source": "rubygems:gitingest",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 19,
-      "next_retry_at": "2026-06-22T23:08:42.710254042Z"
+      "failure_count": 20,
+      "next_retry_at": "2026-06-30T05:06:26.31769356Z"
     },
     {
       "name": "gitlab-ci-linter",
@@ -17116,7 +17116,7 @@
       "name": "glassfish",
       "source": "rubygems:glassfish",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 19,
@@ -18186,11 +18186,11 @@
       "name": "got",
       "source": "npm:got",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 19,
-      "next_retry_at": "2026-06-22T20:32:19.182561398Z"
+      "failure_count": 20,
+      "next_retry_at": "2026-06-30T05:06:26.31769356Z"
     },
     {
       "name": "gotests",
@@ -19736,7 +19736,7 @@
       "name": "hasura-cli",
       "source": "npm:hasura-cli",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 19,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 861,
