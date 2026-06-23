@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-06-23T20:07:10Z",
+  "generated_at": "2026-06-23T20:08:37Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 78,
-      "pending": 3825,
+      "failed": 80,
+      "pending": 3823,
       "success": 1374
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 78,
-        "pending": 3810,
+        "failed": 80,
+        "pending": 3808,
         "success": 1350
       }
     },
@@ -68,14 +68,12 @@
         "total": 1
       },
       "npm": {
-        "failed": 19,
-        "pending": 1,
+        "failed": 20,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -431,6 +429,15 @@
           "next_retry_at": "2026-06-27T23:12:10Z"
         },
         {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 595,
+          "next_retry_at": "1734-03-14T20:20:28Z"
+        },
+        {
           "id": "crates.io:basis_universal",
           "name": "basis_universal",
           "ecosystem": "crates.io",
@@ -683,15 +690,6 @@
           "next_retry_at": "2026-06-30T12:06:03Z"
         },
         {
-          "id": "rubygems:hercules",
-          "name": "hercules",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 19,
-          "next_retry_at": "2026-06-23T18:11:47Z"
-        },
-        {
           "id": "rubygems:htmldoc",
           "name": "htmldoc",
           "ecosystem": "rubygems",
@@ -798,6 +796,15 @@
           "category": "install_failed",
           "failure_count": 18,
           "next_retry_at": "2026-06-25T03:44:27Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 867,
+          "next_retry_at": "1734-03-14T20:20:28Z"
         },
         {
           "id": "rubygems:libnotify",
@@ -1059,6 +1066,15 @@
           "category": "install_failed",
           "failure_count": 19,
           "next_retry_at": "2026-06-25T16:36:22Z"
+        },
+        {
+          "id": "rubygems:quickjs",
+          "name": "quickjs",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 13,
+          "next_retry_at": "2026-06-30T20:07:45Z"
         },
         {
           "id": "npm:sigstore",
@@ -2912,15 +2928,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 594,
-          "next_retry_at": "1734-03-14T15:17:02Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -10843,6 +10850,15 @@
           "failure_count": 1
         },
         {
+          "id": "rubygems:hercules",
+          "name": "hercules",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 19,
+          "next_retry_at": "2026-06-23T18:11:47Z"
+        },
+        {
           "id": "homebrew:heremaps/olp-cli/olp",
           "name": "heremaps/olp-cli/olp",
           "ecosystem": "homebrew",
@@ -13209,15 +13225,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 865,
-          "next_retry_at": "1734-03-14T15:17:02Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -20907,15 +20914,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:quickjs",
-          "name": "quickjs",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 12,
-          "next_retry_at": "2026-06-13T11:31:06Z"
         },
         {
           "id": "homebrew:quilt",
