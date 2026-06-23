@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-23T21:53:15Z",
+  "updated_at": "2026-06-23T23:14:11Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 595,
-      "next_retry_at": "1734-03-14T20:20:28.847799158Z"
+      "failure_count": 597,
+      "next_retry_at": "1734-03-14T23:26:54.306374851Z"
     },
     {
       "name": "azqr",
@@ -20486,11 +20486,11 @@
       "name": "htmldoc",
       "source": "rubygems:htmldoc",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 19,
-      "next_retry_at": "2026-06-23T21:48:47.917855723Z"
+      "failure_count": 20,
+      "next_retry_at": "2026-06-30T23:14:11.161150659Z"
     },
     {
       "name": "htmlhint",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 867,
-      "next_retry_at": "1734-03-14T20:20:28.847799158Z"
+      "failure_count": 869,
+      "next_retry_at": "1734-03-14T23:26:54.306374851Z"
     },
     {
       "name": "libaacs",
