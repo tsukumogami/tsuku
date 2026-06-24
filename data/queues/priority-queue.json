@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-24T16:25:05Z",
+  "updated_at": "2026-06-24T18:57:02Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 599,
-      "next_retry_at": "1734-03-15T13:39:27.342014926Z"
+      "failure_count": 600,
+      "next_retry_at": "1734-03-15T19:09:45.679265731Z"
     },
     {
       "name": "azqr",
@@ -21416,7 +21416,7 @@
       "name": "influxdb",
       "source": "rubygems:influxdb",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 19,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 873,
-      "next_retry_at": "1734-03-15T13:39:27.342014926Z"
+      "failure_count": 875,
+      "next_retry_at": "1734-03-15T19:09:45.679265731Z"
     },
     {
       "name": "libaacs",
@@ -40406,11 +40406,11 @@
       "name": "redis",
       "source": "rubygems:redis",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-06-15T22:31:33.211126139Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-07-01T18:57:02.534041539Z"
     },
     {
       "name": "redis@6.2",
