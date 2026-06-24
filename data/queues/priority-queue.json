@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-23T23:14:11Z",
+  "updated_at": "2026-06-24T03:01:49Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 597,
@@ -20626,7 +20626,7 @@
       "name": "httpx",
       "source": "rubygems:httpx",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 19,
@@ -24896,11 +24896,11 @@
       "name": "lcm",
       "source": "npm:lcm",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 19,
-      "next_retry_at": "2026-06-23T21:48:47.917855723Z"
+      "failure_count": 20,
+      "next_retry_at": "2026-07-01T03:01:48.994454129Z"
     },
     {
       "name": "lcov",
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 869,
@@ -40296,11 +40296,11 @@
       "name": "re2",
       "source": "rubygems:re2",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 12,
-      "next_retry_at": "2026-06-13T15:20:11.524395018Z"
+      "failure_count": 13,
+      "next_retry_at": "2026-07-01T03:01:48.994454129Z"
     },
     {
       "name": "re2c",
