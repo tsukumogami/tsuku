@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-25T00:16:36Z",
+  "updated_at": "2026-06-25T05:09:59Z",
   "entries": [
     {
       "name": "node",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 602,
-      "next_retry_at": "1734-03-15T22:35:23.64303038Z"
+      "failure_count": 603,
+      "next_retry_at": "1734-03-16T05:22:42.229655364Z"
     },
     {
       "name": "azqr",
@@ -25056,11 +25056,11 @@
       "name": "lemon",
       "source": "rubygems:lemon",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 19,
-      "next_retry_at": "2026-06-24T23:49:19.743060703Z"
+      "failure_count": 20,
+      "next_retry_at": "2026-07-02T05:09:59.084431172Z"
     },
     {
       "name": "lensfun",
@@ -25116,7 +25116,7 @@
       "name": "less",
       "source": "rubygems:less",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 18,
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 877,
-      "next_retry_at": "1734-03-15T22:35:23.64303038Z"
+      "failure_count": 879,
+      "next_retry_at": "1734-03-16T05:22:42.229655364Z"
     },
     {
       "name": "libaacs",
