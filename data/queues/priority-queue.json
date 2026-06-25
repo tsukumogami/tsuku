@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-06-24T22:22:40Z",
+  "updated_at": "2026-06-25T00:16:36Z",
   "entries": [
     {
       "name": "node",
@@ -3966,7 +3966,7 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 602,
@@ -23966,11 +23966,11 @@
       "name": "kor",
       "source": "rubygems:kor",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 19,
-      "next_retry_at": "2026-06-24T22:06:39.787787887Z"
+      "failure_count": 20,
+      "next_retry_at": "2026-07-02T00:16:35.886563602Z"
     },
     {
       "name": "kosli-cli",
@@ -25056,7 +25056,7 @@
       "name": "lemon",
       "source": "rubygems:lemon",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 19,
@@ -25196,7 +25196,7 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 877,
@@ -30826,11 +30826,11 @@
       "name": "mongoose",
       "source": "npm:mongoose",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 19,
-      "next_retry_at": "2026-06-24T19:30:56.054523612Z"
+      "failure_count": 20,
+      "next_retry_at": "2026-07-02T00:16:35.886563602Z"
     },
     {
       "name": "mongosh",
@@ -37216,7 +37216,7 @@
       "name": "pocketbase",
       "source": "npm:pocketbase",
       "priority": 3,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 19,
