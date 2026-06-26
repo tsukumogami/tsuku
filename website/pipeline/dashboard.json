@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-06-26T16:20:41Z",
+  "generated_at": "2026-06-26T16:21:58Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 6,
-      "failed": 83,
-      "pending": 3820,
+      "failed": 84,
+      "pending": 3819,
       "success": 1374
     },
     "by_tier": {
@@ -23,8 +23,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 83,
-        "pending": 3805,
+        "failed": 84,
+        "pending": 3804,
         "success": 1350
       }
     },
@@ -74,8 +74,7 @@
         "total": 75
       },
       "pypi": {
-        "failed": 2,
-        "pending": 1,
+        "failed": 3,
         "success": 4,
         "total": 7
       },
@@ -429,6 +428,15 @@
           "category": "install_failed",
           "failure_count": 22,
           "next_retry_at": "2026-06-27T23:12:10Z"
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 610,
+          "next_retry_at": "1734-03-17T16:33:52Z"
         },
         {
           "id": "crates.io:basis_universal",
@@ -800,6 +808,15 @@
           "next_retry_at": "2026-07-02T09:04:09Z"
         },
         {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 891,
+          "next_retry_at": "1734-03-17T16:33:52Z"
+        },
+        {
           "id": "rubygems:libnotify",
           "name": "libnotify",
           "ecosystem": "rubygems",
@@ -881,6 +898,15 @@
           "next_retry_at": "2026-07-03T10:55:36Z"
         },
         {
+          "id": "rubygems:mktorrent",
+          "name": "mktorrent",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 18,
+          "next_retry_at": "2026-07-03T16:21:09Z"
+        },
+        {
           "id": "npm:mongoose",
           "name": "mongoose",
           "ecosystem": "npm",
@@ -888,15 +914,6 @@
           "category": "install_failed",
           "failure_count": 20,
           "next_retry_at": "2026-07-02T00:16:35Z"
-        },
-        {
-          "id": "rubygems:multimarkdown",
-          "name": "multimarkdown",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 16,
-          "next_retry_at": "2026-06-26T15:06:05Z"
         },
         {
           "id": "rubygems:neo4j",
@@ -1140,15 +1157,6 @@
           "category": "install_failed",
           "failure_count": 20,
           "next_retry_at": "2026-07-03T13:16:36Z"
-        },
-        {
-          "id": "npm:webdav",
-          "name": "webdav",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 18,
-          "next_retry_at": "2026-06-26T15:06:05Z"
         }
       ],
       "pending": [
@@ -2957,15 +2965,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 609,
-          "next_retry_at": "1734-03-17T11:08:19Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -13256,15 +13255,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 889,
-          "next_retry_at": "1734-03-17T11:08:19Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -15845,15 +15835,6 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:mktorrent",
-          "name": "mktorrent",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 17,
-          "next_retry_at": "2026-06-26T11:27:14Z"
-        },
-        {
           "id": "homebrew:mkvtomp4",
           "name": "mkvtomp4",
           "ecosystem": "homebrew",
@@ -16307,6 +16288,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "rubygems:multimarkdown",
+          "name": "multimarkdown",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 16,
+          "next_retry_at": "2026-06-26T15:06:05Z"
         },
         {
           "id": "homebrew:mupdf",
@@ -26983,6 +26973,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "npm:webdav",
+          "name": "webdav",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 18,
+          "next_retry_at": "2026-06-26T15:06:05Z"
         },
         {
           "id": "rubygems:webhook",
