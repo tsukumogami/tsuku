@@ -1,0 +1,18 @@
+[metadata]
+name = "clerk"
+description = "Official Clerk CLI for managing authentication and user management"
+homepage = "https://clerk.com/docs/cli"
+version_format = "semver"
+
+# Clerk ships prebuilt single-file binaries per platform: clerk-{os}-{arch}.
+# Asset os names (linux, darwin) match tsuku defaults; only amd64 -> x64 needs mapping.
+[[steps]]
+action = "github_file"
+repo = "clerk/cli"
+asset_pattern = "clerk-{os}-{arch}"
+binary = "clerk"
+arch_mapping = { amd64 = "x64" }
+
+[verify]
+command = "clerk --version"
+pattern = "{version}"
