@@ -4,14 +4,35 @@ description = "Official Clerk CLI for managing authentication and user managemen
 homepage = "https://clerk.com/docs/cli"
 version_format = "semver"
 
-# Clerk ships prebuilt single-file binaries per platform: clerk-{os}-{arch}.
-# Asset os names (linux, darwin) match tsuku defaults; only amd64 -> x64 needs mapping.
+[version]
+github_repo = "clerk/cli"
+tag_prefix = "v"
+
+# Clerk ships prebuilt single-file binaries per platform. The plain linux
+# binaries are glibc-linked; Alpine and other musl systems need the -musl asset.
 [[steps]]
 action = "github_file"
+when = { os = ["linux"], libc = ["glibc"] }
 repo = "clerk/cli"
-asset_pattern = "clerk-{os}-{arch}"
-binary = "clerk"
+asset_pattern = "clerk-linux-{arch}"
 arch_mapping = { amd64 = "x64" }
+binary = "clerk"
+
+[[steps]]
+action = "github_file"
+when = { os = ["linux"], libc = ["musl"] }
+repo = "clerk/cli"
+asset_pattern = "clerk-linux-{arch}-musl"
+arch_mapping = { amd64 = "x64" }
+binary = "clerk"
+
+[[steps]]
+action = "github_file"
+when = { os = ["darwin"] }
+repo = "clerk/cli"
+asset_pattern = "clerk-darwin-{arch}"
+arch_mapping = { amd64 = "x64" }
+binary = "clerk"
 
 [verify]
 command = "clerk --version"
