@@ -1,0 +1,34 @@
+[metadata]
+name = "clerk"
+description = "Official Clerk CLI for managing authentication and user management"
+homepage = "https://clerk.com/docs/cli"
+version_format = "semver"
+# clerk's prebuilt linux binaries dynamically link libstdc++/libgcc, which glibc
+# distros ship by default but bare musl systems (Alpine) do not. Limit to glibc.
+supported_libc = ["glibc"]
+
+[version]
+github_repo = "clerk/cli"
+tag_prefix = "v"
+
+# Clerk ships prebuilt single-file binaries per platform: clerk-{os}-{arch}.
+# Only amd64 needs mapping to the asset's x64 name; arm64 and the OS names match.
+[[steps]]
+action = "github_file"
+when = { os = ["linux"] }
+repo = "clerk/cli"
+asset_pattern = "clerk-linux-{arch}"
+arch_mapping = { amd64 = "x64" }
+binary = "clerk"
+
+[[steps]]
+action = "github_file"
+when = { os = ["darwin"] }
+repo = "clerk/cli"
+asset_pattern = "clerk-darwin-{arch}"
+arch_mapping = { amd64 = "x64" }
+binary = "clerk"
+
+[verify]
+command = "clerk --version"
+pattern = "{version}"
