@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-06-13T19:15:55Z",
-  "total_recipes": 1445,
+  "generated_at": "2026-07-05T16:31:08Z",
+  "total_recipes": 1446,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 883,
-        "total": 1445,
-        "pct": 61.10726643598616
+        "supported": 884,
+        "total": 1446,
+        "pct": 61.13416320885201
       },
       "glibc": {
-        "supported": 1412,
-        "total": 1445,
-        "pct": 97.71626297577855
+        "supported": 1413,
+        "total": 1446,
+        "pct": 97.71784232365145
       },
       "musl": {
         "supported": 1256,
-        "total": 1445,
-        "pct": 86.9204152249135
+        "total": 1446,
+        "pct": 86.86030428769018
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 150
       },
       "tool": {
-        "total": 1292,
+        "total": 1293,
         "musl_support": 1106,
-        "glibc_support": 1262
+        "glibc_support": 1263
       }
     }
   },
@@ -2758,6 +2758,20 @@
       },
       "gaps": [
         "darwin",
+        "musl"
+      ],
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "clerk",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": false
+      },
+      "gaps": [
         "musl"
       ],
       "errors": null,
