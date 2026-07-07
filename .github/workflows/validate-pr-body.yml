@@ -1,0 +1,37 @@
+name: Validate PR body
+
+# Adopts shirabe's reusable PR-body conformance gate. The reusable workflow
+# builds the shirabe binary at the referenced ref and runs
+# `shirabe validate --pr-body` against this PR's title and body, checking the
+# mechanical, path-independent parts of the two-part squash-merge convention
+# (Conventional Commits title; one `---` separator with a non-empty Part 1; no
+# AI-attribution footer). The rule is single-sourced in shirabe's
+# references/pr-body-conformance.md.
+#
+# The gate is path-independent by design: no `paths:` filter, so a malformed PR
+# body is caught regardless of which files the diff touches and regardless of
+# which code path opened the PR (a manual `gh pr create`, a dispatched worker,
+# or a skill).
+#
+# Pinned to @main to match this repo's other shirabe reusable-workflow
+# adoption (validate-docs.yml), so the gate always runs the current engine
+# without per-release pin bumps.
+#
+# `types:` mirrors shirabe's own self-caller: `edited` re-checks a body edited
+# after the PR opens (e.g. fixed in the GitHub UI) and `ready_for_review`
+# re-runs at the draft-to-ready flip.
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize, ready_for_review]
+
+# Granted on the caller so the called reusable workflow's `permissions` block
+# (contents: read + pull-requests: read) is a subset of what this caller has.
+# A reusable workflow cannot request a permission the caller lacks.
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  pr-body:
+    uses: tsukumogami/shirabe/.github/workflows/pr-body.yml@main
