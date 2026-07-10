@@ -4,10 +4,14 @@
 # prebuilt Homebrew bottle (upstream ships only source tarballs, no binaries).
 #
 # Linux-only: bwrap relies on Linux namespaces. The bottle is non-setuid, so it
-# needs unprivileged user namespaces enabled on the host
-# (kernel.unprivileged_userns_clone=1). Where they are disabled (some hardened
-# distros, or inside another sandbox) bwrap installs and reports --version but
-# cannot create a sandbox; that is a host-policy limit, not a tsuku issue.
+# needs unprivileged user namespaces to create a sandbox. On Ubuntu 23.10+ /
+# 24.04 the sysctl kernel.apparmor_restrict_unprivileged_userns=1 gates userns
+# creation behind a per-path AppArmor profile. A tsuku-installed bwrap lives
+# under $TSUKU_HOME/tools and has no such profile, so sandbox creation is denied
+# there even though the distro's own /usr/bin/bwrap (which ships a profile) may
+# work. On such hosts bwrap still installs and reports --version; to actually
+# sandbox, load an AppArmor profile for the installed path or set the sysctl
+# to 0. This is a host security policy, not a tsuku issue.
 
 [metadata]
 name = "bubblewrap"
