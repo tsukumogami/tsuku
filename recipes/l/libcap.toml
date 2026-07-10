@@ -1,0 +1,32 @@
+# libcap - POSIX 1003.1e capabilities library
+#
+# Runtime dependency for bubblewrap (bwrap links libcap.so.2).
+# Linux-only: capabilities are a Linux kernel feature.
+
+[metadata]
+name = "libcap"
+description = "POSIX 1003.1e capabilities library"
+homepage = "https://sites.google.com/site/fullycapable/"
+type = "library"
+
+[metadata.satisfies]
+homebrew = ["libcap"]
+
+# glibc Linux: Homebrew bottle. Directory mode with no outputs installs the
+# whole extracted tree, guaranteeing the shared objects (libcap.so.2) are
+# present for soname resolution regardless of the exact versioned filename.
+[[steps]]
+action = "homebrew"
+formula = "libcap"
+when = { os = ["linux"], libc = ["glibc"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["libcap-dev"]
+when = { os = ["linux"], libc = ["musl"] }
