@@ -1,0 +1,47 @@
+# bubblewrap - Unprivileged sandboxing tool (bwrap)
+#
+# Low-level sandboxing tool used by Flatpak and similar projects. Installs the
+# prebuilt Homebrew bottle (upstream ships only source tarballs, no binaries).
+#
+# Linux-only: bwrap relies on Linux namespaces. The bottle is non-setuid, so it
+# needs unprivileged user namespaces to create a sandbox. On Ubuntu 23.10+ /
+# 24.04 the sysctl kernel.apparmor_restrict_unprivileged_userns=1 gates userns
+# creation behind a per-path AppArmor profile. A tsuku-installed bwrap lives
+# under $TSUKU_HOME/tools and has no such profile, so sandbox creation is denied
+# there even though the distro's own /usr/bin/bwrap (which ships a profile) may
+# work. On such hosts bwrap still installs and reports --version; to actually
+# sandbox, load an AppArmor profile for the installed path or set the sysctl
+# to 0. This is a host security policy, not a tsuku issue.
+
+[metadata]
+name = "bubblewrap"
+description = "Unprivileged sandboxing tool for Linux (bwrap)"
+homepage = "https://github.com/containers/bubblewrap"
+runtime_dependencies = ["libcap"]
+supported_os = ["linux"]
+
+[metadata.satisfies]
+homebrew = ["bubblewrap"]
+
+# glibc Linux: Homebrew bottle
+[[steps]]
+action = "homebrew"
+formula = "bubblewrap"
+when = { os = ["linux"], libc = ["glibc"] }
+
+[[steps]]
+action = "install_binaries"
+binaries = ["bin/bwrap"]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: Alpine package
+[[steps]]
+action = "apk_install"
+packages = ["bubblewrap"]
+when = { os = ["linux"], libc = ["musl"] }
+
+[verify]
+command = "bwrap --version"
+mode = "output"
+pattern = "bubblewrap"
+reason = "bwrap --version prints 'bubblewrap X.Y.Z'; homebrew formula version may differ from the printed release"
