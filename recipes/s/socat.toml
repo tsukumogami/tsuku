@@ -8,6 +8,7 @@
   type = ""
   llm_validation = "skipped"
   unsupported_platforms = ["darwin/arm64", "darwin/amd64"]
+  supported_libc = ["glibc"]
   runtime_dependencies = ["openssl"]
 
 [version]
@@ -29,8 +30,8 @@
 
 [[steps]]
   action = "install_binaries"
-  binaries = ["bin/filan", "bin/procan", "bin/socat-broker.sh", "bin/socat-chain.sh", "bin/socat-mux.sh", "bin/socat1"]
+  binaries = ["bin/filan", "bin/procan", "bin/socat", "bin/socat-broker.sh", "bin/socat-chain.sh", "bin/socat-mux.sh", "bin/socat1"]
 
 [verify]
-  command = "filan --version"
+  command = "socat -V"
   pattern = ""
