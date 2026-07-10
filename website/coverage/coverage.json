@@ -1,29 +1,29 @@
 {
-  "generated_at": "2026-07-05T16:31:08Z",
-  "total_recipes": 1446,
+  "generated_at": "2026-07-10T01:57:23Z",
+  "total_recipes": 1447,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 884,
-        "total": 1446,
-        "pct": 61.13416320885201
+        "supported": 885,
+        "total": 1447,
+        "pct": 61.16102280580511
       },
       "glibc": {
-        "supported": 1413,
-        "total": 1446,
-        "pct": 97.71784232365145
+        "supported": 1414,
+        "total": 1447,
+        "pct": 97.7194194885971
       },
       "musl": {
-        "supported": 1256,
-        "total": 1446,
-        "pct": 86.86030428769018
+        "supported": 1257,
+        "total": 1447,
+        "pct": 86.86938493434693
       }
     },
     "by_category": {
       "library": {
-        "total": 153,
-        "musl_support": 150,
-        "glibc_support": 150
+        "total": 154,
+        "musl_support": 151,
+        "glibc_support": 151
       },
       "tool": {
         "total": 1293,
@@ -10773,6 +10773,18 @@
       "warnings": [
         "recipe 'libbluray' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "libcap",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "libcbor",
