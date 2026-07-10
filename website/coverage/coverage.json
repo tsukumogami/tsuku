@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-07-10T01:57:23Z",
-  "total_recipes": 1447,
+  "generated_at": "2026-07-10T02:05:36Z",
+  "total_recipes": 1448,
   "summary": {
     "by_platform": {
       "darwin": {
         "supported": 885,
-        "total": 1447,
-        "pct": 61.16102280580511
+        "total": 1448,
+        "pct": 61.11878453038674
       },
       "glibc": {
-        "supported": 1414,
-        "total": 1447,
-        "pct": 97.7194194885971
+        "supported": 1415,
+        "total": 1448,
+        "pct": 97.72099447513813
       },
       "musl": {
-        "supported": 1257,
-        "total": 1447,
-        "pct": 86.86938493434693
+        "supported": 1258,
+        "total": 1448,
+        "pct": 86.87845303867402
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 151
       },
       "tool": {
-        "total": 1293,
-        "musl_support": 1106,
-        "glibc_support": 1263
+        "total": 1294,
+        "musl_support": 1107,
+        "glibc_support": 1264
       }
     }
   },
@@ -1723,6 +1723,20 @@
     },
     {
       "name": "btop",
+      "type": "tool",
+      "platforms": {
+        "darwin": false,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": [
+        "darwin"
+      ],
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "bubblewrap",
       "type": "tool",
       "platforms": {
         "darwin": false,
