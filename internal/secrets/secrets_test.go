@@ -192,6 +192,34 @@ func TestKnownKeysFieldsPopulated(t *testing.T) {
 	}
 }
 
+func TestGetResolvesGitHubTokenFromGHTokenFallback(t *testing.T) {
+	// GITHUB_TOKEN unset, only the GH_TOKEN alias (the gh CLI / GitHub
+	// Actions convention) is set.
+	t.Setenv("GITHUB_TOKEN", "")
+	t.Setenv("GH_TOKEN", "gh-cli-token")
+
+	val, err := Get("github_token")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if val != "gh-cli-token" {
+		t.Errorf("expected 'gh-cli-token', got %q", val)
+	}
+}
+
+func TestGetPrefersGitHubTokenOverGHToken(t *testing.T) {
+	t.Setenv("GITHUB_TOKEN", "primary")
+	t.Setenv("GH_TOKEN", "fallback")
+
+	val, err := Get("github_token")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if val != "primary" {
+		t.Errorf("expected GITHUB_TOKEN to take priority ('primary'), got %q", val)
+	}
+}
+
 func TestGoogleKeyHasMultipleEnvVars(t *testing.T) {
 	keys := KnownKeys()
 
