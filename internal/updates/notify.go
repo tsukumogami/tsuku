@@ -100,6 +100,10 @@ func renderUnshownNotices(noticesDir string) {
 			for _, msg := range n.Messages {
 				fmt.Fprintf(os.Stderr, "  %s\n", msg)
 			}
+		case n.Kind == notices.KindCheckFailure:
+			fmt.Fprintf(os.Stderr, "\nWarning: update checks for %s have failed %d times in a row: %s\n",
+				n.Tool, n.ConsecutiveFailures, n.Error)
+			fmt.Fprintf(os.Stderr, "  %s is not being considered for auto-update until a check succeeds. Run 'tsuku outdated' to retry.\n", n.Tool)
 		case strings.HasPrefix(n.Tool, notices.LibraryNoticePrefix):
 			renderLibraryNotice(n)
 		case n.Tool == SelfToolName:
