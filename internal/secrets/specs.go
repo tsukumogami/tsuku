@@ -21,7 +21,7 @@ var knownKeys = map[string]KeySpec{
 		Desc:    "Google API key for Gemini",
 	},
 	"github_token": {
-		EnvVars: []string{"GITHUB_TOKEN"},
+		EnvVars: []string{"GITHUB_TOKEN", "GH_TOKEN"},
 		Desc:    "GitHub personal access token",
 	},
 	"tavily_api_key": {

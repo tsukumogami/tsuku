@@ -47,6 +47,14 @@ type UpdateCheckEntry struct {
 
 	// Error records a non-empty string if the check failed for this tool.
 	Error string `json:"error,omitempty"`
+
+	// ConsecutiveCheckFailures counts how many background checks in a row have
+	// failed for this tool (reset to 0 on a successful check). Distinct from
+	// notices.Notice.ConsecutiveFailures, which tracks failed *apply* attempts:
+	// this counts failed *checks* -- a tool whose check keeps erroring (e.g. a
+	// GitHub rate limit) never reaches the apply stage at all, so without this
+	// counter the failure has no persisted trail. See RunUpdateCheck.
+	ConsecutiveCheckFailures int `json:"consecutive_check_failures,omitempty"`
 }
 
 // ReadEntry reads a single tool's update check cache entry.

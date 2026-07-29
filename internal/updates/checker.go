@@ -10,10 +10,18 @@ import (
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/log"
+	"github.com/tsukumogami/tsuku/internal/notices"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 	"github.com/tsukumogami/tsuku/internal/version"
 )
+
+// checkFailureNoticeThreshold is how many consecutive failed checks a tool
+// must accumulate before a KindCheckFailure notice surfaces to the user.
+// A single failed check is often a transient blip (a rate limit, a flaky
+// network); only a run of failures indicates the tool has silently stopped
+// being considered for auto-update.
+const checkFailureNoticeThreshold = 3
 
 // RecipeLoader loads recipes for tools. This interface allows testing without
 // depending on the global loader in cmd/tsuku.
@@ -66,11 +74,22 @@ func RunUpdateCheck(ctx context.Context, cfg *config.Config, userCfg *userconfig
 
 	res := version.New()
 	factory := version.NewProviderFactory()
+	noticesDir := notices.NoticesDir(cfg.HomeDir)
 
 	for _, tool := range tools {
 		// Check context deadline
 		if ctx.Err() != nil {
 			break
+		}
+
+		// mgr.List() returns one row per retained version directory, not one
+		// per tool: a tool with several old versions still on disk (pending
+		// garbage collection) would otherwise be checked -- and would burn a
+		// version-resolution network call -- once per stale directory. Only
+		// the active version's result can ever become an auto-apply
+		// candidate, so skip the rest.
+		if !tool.IsActive {
+			continue
 		}
 
 		var requested string
@@ -86,6 +105,8 @@ func RunUpdateCheck(ctx context.Context, cfg *config.Config, userCfg *userconfig
 		}
 
 		entry := checkTool(ctx, tool, requested, state, cfg, loader, res, factory)
+		recordConsecutiveCheckFailures(cacheDir, noticesDir, entry)
+
 		// Write result (best effort, matching version cache pattern)
 		_ = WriteEntry(cacheDir, entry)
 	}
@@ -98,6 +119,42 @@ func RunUpdateCheck(ctx context.Context, cfg *config.Config, userCfg *userconfig
 	// Touch sentinel after all tools processed
 	_ = TouchSentinel(cacheDir)
 	return nil
+}
+
+// recordConsecutiveCheckFailures updates entry.ConsecutiveCheckFailures from
+// the prior cached entry for the same tool and, once a run of failures
+// crosses checkFailureNoticeThreshold, writes a KindCheckFailure notice so
+// the failure is no longer invisible: a checkTool error alone never reaches
+// notices (IsPendingEntry excludes it from auto-apply, and nothing else
+// looks at the check-cache directory), so without this a tool can silently
+// stop being considered for auto-update indefinitely. A check that recovers
+// clears any standing KindCheckFailure notice -- but only one of our own;
+// an unrelated pending notice (e.g. an apply failure awaiting review) is
+// left alone.
+func recordConsecutiveCheckFailures(cacheDir, noticesDir string, entry *UpdateCheckEntry) {
+	if prior, _ := ReadEntry(cacheDir, entry.Tool); prior != nil {
+		entry.ConsecutiveCheckFailures = prior.ConsecutiveCheckFailures
+	}
+
+	if entry.Error == "" {
+		entry.ConsecutiveCheckFailures = 0
+		if n, _ := notices.ReadNotice(noticesDir, entry.Tool); n != nil && n.Kind == notices.KindCheckFailure {
+			_ = notices.RemoveNotice(noticesDir, entry.Tool)
+		}
+		return
+	}
+
+	entry.ConsecutiveCheckFailures++
+	if entry.ConsecutiveCheckFailures >= checkFailureNoticeThreshold {
+		_ = notices.WriteNotice(noticesDir, &notices.Notice{
+			Tool:                entry.Tool,
+			Error:               entry.Error,
+			Kind:                notices.KindCheckFailure,
+			ConsecutiveFailures: entry.ConsecutiveCheckFailures,
+			Timestamp:           entry.CheckedAt,
+			Shown:               false,
+		})
+	}
 }
 
 // checkTool checks a single tool and returns an UpdateCheckEntry.
@@ -147,7 +204,15 @@ func checkTool(
 		entry.LatestWithinPin = withinPin.Version
 	}
 
-	// Resolve latest overall
+	// Resolve latest overall. When there is no pin (or the pin is "latest"),
+	// ResolveWithinBoundary above already called provider.ResolveLatest and
+	// withinPin *is* the overall latest -- reuse it instead of making an
+	// identical second network request for the same answer.
+	if requested == "" || requested == "latest" {
+		entry.LatestOverall = withinPin.Version
+		return entry
+	}
+
 	overall, err := provider.ResolveLatest(ctx)
 	if err != nil {
 		// Non-fatal: we have within-pin, just skip overall

@@ -500,6 +500,7 @@ func TestTapProvider_GitHubTokenAuth(t *testing.T) {
 	// Test without token
 	t.Run("without token", func(t *testing.T) {
 		t.Setenv("GITHUB_TOKEN", "")
+		t.Setenv("GH_TOKEN", "")
 
 		receivedAuth = ""
 		_, err := provider.ResolveLatest(context.Background())

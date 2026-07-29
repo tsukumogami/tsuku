@@ -15,11 +15,16 @@ import (
 // the Kind field was introduced. KindAutoApplyResult identifies notices written
 // by the background auto-apply subprocess. KindVersionFallback and
 // KindShellInitChange are single-view notices removed after display.
+// KindCheckFailure identifies a persistent version-check failure (as opposed
+// to an install/update *apply* failure): the background checker was unable to
+// resolve a tool's latest version for several checks in a row, so the tool
+// never became a candidate for auto-apply at all.
 const (
 	KindUpdateResult    = ""
 	KindAutoApplyResult = "auto_apply_result"
 	KindVersionFallback = "version_fallback"
 	KindShellInitChange = "shell_init_change"
+	KindCheckFailure    = "check_failure"
 )
 
 // Notice represents a failed auto-update for a single tool.
