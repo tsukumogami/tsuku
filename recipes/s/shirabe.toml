@@ -1,0 +1,46 @@
+[metadata]
+name = "shirabe"
+description = "Doc-format and lifecycle validation CLI for tsukumogami-style artifact repos"
+homepage = "https://github.com/tsukumogami/shirabe"
+version_format = "semver"
+
+[version]
+source = "github_releases"
+github_repo = "tsukumogami/shirabe"
+tag_prefix = "v"
+
+[[steps]]
+action = "download"
+when = { os = ["linux"] }
+url = "https://github.com/tsukumogami/shirabe/releases/download/v{version}/shirabe-{os}-{arch}"
+checksum_url = "https://github.com/tsukumogami/shirabe/releases/download/v{version}/checksums.txt"
+
+[[steps]]
+action = "chmod"
+when = { os = ["linux"] }
+files = ["shirabe-{os}-{arch}"]
+
+[[steps]]
+action = "install_binaries"
+when = { os = ["linux"] }
+outputs = [{ src = "shirabe-{os}-{arch}", dest = "bin/shirabe" }]
+
+[[steps]]
+action = "download"
+when = { os = ["darwin"] }
+url = "https://github.com/tsukumogami/shirabe/releases/download/v{version}/shirabe-{os}-{arch}"
+checksum_url = "https://github.com/tsukumogami/shirabe/releases/download/v{version}/checksums.txt"
+
+[[steps]]
+action = "chmod"
+when = { os = ["darwin"] }
+files = ["shirabe-{os}-{arch}"]
+
+[[steps]]
+action = "install_binaries"
+when = { os = ["darwin"] }
+outputs = [{ src = "shirabe-{os}-{arch}", dest = "bin/shirabe" }]
+
+[verify]
+command = "shirabe --version"
+pattern = "{version}"
