@@ -3,6 +3,8 @@ name = "shirabe"
 description = "Doc-format and lifecycle validation CLI for tsukumogami-style artifact repos"
 homepage = "https://github.com/tsukumogami/shirabe"
 version_format = "semver"
+supported_libc = ["glibc"]
+unsupported_reason = "Upstream publishes a glibc-dynamically-linked binary only; no musl build."
 
 [version]
 source = "github_releases"
