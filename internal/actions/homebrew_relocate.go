@@ -470,41 +470,56 @@ func verifyPatchelfRunnable(path string) error {
 // one from the system package manager.
 //
 // Returns the path to the first runnable candidate. When candidates were found
-// but none of them run, the returned error describes why the first one did not,
-// which is far more useful than reporting that patchelf is missing when it
-// plainly is not.
+// but none run, it reports why one of them failed rather than claiming patchelf
+// is missing. A tsuku-installed candidate's failure is preferred over a system
+// one's, since that is the copy the user can act on — telling someone whose
+// system patchelf just failed to install patchelf would be circular.
 func (a *HomebrewRelocateAction) findPatchelf(ctx *ExecutionContext) (string, error) {
-	var candidates []string
+	// tsukuProvided distinguishes copies tsuku installed from whatever is on
+	// PATH; it only affects which failure gets reported.
+	type candidate struct {
+		path          string
+		tsukuProvided bool
+	}
+	var candidates []candidate
 
 	// 1. Check ExecPaths (dependency bin dirs from earlier plan steps)
 	for _, p := range ctx.ExecPaths {
-		candidate := filepath.Join(p, "patchelf")
-		if _, err := os.Stat(candidate); err == nil {
-			candidates = append(candidates, candidate)
+		path := filepath.Join(p, "patchelf")
+		if _, err := os.Stat(path); err == nil {
+			candidates = append(candidates, candidate{path, true})
 		}
 	}
 
 	// 2. Check system PATH
 	if p, err := exec.LookPath("patchelf"); err == nil {
-		candidates = append(candidates, p)
+		candidates = append(candidates, candidate{p, false})
 	}
 
 	// 3-4. Check $TSUKU_HOME tools directory (glob and current symlink)
-	candidates = append(candidates, a.patchelfCandidatesInToolsDir(ctx.ToolsDir, ctx.CurrentDir)...)
-
-	var firstUnrunnable error
-	for _, candidate := range candidates {
-		if err := verifyPatchelfRunnable(candidate); err != nil {
-			if firstUnrunnable == nil {
-				firstUnrunnable = err
-			}
-			continue
-		}
-		return candidate, nil
+	for _, p := range a.patchelfCandidatesInToolsDir(ctx.ToolsDir, ctx.CurrentDir) {
+		candidates = append(candidates, candidate{p, true})
 	}
 
-	if firstUnrunnable != nil {
-		return "", firstUnrunnable
+	var firstFailure, firstTsukuFailure error
+	for _, c := range candidates {
+		err := verifyPatchelfRunnable(c.path)
+		if err == nil {
+			return c.path, nil
+		}
+		if firstFailure == nil {
+			firstFailure = err
+		}
+		if c.tsukuProvided && firstTsukuFailure == nil {
+			firstTsukuFailure = err
+		}
+	}
+
+	if firstTsukuFailure != nil {
+		return "", firstTsukuFailure
+	}
+	if firstFailure != nil {
+		return "", firstFailure
 	}
 
 	return "", fmt.Errorf("patchelf not found: checked ExecPaths, system PATH, %s/patchelf-*/bin/, and %s/", ctx.ToolsDir, ctx.CurrentDir)
@@ -519,10 +534,9 @@ func (a *HomebrewRelocateAction) findPatchelf(ctx *ExecutionContext) (string, er
 // install mask a working one sitting beside it — which is exactly the
 // situation a glibc-mismatched patchelf creates.
 //
-// Reverse glob order approximates newest-first. It is only an approximation:
-// the sort is lexicographic, so "patchelf-0.9.0" sorts above
-// "patchelf-0.19.1". That inversion no longer decides anything on its own,
-// since every candidate is probed and the first runnable one wins.
+// Reverse glob order approximates newest-first. The sort is lexicographic, so
+// it is only an approximation, but nothing rests on it: every candidate is
+// probed and the first runnable one wins.
 func (a *HomebrewRelocateAction) patchelfCandidatesInToolsDir(toolsDir, currentDir string) []string {
 	var candidates []string
 
@@ -545,15 +559,6 @@ func (a *HomebrewRelocateAction) patchelfCandidatesInToolsDir(toolsDir, currentD
 	}
 
 	return candidates
-}
-
-// findPatchelfInToolsDir returns the most-preferred patchelf in the tsuku
-// tools directory, without checking whether it runs.
-func (a *HomebrewRelocateAction) findPatchelfInToolsDir(toolsDir, currentDir string) (string, error) {
-	if candidates := a.patchelfCandidatesInToolsDir(toolsDir, currentDir); len(candidates) > 0 {
-		return candidates[0], nil
-	}
-	return "", fmt.Errorf("patchelf not found in tools directory")
 }
 
 // fixElfRpath uses patchelf to set RPATH on Linux ELF binaries

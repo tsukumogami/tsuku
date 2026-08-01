@@ -72,7 +72,7 @@ func TestHomebrewRelocateAction_ExtractBottlePrefixes_NoInstallSegment(t *testin
 // -- findPatchelf discovery tests --
 
 func TestFindPatchelf_ExecPaths(t *testing.T) {
-	t.Parallel()
+	// No t.Parallel(): writes then execs a fake patchelf (see writeFakePatchelf).
 	action := &HomebrewRelocateAction{}
 
 	// Create a temporary bin dir with a fake patchelf
@@ -125,6 +125,14 @@ func TestFindPatchelf_NotFound_ReturnsError(t *testing.T) {
 
 // writeFakePatchelf writes an executable shell script named "patchelf" into
 // dir, with body as its contents after the shebang, and returns its path.
+//
+// Tests that write a fake and then run it must NOT call t.Parallel(). Go's
+// fork inherits open file descriptors, so a fork in one goroutine racing a
+// WriteFile in another can leave the child holding the new script open for
+// writing, and the subsequent exec fails with ETXTBSY (golang/go#22315). The
+// symptom is an assertion failing against "text file busy" instead of the
+// message under test, intermittently. Keeping these tests sequential keeps
+// their writes away from other tests' forks.
 func writeFakePatchelf(t *testing.T, dir, body string) string {
 	t.Helper()
 	if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -142,13 +150,12 @@ func writeFakePatchelf(t *testing.T, dir, body string) string {
 // the exact failure mode of issue #2447, where the Homebrew patchelf bottle
 // wants GLIBC_2.38 on an image that ships something older.
 //
-// The backtick is escaped because the message is inside shell double quotes,
-// where an unescaped one would start a command substitution. Go itself needs
-// no escaping for it.
+// The backtick is escaped because the message sits inside shell double quotes,
+// where an unescaped one would start a command substitution.
 const glibcLoaderFailureBody = "echo \"$0: /lib/x86_64-linux-gnu/libc.so.6: version \\`GLIBC_2.38' not found (required by $0)\" >&2\nexit 1\n"
 
 func TestVerifyPatchelfRunnable_Runnable(t *testing.T) {
-	t.Parallel()
+	// No t.Parallel(): writes then execs a fake patchelf (see writeFakePatchelf).
 	// An empty script exits 0 for any arguments, standing in for a patchelf
 	// that answers --version normally.
 	path := writeFakePatchelf(t, t.TempDir(), "")
@@ -158,7 +165,7 @@ func TestVerifyPatchelfRunnable_Runnable(t *testing.T) {
 }
 
 func TestVerifyPatchelfRunnable_GlibcMismatch(t *testing.T) {
-	t.Parallel()
+	// No t.Parallel(): writes then execs a fake patchelf (see writeFakePatchelf).
 	path := writeFakePatchelf(t, t.TempDir(), glibcLoaderFailureBody)
 
 	err := verifyPatchelfRunnable(path)
@@ -178,7 +185,7 @@ func TestVerifyPatchelfRunnable_GlibcMismatch(t *testing.T) {
 }
 
 func TestVerifyPatchelfRunnable_GenericFailure(t *testing.T) {
-	t.Parallel()
+	// No t.Parallel(): writes then execs a fake patchelf (see writeFakePatchelf).
 	path := writeFakePatchelf(t, t.TempDir(), "echo 'illegal instruction' >&2\nexit 132\n")
 
 	err := verifyPatchelfRunnable(path)
@@ -201,7 +208,7 @@ func TestVerifyPatchelfRunnable_GenericFailure(t *testing.T) {
 // the host can — the realistic recovery for a user whose distribution ships an
 // older glibc and who has installed patchelf from their package manager.
 func TestFindPatchelf_SkipsUnrunnableCandidate(t *testing.T) {
-	t.Parallel()
+	// No t.Parallel(): writes then execs a fake patchelf (see writeFakePatchelf).
 	action := &HomebrewRelocateAction{}
 
 	tmpDir := t.TempDir()
@@ -292,7 +299,7 @@ func TestFindPatchelf_AllCandidatesUnrunnable_ReportsCause(t *testing.T) {
 // with many binaries would spawn a patchelf process per binary just to check
 // that patchelf works.
 func TestPatchelfFinder_ResolvesOnce(t *testing.T) {
-	t.Parallel()
+	// No t.Parallel(): writes then execs a fake patchelf (see writeFakePatchelf).
 	action := &HomebrewRelocateAction{}
 
 	tmpDir := t.TempDir()
@@ -360,7 +367,18 @@ func TestFixBinaryRpath_UnrunnablePatchelfNamesCause(t *testing.T) {
 	}
 }
 
-// -- findPatchelfInToolsDir tests (test glob/current fallback directly) --
+// -- patchelfCandidatesInToolsDir tests (glob/current discovery, no probing) --
+
+// firstCandidate returns the most-preferred candidate, failing the test if the
+// list is empty. Discovery order is what these tests pin down; which candidate
+// survives probing is covered by the findPatchelf tests above.
+func firstCandidate(t *testing.T, candidates []string) string {
+	t.Helper()
+	if len(candidates) == 0 {
+		t.Fatal("patchelfCandidatesInToolsDir() returned no candidates")
+	}
+	return candidates[0]
+}
 
 func TestFindPatchelfInToolsDir_Glob(t *testing.T) {
 	t.Parallel()
@@ -378,12 +396,9 @@ func TestFindPatchelfInToolsDir_Glob(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, err := action.findPatchelfInToolsDir(toolsDir, filepath.Join(toolsDir, "current"))
-	if err != nil {
-		t.Fatalf("findPatchelfInToolsDir() returned error: %v", err)
-	}
+	got := firstCandidate(t, action.patchelfCandidatesInToolsDir(toolsDir, filepath.Join(toolsDir, "current")))
 	if got != fakePatchelf {
-		t.Errorf("findPatchelfInToolsDir() = %q, want %q", got, fakePatchelf)
+		t.Errorf("patchelfCandidatesInToolsDir() first = %q, want %q", got, fakePatchelf)
 	}
 }
 
@@ -402,12 +417,9 @@ func TestFindPatchelfInToolsDir_CurrentDir(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, err := action.findPatchelfInToolsDir(filepath.Join(tmpDir, "tools"), currentDir)
-	if err != nil {
-		t.Fatalf("findPatchelfInToolsDir() returned error: %v", err)
-	}
+	got := firstCandidate(t, action.patchelfCandidatesInToolsDir(filepath.Join(tmpDir, "tools"), currentDir))
 	if got != fakePatchelf {
-		t.Errorf("findPatchelfInToolsDir() = %q, want %q", got, fakePatchelf)
+		t.Errorf("patchelfCandidatesInToolsDir() first = %q, want %q", got, fakePatchelf)
 	}
 }
 
@@ -428,14 +440,11 @@ func TestFindPatchelfInToolsDir_PicksLatestVersion(t *testing.T) {
 		}
 	}
 
-	got, err := action.findPatchelfInToolsDir(toolsDir, filepath.Join(toolsDir, "current"))
-	if err != nil {
-		t.Fatalf("findPatchelfInToolsDir() returned error: %v", err)
-	}
+	got := firstCandidate(t, action.patchelfCandidatesInToolsDir(toolsDir, filepath.Join(toolsDir, "current")))
 	// Should pick 0.18.0 (last in lexicographic order)
 	want := filepath.Join(toolsDir, "patchelf-0.18.0", "bin", "patchelf")
 	if got != want {
-		t.Errorf("findPatchelfInToolsDir() = %q, want %q (latest version)", got, want)
+		t.Errorf("patchelfCandidatesInToolsDir() first = %q, want %q (latest version)", got, want)
 	}
 }
 
@@ -444,9 +453,9 @@ func TestFindPatchelfInToolsDir_NotFound(t *testing.T) {
 	action := &HomebrewRelocateAction{}
 
 	tmpDir := t.TempDir()
-	_, err := action.findPatchelfInToolsDir(filepath.Join(tmpDir, "tools"), filepath.Join(tmpDir, "tools", "current"))
-	if err == nil {
-		t.Fatal("findPatchelfInToolsDir() should return error when patchelf not found")
+	got := action.patchelfCandidatesInToolsDir(filepath.Join(tmpDir, "tools"), filepath.Join(tmpDir, "tools", "current"))
+	if len(got) != 0 {
+		t.Fatalf("patchelfCandidatesInToolsDir() = %v, want no candidates", got)
 	}
 }
 
