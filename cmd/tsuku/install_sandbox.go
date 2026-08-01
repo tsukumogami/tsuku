@@ -39,7 +39,8 @@ const sandboxTruncationNotice = "[earlier output truncated]"
 
 // minMaskedSecretLen is the shortest --env value masked out of container
 // output. Credentials are long; short values are things like DEBUG=1, and
-// masking every "1" in a build log would destroy it.
+// masking every "1" in a build log would destroy it. A credential shorter than
+// this is therefore not masked and reaches the output verbatim.
 const minMaskedSecretLen = 8
 
 // runSandboxInstall runs the installation in an isolated sandbox container.
@@ -147,13 +148,18 @@ func runSandboxInstall(toolName, planPath, recipePath, targetFamily string) erro
 		return fmt.Errorf("sandbox execution failed: %w", err)
 	}
 
+	// Both output paths mask the values forwarded into the container. Deriving
+	// them from reqs.ExtraEnv rather than re-reading the flag keeps one source
+	// for "what env the container received".
+	secrets := sandboxSecretValues(reqs.ExtraEnv)
+
 	// JSON output mode: emit a single JSON object and return
 	if installJSON {
-		return emitSandboxJSON(toolName, result)
+		return emitSandboxJSON(toolName, result, secrets)
 	}
 
 	// Human-readable output mode (unchanged from before --json was added)
-	return emitSandboxHumanReadable(result)
+	return emitSandboxHumanReadable(result, secrets)
 }
 
 // emitSandboxJSON writes a single JSON object to stdout for the sandbox result.
@@ -162,8 +168,8 @@ func runSandboxInstall(toolName, planPath, recipePath, targetFamily string) erro
 // to the caller, which prevents handleInstallError from emitting a second JSON
 // object. For non-passing states, it calls exitWithCode directly to set the
 // appropriate process exit code.
-func emitSandboxJSON(toolName string, result *sandbox.SandboxResult) error {
-	out := buildSandboxJSONOutput(toolName, result, sandboxSecretValues(installEnv))
+func emitSandboxJSON(toolName string, result *sandbox.SandboxResult, secrets []string) error {
+	out := buildSandboxJSONOutput(toolName, result, secrets)
 	printJSON(out)
 
 	// For failed or errored states, exit directly so the caller doesn't
@@ -234,6 +240,9 @@ func buildSandboxJSONOutput(toolName string, result *sandbox.SandboxResult, secr
 // a JSON result. Without it a failing CI job reports only an exit code, and
 // identifying the failing command means reproducing the build by hand.
 //
+// stdout and stderr are concatenated in that order, not interleaved, so the
+// seam between them is not a moment in time.
+//
 // The tail is what matters: a build log's last lines name the command that
 // died, so anything over the cap loses its head rather than its end.
 //
@@ -263,19 +272,31 @@ func maskAndTail(output string, secrets []string) string {
 	if output == "" {
 		return ""
 	}
+	return tailBytes(maskSecrets(output, secrets), maxSandboxOutputBytes)
+}
+
+// maskSecrets replaces each secret with [REDACTED] wherever it appears. Exact
+// values match anywhere, including inside a URL, which is how a forwarded token
+// most often escapes into a log.
+func maskSecrets(output string, secrets []string) string {
 	for _, secret := range secrets {
 		output = strings.ReplaceAll(output, secret, "[REDACTED]")
 	}
-	return tailLines(output, maxSandboxOutputBytes)
+	return output
 }
 
-// sandboxSecretValues returns the --env values long enough to be credentials.
-// CI forwards GITHUB_TOKEN into the sandbox this way and publishes the JSON
-// result to a public job log, so those exact strings are masked out of any
-// container output the result carries.
-func sandboxSecretValues(entries []string) []string {
+// sandboxSecretValues returns the values to mask out of container output, given
+// the already-resolved KEY=VALUE entries forwarded into the sandbox. CI forwards
+// GITHUB_TOKEN this way and publishes the output to a public job log.
+//
+// The only test applied is length, because --env carries both credentials and
+// plain configuration and nothing distinguishes them at this layer. That cuts
+// both ways: a credential shorter than minMaskedSecretLen is left in the output
+// verbatim, and a long non-secret value (a registry URL, say) is replaced with
+// [REDACTED] even though a reader would rather see it.
+func sandboxSecretValues(resolvedEnv []string) []string {
 	var secrets []string
-	for _, entry := range resolveEnvFlags(entries) {
+	for _, entry := range resolvedEnv {
 		idx := strings.IndexByte(entry, '=')
 		if idx < 0 {
 			continue
@@ -287,9 +308,9 @@ func sandboxSecretValues(entries []string) []string {
 	return secrets
 }
 
-// tailLines returns at most maxBytes of trailing text, starting at a line
+// tailBytes returns at most maxBytes of trailing text, starting at a line
 // boundary and prefixed with a notice when anything was dropped.
-func tailLines(s string, maxBytes int) string {
+func tailBytes(s string, maxBytes int) string {
 	if len(s) <= maxBytes {
 		return s
 	}
@@ -308,10 +329,12 @@ func tailLines(s string, maxBytes int) string {
 // emitSandboxHumanReadable prints the sandbox result in human-readable format.
 // This is the original output path used when --json is not set.
 //
-// Unlike the JSON path, this prints container output verbatim: it goes to the
-// operator's own terminal, who supplied any --env values in the first place,
-// and truncating a local build log would only get in the way of debugging.
-func emitSandboxHumanReadable(result *sandbox.SandboxResult) error {
+// Output is masked but not truncated. Masking applies because this path is not
+// only interactive -- validate-golden-execution.yml runs the sandbox without
+// --json while forwarding a token, and its output lands in a public job log.
+// Truncation does not, because the operator running this locally wants the
+// whole build log, which is the thing they came for.
+func emitSandboxHumanReadable(result *sandbox.SandboxResult, secrets []string) error {
 	// Handle skipped sandbox (no container runtime)
 	if result.Skipped {
 		printInfo("Sandbox testing skipped (no container runtime available)")
@@ -319,13 +342,16 @@ func emitSandboxHumanReadable(result *sandbox.SandboxResult) error {
 		return nil
 	}
 
+	stdout := maskSecrets(result.Stdout, secrets)
+	stderr := maskSecrets(result.Stderr, secrets)
+
 	// Report results
 	if result.Passed {
 		printInfo("Sandbox test PASSED")
-		if result.Stdout != "" {
+		if stdout != "" {
 			printInfo()
 			printInfo("Container output:")
-			printInfo(result.Stdout)
+			printInfo(stdout)
 		}
 	} else {
 		printInfo("Sandbox test FAILED")
@@ -334,15 +360,15 @@ func emitSandboxHumanReadable(result *sandbox.SandboxResult) error {
 		} else {
 			printInfof("Verification failed with exit code: %d\n", result.VerifyExitCode)
 		}
-		if result.Stderr != "" {
+		if stderr != "" {
 			printInfo()
 			printInfo("Error output:")
-			fmt.Fprintln(os.Stderr, result.Stderr)
+			fmt.Fprintln(os.Stderr, stderr)
 		}
-		if result.Stdout != "" {
+		if stdout != "" {
 			printInfo()
 			printInfo("Container output:")
-			printInfo(result.Stdout)
+			printInfo(stdout)
 		}
 		if result.ExitCode != 0 {
 			return fmt.Errorf("sandbox test failed with exit code %d", result.ExitCode)

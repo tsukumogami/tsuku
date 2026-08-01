@@ -801,7 +801,9 @@ tsuku install ruff --sandbox --json
 | `duration_ms` | Total execution time in milliseconds |
 | `error` | Error message string, or null on success |
 
-`install_output` and `verify_output` carry the last 16 KiB of output, so the failing command is visible without rerunning the build. Values passed with `--env` are masked out of both, since CI commonly forwards a token that way and publishes the result.
+`install_output` and `verify_output` carry the last 16 KiB of output, so the failing command is visible without rerunning the build.
+
+Values passed with `--env` are replaced by `[REDACTED]` wherever they appear, since CI commonly forwards a token that way and publishes the result. The test is length, not key name: values shorter than 8 characters are left alone, because masking a value like `1` would shred the log, and long values are masked whether or not they are secret. If you pass configuration you need to read back, expect to see it redacted.
 
 When `--json` is set, human-readable progress output is suppressed. CI workflows can parse results with `jq`:
 

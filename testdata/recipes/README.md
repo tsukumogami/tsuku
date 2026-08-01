@@ -43,10 +43,9 @@ started compiling part of itself in Rust and the sandbox, which has no `cargo`,
 stopped being able to build it.
 
 Expect this class of failure and treat a red source-build job as a question
-about upstream rather than about a change here. `tsuku install --sandbox --json`
-carries the container's output in `install_output` on failure, and
-`Build Essentials` prints it, so the failing command should be visible in the
-job log without reproducing the build locally.
+about upstream rather than about a change here. The failing command should be
+visible in the job log without reproducing the build locally — see the
+`install_output` field documented under sandbox testing in the root README.
 
 ### System Recipes (`*-system.toml`)
 

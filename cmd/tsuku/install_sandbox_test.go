@@ -178,7 +178,7 @@ func TestSandboxJSONOutput_ErrorFieldStringEncoding(t *testing.T) {
 	}
 }
 
-func TestEmitSandboxJSON_PassedResult(t *testing.T) {
+func TestBuildSandboxJSONOutput_PassedResult(t *testing.T) {
 	t.Parallel()
 
 	result := &sandbox.SandboxResult{
@@ -214,7 +214,7 @@ func TestEmitSandboxJSON_PassedResult(t *testing.T) {
 	}
 }
 
-func TestEmitSandboxJSON_FailedResult(t *testing.T) {
+func TestBuildSandboxJSONOutput_FailedResult(t *testing.T) {
 	t.Parallel()
 
 	result := &sandbox.SandboxResult{
@@ -238,7 +238,7 @@ func TestEmitSandboxJSON_FailedResult(t *testing.T) {
 	}
 }
 
-func TestEmitSandboxJSON_SkippedResult(t *testing.T) {
+func TestBuildSandboxJSONOutput_SkippedResult(t *testing.T) {
 	t.Parallel()
 
 	result := &sandbox.SandboxResult{
@@ -268,7 +268,7 @@ func TestEmitSandboxJSON_SkippedResult(t *testing.T) {
 	}
 }
 
-func TestEmitSandboxJSON_ErrorResult(t *testing.T) {
+func TestBuildSandboxJSONOutput_ErrorResult(t *testing.T) {
 	t.Parallel()
 
 	result := &sandbox.SandboxResult{
@@ -296,7 +296,7 @@ func TestEmitSandboxJSON_ErrorResult(t *testing.T) {
 	}
 }
 
-func TestEmitSandboxJSON_PassedNoVerifyCommand(t *testing.T) {
+func TestBuildSandboxJSONOutput_PassedNoVerifyCommand(t *testing.T) {
 	t.Parallel()
 
 	// When no verify command exists, Verified is true (vacuously) and
@@ -322,7 +322,7 @@ func TestEmitSandboxJSON_PassedNoVerifyCommand(t *testing.T) {
 	}
 }
 
-func TestEmitSandboxJSON_AllFieldsRoundTrip(t *testing.T) {
+func TestBuildSandboxJSONOutput_AllFieldsRoundTrip(t *testing.T) {
 	t.Parallel()
 
 	// Test that JSON output round-trips correctly through marshal/unmarshal
@@ -555,40 +555,50 @@ func TestSandboxFailureOutput_MasksSecrets(t *testing.T) {
 	t.Parallel()
 
 	// The Build Essentials workflow forwards GITHUB_TOKEN into the sandbox and
-	// publishes this JSON to a public job log.
-	result := &sandbox.SandboxResult{
-		Stdout: "fetching with token=ghp_abcdef1234567890\n",
-		Stderr: "Authorization: Bearer ghp_abcdef1234567890\n",
+	// publishes this JSON to a public job log. A token escapes as often inside a
+	// URL as in a tidy KEY=VALUE pair, so exact values are matched anywhere.
+	const secret = "ghp_abcdef1234567890"
+
+	tests := []struct {
+		name   string
+		result *sandbox.SandboxResult
+		want   string
+	}{
+		{
+			name: "key=value and bearer header",
+			result: &sandbox.SandboxResult{
+				Stdout: "fetching with token=" + secret + "\n",
+				Stderr: "Authorization: Bearer " + secret + "\n",
+			},
+			want: "fetching with token=[REDACTED]\nAuthorization: Bearer [REDACTED]",
+		},
+		{
+			name: "embedded in a clone URL",
+			result: &sandbox.SandboxResult{
+				Stdout: "cloning https://x-access-token:" + secret + "@github.com/o/r\n",
+			},
+			want: "cloning https://x-access-token:[REDACTED]@github.com/o/r",
+		},
+		{
+			name:   "bare on its own line",
+			result: &sandbox.SandboxResult{Stderr: secret + "\n"},
+			want:   "[REDACTED]",
+		},
 	}
 
-	got := sandboxFailureOutput(result, []string{"ghp_abcdef1234567890"})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	if strings.Contains(got, "ghp_abcdef1234567890") {
-		t.Errorf("secret survived masking: %q", got)
-	}
-	if strings.Count(got, "[REDACTED]") != 2 {
-		t.Errorf("both occurrences should be masked, got %q", got)
-	}
-}
+			got := sandboxFailureOutput(tt.result, []string{secret})
 
-func TestSandboxFailureOutput_MasksSecretsAnywhereInTheLine(t *testing.T) {
-	t.Parallel()
-
-	// A token most often escapes inside a clone URL or a bare echo, not as a
-	// tidy KEY=VALUE pair. Exact-value masking catches it either way.
-	secret := "ghp_abcdef1234567890"
-	result := &sandbox.SandboxResult{
-		Stdout: "cloning https://x-access-token:" + secret + "@github.com/o/r\n",
-		Stderr: secret + "\n",
-	}
-
-	got := sandboxFailureOutput(result, []string{secret})
-
-	if strings.Contains(got, secret) {
-		t.Errorf("secret survived masking: %q", got)
-	}
-	if !strings.Contains(got, "https://x-access-token:[REDACTED]@github.com/o/r") {
-		t.Errorf("masking should leave the rest of the URL readable, got %q", got)
+			if strings.Contains(got, secret) {
+				t.Errorf("secret survived masking: %q", got)
+			}
+			if got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
 	}
 }
 
@@ -655,29 +665,6 @@ func TestSandboxFailureOutput_LeavesBuildDiagnosticsIntact(t *testing.T) {
 	}
 }
 
-func TestSandboxSecretValues(t *testing.T) {
-	// No t.Parallel: t.Setenv is incompatible with parallel tests.
-	t.Setenv("TSUKU_TEST_HOST_SECRET", "host-side-credential")
-
-	got := sandboxSecretValues([]string{
-		"GITHUB_TOKEN=ghp_abcdef1234567890",
-		"DEBUG=1",     // too short to mask without wrecking the log
-		"EMPTY=",      // no value to mask
-		"NOEQUALSIGN", // KEY-only, resolves from the host (unset -> empty)
-		"TSUKU_TEST_HOST_SECRET",
-	})
-
-	want := []string{"ghp_abcdef1234567890", "host-side-credential"}
-	if len(got) != len(want) {
-		t.Fatalf("got %q, want %q", got, want)
-	}
-	for i := range want {
-		if got[i] != want[i] {
-			t.Errorf("got[%d] = %q, want %q", i, got[i], want[i])
-		}
-	}
-}
-
 func TestSandboxFailureOutput_NoNewlineTailStaysValidUTF8(t *testing.T) {
 	t.Parallel()
 
@@ -707,13 +694,49 @@ func TestSandboxFailureOutput_EmptyWhenNoOutput(t *testing.T) {
 func TestSandboxFailureOutput_CombinesStdoutAndStderr(t *testing.T) {
 	t.Parallel()
 
+	// The two streams are concatenated in that order, not interleaved.
 	got := sandboxFailureOutput(&sandbox.SandboxResult{
 		Stdout: "step 3/5: configure_make\n",
 		Stderr: "make failed\n",
 	}, nil)
 
-	if !strings.Contains(got, "step 3/5: configure_make") || !strings.Contains(got, "make failed") {
-		t.Errorf("got %q, want both streams", got)
+	if got != "step 3/5: configure_make\nmake failed" {
+		t.Errorf("got %q, want stdout then stderr", got)
+	}
+}
+
+func TestSandboxSecretValues(t *testing.T) {
+	t.Parallel()
+
+	got := sandboxSecretValues([]string{
+		"GITHUB_TOKEN=ghp_abcdef1234567890",
+		"DEBUG=1",     // too short to mask without wrecking the log
+		"EMPTY=",      // no value to mask
+		"NOEQUALSIGN", // not a KEY=VALUE entry
+	})
+
+	want := []string{"ghp_abcdef1234567890"}
+	if len(got) != len(want) {
+		t.Fatalf("got %q, want %q", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("got[%d] = %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
+func TestSandboxSecretValues_WiredFromResolvedEnv(t *testing.T) {
+	// No t.Parallel: t.Setenv is incompatible with parallel tests.
+	// runSandboxInstall feeds reqs.ExtraEnv, which resolveEnvFlags has already
+	// expanded from --env. This pins that a KEY-only flag, whose value comes
+	// from the host, still reaches the mask list.
+	t.Setenv("TSUKU_TEST_HOST_SECRET", "host-side-credential")
+
+	got := sandboxSecretValues(resolveEnvFlags([]string{"TSUKU_TEST_HOST_SECRET"}))
+
+	if len(got) != 1 || got[0] != "host-side-credential" {
+		t.Errorf("got %q, want [host-side-credential]", got)
 	}
 }
 
