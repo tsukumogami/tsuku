@@ -33,6 +33,21 @@ In production, these tools use pre-built bottles or binaries because:
 - More reliable (no build tool dependencies)
 - Consistent across environments
 
+#### They track upstream, so upstream can break them
+
+Most of these resolve their version from a homebrew formula, which means they
+build whatever the formula currently reports. A project can add a build-time
+toolchain requirement in any release, and the recipe will follow it there with
+no commit in this repo. That is what happened to `git-source` in #2449: git
+started compiling part of itself in Rust and the sandbox, which has no `cargo`,
+stopped being able to build it.
+
+Expect this class of failure and treat a red source-build job as a question
+about upstream rather than about a change here. `tsuku install --sandbox --json`
+carries the container's output in `install_output` on failure, and
+`Build Essentials` prints it, so the failing command should be visible in the
+job log without reproducing the build locally.
+
 ### System Recipes (`*-system.toml`)
 
 Recipes like `build-tools-system.toml` and `ssl-libs-system.toml` demonstrate integration with system package managers. These verify:
