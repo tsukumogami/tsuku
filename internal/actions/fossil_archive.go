@@ -139,7 +139,10 @@ func (a *FossilArchiveAction) Decompose(ctx *EvalContext, params map[string]inte
 	archiveFilename := fmt.Sprintf("%s.tar.gz", projectName)
 
 	// Delegate to download action for checksum computation
-	downloadStep, err := decomposeDownload(ctx, url, archiveFilename, nil, nil, "")
+	downloadStep, err := decomposeDownload(ctx, downloadSpec{
+		URL:  url,
+		Dest: archiveFilename,
+	})
 	if err != nil {
 		return nil, err
 	}

@@ -13,48 +13,73 @@ import (
 // Ensure GitHubArchiveAction implements Decomposable
 var _ Decomposable = (*GitHubArchiveAction)(nil)
 
-// decomposeDownload delegates to DownloadAction.Decompose() to get a download_file step.
-// This centralizes URL resolution, OS/arch mapping, and checksum computation.
+// downloadSpec carries everything decomposeDownload needs to build a
+// download_file step.
 //
-// Parameters:
-//   - ctx: evaluation context with version, OS, arch info
-//   - url: URL pattern with optional {version}, {os}, {arch} placeholders
-//   - dest: destination filename (can contain placeholders)
-//   - osMapping: optional OS name mapping (e.g., darwin -> macos)
-//   - archMapping: optional architecture mapping (e.g., amd64 -> x64)
-//   - checksumURL: optional URL to an upstream-published checksum file
+// It is a struct rather than a positional parameter list because four
+// composite actions share this one funnel — download_archive, github_archive,
+// github_file and fossil_archive — so anything added here reaches all four.
+// Added as a positional parameter instead, the call sites read as a run of
+// bare nils and empty strings, and an unreadable shared funnel is what makes
+// the next author write their own copy.
+//
+// Fields:
+//   - URL: URL pattern with optional {version}, {os}, {arch} placeholders.
+//   - FallbackURLs: ordered alternate sources for the same bytes, tried after
+//     URL when it cannot be reached. Every entry gets the same placeholder
+//     expansion and the same OS/arch mapping as URL. Empty for the
+//     single-source case, which is the overwhelming majority of recipes and
+//     which must stay byte-identical in the generated plan.
+//   - Dest: destination filename (can contain placeholders).
+//   - OSMapping: optional OS name mapping (e.g., darwin -> macos).
+//   - ArchMapping: optional architecture mapping (e.g., amd64 -> x64).
+//   - ChecksumURL: optional URL to an upstream-published checksum file
 //     (per-asset .sha256 or multi-line SHA256SUMS manifest). When non-empty,
 //     DownloadAction.Decompose fetches it at plan time and validates the
 //     computed checksum against the upstream-declared value; mismatch fails
 //     plan generation. Empty string disables upstream-checksum verification
 //     (the existing behavior for recipes without checksum_url).
+type downloadSpec struct {
+	URL          string
+	FallbackURLs []string
+	Dest         string
+	OSMapping    map[string]string
+	ArchMapping  map[string]string
+	ChecksumURL  string
+}
+
+// decomposeDownload delegates to DownloadAction.Decompose() to get a download_file step.
+// This centralizes URL resolution, OS/arch mapping, and checksum computation.
 //
 // Returns the download_file step produced by DownloadAction.Decompose().
-func decomposeDownload(ctx *EvalContext, url, dest string, osMapping, archMapping map[string]string, checksumURL string) (Step, error) {
+func decomposeDownload(ctx *EvalContext, spec downloadSpec) (Step, error) {
 	downloadParams := map[string]interface{}{
-		"url": url,
+		"url": spec.URL,
 	}
-	if dest != "" {
-		downloadParams["dest"] = dest
+	if len(spec.FallbackURLs) > 0 {
+		downloadParams[FallbackURLsParam] = toInterfaceSlice(spec.FallbackURLs)
 	}
-	if len(osMapping) > 0 {
+	if spec.Dest != "" {
+		downloadParams["dest"] = spec.Dest
+	}
+	if len(spec.OSMapping) > 0 {
 		// Convert to map[string]interface{} for compatibility
-		m := make(map[string]interface{}, len(osMapping))
-		for k, v := range osMapping {
+		m := make(map[string]interface{}, len(spec.OSMapping))
+		for k, v := range spec.OSMapping {
 			m[k] = v
 		}
 		downloadParams["os_mapping"] = m
 	}
-	if len(archMapping) > 0 {
+	if len(spec.ArchMapping) > 0 {
 		// Convert to map[string]interface{} for compatibility
-		m := make(map[string]interface{}, len(archMapping))
-		for k, v := range archMapping {
+		m := make(map[string]interface{}, len(spec.ArchMapping))
+		for k, v := range spec.ArchMapping {
 			m[k] = v
 		}
 		downloadParams["arch_mapping"] = m
 	}
-	if checksumURL != "" {
-		downloadParams["checksum_url"] = checksumURL
+	if spec.ChecksumURL != "" {
+		downloadParams["checksum_url"] = spec.ChecksumURL
 	}
 
 	downloadAction := &DownloadAction{}
@@ -118,11 +143,15 @@ func (a *DownloadArchiveAction) Preflight(params map[string]interface{}) *Prefli
 	// fetch the same checksum file and surface every version bump as a hash
 	// mismatch. Rare legitimate cases exist (upstream publishes one signing
 	// artifact across versions), so this is a warning not an error.
-	if checksumURL, hasChecksumURL := GetString(params, "checksum_url"); hasChecksumURL && checksumURL != "" {
+	checksumURL, hasChecksumURL := GetString(params, "checksum_url")
+	if hasChecksumURL && checksumURL != "" {
 		if containsPlaceholder(url, "version") && !containsPlaceholder(checksumURL, "version") {
 			result.AddWarning("checksum_url has no {version} placeholder but url is version-templated; each install will fetch the same checksum file regardless of version — likely a recipe authoring mistake")
 		}
 	}
+
+	// ERROR/WARNING: every fallback source is validated the same way url is.
+	preflightFallbackURLs(result, params, url, hasChecksumURL && checksumURL != "")
 
 	return result
 }
@@ -211,10 +240,22 @@ func (a *DownloadArchiveAction) Execute(ctx *ExecutionContext, params map[string
 		archiveFilename = downloadURL[lastSlash+1:]
 	}
 
-	// Step 1: Download archive
+	// Step 1: Download archive.
+	// Alternates are forwarded unexpanded: DownloadAction.Execute builds its
+	// own vars (including the same os_mapping / arch_mapping applied above)
+	// and expands them itself.
 	downloadParams := map[string]interface{}{
 		"url":  downloadURL,
 		"dest": archiveFilename,
+	}
+	if fallbackURLs, ok := GetStringSlice(params, FallbackURLsParam); ok && len(fallbackURLs) > 0 {
+		downloadParams[FallbackURLsParam] = toInterfaceSlice(fallbackURLs)
+		if osMapping, ok := params["os_mapping"]; ok {
+			downloadParams["os_mapping"] = osMapping
+		}
+		if archMapping, ok := params["arch_mapping"]; ok {
+			downloadParams["arch_mapping"] = archMapping
+		}
 	}
 
 	downloadAction := &DownloadAction{}
@@ -315,8 +356,18 @@ func (a *DownloadArchiveAction) Decompose(ctx *EvalContext, params map[string]in
 	// fully recipe-supplied with no sibling-asset anchor to resolve against.
 	checksumURL, _ := GetString(params, "checksum_url")
 
+	// Optional ordered alternates for the same bytes. Absent for a
+	// single-source recipe, in which case the emitted step is unchanged.
+	fallbackURLs, _ := GetStringSlice(params, FallbackURLsParam)
+
 	// Delegate to download action for URL resolution and checksum computation
-	downloadStep, err := decomposeDownload(ctx, url, "", osMapping, archMapping, checksumURL)
+	downloadStep, err := decomposeDownload(ctx, downloadSpec{
+		URL:          url,
+		FallbackURLs: fallbackURLs,
+		OSMapping:    osMapping,
+		ArchMapping:  archMapping,
+		ChecksumURL:  checksumURL,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -655,7 +706,11 @@ func (a *GitHubArchiveAction) Decompose(ctx *EvalContext, params map[string]inte
 
 	// Delegate to download action for checksum computation
 	// URL is already fully resolved, so no mappings needed
-	downloadStep, err := decomposeDownload(ctx, url, resolved.assetName, nil, nil, checksumURL)
+	downloadStep, err := decomposeDownload(ctx, downloadSpec{
+		URL:         url,
+		Dest:        resolved.assetName,
+		ChecksumURL: checksumURL,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -1069,7 +1124,10 @@ func (a *GitHubFileAction) Decompose(ctx *EvalContext, params map[string]interfa
 	// Delegate to download action for checksum computation. github_file does
 	// not yet support upstream checksum forwarding — PRD R1/R2 scoped the
 	// new fields to github_archive and download_archive.
-	downloadStep, err := decomposeDownload(ctx, url, expandedDownloadName, nil, nil, "")
+	downloadStep, err := decomposeDownload(ctx, downloadSpec{
+		URL:  url,
+		Dest: expandedDownloadName,
+	})
 	if err != nil {
 		return nil, err
 	}

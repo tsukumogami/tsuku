@@ -110,7 +110,66 @@ func (a *DownloadAction) Preflight(params map[string]interface{}) *PreflightResu
 		}
 	}
 
+	preflightFallbackURLs(result, params, url, hasChecksumURL || hasSigURL)
+
 	return result
+}
+
+// preflightFallbackURLs validates every entry of the optional fallback_urls
+// list, so a validation rule that holds for url holds for the alternates too.
+// Without this, half of recipe validation quietly stops applying the moment a
+// recipe declares a second source.
+//
+// hasUpstreamAnchor reports whether the step verifies its plan-time checksum
+// against something upstream publishes (checksum_url or a signature).
+func preflightFallbackURLs(result *PreflightResult, params map[string]interface{}, primaryURL string, hasUpstreamAnchor bool) {
+	fallbacks, hasFallbacks := GetStringSlice(params, FallbackURLsParam)
+	if !hasFallbacks {
+		return
+	}
+
+	if len(fallbacks) == 0 {
+		result.AddWarning("fallback_urls is empty; remove it or list the alternate sources")
+		return
+	}
+
+	seen := make(map[string]bool, len(fallbacks)+1)
+	seen[primaryURL] = true
+
+	for i, fallback := range fallbacks {
+		field := fmt.Sprintf("fallback_urls[%d]", i)
+
+		if strings.TrimSpace(fallback) == "" {
+			result.AddError(field + " is empty")
+			continue
+		}
+
+		// SECURITY: the same HTTPS requirement the download path enforces at
+		// fetch time, surfaced at authoring time where it is cheap to fix.
+		if !strings.HasPrefix(fallback, "https://") {
+			result.AddError(field + " must use HTTPS: " + fallback)
+		}
+
+		if seen[fallback] {
+			result.AddWarning(field + " duplicates an earlier source; it will never be reached")
+		}
+		seen[fallback] = true
+
+		// A version-templated primary with a static alternate would serve one
+		// fixed version forever and surface every version bump as a checksum
+		// mismatch.
+		if containsPlaceholder(primaryURL, "version") && !containsPlaceholder(fallback, "version") {
+			result.AddWarning(field + " has no {version} placeholder but url is version-templated; it will resolve to the same file for every version")
+		}
+	}
+
+	// A source list widens the plan-time trust set to whichever host answers
+	// first, and plan generation is where the checksum gets minted. A warning
+	// rather than an error: not every upstream publishes a checksum file, and
+	// requiring one would block recipes that have no way to satisfy it.
+	if !hasUpstreamAnchor {
+		result.AddWarning("fallback_urls declared without checksum_url or signature_url; the plan-time checksum will be minted from whichever source answers first")
+	}
 }
 
 // Decompose converts the download composite action to a download_file primitive.
@@ -143,6 +202,14 @@ func (a *DownloadAction) Decompose(ctx *EvalContext, params map[string]interface
 	// Expand variables in URL
 	downloadURL := ExpandVars(urlPattern, vars)
 
+	// Expand the optional fallback sources with the same vars, so os_mapping
+	// and arch_mapping apply to every alternate exactly as they do to url.
+	fallbackPatterns, _ := GetStringSlice(params, FallbackURLsParam)
+	var fallbackURLs []string
+	for _, pattern := range fallbackPatterns {
+		fallbackURLs = append(fallbackURLs, ExpandVars(pattern, vars))
+	}
+
 	// Get destination filename
 	dest, _ := GetString(params, "dest")
 	if dest == "" {
@@ -167,7 +234,11 @@ func (a *DownloadAction) Decompose(ctx *EvalContext, params map[string]interface
 	var size int64
 
 	if ctx.Downloader != nil {
-		result, err := ctx.Downloader.Download(ctx.Context, downloadURL)
+		// Walk [url, ...fallback_urls] in declaration order and stop at the
+		// first source that serves. Which source answered is deliberately not
+		// recorded: the checksum is a property of the bytes, not of the host,
+		// so the plan this produces is identical either way.
+		result, servingURL, err := DownloadFirstAvailable(ctx.Context, ctx.Downloader, append([]string{downloadURL}, fallbackURLs...))
 		if err != nil {
 			return nil, fmt.Errorf("failed to download for checksum computation: %w", err)
 		}
@@ -175,7 +246,7 @@ func (a *DownloadAction) Decompose(ctx *EvalContext, params map[string]interface
 		size = result.Size
 		// Save to cache if configured, then cleanup temp file
 		if ctx.DownloadCache != nil {
-			_ = ctx.DownloadCache.Save(downloadURL, result.AssetPath, result.Checksum)
+			_ = ctx.DownloadCache.Save(servingURL, result.AssetPath, result.Checksum)
 		}
 		_ = result.Cleanup()
 
@@ -209,6 +280,13 @@ func (a *DownloadAction) Decompose(ctx *EvalContext, params map[string]interface
 	downloadParams := map[string]interface{}{
 		"url":  downloadURL,
 		"dest": dest,
+	}
+	// Record the expanded alternates so install-from-published-plan falls back
+	// the same way plan generation did. Emitted only when the recipe declared
+	// alternates: a single-source recipe's params map — and therefore its
+	// serialized plan — is unchanged byte for byte.
+	if len(fallbackURLs) > 0 {
+		downloadParams[FallbackURLsParam] = toInterfaceSlice(fallbackURLs)
 	}
 	if checksum != "" {
 		downloadParams["checksum"] = checksum
@@ -260,6 +338,14 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 	// Expand variables in URL
 	url := ExpandVars(urlPattern, vars)
 
+	// Expand the optional alternates with the same vars, so a direct install
+	// (no generated plan) falls back exactly as an install from a plan does.
+	fallbackPatterns, _ := GetStringSlice(params, FallbackURLsParam)
+	sources := []string{url}
+	for _, pattern := range fallbackPatterns {
+		sources = append(sources, ExpandVars(pattern, vars))
+	}
+
 	// Get destination filename
 	dest, ok := GetString(params, "dest")
 	if !ok {
@@ -298,7 +384,7 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 		cache.SetSkipSecurityChecks(ctx.SkipCacheSecurityChecks)
 		logger.Debug("checking download cache", "cacheDir", ctx.DownloadCacheDir)
 		// download action does not support inline checksum, pass empty string
-		found, err := cache.Check(url, destPath, "", checksumAlgo)
+		found, err := cache.CheckAny(sources, destPath, "", checksumAlgo)
 		if err != nil {
 			// Log warning but continue with download
 			logger.Warn("cache check failed", "error", err)
@@ -326,8 +412,9 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 		}
 	}
 
-	// Download file with context for cancellation support
-	if err := a.downloadFile(ctx.Context, url, destPath, reporter); err != nil {
+	// Download file with context for cancellation support, falling through the
+	// declared sources in order.
+	if err := a.downloadFileWithFallback(ctx.Context, sources, destPath, reporter); err != nil {
 		return fmt.Errorf("download failed: %w", err)
 	}
 
@@ -478,6 +565,39 @@ func (a *DownloadAction) doDownloadFile(ctx context.Context, url, destPath strin
 	}
 
 	return nil
+}
+
+// downloadFileWithFallback tries each source in order, giving every source the
+// full retry treatment before moving on. It mirrors
+// downloadFileHTTPWithFallback for the composite download action, which owns
+// its own copy of the retry loop.
+func (a *DownloadAction) downloadFileWithFallback(
+	ctx context.Context, urls []string, destPath string, reporter progress.Reporter,
+) error {
+	if len(urls) == 0 {
+		return fmt.Errorf("no download sources configured")
+	}
+
+	var failures []sourceFailure
+	for i, url := range urls {
+		if len(failures) > 0 {
+			previous := failures[len(failures)-1].URL
+			reporter.Log("Source %d/%d unreachable, trying next: %s",
+				i, len(urls), downloadDisplayName(previous))
+		}
+
+		err := a.downloadFile(ctx, url, destPath, reporter)
+		if err == nil {
+			return nil
+		}
+		failures = append(failures, sourceFailure{URL: url, Err: err})
+
+		if ctx.Err() != nil {
+			break
+		}
+	}
+
+	return newAllSourcesFailedError(failures)
 }
 
 // verifyChecksum verifies the downloaded file's checksum using checksum_url

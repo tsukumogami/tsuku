@@ -33,6 +33,9 @@ type VersionFieldRule struct {
 	Field string
 	// ExpectPlaceholder indicates this field should use {version} placeholder
 	ExpectPlaceholder bool
+	// List indicates the parameter holds an array of strings rather than a
+	// single string, so every entry is checked instead of only the first.
+	List bool
 }
 
 // actionVersionRules maps action names to their version-sensitive fields.
@@ -41,10 +44,12 @@ var actionVersionRules = map[string][]VersionFieldRule{
 	// Download actions
 	"download": {
 		{Field: "url", ExpectPlaceholder: true},
+		{Field: "fallback_urls", ExpectPlaceholder: true, List: true},
 		{Field: "checksum_url", ExpectPlaceholder: true},
 	},
 	"download_archive": {
 		{Field: "url", ExpectPlaceholder: true},
+		{Field: "fallback_urls", ExpectPlaceholder: true, List: true},
 		{Field: "checksum_url", ExpectPlaceholder: true},
 	},
 	// download_file: No ExpectPlaceholder fields - static URLs are expected
@@ -219,6 +224,42 @@ func DetectDownloadFileVersionMismatch(r *Recipe) []DownloadFileVersionMismatch 
 	return mismatches
 }
 
+// fieldValue pairs a value with the display name to report it under. For a
+// list-shaped rule the name carries the index, so a hardcoded version in the
+// third fallback source points at the third fallback source.
+type fieldValue struct {
+	name  string
+	value string
+}
+
+// fieldValues extracts the string values a rule covers, flattening a
+// list-shaped parameter into one entry per element.
+func fieldValues(params map[string]interface{}, rule VersionFieldRule) []fieldValue {
+	if !rule.List {
+		value, ok := params[rule.Field].(string)
+		if !ok {
+			return nil
+		}
+		return []fieldValue{{name: rule.Field, value: value}}
+	}
+
+	entries, ok := params[rule.Field].([]interface{})
+	if !ok {
+		return nil
+	}
+
+	values := make([]fieldValue, 0, len(entries))
+	for i, entry := range entries {
+		if s, isString := entry.(string); isString {
+			values = append(values, fieldValue{
+				name:  fmt.Sprintf("%s[%d]", rule.Field, i),
+				value: s,
+			})
+		}
+	}
+	return values
+}
+
 // DetectHardcodedVersions scans a recipe for fields that contain hardcoded
 // version strings where {version} placeholders should be used.
 //
@@ -239,26 +280,26 @@ func DetectHardcodedVersions(r *Recipe) []HardcodedVersion {
 				continue
 			}
 
-			// Get the field value
-			value, ok := step.Params[rule.Field].(string)
-			if !ok || value == "" {
-				continue
-			}
+			for _, fv := range fieldValues(step.Params, rule) {
+				if fv.value == "" {
+					continue
+				}
 
-			// Fast path: skip if already has version placeholder
-			if hasVersionPlaceholder(value) {
-				continue
-			}
+				// Fast path: skip if already has version placeholder
+				if hasVersionPlaceholder(fv.value) {
+					continue
+				}
 
-			// Scan for version patterns
-			if version := findVersionPattern(value); version != "" {
-				detected = append(detected, HardcodedVersion{
-					Step:      stepIdx + 1, // 1-based for user display
-					Action:    step.Action,
-					Field:     rule.Field,
-					Value:     version,
-					FullValue: value,
-				})
+				// Scan for version patterns
+				if version := findVersionPattern(fv.value); version != "" {
+					detected = append(detected, HardcodedVersion{
+						Step:      stepIdx + 1, // 1-based for user display
+						Action:    step.Action,
+						Field:     fv.name,
+						Value:     version,
+						FullValue: fv.value,
+					})
+				}
 			}
 		}
 	}

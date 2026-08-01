@@ -403,14 +403,17 @@ func (e *Executor) resolveStep(
 						rs.Checksum = pstep.Checksum
 						rs.Size = pstep.Size
 					} else if downloader != nil {
-						// No checksum provided, need to download to compute it
-						result, err := downloader.Download(ctx, url)
+						// No checksum provided, need to download to compute it.
+						// Walk any recorded fallback sources the same way
+						// Decompose does, so a step that reaches here is not
+						// single-sourced when its recipe was not.
+						result, servingURL, err := actions.DownloadFirstAvailable(ctx, downloader, actions.DownloadSources(pstep.Params))
 						if err != nil {
 							return nil, fmt.Errorf("failed to download for caching: %w", err)
 						}
 						// Save to cache if configured
 						if evalCtx.DownloadCache != nil {
-							_ = evalCtx.DownloadCache.Save(url, result.AssetPath, result.Checksum)
+							_ = evalCtx.DownloadCache.Save(servingURL, result.AssetPath, result.Checksum)
 						}
 						rs.Checksum = result.Checksum
 						rs.Size = result.Size
@@ -476,7 +479,11 @@ func (e *Executor) resolveStep(
 			// Always download to cache the file for offline execution (e.g., sandbox mode)
 			// Even if checksum is provided in params, we need the file cached
 			if downloader != nil {
-				result, err := downloader.Download(ctx, url)
+				// url here comes from extractDownloadURL, which knows the
+				// per-action shape, so it is the primary rather than
+				// expandedParams["url"]. The alternates come from params.
+				fallbacks, _ := actions.GetStringSlice(expandedParams, actions.FallbackURLsParam)
+				result, servingURL, err := actions.DownloadFirstAvailable(ctx, downloader, append([]string{url}, fallbacks...))
 				if err != nil {
 					return nil, fmt.Errorf("failed to download for caching: %w", err)
 				}
@@ -487,7 +494,7 @@ func (e *Executor) resolveStep(
 					if checksum == "" {
 						checksum = result.Checksum
 					}
-					if err := evalCtx.DownloadCache.Save(url, result.AssetPath, checksum); err != nil {
+					if err := evalCtx.DownloadCache.Save(servingURL, result.AssetPath, checksum); err != nil {
 						return nil, fmt.Errorf("failed to save to cache: %w", err)
 					}
 				}

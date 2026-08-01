@@ -557,6 +557,13 @@ func validatePathParams(result *ValidationResult, stepField string, step *Step) 
 		validateURLParam(result, stepField+".url", url)
 	}
 
+	// Fallback sources get the same URL validation as the primary. A rule that
+	// applies only to the first entry would stop applying the moment a recipe
+	// declares alternates, which is exactly when nobody is watching.
+	if fallbacks, ok := step.Params["fallback_urls"]; ok {
+		validateFallbackURLsParam(result, stepField+".fallback_urls", fallbacks)
+	}
+
 	// Validate SHA256 checksum format when present
 	if sha256Param, ok := step.Params["sha256"]; ok {
 		validateSHA256Param(result, stepField+".sha256", sha256Param)
@@ -587,6 +594,24 @@ func validateSHA256Param(result *ValidationResult, field string, value interface
 			result.addError(field, "sha256 must be hexadecimal (0-9, a-f)")
 			return
 		}
+	}
+}
+
+// validateFallbackURLsParam validates each entry of a fallback_urls list with
+// the same rules the primary url gets.
+func validateFallbackURLsParam(result *ValidationResult, field string, value interface{}) {
+	entries, ok := value.([]interface{})
+	if !ok {
+		result.addError(field, "fallback_urls must be an array of URL strings")
+		return
+	}
+
+	for i, entry := range entries {
+		if _, isString := entry.(string); !isString {
+			result.addError(fmt.Sprintf("%s[%d]", field, i), "fallback_urls entries must be strings")
+			continue
+		}
+		validateURLParam(result, fmt.Sprintf("%s[%d]", field, i), entry)
 	}
 }
 

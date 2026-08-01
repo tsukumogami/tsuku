@@ -48,6 +48,11 @@ func (a *DownloadFileAction) Execute(ctx *ExecutionContext, params map[string]in
 		return fmt.Errorf("download_file action requires 'url' parameter")
 	}
 
+	// The primary plus any alternates the plan recorded. A plan generated
+	// before fallback existed, or one for a single-source recipe, yields a
+	// one-element list and the identical behavior it has today.
+	sources := DownloadSources(params)
+
 	// Get checksum (required for download_file)
 	checksum, ok := GetString(params, "checksum")
 	if !ok || checksum == "" {
@@ -88,7 +93,11 @@ func (a *DownloadFileAction) Execute(ctx *ExecutionContext, params map[string]in
 		cache = NewDownloadCache(ctx.DownloadCacheDir)
 		cache.SetSkipSecurityChecks(ctx.SkipCacheSecurityChecks)
 		logger.Debug("checking download cache", "cacheDir", ctx.DownloadCacheDir)
-		found, err := cache.Check(url, destPath, checksum, checksumAlgo)
+		// Probe every source's key, not just the primary's. Plan generation
+		// saves under whichever source answered, so a URL-keyed probe against
+		// the primary alone would miss bytes already on disk and re-download
+		// the whole archive.
+		found, err := cache.CheckAny(sources, destPath, checksum, checksumAlgo)
 		if err != nil {
 			// Log warning but continue with download
 			logger.Warn("cache check failed", "error", err)
@@ -102,12 +111,15 @@ func (a *DownloadFileAction) Execute(ctx *ExecutionContext, params map[string]in
 		}
 	}
 
-	// Download file with context for cancellation support
-	if err := downloadFileHTTP(ctx.Context, url, destPath, reporter); err != nil {
+	// Download file with context for cancellation support, falling through the
+	// recorded sources in order.
+	if err := downloadFileHTTPWithFallback(ctx.Context, sources, destPath, reporter); err != nil {
 		return fmt.Errorf("download failed: %w", err)
 	}
 
-	// Verify checksum (required)
+	// Verify checksum (required). This runs on whatever arrived, regardless of
+	// which source served it — checksum identity is the invariant, so fallback
+	// cannot widen what the install will accept.
 	if err := VerifyChecksum(destPath, checksum, checksumAlgo); err != nil {
 		return fmt.Errorf("checksum verification failed: %w", err)
 	}
@@ -170,6 +182,52 @@ func downloadDisplayName(downloadURL string) string {
 		base = base[:idx]
 	}
 	return progress.SanitizeDisplayString(base)
+}
+
+// downloadFileHTTPWithFallback downloads from the first source that serves,
+// trying sources in declaration order. Each source gets the full retry
+// treatment in downloadFileHTTP (three attempts with exponential backoff)
+// before the next source is tried, so a flaky first source is not abandoned
+// for a transient error.
+//
+// A non-retryable status such as 404 ends attempts against that source and
+// moves to the next one rather than aborting the whole download. That is
+// deliberate: a mirror that has dropped an old release while still serving
+// current ones answers 404, and falling through to a source that kept it is
+// the point of having a list. The cost is that a genuinely wrong URL now
+// costs one round trip per source, which is why the aggregate error names
+// every source and its failure.
+//
+// A single-element list produces exactly today's behavior and today's error.
+func downloadFileHTTPWithFallback(
+	ctx context.Context, urls []string, destPath string, reporter progress.Reporter,
+) error {
+	if len(urls) == 0 {
+		return fmt.Errorf("no download sources configured")
+	}
+
+	var failures []sourceFailure
+	for i, downloadURL := range urls {
+		if len(failures) > 0 {
+			previous := failures[len(failures)-1].URL
+			reporter.Log("Source %d/%d unreachable, trying next: %s",
+				i, len(urls), downloadDisplayName(previous))
+		}
+
+		err := downloadFileHTTP(ctx, downloadURL, destPath, reporter)
+		if err == nil {
+			return nil
+		}
+		failures = append(failures, sourceFailure{URL: downloadURL, Err: err})
+
+		// A canceled context means the caller gave up, not that this source
+		// failed. Trying the next one would be busywork.
+		if ctx.Err() != nil {
+			break
+		}
+	}
+
+	return newAllSourcesFailedError(failures)
 }
 
 // downloadFileHTTP performs the actual HTTP download with context for cancellation.
