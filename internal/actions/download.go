@@ -110,7 +110,11 @@ func (a *DownloadAction) Preflight(params map[string]interface{}) *PreflightResu
 		}
 	}
 
-	preflightFallbackURLs(result, params, url, hasChecksumURL || hasSigURL)
+	// An empty checksum_url or signature_url anchors nothing, so treat it as
+	// absent rather than as verification.
+	checksumURLValue, _ := GetString(params, "checksum_url")
+	sigURLValue, _ := GetString(params, "signature_url")
+	preflightFallbackURLs(result, params, url, checksumURLValue != "" || sigURLValue != "")
 
 	return result
 }
