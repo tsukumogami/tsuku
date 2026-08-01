@@ -445,18 +445,31 @@ The mitigation available today is `checksum_url`, which is already plumbed
 through `DownloadAction.Decompose` and validates the plan-time-computed
 checksum against an upstream-published value, failing plan generation on
 mismatch. That check is applied independently of which source answered (PRD
-R16), and a preflight warning fires when a recipe declares alternates without
-one.
+R16). See the correction below on why a preflight warning for the
+no-anchor case is deliberately absent.
 
-The warning is a warning rather than an error because mandatory anchoring
-would block the acceptance criteria. The architectural review on #2443 stated
-that minisign machinery exists in `internal/actions/download.go`; it does not —
-that file carries PGP verification, and `grep -rn minisign internal/
---include=*.go` returns nothing. zig publishes `.minisig` and no `.sha256`
-sidecar (`zig-x86_64-linux-0.14.1.tar.xz.sha256` returns 404 while `.minisig`
-returns 200), so requiring an anchor would mean building minisign support
-before zig could satisfy its own acceptance criterion. That is named in the
-PRD's Out of Scope as the follow-up.
+Mandatory anchoring is not taken, because it would block the acceptance
+criteria. The architectural review on #2443 stated that minisign machinery
+exists in `internal/actions/download.go`; it does not — that file carries PGP
+verification, and `grep -rn minisign internal/ --include=*.go` returns
+nothing. zig publishes `.minisig` and no `.sha256` sidecar
+(`zig-x86_64-linux-0.14.1.tar.xz.sha256` returns 404 while `.minisig` returns
+200), so requiring an anchor would mean building minisign support before zig
+could satisfy its own acceptance criterion. That is named in the PRD's Out of
+Scope as the follow-up.
+
+**Correction, made during implementation.** This design originally called for
+a preflight *warning* when a recipe declares alternates without an anchor. That
+was wrong, and CI said so: `tsuku validate --strict` promotes warnings to
+errors, and the `Tests / Validate Recipes` job validates every recipe that way,
+so the warning made `zig.toml` fail validation. A warning under `--strict` is
+not a nudge — it is the mandatory anchoring this section just rejected, arriving
+through a side door. The warning was removed. The per-entry checks that remain
+(HTTPS scheme, empty entry, unreachable duplicate, static alternate behind a
+version-templated primary) are all genuine authoring mistakes that do not fire
+for a correct recipe. The widened plan-time trust set is recorded in prose here,
+in the PRD, and in `zig.toml`'s own comment, which is where a reader looking for
+it will be.
 
 **Ordering is fixed and recipe-declared**, which closes the obvious attack on a
 fallback mechanism. Nothing probes hosts, ranks by latency, or remembers which
@@ -514,8 +527,9 @@ same client the primary uses, with the same SSRF protections.
 
 - R4's per-source error reporting keeps typos and retention gaps legible in CI
   logs without reproduction.
-- The preflight warning on multi-source-without-anchor keeps the widened
-  plan-time trust set visible to recipe authors at the moment they widen it.
+- The widened plan-time trust set is recorded in this document, in the PRD,
+  and in `zig.toml`'s own comment. It is deliberately not a preflight warning:
+  `--strict` would turn that into the mandatory anchoring the design rejected.
 - `docs/EMBEDDED_RECIPES.md` documents the emission rule, so the next person to
   regenerate a golden knows why `fallback_urls` appears in some plans and not
   others.

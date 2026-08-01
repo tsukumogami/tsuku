@@ -216,12 +216,15 @@ func TestDownloadArchivePreflight_FallbackURLs(t *testing.T) {
 			wantWarning: "duplicates an earlier source",
 		},
 		{
-			name: "alternates without an upstream anchor warn",
+			// `tsuku validate --strict` promotes warnings to errors and CI
+			// validates every recipe that way, so a warning here would make
+			// upstream anchoring mandatory in practice -- which is what the
+			// design rejected, because zig cannot satisfy it.
+			name: "alternates without an upstream anchor produce no diagnostics",
 			params: map[string]interface{}{
 				"url":             "https://a.example/tool-{version}.tar.gz",
 				FallbackURLsParam: []interface{}{"https://b.example/tool-{version}.tar.gz"},
 			},
-			wantWarning: "whichever source answers first",
 		},
 		{
 			name: "a single-source recipe gets no fallback diagnostics at all",

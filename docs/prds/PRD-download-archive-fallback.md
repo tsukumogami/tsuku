@@ -319,7 +319,9 @@ criteria require converting, publishes no `.sha256` sidecar at the mirror paths
 this recipe uses (`zig-x86_64-linux-0.14.1.tar.xz.sha256` returns 404;
 `.minisig` returns 200), so a mandatory anchor would block the acceptance
 criteria on building minisign support first. Anchoring is instead surfaced as a
-preflight warning when a recipe declares alternates without one, and minisign
+documented constraint rather than a preflight warning -- `tsuku validate
+--strict` promotes warnings to errors and CI validates every recipe that way,
+so a warning would be mandatory anchoring by another name -- and minisign
 is named in Out of Scope as the follow-up that would let zig satisfy it.
 
 ## Known Limitations

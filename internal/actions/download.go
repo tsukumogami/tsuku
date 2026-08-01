@@ -110,11 +110,7 @@ func (a *DownloadAction) Preflight(params map[string]interface{}) *PreflightResu
 		}
 	}
 
-	// An empty checksum_url or signature_url anchors nothing, so treat it as
-	// absent rather than as verification.
-	checksumURLValue, _ := GetString(params, "checksum_url")
-	sigURLValue, _ := GetString(params, "signature_url")
-	preflightFallbackURLs(result, params, url, checksumURLValue != "" || sigURLValue != "")
+	preflightFallbackURLs(result, params, url)
 
 	return result
 }
@@ -124,9 +120,17 @@ func (a *DownloadAction) Preflight(params map[string]interface{}) *PreflightResu
 // Without this, half of recipe validation quietly stops applying the moment a
 // recipe declares a second source.
 //
-// hasUpstreamAnchor reports whether the step verifies its plan-time checksum
-// against something upstream publishes (checksum_url or a signature).
-func preflightFallbackURLs(result *PreflightResult, params map[string]interface{}, primaryURL string, hasUpstreamAnchor bool) {
+// Every diagnostic here is an authoring mistake — a wrong scheme, an empty
+// entry, an unreachable duplicate, a static URL behind a version-templated
+// primary. Deliberately NOT among them: a warning for declaring alternates
+// without a checksum_url. `tsuku validate --strict` promotes warnings to
+// errors and CI validates every recipe that way, so such a warning would make
+// upstream anchoring mandatory in practice — and zig, the recipe this
+// mechanism exists for, publishes .minisig and no .sha256 sidecar, so it
+// could not satisfy it. The widened plan-time trust set is real and is
+// recorded in the design doc and in zig.toml's own comment; a gate that
+// blocks the recipes it is meant to protect is not the way to surface it.
+func preflightFallbackURLs(result *PreflightResult, params map[string]interface{}, primaryURL string) {
 	fallbacks, hasFallbacks := GetStringSlice(params, FallbackURLsParam)
 	if !hasFallbacks {
 		return
@@ -165,14 +169,6 @@ func preflightFallbackURLs(result *PreflightResult, params map[string]interface{
 		if containsPlaceholder(primaryURL, "version") && !containsPlaceholder(fallback, "version") {
 			result.AddWarning(field + " has no {version} placeholder but url is version-templated; it will resolve to the same file for every version")
 		}
-	}
-
-	// A source list widens the plan-time trust set to whichever host answers
-	// first, and plan generation is where the checksum gets minted. A warning
-	// rather than an error: not every upstream publishes a checksum file, and
-	// requiring one would block recipes that have no way to satisfy it.
-	if !hasUpstreamAnchor {
-		result.AddWarning("fallback_urls declared without checksum_url or signature_url; the plan-time checksum will be minted from whichever source answers first")
 	}
 }
 

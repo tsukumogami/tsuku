@@ -143,15 +143,14 @@ func (a *DownloadArchiveAction) Preflight(params map[string]interface{}) *Prefli
 	// fetch the same checksum file and surface every version bump as a hash
 	// mismatch. Rare legitimate cases exist (upstream publishes one signing
 	// artifact across versions), so this is a warning not an error.
-	checksumURL, hasChecksumURL := GetString(params, "checksum_url")
-	if hasChecksumURL && checksumURL != "" {
+	if checksumURL, hasChecksumURL := GetString(params, "checksum_url"); hasChecksumURL && checksumURL != "" {
 		if containsPlaceholder(url, "version") && !containsPlaceholder(checksumURL, "version") {
 			result.AddWarning("checksum_url has no {version} placeholder but url is version-templated; each install will fetch the same checksum file regardless of version — likely a recipe authoring mistake")
 		}
 	}
 
 	// ERROR/WARNING: every fallback source is validated the same way url is.
-	preflightFallbackURLs(result, params, url, hasChecksumURL && checksumURL != "")
+	preflightFallbackURLs(result, params, url)
 
 	return result
 }
