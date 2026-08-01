@@ -18,6 +18,7 @@ on:
       - 'cmd/tsuku/eval.go'
       - 'cmd/tsuku/install_deps.go'
       - 'cmd/tsuku/install_lib.go'
+      - 'cmd/tsuku/install_sandbox.go'
       - 'testdata/recipes/*.toml'
       - 'test/scripts/verify-*.sh'
       - 'test/scripts/test-*-provisioning.sh'
@@ -38,6 +39,7 @@ on:
       - 'cmd/tsuku/eval.go'
       - 'cmd/tsuku/install_deps.go'
       - 'cmd/tsuku/install_lib.go'
+      - 'cmd/tsuku/install_sandbox.go'
       - 'testdata/recipes/*.toml'
       - 'scripts/*.sh'
       - 'test/scripts/verify-*.sh'
@@ -124,8 +126,26 @@ jobs:
               echo "FAIL: ${{ matrix.tool.name }} (exit $EXIT_CODE)"
               if [ -f "$RESULT_FILE" ]; then
                 echo "Error: $(jq -r '.error // .message // "unknown"' "$RESULT_FILE")"
+                # install_output holds the tail of the container's build log and
+                # names the command that failed. Print it unescaped and
+                # uncollapsed -- this is the whole reason the job is red, and
+                # reading it out of the raw JSON below is impractical.
+                #
+                # Printing build output verbatim lets a "::" line in it act as
+                # a workflow command. That is acceptable here because the
+                # recipes this job builds live in the repo. Do not copy this
+                # into a workflow that builds recipes from a pull request
+                # without filtering those sequences first.
+                if [ -n "$(jq -r '.install_output // ""' "$RESULT_FILE")" ]; then
+                  echo "Container output:"
+                  jq -r '.install_output' "$RESULT_FILE"
+                fi
+                if [ -n "$(jq -r '.verify_output // ""' "$RESULT_FILE")" ]; then
+                  echo "Verify output:"
+                  jq -r '.verify_output' "$RESULT_FILE"
+                fi
                 echo "Full result:"
-                jq . "$RESULT_FILE"
+                jq 'del(.install_output, .verify_output)' "$RESULT_FILE"
               fi
               exit 1
             fi

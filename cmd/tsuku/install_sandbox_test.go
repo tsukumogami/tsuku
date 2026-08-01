@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"unicode/utf8"
 
 	"github.com/tsukumogami/tsuku/internal/sandbox"
 )
@@ -188,7 +189,7 @@ func TestEmitSandboxJSON_PassedResult(t *testing.T) {
 		DurationMs:     5000,
 	}
 
-	out := buildSandboxJSONOutput("ruff", result)
+	out := buildSandboxJSONOutput("ruff", result, nil)
 
 	if out.Tool != "ruff" {
 		t.Errorf("Tool = %q, want %q", out.Tool, "ruff")
@@ -224,7 +225,7 @@ func TestEmitSandboxJSON_FailedResult(t *testing.T) {
 		DurationMs:     3000,
 	}
 
-	out := buildSandboxJSONOutput("ruff", result)
+	out := buildSandboxJSONOutput("ruff", result, nil)
 
 	if out.Passed {
 		t.Error("Passed should be false")
@@ -245,7 +246,7 @@ func TestEmitSandboxJSON_SkippedResult(t *testing.T) {
 		DurationMs: 10,
 	}
 
-	out := buildSandboxJSONOutput("ruff", result)
+	out := buildSandboxJSONOutput("ruff", result, nil)
 
 	if out.Passed {
 		t.Error("Passed should be false for skipped result")
@@ -279,7 +280,7 @@ func TestEmitSandboxJSON_ErrorResult(t *testing.T) {
 		DurationMs:     500,
 	}
 
-	out := buildSandboxJSONOutput("ruff", result)
+	out := buildSandboxJSONOutput("ruff", result, nil)
 
 	if out.Passed {
 		t.Error("Passed should be false for error result")
@@ -308,7 +309,7 @@ func TestEmitSandboxJSON_PassedNoVerifyCommand(t *testing.T) {
 		DurationMs:     2000,
 	}
 
-	out := buildSandboxJSONOutput("serve", result)
+	out := buildSandboxJSONOutput("serve", result, nil)
 
 	if !out.Verified {
 		t.Error("Verified should be true when no verify command exists")
@@ -332,6 +333,8 @@ func TestEmitSandboxJSON_AllFieldsRoundTrip(t *testing.T) {
 		Verified:        false,
 		InstallExitCode: 127,
 		VerifyExitCode:  -1,
+		InstallOutput:   "cargo: not found",
+		VerifyOutput:    "my-tool: command not found",
 		DurationMs:      99999,
 		Error:           &errMsg,
 	}
@@ -361,11 +364,356 @@ func TestEmitSandboxJSON_AllFieldsRoundTrip(t *testing.T) {
 	if roundTripped.VerifyExitCode != original.VerifyExitCode {
 		t.Errorf("VerifyExitCode = %d, want %d", roundTripped.VerifyExitCode, original.VerifyExitCode)
 	}
+	if roundTripped.InstallOutput != original.InstallOutput {
+		t.Errorf("InstallOutput = %q, want %q", roundTripped.InstallOutput, original.InstallOutput)
+	}
+	if roundTripped.VerifyOutput != original.VerifyOutput {
+		t.Errorf("VerifyOutput = %q, want %q", roundTripped.VerifyOutput, original.VerifyOutput)
+	}
 	if roundTripped.DurationMs != original.DurationMs {
 		t.Errorf("DurationMs = %d, want %d", roundTripped.DurationMs, original.DurationMs)
 	}
 	if roundTripped.Error == nil || *roundTripped.Error != *original.Error {
 		t.Errorf("Error = %v, want %v", roundTripped.Error, original.Error)
+	}
+}
+
+func TestBuildSandboxJSONOutput_InstallFailureIncludesOutput(t *testing.T) {
+	t.Parallel()
+
+	result := &sandbox.SandboxResult{
+		Passed:         false,
+		ExitCode:       6,
+		Stdout:         "    AR libgit.a\n    CARGO target/release/libgitcore.a\n",
+		Stderr:         "/bin/sh: 1: cargo: not found\nmake: *** [Makefile:3021: target/release/libgitcore.a] Error 127\n",
+		Verified:       false,
+		VerifyExitCode: -1,
+		DurationMs:     420000,
+	}
+
+	out := buildSandboxJSONOutput("git-source", result, nil)
+
+	if out.InstallOutput == "" {
+		t.Fatal("InstallOutput should be populated when the install fails")
+	}
+	for _, want := range []string{"CARGO target/release/libgitcore.a", "cargo: not found", "Error 127"} {
+		if !strings.Contains(out.InstallOutput, want) {
+			t.Errorf("InstallOutput missing %q, got:\n%s", want, out.InstallOutput)
+		}
+	}
+}
+
+func TestBuildSandboxJSONOutput_InstallOutputSerializesUnderExpectedKey(t *testing.T) {
+	t.Parallel()
+
+	// build-essentials.yml reads `.install_output` with jq. Renaming the tag
+	// would compile and pass every struct-level test while silently returning
+	// the job log to exit-code-only.
+	out := buildSandboxJSONOutput("git-source", &sandbox.SandboxResult{
+		ExitCode: 6,
+		Stderr:   "cargo: not found\n",
+	}, nil)
+
+	data, err := json.Marshal(out)
+	if err != nil {
+		t.Fatalf("Marshal failed: %v", err)
+	}
+	var parsed map[string]any
+	if err := json.Unmarshal(data, &parsed); err != nil {
+		t.Fatalf("Unmarshal failed: %v", err)
+	}
+
+	got, ok := parsed["install_output"].(string)
+	if !ok {
+		t.Fatalf("install_output missing or not a string in %s", data)
+	}
+	if !strings.Contains(got, "cargo: not found") {
+		t.Errorf("install_output = %q, want the container output", got)
+	}
+}
+
+func TestBuildSandboxJSONOutput_RunErrorIncludesOutput(t *testing.T) {
+	t.Parallel()
+
+	result := &sandbox.SandboxResult{
+		Passed:         false,
+		ExitCode:       -1,
+		Stderr:         "Error: image pull failed\n",
+		Error:          fmt.Errorf("container execution failed"),
+		Verified:       false,
+		VerifyExitCode: -1,
+		DurationMs:     500,
+	}
+
+	out := buildSandboxJSONOutput("ruff", result, nil)
+
+	if !strings.Contains(out.InstallOutput, "image pull failed") {
+		t.Errorf("InstallOutput should carry container output on run error, got %q", out.InstallOutput)
+	}
+}
+
+func TestBuildSandboxJSONOutput_PassedOmitsOutput(t *testing.T) {
+	t.Parallel()
+
+	result := &sandbox.SandboxResult{
+		Passed:         true,
+		ExitCode:       0,
+		Stdout:         "Installed ruff 0.1.0\n",
+		Verified:       true,
+		VerifyExitCode: 0,
+		DurationMs:     4000,
+	}
+
+	out := buildSandboxJSONOutput("ruff", result, nil)
+
+	if out.InstallOutput != "" {
+		t.Errorf("InstallOutput should be empty on success, got %q", out.InstallOutput)
+	}
+}
+
+func TestBuildSandboxJSONOutput_SkippedOmitsOutput(t *testing.T) {
+	t.Parallel()
+
+	result := &sandbox.SandboxResult{
+		Skipped:    true,
+		DurationMs: 10,
+	}
+
+	out := buildSandboxJSONOutput("ruff", result, nil)
+
+	if out.InstallOutput != "" {
+		t.Errorf("InstallOutput should be empty when the sandbox is skipped, got %q", out.InstallOutput)
+	}
+}
+
+func TestBuildSandboxJSONOutput_VerifyFailureOmitsInstallOutput(t *testing.T) {
+	t.Parallel()
+
+	// The install succeeded, so the build log is noise -- verify_output is the
+	// field that matters here.
+	result := &sandbox.SandboxResult{
+		Passed:         false,
+		ExitCode:       0,
+		Stdout:         "Installed ruff 0.1.0\n",
+		Verified:       false,
+		VerifyExitCode: 1,
+		VerifyOutput:   "ruff: command not found\n",
+		DurationMs:     4000,
+	}
+
+	out := buildSandboxJSONOutput("ruff", result, nil)
+
+	if out.InstallOutput != "" {
+		t.Errorf("InstallOutput should be empty when only verification failed, got %q", out.InstallOutput)
+	}
+	if !strings.Contains(out.VerifyOutput, "command not found") {
+		t.Errorf("VerifyOutput = %q, want it to carry the verify failure", out.VerifyOutput)
+	}
+}
+
+func TestSandboxFailureOutput_KeepsTailAndMarksTruncation(t *testing.T) {
+	t.Parallel()
+
+	// A build log far larger than the cap: the failing command is at the end,
+	// so the tail is what must survive.
+	var sb strings.Builder
+	for i := 0; i < 20000; i++ {
+		fmt.Fprintf(&sb, "    CC builtin/file-%d.o\n", i)
+	}
+	sb.WriteString("cargo: not found\n")
+
+	got := sandboxFailureOutput(&sandbox.SandboxResult{Stdout: sb.String()}, nil)
+
+	if want := maxSandboxOutputBytes + len(sandboxTruncationNotice) + 1; len(got) > want {
+		t.Errorf("output length %d exceeds the cap plus the notice (%d)", len(got), want)
+	}
+	if !strings.Contains(got, "cargo: not found") {
+		t.Error("truncation dropped the tail, which is where the failing command is")
+	}
+	if !strings.Contains(got, sandboxTruncationNotice) {
+		t.Errorf("truncated output should say so, got prefix %q", got[:80])
+	}
+	if strings.Contains(got, "file-0.o") {
+		t.Error("head of the log should have been dropped, not the tail")
+	}
+}
+
+func TestSandboxFailureOutput_ShortOutputNotTruncated(t *testing.T) {
+	t.Parallel()
+
+	got := sandboxFailureOutput(&sandbox.SandboxResult{Stderr: "make: *** Error 2\n"}, nil)
+
+	if strings.Contains(got, sandboxTruncationNotice) {
+		t.Errorf("short output should not be marked truncated, got %q", got)
+	}
+	if got != "make: *** Error 2" {
+		t.Errorf("got %q, want the trimmed stderr", got)
+	}
+}
+
+func TestSandboxFailureOutput_MasksSecrets(t *testing.T) {
+	t.Parallel()
+
+	// The Build Essentials workflow forwards GITHUB_TOKEN into the sandbox and
+	// publishes this JSON to a public job log.
+	result := &sandbox.SandboxResult{
+		Stdout: "fetching with token=ghp_abcdef1234567890\n",
+		Stderr: "Authorization: Bearer ghp_abcdef1234567890\n",
+	}
+
+	got := sandboxFailureOutput(result, []string{"ghp_abcdef1234567890"})
+
+	if strings.Contains(got, "ghp_abcdef1234567890") {
+		t.Errorf("secret survived masking: %q", got)
+	}
+	if strings.Count(got, "[REDACTED]") != 2 {
+		t.Errorf("both occurrences should be masked, got %q", got)
+	}
+}
+
+func TestSandboxFailureOutput_MasksSecretsAnywhereInTheLine(t *testing.T) {
+	t.Parallel()
+
+	// A token most often escapes inside a clone URL or a bare echo, not as a
+	// tidy KEY=VALUE pair. Exact-value masking catches it either way.
+	secret := "ghp_abcdef1234567890"
+	result := &sandbox.SandboxResult{
+		Stdout: "cloning https://x-access-token:" + secret + "@github.com/o/r\n",
+		Stderr: secret + "\n",
+	}
+
+	got := sandboxFailureOutput(result, []string{secret})
+
+	if strings.Contains(got, secret) {
+		t.Errorf("secret survived masking: %q", got)
+	}
+	if !strings.Contains(got, "https://x-access-token:[REDACTED]@github.com/o/r") {
+		t.Errorf("masking should leave the rest of the URL readable, got %q", got)
+	}
+}
+
+func TestBuildSandboxJSONOutput_VerifyOutputIsMasked(t *testing.T) {
+	t.Parallel()
+
+	// verify_output is printed in the same job log as install_output, so it
+	// gets the same treatment.
+	secret := "ghp_abcdef1234567890"
+	result := &sandbox.SandboxResult{
+		Passed:         false,
+		ExitCode:       0,
+		Verified:       false,
+		VerifyExitCode: 1,
+		VerifyOutput:   "auth failed for " + secret + "\n",
+	}
+
+	out := buildSandboxJSONOutput("ruff", result, []string{secret})
+
+	if strings.Contains(out.VerifyOutput, secret) {
+		t.Errorf("secret survived masking in VerifyOutput: %q", out.VerifyOutput)
+	}
+	if !strings.Contains(out.VerifyOutput, "auth failed for [REDACTED]") {
+		t.Errorf("VerifyOutput = %q, want the masked message", out.VerifyOutput)
+	}
+}
+
+func TestSandboxFailureOutput_MasksBeforeTruncating(t *testing.T) {
+	t.Parallel()
+
+	// A secret near the head would otherwise be cut mid-string by truncation,
+	// leaving a fragment that exact-match masking can no longer find.
+	secret := strings.Repeat("s3cr3t", 8)
+	var sb strings.Builder
+	sb.WriteString("leaked " + secret + "\n")
+	for i := 0; i < 6000; i++ {
+		fmt.Fprintf(&sb, "    CC builtin/file-%d.o\n", i)
+	}
+
+	got := sandboxFailureOutput(&sandbox.SandboxResult{Stdout: sb.String()}, []string{secret})
+
+	if strings.Contains(got, "s3cr3t") {
+		t.Errorf("a fragment of the secret survived: %q", got[:200])
+	}
+}
+
+func TestSandboxFailureOutput_LeavesBuildDiagnosticsIntact(t *testing.T) {
+	t.Parallel()
+
+	// Regression guard: pattern-based redaction used to rewrite "foo.c:12:3:"
+	// to "foo.c[IP]3:" and "unexpected token: X" to "unexpected [REDACTED]",
+	// destroying the diagnostics this field exists to carry.
+	log := strings.Join([]string{
+		"foo.c:12:3: error: unexpected token: ')'",
+		"checking for basic C types... yes",
+		"/bin/sh: 1: cargo: not found",
+		"make: *** [Makefile:3021: target/release/libgitcore.a] Error 127",
+	}, "\n")
+
+	got := sandboxFailureOutput(&sandbox.SandboxResult{Stdout: log}, nil)
+
+	if got != log {
+		t.Errorf("build output was altered:\ngot:  %q\nwant: %q", got, log)
+	}
+}
+
+func TestSandboxSecretValues(t *testing.T) {
+	// No t.Parallel: t.Setenv is incompatible with parallel tests.
+	t.Setenv("TSUKU_TEST_HOST_SECRET", "host-side-credential")
+
+	got := sandboxSecretValues([]string{
+		"GITHUB_TOKEN=ghp_abcdef1234567890",
+		"DEBUG=1",     // too short to mask without wrecking the log
+		"EMPTY=",      // no value to mask
+		"NOEQUALSIGN", // KEY-only, resolves from the host (unset -> empty)
+		"TSUKU_TEST_HOST_SECRET",
+	})
+
+	want := []string{"ghp_abcdef1234567890", "host-side-credential"}
+	if len(got) != len(want) {
+		t.Fatalf("got %q, want %q", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("got[%d] = %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
+func TestSandboxFailureOutput_NoNewlineTailStaysValidUTF8(t *testing.T) {
+	t.Parallel()
+
+	// One enormous line with no newline to cut on: the byte slice can land
+	// mid-rune, and invalid UTF-8 would come back from JSON as replacement
+	// characters.
+	oneLine := strings.Repeat("é", maxSandboxOutputBytes)
+
+	got := sandboxFailureOutput(&sandbox.SandboxResult{Stdout: oneLine}, nil)
+
+	if !utf8.ValidString(got) {
+		t.Error("truncated output is not valid UTF-8")
+	}
+	if !strings.Contains(got, sandboxTruncationNotice) {
+		t.Error("expected the truncation notice")
+	}
+}
+
+func TestSandboxFailureOutput_EmptyWhenNoOutput(t *testing.T) {
+	t.Parallel()
+
+	if got := sandboxFailureOutput(&sandbox.SandboxResult{}, nil); got != "" {
+		t.Errorf("got %q, want empty string when the container produced nothing", got)
+	}
+}
+
+func TestSandboxFailureOutput_CombinesStdoutAndStderr(t *testing.T) {
+	t.Parallel()
+
+	got := sandboxFailureOutput(&sandbox.SandboxResult{
+		Stdout: "step 3/5: configure_make\n",
+		Stderr: "make failed\n",
+	}, nil)
+
+	if !strings.Contains(got, "step 3/5: configure_make") || !strings.Contains(got, "make failed") {
+		t.Errorf("got %q, want both streams", got)
 	}
 }
 

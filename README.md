@@ -796,13 +796,20 @@ tsuku install ruff --sandbox --json
 | `verified` | Whether the verify command passed (true when no verify command exists) |
 | `install_exit_code` | Container exit code from the install step |
 | `verify_exit_code` | Exit code from the recipe's verify command (-1 if none) |
+| `install_output` | Container output, present only when the install fails |
+| `verify_output` | Verify command output, present only when verification fails |
 | `duration_ms` | Total execution time in milliseconds |
 | `error` | Error message string, or null on success |
+
+`install_output` and `verify_output` carry the last 16 KiB of output, so the failing command is visible without rerunning the build. Values passed with `--env` are masked out of both, since CI commonly forwards a token that way and publishes the result.
 
 When `--json` is set, human-readable progress output is suppressed. CI workflows can parse results with `jq`:
 
 ```bash
 tsuku install ruff --sandbox --json | jq '.passed'
+
+# On failure, read what the container actually printed
+tsuku install ruff --sandbox --json | jq -r '.install_output'
 ```
 
 For technical details, see [DESIGN-install-sandbox.md](docs/DESIGN-install-sandbox.md).
