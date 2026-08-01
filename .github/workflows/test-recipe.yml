@@ -312,6 +312,9 @@ jobs:
         uses: actions/cache@b7e8d49f17405cc70c1c120101943203c98d3a4b  # v5.0.3
         with:
           path: /tmp/tsuku-shared-downloads
+          # hashFiles uses Actions glob semantics, where `**` also matches zero
+          # directories -- so unlike the git pathspec in the detect step, this
+          # already covers the flat embedded recipes. Checked for #2445.
           key: test-recipe-downloads-linux-amd64-${{ hashFiles('recipes/**/*.toml', 'internal/recipe/recipes/**/*.toml') }}
           restore-keys: |
             test-recipe-downloads-linux-amd64-
@@ -482,6 +485,9 @@ jobs:
         uses: actions/cache@b7e8d49f17405cc70c1c120101943203c98d3a4b  # v5.0.3
         with:
           path: /tmp/tsuku-shared-downloads
+          # hashFiles uses Actions glob semantics, where `**` also matches zero
+          # directories -- so unlike the git pathspec in the detect step, this
+          # already covers the flat embedded recipes. Checked for #2445.
           key: test-recipe-downloads-linux-arm64-${{ hashFiles('recipes/**/*.toml', 'internal/recipe/recipes/**/*.toml') }}
           restore-keys: |
             test-recipe-downloads-linux-arm64-
@@ -655,6 +661,9 @@ jobs:
         uses: actions/cache@b7e8d49f17405cc70c1c120101943203c98d3a4b  # v5.0.3
         with:
           path: /tmp/tsuku-shared-downloads
+          # hashFiles uses Actions glob semantics, where `**` also matches zero
+          # directories -- so unlike the git pathspec in the detect step, this
+          # already covers the flat embedded recipes. Checked for #2445.
           key: test-recipe-downloads-darwin-arm64-${{ hashFiles('recipes/**/*.toml', 'internal/recipe/recipes/**/*.toml') }}
           restore-keys: |
             test-recipe-downloads-darwin-arm64-
@@ -771,6 +780,9 @@ jobs:
         uses: actions/cache@b7e8d49f17405cc70c1c120101943203c98d3a4b  # v5.0.3
         with:
           path: /tmp/tsuku-shared-downloads
+          # hashFiles uses Actions glob semantics, where `**` also matches zero
+          # directories -- so unlike the git pathspec in the detect step, this
+          # already covers the flat embedded recipes. Checked for #2445.
           key: test-recipe-downloads-darwin-amd64-${{ hashFiles('recipes/**/*.toml', 'internal/recipe/recipes/**/*.toml') }}
           restore-keys: |
             test-recipe-downloads-darwin-amd64-
