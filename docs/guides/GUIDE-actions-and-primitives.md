@@ -191,6 +191,56 @@ Composite actions are shortcuts for recipe authors. They decompose into primitiv
 | `github_archive` | download_file + extract + chmod + install_binaries | Download release asset from GitHub |
 | `github_file` | download_file + chmod + install_binaries | Download a single binary from GitHub |
 
+##### Multiple Download Sources
+
+Every download composite accepts an optional `fallback_urls` list beside its
+`url`. When a tool's archives are served from more than one place, list the
+hosts you trust in preference order:
+
+```toml
+[[steps]]
+action = "download_archive"
+url = "https://ziglang.freetls.fastly.net/zig-{arch}-{os}-{version}.tar.xz"
+fallback_urls = [
+  "https://zig.squirl.dev/zig-{arch}-{os}-{version}.tar.xz",
+  "https://ziglang.org/download/{version}/zig-{arch}-{os}-{version}.tar.xz",
+]
+```
+
+`url` is tried first, then each `fallback_urls` entry in the order written.
+Nothing probes hosts, ranks them by latency, or remembers which one answered
+last time — the order is exactly what you wrote. Alternates get the same
+`{version}` / `{os}` / `{arch}` expansion and the same `os_mapping` and
+`arch_mapping` as `url`, so a mirror using the same path layout needs no
+special handling.
+
+This matters more than it looks, because `download_archive` fetches the whole
+archive during plan generation to compute the checksum it pins. Before
+fallback existed, one unreachable host failed `tsuku eval` — and since zig is
+an implicit dependency of `cmake_build`, `configure_make` and `meson_build`, a
+dead zig host turned CI red on pull requests that had nothing to do with zig.
+
+**Every source must serve byte-identical content.** The plan pins one
+checksum, and `download_file` verifies it against whatever arrives, whichever
+source served it. A source serving different bytes fails verification exactly
+as a corrupted download does. Before adding an entry, confirm it serves every
+version the recipe must reach — comparing `Content-Length` catches most
+mismatches, and hashing one archive settles it.
+
+Recipe validation covers every entry, so a non-HTTPS or malformed alternate is
+caught at authoring time rather than during an outage months later. A recipe
+that declares alternates without a `checksum_url` gets a warning: plan
+generation mints the checksum from whichever source answers first, so the list
+widens the plan-time trust set even though it does not widen the install-time
+one.
+
+**Effect on golden plans.** A generated plan carries `fallback_urls` only when
+its recipe declared alternates. A single-source recipe's plan is byte-identical
+to what it was before this parameter existed, which is why adding the parameter
+did not require regenerating every golden in `testdata/golden/plans/`. If you
+see `fallback_urls` in a golden diff, the recipe grew a source list; if you see
+it appear in a golden whose recipe you did not touch, something is wrong.
+
 #### Specialized Composites
 
 | Composite | Decomposes To | Example Recipe Use |
