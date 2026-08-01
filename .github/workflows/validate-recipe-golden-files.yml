@@ -80,6 +80,13 @@ jobs:
         run: |
           # Get list of changed recipe files (exclude deleted files)
           # Check both embedded (internal/recipe/recipes) and registry (recipes/) locations
+          #
+          # KNOWN BUG (#2453): the comment above is not true today. These
+          # patterns need a `:(glob)` prefix to match embedded recipes, which
+          # are flat files -- without it this matches registry recipes only and
+          # reports "No recipe files changed" for embedded ones. The fix and the
+          # explanation are in .github/workflows/test-recipe.yml (#2445); this
+          # workflow is deliberately left alone there so the fix stays scoped.
           CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- 'internal/recipe/recipes/**/*.toml' 'recipes/**/*.toml')
 
           if [ -z "$CHANGED" ]; then
