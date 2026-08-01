@@ -171,6 +171,10 @@
             "checksum": "c4bd624d901c1268f2deb9d8eb2d86a2f8b97bafa3f118025344242da2c54d7b",
             "checksum_algo": "sha256",
             "dest": "zig-aarch64-macos-0.15.1.tar.xz",
+            "fallback_urls": [
+              "https://zig.squirl.dev/zig-aarch64-macos-0.15.1.tar.xz",
+              "https://ziglang.org/download/0.15.1/zig-aarch64-macos-0.15.1.tar.xz"
+            ],
             "url": "https://ziglang.freetls.fastly.net/zig-aarch64-macos-0.15.1.tar.xz"
           },
           "evaluable": true,

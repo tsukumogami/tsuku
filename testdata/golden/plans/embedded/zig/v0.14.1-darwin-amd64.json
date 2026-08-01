@@ -14,6 +14,10 @@
         "checksum": "b0f8bdfb9035783db58dd6c19d7dea89892acc3814421853e5752fe4573e5f43",
         "checksum_algo": "sha256",
         "dest": "zig-x86_64-macos-0.14.1.tar.xz",
+        "fallback_urls": [
+          "https://zig.squirl.dev/zig-x86_64-macos-0.14.1.tar.xz",
+          "https://ziglang.org/download/0.14.1/zig-x86_64-macos-0.14.1.tar.xz"
+        ],
         "url": "https://ziglang.freetls.fastly.net/zig-x86_64-macos-0.14.1.tar.xz"
       },
       "evaluable": true,
