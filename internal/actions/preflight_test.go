@@ -35,8 +35,8 @@ func TestValidateAction_ActionWithPreflight(t *testing.T) {
 
 func TestValidateAction_ActionWithoutPreflight(t *testing.T) {
 	// Actions that don't implement Preflight pass validation
-	// set_env is an example that doesn't require specific params in Preflight
-	result := ValidateAction("set_env", nil)
+	// set_rpath is an example that declares no Preflight method
+	result := ValidateAction("set_rpath", nil)
 	if result.HasErrors() {
 		t.Errorf("expected no errors for action that passes Preflight validation, got: %v", result.Errors)
 	}

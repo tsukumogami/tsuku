@@ -78,7 +78,7 @@ and action-specific parameters.
 | `install_binaries` | Copy binaries to install dir; register for PATH symlinking |
 | `chmod` | Set file permissions |
 | `set_rpath` | Modify ELF RPATH for library resolution (Linux) |
-| `set_env` | Export environment variables via env.sh |
+| `set_env` | Export environment variables into the user's shell via shell.d |
 | `text_replace` | Find/replace in files |
 | `install_shell_init` | Write shell initialization scripts |
 | `install_completions` | Write shell completion scripts |

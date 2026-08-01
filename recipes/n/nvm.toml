@@ -6,7 +6,10 @@ version_format = "semver"
 curated = true
 # nvm is a shell function, not a compiled binary. The recipe downloads the source
 # archive, installs it to the tool directory, and wires it into shell init via
-# install_shell_init. Node.js versions managed by nvm are stored under NVM_DIR.
+# install_shell_init. Node.js versions managed by nvm are stored under NVM_DIR,
+# which set_env points at the tool directory. That export has to reach the shell
+# before nvm.sh runs: nvm.sh only honors NVM_DIR when it is already set and
+# otherwise self-locates to the directory it was sourced from.
 
 [version]
 github_repo = "nvm-sh/nvm"

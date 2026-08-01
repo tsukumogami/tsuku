@@ -396,11 +396,34 @@ Platform: Linux only.
 
 ### set_env
 
-Creates an env.sh file that tsuku sources when activating the tool.
+Exports environment variables into the user's shell. Writes
+`$TSUKU_HOME/share/shell.d/00-env-{tool}.{shell}`, which tsuku concatenates into
+the init cache that `$TSUKU_HOME/env` sources on shell startup. Removing the tool
+deletes the files again.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `vars` | map | Yes | Environment variable name-value pairs |
+| `vars` | []table | Yes | Entries of `{name = "VAR", value = "..."}` |
+
+```toml
+[[steps]]
+action = "set_env"
+vars = [{name = "JAVA_HOME", value = "{install_dir}"}]
+```
+
+Notes:
+
+- Runs in the `post-install` phase automatically, so `{install_dir}` expands to
+  the tool's permanent directory (`$TSUKU_HOME/tools/{name}-{version}`) rather
+  than the staging directory.
+- Covers bash and zsh — the shells `$TSUKU_HOME/env` sources. fish is not
+  supported because it needs `set -gx` rather than `export`.
+- The `00-env-` prefix keeps exports sorted ahead of `install_shell_init` files,
+  so a tool's init script sees the variables its recipe set. `recipes/n/nvm.toml`
+  relies on this: `nvm.sh` only honors `NVM_DIR` when it is already set.
+- Names must match `[A-Za-z_][A-Za-z0-9_]*`, and values may not contain newlines.
+  Values are single-quoted, so no shell metacharacter in a value is interpreted.
+- Skipped entirely under `--no-shell-init`.
 
 ### text_replace
 

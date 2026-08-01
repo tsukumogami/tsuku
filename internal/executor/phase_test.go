@@ -18,6 +18,22 @@ func TestStepPhase_PreservesExplicitPhase(t *testing.T) {
 	}
 }
 
+// set_env expands {install_dir} from ToolInstallDir, which is only populated
+// for the post-install phase, so it must default there rather than to install.
+func TestStepPhase_SetEnvDefaultsToPostInstall(t *testing.T) {
+	step := ResolvedStep{Action: "set_env"}
+	if phase := StepPhase(step); phase != "post-install" {
+		t.Errorf("expected set_env to default to 'post-install', got %q", phase)
+	}
+}
+
+func TestStepPhase_ExplicitPhaseBeatsDefault(t *testing.T) {
+	step := ResolvedStep{Action: "set_env", Phase: "install"}
+	if phase := StepPhase(step); phase != "install" {
+		t.Errorf("expected explicit 'install' to win, got %q", phase)
+	}
+}
+
 func TestPhaseFiltering(t *testing.T) {
 	steps := []ResolvedStep{
 		{Action: "download_file", Phase: ""},

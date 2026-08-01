@@ -4,11 +4,30 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
-// SetEnvAction implements environment variable setting
+// envVarNamePattern is the set of names accepted by set_env. The generated file
+// is sourced by the user's shell, so anything outside a plain identifier is
+// rejected rather than escaped.
+var envVarNamePattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+
+// envShells are the shells set_env writes exports for. These are the two shells
+// $TSUKU_HOME/env sources (see config.EnvFileContent) and the two that share
+// `export NAME=value` syntax. fish would need `set -gx` and is not supported.
+var envShells = []string{"bash", "zsh"}
+
+// SetEnvAction exports environment variables into the user's shell by writing
+// $TSUKU_HOME/share/shell.d/00-env-{tool}.{shell}, which RebuildShellCache
+// concatenates into the init cache that $TSUKU_HOME/env sources.
+//
+// The "00-env-" prefix is load-bearing: the cache builder concatenates shell.d
+// in alphabetical order, and a tool's own init script often reads the variables
+// its recipe exports (nvm.sh only honors NVM_DIR when it is already set). The
+// numeric prefix keeps exports ahead of every plausible init filename.
 type SetEnvAction struct{ BaseAction }
 
 // IsDeterministic returns true because set_env produces identical results.
@@ -19,11 +38,52 @@ func (a *SetEnvAction) Name() string {
 	return "set_env"
 }
 
-// Execute sets environment variables
+// Preflight validates parameters without side effects.
+func (a *SetEnvAction) Preflight(params map[string]interface{}) *PreflightResult {
+	result := &PreflightResult{}
+
+	varsRaw, ok := params["vars"]
+	if !ok {
+		result.AddError("set_env action requires 'vars' parameter")
+		return result
+	}
+
+	envVars, err := a.parseVars(varsRaw)
+	if err != nil {
+		result.AddErrorf("set_env: failed to parse vars: %v", err)
+		return result
+	}
+
+	if len(envVars) == 0 {
+		result.AddError("set_env: 'vars' must not be empty")
+	}
+
+	for _, envVar := range envVars {
+		if err := validateEnvVar(envVar); err != nil {
+			result.AddErrorf("set_env: %v", err)
+		}
+	}
+
+	return result
+}
+
+// Execute writes the recipe's environment variables into shell.d.
 //
 // Parameters:
 //   - vars (required): List of environment variables [{name: "JAVA_HOME", value: "{install_dir}"}]
+//
+// This action runs in the post-install phase (see executor.StepPhase) so that
+// {install_dir} expands to the tool's final install directory rather than the
+// staging directory that is deleted once the install finishes.
 func (a *SetEnvAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
+	reporter := ctx.GetReporter()
+
+	// When --no-shell-init is set, skip entirely: no files, no CleanupActions.
+	if ctx.NoShellInit {
+		reporter.Log("   Skipping environment exports (--no-shell-init)")
+		return nil
+	}
+
 	// Get vars list (required)
 	varsRaw, ok := params["vars"]
 	if !ok {
@@ -36,32 +96,97 @@ func (a *SetEnvAction) Execute(ctx *ExecutionContext, params map[string]interfac
 		return fmt.Errorf("failed to parse vars: %w", err)
 	}
 
-	// Build standard vars for substitution
-	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir, ctx.LibsDir)
+	for _, envVar := range envVars {
+		if err := validateEnvVar(envVar); err != nil {
+			return fmt.Errorf("set_env: %w", err)
+		}
+	}
 
-	reporter := ctx.GetReporter()
+	if ctx.ToolInstallDir == "" {
+		return fmt.Errorf("set_env requires ToolInstallDir to be set in ExecutionContext; " +
+			"the step must run in the post-install phase")
+	}
+
+	target, err := envTargetName(ctx)
+	if err != nil {
+		return fmt.Errorf("set_env: %w", err)
+	}
+
+	// {install_dir} must resolve to the tool's permanent directory, not the
+	// staging directory that ctx.InstallDir points at.
+	vars := GetStandardVars(ctx.Version, ctx.ToolInstallDir, ctx.WorkDir, ctx.LibsDir)
+
+	// Derive $TSUKU_HOME from ToolsDir (which is $TSUKU_HOME/tools)
+	tsukuHome := filepath.Dir(ctx.ToolsDir)
+	shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
+
+	if err := os.MkdirAll(shellDDir, 0700); err != nil {
+		return fmt.Errorf("set_env: failed to create shell.d directory: %w", err)
+	}
+	// Ensure restrictive permissions even if the directory already existed
+	if err := os.Chmod(shellDDir, 0700); err != nil {
+		return fmt.Errorf("set_env: failed to set permissions on shell.d directory: %w", err)
+	}
+
 	reporter.Log("   Setting %d environment variable(s)", len(envVars))
 
-	// Create env file
-	envFilePath := filepath.Join(ctx.InstallDir, "env.sh")
-	envFile, err := os.Create(envFilePath)
-	if err != nil {
-		return fmt.Errorf("failed to create env file: %w", err)
-	}
-	defer envFile.Close()
-
-	// Write environment variables
+	var buf strings.Builder
 	for _, envVar := range envVars {
 		value := ExpandVars(envVar.Value, vars)
-
-		// Write to env file
-		fmt.Fprintf(envFile, "export %s=%s\n", envVar.Name, value)
-
+		if err := validateEnvValue(envVar.Name, value); err != nil {
+			return fmt.Errorf("set_env: %w", err)
+		}
+		fmt.Fprintf(&buf, "export %s=%s\n", envVar.Name, shellQuote(value))
 		reporter.Log("   %s=%s", envVar.Name, value)
 	}
+	content := []byte(buf.String())
 
-	reporter.Log("   Environment file: %s", envFilePath)
+	for _, shell := range envShells {
+		destPath := filepath.Join(shellDDir, fmt.Sprintf("%s.%s", target, shell))
+		if err := os.WriteFile(destPath, content, 0600); err != nil {
+			return fmt.Errorf("set_env: failed to write %s: %w", destPath, err)
+		}
+		reporter.Status(fmt.Sprintf("   Installed environment exports: %s", destPath))
+		recordCleanup(ctx, target, shell, contentHash(content))
+	}
+
 	return nil
+}
+
+// envTargetName builds the shell.d basename for this recipe's exports.
+// The "00-env-" prefix keeps exports sorted ahead of tool init scripts.
+func envTargetName(ctx *ExecutionContext) (string, error) {
+	if ctx.Recipe == nil || ctx.Recipe.Metadata.Name == "" {
+		return "", fmt.Errorf("recipe name is not available in ExecutionContext")
+	}
+	name := ctx.Recipe.Metadata.Name
+	if name != filepath.Base(name) || name == "." || name == ".." || strings.ContainsAny(name, `/\`) {
+		return "", fmt.Errorf("recipe name %q is not a valid path segment", name)
+	}
+	return "00-env-" + name, nil
+}
+
+// validateEnvVar checks a variable name and its unexpanded value.
+func validateEnvVar(envVar recipe.EnvVar) error {
+	if !envVarNamePattern.MatchString(envVar.Name) {
+		return fmt.Errorf("invalid variable name %q (must match [A-Za-z_][A-Za-z0-9_]*)", envVar.Name)
+	}
+	return validateEnvValue(envVar.Name, envVar.Value)
+}
+
+// validateEnvValue rejects values that cannot be represented on a single
+// `export` line. Everything else is made safe by shellQuote.
+func validateEnvValue(name, value string) error {
+	if strings.ContainsAny(value, "\n\r\x00") {
+		return fmt.Errorf("value for %q must not contain newlines or NUL bytes", name)
+	}
+	return nil
+}
+
+// shellQuote wraps a value in single quotes, escaping embedded single quotes
+// the POSIX way, so no metacharacter in the value is interpreted by the shell.
+func shellQuote(value string) string {
+	return "'" + strings.ReplaceAll(value, "'", `'\''`) + "'"
 }
 
 // parseVars parses the vars parameter
