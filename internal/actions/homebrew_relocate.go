@@ -446,13 +446,10 @@ func verifyPatchelfRunnable(path string) error {
 	text := strings.TrimSpace(string(output))
 
 	if m := glibcVersionPattern.FindStringSubmatch(text); m != nil {
-		required := m[1]
-		return fmt.Errorf("patchelf at %s cannot run on this system: it needs glibc %s, "+
-			"which is newer than this system's C library. tsuku installs patchelf from a "+
-			"Homebrew bottle, and Homebrew builds its Linux bottles against a recent glibc. "+
-			"Install patchelf with your system package manager so tsuku can use that one "+
-			"instead, or run tsuku on a system with glibc %s or newer. Loader reported: %s",
-			path, required, required, text)
+		return fmt.Errorf("patchelf at %s needs glibc %s, which is newer than this "+
+			"system's C library, so it cannot run. Install patchelf with "+
+			"'apt install patchelf' or 'yum install patchelf' and tsuku will use that "+
+			"one instead. Loader reported: %s", path, m[1], text)
 	}
 
 	if text == "" {
@@ -493,9 +490,7 @@ func (a *HomebrewRelocateAction) findPatchelf(ctx *ExecutionContext) (string, er
 	}
 
 	// 3-4. Check $TSUKU_HOME tools directory (glob and current symlink)
-	if p, err := a.findPatchelfInToolsDir(ctx.ToolsDir, ctx.CurrentDir); err == nil {
-		candidates = append(candidates, p)
-	}
+	candidates = append(candidates, a.patchelfCandidatesInToolsDir(ctx.ToolsDir, ctx.CurrentDir)...)
 
 	var firstUnrunnable error
 	for _, candidate := range candidates {
@@ -515,15 +510,29 @@ func (a *HomebrewRelocateAction) findPatchelf(ctx *ExecutionContext) (string, er
 	return "", fmt.Errorf("patchelf not found: checked ExecPaths, system PATH, %s/patchelf-*/bin/, and %s/", ctx.ToolsDir, ctx.CurrentDir)
 }
 
-// findPatchelfInToolsDir searches for patchelf in the tsuku tools directory.
-// It first globs for versioned install dirs, then checks the current symlink dir.
-func (a *HomebrewRelocateAction) findPatchelfInToolsDir(toolsDir, currentDir string) (string, error) {
+// patchelfCandidatesInToolsDir returns every patchelf in the tsuku tools
+// directory, most-preferred first: the versioned install dirs in reverse glob
+// order, then the current symlink dir.
+//
+// It returns all of them rather than just the best one so findPatchelf can
+// probe each in turn. Keeping only the top match would let a single unrunnable
+// install mask a working one sitting beside it — which is exactly the
+// situation a glibc-mismatched patchelf creates.
+//
+// Reverse glob order approximates newest-first. It is only an approximation:
+// the sort is lexicographic, so "patchelf-0.9.0" sorts above
+// "patchelf-0.19.1". That inversion no longer decides anything on its own,
+// since every candidate is probed and the first runnable one wins.
+func (a *HomebrewRelocateAction) patchelfCandidatesInToolsDir(toolsDir, currentDir string) []string {
+	var candidates []string
+
 	// Glob $TSUKU_HOME/tools/patchelf-*/bin/patchelf
 	if toolsDir != "" {
 		matches, err := filepath.Glob(filepath.Join(toolsDir, "patchelf-*", "bin", "patchelf"))
-		if err == nil && len(matches) > 0 {
-			// Use the last match (highest version due to lexicographic sort)
-			return matches[len(matches)-1], nil
+		if err == nil {
+			for i := len(matches) - 1; i >= 0; i-- {
+				candidates = append(candidates, matches[i])
+			}
 		}
 	}
 
@@ -531,10 +540,19 @@ func (a *HomebrewRelocateAction) findPatchelfInToolsDir(toolsDir, currentDir str
 	if currentDir != "" {
 		candidate := filepath.Join(currentDir, "patchelf")
 		if _, err := os.Stat(candidate); err == nil {
-			return candidate, nil
+			candidates = append(candidates, candidate)
 		}
 	}
 
+	return candidates
+}
+
+// findPatchelfInToolsDir returns the most-preferred patchelf in the tsuku
+// tools directory, without checking whether it runs.
+func (a *HomebrewRelocateAction) findPatchelfInToolsDir(toolsDir, currentDir string) (string, error) {
+	if candidates := a.patchelfCandidatesInToolsDir(toolsDir, currentDir); len(candidates) > 0 {
+		return candidates[0], nil
+	}
 	return "", fmt.Errorf("patchelf not found in tools directory")
 }
 

@@ -170,7 +170,7 @@ func TestVerifyPatchelfRunnable_GlibcMismatch(t *testing.T) {
 	// The point of the check is that the caller learns the cause without
 	// having to interpret a loader message, so assert on the explanation
 	// rather than on the passed-through loader text.
-	for _, want := range []string{"cannot run on this system", "glibc", "2.38", path} {
+	for _, want := range []string{"cannot run", "glibc", "2.38", "apt install patchelf", path} {
 		if !strings.Contains(msg, want) {
 			t.Errorf("error message = %q, want it to contain %q", msg, want)
 		}
@@ -220,6 +220,36 @@ func TestFindPatchelf_SkipsUnrunnableCandidate(t *testing.T) {
 	}
 	if got != working {
 		t.Errorf("findPatchelf() = %q, want the runnable candidate %q", got, working)
+	}
+}
+
+// TestFindPatchelf_SkipsUnrunnableToolsDirInstall covers the same fallback one
+// level down: when tsuku has installed several patchelf versions and the
+// preferred one cannot run, the others must still be considered. Returning
+// only the top match would let one broken install mask a working one sitting
+// beside it.
+func TestFindPatchelf_SkipsUnrunnableToolsDirInstall(t *testing.T) {
+	// Cannot use t.Parallel() with t.Setenv()
+	action := &HomebrewRelocateAction{}
+
+	t.Setenv("PATH", t.TempDir())
+
+	toolsDir := filepath.Join(t.TempDir(), "tools")
+	// Reverse glob order makes 0.19.1 the preferred candidate.
+	writeFakePatchelf(t, filepath.Join(toolsDir, "patchelf-0.19.1", "bin"), glibcLoaderFailureBody)
+	working := writeFakePatchelf(t, filepath.Join(toolsDir, "patchelf-0.18.0", "bin"), "")
+
+	ctx := &ExecutionContext{
+		ToolsDir:   toolsDir,
+		CurrentDir: filepath.Join(toolsDir, "current"),
+	}
+
+	got, err := action.findPatchelf(ctx)
+	if err != nil {
+		t.Fatalf("findPatchelf() returned error: %v", err)
+	}
+	if got != working {
+		t.Errorf("findPatchelf() = %q, want the runnable older install %q", got, working)
 	}
 }
 
