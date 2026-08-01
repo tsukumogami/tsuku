@@ -1,6 +1,6 @@
 ---
 schema: prd/v1
-status: In Progress
+status: Done
 problem: |
   A tsuku recipe can name exactly one download host, and download_archive
   fetches the whole archive at plan time to compute the checksum it pins. So
@@ -30,7 +30,7 @@ motivating_context: |
 
 ## Status
 
-In Progress
+Done
 
 Requirements for issue #2443, framed by
 `docs/briefs/BRIEF-download-archive-fallback.md`. The downstream design doc

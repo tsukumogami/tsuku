@@ -1,6 +1,6 @@
 ---
 schema: brief/v1
-status: Accepted
+status: Done
 problem: |
   A recipe can name exactly one download host. download_archive
   pre-downloads the archive at plan time to compute a checksum, so one
@@ -24,7 +24,7 @@ motivating_context: |
 
 ## Status
 
-Accepted
+Done
 
 Framing for issue #2443. The downstream PRD owns the requirements
 articulation; the DESIGN owns where the source list lives in the recipe

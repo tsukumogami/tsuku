@@ -1,6 +1,6 @@
 ---
 schema: design/v1
-status: Planned
+status: Current
 upstream: docs/prds/PRD-download-archive-fallback.md
 problem: |
   A recipe names one download host, and download_archive fetches the whole
@@ -31,7 +31,7 @@ rationale: |
 
 ## Status
 
-Planned
+Current
 
 Design for issue #2443, from `docs/prds/PRD-download-archive-fallback.md`.
 
