@@ -8,23 +8,39 @@ supported_libc = ["glibc", "musl"]
 [version]
 github_repo = "ziglang/zig"
 
-# Use zigmirror.hryx.net (community mirror on the upstream-published list at
-# ziglang.org/download/community-mirrors.json) instead of ziglang.org/download
-# because the canonical CDN has been intermittently unreachable in CI (#2384).
+# Download source: ziglang.freetls.fastly.net, a community mirror on the
+# upstream-published list at ziglang.org/download/community-mirrors.txt.
+#
+# Source history — two outages, both from the same cause:
+#   ziglang.org        -> #2384: intermittently unreachable from CI
+#   zigmirror.hryx.net -> #2441: unreachable entirely
+# Both resolve to a single address (ziglang.org to one Hetzner address, hryx to
+# one address), so one box or one route going bad took plan generation down
+# repo-wide. Fastly answers from four anycast addresses, which is why it was
+# picked over the remaining community mirrors — pkg.hexops.org, zig.linus.dev,
+# zig.mirror.mschae23.de and zig.squirl.dev are all single-address and share the
+# topology that already failed twice. It carries the same archives as
+# ziglang.org but not its network path, so it does not re-create #2384.
 #
 # GitHub Releases is not a viable alternative: the ziglang/zig project only
 # publishes zig-bootstrap-<version>.tar.xz source archives on GitHub, not the
 # per-platform binaries this recipe needs (verified for 0.14.1 and 0.15.1 via
 # `gh release view <ver> -R ziglang/zig`).
 #
-# Mirror-selection heuristic for future maintainers if hryx becomes unreliable:
-# pick the next entry from community-mirrors.json that (a) is HTTPS, (b) is
-# reachable from GitHub-hosted CI runners, and (c) serves byte-identical
-# archives — the upstream MIRRORS.md spec requires this, and tsuku's pinned
-# checksums will catch any divergence at install time.
+# Mirror-selection heuristic for future maintainers if Fastly becomes
+# unreliable: pick an entry from community-mirrors.txt that (a) is HTTPS,
+# (b) resolves to several addresses rather than one — the property both failed
+# sources lacked, (c) is reachable from GitHub-hosted CI runners, not merely
+# from a developer machine, and (d) serves byte-identical archives. The upstream
+# MIRRORS.md spec requires (d), and tsuku's pinned checksums catch any
+# divergence at install time. Verify (c) by pushing a branch and letting
+# Validate Embedded Dependencies run; a local probe does not establish it.
+#
+# This is still one URL. #2443 tracks giving download_archive a real fallback
+# list so the next outage is not another recipe edit.
 [[steps]]
 action = "download_archive"
-url = "https://zigmirror.hryx.net/zig/zig-{arch}-{os}-{version}.tar.xz"
+url = "https://ziglang.freetls.fastly.net/zig-{arch}-{os}-{version}.tar.xz"
 strip_dirs = 1
 binaries = ["zig"]
 install_mode = "directory"
