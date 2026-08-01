@@ -534,3 +534,39 @@ func TestRebuildShellCache_DirectoryPermissions(t *testing.T) {
 		t.Errorf("expected shell.d directory permissions 0700, got %04o", perm)
 	}
 }
+
+// The shell cache is concatenated in alphabetical order, and that order is a
+// contract, not just reproducibility: a tool's init script often reads what its
+// recipe exported. The set_env action names its files "00-env-<tool>.<shell>"
+// to sit ahead of the tool's own entry, so this test fails if the sort is
+// dropped or reversed.
+func TestRebuildShellCache_EnvExportsPrecedeToolInit(t *testing.T) {
+	tsukuHome := t.TempDir()
+	shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
+	if err := os.MkdirAll(shellDDir, 0700); err != nil {
+		t.Fatalf("failed to create shell.d: %v", err)
+	}
+
+	// Written in the order that would be wrong, so the sort has to do the work.
+	writeTestFile(t, filepath.Join(shellDDir, "nvm.bash"), "# nvm init\n")
+	writeTestFile(t, filepath.Join(shellDDir, "00-env-nvm.bash"), "export NVM_DIR='/tools/nvm-1'\n")
+
+	if err := RebuildShellCache(tsukuHome, "bash"); err != nil {
+		t.Fatalf("RebuildShellCache() error = %v", err)
+	}
+
+	content, err := os.ReadFile(filepath.Join(shellDDir, ".init-cache.bash"))
+	if err != nil {
+		t.Fatalf("reading cache: %v", err)
+	}
+
+	exportAt := strings.Index(string(content), "export NVM_DIR=")
+	initAt := strings.Index(string(content), "# nvm init")
+	if exportAt < 0 || initAt < 0 {
+		t.Fatalf("cache is missing one of the entries:\n%s", content)
+	}
+	if exportAt > initAt {
+		t.Errorf("the 00-env- exports were concatenated after the tool init script; "+
+			"a tool that reads its recipe's variables at source time would miss them:\n%s", content)
+	}
+}

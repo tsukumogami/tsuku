@@ -55,8 +55,13 @@ func (a *InstallShellInitAction) Preflight(params map[string]interface{}) *Prefl
 	}
 
 	// target is required
-	if _, ok := GetString(params, "target"); !ok {
+	if target, ok := GetString(params, "target"); !ok {
 		result.AddError("install_shell_init requires 'target' parameter")
+	} else if strings.HasPrefix(target, EnvFilePrefix) {
+		// Taking this prefix would put an init script ahead of the exports
+		// set_env writes, which is the ordering that prefix exists to guarantee.
+		result.AddErrorf("install_shell_init: target %q may not start with %q (reserved for set_env)",
+			target, EnvFilePrefix)
 	}
 
 	// Validate shells if provided
@@ -138,10 +143,48 @@ func contentHash(data []byte) string {
 	return hex.EncodeToString(h[:])
 }
 
+// shellDCleanupPath is the $TSUKU_HOME-relative path recorded for a shell.d
+// file. It is the single place that formula lives; anything matching against
+// recorded cleanup paths must build them here.
+func shellDCleanupPath(target, shell string) string {
+	return fmt.Sprintf("share/shell.d/%s.%s", target, shell)
+}
+
 // recordCleanup appends a CleanupAction for a shell.d file to the execution context.
 // The path is stored relative to $TSUKU_HOME. The hash is the SHA-256 of the file content.
 func recordCleanup(ctx *ExecutionContext, target, shell, hash string) {
-	relPath := fmt.Sprintf("share/shell.d/%s.%s", target, shell)
+	ctx.CleanupActions = append(ctx.CleanupActions, CleanupAction{
+		Action:      "delete_file",
+		Path:        shellDCleanupPath(target, shell),
+		ContentHash: hash,
+	})
+}
+
+// cleanupRecorded reports whether this execution already recorded a cleanup
+// action for a shell.d file, which means the file on disk is this install's own
+// output rather than a leftover from a previous version.
+func cleanupRecorded(ctx *ExecutionContext, target, shell string) bool {
+	relPath := shellDCleanupPath(target, shell)
+	for _, ca := range ctx.CleanupActions {
+		if ca.Path == relPath {
+			return true
+		}
+	}
+	return false
+}
+
+// upsertCleanup records a cleanup action for a shell.d file, refreshing the
+// content hash when this execution already recorded that path. Only actions
+// that may write the same path more than once in a single install need this;
+// the append-only recordCleanup is right for everything else.
+func upsertCleanup(ctx *ExecutionContext, target, shell, hash string) {
+	relPath := shellDCleanupPath(target, shell)
+	for i := range ctx.CleanupActions {
+		if ctx.CleanupActions[i].Path == relPath {
+			ctx.CleanupActions[i].ContentHash = hash
+			return
+		}
+	}
 	ctx.CleanupActions = append(ctx.CleanupActions, CleanupAction{
 		Action:      "delete_file",
 		Path:        relPath,

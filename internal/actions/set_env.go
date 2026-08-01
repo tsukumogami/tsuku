@@ -20,6 +20,12 @@ var envVarNamePattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
 // `export NAME=value` syntax. fish would need `set -gx` and is not supported.
 var envShells = []string{"bash", "zsh"}
 
+// EnvFilePrefix is reserved for the shell.d files set_env writes. The shell
+// cache concatenates share/shell.d in alphabetical order, so this prefix is
+// what keeps a recipe's exports ahead of that tool's own init script. No other
+// action may claim it -- see the sort in shellenv.RebuildShellCache.
+const EnvFilePrefix = "00-env-"
+
 // SetEnvAction exports environment variables into the user's shell by writing
 // $TSUKU_HOME/share/shell.d/00-env-{tool}.{shell}, which RebuildShellCache
 // concatenates into the init cache that $TSUKU_HOME/env sources.
@@ -36,6 +42,14 @@ func (SetEnvAction) IsDeterministic() bool { return true }
 // Name returns the action name
 func (a *SetEnvAction) Name() string {
 	return "set_env"
+}
+
+// DefaultPhase puts set_env in the post-install phase when the recipe does not
+// name one. {install_dir} has to expand to ToolInstallDir, and that is only
+// populated once the tool reaches its permanent directory; during the install
+// phase it is empty.
+func (a *SetEnvAction) DefaultPhase() string {
+	return "post-install"
 }
 
 // Preflight validates parameters without side effects.
@@ -59,7 +73,10 @@ func (a *SetEnvAction) Preflight(params map[string]interface{}) *PreflightResult
 	}
 
 	for _, envVar := range envVars {
-		if err := validateEnvVar(envVar); err != nil {
+		if err := validateEnvName(envVar.Name); err != nil {
+			result.AddErrorf("set_env: %v", err)
+		}
+		if err := validateEnvValue(envVar.Name, envVar.Value); err != nil {
 			result.AddErrorf("set_env: %v", err)
 		}
 	}
@@ -72,7 +89,7 @@ func (a *SetEnvAction) Preflight(params map[string]interface{}) *PreflightResult
 // Parameters:
 //   - vars (required): List of environment variables [{name: "JAVA_HOME", value: "{install_dir}"}]
 //
-// This action runs in the post-install phase (see executor.StepPhase) so that
+// This action runs in the post-install phase (see DefaultPhase) so that
 // {install_dir} expands to the tool's final install directory rather than the
 // staging directory that is deleted once the install finishes.
 func (a *SetEnvAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
@@ -97,19 +114,20 @@ func (a *SetEnvAction) Execute(ctx *ExecutionContext, params map[string]interfac
 	}
 
 	for _, envVar := range envVars {
-		if err := validateEnvVar(envVar); err != nil {
+		if err := validateEnvName(envVar.Name); err != nil {
 			return fmt.Errorf("set_env: %w", err)
 		}
 	}
 
 	if ctx.ToolInstallDir == "" {
-		// Reached when a step-execution path never runs the post-install phase.
-		// Today that means dependency recipes (Executor.installSingleDependency
-		// executes every step inline with no phases). Failing loudly beats
-		// writing an export that points nowhere.
-		return fmt.Errorf("set_env is not supported here: it needs the tool's final install " +
-			"directory, which is only available in the post-install phase. Recipes installed as " +
-			"a dependency of another tool cannot use set_env")
+		// Reached whenever the step runs outside the post-install phase: a
+		// recipe that overrode the phase, or a step-execution path with no
+		// phases at all (Executor.installSingleDependency runs every step of a
+		// dependency recipe inline). Failing loudly beats writing an export that
+		// points nowhere.
+		return fmt.Errorf("set_env ran outside the post-install phase, so the tool's final " +
+			"install directory is not known yet. Remove any 'phase' override from the step; " +
+			"note that a recipe installed as another tool's dependency cannot use set_env")
 	}
 
 	target, err := envTargetName(ctx)
@@ -147,17 +165,18 @@ func (a *SetEnvAction) Execute(ctx *ExecutionContext, params map[string]interfac
 	content := []byte(buf.String())
 
 	for _, shell := range envShells {
-		relPath := fmt.Sprintf("share/shell.d/%s.%s", target, shell)
 		destPath := filepath.Join(shellDDir, fmt.Sprintf("%s.%s", target, shell))
 
-		// A recipe may carry more than one set_env step. They all target the
-		// same file, so later steps append rather than truncate — otherwise the
-		// earlier steps' exports would vanish without a word.
+		// A recipe may carry more than one set_env step, and they all target the
+		// same file. Later steps append to what this install already wrote --
+		// otherwise the earlier steps' exports would vanish without a word. A
+		// file left by a previous version is not ours to keep, so the first step
+		// of each install truncates.
 		written := content
-		if idx := findCleanupAction(ctx, relPath); idx >= 0 {
+		if cleanupRecorded(ctx, target, shell) {
 			existing, err := os.ReadFile(destPath)
 			if err != nil {
-				return fmt.Errorf("set_env: failed to read %s for append: %w", destPath, err)
+				return fmt.Errorf("set_env: failed to read %s to append to: %w", destPath, err)
 			}
 			written = append(existing, content...)
 		}
@@ -167,26 +186,10 @@ func (a *SetEnvAction) Execute(ctx *ExecutionContext, params map[string]interfac
 		}
 		reporter.Status(fmt.Sprintf("   Installed environment exports: %s", destPath))
 
-		hash := contentHash(written)
-		if idx := findCleanupAction(ctx, relPath); idx >= 0 {
-			ctx.CleanupActions[idx].ContentHash = hash
-		} else {
-			recordCleanup(ctx, target, shell, hash)
-		}
+		upsertCleanup(ctx, target, shell, contentHash(written))
 	}
 
 	return nil
-}
-
-// findCleanupAction returns the index of the cleanup action recorded for
-// relPath, or -1 when this execution has not written that file yet.
-func findCleanupAction(ctx *ExecutionContext, relPath string) int {
-	for i, ca := range ctx.CleanupActions {
-		if ca.Path == relPath {
-			return i
-		}
-	}
-	return -1
 }
 
 // envTargetName builds the shell.d basename for this recipe's exports.
@@ -199,19 +202,24 @@ func envTargetName(ctx *ExecutionContext) (string, error) {
 	if name != filepath.Base(name) || name == "." || name == ".." || strings.ContainsAny(name, `/\`) {
 		return "", fmt.Errorf("recipe name %q is not a valid path segment", name)
 	}
-	return "00-env-" + name, nil
+	return EnvFilePrefix + name, nil
 }
 
-// validateEnvVar checks a variable name and its unexpanded value.
-func validateEnvVar(envVar recipe.EnvVar) error {
-	if !envVarNamePattern.MatchString(envVar.Name) {
-		return fmt.Errorf("invalid variable name %q (must match [A-Za-z_][A-Za-z0-9_]*)", envVar.Name)
+// validateEnvName rejects names that would not survive being written to an
+// `export` line verbatim.
+func validateEnvName(name string) error {
+	if !envVarNamePattern.MatchString(name) {
+		return fmt.Errorf("invalid variable name %q (must match [A-Za-z_][A-Za-z0-9_]*)", name)
 	}
-	return validateEnvValue(envVar.Name, envVar.Value)
+	return nil
 }
 
 // validateEnvValue rejects values that cannot be represented on a single
 // `export` line. Everything else is made safe by shellQuote.
+//
+// Execute checks values after {version} and the other placeholders have been
+// substituted, since that is what actually reaches the file; Preflight checks
+// the recipe's literal, which is all it has.
 func validateEnvValue(name, value string) error {
 	if strings.ContainsAny(value, "\n\r\x00") {
 		return fmt.Errorf("value for %q must not contain newlines or NUL bytes", name)
