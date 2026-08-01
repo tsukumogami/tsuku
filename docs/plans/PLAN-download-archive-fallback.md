@@ -210,30 +210,6 @@ consequence for anyone regenerating a golden, in `docs/EMBEDDED_RECIPES.md`.
 
 ## Dependency Graph
 
-```mermaid
-graph TD
-    subgraph Phase1["Phase 1: Funnel"]
-        I1["Issue 1: decomposeDownload struct"]
-    end
-
-    subgraph Phase2["Phase 2: Fallback"]
-        I2["Issue 2: plan-time fallback"]
-        I3["Issue 3: install-time fallback + cache"]
-    end
-
-    subgraph Phase3["Phase 3: Adoption"]
-        I4["Issue 4: zig recipe + goldens"]
-        I5["Issue 5: docs"]
-    end
-
-    I1 --> I2
-    I2 --> I3
-    I3 --> I4
-    I2 --> I5
-
-    class I1,I2,I3,I4,I5 pending
-```
-
 ## Implementation Sequence
 
 **Critical path:** Issue 1 → Issue 2 → Issue 3 → Issue 4. Every step is a hard
