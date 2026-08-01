@@ -612,6 +612,191 @@ func TestReadVerifyResults_MarkerFilesExist(t *testing.T) {
 	}
 }
 
+// additionalVerifyPlan builds a plan whose primary verify check passes,
+// so any failure the tests observe is attributable to the additional
+// checks rather than to the primary one.
+func additionalVerifyPlan(additional ...executor.PlanAdditionalVerify) *executor.InstallationPlan {
+	return &executor.InstallationPlan{
+		Tool:    "test-tool",
+		Version: "1.0.0",
+		Verify: &executor.PlanVerify{
+			Command:    "test-tool --version",
+			Pattern:    "1.0.0",
+			Additional: additional,
+		},
+	}
+}
+
+// writePrimaryVerifyMarkers writes a passing primary verify result.
+func writePrimaryVerifyMarkers(t *testing.T, dir string) {
+	t.Helper()
+	if err := os.WriteFile(dir+"/.sandbox-verify-exit", []byte("0\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dir+"/.sandbox-verify-output", []byte("test-tool v1.0.0\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func writeAdditionalVerifyMarkers(t *testing.T, dir string, i int, exitCode, output string) {
+	t.Helper()
+	exitMarker, outputMarker := additionalVerifyMarkers(i)
+	if err := os.WriteFile(dir+"/"+exitMarker, []byte(exitCode+"\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dir+"/"+outputMarker, []byte(output+"\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// TestReadVerifyResults_AdditionalNonZeroExit is the sandbox-side
+// counterpart of the issue's demonstration: an additional check running
+// `false` against an impossible pattern must fail verification.
+func TestReadVerifyResults_AdditionalNonZeroExit(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	writePrimaryVerifyMarkers(t, dir)
+	writeAdditionalVerifyMarkers(t, dir, 0, "1", "")
+
+	exec := &Executor{logger: log.NewNoop()}
+	plan := additionalVerifyPlan(executor.PlanAdditionalVerify{
+		Command: "false",
+		Pattern: "THIS_STRING_CANNOT_POSSIBLY_APPEAR",
+	})
+
+	verified, _, output := exec.readVerifyResults(dir, plan)
+	if verified {
+		t.Error("Expected verified=false when an additional check exits non-zero")
+	}
+	if !strings.Contains(output, "additional verification failed") {
+		t.Errorf("Expected the failure to be reported in the output, got %q", output)
+	}
+}
+
+func TestReadVerifyResults_AdditionalPatternMissing(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	writePrimaryVerifyMarkers(t, dir)
+	writeAdditionalVerifyMarkers(t, dir, 0, "0", "blackd, version 1.0.0")
+
+	exec := &Executor{logger: log.NewNoop()}
+	plan := additionalVerifyPlan(executor.PlanAdditionalVerify{
+		Command: "blackd --version",
+		Pattern: "NOT_IN_OUTPUT",
+	})
+
+	verified, _, output := exec.readVerifyResults(dir, plan)
+	if verified {
+		t.Error("Expected verified=false when an additional check's pattern is absent")
+	}
+	if !strings.Contains(output, "NOT_IN_OUTPUT") {
+		t.Errorf("Expected the missing pattern to be named in the output, got %q", output)
+	}
+}
+
+// TestReadVerifyResults_AdditionalMarkersMissing covers the case where
+// the sandbox never produced markers for a declared check. No evidence
+// that a check ran is not evidence that it passed.
+func TestReadVerifyResults_AdditionalMarkersMissing(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	writePrimaryVerifyMarkers(t, dir)
+
+	exec := &Executor{logger: log.NewNoop()}
+	plan := additionalVerifyPlan(executor.PlanAdditionalVerify{
+		Command: "blackd --version",
+		Pattern: "1.0.0",
+	})
+
+	verified, _, _ := exec.readVerifyResults(dir, plan)
+	if verified {
+		t.Error("Expected verified=false when an additional check left no marker files")
+	}
+}
+
+func TestReadVerifyResults_AdditionalAllPass(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	writePrimaryVerifyMarkers(t, dir)
+	writeAdditionalVerifyMarkers(t, dir, 0, "0", "blackd, version 1.0.0")
+	writeAdditionalVerifyMarkers(t, dir, 1, "0", "isortd 1.0.0")
+
+	exec := &Executor{logger: log.NewNoop()}
+	plan := additionalVerifyPlan(
+		executor.PlanAdditionalVerify{Command: "blackd --version", Pattern: "blackd"},
+		// {version} must be substituted from the plan, as it is for the
+		// primary check.
+		executor.PlanAdditionalVerify{Command: "isortd --version", Pattern: "isortd {version}"},
+	)
+
+	verified, exitCode, _ := exec.readVerifyResults(dir, plan)
+	if !verified {
+		t.Error("Expected verified=true when every additional check passes")
+	}
+	if exitCode != 0 {
+		t.Errorf("Expected exitCode=0, got %d", exitCode)
+	}
+}
+
+// TestReadVerifyResults_AdditionalIgnoredWhenPrimaryFails keeps the
+// reported failure attributable to the primary check.
+func TestReadVerifyResults_AdditionalIgnoredWhenPrimaryFails(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	if err := os.WriteFile(dir+"/.sandbox-verify-exit", []byte("1\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dir+"/.sandbox-verify-output", []byte("boom\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	writeAdditionalVerifyMarkers(t, dir, 0, "0", "blackd, version 1.0.0")
+
+	exec := &Executor{logger: log.NewNoop()}
+	plan := additionalVerifyPlan(executor.PlanAdditionalVerify{
+		Command: "blackd --version",
+		Pattern: "blackd",
+	})
+
+	verified, _, output := exec.readVerifyResults(dir, plan)
+	if verified {
+		t.Error("Expected verified=false when the primary check fails")
+	}
+	if strings.Contains(output, "additional verification") {
+		t.Errorf("Expected no additional-check noise when the primary check failed, got %q", output)
+	}
+}
+
+// TestBuildSandboxScript_AdditionalVerify checks that declared additional
+// checks actually reach the script the container runs.
+func TestBuildSandboxScript_AdditionalVerify(t *testing.T) {
+	t.Parallel()
+
+	exec := &Executor{logger: log.NewNoop()}
+	plan := additionalVerifyPlan(executor.PlanAdditionalVerify{
+		Command: "{install_dir}/bin/blackd --version",
+		Pattern: "blackd",
+	})
+
+	script := exec.buildSandboxScript(plan, &SandboxRequirements{})
+
+	wantCmd := "$TSUKU_HOME/tools/test-tool-1.0.0/bin/blackd --version"
+	if !strings.Contains(script, wantCmd) {
+		t.Errorf("Expected script to run the additional check with {install_dir} expanded to %q\nScript:\n%s", wantCmd, script)
+	}
+	exitMarker, outputMarker := additionalVerifyMarkers(0)
+	if !strings.Contains(script, outputMarker) {
+		t.Errorf("Expected script to write the additional output marker %q", outputMarker)
+	}
+	if !strings.Contains(script, exitMarker) {
+		t.Errorf("Expected script to write the additional exit marker %q", exitMarker)
+	}
+}
+
 func TestReadVerifyResults_PatternMismatch(t *testing.T) {
 	t.Parallel()
 

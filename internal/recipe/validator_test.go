@@ -361,6 +361,87 @@ reason = "test"
 	}
 }
 
+func TestValidateBytes_VerifyAdditionalMissingPattern(t *testing.T) {
+	// An additional check with no pattern would reduce to "the command
+	// exited 0" while reading like a real assertion.
+	recipe := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "test --version"
+mode = "output"
+pattern = "test"
+reason = "test"
+
+[[verify.additional]]
+command = "testd --version"
+`
+	result := ValidateBytes([]byte(recipe))
+	if result.Valid {
+		t.Fatal("expected invalid recipe when an additional check has no pattern")
+	}
+	if !hasError(result, "verify.additional[0].pattern", "required") {
+		t.Errorf("expected missing-pattern error, got errors: %+v", result.Errors)
+	}
+}
+
+func TestValidateBytes_VerifyAdditionalMissingCommand(t *testing.T) {
+	recipe := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "test --version"
+mode = "output"
+pattern = "test"
+reason = "test"
+
+[[verify.additional]]
+pattern = "testd"
+`
+	result := ValidateBytes([]byte(recipe))
+	if result.Valid {
+		t.Fatal("expected invalid recipe when an additional check has no command")
+	}
+	if !hasError(result, "verify.additional[0].command", "required") {
+		t.Errorf("expected missing-command error, got errors: %+v", result.Errors)
+	}
+}
+
+func TestValidateBytes_VerifyAdditionalValid(t *testing.T) {
+	recipe := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "test --version"
+mode = "output"
+pattern = "test"
+reason = "test"
+
+[[verify.additional]]
+command = "testd --version"
+pattern = "testd"
+`
+	result := ValidateBytes([]byte(recipe))
+	if !result.Valid {
+		t.Fatalf("expected a well-formed additional check to validate, got errors: %+v", result.Errors)
+	}
+}
+
 func TestValidateBytes_VerifyPatternsVersionModeWarning(t *testing.T) {
 	// version mode (default) without {version} in any patterns entry
 	// should warn the same way single-pattern mode does today.

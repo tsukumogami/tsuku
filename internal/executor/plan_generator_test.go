@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -494,6 +495,81 @@ func TestApplyArchMapping(t *testing.T) {
 
 	if vars["arch"] != "x86_64" {
 		t.Errorf("after mapping, arch = %q, want %q", vars["arch"], "x86_64")
+	}
+}
+
+func TestPlanAdditionalVerify(t *testing.T) {
+	if got := planAdditionalVerify(nil); got != nil {
+		t.Errorf("planAdditionalVerify(nil) = %v, want nil", got)
+	}
+	if got := planAdditionalVerify([]recipe.AdditionalVerify{}); got != nil {
+		t.Errorf("planAdditionalVerify(empty) = %v, want nil", got)
+	}
+
+	got := planAdditionalVerify([]recipe.AdditionalVerify{
+		{Command: "blackd --version", Pattern: "blackd"},
+		{Command: "isortd --version", Pattern: "{version}"},
+	})
+	want := []PlanAdditionalVerify{
+		{Command: "blackd --version", Pattern: "blackd"},
+		{Command: "isortd --version", Pattern: "{version}"},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("planAdditionalVerify = %+v, want %+v", got, want)
+	}
+}
+
+// TestGeneratePlan_CarriesAdditionalVerify guards the regression this
+// test file exists to prevent: entries declared in [[verify.additional]]
+// must survive into the plan, or the checks they declare never run.
+func TestGeneratePlan_CarriesAdditionalVerify(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "test-tool",
+			Description: "Test tool for additional verify propagation",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{
+					"files": []interface{}{"bin/tool"},
+				},
+			},
+		},
+		Verify: &recipe.VerifySection{
+			Command: "tool --version",
+			Pattern: "{version}",
+			Additional: []recipe.AdditionalVerify{
+				{Command: "toold --version", Pattern: "toold"},
+			},
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	defer exec.Cleanup()
+
+	plan, err := exec.GeneratePlan(context.Background(), PlanConfig{
+		OS:           "linux",
+		Arch:         "amd64",
+		RecipeSource: "test",
+	})
+	if err != nil {
+		// Network failures are acceptable in unit tests
+		t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
+	}
+
+	if plan.Verify == nil {
+		t.Fatal("plan.Verify is nil, want the recipe's verify section")
+	}
+	want := []PlanAdditionalVerify{{Command: "toold --version", Pattern: "toold"}}
+	if !reflect.DeepEqual(plan.Verify.Additional, want) {
+		t.Errorf("plan.Verify.Additional = %+v, want %+v", plan.Verify.Additional, want)
 	}
 }
 

@@ -117,6 +117,20 @@ command = "blackd --version"
 pattern = "{version}"
 ```
 
+Additional checks run after the primary verify command passes, in the order
+they're declared. An entry passes when its command exits 0 and its `pattern`
+appears in the combined output. There's no `exit_code` override, so a command
+that exits non-zero fails verification. `{version}` and `{install_dir}` are
+substituted in both fields.
+
+Both `command` and `pattern` are required. A check with no pattern would only
+assert that the command exited 0 while reading like it asserts more, so
+validation rejects it.
+
+Reach for `patterns` instead when one command's output contains several strings
+you need to match. `additional` is for the case where you need to run a
+different command.
+
 ---
 
 ## Common Patterns by Tool Type

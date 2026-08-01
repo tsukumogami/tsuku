@@ -224,6 +224,49 @@ func matchVerifyPatterns(patterns []string, output string) []string {
 	return missing
 }
 
+// runAdditionalVerifications runs each [[verify.additional]] entry in
+// declaration order and returns an error on the first failure. An entry
+// passes only when its command exits 0 and its pattern appears in the
+// combined output — there is no exit_code override, so a check that
+// cannot succeed fails the whole verification rather than being skipped.
+//
+// Callers run this after the primary verify command has passed, so the
+// error a user sees names the additional check rather than looking like
+// a plain version-check failure.
+func runAdditionalVerifications(additional []recipe.AdditionalVerify, version, installDir string, cfg *config.Config, opts ToolVerifyOptions) error {
+	subst := func(s string) string {
+		s = strings.ReplaceAll(s, "{version}", version)
+		s = strings.ReplaceAll(s, "{install_dir}", installDir)
+		return s
+	}
+
+	for i, a := range additional {
+		command := subst(a.Command)
+		pattern := subst(a.Pattern)
+
+		if opts.Verbose {
+			printInfof("  Additional check %d/%d: %s\n", i+1, len(additional), command)
+		}
+
+		cmdExec := exec.Command("sh", "-c", command)
+		cmdExec.Env = makeVerifyEnv(installDir, cfg)
+
+		output, err := cmdExec.CombinedOutput()
+		outputStr := strings.TrimSpace(string(output))
+		if err != nil {
+			return fmt.Errorf("additional verification command failed: %s: %w\nOutput: %s", command, err, outputStr)
+		}
+
+		if !strings.Contains(outputStr, pattern) {
+			return fmt.Errorf("additional verification output does not match expected pattern\n  Command: %s\n  Missing: %s\n  Got: %s", command, pattern, outputStr)
+		}
+		if opts.Verbose {
+			printInfof("  Additional check passed: %s\n", pattern)
+		}
+	}
+	return nil
+}
+
 // makeVerifyEnv creates an environment for verification commands with
 // proper PATH setup. It filters out existing PATH entries and prepends
 // the install directories to ensure the installed tool's binaries are
@@ -281,6 +324,10 @@ func runHiddenToolVerification(r *recipe.Recipe, toolName, version, installDir s
 	}
 	if opts.Verbose && len(patterns) > 0 {
 		printInfof("  Pattern(s) matched: %s\n", strings.Join(patterns, ", "))
+	}
+
+	if err := runAdditionalVerifications(r.Verify.Additional, version, installDir, cfg, opts); err != nil {
+		return err
 	}
 
 	// Binary integrity verification
@@ -357,6 +404,11 @@ func runVisibleToolVerification(r *recipe.Recipe, toolName string, toolState *in
 	if missing := matchVerifyPatterns(patterns, outputStr); len(missing) > 0 {
 		return fmt.Errorf("pattern mismatch\n  Missing: %s\n  Got: %s", strings.Join(missing, ", "), outputStr)
 	}
+
+	if err := runAdditionalVerifications(r.Verify.Additional, version, installDir, cfg, opts); err != nil {
+		return err
+	}
+
 	if opts.Verbose {
 		printInfo("    Installation verified\n")
 	}

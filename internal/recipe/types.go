@@ -847,7 +847,13 @@ type VerifySection struct {
 	Additional    []AdditionalVerify `toml:"additional,omitempty"`
 }
 
-// AdditionalVerify represents additional verification commands
+// AdditionalVerify is a secondary verification command, for tools that
+// install several binaries and need each one checked. Entries run after
+// the primary verify command passes, in declaration order. An entry
+// passes when its command exits 0 and Pattern appears in the combined
+// output; {version} and {install_dir} are substituted in both fields.
+// Unlike VerifySection there is no exit_code override — an additional
+// check that exits non-zero fails verification.
 type AdditionalVerify struct {
 	Command string `toml:"command"`
 	Pattern string `toml:"pattern"`

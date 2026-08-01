@@ -695,8 +695,29 @@ func validateVerify(result *ValidationResult, r *Recipe) {
 	// Check for dangerous patterns in verify command
 	validateDangerousPatterns(result, r.Verify.Command)
 
+	validateAdditionalVerify(result, r.Verify.Additional)
+
 	// Validate verification mode
 	validateVerifyMode(result, r)
+}
+
+// validateAdditionalVerify checks each [[verify.additional]] entry. Both
+// fields are required: an entry with no command has nothing to run, and
+// an entry with an empty pattern would match any output, which reduces
+// the check to "the command exited 0" while reading like a real
+// assertion. Either shape is a check that quietly does less than it
+// claims, so both are errors rather than warnings.
+func validateAdditionalVerify(result *ValidationResult, additional []AdditionalVerify) {
+	for i, a := range additional {
+		field := fmt.Sprintf("verify.additional[%d]", i)
+		if a.Command == "" {
+			result.addError(field+".command", "command is required")
+		}
+		if a.Pattern == "" {
+			result.addError(field+".pattern", "pattern is required")
+		}
+		validateDangerousPatterns(result, a.Command)
+	}
 }
 
 // validateDangerousPatterns checks for potentially dangerous patterns in verify commands
