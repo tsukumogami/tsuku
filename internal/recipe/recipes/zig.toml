@@ -28,23 +28,29 @@ github_repo = "ziglang/zig"
 # sits in front of the bytes; check the CNAME chain, not the address count.
 #
 # What this source does and does not fix — read this before picking the next
-# one. ziglang.freetls.fastly.net is Fastly fronting the SAME origin as
-# ziglang.org: identical ETag and Last-Modified, same nginx, one-hour TTL with
-# pull-through revalidation. It is not an independent copy. What it changes is
+# one. ziglang.freetls.fastly.net serves ziglang.org's own bytes rather than an
+# independent copy: both return the same ETag and Last-Modified from the same
+# nginx, with a one-hour TTL and pull-through revalidation. So what changes is
 # the path CI takes to the bytes — an edge cache at a nearby POP instead of one
-# long trip to one Hetzner box. If #2384 was a route problem between GitHub
-# runners and Hetzner, that is fixed. If the origin itself was down, this buys
-# an hour of cache per POP and then fails too. Both readings fit #2384's
-# symptoms, so treat the origin exposure as still open.
+# long trip to one Hetzner box — not the origin behind them. If #2384 was a
+# route problem between GitHub runners and Hetzner, that is fixed. If the
+# origin itself was down, this buys at least an hour of cache per POP and then
+# fails too. Both readings fit #2384's symptoms, so treat the origin exposure
+# as still open.
 #
 # Triage for whoever is here next, because the two cases need opposite moves:
 #   - Fastly timing out / unreachable at the edge -> a path problem. Another
 #     CDN-fronted source may help.
 #   - Fastly returning 5xx or revalidation errors -> suspect the shared origin.
 #     Switch to a mirror that stores its OWN copies rather than another
-#     ziglang.org alias. zig.squirl.dev is the strongest such candidate: it is
-#     both independently operated and CDN-backed. It has not been verified from
-#     CI runners, so verify before trusting it.
+#     ziglang.org alias. Test for that the same way this note was written:
+#     compare Last-Modified against ziglang.org's. An independent mirror
+#     carries its own mtime; an alias reproduces ziglang.org's exactly.
+#     zig.squirl.dev is the strongest such candidate — independently operated
+#     and CDN-backed (BunnyCDN). It was not taken in #2441 only because
+#     reachability from GitHub runners was unproven for it and proven for
+#     Fastly, and that is the property that failed both previous times. Verify
+#     it from CI before trusting it.
 #
 # GitHub Releases is not a viable alternative: the ziglang/zig project only
 # publishes zig-bootstrap-<version>.tar.xz source archives on GitHub, not the
