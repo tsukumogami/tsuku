@@ -8,7 +8,7 @@ description = "Distributed revision control system (source build for testing)"
 homepage = "https://git-scm.com/"
 # libcurl-source is built from source with --disable-ldap to avoid OPENLDAP
 # symbol version mismatch in Debian sandbox containers.
-# NO_TCLTK skips gitk/git-gui (need msgfmt in container).
+# See make_args below for the flags that keep this dependency set small.
 dependencies = ["libcurl-source", "openssl", "zlib", "expat"]
 
 [version]
@@ -36,7 +36,15 @@ make_args = [
     "RUNTIME_PREFIX=YesPlease",
     "gitexecdir=libexec/git-core",
     "NO_GETTEXT=YesPlease",
+    # NO_TCLTK skips gitk/git-gui, which need msgfmt in the container.
     "NO_TCLTK=YesPlease",
+    # git 2.55 builds part of itself in Rust and invokes cargo from the
+    # Makefile. This fixture exercises configure_make against C library
+    # dependencies, so it opts out rather than pulling a Rust toolchain into
+    # the sandbox.
+    # TODO(#2456): git 3.0 removes NO_RUST. This recipe then needs a
+    # cargo-providing dependency or a pinned version.
+    "NO_RUST=YesPlease",
     "NO_CURL=",
     "CURLDIR={libs_dir}/libcurl-source-{deps.libcurl-source.version}",
     "CURL_LIBCURL=-L{libs_dir}/libcurl-source-{deps.libcurl-source.version}/lib -lcurl",

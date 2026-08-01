@@ -271,7 +271,10 @@ jobs:
                   --json > "$RESULT_FILE" 2>/dev/null || true
 
                 if [ -f "$RESULT_FILE" ] && jq -e . "$RESULT_FILE" > /dev/null 2>&1; then
-                  cat "$RESULT_FILE"  # Show output for logging
+                  # Show the result for logging, minus the build-log fields
+                  # this loop does not read -- they would add up to 16 KiB of
+                  # escaped output per failing recipe per family.
+                  jq 'del(.install_output, .verify_output)' "$RESULT_FILE"
 
                   # Sandbox JSON has install_exit_code; error JSON has exit_code
                   if jq -e '.install_exit_code' "$RESULT_FILE" > /dev/null 2>&1; then
@@ -423,7 +426,10 @@ jobs:
                   --json > "$RESULT_FILE" 2>/dev/null || true
 
                 if [ -f "$RESULT_FILE" ] && jq -e . "$RESULT_FILE" > /dev/null 2>&1; then
-                  cat "$RESULT_FILE"  # Show output for logging
+                  # Show the result for logging, minus the build-log fields
+                  # this loop does not read -- they would add up to 16 KiB of
+                  # escaped output per failing recipe per family.
+                  jq 'del(.install_output, .verify_output)' "$RESULT_FILE"
 
                   # Sandbox JSON has install_exit_code; error JSON has exit_code
                   if jq -e '.install_exit_code' "$RESULT_FILE" > /dev/null 2>&1; then
