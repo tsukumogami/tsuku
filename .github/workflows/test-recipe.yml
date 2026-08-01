@@ -125,7 +125,11 @@ jobs:
             # To check a change here, this must print files:
             #   git ls-files -- ':(glob)internal/recipe/recipes/**/*.toml'
             # Drop the prefix and it prints nothing.
-            CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- ':(glob)recipes/**/*.toml' ':(glob)internal/recipe/recipes/**/*.toml')
+            #
+            # core.quotePath=false because git otherwise C-quotes any path with
+            # a non-ASCII byte -- `"internal/recipe/recipes/t\303\251st.toml"`,
+            # quotes and all -- which is not a path anything downstream can open.
+            CHANGED=$(git -c core.quotePath=false diff --name-only --diff-filter=d origin/main...HEAD -- ':(glob)recipes/**/*.toml' ':(glob)internal/recipe/recipes/**/*.toml')
             if [ -z "$CHANGED" ]; then
               # A real possibility, not necessarily a bug: this workflow also
               # triggers on changes to itself. The cross-check step below is
@@ -186,7 +190,12 @@ jobs:
           # would come out empty, which reads as "no recipes changed" -- the
           # very thing this step exists to catch. Split like this, `set -e`
           # fails the step on a git error.
-          ALL_CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD)
+          #
+          # core.quotePath=false for the same reason as the detect step: a
+          # C-quoted path starts with a `"`, so the anchored grep below would
+          # miss it and this step would go quiet about a file detect mangled --
+          # the failure it exists to catch, through a door it wasn't watching.
+          ALL_CHANGED=$(git -c core.quotePath=false diff --name-only --diff-filter=d origin/main...HEAD)
           IN_DIFF=$(printf '%s\n' "$ALL_CHANGED" \
             | grep -E '^(recipes|internal/recipe/recipes)/.*\.toml$' | sort || true)
 
