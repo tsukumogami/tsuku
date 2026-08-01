@@ -11,33 +11,60 @@ github_repo = "ziglang/zig"
 # Download source: ziglang.freetls.fastly.net, a community mirror on the
 # upstream-published list at ziglang.org/download/community-mirrors.txt.
 #
-# Source history — two outages, both from the same cause:
+# Source history — two outages:
 #   ziglang.org        -> #2384: intermittently unreachable from CI
 #   zigmirror.hryx.net -> #2441: unreachable entirely
-# Both resolve to a single address (ziglang.org to one Hetzner address, hryx to
-# one address), so one box or one route going bad took plan generation down
-# repo-wide. Fastly answers from four anycast addresses, which is why it was
-# picked over the remaining community mirrors — pkg.hexops.org, zig.linus.dev,
-# zig.mirror.mschae23.de and zig.squirl.dev are all single-address and share the
-# topology that already failed twice. It carries the same archives as
-# ziglang.org but not its network path, so it does not re-create #2384.
+# Both were a single origin host with nothing cached in front of it, so one
+# machine or one route going bad took plan generation down repo-wide —
+# download_archive pre-downloads to compute a checksum, so an unreachable
+# source breaks `tsuku eval`, not just install.
+#
+# Do NOT rank candidates by how many addresses they resolve to. That test looks
+# right and is not: ziglang.org is dual-stack (65.109.105.178 and
+# 2a01:4f9:3051:4bd2::2) and still one box, while zig.squirl.dev answers with a
+# single address per family and is a BunnyCDN pull zone (CNAME
+# squirl-zig.b-cdn.net) serving from many POPs. Geo-DNS hands back the local
+# POP, so a real CDN can look single-homed. What matters is whether a CDN edge
+# sits in front of the bytes; check the CNAME chain, not the address count.
+#
+# What this source does and does not fix — read this before picking the next
+# one. ziglang.freetls.fastly.net is Fastly fronting the SAME origin as
+# ziglang.org: identical ETag and Last-Modified, same nginx, one-hour TTL with
+# pull-through revalidation. It is not an independent copy. What it changes is
+# the path CI takes to the bytes — an edge cache at a nearby POP instead of one
+# long trip to one Hetzner box. If #2384 was a route problem between GitHub
+# runners and Hetzner, that is fixed. If the origin itself was down, this buys
+# an hour of cache per POP and then fails too. Both readings fit #2384's
+# symptoms, so treat the origin exposure as still open.
+#
+# Triage for whoever is here next, because the two cases need opposite moves:
+#   - Fastly timing out / unreachable at the edge -> a path problem. Another
+#     CDN-fronted source may help.
+#   - Fastly returning 5xx or revalidation errors -> suspect the shared origin.
+#     Switch to a mirror that stores its OWN copies rather than another
+#     ziglang.org alias. zig.squirl.dev is the strongest such candidate: it is
+#     both independently operated and CDN-backed. It has not been verified from
+#     CI runners, so verify before trusting it.
 #
 # GitHub Releases is not a viable alternative: the ziglang/zig project only
 # publishes zig-bootstrap-<version>.tar.xz source archives on GitHub, not the
 # per-platform binaries this recipe needs (verified for 0.14.1 and 0.15.1 via
 # `gh release view <ver> -R ziglang/zig`).
 #
-# Mirror-selection heuristic for future maintainers if Fastly becomes
-# unreliable: pick an entry from community-mirrors.txt that (a) is HTTPS,
-# (b) resolves to several addresses rather than one — the property both failed
-# sources lacked, (c) is reachable from GitHub-hosted CI runners, not merely
-# from a developer machine, and (d) serves byte-identical archives. The upstream
-# MIRRORS.md spec requires (d), and tsuku's pinned checksums catch any
-# divergence at install time. Verify (c) by pushing a branch and letting
-# Validate Embedded Dependencies run; a local probe does not establish it.
+# Selection heuristic: re-read community-mirrors.txt rather than trusting any
+# list written here — it had 16 entries when this was written and it changes.
+# Prefer a source that (a) is HTTPS, (b) serves byte-identical archives — the
+# upstream MIRRORS.md spec requires it, and tsuku's pinned checksums catch
+# divergence at install time, and (c) is reachable from GitHub-hosted CI
+# runners. Verify (c) by pushing a branch and letting Validate Embedded
+# Dependencies run; a local probe does not establish it, and getting that wrong
+# is what produced #2441. Among sources that qualify, prefer a CDN edge over a
+# bare origin host, and prefer an independent operator over another ziglang.org
+# alias when the origin is the suspect. If nothing better qualifies, take the
+# most reachable candidate as a stopgap — the real fix is #2443.
 #
-# This is still one URL. #2443 tracks giving download_archive a real fallback
-# list so the next outage is not another recipe edit.
+# This is still one URL. #2443 tracks giving download_archive a fallback list
+# so the next outage is not another recipe edit.
 [[steps]]
 action = "download_archive"
 url = "https://ziglang.freetls.fastly.net/zig-{arch}-{os}-{version}.tar.xz"
