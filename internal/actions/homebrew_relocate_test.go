@@ -72,7 +72,7 @@ func TestHomebrewRelocateAction_ExtractBottlePrefixes_NoInstallSegment(t *testin
 // -- findPatchelf discovery tests --
 
 func TestFindPatchelf_ExecPaths(t *testing.T) {
-	t.Parallel()
+	// No t.Parallel(): writes then execs a fake patchelf (see writeFakePatchelf).
 	action := &HomebrewRelocateAction{}
 
 	// Create a temporary bin dir with a fake patchelf
@@ -121,7 +121,313 @@ func TestFindPatchelf_NotFound_ReturnsError(t *testing.T) {
 	}
 }
 
-// -- findPatchelfInToolsDir tests (test glob/current fallback directly) --
+// -- patchelf runnability tests --
+
+// writeFakePatchelf writes an executable shell script named "patchelf" into
+// dir, with body as its contents after the shebang, and returns its path.
+//
+// Tests that write a fake and then run it must NOT call t.Parallel(). Go's
+// fork inherits open file descriptors, so a fork in one goroutine racing a
+// WriteFile in another can leave the child holding the new script open for
+// writing, and the subsequent exec fails with ETXTBSY (golang/go#22315). The
+// symptom is an assertion failing against "text file busy" instead of the
+// message under test, intermittently. Keeping these tests sequential keeps
+// their writes away from other tests' forks.
+func writeFakePatchelf(t *testing.T, dir, body string) string {
+	t.Helper()
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(dir, "patchelf")
+	if err := os.WriteFile(path, []byte("#!/bin/sh\n"+body), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	return path
+}
+
+// glibcLoaderFailureBody makes a fake patchelf reproduce what the dynamic
+// loader prints when a binary needs a newer glibc than the host provides —
+// the exact failure mode of issue #2447, where the Homebrew patchelf bottle
+// wants GLIBC_2.38 on an image that ships something older.
+//
+// Two things to know before editing this. The backtick is escaped because the
+// message sits inside shell double quotes, where an unescaped one would start a
+// command substitution; Go needs no escape for it. And this has to stay a
+// double-quoted Go literal — a raw (backquoted) string cannot contain a
+// backtick at all, so converting it for readability is not possible.
+//
+// The two $0s are live shell expansions, not literal text: anything else with a
+// $ added here will expand too.
+const glibcLoaderFailureBody = "echo \"$0: /lib/x86_64-linux-gnu/libc.so.6: version \\`GLIBC_2.38' not found (required by $0)\" >&2\nexit 1\n"
+
+func TestVerifyPatchelfRunnable_Runnable(t *testing.T) {
+	// No t.Parallel(): writes then execs a fake patchelf (see writeFakePatchelf).
+	// An empty script exits 0 for any arguments, standing in for a patchelf
+	// that answers --version normally.
+	path := writeFakePatchelf(t, t.TempDir(), "")
+	if err := verifyPatchelfRunnable(path); err != nil {
+		t.Errorf("verifyPatchelfRunnable() on a runnable binary = %v, want nil", err)
+	}
+}
+
+func TestVerifyPatchelfRunnable_GlibcMismatch(t *testing.T) {
+	// No t.Parallel(): writes then execs a fake patchelf (see writeFakePatchelf).
+	path := writeFakePatchelf(t, t.TempDir(), glibcLoaderFailureBody)
+
+	err := verifyPatchelfRunnable(path)
+	if err == nil {
+		t.Fatal("verifyPatchelfRunnable() on an unrunnable binary = nil, want error")
+	}
+
+	msg := err.Error()
+	// The point of the check is that the caller learns the cause without
+	// having to interpret a loader message, so assert on the explanation
+	// rather than on the passed-through loader text.
+	for _, want := range []string{"cannot run", "glibc", "2.38", "apt install patchelf", path} {
+		if !strings.Contains(msg, want) {
+			t.Errorf("error message = %q, want it to contain %q", msg, want)
+		}
+	}
+}
+
+func TestVerifyPatchelfRunnable_GenericFailure(t *testing.T) {
+	// No t.Parallel(): writes then execs a fake patchelf (see writeFakePatchelf).
+	path := writeFakePatchelf(t, t.TempDir(), "echo 'illegal instruction' >&2\nexit 132\n")
+
+	err := verifyPatchelfRunnable(path)
+	if err == nil {
+		t.Fatal("verifyPatchelfRunnable() on a failing binary = nil, want error")
+	}
+
+	msg := err.Error()
+	if !strings.Contains(msg, "illegal instruction") {
+		t.Errorf("error message = %q, want it to carry the command output", msg)
+	}
+	// A failure that isn't a symbol-version problem must not be reported as one.
+	if strings.Contains(msg, "glibc") {
+		t.Errorf("error message = %q, want no glibc claim for an unrelated failure", msg)
+	}
+}
+
+// TestFindPatchelf_SkipsUnrunnableCandidate covers the fallback that keeps an
+// install alive when tsuku's own patchelf cannot execute but another one on
+// the host can — the realistic recovery for a user whose distribution ships an
+// older glibc and who has installed patchelf from their package manager.
+func TestFindPatchelf_SkipsUnrunnableCandidate(t *testing.T) {
+	// No t.Parallel(): writes then execs a fake patchelf (see writeFakePatchelf).
+	action := &HomebrewRelocateAction{}
+
+	// Neutralize PATH so the assertion rests on the ExecPaths ordering under
+	// test rather than on ExecPaths happening to be searched before PATH.
+	t.Setenv("PATH", t.TempDir())
+
+	tmpDir := t.TempDir()
+	brokenDir := filepath.Join(tmpDir, "broken")
+	workingDir := filepath.Join(tmpDir, "working")
+	writeFakePatchelf(t, brokenDir, glibcLoaderFailureBody)
+	working := writeFakePatchelf(t, workingDir, "")
+
+	ctx := &ExecutionContext{
+		ExecPaths: []string{brokenDir, workingDir},
+	}
+
+	got, err := action.findPatchelf(ctx)
+	if err != nil {
+		t.Fatalf("findPatchelf() returned error: %v", err)
+	}
+	if got != working {
+		t.Errorf("findPatchelf() = %q, want the runnable candidate %q", got, working)
+	}
+}
+
+// TestFindPatchelf_SkipsUnrunnableToolsDirInstall covers the same fallback one
+// level down: when tsuku has installed several patchelf versions and the
+// preferred one cannot run, the others must still be considered. Returning
+// only the top match would let one broken install mask a working one sitting
+// beside it.
+func TestFindPatchelf_SkipsUnrunnableToolsDirInstall(t *testing.T) {
+	// Cannot use t.Parallel() with t.Setenv()
+	action := &HomebrewRelocateAction{}
+
+	t.Setenv("PATH", t.TempDir())
+
+	toolsDir := filepath.Join(t.TempDir(), "tools")
+	// Reverse glob order makes 0.19.1 the preferred candidate.
+	writeFakePatchelf(t, filepath.Join(toolsDir, "patchelf-0.19.1", "bin"), glibcLoaderFailureBody)
+	working := writeFakePatchelf(t, filepath.Join(toolsDir, "patchelf-0.18.0", "bin"), "")
+
+	ctx := &ExecutionContext{
+		ToolsDir:   toolsDir,
+		CurrentDir: filepath.Join(toolsDir, "current"),
+	}
+
+	got, err := action.findPatchelf(ctx)
+	if err != nil {
+		t.Fatalf("findPatchelf() returned error: %v", err)
+	}
+	if got != working {
+		t.Errorf("findPatchelf() = %q, want the runnable older install %q", got, working)
+	}
+}
+
+// TestFindPatchelf_AllCandidatesUnrunnable_ReportsCause guards against the
+// regression that motivated this check: reporting "patchelf not found" when
+// patchelf is present and merely unusable sends the reader looking for a
+// missing dependency instead of a glibc mismatch.
+func TestFindPatchelf_AllCandidatesUnrunnable_ReportsCause(t *testing.T) {
+	// Cannot use t.Parallel() with t.Setenv()
+	action := &HomebrewRelocateAction{}
+
+	// Override PATH so a real system patchelf can't satisfy the lookup.
+	t.Setenv("PATH", t.TempDir())
+
+	tmpDir := t.TempDir()
+	binDir := filepath.Join(tmpDir, "bin")
+	writeFakePatchelf(t, binDir, glibcLoaderFailureBody)
+
+	ctx := &ExecutionContext{
+		ExecPaths:  []string{binDir},
+		ToolsDir:   filepath.Join(tmpDir, "tools"),
+		CurrentDir: filepath.Join(tmpDir, "tools", "current"),
+	}
+
+	_, err := action.findPatchelf(ctx)
+	if err == nil {
+		t.Fatal("findPatchelf() with only unrunnable candidates = nil, want error")
+	}
+	msg := err.Error()
+	if !strings.Contains(msg, "glibc") || !strings.Contains(msg, "2.38") {
+		t.Errorf("error message = %q, want it to name the glibc mismatch", msg)
+	}
+	if strings.Contains(msg, "patchelf not found") {
+		t.Errorf("error message = %q, want it not to claim patchelf is missing", msg)
+	}
+}
+
+// TestPatchelfFinder_ResolvesOnce is the regression guard for the "probe once
+// per install, not once per binary" property. Without memoization a bottle
+// with many binaries would spawn a patchelf process per binary just to check
+// that patchelf works.
+func TestPatchelfFinder_ResolvesOnce(t *testing.T) {
+	// No t.Parallel(): writes then execs a fake patchelf (see writeFakePatchelf).
+	action := &HomebrewRelocateAction{}
+
+	tmpDir := t.TempDir()
+	binDir := filepath.Join(tmpDir, "bin")
+	counter := filepath.Join(tmpDir, "invocations")
+	expected := writeFakePatchelf(t, binDir, "echo x >> "+counter+"\n")
+
+	ctx := &ExecutionContext{ExecPaths: []string{binDir}}
+	finder := newPatchelfFinder(action, ctx)
+
+	for i := 0; i < 3; i++ {
+		got, err := finder()
+		if err != nil {
+			t.Fatalf("finder() call %d returned error: %v", i, err)
+		}
+		if got != expected {
+			t.Errorf("finder() call %d = %q, want %q", i, got, expected)
+		}
+	}
+
+	data, err := os.ReadFile(counter)
+	if err != nil {
+		t.Fatalf("reading invocation counter: %v", err)
+	}
+	if n := len(strings.Fields(string(data))); n != 1 {
+		t.Errorf("patchelf was invoked %d times across 3 finder calls, want 1", n)
+	}
+}
+
+// TestPatchelfFinder_MemoizesFailure covers the other half of the finder's
+// contract. A failed search is as expensive as a successful one, and a bottle
+// full of ELF binaries would re-run it per binary if only success were cached.
+func TestPatchelfFinder_MemoizesFailure(t *testing.T) {
+	// No t.Parallel(): writes then execs a fake patchelf (see writeFakePatchelf).
+	action := &HomebrewRelocateAction{}
+
+	t.Setenv("PATH", t.TempDir())
+
+	tmpDir := t.TempDir()
+	binDir := filepath.Join(tmpDir, "bin")
+	counter := filepath.Join(tmpDir, "invocations")
+	writeFakePatchelf(t, binDir, "echo x >> "+counter+"\n"+glibcLoaderFailureBody)
+
+	ctx := &ExecutionContext{ExecPaths: []string{binDir}}
+	finder := newPatchelfFinder(action, ctx)
+
+	var first error
+	for i := 0; i < 3; i++ {
+		_, err := finder()
+		if err == nil {
+			t.Fatalf("finder() call %d = nil error, want the glibc failure", i)
+		}
+		if i == 0 {
+			first = err
+		} else if err.Error() != first.Error() {
+			t.Errorf("finder() call %d returned a different error:\n got %v\nwant %v", i, err, first)
+		}
+	}
+
+	data, err := os.ReadFile(counter)
+	if err != nil {
+		t.Fatalf("reading invocation counter: %v", err)
+	}
+	if n := len(strings.Fields(string(data))); n != 1 {
+		t.Errorf("patchelf was invoked %d times across 3 failing finder calls, want 1", n)
+	}
+}
+
+// TestFixBinaryRpath_UnrunnablePatchelfNamesCause is the end-to-end assertion
+// for the reporting behavior: an ELF binary dispatched for RPATH fixup with
+// an unrunnable patchelf must fail with the cause named, not with the loader's
+// raw output. Execute wires the same finder into this pass and the ELF chain
+// walk, so both report identically.
+func TestFixBinaryRpath_UnrunnablePatchelfNamesCause(t *testing.T) {
+	// Cannot use t.Parallel() with t.Setenv()
+	action := &HomebrewRelocateAction{}
+
+	t.Setenv("PATH", t.TempDir())
+
+	tmpDir := t.TempDir()
+	binDir := filepath.Join(tmpDir, "bin")
+	writeFakePatchelf(t, binDir, glibcLoaderFailureBody)
+
+	// Magic bytes are what routes fixBinaryRpath to the ELF path, so a stub
+	// header is enough to reach the patchelf lookup on any host.
+	fixture := filepath.Join(tmpDir, "make")
+	if err := os.WriteFile(fixture, []byte{0x7f, 'E', 'L', 'F', 0x02, 0x01, 0x01}, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		ExecPaths:  []string{binDir},
+		ToolsDir:   filepath.Join(tmpDir, "tools"),
+		CurrentDir: filepath.Join(tmpDir, "tools", "current"),
+	}
+
+	err := action.fixBinaryRpath(fixture, "/opt/make", newPatchelfFinder(action, ctx), progress.NoopReporter{})
+	if err == nil {
+		t.Fatal("fixBinaryRpath() with an unrunnable patchelf = nil, want error")
+	}
+	msg := err.Error()
+	if !strings.Contains(msg, "glibc") || !strings.Contains(msg, "2.38") {
+		t.Errorf("error message = %q, want it to name the glibc mismatch", msg)
+	}
+}
+
+// -- patchelfCandidatesInToolsDir tests (glob/current discovery, no probing) --
+
+// firstCandidate returns the most-preferred candidate, failing the test if the
+// list is empty. Discovery order is what these tests pin down; which candidate
+// survives probing is covered by the findPatchelf tests above.
+func firstCandidate(t *testing.T, candidates []string) string {
+	t.Helper()
+	if len(candidates) == 0 {
+		t.Fatal("patchelfCandidatesInToolsDir() returned no candidates")
+	}
+	return candidates[0]
+}
 
 func TestFindPatchelfInToolsDir_Glob(t *testing.T) {
 	t.Parallel()
@@ -139,12 +445,9 @@ func TestFindPatchelfInToolsDir_Glob(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, err := action.findPatchelfInToolsDir(toolsDir, filepath.Join(toolsDir, "current"))
-	if err != nil {
-		t.Fatalf("findPatchelfInToolsDir() returned error: %v", err)
-	}
+	got := firstCandidate(t, action.patchelfCandidatesInToolsDir(toolsDir, filepath.Join(toolsDir, "current")))
 	if got != fakePatchelf {
-		t.Errorf("findPatchelfInToolsDir() = %q, want %q", got, fakePatchelf)
+		t.Errorf("patchelfCandidatesInToolsDir() first = %q, want %q", got, fakePatchelf)
 	}
 }
 
@@ -163,12 +466,9 @@ func TestFindPatchelfInToolsDir_CurrentDir(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, err := action.findPatchelfInToolsDir(filepath.Join(tmpDir, "tools"), currentDir)
-	if err != nil {
-		t.Fatalf("findPatchelfInToolsDir() returned error: %v", err)
-	}
+	got := firstCandidate(t, action.patchelfCandidatesInToolsDir(filepath.Join(tmpDir, "tools"), currentDir))
 	if got != fakePatchelf {
-		t.Errorf("findPatchelfInToolsDir() = %q, want %q", got, fakePatchelf)
+		t.Errorf("patchelfCandidatesInToolsDir() first = %q, want %q", got, fakePatchelf)
 	}
 }
 
@@ -189,14 +489,11 @@ func TestFindPatchelfInToolsDir_PicksLatestVersion(t *testing.T) {
 		}
 	}
 
-	got, err := action.findPatchelfInToolsDir(toolsDir, filepath.Join(toolsDir, "current"))
-	if err != nil {
-		t.Fatalf("findPatchelfInToolsDir() returned error: %v", err)
-	}
+	got := firstCandidate(t, action.patchelfCandidatesInToolsDir(toolsDir, filepath.Join(toolsDir, "current")))
 	// Should pick 0.18.0 (last in lexicographic order)
 	want := filepath.Join(toolsDir, "patchelf-0.18.0", "bin", "patchelf")
 	if got != want {
-		t.Errorf("findPatchelfInToolsDir() = %q, want %q (latest version)", got, want)
+		t.Errorf("patchelfCandidatesInToolsDir() first = %q, want %q (latest version)", got, want)
 	}
 }
 
@@ -205,9 +502,9 @@ func TestFindPatchelfInToolsDir_NotFound(t *testing.T) {
 	action := &HomebrewRelocateAction{}
 
 	tmpDir := t.TempDir()
-	_, err := action.findPatchelfInToolsDir(filepath.Join(tmpDir, "tools"), filepath.Join(tmpDir, "tools", "current"))
-	if err == nil {
-		t.Fatal("findPatchelfInToolsDir() should return error when patchelf not found")
+	got := action.patchelfCandidatesInToolsDir(filepath.Join(tmpDir, "tools"), filepath.Join(tmpDir, "tools", "current"))
+	if len(got) != 0 {
+		t.Fatalf("patchelfCandidatesInToolsDir() = %v, want no candidates", got)
 	}
 }
 
@@ -737,7 +1034,7 @@ func TestFixElfRpathChain_NonLinuxIsNoOp(t *testing.T) {
 		},
 	}
 
-	err := action.fixElfRpathChain(ctx, "/unused", nil, progress.NoopReporter{})
+	err := action.fixElfRpathChain(ctx, "/unused", nil, newPatchelfFinder(action, ctx), progress.NoopReporter{})
 	if err != nil {
 		t.Fatalf("fixElfRpathChain on non-linux = %v, want nil", err)
 	}
@@ -762,7 +1059,7 @@ func TestFixElfRpathChain_EmptyRuntimeDepsIsNoOp(t *testing.T) {
 		Dependencies: ResolvedDeps{}, // RuntimeDependencies is nil
 	}
 
-	err := action.fixElfRpathChain(ctx, "/unused", nil, progress.NoopReporter{})
+	err := action.fixElfRpathChain(ctx, "/unused", nil, newPatchelfFinder(action, ctx), progress.NoopReporter{})
 	if err != nil {
 		t.Fatalf("fixElfRpathChain with empty RuntimeDeps = %v, want nil", err)
 	}
@@ -875,7 +1172,7 @@ func TestFixElfRpathChain_WritesDTRpath(t *testing.T) {
 		},
 	}
 
-	if err := action.fixElfRpathChain(ctx, installPath, nil, progress.NoopReporter{}); err != nil {
+	if err := action.fixElfRpathChain(ctx, installPath, nil, newPatchelfFinder(action, ctx), progress.NoopReporter{}); err != nil {
 		t.Fatalf("fixElfRpathChain returned error: %v", err)
 	}
 

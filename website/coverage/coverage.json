@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-07-10T02:56:26Z",
-  "total_recipes": 1448,
+  "generated_at": "2026-08-01T21:28:56Z",
+  "total_recipes": 1449,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 885,
-        "total": 1448,
-        "pct": 61.11878453038674
+        "supported": 886,
+        "total": 1449,
+        "pct": 61.1456176673568
       },
       "glibc": {
-        "supported": 1415,
-        "total": 1448,
-        "pct": 97.72099447513813
+        "supported": 1416,
+        "total": 1449,
+        "pct": 97.72256728778468
       },
       "musl": {
         "supported": 1257,
-        "total": 1448,
-        "pct": 86.80939226519338
+        "total": 1449,
+        "pct": 86.74948240165632
       }
     },
     "by_category": {
@@ -26,9 +26,9 @@
         "glibc_support": 151
       },
       "tool": {
-        "total": 1294,
+        "total": 1295,
         "musl_support": 1106,
-        "glibc_support": 1264
+        "glibc_support": 1265
       }
     }
   },
@@ -15830,6 +15830,20 @@
       "warnings": [
         "recipe 'plakar' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "playwright",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": false
+      },
+      "gaps": [
+        "musl"
+      ],
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "pluto",

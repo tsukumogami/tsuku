@@ -171,11 +171,11 @@
             "checksum": "c4bd624d901c1268f2deb9d8eb2d86a2f8b97bafa3f118025344242da2c54d7b",
             "checksum_algo": "sha256",
             "dest": "zig-aarch64-macos-0.15.1.tar.xz",
-            "url": "https://zigmirror.hryx.net/zig/zig-aarch64-macos-0.15.1.tar.xz"
+            "url": "https://ziglang.freetls.fastly.net/zig-aarch64-macos-0.15.1.tar.xz"
           },
           "evaluable": true,
           "deterministic": true,
-          "url": "https://zigmirror.hryx.net/zig/zig-aarch64-macos-0.15.1.tar.xz",
+          "url": "https://ziglang.freetls.fastly.net/zig-aarch64-macos-0.15.1.tar.xz",
           "checksum": "c4bd624d901c1268f2deb9d8eb2d86a2f8b97bafa3f118025344242da2c54d7b",
           "size": 50644996
         },
