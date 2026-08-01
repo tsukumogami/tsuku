@@ -600,10 +600,25 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 	return nil
 }
 
+// defaultPostInstallActions lists actions that run in the post-install phase
+// unless the recipe says otherwise. These actions need ToolInstallDir, which is
+// only populated between ExecutePlan and ExecutePhase("post-install") — running
+// them in the install phase would silently give them an empty path.
+//
+// The classification lives here rather than in plan generation so that plans
+// stored before an action joined this list still route correctly.
+var defaultPostInstallActions = map[string]bool{
+	"set_env": true,
+}
+
 // StepPhase returns the effective phase of a ResolvedStep.
-// Empty phase is treated as "install" for backward compatibility.
+// A step with no explicit phase runs in "install" unless its action is one of
+// the actions that default to post-install.
 func StepPhase(step ResolvedStep) string {
 	if step.Phase == "" {
+		if defaultPostInstallActions[step.Action] {
+			return "post-install"
+		}
 		return "install"
 	}
 	return step.Phase
