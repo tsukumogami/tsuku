@@ -186,27 +186,34 @@ func TestRunAdditionalVerifications(t *testing.T) {
 	}
 }
 
-// TestRunAdditionalVerifications_InstallDirSubstitution checks that
-// {install_dir} resolves, since additional checks commonly invoke a
-// second binary by absolute path.
+// TestRunAdditionalVerifications_InstallDirSubstitution pins the
+// asymmetry the sandbox forces on us: {install_dir} resolves in the
+// command, because additional checks commonly invoke a second binary by
+// absolute path, but NOT in the pattern. The sandbox resolves the
+// install directory to a shell path that never appears in a tool's
+// output, so expanding it in the pattern here would make the same
+// recipe pass on the host and fail in the sandbox.
 func TestRunAdditionalVerifications_InstallDirSubstitution(t *testing.T) {
 	installDir := t.TempDir()
 	cfg := &config.Config{CurrentDir: t.TempDir()}
 
-	additional := []recipe.AdditionalVerify{
-		{Command: "echo {install_dir}", Pattern: "{install_dir}"},
+	// Echoing {install_dir} must print the resolved path, matched
+	// against that literal path rather than against the placeholder.
+	expanded := []recipe.AdditionalVerify{
+		{Command: "echo {install_dir}", Pattern: installDir},
 	}
-	if err := runAdditionalVerifications(additional, "1.0", installDir, cfg, ToolVerifyOptions{}); err != nil {
-		t.Fatalf("runAdditionalVerifications: unexpected error: %v", err)
+	if err := runAdditionalVerifications(expanded, "1.0", installDir, cfg, ToolVerifyOptions{}); err != nil {
+		t.Fatalf("runAdditionalVerifications: expected {install_dir} to resolve in the command: %v", err)
 	}
 
-	// The same command with an install dir that was never substituted
-	// must fail, otherwise the passing case above proves nothing.
-	mismatched := []recipe.AdditionalVerify{
-		{Command: "echo " + installDir, Pattern: "{install_dir}/nowhere"},
+	// The pattern keeps the placeholder verbatim, so matching a command
+	// that prints the resolved path against a "{install_dir}" pattern
+	// must fail.
+	unexpandedPattern := []recipe.AdditionalVerify{
+		{Command: "echo " + installDir, Pattern: "{install_dir}"},
 	}
-	if err := runAdditionalVerifications(mismatched, "1.0", installDir, cfg, ToolVerifyOptions{}); err == nil {
-		t.Fatal("runAdditionalVerifications: expected an error for a pattern that cannot match")
+	if err := runAdditionalVerifications(unexpandedPattern, "1.0", installDir, cfg, ToolVerifyOptions{}); err == nil {
+		t.Fatal("runAdditionalVerifications: expected {install_dir} to stay unexpanded in the pattern")
 	}
 }
 

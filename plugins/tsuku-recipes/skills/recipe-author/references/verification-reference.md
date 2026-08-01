@@ -117,10 +117,11 @@ command = "blackd --version"
 pattern = "{version}"
 ```
 
-Additional checks run after the primary verify command passes, in the order
-they're declared. An entry passes when its command exits 0 and its `pattern`
-appears in the combined output. There's no `exit_code` override, so a command
-that exits non-zero fails verification.
+Additional checks are evaluated after the primary verify command passes, in the
+order they're declared, so a broken primary check is reported as itself rather
+than as a downstream failure. An entry passes when its command exits 0 and its
+`pattern` appears in the combined output. There's no `exit_code` override, so a
+command that exits non-zero fails verification.
 
 `{version}` is substituted in both `command` and `pattern`. `{install_dir}` is
 substituted in `command`; don't rely on it inside `pattern`, because sandbox

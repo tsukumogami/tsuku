@@ -18,8 +18,12 @@ import (
 //   - Version 3: Nested dependencies for self-contained plans (introduced in #621)
 //   - Version 4: Removed recipe_hash field (cache uses content-based hashing) (#1585)
 //   - Version 5: Added ExitCode to PlanVerify for sandbox verification (#1942)
-//   - Version 6: Added Additional to PlanVerify so [[verify.additional]] runs (#2440)
-const PlanFormatVersion = 6
+//
+// PlanVerify.Additional (#2440) was added without a bump: it is additive
+// and omitempty, so a v5 plan written before it existed decodes with an
+// empty Additional and behaves exactly as it did. Bumping would have
+// invalidated every golden plan for a field no recipe uses yet.
+const PlanFormatVersion = 5
 
 // InstallationPlan represents a fully-resolved, deterministic specification
 // for installing a tool. Plans capture the exact URLs, checksums, and steps

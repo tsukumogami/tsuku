@@ -519,6 +519,23 @@ func TestPlanAdditionalVerify(t *testing.T) {
 	}
 }
 
+// TestRecipeAdditionalVerify_RoundTrip keeps the plan<->recipe
+// conversion lossless, so a dependency's checks survive the round trip
+// rather than disappearing on the way back.
+func TestRecipeAdditionalVerify_RoundTrip(t *testing.T) {
+	if got := recipeAdditionalVerify(nil); got != nil {
+		t.Errorf("recipeAdditionalVerify(nil) = %v, want nil", got)
+	}
+
+	original := []recipe.AdditionalVerify{
+		{Command: "blackd --version", Pattern: "blackd"},
+		{Command: "isortd --version", Pattern: "{version}"},
+	}
+	if got := recipeAdditionalVerify(planAdditionalVerify(original)); !reflect.DeepEqual(got, original) {
+		t.Errorf("round trip = %+v, want %+v", got, original)
+	}
+}
+
 // TestPlanContentHash_AdditionalVerify guards cache identity: two plans
 // that differ only in their additional checks must not share a hash, or
 // a cached plan would serve the wrong verification.

@@ -359,6 +359,14 @@ func emitSandboxHumanReadable(result *sandbox.SandboxResult, secrets []string) e
 			printInfof("Exit code: %d\n", result.ExitCode)
 		} else {
 			printInfof("Verification failed with exit code: %d\n", result.VerifyExitCode)
+			// An additional check can fail while the primary command
+			// exits 0, in which case the exit code alone says nothing.
+			// The verify output carries which check failed and why.
+			if result.VerifyOutput != "" {
+				printInfo()
+				printInfo("Verification output:")
+				printInfo(strings.TrimSpace(result.VerifyOutput))
+			}
 		}
 		if stderr != "" {
 			printInfo()

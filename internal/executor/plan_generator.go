@@ -28,6 +28,21 @@ func planAdditionalVerify(additional []recipe.AdditionalVerify) []PlanAdditional
 	return out
 }
 
+// recipeAdditionalVerify is the inverse of planAdditionalVerify, used
+// when a dependency plan is turned back into a recipe. Keeping the
+// conversion lossless in both directions means a dependency's checks
+// can't quietly disappear on the round trip.
+func recipeAdditionalVerify(additional []PlanAdditionalVerify) []recipe.AdditionalVerify {
+	if len(additional) == 0 {
+		return nil
+	}
+	out := make([]recipe.AdditionalVerify, len(additional))
+	for i, a := range additional {
+		out[i] = recipe.AdditionalVerify{Command: a.Command, Pattern: a.Pattern}
+	}
+	return out
+}
+
 // PlanConfig configures plan generation behavior.
 type PlanConfig struct {
 	// OS overrides the target operating system (default: runtime.GOOS)

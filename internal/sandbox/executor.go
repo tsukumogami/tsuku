@@ -497,27 +497,30 @@ func (e *Executor) readVerifyResults(outputDir string, plan *executor.Installati
 		return false, verifyExitCode, output
 	}
 
-	if failure := e.checkAdditionalVerify(outputDir, plan); failure != "" {
+	if failure := e.additionalVerifyFailure(outputDir, plan); failure != "" {
 		return false, verifyExitCode, output + "\n" + failure
 	}
 	return true, verifyExitCode, output
 }
 
-// checkAdditionalVerify evaluates the marker pair each
+// additionalVerifyFailure evaluates the marker pair each
 // [[verify.additional]] entry wrote in the sandbox. It returns an empty
 // string when every entry passed, or a description of the first failure.
 //
 // A missing or unparsable marker counts as a failure: the entry declared
 // a check, and no evidence that it ran is not the same as evidence that
 // it passed.
-func (e *Executor) checkAdditionalVerify(outputDir string, plan *executor.InstallationPlan) string {
+//
+// Entries are numbered from 1 in the messages to match the host path's
+// output; the marker file names use the 0-based slice index.
+func (e *Executor) additionalVerifyFailure(outputDir string, plan *executor.InstallationPlan) string {
 	for i, a := range plan.Verify.Additional {
 		exitMarker, outputMarker := additionalVerifyMarkers(i)
 
 		exitData, err := os.ReadFile(filepath.Join(outputDir, exitMarker))
 		if err != nil {
 			e.logger.Debug("Failed to read additional verify exit marker", "index", i, "error", err)
-			return fmt.Sprintf("additional verification %d did not run: %s", i+1, a.Command)
+			return fmt.Sprintf("additional verification %d left no result: %s", i+1, a.Command)
 		}
 		exitCode, err := strconv.Atoi(strings.TrimSpace(string(exitData)))
 		if err != nil {
@@ -693,6 +696,13 @@ func (e *Executor) buildSandboxScript(
 		// Each [[verify.additional]] entry runs unconditionally and writes
 		// its own marker pair. Evaluation happens host-side in
 		// readVerifyResults so the sandbox script stays a plain recorder.
+		//
+		// These expand {version} as well as {install_dir}, which the
+		// primary command above does not. That asymmetry is deliberate
+		// for now: matching the host's substitution rules here is what
+		// keeps an additional check from behaving differently in the two
+		// places, and changing the primary command's rules would alter
+		// behavior for recipes that already ship.
 		for i, a := range plan.Verify.Additional {
 			exitMarker, outputMarker := additionalVerifyMarkers(i)
 			addCmd := strings.ReplaceAll(a.Command, "{install_dir}", installDir)

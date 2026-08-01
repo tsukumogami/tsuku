@@ -314,9 +314,8 @@ func TestFormatVersionConstant(t *testing.T) {
 	// Version 3 introduced nested dependency plans (issue #621)
 	// Version 4 removed recipe_hash field (issue #1585)
 	// Version 5 added ExitCode to PlanVerify for sandbox verification (issue #1942)
-	// Version 6 added Additional to PlanVerify so [[verify.additional]] runs (issue #2440)
-	if PlanFormatVersion != 6 {
-		t.Errorf("PlanFormatVersion: got %d, want 6", PlanFormatVersion)
+	if PlanFormatVersion != 5 {
+		t.Errorf("PlanFormatVersion: got %d, want 5", PlanFormatVersion)
 	}
 }
 

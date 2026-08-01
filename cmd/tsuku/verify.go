@@ -234,15 +234,15 @@ func matchVerifyPatterns(patterns []string, output string) []string {
 // error a user sees names the additional check rather than looking like
 // a plain version-check failure.
 func runAdditionalVerifications(additional []recipe.AdditionalVerify, version, installDir string, cfg *config.Config, opts ToolVerifyOptions) error {
-	subst := func(s string) string {
-		s = strings.ReplaceAll(s, "{version}", version)
-		s = strings.ReplaceAll(s, "{install_dir}", installDir)
-		return s
-	}
-
 	for i, a := range additional {
-		command := subst(a.Command)
-		pattern := subst(a.Pattern)
+		command := strings.ReplaceAll(a.Command, "{version}", version)
+		command = strings.ReplaceAll(command, "{install_dir}", installDir)
+
+		// {install_dir} is deliberately not expanded in the pattern. The
+		// sandbox resolves the install directory to a shell path that
+		// never appears in a tool's output, so expanding it here would
+		// make the same recipe pass on the host and fail in the sandbox.
+		pattern := strings.ReplaceAll(a.Pattern, "{version}", version)
 
 		if opts.Verbose {
 			printInfof("  Additional check %d/%d: %s\n", i+1, len(additional), command)
