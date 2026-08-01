@@ -423,7 +423,21 @@ Notes:
   relies on this: `nvm.sh` only honors `NVM_DIR` when it is already set.
 - Names must match `[A-Za-z_][A-Za-z0-9_]*`, and values may not contain newlines.
   Values are single-quoted, so no shell metacharacter in a value is interpreted.
+- Several `set_env` steps in one recipe append to the same file rather than
+  overwrite, so platform-gated variants and plain multiple steps both work.
 - Skipped entirely under `--no-shell-init`.
+
+Where it does not apply:
+
+- **Library recipes** (`type = "library"`) — rejected by recipe validation.
+  Libraries are installed without a post-install phase and have no shell
+  integration.
+- **Recipes installed as a dependency of another tool** — the dependency
+  installer runs every step inline with no post-install phase, so `set_env`
+  fails the install with an explicit error rather than exporting nothing.
+- **Already-installed tools** — an install that short-circuits on "already
+  installed" runs no steps, so the exports appear on the next fresh install or
+  version upgrade. `tsuku remove <tool> && tsuku install <tool>` applies them now.
 
 ### text_replace
 
