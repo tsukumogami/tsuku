@@ -95,10 +95,24 @@ jobs:
               exit 1
             fi
           else
-            # PR trigger: detect changed recipe files
-            CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- 'recipes/**/*.toml' 'internal/recipe/recipes/**/*.toml' || true)
+            # PR trigger: detect changed recipe files.
+            #
+            # These patterns mirror the `on: paths:` filter at the top of this
+            # file, and the `:(glob)` prefixes are what keep them matching the
+            # same files. Without the prefixes, git requires `**/` to consume a
+            # literal directory, so `internal/recipe/recipes/**/*.toml` misses
+            # every embedded recipe -- they sit flat in that directory. With
+            # them, git matches the way the Actions filter does, where `/**/`
+            # also matches zero directories. Registry recipes under
+            # `recipes/<letter>/` matched either way, which is why the mismatch
+            # went unnoticed while it silently disabled every platform lane for
+            # embedded recipes. Don't drop the prefixes.
+            CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- ':(glob)recipes/**/*.toml' ':(glob)internal/recipe/recipes/**/*.toml' || true)
             if [ -z "$CHANGED" ]; then
-              echo "No recipe files changed in this PR."
+              # A real possibility, not necessarily a bug: this workflow also
+              # triggers on changes to itself. The guard step below is what
+              # decides whether finding nothing was legitimate.
+              echo "::notice::No recipe files changed in this PR -- no platform lanes will run."
               echo "recipes=[]" >> "$GITHUB_OUTPUT"
               echo "has_recipes=false" >> "$GITHUB_OUTPUT"
               exit 0
@@ -130,6 +144,48 @@ jobs:
           else
             echo "has_recipes=false" >> "$GITHUB_OUTPUT"
           fi
+
+      # A run that tests nothing looks exactly like a run that tested everything
+      # and found no problems: both are green. That is how the pathspec above
+      # stayed broken. This step re-derives the recipe list with a plain grep --
+      # deliberately a different matcher from the pathspec, so the two can
+      # disagree -- and fails the run when the diff holds recipe files that
+      # detect did not pick up.
+      #
+      # Finding nothing is not itself an error. This workflow triggers on
+      # changes to its own file, so a PR that edits only this workflow really
+      # does change no recipes. What must never pass quietly is detect
+      # disagreeing with the diff it was handed.
+      - name: Guard against a silent no-op
+        if: github.event_name == 'pull_request'
+        env:
+          HAS_RECIPES: ${{ steps.detect.outputs.has_recipes }}
+        run: |
+          # Two statements, not one pipeline: `|| true` on a pipeline would
+          # swallow a failing `git diff` and leave EXPECTED empty, which reads
+          # as "no recipes changed" -- the very thing this step exists to catch.
+          # Split like this, a git failure fails the step.
+          ALL_CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD)
+          EXPECTED=$(printf '%s\n' "$ALL_CHANGED" \
+            | grep -E '^(recipes|internal/recipe/recipes)/.*\.toml$' || true)
+
+          if [ -z "$EXPECTED" ]; then
+            echo "No recipe files in this diff -- nothing for the platform lanes to test."
+            exit 0
+          fi
+
+          if [ "$HAS_RECIPES" != "true" ]; then
+            echo "::error::Recipe files changed in this PR but the detect step found none."
+            echo "The diff contains:"
+            echo "$EXPECTED" | sed 's/^/  /'
+            echo ""
+            echo "The pathspec in the detect step and this grep disagree about what"
+            echo "counts as a recipe file. Reconcile them -- and the 'on: paths:'"
+            echo "filter -- before merging. See issue #2445 for how this fails."
+            exit 1
+          fi
+
+          echo "Detect step and diff agree: $(echo "$EXPECTED" | wc -l) recipe file(s) changed."
 
       - name: Split recipes into batches
         id: batch
