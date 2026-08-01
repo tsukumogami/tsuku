@@ -230,11 +230,11 @@
             "checksum": "c61c5da6edeea14ca51ecd5e4520c6f4189ef5250383db33d01848293bfafe05",
             "checksum_algo": "sha256",
             "dest": "zig-x86_64-linux-0.15.1.tar.xz",
-            "url": "https://zigmirror.hryx.net/zig/zig-x86_64-linux-0.15.1.tar.xz"
+            "url": "https://ziglang.freetls.fastly.net/zig-x86_64-linux-0.15.1.tar.xz"
           },
           "evaluable": true,
           "deterministic": true,
-          "url": "https://zigmirror.hryx.net/zig/zig-x86_64-linux-0.15.1.tar.xz",
+          "url": "https://ziglang.freetls.fastly.net/zig-x86_64-linux-0.15.1.tar.xz",
           "checksum": "c61c5da6edeea14ca51ecd5e4520c6f4189ef5250383db33d01848293bfafe05",
           "size": 53734456
         },
