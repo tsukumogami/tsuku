@@ -519,6 +519,41 @@ func TestPlanAdditionalVerify(t *testing.T) {
 	}
 }
 
+// TestPlanContentHash_AdditionalVerify guards cache identity: two plans
+// that differ only in their additional checks must not share a hash, or
+// a cached plan would serve the wrong verification.
+func TestPlanContentHash_AdditionalVerify(t *testing.T) {
+	base := func(additional []PlanAdditionalVerify) *InstallationPlan {
+		return &InstallationPlan{
+			FormatVersion: PlanFormatVersion,
+			Tool:          "test-tool",
+			Version:       "1.0.0",
+			Platform:      Platform{OS: "linux", Arch: "amd64"},
+			Steps:         []ResolvedStep{{Action: "install_binaries"}},
+			Verify: &PlanVerify{
+				Command:    "tool --version",
+				Pattern:    "1.0.0",
+				Additional: additional,
+			},
+		}
+	}
+
+	none := ComputePlanContentHash(base(nil))
+	one := ComputePlanContentHash(base([]PlanAdditionalVerify{
+		{Command: "toold --version", Pattern: "toold"},
+	}))
+	other := ComputePlanContentHash(base([]PlanAdditionalVerify{
+		{Command: "toold --version", Pattern: "different"},
+	}))
+
+	if none == one {
+		t.Error("plans with and without additional checks hash identically")
+	}
+	if one == other {
+		t.Error("plans whose additional checks differ hash identically")
+	}
+}
+
 // TestGeneratePlan_CarriesAdditionalVerify guards the regression this
 // test file exists to prevent: entries declared in [[verify.additional]]
 // must survive into the plan, or the checks they declare never run.

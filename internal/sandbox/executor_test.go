@@ -797,6 +797,29 @@ func TestBuildSandboxScript_AdditionalVerify(t *testing.T) {
 	}
 }
 
+// TestBuildSandboxScript_AdditionalVerifyVersionSubstitution keeps the
+// sandbox in step with the host path, which substitutes {version} in the
+// command. A placeholder reaching the shell verbatim would run the wrong
+// command and the failure would look like a broken recipe.
+func TestBuildSandboxScript_AdditionalVerifyVersionSubstitution(t *testing.T) {
+	t.Parallel()
+
+	exec := &Executor{logger: log.NewNoop()}
+	plan := additionalVerifyPlan(executor.PlanAdditionalVerify{
+		Command: "blackd-{version} --version",
+		Pattern: "blackd",
+	})
+
+	script := exec.buildSandboxScript(plan, &SandboxRequirements{})
+
+	if !strings.Contains(script, "blackd-1.0.0 --version") {
+		t.Errorf("Expected {version} to be substituted in the additional command\nScript:\n%s", script)
+	}
+	if strings.Contains(script, "blackd-{version}") {
+		t.Error("Expected no unsubstituted {version} placeholder in the script")
+	}
+}
+
 func TestReadVerifyResults_PatternMismatch(t *testing.T) {
 	t.Parallel()
 

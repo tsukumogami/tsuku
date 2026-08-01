@@ -254,11 +254,11 @@ func runAdditionalVerifications(additional []recipe.AdditionalVerify, version, i
 		output, err := cmdExec.CombinedOutput()
 		outputStr := strings.TrimSpace(string(output))
 		if err != nil {
-			return fmt.Errorf("additional verification command failed: %s: %w\nOutput: %s", command, err, outputStr)
+			return fmt.Errorf("additional verification %d failed: %s: %w\nOutput: %s", i+1, command, err, outputStr)
 		}
 
 		if !strings.Contains(outputStr, pattern) {
-			return fmt.Errorf("additional verification output does not match expected pattern\n  Command: %s\n  Missing: %s\n  Got: %s", command, pattern, outputStr)
+			return fmt.Errorf("additional verification %d output does not match expected pattern\n  Command: %s\n  Missing: %s\n  Got: %s", i+1, command, pattern, outputStr)
 		}
 		if opts.Verbose {
 			printInfof("  Additional check passed: %s\n", pattern)

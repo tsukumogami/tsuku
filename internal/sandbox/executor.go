@@ -517,12 +517,12 @@ func (e *Executor) checkAdditionalVerify(outputDir string, plan *executor.Instal
 		exitData, err := os.ReadFile(filepath.Join(outputDir, exitMarker))
 		if err != nil {
 			e.logger.Debug("Failed to read additional verify exit marker", "index", i, "error", err)
-			return fmt.Sprintf("additional verification %d did not run: %s", i, a.Command)
+			return fmt.Sprintf("additional verification %d did not run: %s", i+1, a.Command)
 		}
 		exitCode, err := strconv.Atoi(strings.TrimSpace(string(exitData)))
 		if err != nil {
 			e.logger.Debug("Failed to parse additional verify exit code", "index", i, "error", err)
-			return fmt.Sprintf("additional verification %d produced an unreadable exit code: %s", i, a.Command)
+			return fmt.Sprintf("additional verification %d produced an unreadable exit code: %s", i+1, a.Command)
 		}
 
 		addOutput := ""
@@ -696,6 +696,7 @@ func (e *Executor) buildSandboxScript(
 		for i, a := range plan.Verify.Additional {
 			exitMarker, outputMarker := additionalVerifyMarkers(i)
 			addCmd := strings.ReplaceAll(a.Command, "{install_dir}", installDir)
+			addCmd = strings.ReplaceAll(addCmd, "{version}", plan.Version)
 			sb.WriteString(fmt.Sprintf("%s > /workspace/output/%s 2>&1\n", addCmd, outputMarker))
 			sb.WriteString(fmt.Sprintf("echo $? > /workspace/output/%s\n", exitMarker))
 		}

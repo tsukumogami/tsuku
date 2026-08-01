@@ -100,9 +100,9 @@ type PlanVerify struct {
 	ExitCode *int     `json:"exit_code,omitempty"` // Expected exit code (default: 0)
 
 	// Additional carries the recipe's [[verify.additional]] entries so
-	// the plan-based install path and the sandbox can run them. Without
-	// this the entries are dropped between recipe and executor and the
-	// checks they declare never run.
+	// sandbox verification can run them. Without this the entries are
+	// dropped between recipe and plan and the checks they declare never
+	// run there.
 	Additional []PlanAdditionalVerify `json:"additional,omitempty"`
 }
 

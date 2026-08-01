@@ -126,7 +126,7 @@ func TestRunAdditionalVerifications(t *testing.T) {
 				{Command: "false", Pattern: "THIS_STRING_CANNOT_POSSIBLY_APPEAR"},
 			},
 			wantErr: true,
-			errWant: "additional verification command failed",
+			errWant: "additional verification 1 failed",
 		},
 		{
 			name: "pattern absent from output",
