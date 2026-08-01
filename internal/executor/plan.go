@@ -112,8 +112,11 @@ type ResolvedStep struct {
 	// Action is the action name (e.g., "download", "extract", "install_binaries")
 	Action string `json:"action"`
 
-	// Phase is the lifecycle phase for this step: "install" (default), "post-install", etc.
-	// Empty string is treated as "install" for backward compatibility.
+	// Phase is the lifecycle phase for this step: "install", "post-install", etc.
+	// Empty string means the recipe did not name one, in which case the action
+	// decides -- see StepPhase. Do not resolve it here at plan-generation time:
+	// the resolved value would be frozen into stored plans, so a later change to
+	// an action's phase would not reach plans already written to state.json.
 	Phase string `json:"phase,omitempty"`
 
 	// Params contains the resolved action parameters

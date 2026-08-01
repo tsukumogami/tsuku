@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
 	"strings"
 	"testing"
 
@@ -131,22 +130,26 @@ func TestSetEnvAction_ReachesUserShell(t *testing.T) {
 	}
 }
 
-// TestSetEnvAction_SortsBeforeToolInit pins the ordering guarantee the
-// "00-env-" prefix exists for: the shell cache concatenates shell.d
-// alphabetically, so exports must sort ahead of the tool's own init script.
-func TestSetEnvAction_SortsBeforeToolInit(t *testing.T) {
+// The "00-env-" prefix is what keeps exports ahead of a tool's init script in
+// the shell cache, so no other action may claim it.
+func TestInstallShellInit_RejectsReservedEnvPrefix(t *testing.T) {
 	t.Parallel()
 
-	_, ctx := setEnvHome(t, "nvm", "0.40.6")
-	target, err := envTargetName(ctx)
-	if err != nil {
-		t.Fatalf("envTargetName() error = %v", err)
+	action := &InstallShellInitAction{}
+	result := action.Preflight(map[string]interface{}{
+		"source_file": "init.sh",
+		"target":      EnvFilePrefix + "nvm",
+	})
+	if !result.HasErrors() {
+		t.Errorf("Preflight() accepted a target claiming the %q prefix reserved for set_env", EnvFilePrefix)
 	}
 
-	names := []string{"nvm.bash", target + ".bash"}
-	sort.Strings(names)
-	if names[0] != target+".bash" {
-		t.Errorf("sorted order = %v, want %q first so exports load before the tool init script", names, target+".bash")
+	result = action.Preflight(map[string]interface{}{
+		"source_file": "init.sh",
+		"target":      "nvm",
+	})
+	if result.HasErrors() {
+		t.Errorf("Preflight() rejected an ordinary target: %v", result.Errors)
 	}
 }
 
@@ -479,88 +482,40 @@ func TestSetEnvAction_parseVars(t *testing.T) {
 	}
 }
 
+// Malformed vars must be rejected by parseVars itself and by Execute, which
+// wraps it -- a recipe reaching Execute with bad vars must not write a file.
 func TestSetEnvAction_parseVars_InvalidFormat(t *testing.T) {
 	t.Parallel()
-	action := &SetEnvAction{}
 
-	tests := []struct {
-		name  string
-		input interface{}
-	}{
-		{
-			name:  "not an array",
-			input: "string",
-		},
-		{
-			name:  "array item not a map",
-			input: []interface{}{"string"},
-		},
-		{
-			name:  "missing name",
-			input: []interface{}{map[string]interface{}{"value": "bar"}},
-		},
-		{
-			name:  "missing value",
-			input: []interface{}{map[string]interface{}{"name": "FOO"}},
-		},
-		{
-			name:  "name not string",
-			input: []interface{}{map[string]interface{}{"name": 123, "value": "bar"}},
-		},
-		{
-			name:  "value not string",
-			input: []interface{}{map[string]interface{}{"name": "FOO", "value": 123}},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, err := action.parseVars(tt.input)
-			if err == nil {
-				t.Errorf("parseVars(%v) should fail", tt.input)
-			}
-		})
-	}
-}
-
-// TestSetEnvAction_ParseVars_Errors tests parseVars error paths via Execute
-func TestSetEnvAction_ParseVars_Errors(t *testing.T) {
-	t.Parallel()
 	tests := []struct {
 		name        string
-		vars        any
+		input       interface{}
 		errContains string
 	}{
-		{
-			name:        "missing name",
-			vars:        []any{map[string]any{"value": "bar"}},
-			errContains: "name",
-		},
-		{
-			name:        "missing value",
-			vars:        []any{map[string]any{"name": "FOO"}},
-			errContains: "value",
-		},
-		{
-			name:        "non-array",
-			vars:        "not an array",
-			errContains: "array",
-		},
-		{
-			name:        "non-map entry",
-			vars:        []any{"not a map"},
-			errContains: "map",
-		},
+		{"not an array", "string", "array"},
+		{"array item not a map", []interface{}{"string"}, "map"},
+		{"missing name", []interface{}{map[string]interface{}{"value": "bar"}}, "name"},
+		{"missing value", []interface{}{map[string]interface{}{"name": "FOO"}}, "value"},
+		{"name not string", []interface{}{map[string]interface{}{"name": 123, "value": "bar"}}, "name"},
+		{"value not string", []interface{}{map[string]interface{}{"name": "FOO", "value": 123}}, "value"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			_, ctx := setEnvHome(t, "demo", "1.0.0")
 			action := &SetEnvAction{}
-			err := action.Execute(ctx, map[string]any{"vars": tt.vars})
+
+			if _, err := action.parseVars(tt.input); err == nil {
+				t.Errorf("parseVars(%v) should fail", tt.input)
+			}
+
+			home, ctx := setEnvHome(t, "demo", "1.0.0")
+			err := action.Execute(ctx, map[string]interface{}{"vars": tt.input})
 			if err == nil || !strings.Contains(err.Error(), tt.errContains) {
-				t.Errorf("Expected error containing %q, got %v", tt.errContains, err)
+				t.Errorf("Execute() error = %v, want an error containing %q", err, tt.errContains)
+			}
+			if _, statErr := os.Stat(filepath.Join(home, "share", "shell.d")); !os.IsNotExist(statErr) {
+				t.Error("malformed vars should not have produced any shell.d output")
 			}
 		})
 	}

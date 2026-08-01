@@ -101,7 +101,13 @@ func RebuildShellCache(tsukuHome string, shell string, contentHashes ...map[stri
 		return nil
 	}
 
-	// Sort alphabetically for deterministic output
+	// Sort alphabetically. This is not only for reproducible output: the order
+	// is a contract. Files are sourced in this order, and a tool's init script
+	// often reads variables its recipe exported -- nvm.sh, for one, only honors
+	// NVM_DIR when it is already set. The set_env action relies on that by
+	// naming its files "00-env-<tool>.<shell>" so they sort ahead of the tool's
+	// own entry. Changing this ordering, or letting a tool install a name that
+	// sorts before "00-env-", breaks those recipes.
 	sort.Strings(files)
 
 	// Concatenate file contents with hash verification and error isolation.

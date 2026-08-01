@@ -128,6 +128,35 @@ type NetworkValidator interface {
 	RequiresNetwork() bool
 }
 
+// PhaseDeclarer is implemented by actions that must run in a lifecycle phase
+// other than "install" when the recipe does not name one. An action declares
+// this when it needs state the install phase cannot provide -- ToolInstallDir,
+// for instance, is only populated once the tool has reached its permanent
+// directory, so an action reading it during the install phase would silently
+// see an empty path.
+//
+// A phase named by the recipe always wins. The executor resolves this through
+// the action registry at execution time, so plans stored before an action
+// started declaring a phase still route to the right one.
+type PhaseDeclarer interface {
+	DefaultPhase() string
+}
+
+// DefaultPhase returns the phase an action runs in when the recipe does not
+// name one. Actions that do not implement PhaseDeclarer run in "install".
+func DefaultPhase(name string) string {
+	action := Get(name)
+	if action == nil {
+		return "install"
+	}
+	if d, ok := action.(PhaseDeclarer); ok {
+		if phase := d.DefaultPhase(); phase != "" {
+			return phase
+		}
+	}
+	return "install"
+}
+
 // BaseAction provides default implementations for Action metadata methods.
 // Embed this in action types to inherit defaults:
 //   - IsDeterministic() returns false (safe default)
