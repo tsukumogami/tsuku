@@ -38,9 +38,14 @@ github_repo = "ziglang/zig"
 # fails too. Both readings fit #2384's symptoms, so treat the origin exposure
 # as still open.
 #
-# Triage for whoever is here next, because the two cases need opposite moves:
+# Triage for whoever is here next, because the cases need different moves:
 #   - Fastly timing out / unreachable at the edge -> a path problem. Another
 #     CDN-fronted source may help.
+#   - A 404 on an older version while current ones still serve -> retention,
+#     not an outage. Mirrors are not obliged to keep old releases, and this
+#     recipe needs whatever the goldens pin (0.14.1 at time of writing) as
+#     well as current. Check the old version explicitly before switching to
+#     any candidate; ziglang.org itself keeps the full archive.
 #   - Fastly returning 5xx or revalidation errors -> suspect the shared origin.
 #     Switch to a mirror that stores its OWN copies rather than another
 #     ziglang.org alias. Test for that the same way this note was written:
