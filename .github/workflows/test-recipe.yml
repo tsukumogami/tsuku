@@ -156,6 +156,11 @@ jobs:
       # changes to its own file, so a PR that edits only this workflow really
       # does change no recipes. What must never pass quietly is detect
       # disagreeing with the diff it was handed.
+      #
+      # What no step here can catch: drift in the `on: paths:` filter itself.
+      # Add a recipe location there without adding it to both matchers below
+      # and the job simply never runs for it -- nothing inside a job that
+      # didn't start can notice. Keep all three lists in sync by hand.
       - name: Guard against a silent no-op
         if: github.event_name == 'pull_request'
         env:
@@ -282,6 +287,25 @@ jobs:
           fi
 
           echo "Generated $DARWIN_BATCH_COUNT Darwin batch(es) of up to $DARWIN_BATCH_SIZE recipes"
+
+          # Batching is the second way this workflow can go green having tested
+          # nothing. The platform lanes gate on has_*_batches, not on
+          # has_recipes, so a recipe list that survives detection and then
+          # collapses to zero batches skips every lane just as quietly as an
+          # empty detection did. jq will do that without complaint -- a batch
+          # size of 0 in .github/ci-batch-config.json makes `range(0; n; 0)`
+          # yield an empty array, and `resolve_bs` treats `max` as usable
+          # whenever it is present rather than positive. Recipes in, no batches
+          # out is always a bug.
+          if [ "$LINUX_BATCH_COUNT" -eq 0 ] || [ "$DARWIN_BATCH_COUNT" -eq 0 ]; then
+            RECIPE_COUNT=$(echo "$RECIPES" | jq 'length')
+            echo "::error::$RECIPE_COUNT recipe(s) were detected but batching produced $LINUX_BATCH_COUNT Linux and $DARWIN_BATCH_COUNT Darwin batch(es)."
+            echo "The platform lanes gate on the batch counts, so this would skip every"
+            echo "lane and report green. Check the batch sizes in .github/ci-batch-config.json --"
+            echo "a size of 0, or an ecosystem whose config entry is missing or malformed,"
+            echo "produces an empty batch list without erroring."
+            exit 1
+          fi
 
   # Linux x86_64: test in sandbox containers for all five families.
   # Recipes are split into batches (one job per batch) and families run in parallel
