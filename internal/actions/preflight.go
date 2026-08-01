@@ -120,6 +120,10 @@ func (v *registryValidator) RegisteredNames() []string {
 	return RegisteredNames()
 }
 
+func (v *registryValidator) DefaultPhase(name string) string {
+	return DefaultPhase(name)
+}
+
 func (v *registryValidator) ValidateAction(name string, params map[string]interface{}) *recipe.ActionValidationResult {
 	result := ValidateAction(name, params)
 	return &recipe.ActionValidationResult{

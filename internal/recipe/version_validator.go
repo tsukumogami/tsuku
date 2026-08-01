@@ -70,6 +70,11 @@ type ActionValidator interface {
 	// ValidateAction checks if an action exists and validates its parameters.
 	// Returns an ActionValidationResult containing errors (fatal) and warnings (non-fatal).
 	ValidateAction(name string, params map[string]interface{}) *ActionValidationResult
+
+	// DefaultPhase returns the lifecycle phase an action runs in when a recipe
+	// step does not name one. Most actions answer "install"; an action answers
+	// otherwise when it needs state an earlier phase cannot provide.
+	DefaultPhase(name string) string
 }
 
 var (

@@ -415,7 +415,8 @@ Notes:
 
 - Runs in the `post-install` phase automatically, so `{install_dir}` expands to
   the tool's permanent directory (`$TSUKU_HOME/tools/{name}-{version}`) rather
-  than the staging directory.
+  than the staging directory. Do not set `phase` on the step; any other value is
+  rejected by `tsuku validate`, since the final directory is not known earlier.
 - Covers bash and zsh — the shells `$TSUKU_HOME/env` sources. fish is not
   supported because it needs `set -gx` rather than `export`.
 - The `00-env-` prefix keeps exports sorted ahead of `install_shell_init` files,

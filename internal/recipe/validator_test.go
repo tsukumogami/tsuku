@@ -21,6 +21,15 @@ func (m *mockActionValidator) RegisteredNames() []string {
 	return names
 }
 
+// DefaultPhase mirrors the real registry: set_env is the one action that runs
+// somewhere other than the install phase by default.
+func (m *mockActionValidator) DefaultPhase(name string) string {
+	if name == "set_env" {
+		return "post-install"
+	}
+	return "install"
+}
+
 func (m *mockActionValidator) ValidateAction(name string, params map[string]interface{}) *ActionValidationResult {
 	result := &ActionValidationResult{}
 	if !m.actions[name] {
@@ -1662,6 +1671,66 @@ vars = [{name = "TEST_LIB_HOME", value = "{install_dir}"}]
 	}
 	if !found {
 		t.Errorf("expected an error naming the library restriction, got: %v", result.Errors)
+	}
+}
+
+// A phase override on set_env can never work -- ToolInstallDir is unset before
+// post-install -- so it has to fail at validation, not at install time.
+func TestValidateBytes_SetEnvPhaseOverrideRejected(t *testing.T) {
+	recipe := `
+[metadata]
+name = "test-tool"
+description = "Test tool"
+homepage = "https://example.com"
+
+[[steps]]
+action = "set_env"
+phase = "install"
+vars = [{name = "TEST_TOOL_HOME", value = "{install_dir}"}]
+
+[verify]
+command = "test -d {install_dir}"
+mode = "output"
+reason = "no binary to run"
+`
+	result := ValidateBytes([]byte(recipe))
+
+	if result.Valid {
+		t.Fatal("expected a phase override on set_env to be rejected")
+	}
+	var found bool
+	for _, e := range result.Errors {
+		if strings.Contains(e.Message, `set_env must run in the "post-install" phase`) {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected an error naming the required phase, got: %v", result.Errors)
+	}
+}
+
+// Naming the phase the action already wants is redundant but harmless.
+func TestValidateBytes_SetEnvRedundantPhaseAccepted(t *testing.T) {
+	recipe := `
+[metadata]
+name = "test-tool"
+description = "Test tool"
+homepage = "https://example.com"
+
+[[steps]]
+action = "set_env"
+phase = "post-install"
+vars = [{name = "TEST_TOOL_HOME", value = "{install_dir}"}]
+
+[verify]
+command = "test -d {install_dir}"
+mode = "output"
+reason = "no binary to run"
+`
+	result := ValidateBytes([]byte(recipe))
+
+	if !result.Valid {
+		t.Errorf("expected an explicit post-install phase to be accepted, got: %v", result.Errors)
 	}
 }
 
