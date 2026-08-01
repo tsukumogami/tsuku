@@ -573,7 +573,7 @@ func TestRunSonameScan_ChainEmitsAutoIncludeRPATH(t *testing.T) {
 	}
 
 	action := &HomebrewRelocateAction{}
-	if err := action.fixElfRpathChain(ctx, "/unused", result.AutoInclude, progress.NoopReporter{}); err != nil {
+	if err := action.fixElfRpathChain(ctx, "/unused", result.AutoInclude, newPatchelfFinder(action, ctx), progress.NoopReporter{}); err != nil {
 		t.Fatalf("fixElfRpathChain: %v", err)
 	}
 
