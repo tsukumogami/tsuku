@@ -1,0 +1,70 @@
+[metadata]
+name = "playwright"
+description = "Browser automation CLI for Chromium, Firefox, and WebKit"
+homepage = "https://playwright.dev/python/"
+version_format = "semver"
+curated = true
+supported_libc = ["glibc"]
+unsupported_reason = "Playwright publishes manylinux and macOS wheels but no musllinux wheel, and upstream does not support Alpine"
+
+# This recipe installs the Python distribution into a pipx-isolated venv, which
+# puts the `playwright` CLI on PATH along with the Node driver bundled in the
+# wheel. It deliberately stops there and does not run `playwright install`:
+#
+#   - A fetched browser earns little even for CLI-only use, which is what this
+#     recipe serves. Browser builds are pinned per Playwright release, and on
+#     PyPI the pin moved on every one of the 17 minor releases between 1.40 and
+#     1.57 (chromium-1091 through chromium-1200); only the four patch releases
+#     in that range kept it. So all but a patch upgrade of this recipe would
+#     re-download, and each generation accretes several hundred MB in a cache
+#     `tsuku remove` cannot reclaim. (A project resolving Playwright from its
+#     own virtualenv would not match this build either, but that is a
+#     second-order point -- see the note on the library half below.)
+#   - Left alone, the download lands in ~/.cache/ms-playwright, outside
+#     {install_dir} where `tsuku remove playwright` cannot reverse it. Keeping
+#     it inside would mean exporting PLAYWRIGHT_BROWSERS_PATH from a shell init
+#     script, and that variable is process-wide: it would redirect browser
+#     lookup for every Playwright on the machine, including project virtualenvs
+#     on a different release, and point their `playwright install` at this
+#     tool's directory.
+#   - Playwright's browser builds need system libraries (libglib, libnss, libgbm
+#     and friends). A recipe can declare those with apt_install and friends, and
+#     the sandbox does bake them into its test images -- but on a user's machine
+#     those actions only check for the packages and fail with a sudo command to
+#     run. Declaring them would make `tsuku install playwright` sudo-gated on any
+#     minimal machine, which is the one thing tsuku promises never to require.
+#
+# Choose a browser after installing:
+#
+#   playwright install chromium   # fetches chromium, the headless shell and
+#                                 # ffmpeg: ~315 MB down, ~640 MB unpacked into
+#                                 # ~/.cache/ms-playwright, which is shared and
+#                                 # reference-counted across every Playwright on
+#                                 # the machine. Reclaim with
+#                                 # `playwright uninstall`.
+#   channel = "chrome"            # drive an installed Chrome/Edge, no download
+#
+# Note for Python projects: this recipe gives you the CLI, not an importable
+# module. `from playwright.sync_api import sync_playwright` still requires
+# `pip install playwright` inside the project's own virtualenv, because pipx
+# isolates the venv it creates here.
+[[steps]]
+action = "pipx_install"
+package = "playwright"
+executables = ["playwright"]
+
+# `--dry-run` exercises more than `playwright --version` does: it boots the
+# bundled Node driver and resolves the browser registry for the running
+# platform, printing the exact build and download URL a browser install would
+# fetch. It needs no network, so `tsuku verify playwright` works offline.
+#
+# It stops short of launching a browser. That is a consequence of shipping no
+# browser, not a limit of the test environment -- the sandbox could be given the
+# libraries. A launching verify would also run on user machines via
+# `tsuku verify`, where it would report failure for a perfectly healthy install
+# that simply has no browser yet.
+[verify]
+command = "playwright install --dry-run chromium"
+mode = "output"
+patterns = ["chromium", "Install location:", "Download url:"]
+reason = "Version mode was available -- `playwright --version` prints the release -- but this command is the stronger check because it boots the bundled Node driver and resolves the browser registry, and its output carries browser build numbers rather than the release version"
