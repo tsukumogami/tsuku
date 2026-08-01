@@ -103,8 +103,13 @@ func (a *SetEnvAction) Execute(ctx *ExecutionContext, params map[string]interfac
 	}
 
 	if ctx.ToolInstallDir == "" {
-		return fmt.Errorf("set_env requires ToolInstallDir to be set in ExecutionContext; " +
-			"the step must run in the post-install phase")
+		// Reached when a step-execution path never runs the post-install phase.
+		// Today that means dependency recipes (Executor.installSingleDependency
+		// executes every step inline with no phases). Failing loudly beats
+		// writing an export that points nowhere.
+		return fmt.Errorf("set_env is not supported here: it needs the tool's final install " +
+			"directory, which is only available in the post-install phase. Recipes installed as " +
+			"a dependency of another tool cannot use set_env")
 	}
 
 	target, err := envTargetName(ctx)
@@ -142,15 +147,46 @@ func (a *SetEnvAction) Execute(ctx *ExecutionContext, params map[string]interfac
 	content := []byte(buf.String())
 
 	for _, shell := range envShells {
+		relPath := fmt.Sprintf("share/shell.d/%s.%s", target, shell)
 		destPath := filepath.Join(shellDDir, fmt.Sprintf("%s.%s", target, shell))
-		if err := os.WriteFile(destPath, content, 0600); err != nil {
+
+		// A recipe may carry more than one set_env step. They all target the
+		// same file, so later steps append rather than truncate — otherwise the
+		// earlier steps' exports would vanish without a word.
+		written := content
+		if idx := findCleanupAction(ctx, relPath); idx >= 0 {
+			existing, err := os.ReadFile(destPath)
+			if err != nil {
+				return fmt.Errorf("set_env: failed to read %s for append: %w", destPath, err)
+			}
+			written = append(existing, content...)
+		}
+
+		if err := os.WriteFile(destPath, written, 0600); err != nil {
 			return fmt.Errorf("set_env: failed to write %s: %w", destPath, err)
 		}
 		reporter.Status(fmt.Sprintf("   Installed environment exports: %s", destPath))
-		recordCleanup(ctx, target, shell, contentHash(content))
+
+		hash := contentHash(written)
+		if idx := findCleanupAction(ctx, relPath); idx >= 0 {
+			ctx.CleanupActions[idx].ContentHash = hash
+		} else {
+			recordCleanup(ctx, target, shell, hash)
+		}
 	}
 
 	return nil
+}
+
+// findCleanupAction returns the index of the cleanup action recorded for
+// relPath, or -1 when this execution has not written that file yet.
+func findCleanupAction(ctx *ExecutionContext, relPath string) int {
+	for i, ca := range ctx.CleanupActions {
+		if ca.Path == relPath {
+			return i
+		}
+	}
+	return -1
 }
 
 // envTargetName builds the shell.d basename for this recipe's exports.

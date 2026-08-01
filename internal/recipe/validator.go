@@ -497,6 +497,14 @@ func validateSteps(result *ValidationResult, r *Recipe) {
 			continue
 		}
 
+		// set_env delivers exports through the post-install phase, which the
+		// library install path never runs. Rejecting it here beats installing a
+		// library whose exports silently never appear.
+		if step.Action == "set_env" && r.IsLibrary() {
+			result.addError(stepField+".action",
+				"set_env is not supported in library recipes (libraries have no shell integration)")
+		}
+
 		// Validate action via registered ActionValidator (avoids circular import)
 		if av != nil {
 			actionResult := av.ValidateAction(step.Action, step.Params)

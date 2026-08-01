@@ -228,6 +228,49 @@ func TestSetEnvAction_RecordsCleanupActions(t *testing.T) {
 	}
 }
 
+// A recipe may carry several set_env steps; they all target one file, so a
+// later step must not silently drop the earlier one's exports.
+func TestSetEnvAction_MultipleStepsAppend(t *testing.T) {
+	t.Parallel()
+
+	home, ctx := setEnvHome(t, "demo", "2.1.0")
+	action := &SetEnvAction{}
+
+	for _, name := range []string{"FIRST", "SECOND"} {
+		if err := action.Execute(ctx, map[string]interface{}{
+			"vars": []interface{}{
+				map[string]interface{}{"name": name, "value": "{install_dir}"},
+			},
+		}); err != nil {
+			t.Fatalf("Execute() for %s error = %v", name, err)
+		}
+	}
+
+	path := filepath.Join(home, "share", "shell.d", "00-env-demo.bash")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("reading %s: %v", path, err)
+	}
+	want := "export FIRST='" + ctx.ToolInstallDir + "'\nexport SECOND='" + ctx.ToolInstallDir + "'\n"
+	if string(content) != want {
+		t.Errorf("content = %q, want %q", content, want)
+	}
+
+	// One cleanup action per shell, and its hash must cover the merged file.
+	if len(ctx.CleanupActions) != 2 {
+		t.Fatalf("recorded %d cleanup actions, want 2", len(ctx.CleanupActions))
+	}
+	for _, ca := range ctx.CleanupActions {
+		merged, err := os.ReadFile(filepath.Join(home, ca.Path))
+		if err != nil {
+			t.Fatalf("reading %s: %v", ca.Path, err)
+		}
+		if got := contentHash(merged); got != ca.ContentHash {
+			t.Errorf("hash for %s = %q, want %q (must cover the merged file)", ca.Path, ca.ContentHash, got)
+		}
+	}
+}
+
 func TestSetEnvAction_NoShellInit(t *testing.T) {
 	t.Parallel()
 

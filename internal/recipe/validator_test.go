@@ -1474,6 +1474,62 @@ patterns = ["lib/*.so*"]
 	}
 }
 
+// set_env is delivered by the post-install phase, which the library install
+// path never runs. Validation has to reject it rather than let a library ship
+// exports that never appear.
+func TestValidateBytes_SetEnvRejectedInLibraryRecipe(t *testing.T) {
+	recipe := `
+[metadata]
+name = "test-lib"
+type = "library"
+
+[[steps]]
+action = "install_libraries"
+patterns = ["lib/*.so*"]
+
+[[steps]]
+action = "set_env"
+vars = [{name = "TEST_LIB_HOME", value = "{install_dir}"}]
+`
+	result := ValidateBytes([]byte(recipe))
+
+	if result.Valid {
+		t.Fatal("expected set_env in a library recipe to be rejected")
+	}
+	var found bool
+	for _, e := range result.Errors {
+		if strings.Contains(e.Message, "set_env is not supported in library recipes") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected an error naming the library restriction, got: %v", result.Errors)
+	}
+}
+
+func TestValidateBytes_SetEnvAllowedInToolRecipe(t *testing.T) {
+	recipe := `
+[metadata]
+name = "test-tool"
+description = "Test tool"
+homepage = "https://example.com"
+
+[[steps]]
+action = "set_env"
+vars = [{name = "TEST_TOOL_HOME", value = "{install_dir}"}]
+
+[verify]
+command = "test -d {install_dir}"
+mode = "output"
+reason = "no binary to run"
+`
+	result := ValidateBytes([]byte(recipe))
+
+	if !result.Valid {
+		t.Errorf("expected set_env to be valid in a tool recipe, got errors: %v", result.Errors)
+	}
+}
+
 func TestValidateBytes_ApplyPatchWithURLMissingChecksum(t *testing.T) {
 	recipe := `
 [metadata]
