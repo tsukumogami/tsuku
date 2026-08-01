@@ -388,9 +388,9 @@ func (a *HomebrewRelocateAction) fixBinaryRpath(binaryPath, installPath string, 
 }
 
 // patchelfFinder resolves a patchelf binary that can actually execute on this
-// host. Implementations resolve once and return the same path (or the same
-// error) on every later call, so a relocation pass that patches many binaries
-// probes for patchelf at most once.
+// host. It resolves on the first call and returns the same path (or the same
+// error) on every call after that, so a relocation pass that patches many
+// binaries searches for patchelf once rather than once per binary.
 type patchelfFinder func() (string, error)
 
 // newPatchelfFinder returns a patchelfFinder backed by a.findPatchelf(ctx).
@@ -447,9 +447,9 @@ func verifyPatchelfRunnable(path string) error {
 
 	if m := glibcVersionPattern.FindStringSubmatch(text); m != nil {
 		return fmt.Errorf("patchelf at %s needs glibc %s, which is newer than this "+
-			"system's C library, so it cannot run. Install patchelf with "+
-			"'apt install patchelf' or 'yum install patchelf' and tsuku will use that "+
-			"one instead. Loader reported: %s", path, m[1], text)
+			"system's C library, so it cannot run. Install patchelf with your system "+
+			"package manager (for example 'apt install patchelf') and tsuku will use "+
+			"that one instead. Loader reported: %s", path, m[1], text)
 	}
 
 	if text == "" {
@@ -464,10 +464,14 @@ func verifyPatchelfRunnable(path string) error {
 //  3. $TSUKU_HOME/tools/patchelf-*/bin/patchelf (glob for any installed version)
 //  4. $TSUKU_HOME/tools/current/patchelf (current symlink)
 //
-// Each candidate is probed with verifyPatchelfRunnable and skipped if it cannot
-// execute, so a host where tsuku's own bottled patchelf is unusable still
-// installs successfully when a working patchelf exists elsewhere — typically
-// one from the system package manager.
+// Each candidate is executed (`patchelf --version`) and skipped if it cannot
+// run, so a host where tsuku's own bottled patchelf is unusable still installs
+// successfully when a working patchelf exists elsewhere — typically one from
+// the system package manager. Note that this makes the function spawn
+// processes, which a name beginning "find" does not suggest.
+//
+// Relocation passes must not call this directly: go through the patchelfFinder
+// that Execute builds, or every binary in the bottle re-runs the whole search.
 //
 // Returns the path to the first runnable candidate. When candidates were found
 // but none run, it reports why one of them failed rather than claiming patchelf
@@ -501,8 +505,18 @@ func (a *HomebrewRelocateAction) findPatchelf(ctx *ExecutionContext) (string, er
 		candidates = append(candidates, candidate{p, true})
 	}
 
+	// The same binary can surface more than once — an ExecPaths entry that is
+	// also on PATH, or a versioned dir that tools/current points at — and
+	// probing it twice would spawn a process to learn what we already know.
+	probed := make(map[string]bool, len(candidates))
+
 	var firstFailure, firstTsukuFailure error
 	for _, c := range candidates {
+		if probed[c.path] {
+			continue
+		}
+		probed[c.path] = true
+
 		err := verifyPatchelfRunnable(c.path)
 		if err == nil {
 			return c.path, nil

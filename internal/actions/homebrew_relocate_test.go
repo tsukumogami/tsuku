@@ -150,8 +150,14 @@ func writeFakePatchelf(t *testing.T, dir, body string) string {
 // the exact failure mode of issue #2447, where the Homebrew patchelf bottle
 // wants GLIBC_2.38 on an image that ships something older.
 //
-// The backtick is escaped because the message sits inside shell double quotes,
-// where an unescaped one would start a command substitution.
+// Two things to know before editing this. The backtick is escaped because the
+// message sits inside shell double quotes, where an unescaped one would start a
+// command substitution; Go needs no escape for it. And this has to stay a
+// double-quoted Go literal — a raw (backquoted) string cannot contain a
+// backtick at all, so converting it for readability is not possible.
+//
+// The two $0s are live shell expansions, not literal text: anything else with a
+// $ added here will expand too.
 const glibcLoaderFailureBody = "echo \"$0: /lib/x86_64-linux-gnu/libc.so.6: version \\`GLIBC_2.38' not found (required by $0)\" >&2\nexit 1\n"
 
 func TestVerifyPatchelfRunnable_Runnable(t *testing.T) {
@@ -210,6 +216,10 @@ func TestVerifyPatchelfRunnable_GenericFailure(t *testing.T) {
 func TestFindPatchelf_SkipsUnrunnableCandidate(t *testing.T) {
 	// No t.Parallel(): writes then execs a fake patchelf (see writeFakePatchelf).
 	action := &HomebrewRelocateAction{}
+
+	// Neutralize PATH so the assertion rests on the ExecPaths ordering under
+	// test rather than on ExecPaths happening to be searched before PATH.
+	t.Setenv("PATH", t.TempDir())
 
 	tmpDir := t.TempDir()
 	brokenDir := filepath.Join(tmpDir, "broken")
@@ -326,6 +336,45 @@ func TestPatchelfFinder_ResolvesOnce(t *testing.T) {
 	}
 	if n := len(strings.Fields(string(data))); n != 1 {
 		t.Errorf("patchelf was invoked %d times across 3 finder calls, want 1", n)
+	}
+}
+
+// TestPatchelfFinder_MemoizesFailure covers the other half of the finder's
+// contract. A failed search is as expensive as a successful one, and a bottle
+// full of ELF binaries would re-run it per binary if only success were cached.
+func TestPatchelfFinder_MemoizesFailure(t *testing.T) {
+	// No t.Parallel(): writes then execs a fake patchelf (see writeFakePatchelf).
+	action := &HomebrewRelocateAction{}
+
+	t.Setenv("PATH", t.TempDir())
+
+	tmpDir := t.TempDir()
+	binDir := filepath.Join(tmpDir, "bin")
+	counter := filepath.Join(tmpDir, "invocations")
+	writeFakePatchelf(t, binDir, "echo x >> "+counter+"\n"+glibcLoaderFailureBody)
+
+	ctx := &ExecutionContext{ExecPaths: []string{binDir}}
+	finder := newPatchelfFinder(action, ctx)
+
+	var first error
+	for i := 0; i < 3; i++ {
+		_, err := finder()
+		if err == nil {
+			t.Fatalf("finder() call %d = nil error, want the glibc failure", i)
+		}
+		if i == 0 {
+			first = err
+		} else if err.Error() != first.Error() {
+			t.Errorf("finder() call %d returned a different error:\n got %v\nwant %v", i, err, first)
+		}
+	}
+
+	data, err := os.ReadFile(counter)
+	if err != nil {
+		t.Fatalf("reading invocation counter: %v", err)
+	}
+	if n := len(strings.Fields(string(data))); n != 1 {
+		t.Errorf("patchelf was invoked %d times across 3 failing finder calls, want 1", n)
 	}
 }
 

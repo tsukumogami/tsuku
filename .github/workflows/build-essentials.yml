@@ -135,12 +135,17 @@ jobs:
   # This validates that configure_make falls back to zig when no gcc exists
   # Libtool compatibility via -print-prog-name workaround (ziglang/zig#17273)
   #
-  # The base image needs glibc >= 2.38. gdbm-source pulls in make, which tsuku
-  # installs from a Homebrew bottle and relocates with patchelf - and patchelf
-  # is itself a bottle that Homebrew builds against a recent glibc. On an older
-  # image it installs fine and then cannot execute, taking every relocation
-  # with it. ubuntu:24.04 ships 2.39; ubuntu:22.04 shipped 2.35 and broke this
-  # job for a month. Removing that floor entirely is tracked in #2451.
+  # The base image must be new enough for the patchelf Homebrew bottle to run.
+  # gdbm-source pulls in make, which tsuku installs from a bottle and relocates
+  # with patchelf - and patchelf is itself a bottle, built against whatever
+  # glibc Homebrew currently targets. On an older image it installs fine and
+  # then cannot execute, taking every relocation with it (#2447).
+  #
+  # That floor moves whenever Homebrew bumps its Linux build toolchain. As of
+  # #2447 it was glibc 2.38, so ubuntu:22.04 (2.35) failed and ubuntu:24.04
+  # (2.39) works. If this job starts failing the same way again, check the
+  # bottle's requirement before assuming the image is fine. Removing the
+  # dependency on the image's glibc entirely is tracked in #2451.
   test-no-gcc:
     name: "No-GCC Container: gdbm-source"
     runs-on: ubuntu-latest
