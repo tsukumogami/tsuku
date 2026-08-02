@@ -466,7 +466,8 @@ fixed in the same change.
   *Resolved in issue #2462: the dependency path now filters by phase, populates
   `ToolInstallDir` before post-install steps run, and records its cleanup actions
   against a state entry of the dependency's own. The narrowness of the exclusion rule
-  is unaffected — two unrecorded writers remain.*
+  is unaffected — `install_lib.go` still writes without recording, so the rule still
+  has a writer to protect.*
 - **The already-installed short-circuit** returns before running any steps and `--force`
   does not bypass it, so an existing install never picks up a fix. `tsuku verify`
   recommends a `--reinstall` flag that does not exist; separate issue.
