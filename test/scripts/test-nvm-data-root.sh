@@ -37,12 +37,20 @@ echo ""
 WORK_DIR="$(mktemp -d)"
 trap 'rm -rf "$WORK_DIR"' EXIT
 
-export TSUKU_HOME="$WORK_DIR/tsuku"
+export TSUKU_HOME="$WORK_DIR/home"
 export TSUKU_TELEMETRY=0
 
 echo "Building tsuku..."
-CGO_ENABLED=0 go build -o "$WORK_DIR/tsuku" ./cmd/tsuku
-TSUKU="$WORK_DIR/tsuku"
+CGO_ENABLED=0 go build -o "$WORK_DIR/bin/tsuku" ./cmd/tsuku
+TSUKU="$WORK_DIR/bin/tsuku"
+
+# Install the recipe from this checkout rather than from a registry. The local recipe
+# provider has the highest priority in the chain, so this guarantees the test exercises
+# the nvm recipe as it stands in this branch -- and it removes any dependence on a
+# registry fetch resolving, which would otherwise leave "nvm" as an ambiguous alias
+# across the homebrew, npm and pypi satisfiers.
+mkdir -p "$TSUKU_HOME/recipes"
+cp "$REPO_ROOT/recipes/n/nvm.toml" "$TSUKU_HOME/recipes/nvm.toml"
 
 # Two real releases, so the upgrade swaps genuinely different program files.
 OLD_NVM="0.40.1"
@@ -61,7 +69,10 @@ run_in_shell() {
 echo "Installing Node $NODE_VERSION through nvm and setting it as the default..."
 run_in_shell "nvm install $NODE_VERSION && nvm alias default $NODE_VERSION"
 
-NODE_INSTALLED="$(run_in_shell "nvm ls --no-colors | tr -d ' *' | grep -o 'v[0-9.]*' | head -1")"
+# Capture then match, never pipe into grep -q: the early close sends SIGPIPE upstream and
+# pipefail turns that into a failure even when the match succeeded.
+NVM_LS_BEFORE="$(run_in_shell "nvm ls --no-colors")"
+NODE_INSTALLED="$(printf '%s' "$NVM_LS_BEFORE" | tr -d ' *' | grep -o 'v[0-9.]*' | head -1)"
 if [ -z "$NODE_INSTALLED" ]; then
   echo "ERROR: no Node version was installed before the upgrade"
   exit 1
@@ -97,18 +108,29 @@ if [ "$DATA_ROOT_AFTER" != "$DATA_ROOT" ]; then
 fi
 
 echo "Checking nvm ls still lists $NODE_INSTALLED..."
-if ! run_in_shell "nvm ls --no-colors" | grep -q "$NODE_INSTALLED"; then
-  echo "ERROR: nvm ls no longer lists $NODE_INSTALLED after the upgrade"
-  run_in_shell "nvm ls --no-colors" || true
-  exit 1
-fi
+NVM_LS_AFTER="$(run_in_shell "nvm ls --no-colors")"
+case "$NVM_LS_AFTER" in
+  *"$NODE_INSTALLED"*) ;;
+  *)
+    echo "ERROR: nvm ls no longer lists $NODE_INSTALLED after the upgrade"
+    printf '%s\n' "$NVM_LS_AFTER"
+    exit 1
+    ;;
+esac
 
 echo "Checking the default alias survived..."
-if ! run_in_shell "nvm alias --no-colors" | grep -q "default"; then
-  echo "ERROR: the default alias did not survive the upgrade"
-  run_in_shell "nvm alias --no-colors" || true
-  exit 1
-fi
+# nvm alias prints every built-in alias too, so match the default line specifically
+# rather than the word "default" anywhere in the output.
+NVM_ALIASES="$(run_in_shell "nvm alias --no-colors")"
+DEFAULT_LINE="$(printf '%s\n' "$NVM_ALIASES" | grep '^default ->' || true)"
+case "$DEFAULT_LINE" in
+  *"$NODE_INSTALLED"*) echo "  default alias resolves to $NODE_INSTALLED" ;;
+  *)
+    echo "ERROR: the default alias did not survive the upgrade (got: ${DEFAULT_LINE:-none})"
+    printf '%s\n' "$NVM_ALIASES"
+    exit 1
+    ;;
+esac
 
 echo "Checking node still runs..."
 NODE_REPORTED="$(run_in_shell "nvm use default >/dev/null 2>&1; node --version")"
