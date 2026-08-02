@@ -30,6 +30,14 @@ const (
 	verifyOutputMarker = ".sandbox-verify-output"
 )
 
+// additionalVerifyMarkers returns the exit and output marker names for
+// the i-th [[verify.additional]] entry. Each entry gets its own pair so
+// a failure can be attributed to the check that produced it.
+func additionalVerifyMarkers(i int) (exitMarker, outputMarker string) {
+	return fmt.Sprintf(".sandbox-verify-additional-%d-exit", i),
+		fmt.Sprintf(".sandbox-verify-additional-%d-output", i)
+}
+
 // protectedEnvKeys lists environment variable keys that the sandbox hardcodes.
 // User-provided ExtraEnv entries matching these keys are silently dropped to
 // prevent subverting the sandbox environment.
@@ -485,7 +493,55 @@ func (e *Executor) readVerifyResults(outputDir string, plan *executor.Installati
 	// but the tool output contains the actual version number.
 	patterns := planVerifyPatterns(plan.Verify, plan.Version)
 	verified := executor.CheckPlanVerification(verifyExitCode, output, expectedExitCode, patterns)
-	return verified, verifyExitCode, output
+	if !verified {
+		return false, verifyExitCode, output
+	}
+
+	if failure := e.additionalVerifyFailure(outputDir, plan); failure != "" {
+		return false, verifyExitCode, output + "\n" + failure
+	}
+	return true, verifyExitCode, output
+}
+
+// additionalVerifyFailure evaluates the marker pair each
+// [[verify.additional]] entry wrote in the sandbox. It returns an empty
+// string when every entry passed, or a description of the first failure.
+//
+// A missing or unparsable marker counts as a failure: the entry declared
+// a check, and no evidence that it ran is not the same as evidence that
+// it passed.
+//
+// Entries are numbered from 1 in the messages to match the host path's
+// output; the marker file names use the 0-based slice index.
+func (e *Executor) additionalVerifyFailure(outputDir string, plan *executor.InstallationPlan) string {
+	for i, a := range plan.Verify.Additional {
+		exitMarker, outputMarker := additionalVerifyMarkers(i)
+
+		exitData, err := os.ReadFile(filepath.Join(outputDir, exitMarker))
+		if err != nil {
+			e.logger.Debug("Failed to read additional verify exit marker", "index", i, "error", err)
+			return fmt.Sprintf("additional verification %d left no result: %s", i+1, a.Command)
+		}
+		exitCode, err := strconv.Atoi(strings.TrimSpace(string(exitData)))
+		if err != nil {
+			e.logger.Debug("Failed to parse additional verify exit code", "index", i, "error", err)
+			return fmt.Sprintf("additional verification %d produced an unreadable exit code: %s", i+1, a.Command)
+		}
+
+		addOutput := ""
+		if data, err := os.ReadFile(filepath.Join(outputDir, outputMarker)); err == nil {
+			addOutput = string(data)
+		}
+
+		if exitCode != 0 {
+			return fmt.Sprintf("additional verification failed (exit %d): %s\n%s", exitCode, a.Command, addOutput)
+		}
+		pattern := strings.ReplaceAll(a.Pattern, "{version}", plan.Version)
+		if !strings.Contains(addOutput, pattern) {
+			return fmt.Sprintf("additional verification output missing pattern %q: %s\n%s", pattern, a.Command, addOutput)
+		}
+	}
+	return ""
 }
 
 // planVerifyPatterns returns the verify patterns from a PlanVerify with
@@ -636,6 +692,24 @@ func (e *Executor) buildSandboxScript(
 		verifyCmd := strings.ReplaceAll(plan.Verify.Command, "{install_dir}", installDir)
 		sb.WriteString(fmt.Sprintf("%s > /workspace/output/%s 2>&1\n", verifyCmd, verifyOutputMarker))
 		sb.WriteString(fmt.Sprintf("echo $? > /workspace/output/%s\n", verifyExitMarker))
+
+		// Each [[verify.additional]] entry runs unconditionally and writes
+		// its own marker pair. Evaluation happens host-side in
+		// readVerifyResults so the sandbox script stays a plain recorder.
+		//
+		// These expand {version} as well as {install_dir}, which the
+		// primary command above does not. That asymmetry is deliberate
+		// for now: matching the host's substitution rules here is what
+		// keeps an additional check from behaving differently in the two
+		// places, and changing the primary command's rules would alter
+		// behavior for recipes that already ship.
+		for i, a := range plan.Verify.Additional {
+			exitMarker, outputMarker := additionalVerifyMarkers(i)
+			addCmd := strings.ReplaceAll(a.Command, "{install_dir}", installDir)
+			addCmd = strings.ReplaceAll(addCmd, "{version}", plan.Version)
+			sb.WriteString(fmt.Sprintf("%s > /workspace/output/%s 2>&1\n", addCmd, outputMarker))
+			sb.WriteString(fmt.Sprintf("echo $? > /workspace/output/%s\n", exitMarker))
+		}
 	}
 
 	return sb.String()

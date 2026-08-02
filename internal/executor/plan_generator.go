@@ -14,6 +14,35 @@ import (
 	"github.com/tsukumogami/tsuku/internal/version"
 )
 
+// planAdditionalVerify converts a recipe's [[verify.additional]] entries
+// into their plan representation. Returns nil for an empty list so the
+// plan JSON stays unchanged for the recipes that don't use the field.
+func planAdditionalVerify(additional []recipe.AdditionalVerify) []PlanAdditionalVerify {
+	if len(additional) == 0 {
+		return nil
+	}
+	out := make([]PlanAdditionalVerify, len(additional))
+	for i, a := range additional {
+		out[i] = PlanAdditionalVerify{Command: a.Command, Pattern: a.Pattern}
+	}
+	return out
+}
+
+// recipeAdditionalVerify is the inverse of planAdditionalVerify, used
+// when a dependency plan is turned back into a recipe. Keeping the
+// conversion lossless in both directions means a dependency's checks
+// can't quietly disappear on the round trip.
+func recipeAdditionalVerify(additional []PlanAdditionalVerify) []recipe.AdditionalVerify {
+	if len(additional) == 0 {
+		return nil
+	}
+	out := make([]recipe.AdditionalVerify, len(additional))
+	for i, a := range additional {
+		out[i] = recipe.AdditionalVerify{Command: a.Command, Pattern: a.Pattern}
+	}
+	return out
+}
+
 // PlanConfig configures plan generation behavior.
 type PlanConfig struct {
 	// OS overrides the target operating system (default: runtime.GOOS)
@@ -283,10 +312,11 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 	var verify *PlanVerify
 	if e.recipe.Verify != nil && e.recipe.Verify.Command != "" {
 		verify = &PlanVerify{
-			Command:  e.recipe.Verify.Command,
-			Pattern:  e.recipe.Verify.Pattern,
-			Patterns: e.recipe.Verify.Patterns,
-			ExitCode: e.recipe.Verify.ExitCode,
+			Command:    e.recipe.Verify.Command,
+			Pattern:    e.recipe.Verify.Pattern,
+			Patterns:   e.recipe.Verify.Patterns,
+			ExitCode:   e.recipe.Verify.ExitCode,
+			Additional: planAdditionalVerify(e.recipe.Verify.Additional),
 		}
 	}
 
@@ -813,10 +843,11 @@ func generateSingleDependencyPlan(
 	var verify *PlanVerify
 	if depRecipe.Verify != nil && depRecipe.Verify.Command != "" {
 		verify = &PlanVerify{
-			Command:  depRecipe.Verify.Command,
-			Pattern:  depRecipe.Verify.Pattern,
-			Patterns: depRecipe.Verify.Patterns,
-			ExitCode: depRecipe.Verify.ExitCode,
+			Command:    depRecipe.Verify.Command,
+			Pattern:    depRecipe.Verify.Pattern,
+			Patterns:   depRecipe.Verify.Patterns,
+			ExitCode:   depRecipe.Verify.ExitCode,
+			Additional: planAdditionalVerify(depRecipe.Verify.Additional),
 		}
 	}
 

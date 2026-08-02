@@ -154,6 +154,14 @@ func (r *Recipe) ToTOML() ([]byte, error) {
 			}
 			buf.WriteString("]\n")
 		}
+		// Array-of-tables must follow the [verify] key-values. Dropping
+		// these would hand the container a recipe whose additional
+		// checks silently vanished.
+		for _, a := range r.Verify.Additional {
+			buf.WriteString("\n[[verify.additional]]\n")
+			buf.WriteString(fmt.Sprintf("command = %q\n", a.Command))
+			buf.WriteString(fmt.Sprintf("pattern = %q\n", a.Pattern))
+		}
 	}
 
 	return []byte(buf.String()), nil
@@ -847,7 +855,21 @@ type VerifySection struct {
 	Additional    []AdditionalVerify `toml:"additional,omitempty"`
 }
 
-// AdditionalVerify represents additional verification commands
+// AdditionalVerify is a secondary verification command, for tools that
+// install several binaries and need each one checked. Entries are
+// evaluated after the primary verify command passes, in declaration
+// order; a primary failure short-circuits them so the reported error
+// names the check that actually broke. (The sandbox runs every entry
+// unconditionally and records the results — only the evaluation is
+// gated.) An entry passes when its command exits 0 and Pattern appears
+// in the combined output. {version} is substituted in both fields;
+// {install_dir} is substituted in Command only, since the sandbox
+// resolves it to a shell path that never appears in a tool's output.
+// Unlike VerifySection there is no exit_code override — a check that
+// exits non-zero fails verification. Library recipes cannot use this:
+// their verification runs dlopen and dependency checks, not commands, so
+// the validator rejects the field there rather than letting it be
+// silently skipped.
 type AdditionalVerify struct {
 	Command string `toml:"command"`
 	Pattern string `toml:"pattern"`

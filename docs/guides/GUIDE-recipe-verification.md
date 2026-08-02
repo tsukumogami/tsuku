@@ -189,6 +189,25 @@ pattern = "Terraform v{version}"
 version_format = "strip_v"
 ```
 
+To check the others too, add a `[[verify.additional]]` entry per binary:
+
+```toml
+[verify]
+command = "black --version"
+pattern = "{version}"
+
+[[verify.additional]]
+command = "blackd --version"
+pattern = "{version}"
+```
+
+Additional entries are evaluated after the primary check passes, in the
+order declared. An entry passes when its command exits 0 and its pattern
+appears in the output; there is no `exit_code` override. Both `command`
+and `pattern` are required. `{version}` is substituted in both fields,
+`{install_dir}` in the command only. Library recipes cannot use this,
+since their verification loads the library rather than running commands.
+
 ## Decision Flowchart
 
 Use this flowchart to choose the right verification configuration:

@@ -4,8 +4,10 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
+	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/verify"
@@ -104,6 +106,114 @@ func TestMatchVerifyPatterns(t *testing.T) {
 				t.Errorf("matchVerifyPatterns: got %v, want %v", got, tc.wantMissing)
 			}
 		})
+	}
+}
+
+// TestRunAdditionalVerifications covers the failing cases first: the
+// point of [[verify.additional]] is that a check which cannot pass must
+// fail verification rather than being skipped.
+func TestRunAdditionalVerifications(t *testing.T) {
+	cases := []struct {
+		name       string
+		additional []recipe.AdditionalVerify
+		version    string
+		wantErr    bool
+		errWant    string
+	}{
+		{
+			name: "command exits non-zero",
+			additional: []recipe.AdditionalVerify{
+				{Command: "false", Pattern: "THIS_STRING_CANNOT_POSSIBLY_APPEAR"},
+			},
+			wantErr: true,
+			errWant: "additional verification 1 failed",
+		},
+		{
+			name: "pattern absent from output",
+			additional: []recipe.AdditionalVerify{
+				{Command: "echo hello", Pattern: "THIS_STRING_CANNOT_POSSIBLY_APPEAR"},
+			},
+			wantErr: true,
+			errWant: "does not match expected pattern",
+		},
+		{
+			name: "first entry passes, second fails",
+			additional: []recipe.AdditionalVerify{
+				{Command: "echo blackd 1.2.3", Pattern: "blackd"},
+				{Command: "echo isortd 1.2.3", Pattern: "NOPE"},
+			},
+			wantErr: true,
+			errWant: "isortd",
+		},
+		{
+			name:    "empty list is a pass",
+			wantErr: false,
+		},
+		{
+			name: "satisfiable check passes",
+			additional: []recipe.AdditionalVerify{
+				{Command: "echo blackd 1.2.3", Pattern: "blackd"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "version placeholder is substituted in command and pattern",
+			additional: []recipe.AdditionalVerify{
+				{Command: "echo blackd {version}", Pattern: "blackd {version}"},
+			},
+			version: "1.2.3",
+			wantErr: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := &config.Config{CurrentDir: t.TempDir()}
+			err := runAdditionalVerifications(tc.additional, tc.version, t.TempDir(), cfg, ToolVerifyOptions{})
+			if tc.wantErr {
+				if err == nil {
+					t.Fatalf("runAdditionalVerifications: expected an error, got nil")
+				}
+				if !strings.Contains(err.Error(), tc.errWant) {
+					t.Errorf("runAdditionalVerifications: error %q does not contain %q", err, tc.errWant)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("runAdditionalVerifications: unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+// TestRunAdditionalVerifications_InstallDirSubstitution pins the
+// asymmetry the sandbox forces on us: {install_dir} resolves in the
+// command, because additional checks commonly invoke a second binary by
+// absolute path, but NOT in the pattern. The sandbox resolves the
+// install directory to a shell path that never appears in a tool's
+// output, so expanding it in the pattern here would make the same
+// recipe pass on the host and fail in the sandbox.
+func TestRunAdditionalVerifications_InstallDirSubstitution(t *testing.T) {
+	installDir := t.TempDir()
+	cfg := &config.Config{CurrentDir: t.TempDir()}
+
+	// Echoing {install_dir} must print the resolved path, matched
+	// against that literal path rather than against the placeholder.
+	expanded := []recipe.AdditionalVerify{
+		{Command: "echo {install_dir}", Pattern: installDir},
+	}
+	if err := runAdditionalVerifications(expanded, "1.0", installDir, cfg, ToolVerifyOptions{}); err != nil {
+		t.Fatalf("runAdditionalVerifications: expected {install_dir} to resolve in the command: %v", err)
+	}
+
+	// The pattern keeps the placeholder verbatim, so matching a command
+	// that prints the resolved path against a "{install_dir}" pattern
+	// must fail.
+	unexpandedPattern := []recipe.AdditionalVerify{
+		{Command: "echo " + installDir, Pattern: "{install_dir}"},
+	}
+	if err := runAdditionalVerifications(unexpandedPattern, "1.0", installDir, cfg, ToolVerifyOptions{}); err == nil {
+		t.Fatal("runAdditionalVerifications: expected {install_dir} to stay unexpanded in the pattern")
 	}
 }
 

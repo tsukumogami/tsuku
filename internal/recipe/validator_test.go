@@ -361,6 +361,164 @@ reason = "test"
 	}
 }
 
+func TestValidateBytes_VerifyAdditionalMissingPattern(t *testing.T) {
+	// An additional check with no pattern would reduce to "the command
+	// exited 0" while reading like a real assertion.
+	recipe := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "test --version"
+mode = "output"
+pattern = "test"
+reason = "test"
+
+[[verify.additional]]
+command = "testd --version"
+`
+	result := ValidateBytes([]byte(recipe))
+	if result.Valid {
+		t.Fatal("expected invalid recipe when an additional check has no pattern")
+	}
+	if !hasError(result, "verify.additional[0].pattern", "required") {
+		t.Errorf("expected missing-pattern error, got errors: %+v", result.Errors)
+	}
+}
+
+func TestValidateBytes_VerifyAdditionalMissingCommand(t *testing.T) {
+	recipe := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "test --version"
+mode = "output"
+pattern = "test"
+reason = "test"
+
+[[verify.additional]]
+pattern = "testd"
+`
+	result := ValidateBytes([]byte(recipe))
+	if result.Valid {
+		t.Fatal("expected invalid recipe when an additional check has no command")
+	}
+	if !hasError(result, "verify.additional[0].command", "required") {
+		t.Errorf("expected missing-command error, got errors: %+v", result.Errors)
+	}
+}
+
+func TestValidateBytes_VerifyAdditionalDangerousPatternAttribution(t *testing.T) {
+	// The warning must point at the entry that contains the pattern, not
+	// at verify.command, or an author cannot find what to fix.
+	recipe := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "test --version"
+mode = "output"
+pattern = "test"
+reason = "test"
+
+[[verify.additional]]
+command = "testd --version && echo ok"
+pattern = "ok"
+`
+	result := ValidateBytes([]byte(recipe))
+	if !hasWarning(result, "verify.additional[0].command", "&&") {
+		t.Errorf("expected the warning to name the additional entry, got warnings: %+v", result.Warnings)
+	}
+	if hasWarning(result, "verify.command", "&&") {
+		t.Errorf("expected no warning attributed to verify.command, got warnings: %+v", result.Warnings)
+	}
+}
+
+func TestValidateBytes_VerifyAdditionalRejectedForLibraries(t *testing.T) {
+	// Library verification runs dlopen and dependency checks, never
+	// recipe commands, so an additional check here would be accepted and
+	// then skipped — the exact trap this validation exists to close.
+	recipe := `
+[metadata]
+name = "test"
+type = "library"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "test --version"
+pattern = "test"
+
+[[verify.additional]]
+command = "false"
+pattern = "THIS_STRING_CANNOT_POSSIBLY_APPEAR"
+`
+	result := ValidateBytes([]byte(recipe))
+	if result.Valid {
+		t.Fatal("expected invalid recipe when a library declares verify.additional")
+	}
+	if !hasError(result, "verify.additional", "library recipes do not run verification commands") {
+		t.Errorf("expected library rejection error, got errors: %+v", result.Errors)
+	}
+}
+
+func TestValidateBytes_LibraryWithoutAdditionalStillValid(t *testing.T) {
+	// The library early-return must stay in place for everything else.
+	recipe := `
+[metadata]
+name = "test"
+type = "library"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+`
+	result := ValidateBytes([]byte(recipe))
+	if !result.Valid {
+		t.Fatalf("expected a library recipe with no verify section to validate, got errors: %+v", result.Errors)
+	}
+}
+
+func TestValidateBytes_VerifyAdditionalValid(t *testing.T) {
+	recipe := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "test --version"
+mode = "output"
+pattern = "test"
+reason = "test"
+
+[[verify.additional]]
+command = "testd --version"
+pattern = "testd"
+`
+	result := ValidateBytes([]byte(recipe))
+	if !result.Valid {
+		t.Fatalf("expected a well-formed additional check to validate, got errors: %+v", result.Errors)
+	}
+}
+
 func TestValidateBytes_VerifyPatternsVersionModeWarning(t *testing.T) {
 	// version mode (default) without {version} in any patterns entry
 	// should warn the same way single-pattern mode does today.

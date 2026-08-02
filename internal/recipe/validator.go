@@ -663,6 +663,13 @@ func validateCpanModule(result *ValidationResult, stepField string, step *Step) 
 func validateVerify(result *ValidationResult, r *Recipe) {
 	// Libraries don't require verification (they are files, not executables)
 	if r.Metadata.Type == RecipeTypeLibrary {
+		// Library verification goes through dlopen and dependency
+		// checks, which never run recipe commands. An additional check
+		// declared here would be accepted and silently skipped, so
+		// reject it rather than let it read as a working assertion.
+		if r.Verify != nil && len(r.Verify.Additional) > 0 {
+			result.addError("verify.additional", "library recipes do not run verification commands; remove verify.additional")
+		}
 		return
 	}
 
@@ -693,34 +700,58 @@ func validateVerify(result *ValidationResult, r *Recipe) {
 	}
 
 	// Check for dangerous patterns in verify command
-	validateDangerousPatterns(result, r.Verify.Command)
+	validateDangerousPatterns(result, "verify.command", r.Verify.Command)
+
+	validateAdditionalVerify(result, r.Verify.Additional)
 
 	// Validate verification mode
 	validateVerifyMode(result, r)
 }
 
-// validateDangerousPatterns checks for potentially dangerous patterns in verify commands
-func validateDangerousPatterns(result *ValidationResult, command string) {
+// validateAdditionalVerify checks each [[verify.additional]] entry. Both
+// fields are required: an entry with no command has nothing to run, and
+// an entry with an empty pattern would match any output, which reduces
+// the check to "the command exited 0" while reading like a real
+// assertion. Either shape is a check that quietly does less than it
+// claims, so both are errors rather than warnings.
+func validateAdditionalVerify(result *ValidationResult, additional []AdditionalVerify) {
+	for i, a := range additional {
+		field := fmt.Sprintf("verify.additional[%d]", i)
+		if a.Command == "" {
+			result.addError(field+".command", "command is required")
+		}
+		if a.Pattern == "" {
+			result.addError(field+".pattern", "pattern is required")
+		}
+		validateDangerousPatterns(result, field+".command", a.Command)
+	}
+}
+
+// validateDangerousPatterns checks for potentially dangerous patterns in a
+// verify command. field names the recipe field the command came from, so a
+// warning about an additional check points at that entry rather than at
+// verify.command.
+func validateDangerousPatterns(result *ValidationResult, field, command string) {
 	// Patterns with word boundaries to avoid false positives on tool names (e.g., "terraform")
 	dangerous := []string{" rm ", "\trm ", "> /", "| sh", "| bash", "curl |", "wget |"}
 	for _, pattern := range dangerous {
 		if strings.Contains(command, pattern) {
-			result.addWarning("verify.command", fmt.Sprintf("verify command contains potentially dangerous pattern '%s'", strings.TrimSpace(pattern)))
+			result.addWarning(field, fmt.Sprintf("verify command contains potentially dangerous pattern '%s'", strings.TrimSpace(pattern)))
 		}
 	}
 
 	// Check if command starts with rm (word boundary at start)
 	if strings.HasPrefix(command, "rm ") || strings.HasPrefix(command, "rm\t") {
-		result.addWarning("verify.command", "verify command contains potentially dangerous pattern 'rm'")
+		result.addWarning(field, "verify command contains potentially dangerous pattern 'rm'")
 	}
 
 	// Expanded dangerous pattern detection (per design doc)
 	// Check for conditional execution operators
 	if strings.Contains(command, "||") {
-		result.addWarning("verify.command", "verify command contains potentially dangerous pattern '||' (conditional execution); use exit_code field instead")
+		result.addWarning(field, "verify command contains potentially dangerous pattern '||' (conditional execution); use exit_code field instead")
 	}
 	if strings.Contains(command, "&&") {
-		result.addWarning("verify.command", "verify command contains potentially dangerous pattern '&&' (conditional execution)")
+		result.addWarning(field, "verify command contains potentially dangerous pattern '&&' (conditional execution)")
 	}
 
 	// Check for eval/exec with word boundaries
@@ -728,24 +759,24 @@ func validateDangerousPatterns(result *ValidationResult, command string) {
 	for _, pattern := range evalPatterns {
 		if strings.Contains(command, pattern) {
 			keyword := strings.TrimSpace(strings.Trim(pattern, ";\t "))
-			result.addWarning("verify.command", fmt.Sprintf("verify command contains potentially dangerous pattern '%s' (arbitrary code execution)", keyword))
+			result.addWarning(field, fmt.Sprintf("verify command contains potentially dangerous pattern '%s' (arbitrary code execution)", keyword))
 			break // Only warn once per keyword type
 		}
 	}
 	// Check if command starts with eval or exec
 	if strings.HasPrefix(command, "eval ") || strings.HasPrefix(command, "eval\t") {
-		result.addWarning("verify.command", "verify command contains potentially dangerous pattern 'eval' (arbitrary code execution)")
+		result.addWarning(field, "verify command contains potentially dangerous pattern 'eval' (arbitrary code execution)")
 	}
 	if strings.HasPrefix(command, "exec ") || strings.HasPrefix(command, "exec\t") {
-		result.addWarning("verify.command", "verify command contains potentially dangerous pattern 'exec' (process replacement)")
+		result.addWarning(field, "verify command contains potentially dangerous pattern 'exec' (process replacement)")
 	}
 
 	// Check for command substitution
 	if strings.Contains(command, "$(") {
-		result.addWarning("verify.command", "verify command contains potentially dangerous pattern '$()' (command substitution)")
+		result.addWarning(field, "verify command contains potentially dangerous pattern '$()' (command substitution)")
 	}
 	if strings.Contains(command, "`") {
-		result.addWarning("verify.command", "verify command contains potentially dangerous pattern '`' (command substitution)")
+		result.addWarning(field, "verify command contains potentially dangerous pattern '`' (command substitution)")
 	}
 }
 

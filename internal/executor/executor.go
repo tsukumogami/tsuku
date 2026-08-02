@@ -823,9 +823,10 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 	}
 	if dep.Verify != nil {
 		depRecipe.Verify = &recipe.VerifySection{
-			Command:  dep.Verify.Command,
-			Pattern:  dep.Verify.Pattern,
-			Patterns: dep.Verify.Patterns,
+			Command:    dep.Verify.Command,
+			Pattern:    dep.Verify.Pattern,
+			Patterns:   dep.Verify.Patterns,
+			Additional: recipeAdditionalVerify(dep.Verify.Additional),
 		}
 	}
 

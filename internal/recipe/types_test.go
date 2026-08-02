@@ -1291,6 +1291,44 @@ func TestRecipeTypeConstants(t *testing.T) {
 	}
 }
 
+// TestRecipe_ToTOML_AdditionalVerify covers the round-trip that feeds a
+// recipe into container validation. Dropping the additional checks there
+// would hand the container a recipe that verifies less than the original.
+func TestRecipe_ToTOML_AdditionalVerify(t *testing.T) {
+	r := Recipe{
+		Metadata: MetadataSection{Name: "test-tool"},
+		Verify: &VerifySection{
+			Command: "tool --version",
+			Pattern: "{version}",
+			Additional: []AdditionalVerify{
+				{Command: "toold --version", Pattern: "toold"},
+			},
+		},
+	}
+
+	data, err := r.ToTOML()
+	if err != nil {
+		t.Fatalf("ToTOML() error = %v", err)
+	}
+
+	var round Recipe
+	if err := toml.Unmarshal(data, &round); err != nil {
+		t.Fatalf("re-parsing ToTOML() output: %v", err)
+	}
+	if round.Verify == nil {
+		t.Fatal("round-tripped recipe lost its verify section")
+	}
+	if len(round.Verify.Additional) != 1 {
+		t.Fatalf("round-tripped recipe has %d additional checks, want 1", len(round.Verify.Additional))
+	}
+	if round.Verify.Additional[0].Command != "toold --version" {
+		t.Errorf("additional command = %q, want %q", round.Verify.Additional[0].Command, "toold --version")
+	}
+	if round.Verify.Additional[0].Pattern != "toold" {
+		t.Errorf("additional pattern = %q, want %q", round.Verify.Additional[0].Pattern, "toold")
+	}
+}
+
 func TestRecipe_ToTOML_Basic(t *testing.T) {
 	recipe := Recipe{
 		Metadata: MetadataSection{

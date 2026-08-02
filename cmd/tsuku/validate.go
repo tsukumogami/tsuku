@@ -177,9 +177,13 @@ Examples:
 					fmt.Printf("  Binaries: %s\n", formatList(binaries))
 				}
 
-				// Show verification
+				// Show verification, including the additional checks so
+				// the summary lists everything that will actually run.
 				if r.Verify != nil && r.Verify.Command != "" {
 					fmt.Printf("  Verification: %s\n", r.Verify.Command)
+					for _, a := range r.Verify.Additional {
+						fmt.Printf("  Additional verification: %s\n", a.Command)
+					}
 				}
 
 				// Show dependencies
