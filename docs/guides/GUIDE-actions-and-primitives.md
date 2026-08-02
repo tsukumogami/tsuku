@@ -228,11 +228,18 @@ version the recipe must reach — comparing `Content-Length` catches most
 mismatches, and hashing one archive settles it.
 
 Recipe validation covers every entry, so a non-HTTPS or malformed alternate is
-caught at authoring time rather than during an outage months later. A recipe
-that declares alternates without a `checksum_url` gets a warning: plan
-generation mints the checksum from whichever source answers first, so the list
-widens the plan-time trust set even though it does not widen the install-time
-one.
+caught at authoring time rather than during an outage months later.
+
+**Know what a source list widens.** Install time is unaffected — the pinned
+checksum decides, whichever host served. Plan generation is where that checksum
+gets minted, and it is minted from whichever source answers first, so the set of
+hosts your plan trusts is "the first reachable entry" rather than one fixed
+host. `checksum_url`, where the upstream publishes one, closes that: it is
+verified against the plan-time checksum regardless of which source answered.
+Nothing enforces this — `tsuku validate --strict` would turn a warning into a
+hard failure, and not every upstream publishes a checksum file (zig publishes
+minisign signatures and no `.sha256`) — so it is on you to know whether the
+hosts you listed are ones you would accept a checksum from.
 
 **Effect on golden plans.** A generated plan carries `fallback_urls` only when
 its recipe declared alternates. A single-source recipe's plan is byte-identical
