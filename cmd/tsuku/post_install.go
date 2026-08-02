@@ -70,7 +70,9 @@ func finishPostInstall(cfg *config.Config, mgr *install.Manager, toolName, versi
 // decides whether it belongs in the cache has to be the dependency's too.
 //
 // parent names the tool whose install pulled the dependency in, and is recorded
-// as a RequiredBy edge so removing the dependency warns first.
+// as a RequiredBy edge so removing the dependency warns first. That edge is
+// never retired when the parent is removed -- see EnsureDependencyEntry and
+// issue #2476.
 //
 // Each dependency that wrote a fragment rebuilds the shell caches through
 // finishPostInstall, so an install with N such dependencies writes the init

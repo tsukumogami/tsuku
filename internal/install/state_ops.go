@@ -132,6 +132,13 @@ func setVersionCleanup(ts *ToolState, version string, actions []CleanupAction) {
 // is one `tsuku install <dep>` away from a dangling symlink. When the
 // dependency's steps do not name any, CheckAndExposeHidden declines to expose
 // it and the user gets a real install instead.
+//
+// The RequiredBy edge this writes is never retired: cmd/tsuku/remove.go clears
+// RequiredBy by walking the removed tool's metadata.dependencies, and a
+// dependency that got here is by definition not in that list. So the edge
+// outlives its dependent, `tsuku remove <dep>` keeps asking for --force, and
+// cleanupOrphans never reclaims it. Tracked as issue #2476; erring toward a
+// stale warning rather than a silent removal is the deliberate interim.
 func (m *Manager) EnsureDependencyEntry(name, version, parent string, binaries []string) error {
 	if version == "" {
 		return nil
