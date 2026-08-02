@@ -69,6 +69,8 @@ tsuku finds `.tsuku.toml` by walking up from the current directory, stopping at 
 | `tsuku list` | List installed tools | `--json`, `--all` |
 | `tsuku outdated` | Show tools with available updates | `--json` |
 
+**Tool data outlives the tool**: a few tools keep things for you rather than just being a program — nvm holds every Node version you install, their global npm packages, and your `default` alias. Those live in `$TSUKU_HOME/data/<tool>/`, which is separate from the versioned directory tsuku installs into and recycles. Upgrading the tool leaves them alone, and so does `tsuku remove`. Nothing tsuku ships deletes that directory, so reclaim the space with `rm -rf "$TSUKU_HOME/data/<tool>"`. Data an older tsuku left somewhere else is not moved for you — see `docs/tool-data-directory.md`. Note this makes `rm -rf $TSUKU_HOME` destructive to data you cannot get back cheaply.
+
 **Switching versions**: `activate` and `rollback` both re-point everything tsuku
 owns for that tool — the `$TSUKU_HOME/bin` symlinks and the shell integration.
 Rollback is one level deep and does not change the version pin, so auto-update

@@ -947,3 +947,68 @@ export TSUKU_NO_TELEMETRY=1
 			count, string(localAfterSecond))
 	}
 }
+
+func TestEnsureDirectories_DataDir(t *testing.T) {
+	t.Run("creates the data directory private to the user", func(t *testing.T) {
+		home := t.TempDir()
+		t.Setenv(EnvTsukuHome, home)
+		cfg, err := DefaultConfig()
+		if err != nil {
+			t.Fatalf("DefaultConfig() error = %v", err)
+		}
+
+		if err := cfg.EnsureDirectories(); err != nil {
+			t.Fatalf("EnsureDirectories() error = %v", err)
+		}
+
+		info, statErr := os.Stat(cfg.DataDir)
+		if statErr != nil {
+			t.Fatalf("data directory was not created: %v", statErr)
+		}
+		// It holds user data rather than tsuku's own files, so it is not world-readable
+		// the way tools/ is.
+		if perm := info.Mode().Perm(); perm != 0o700 {
+			t.Errorf("data directory mode = %v, want %v", perm, os.FileMode(0o700))
+		}
+	})
+
+	t.Run("creates nothing when DataDir is unset", func(t *testing.T) {
+		// Config literals built directly in tests leave this empty. Without the guard,
+		// filepath.Join("", "data") is the relative path "data" and MkdirAll would drop
+		// a stray directory into whatever the test process's working directory happens
+		// to be -- which the CI job would then catch as a dirty tree, far from here.
+		wd, wdErr := os.Getwd()
+		if wdErr != nil {
+			t.Fatalf("Getwd: %v", wdErr)
+		}
+		home := t.TempDir()
+		t.Setenv(EnvTsukuHome, home)
+		cfg, err := DefaultConfig()
+		if err != nil {
+			t.Fatalf("DefaultConfig() error = %v", err)
+		}
+		cfg.DataDir = ""
+
+		if err := cfg.EnsureDirectories(); err != nil {
+			t.Fatalf("EnsureDirectories() error = %v", err)
+		}
+
+		if _, err := os.Stat(filepath.Join(wd, DataDirName)); !os.IsNotExist(err) {
+			t.Errorf("a stray %q directory was created in the working directory", DataDirName)
+		}
+	})
+
+	t.Run("DefaultConfig points DataDir under TSUKU_HOME", func(t *testing.T) {
+		home := t.TempDir()
+		t.Setenv(EnvTsukuHome, home)
+
+		cfg, cfgErr := DefaultConfig()
+		if cfgErr != nil {
+			t.Fatalf("DefaultConfig() error = %v", cfgErr)
+		}
+
+		if want := filepath.Join(home, DataDirName); cfg.DataDir != want {
+			t.Errorf("DataDir = %q, want %q", cfg.DataDir, want)
+		}
+	})
+}

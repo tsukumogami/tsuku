@@ -144,6 +144,15 @@ func (a *SetEnvAction) Execute(ctx *ExecutionContext, params map[string]interfac
 	// staging directory that ctx.InstallDir points at.
 	vars := GetStandardVars(ctx.Version, ctx.ToolInstallDir, ctx.WorkDir, ctx.LibsDir)
 
+	// {data_dir} is expanded here rather than in GetStandardVars: widening that would
+	// push the placeholder into all nine of its callers to serve the two actions that
+	// understand it.
+	toolDataDir, err := dataDir(ctx)
+	if err != nil {
+		return fmt.Errorf("set_env: %w", err)
+	}
+	vars["data_dir"] = toolDataDir
+
 	// Derive $TSUKU_HOME from ToolsDir (which is $TSUKU_HOME/tools)
 	tsukuHome := filepath.Dir(ctx.ToolsDir)
 	shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
