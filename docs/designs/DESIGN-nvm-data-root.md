@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Planned
 problem: |
   recipes/n/nvm.toml exports NVM_DIR as {install_dir}, which resolves to
   $TSUKU_HOME/tools/nvm-<version>. nvm treats NVM_DIR as its data root, not its
@@ -44,7 +44,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Planned
 
 ## Context and Problem Statement
 
