@@ -44,27 +44,24 @@ directory still there and pick up where you left off.
 
 ## If you installed nvm before this existed
 
-Earlier versions of tsuku pointed `NVM_DIR` at a directory that gets recycled, so your
-Node versions may still be sitting in one. They move to `$TSUKU_HOME/data/nvm`
-automatically the next time nvm updates — in the same step that repoints `NVM_DIR`, so
-there is no moment where your shell is looking in the wrong place.
+Earlier versions of tsuku never exported `NVM_DIR` at all, so nvm self-located to
+wherever its script was sourced from and put your Node versions there — usually
+`$TSUKU_HOME/share/shell.d/`. Those are **not** moved for you. The next time nvm
+updates, `NVM_DIR` starts naming `$TSUKU_HOME/data/nvm`, and `nvm ls` will come up empty
+until you move them:
 
-Until then nothing is broken: your shell and your data still agree, and `nvm ls` works.
-`tsuku doctor` will mention it, and say which of the two situations you are in:
+```bash
+mv "$TSUKU_HOME"/share/shell.d/{versions,alias,.cache} "$TSUKU_HOME/data/nvm/"
+```
 
-- **`WARN (using a legacy location)`** — working. Your Node versions are in an old
-  location and your shell knows it. They will move on the next nvm update. Nothing to do.
-- **`FAIL (data left behind in an old location)`** — your shell is pointing at the new
-  directory but the data did not make it there, so `nvm ls` will come up empty. Run
-  `tsuku doctor --fix` to retry the move.
+Nothing is lost in the meantime — nothing garbage-collects `share/shell.d`, so the
+installs sit there until you move them. Use `mv` on the named directories rather than
+`mv src/* dst/`, which skips dotfiles and would silently leave `.cache` behind.
 
-If `--fix` cannot finish, it says so rather than reporting success. The two cases it
-cannot repair are a file that already exists at the destination, and a move across a
-filesystem boundary. Both print the paths involved; move them with `mv` and re-run
-`tsuku doctor`.
-
-The move never overwrites and never deletes. If anything goes wrong the worst outcome is
-the same files in two places, which is why it is safe to let it run unattended.
+Automatic migration was deliberately left out. Doing it properly means recipes being
+able to describe their own data layout and carry their own migration steps, so that
+knowledge ships and versions with the recipe instead of being compiled into the CLI.
+That is a design in its own right rather than a special case for one tool.
 
 ## An existing nvm you installed some other way
 

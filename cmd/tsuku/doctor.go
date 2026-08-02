@@ -9,9 +9,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/config"
-	"github.com/tsukumogami/tsuku/internal/datamigration"
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/notices"
 	"github.com/tsukumogami/tsuku/internal/shellenv"
@@ -71,26 +69,6 @@ Use --fix to automatically repair stale env files and shell caches.`,
 						fmt.Printf("  Repaired: %s shell cache rebuilt\n", shell)
 						fixed = true
 					}
-				}
-			}
-
-			// Retry a data migration the install could not finish. Only in the
-			// stranded case: when the fragment still names an old location, the data
-			// is where the user's shell expects it and moving it would break a
-			// working install.
-			if nvmDataRootInstalled(cfg) && nvmDataRootState(cfg, homeDir) == nvmDataRootStranded {
-				result, mErr := datamigration.MigrateNvm(homeDir)
-				switch {
-				case mErr != nil:
-					fmt.Fprintf(os.Stderr, "  Failed to move nvm data: %v\n", mErr)
-				case len(result.Moved) > 0:
-					fmt.Printf("  Repaired: moved %d nvm item(s) to %s\n", len(result.Moved), datamigration.NvmDataDir(homeDir))
-					fixed = true
-				}
-				// Conflicts and cross-device failures reproduce on every retry, so say
-				// so rather than reporting a repair that did not happen.
-				if msg := datamigration.ConflictReport(datamigration.NvmDataDir(homeDir), result.Conflicts); msg != "" {
-					fmt.Fprintln(os.Stderr, "  "+msg)
 				}
 			}
 
@@ -307,89 +285,5 @@ func runDoctorChecks(cfg *config.Config, homeDir string) (failed bool, selection
 		fmt.Fprintf(os.Stderr, "    Run: rm %s/*.json to clear\n", noticesDir)
 	}
 
-	// Check 9: nvm data root.
-	//
-	// The only tool-specific check here, and gated so it prints nothing for anyone who
-	// does not have nvm installed. Kept as one hunk so it comes out in one cut once the
-	// affected releases have aged out.
-	if nvmDataRootInstalled(cfg) {
-		fmt.Fprintf(os.Stdout, "  nvm data root")
-		switch state := nvmDataRootState(cfg, homeDir); state {
-		case nvmDataRootOK:
-			fmt.Println(" ... ok")
-		case nvmDataRootStranded:
-			// The export already names the new root, so the user's shell is pointing at
-			// an empty directory right now.
-			fmt.Println(" ... FAIL (data left behind in an old location)")
-			fmt.Fprintf(os.Stderr, "    Your Node versions are not in %s\n", datamigration.NvmDataDir(homeDir))
-			fmt.Fprintln(os.Stderr, "    Run: tsuku doctor --fix")
-			failed = true
-		case nvmDataRootLegacy:
-			// Nothing is broken: the fragment and the data agree. Say where the data is
-			// and leave it alone -- moving it now would break a working install.
-			fmt.Println(" ... WARN (using a legacy location)")
-			fmt.Fprintln(os.Stderr, "    Your Node versions are still inside a tsuku-managed tool directory.")
-			fmt.Fprintf(os.Stderr, "    They move to %s the next time nvm updates.\n", datamigration.NvmDataDir(homeDir))
-		}
-	}
-
 	return failed, selection
-}
-
-// nvmDataRoot states describe how nvm's data and its exported root relate.
-const (
-	// nvmDataRootOK means nothing is in a legacy location.
-	nvmDataRootOK = iota
-	// nvmDataRootStranded means the export names the new root but the data did not
-	// arrive -- the shell is pointing somewhere empty.
-	nvmDataRootStranded
-	// nvmDataRootLegacy means the export still names an old location where the data
-	// actually is. Working, and not ours to move until nvm next installs.
-	nvmDataRootLegacy
-)
-
-// nvmDataRootInstalled reports whether nvm is installed through tsuku.
-func nvmDataRootInstalled(cfg *config.Config) bool {
-	matches, _ := filepath.Glob(filepath.Join(cfg.ToolsDir, datamigration.NvmTool+"-*"))
-	return len(matches) > 0
-}
-
-// nvmDataRootState classifies nvm's data against what the user's shell is told.
-//
-// The active shell fragment is read rather than inferred from what is on disk. A
-// stat of the data root would get this wrong after a rollback: activate re-selects
-// fragments without re-running post-install, so the new root can be populated while the
-// active fragment still names an old path.
-func nvmDataRootState(cfg *config.Config, homeDir string) int {
-	if len(datamigration.FindNvmSources(homeDir)) == 0 {
-		return nvmDataRootOK
-	}
-	if exportedNvmDirIsDataRoot(cfg, homeDir) {
-		return nvmDataRootStranded
-	}
-	return nvmDataRootLegacy
-}
-
-// exportedNvmDirIsDataRoot reports whether the shell fragment tsuku currently serves
-// exports NVM_DIR at the stable data root.
-func exportedNvmDirIsDataRoot(cfg *config.Config, homeDir string) bool {
-	shellDDir := filepath.Join(homeDir, "share", "shell.d")
-	entries, err := os.ReadDir(shellDDir)
-	if err != nil {
-		return false
-	}
-	want := datamigration.NvmDataDir(homeDir)
-	for _, e := range entries {
-		if e.IsDir() || !strings.HasPrefix(e.Name(), actions.EnvFilePrefix+datamigration.NvmTool) {
-			continue
-		}
-		data, err := os.ReadFile(filepath.Join(shellDDir, e.Name()))
-		if err != nil {
-			continue
-		}
-		if strings.Contains(string(data), want) {
-			return true
-		}
-	}
-	return false
 }

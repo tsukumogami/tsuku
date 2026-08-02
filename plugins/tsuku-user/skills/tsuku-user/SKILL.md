@@ -69,7 +69,7 @@ tsuku finds `.tsuku.toml` by walking up from the current directory, stopping at 
 | `tsuku list` | List installed tools | `--json`, `--all` |
 | `tsuku outdated` | Show tools with available updates | `--json` |
 
-**Tool data outlives the tool**: a few tools keep things for you rather than just being a program — nvm holds every Node version you install, their global npm packages, and your `default` alias. Those live in `$TSUKU_HOME/data/<tool>/`, which is separate from the versioned directory tsuku installs into and recycles. Upgrading the tool leaves them alone, and so does `tsuku remove`: removal prints the path and stops there. Nothing tsuku ships deletes that directory, so reclaim the space with `rm -rf` on the path it printed. Note this makes `rm -rf $TSUKU_HOME` destructive to data you cannot get back cheaply.
+**Tool data outlives the tool**: a few tools keep things for you rather than just being a program — nvm holds every Node version you install, their global npm packages, and your `default` alias. Those live in `$TSUKU_HOME/data/<tool>/`, which is separate from the versioned directory tsuku installs into and recycles. Upgrading the tool leaves them alone, and so does `tsuku remove`. Nothing tsuku ships deletes that directory, so reclaim the space with `rm -rf "$TSUKU_HOME/data/<tool>"`. Data an older tsuku left somewhere else is not moved for you — see `docs/tool-data-directory.md`. Note this makes `rm -rf $TSUKU_HOME` destructive to data you cannot get back cheaply.
 
 **Switching versions**: `activate` and `rollback` both re-point everything tsuku
 owns for that tool — the `$TSUKU_HOME/bin` symlinks and the shell integration.
@@ -151,8 +151,6 @@ tsuku doctor
 
 Doctor checks that `$TSUKU_HOME` exists, both directories are on PATH, the state file is accessible, shell init caches are current, and no orphaned staging directories remain. If something's wrong, it tells you what to fix.
 
-If nvm is installed, it also checks that your Node versions are where nvm is being told to look. `FAIL (data left behind in an old location)` means your shell is pointing at an empty root right now and `--fix` will move the data. `WARN (using a legacy location)` means nothing is broken — your Node versions are still inside a tool directory and will move on their own the next time nvm updates. `--fix` deliberately leaves that case alone; moving the data while your shell still points at the old place is what would break it.
-
 Three shell.d diagnostics are worth knowing:
 
 | Message | Meaning |
@@ -165,7 +163,7 @@ Three shell.d diagnostics are worth knowing:
 tsuku doctor --fix
 ```
 
-`--fix` repairs what it can generate from scratch — a stale `$TSUKU_HOME/env` and stale shell caches — plus retrying an nvm data move that did not finish. It won't touch a hash mismatch or a symlink, because both mean something outside tsuku wrote into `share/shell.d/` and tsuku can't reproduce the original bytes. Recover with `tsuku remove <tool>@<version> && tsuku install <tool>@<version>`, or delete the offending file if you put it there.
+`--fix` repairs the two things it can generate from scratch: a stale `$TSUKU_HOME/env`, and stale shell caches. It won't touch a hash mismatch or a symlink, because both mean something outside tsuku wrote into `share/shell.d/` and tsuku can't reproduce the original bytes. Recover with `tsuku remove <tool>@<version> && tsuku install <tool>@<version>`, or delete the offending file if you put it there.
 
 ## Troubleshooting
 

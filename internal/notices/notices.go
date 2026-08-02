@@ -25,10 +25,6 @@ const (
 	KindVersionFallback = "version_fallback"
 	KindShellInitChange = "shell_init_change"
 	KindCheckFailure    = "check_failure"
-	// KindDataMigration identifies a notice about a tool's user data that could not be
-	// moved to its stable data directory. Persistent rather than single-view: the
-	// condition survives until someone acts on it.
-	KindDataMigration = "data_migration"
 )
 
 // Notice represents a failed auto-update for a single tool.

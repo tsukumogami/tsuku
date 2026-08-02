@@ -11,8 +11,8 @@ problem: |
   versions disappear at the next shell start. Garbage collection then deletes the
   old directory once retention expires. The recipe cannot express any path except
   the versioned tool directory, so fixing this requires deciding where a stable data
-  root lives, how nvm exec survives a program/data split, what tsuku remove nvm does
-  to the data, and how existing installs reach the new location.
+  root lives, how nvm exec survives a program/data split, and what tsuku remove nvm
+  does to the data.
 decision: |
   Give tsuku a new top-level $TSUKU_HOME/data/ tree and point NVM_DIR at
   $TSUKU_HOME/data/nvm through a new per-tool {data_dir} placeholder expanded
@@ -32,12 +32,11 @@ rationale: |
   data needs. Copies beat symlinks for the program files because activate, rollback,
   and removal-promotion never re-run post-install, so a recipe-placed symlink tracks
   the last-installed version and goes dangling, breaking nvm exec while every other
-  subcommand stays green. The migration lives in nvm's own post-install phase
-  because set_env bakes an absolute literal into the fragment, so the moment set_env
-  runs is the only moment where the data moving and NVM_DIR being rewritten are the
-  same event; any general install hook covers exactly the extra firings in which
-  moving the data is unsafe. The merge-move contains no deletion primitive and never
-  follows a symlink, which is what makes it safe to run unattended.
+  subcommand stays green. Migration was built and then removed: the export is an
+  absolute literal frozen into a fragment nothing else rewrites, so a migration must
+  run in the same post-install execution as set_env — but that constrains when it
+  runs, not whether it must be Go, and Go is the one place a tool's layout cannot be
+  shipped alongside that tool's recipe.
 ---
 
 # DESIGN: nvm data root
@@ -285,44 +284,52 @@ one.
 
 ### Decision 3 — how existing installs reach the new root
 
-**Chosen: one merge-move in a new leaf package, invoked from three call sites that each
-earn their place for a different reason, plus a failure-only notice.**
+**Chosen: they do not, in this design. The migration is deferred to a design of its own
+and users move their data by hand in the meantime.**
 
-The decision turns on a fact none of the background research surfaced: `set_env` expands
-its placeholder to an **absolute literal** before writing (`set_env.go:165`), single-quoted
-so nothing re-expands at shell time, into `share/shell.d/nvm@<version>.<shell>`, and
-`RebuildShellCache` concatenates it verbatim. Nothing in the tree rewrites a fragment's
-body outside an install of nvm itself.
+A migration was designed and built, then removed before merge. It is worth recording why,
+because the reasoning is about tsuku's architecture rather than about nvm.
 
-So any code that runs at a moment when the nvm recipe has not run does so while `NVM_DIR`
-still names the old location. Moving the data there *causes* the bug.
+The mechanism worked: a merge with no deletion primitive, called from `set_env` so the
+data and the export changed in one event, with a removal-path rescue and a `doctor`
+check. What it cost was a file of nvm's on-disk layout — the names of the directories
+nvm keeps under its root — compiled into the tsuku binary. nvm is not an embedded recipe.
+It is fetched from a registry that updates on its own cadence. So the arrangement put a
+tool's layout knowledge in the one artifact that cannot be updated with that tool's
+recipe: if nvm adds a data path, the recipe can be corrected by a registry push while the
+compiled list needs a CLI release.
+
+The timing argument that justified putting it in Go does not survive inspection either.
+The export is an absolute path frozen into a version-keyed fragment, and nothing rewrites
+a fragment outside an install of the tool — so the migration must run in the same
+post-install execution as `set_env`. That forces *when*, not *where*. A recipe-declared
+step in the same phase satisfies it equally.
+
+What a correct version needs is for a recipe to describe its own data layout and carry
+its own migration, so the knowledge ships and versions with the recipe. That is a
+recipe-schema design, and it deserves to be worked out against more than one example
+rather than inferred from nvm. Tracked separately.
+
+Deferring it costs the user a manual `mv`, and costs nothing else: nothing garbage-collects
+`share/shell.d`, where every released tsuku left nvm's data, so the installs sit there
+until moved. The population whose data is in a directory that *is* collected exists only
+on unreleased `main`.
 
 - **A general migration hook on the install path (`manager.go:149`), the `EnsureEnvFile`
-  shape.** Rejected on correctness, not cost. Its advocates' strongest argument was
-  coverage-per-elapsed-time — days rather than an nvm release — and those extra firings
-  are exactly the unsafe ones: a user with `NVM_DIR` live in their shell who runs
-  `tsuku install jq` would have their data relocated while the fragment still names the
-  old path. Both validators who advocated it verified the mechanism and withdrew it. The
-  `EnsureEnvFile` precedent does not transfer, because `EnsureEnvFile` repairs a file
-  tsuku owns outright with no external state that has to agree with it.
-- **`doctor` alone.** Rejected: nothing in tsuku's non-test Go ever mentions
-  `tsuku doctor` outside `doctor.go`, so it is a pull surface nothing points at. Its
-  *repair* half was right and is adopted.
-- **Detect automatically, never move.** Withdrawn by its own advocate: the irreversibility
-  premise is false against an algorithm with no deletion primitive, and its own consequence
-  — that detected-but-unmoved directories then need GC protection — is new machinery in
-  the deletion path, versus one `os.Rename` earlier in the same process.
-- **A one-shot `tsuku migrate` command.** Rejected: no precedent. Every maintenance
-  surface in the tree is either permanently idempotent (`doctor --fix`, `cache cleanup`)
-  or fully automatic and shape-detecting.
+  shape.** Rejected on correctness before the migration was dropped at all, and the
+  finding stands for whatever replaces it: every event in its extra coverage is an event
+  at which the tool's recipe has not run, so the export still names the old location and
+  moving the data breaks a working install. Both validators who advocated it verified the
+  mechanism and withdrew it.
+- **`doctor` alone.** Nothing in tsuku's non-test Go ever mentions `tsuku doctor` outside
+  `doctor.go`, so it is a pull surface nothing points at.
+- **A one-shot `tsuku migrate` command.** No precedent: every maintenance surface in the
+  tree is either permanently idempotent (`doctor --fix`, `cache cleanup`) or fully
+  automatic and shape-detecting.
 - **Using the new release's file list as a program manifest to move "everything else".**
-  Rejected: it applies the *new* release's manifest to the *old* release's directory, so a
-  file dropped between releases is misclassified as user data — gutting the rollback
-  target and depositing a stale program file into the one tree tsuku promises never to
-  delete.
-- **A notice keyed on `nvm`, or written through `reporter.Warn`.** Rejected: the first is
-  overwritten twice in the same tick, by `Subscriber.Handle` and by `InboxReporter.Stop`;
-  the second corrupts an unrelated tool's background success line into `"nvm -> "`.
+  Applies the *new* release's manifest to the *old* release's directory, so a file
+  dropped between releases is misclassified as user data — emptying the directory
+  garbage collection keeps as the rollback target.
 
 ### Decision 4 — the guardrail
 
@@ -350,11 +357,9 @@ whose stated policy is that nothing in it is ever deleted except by an explicit
 user-initiated command. The recipe names it with `{data_dir}`, a per-tool placeholder
 expanded Go-side. `nvm.sh` and `nvm-exec` are copied into that directory by a new
 `install_program_files` post-install action on every install, so `nvm exec` and `nvm run`
-keep working and an upgrade repoints them by construction. `set_env` itself merge-moves
-data from the two legacy locations immediately after writing the fragment, in the same
-process and the same function call. The same merge-move is called from the removal path
-before the tool directory is deleted, so `tsuku remove nvm` cannot destroy an unmigrated
-estate. `tsuku doctor` reports a migration that did not complete and `--fix` retries it.
+keep working and an upgrade repoints them by construction. Data that an earlier tsuku left
+somewhere else is not moved: that needs recipes to carry their own migrations, which is a
+separate design.
 
 `tsuku remove nvm` deletes the tool and the two program-file copies and leaves the
 estate, printing where it is. No tsuku command deletes it; the documented reclaim is
@@ -362,11 +367,10 @@ estate, printing where it is. No tsuku command deletes it; the documented reclai
 deliberately asymmetric — tsuku will put user data somewhere it can guarantee, and will
 not take it away.
 
-The pieces cohere because each answers a different clock. The recipe step answers the
-one-second invalidation clock — data and pointer move together or not at all. The rescue
-answers `tsuku remove`, which no install path covers. `doctor` answers the case where the
-recipe already committed to the new path and the data did not arrive. And the copies
-answer `Activate`, which never re-runs post-install at all.
+The two pieces cohere because they answer different failure modes. `{data_dir}` answers
+the upgrade, which is what destroys the data. The copies answer `Activate`, which never
+re-runs post-install and would otherwise leave `nvm exec` pointing at a version that no
+longer exists.
 
 ## Solution Architecture
 
@@ -407,124 +411,15 @@ answer `Activate`, which never re-runs post-install at all.
   keeps GC's cross-version guard effective. An `ActionEvaluability` entry is mandatory —
   `install_completions` is already missing from that map, which silently makes every
   recipe using it non-reproducible.
-- **`internal/datamigration`** — a leaf package importing only stdlib and
-  `internal/config`: `merge.go` holds the tool-agnostic merge primitive, `nvm.go` the nvm
-  predicate table. It is a leaf because both `internal/actions` and `internal/install`
-  need it and neither imports the other today, so anything else would create that edge.
-  It is split by generality rather than by tool because `internal/` holds no tool-named
-  package and this repo's convention for ecosystem-specific code is a *file* inside a
-  general package (`brew_actions.go`, `gem_install.go`, `nix_portable.go`). `nvm.go` is
-  the single deletable unit when the migration outlives its usefulness.
-- **The migration runs inside `set_env`**, immediately after the fragment is written,
-  gated on the exported variable being a known data-root name. It is not a separate
-  recipe action: a declared step would have to state "ordered after `set_env`" as a
-  constraint a future recipe edit could violate, and it would owe a registry entry, an
-  evaluability entry, a plugin-skill entry, and a contract to never return an error
-  (because `ExecutePhase` aborts a phase's remaining steps on the first one). Calling it
-  inline makes the ordering inexpressible-wrongly and costs no recipe schema. The
-  precedent is `fixPipxShebangs`, called unconditionally from `installDirectoryMode`
-  (`internal/install/manager.go:177`) — an ecosystem-specific fixup, named honestly, on a
-  general path.
-- **`internal/notices`** — a `KindDataMigration` constant and one render case. Worth its
-  nine lines because without it the notice falls through to a branch that prints
-  `"tsuku rollback <tool>"` — telling a user whose estate is half in two places to run a
-  command that cannot succeed. The notice is **written from `cmd/tsuku/post_install.go`**,
-  which already holds config, by re-running the shape detector. Writing it from inside an
-  action would need a `NoticesDir` on `ExecutionContext` — the most-constructed struct in
-  the tree — plumbed through five construction sites, plus a new
-  `internal/actions` → `internal/notices` edge.
 
-### The merge-move
+### The `Activate` gap this does not close
 
-`Merge(src, dst, entries)`: for each named entry, if the corresponding path under `dst`
-does not exist, `os.Rename` it; if both sides are directories, recurse; if either side is
-not a directory, leave the source in place and record a conflict. It takes the entries to
-move as an argument and **never removes its own source** — an unconditional
-`os.Remove(src)` fits neither call shape, and for the pre-fix population the source *is*
-`share/shell.d`.
-
-**Every stat is `os.Lstat`, and every type test is `Mode().IsDir()` on an `Lstat` result
-or `DirEntry.IsDir()` from `os.ReadDir`.** A symlink on either side is a conflict: left in
-place, reported, never followed. This is not a detail. With `os.Stat`, a symlink at
-`src/versions` pointing at, say, the user's documents makes the merge enumerate *that*
-directory and rename its entries into the data root — a move-anything primitive built out
-of an algorithm whose headline invariant is about deletion. The test that pins it is two
-`os.Symlink` calls, one per side.
-
-**No `os.RemoveAll`, no overwrite, ever.** That invariant is what makes the operation safe
-to run without a human watching, and it gets a comment and a test. Not atomic overall;
-atomic per entry at every depth, so a crash leaves every entry wholly in one place or the
-other, never torn. Re-runnable by shape detection with no state flag, matching
-`State.migrateToMultiVersion` and `migrateSourceTracking`, which is how this codebase
-already does migrations. The destination always wins; the source is never destroyed; every
-conflict is reported by path.
-
-**No `copyDir` fallback, ever** — a prohibition in the doc comment, not an omission a
-future contributor helpfully fills in. On `EXDEV` or `EACCES`, record the path, report,
-and stop. `copyDir` has no hard-link tracking, so npm's content-addressable store becomes
-N full copies and a fits-on-disk migration can hit ENOSPC; a single unreadable file aborts
-mid-tree leaving a partial destination and the original with nothing saying which is
-authoritative. `mv(1)` handles the cross-device case correctly, so the honest remedy is to
-print the path.
-
-### Detection predicates
-
-| Population | Predicate | Move rule |
-|---|---|---|
-| A — pre-shell.d-fix | any of `versions`, `alias`, `.cache` exists as a directory directly under `$TSUKU_HOME/share/shell.d` | **every entry that is a directory** |
-| B — post-shell.d-fix | for each installed nvm version, any of those exists under `$TSUKU_HOME/tools/nvm-<version>/` | the **enumerated** set: `versions/`, `alias/`, `.cache/`, `default-packages`, `current` |
-
-A's rule is provable rather than heuristic: tsuku's only writers under `share/shell.d`
-write named *files*, and both enumerators `continue` on `IsDir()`. A directory there is
-therefore not tsuku's, by construction. B's rule must be the enumerated set rather than an
-inverse rule, because the source is also a program directory and an inverse rule would
-classify a file dropped between releases as user data — gutting the directory GC
-deliberately preserves as the rollback target. B runs before A: B is on a deletion clock
-and A is not, so B wins any collision and A's leftovers are safe where they sit.
-
-tsuku never reads, writes, moves, or deletes anything under `$HOME/.nvm` on any path. A
-user with a pre-existing upstream install there is unaffected and untouched; that
-guarantee is stated in the recipe header rather than surfaced as a health check.
-
-### `doctor` verdicts
-
-The check runs on the *defect* predicate, not on data-exists, and reads the active
-fragment rather than inferring from disk — an `os.Stat($TSUKU_HOME/data/nvm/nvm.sh)`
-shortcut is unsound because `Activate` re-selects fragments without running post-install,
-so after a rollback that file exists while the active fragment names the old path.
-
-The whole check is gated on nvm being installed, so it emits nothing for the
-overwhelming majority of users, and it is kept as one contiguous hunk so the eventual
-deletion is a single cut.
-
-| Condition | Verdict | `--fix` |
-|---|---|---|
-| Fragment names `data/nvm`, data still in an old location | **FAIL** — the shell points at an empty root right now | yes, retry the merge |
-| Fragment names an old path and the data is there | **WARN** — working, at risk, and this is the only surface that tells this user where their data is | **no** — moving it would break a working install |
-
-`--fix` repairs a transient failure and the case where the merge never ran. It cannot
-repair the two documented failure modes — `EXDEV` and a genuine conflict both reproduce
-on retry — and it says so rather than reporting success.
-
-Two further verdicts were considered and cut. A rollback that crosses the old/new
-boundary is a real state, but it diagnoses a bug this design defers, and the diagnostic
-should ship with its fix rather than alone. A note for a user with a pre-existing
-`$HOME/.nvm` is a support-FAQ answer wearing a health check: nothing is wrong and nothing
-is done.
-
-`--no-shell-init` falls out for free: `set_env` returns early writing nothing, no fragment
-exists, the predicate is false, nothing moves.
-
-### The notice
-
-Failure-only, keyed `nvm-data-migration` (not `nvm` — `WriteNotice` writes
-`<Tool>.json`, so a notice named `nvm` is overwritten twice in the same tick), with a
-**non-empty `Error`**. That one field routes it around every trap for free:
-`isBackgroundSuccess` becomes false so it escapes `renderBackgroundSuccess`, which drops
-`Messages` entirely; `cmd/tsuku/cmd_notices.go` needs no change because it deletes only
-error-free notices; and it takes the `MarkShown` branch rather than single-view removal,
-so it persists. Nothing is said on success: a successful migration has nothing to report,
-because the user's `nvm ls` looks exactly as it did.
+`Manager.Activate` flips `ActiveVersion` and re-selects shell fragments without ever
+rewriting one, and `Rollback` delegates to it. So rolling back to a version installed
+under the old recipe repoints `NVM_DIR` at that version's baked path while the data sits
+in `data/nvm`. The data is not destroyed and rolling forward restores the view. Closing it
+means making `Activate` re-run `set_env`, which is the same gap
+`DESIGN-shell-d-lifecycle.md` reasoned about and is wider than this issue.
 
 ## Implementation Approach
 
@@ -543,29 +438,17 @@ because the user's `nvm ls` looks exactly as it did.
    error against a correct recipe.
 3. **`install_program_files`** — action, registration, `ActionEvaluability` entry,
    preflight, unit tests. No `dir` parameter.
-4. **`internal/datamigration`** — `merge.go` (the general primitive) and `nvm.go` (the
-   predicates), with unit tests covering happy path, idempotence, migration, and
-   idempotence-after-migration — the last being the one that matters for a re-runnable
-   file move — plus the conflict, no-deletion-primitive, and symlink-is-a-conflict
-   invariants.
-5. **The migration call inside `set_env`**, gated on the exported variable being a known
-   data-root name, immediately after the fragment is written.
-6. **Removal rescue** — the same merge called before both `os.RemoveAll(toolDir)` sites in
-   `internal/install/remove.go`. Do not touch the deprecated `Manager.Remove`
-   (`remove.go:21`), which has zero non-test callers.
-7. **Notice kind and render case**, with the notice written from
-   `cmd/tsuku/post_install.go` by re-running the shape detector.
-8. **`doctor`** — the two-verdict check gated on nvm being installed, as one contiguous
-   hunk, and the `--fix` stanza, modeled on `TestDoctorFix_EnvRewrite`.
-9. **The recipe** — `set_env` value, the `install_program_files` step, and a header
-   comment describing the model actually in force, including where the data lives, that
-   tsuku never deletes it, and that a pre-existing `$HOME/.nvm` is left alone.
-10. **`docs/` note** — where `data/` lives, that `rm -rf $TSUKU_HOME` now destroys user
-    data, and the manual reclaim command. This is the only mitigation offered for that
-    consequence, so it is a step rather than a claim.
-11. **Plugin skills** — `tsuku-recipe-author` (the new action, the new placeholder),
-    `tsuku-recipe-test`, and `tsuku-user` (the new doctor check, the `data/` tree, what
-    removal does), per the repo's plugin-maintenance table.
+4. **The recipe** — `set_env` value, the `install_program_files` step, and a header
+   comment describing the model actually in force: where the data lives, that no tsuku
+   command deletes it, that data from an earlier tsuku is not moved automatically, and
+   that a pre-existing `$HOME/.nvm` is left alone.
+5. **`docs/` note** — where `data/` lives, that `rm -rf $TSUKU_HOME` now destroys user
+   data, the manual reclaim command, and the manual `mv` for data an earlier tsuku left
+   elsewhere. This is the only mitigation offered for those consequences, so it is a step
+   rather than a claim.
+6. **Plugin skills** — `tsuku-recipe-author` (the new action, the new placeholder) and
+   `tsuku-user` (the `data/` tree, what removal does), per the repo's plugin-maintenance
+   table.
 
 ### Testing
 
@@ -576,11 +459,6 @@ actions, and shellenv meet. Its harness already stands up a real `$TSUKU_HOME` u
 `go test -short ./...` on every PR that touches Go. Seed a user file under the path the
 shell was told to use, install a second version, remove the first, and assert the file
 survives and the shell still names the same root — a test that fails today.
-
-The end-to-end migration case lives in the same file: seed
-`share/shell.d/versions/node/v20.0.0/...`, run the trigger, then assert the tree moved
-**and** that `NVM_DIR` read out of a real bash subshell names the new root. Observable
-behavior, not intermediate state.
 
 The slow real-nvm test — install nvm, install a Node version, set a `default` alias,
 upgrade nvm, then assert in a **fresh shell** that `nvm ls` still lists the version, the
@@ -638,11 +516,6 @@ than narrowing. The temp destination is opened `O_CREATE|O_EXCL|O_NOFOLLOW`. The
 `copyFile` helper cannot be reused: it uses plain `os.Create`, which follows a symlink at
 the destination and preserves no mode.
 
-**The migration must never follow a symlink.** Covered above under the merge primitive:
-every stat is `os.Lstat`, a symlink on either side is a conflict rather than a directory
-to recurse into, and the "no deletion primitive" invariant does not by itself cover
-renaming entries *out of* a directory the migration was never pointed at.
-
 **File modes are not derived from tarball bytes.** `0755` when the source has any execute
 bit, `0644` otherwise. `data/` itself is created `0700`, matching `share/shell.d` and
 `share/completions` — the two places in the tree holding things tsuku treats as sensitive
@@ -665,11 +538,6 @@ injection surface. The action asserts `filepath.Dir(ctx.ToolsDir) == config.Home
 rather than assuming it, since the cleanup path resolves recorded paths against
 `config.HomeDir` and directly-constructed `Config` literals exist in the test suite.
 
-**A concurrent `nvm install` during the migration** can create a version in the old root
-after that entry has moved, leaving the estate split across two locations. Nothing is
-destroyed and the next run of the shape detector merges it; the operation is atomic per
-entry, not overall, which is stated rather than glossed.
-
 ## Consequences
 
 **What becomes true.** Upgrading nvm preserves Node versions by construction rather than
@@ -677,10 +545,7 @@ by machinery firing at the right moment. A plan-install of an already-present ve
 GC both become no-ops with respect to user data. `nvm exec` and `nvm run` keep working,
 verified empirically for this layout. A user who updates nvm has their estate follow
 `NVM_DIR` in the same process, with no window in which the two disagree. `tsuku remove nvm`
-preserves what it promises to preserve even for users who never migrated. The migration is
-a disposable unit — one leaf package and one action — deletable once the affected releases
-are old enough, with shape detection making the deletion a no-op for anyone already
-migrated.
+preserves what it promises to preserve.
 
 **What becomes easier.** The next recipe with a data root has `{data_dir}` waiting, and
 the validator rule makes the original bug unrepresentable in recipe form. tsuku gains a
@@ -696,33 +561,22 @@ directory it can name in `doctor` output and size reporting.
   follow-up outside this design.
 - **`make clean` destroys a contributor's dogfooded data root,** since dev builds default
   `TSUKU_HOME` to `.tsuku-dev`. Contributor-facing; worth a note in CONTRIBUTING.
-- **A user who never updates nvm is never migrated.** The real coverage gap, bounded by
-  nvm's release cadence rather than by days. Survivable because that user is not broken:
-  their fragment and their data agree, and `nvm ls` works. The residual risks are
-  `tsuku remove nvm`, which the rescue closes, and GC, which cannot fire without an nvm
-  install having run `set_env` first in the same process. The acceptance criterion's
-  second clause — the user is *told* — is served for this population by the `doctor` WARN
-  verdict, the recipe header comment, and the release note. It is deliberately not served
-  by moving their data, because moving it while their fragment names the old path is the
-  bug this design exists to prevent.
+- **Nobody's existing Node installs are moved for them.** The next `tsuku update nvm`
+  repoints `NVM_DIR` at `data/nvm` and `nvm ls` comes up empty until the user moves what
+  an earlier tsuku left in `share/shell.d`. Nothing is destroyed — that tree is not
+  garbage-collected — but nothing announces it either, beyond the recipe header comment
+  and the docs note. This is the accepted cost of not compiling a tool's layout into the
+  CLI, and it is the thing recipe-carried migration is meant to fix.
 - **`tsuku rollback nvm` to a version installed under the old recipe repoints `NVM_DIR` at
   the old path while the data sits at `data/nvm`.** `Activate` flips `ActiveVersion` and
   re-selects fragments without ever rewriting one, so the rolled-back version's fragment
   still carries its own baked path. The data is not destroyed and rolling forward restores
-  the view; the third `doctor` verdict makes the state visible. Fixing it properly means
+  the view. Fixing it properly means
   making `Activate` re-run `set_env`, which is the same gap `DESIGN-shell-d-lifecycle.md`
   reasoned about, wider than this issue, and a change to the activate path this PR should
   not make. Recorded as a follow-up.
-- **A `--no-shell-init` user gets program files but no export and is never migrated.**
-  Consistent with what the flag means, and stated rather than discovered.
-- **A partial removal leaves rescued data invisible.** Removing the active version with
-  others remaining promotes another version whose fragment names its own directory, so the
-  rescued data is preserved but not pointed at until the next nvm install. Strictly better
-  than destruction, and the message says so rather than claiming success.
-- **Conflicts and `EXDEV` are reported, not resolved.** By design. The remedy printed is a
-  literal `mv`, because the one-liner a user would improvise is unsafe: `mv src/* dst/`
-  skips dotfiles so `.cache` is silently lost, and it nests `versions/versions` when the
-  destination already exists.
+- **A `--no-shell-init` user gets program files but no export.** Consistent with what
+  the flag means, and stated rather than discovered.
 - **tsuku now owns a directory that can be the largest thing on the machine, and ships no
   command to delete it.** That is the deliberate shape of the answer to "what does
   `tsuku remove nvm` do": nothing tsuku ships ever removes the estate. Removal prints the
@@ -736,6 +590,10 @@ directory it can name in `doctor` output and size reporting.
 
 ## Deliberately out of scope
 
+- **Recipe-carried migration.** The reason this design ships no migration: a recipe needs
+  to be able to describe its own data layout and carry its own migration steps, so the
+  knowledge ships and versions with the recipe rather than being compiled into the CLI.
+  nvm is the motivating example, not the whole requirement.
 - **Making `Activate` re-run `set_env`** so activate and rollback rewrite fragments. The
   general fix for the gap above.
 - **`set_env` gaining `if_unset` semantics** so a user-set `NVM_DIR` wins regardless of
