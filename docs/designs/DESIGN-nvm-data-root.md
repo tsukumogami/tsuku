@@ -78,6 +78,55 @@ fail with `rc=127`. The naive repair — symlink `nvm-exec` into the data root �
 silently does not work, because `nvm-exec` self-locates through an unresolved
 `BASH_SOURCE[0]` and re-sources `$DIR/nvm.sh`. Both files must be present.
 
+### Verified by running nvm, not by reading it
+
+Three questions were settled empirically against two real nvm releases (v0.40.6 and
+v0.40.3, whose `nvm.sh` and `nvm-exec` genuinely differ), extracted exactly as
+`download_archive` with `strip_dirs = 1` would leave them, with every shell run under
+`env -i`.
+
+**nvm creates `$NVM_DIR` itself, unconditionally, including missing parents.** Every
+directory creation in `nvm.sh` is `mkdir -p`, so the first write materializes the root
+and everything above it. This holds for `nvm install` and for non-install writes like
+`nvm alias`. It removes a whole branch of work: **tsuku needs no directory-creating
+action** — no new action, registry entry, plan-evaluability entry, preflight, or
+tests. It also means a freshly-installed nvm has no data directory on disk at all
+until the user runs `nvm install`, so anything reasoning about the data root's
+presence must treat absence as normal rather than as corruption. (Note this is the
+opposite of `install.sh`, which refuses to create a non-default root — tsuku extracts
+the tarball itself and never runs it, so `nvm.sh`'s permissive behavior governs.)
+
+**The full tsuku-shaped layout works, including `nvm exec` and `nvm run`.** With
+`nvm.sh` copied into `share/shell.d` (as `install_shell_init` does), `NVM_DIR`
+exported by a `00-env-` fragment, and `nvm.sh` plus `nvm-exec` symlinked into the data
+root, every command returns 0: `install`, `alias default`, `ls`, `which`, `exec`,
+`run`, `use default`, `use system`, `deactivate`. A brand-new shell auto-uses the
+default alias and `node -v` resolves to the nvm-managed version.
+
+**Swapping the program underneath the data preserves everything.** Repointing both
+symlinks from v0.40.6 to v0.40.3 and rewriting the version-keyed fragments — precisely
+what a tsuku upgrade plus its shell.d cleanup does — leaves the Node version, the
+`default` alias, and `exec`/`run` intact, with `nvm --version` correctly reporting the
+new program version. Then `rm -rf` on the old tool directory, the exact event this
+issue is about, is a **no-op**.
+
+**Migration by `mv` is safe.** Across a pure-JS global (`cowsay`) and a
+native-binary one (`esbuild`), zero files under a Node install embed the old root
+path; the `bin/` entries are relative symlinks, shebangs are `#!/usr/bin/env node`,
+and npm computes `prefix`/`globalconfig` at runtime from node's location rather than
+storing them. After moving `versions/` and `alias/` to a new root, `npm ls -g`, both
+global binaries, the `default` alias, and `exec`/`run` all work, and a residual grep
+for the old path returns nothing.
+
+**The one thing that regresses silently.** If an upgrade deletes the old tool
+directory *without* repointing the symlinks, `install`, `ls`, `use`, `which`, and
+`alias` all keep working and only `exec`/`run` break, with `rc=127`. The two symlinks
+are load-bearing upgrade state, and because the breakage hides behind the common
+commands, an upgrade that forgets to repoint them would very plausibly ship unnoticed.
+Repointing belongs inside the placement action rather than in a separate step, and the
+regression test must run `nvm exec` *after* a simulated upgrade, not only after a
+fresh install.
+
 Three constraints narrow the solution space sharply:
 
 1. **No option is recipe-only.** `set_env` expands six placeholders — `{version}`,
@@ -110,11 +159,16 @@ enumerates it for deletion.
   `delete_dir`-emitting cleanup (with an explicit GC exclusion, since cleanup
   actions are also run by `ReapVersion`). If no, `$HOME/.nvm` is right and tsuku
   should hold no opinion about it.
-- **How `nvm exec` survives.** Both `nvm.sh` and `nvm-exec` must be materialized in
-  the data root, and no tsuku action can create a directory, symlink, or copy a file
-  to an arbitrary path today. Either a narrow new action or `run_command` — which
-  works but is non-evaluable, declares `RequiresNetwork()`, and trips a
-  hardcoded-path preflight warning.
+- **How `nvm.sh` and `nvm-exec` get placed in the data root.** No tsuku action can
+  create a symlink or copy a file to a path outside the staging directory today. The
+  candidates are a narrow new action — which could use the existing `AtomicSymlink`
+  and `ValidateSymlinkTarget` in `internal/install/symlink.go`, both already generic
+  rather than binary-specific — or `run_command`, which works but is non-evaluable,
+  declares `RequiresNetwork()`, and trips a hardcoded-path preflight warning. Note
+  this requirement is **neutral between the two location candidates**: pointing
+  `NVM_DIR` at `$HOME/.nvm` needs `nvm-exec` there just as much, unless the user
+  happens to already have an upstream nvm install at that path. Whichever location
+  wins, the same placement mechanism is needed.
 - **What the new template variable is.** `{tsuku_home}`, `{share_dir}`, or a
   per-tool `{data_dir}` expanding to `$TSUKU_HOME/share/<tool>`. The third is the
   most reusable and the only one that makes a validator guardrail enforceable, and
@@ -122,7 +176,12 @@ enumerates it for deletion.
 - **How existing installs are migrated.** Two populations exist with different
   on-disk signatures and different urgency, and an already-installed nvm runs no
   steps on reinstall (`--force` does not bypass the short-circuit), so a recipe
-  change alone reaches neither of them.
+  change alone reaches neither of them. The move itself is verified safe; what is
+  open is where the migration code runs and what it enumerates. Moving *everything*
+  under the old root except the extracted program files is safer than listing known
+  data paths, since a future nvm release adding a data path would otherwise be
+  silently dropped — the empirical run left `.cache/` behind and nvm silently
+  re-downloaded it.
 
 ## Decision Drivers
 
