@@ -220,8 +220,13 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 	mgr := install.New(cfg, install.WithEventBus(bus))
 	mgr.SetReporter(reporter)
 
-	// If explicit install, check if tool is hidden and just expose it
-	if isExplicit && parent == "" {
+	// If explicit install, check if tool is hidden and just expose it.
+	//
+	// Not when a version was asked for: exposing links whatever version the
+	// entry already records, so taking this shortcut for `tsuku install foo@2`
+	// while foo@1 sits there hidden would hand the user version 1 and report
+	// success. Falling through installs the version they named.
+	if isExplicit && parent == "" && reqVersion == "" && versionConstraint == "" {
 		wasHidden, err := install.CheckAndExposeHidden(ctx, mgr, toolName)
 		if err != nil {
 			reporter.Warn("failed to check hidden status: %v", err)
