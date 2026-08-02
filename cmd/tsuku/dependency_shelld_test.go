@@ -503,3 +503,123 @@ func TestDependencyShellD_RecordedWhenTheToolItselfFails(t *testing.T) {
 	}
 	h.assertShellDEmpty()
 }
+
+// TestDependencyShellD_RecordsTheDependencysBinaries covers what makes the
+// hidden entry safe. Hidden is a state a tool leaves through ExposeHidden, which
+// links exactly the binaries the entry records; an entry recording none used to
+// fall back to guessing bin/<toolname>, so `tsuku install <dep>` handed the user
+// a dangling symlink and an install that did nothing.
+func TestDependencyShellD_RecordsTheDependencysBinaries(t *testing.T) {
+	h := newDepHarness(t)
+
+	// install_binaries copies out of the work directory, not the staging
+	// install directory, so this stages its own source rather than reusing
+	// writeInitBinaryStep.
+	h.installParentWithDependency([]executor.ResolvedStep{
+		{
+			Action:    "run_command",
+			Evaluable: true,
+			Params: map[string]interface{}{
+				"command": "mkdir -p {work_dir}/bin && printf '#!/bin/sh\n' > {work_dir}/bin/depinit && " +
+					"chmod 0755 {work_dir}/bin/depinit",
+			},
+		},
+		{
+			Action:    "install_binaries",
+			Evaluable: true,
+			Params: map[string]interface{}{
+				"binaries": []interface{}{"bin/depinit"},
+			},
+		},
+	})
+
+	ts, err := h.mgr.GetToolState(depTool)
+	if err != nil || ts == nil {
+		t.Fatalf("GetToolState(%s) = %v, %v", depTool, ts, err)
+	}
+	want := filepath.Join("bin", "depinit")
+	if !slices.Contains(ts.Versions[depVersion].Binaries, want) {
+		t.Errorf("%s@%s records binaries %v, want it to include %q",
+			depTool, depVersion, ts.Versions[depVersion].Binaries, want)
+	}
+	if !slices.Contains(ts.Binaries, want) {
+		t.Errorf("the legacy Binaries field is %v, want it to include %q -- ExposeHidden reads it",
+			ts.Binaries, want)
+	}
+}
+
+// TestDependencyShellD_RecordedWhenTheDependencyItselfFails is the sibling of
+// the failed-tool case, and the harder one. The dependency's install phase has
+// already written its fragment by the time a post-install step fails, and the
+// os.Stat dedup on the final directory means retrying never runs those steps
+// again to re-record it. Handing the cleanup actions back only on the happy path
+// would strand the file permanently.
+func TestDependencyShellD_RecordedWhenTheDependencyItselfFails(t *testing.T) {
+	h := newDepHarness(t)
+
+	rec := &recipe.Recipe{Metadata: recipe.MetadataSection{Name: depParentTool, Type: "tool"}}
+	exec, err := executor.NewWithVersion(rec, depParentVersion)
+	if err != nil {
+		t.Fatalf("NewWithVersion() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	exec.SetToolsDir(h.cfg.ToolsDir)
+	exec.SetLibsDir(h.cfg.LibsDir)
+	exec.SetCurrentDir(h.cfg.CurrentDir)
+	exec.SetSkipCacheSecurityChecks(true)
+
+	plan := &executor.InstallationPlan{
+		FormatVersion: executor.PlanFormatVersion,
+		Tool:          depParentTool,
+		Version:       depParentVersion,
+		Platform:      executor.Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
+		Dependencies: []executor.DependencyPlan{{
+			Tool:       depTool,
+			Version:    depVersion,
+			RecipeType: "tool",
+			Steps: []executor.ResolvedStep{
+				writeInitBinaryStep(),
+				// Writes the fragment during the install phase...
+				{
+					Action:    "set_env",
+					Phase:     "post-install",
+					Evaluable: true,
+					Params: map[string]interface{}{
+						"vars": []interface{}{
+							map[string]interface{}{"name": depInitMarker, "value": "{install_dir}"},
+						},
+					},
+				},
+				// ...and then a later post-install step fails.
+				{
+					Action:    "run_command",
+					Phase:     "post-install",
+					Evaluable: true,
+					Params:    map[string]interface{}{"command": "exit 1"},
+				},
+			},
+		}},
+		Steps: []executor.ResolvedStep{},
+	}
+
+	if err := exec.ExecutePlan(context.Background(), plan); err == nil {
+		t.Fatal("ExecutePlan() succeeded; the scenario needs the dependency's own step to fail")
+	}
+
+	deps := exec.GetDependencyInstalls()
+	if len(deps) != 1 {
+		t.Fatalf("GetDependencyInstalls() = %+v, want the dependency that wrote before it failed", deps)
+	}
+	if len(deps[0].CleanupActions) == 0 {
+		t.Fatal("the fragment the dependency wrote before failing was not handed back, so nothing can remove it")
+	}
+
+	recordDependencyInstalls(h.cfg, h.mgr, depParentTool, deps, func(format string, args ...interface{}) {
+		t.Errorf("unexpected warning: "+format, args...)
+	})
+	if err := h.mgr.RemoveAllVersions(lifecycleCtx(), depTool); err != nil {
+		t.Fatalf("RemoveAllVersions(%s) error = %v", depTool, err)
+	}
+	h.assertShellDEmpty()
+}
