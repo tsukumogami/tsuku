@@ -100,6 +100,13 @@ func renderUnshownNotices(noticesDir string) {
 			for _, msg := range n.Messages {
 				fmt.Fprintf(os.Stderr, "  %s\n", msg)
 			}
+		case n.Kind == notices.KindDataMigration:
+			// Its own kind rather than the default rendering, which would end by
+			// suggesting 'tsuku rollback <tool>' against a name that is not a tool.
+			fmt.Fprintf(os.Stderr, "\nWarning: some data could not be moved: %s\n", n.Error)
+			for _, msg := range n.Messages {
+				fmt.Fprintf(os.Stderr, "  %s\n", msg)
+			}
 		case n.Kind == notices.KindCheckFailure:
 			fmt.Fprintf(os.Stderr, "\nWarning: update checks for %s have failed %d times in a row: %s\n",
 				n.Tool, n.ConsecutiveFailures, n.Error)

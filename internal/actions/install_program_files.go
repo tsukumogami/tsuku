@@ -187,7 +187,7 @@ func copyProgramFile(ctx *ExecutionContext, resolvedRoot, destDir, rel string) e
 		_ = os.Remove(tmp)
 		return fmt.Errorf("%q: %w", rel, err)
 	}
-	// O_CREATE honours the umask, so set the mode explicitly.
+	// O_CREATE honors the umask, so set the mode explicitly.
 	if err := os.Chmod(tmp, mode); err != nil {
 		_ = os.Remove(tmp)
 		return fmt.Errorf("%q: %w", rel, err)

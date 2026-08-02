@@ -45,7 +45,7 @@ func (r Result) Merged() bool { return len(r.Moved) > 0 }
 // itself — callers know what that directory is and whether pruning it is safe, and for
 // at least one caller src is a directory tsuku relies on.
 //
-// Every stat is os.Lstat and every type test is lstat-flavoured, so a symlink is never
+// Every stat is os.Lstat and every type test is lstat-flavored, so a symlink is never
 // treated as a directory to descend into. That is load-bearing rather than fastidious:
 // under os.Stat a symlink at src/versions pointing anywhere at all would make this
 // function enumerate that directory and rename its contents into dst, which turns a
@@ -102,7 +102,7 @@ func DirEntries(dir string) ([]string, error) {
 	}
 	var names []string
 	for _, item := range items {
-		// os.ReadDir's DirEntry.IsDir is already lstat-flavoured: a symlink to a
+		// os.ReadDir's DirEntry.IsDir is already lstat-flavored: a symlink to a
 		// directory reports false, which is what we want.
 		if item.IsDir() {
 			names = append(names, item.Name())
