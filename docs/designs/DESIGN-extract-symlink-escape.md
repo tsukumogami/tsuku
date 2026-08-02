@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Planned
 problem: |
   The extract action decides containment with string math and then performs writes
   that follow symlinks. isPathWithinDirectory and validateSymlinkTarget never touch
@@ -33,7 +33,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Planned
 
 ## Context and Problem Statement
 

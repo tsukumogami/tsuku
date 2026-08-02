@@ -1,7 +1,7 @@
 ```yaml
 topic: extract-symlink-escape
 chain_started: 2026-08-02T21:40:00Z
-last_updated: 2026-08-02T21:45:00Z
+last_updated: 2026-08-02T22:15:00Z
 phase_pointer: phase-2
 visibility: Public
 execution_mode: auto
@@ -38,10 +38,13 @@ design_predicates:
   P3: >-
     does-not-fire -- issue is labeled `bug`; implementation is mechanical once
     the mechanism is chosen.
-parent_orchestration:
-  active_child: design
-  invoked_at: 2026-08-02T21:45:00Z
-child_snapshots: {}
+child_snapshots:
+  design:
+    status: Proposed
+    path: docs/designs/DESIGN-extract-symlink-escape.md
+    captured_at: 2026-08-02T22:15:00Z
+chain_ran:
+  - design
 worktree_rebases: []
 worktree_divergences: []
 ```
