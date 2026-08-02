@@ -29,10 +29,12 @@ curated = true
 # nvm installed some other way — the usual ~/.nvm — is never read, written, or removed
 # by tsuku.
 #
-# Node versions installed through an earlier tsuku are NOT moved here automatically.
-# They are wherever that tsuku left them, most likely $TSUKU_HOME/share/shell.d/, and
+# Node versions installed through an earlier tsuku are NOT moved here automatically, and
 # `nvm ls` will not see them until they are moved into $TSUKU_HOME/data/nvm by hand.
-# Recipe-distributed migration is the subject of a separate design.
+# Released tsuku left them in $TSUKU_HOME/share/shell.d/, which nothing reclaims. Builds
+# between the shell.d lifecycle fix and this change left them in the versioned tool
+# directory instead, which IS reclaimed on a 7-day timer — that case is the urgent one.
+# See docs/tool-data-directory.md. Recipe-carried migration is tracked in issue #2472.
 
 [version]
 github_repo = "nvm-sh/nvm"

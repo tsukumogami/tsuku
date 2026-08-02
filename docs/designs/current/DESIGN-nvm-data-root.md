@@ -310,10 +310,12 @@ its own migration, so the knowledge ships and versions with the recipe. That is 
 recipe-schema design, and it deserves to be worked out against more than one example
 rather than inferred from nvm. Tracked in #2472.
 
-Deferring it costs the user a manual `mv`, and costs nothing else: nothing garbage-collects
-`share/shell.d`, where every released tsuku left nvm's data, so the installs sit there
-until moved. The population whose data is in a directory that *is* collected exists only
-on unreleased `main`.
+Deferring it costs a manual `mv`. For the population every released tsuku created that is
+all it costs: their data is in `share/shell.d`, which nothing reclaims, so it sits there
+until moved. The population whose data is in a directory that *is* reclaimed — on the
+7-day retention timer — exists only on unreleased `main`, a window hours wide, but their
+data is genuinely on a clock and the docs call that case out separately rather than
+folding it into the harmless one.
 
 - **A general migration hook on the install path (`manager.go:149`), the `EnsureEnvFile`
   shape.** Rejected on correctness before the migration was dropped at all, and the
@@ -600,13 +602,14 @@ directory it can name in `doctor` output and size reporting.
   sourcing order. Raised during the location decision and deferred deliberately: it changes
   `set_env`'s emitted form for every future consumer and stands on its own.
 - **`GarbageCollectVersions` deleting other tools' directories on recipe-name prefix
-  collisions** (`git`/`git-lfs`, `docker`/`docker-compose` — 59 pairs, verified
+  collisions (#2474)** (`git`/`git-lfs`, `docker`/`docker-compose` — 59 pairs, verified
   empirically). A real bug, independent of this one.
-- **The archive extractor's containment is purely lexical.** `isPathWithinDirectory` and
-  `validateSymlinkTarget` (`internal/actions/extract.go:19-55`) compare cleaned strings
-  and resolve with `filepath.Join`, so a symlink chain in a release tarball escapes the
-  destination directory — demonstrated with a three-entry archive. Pre-existing, wider
-  than this feature, and the most serious thing the security review found.
+- **The archive extractor's containment is purely lexical (#2473).**
+  `isPathWithinDirectory` and `validateSymlinkTarget` (`internal/actions/extract.go:19-55`)
+  compare cleaned strings and resolve with `filepath.Join`, so a symlink chain in a
+  release tarball escapes the destination directory — demonstrated with a three-entry
+  archive. Pre-existing, wider than this feature, and the most serious thing the security
+  review found.
 - **There is no `ValidateToolName`.** `cmd/tsuku/remove.go:30-39` splits `args[0]` on `@`
   with no path-segment validation; today only the state lookup stops a traversal name
   from reaching a path construction. `envTargetName` (`internal/actions/set_env.go:209-217`)

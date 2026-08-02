@@ -44,19 +44,34 @@ directory still there and pick up where you left off.
 
 ## If you installed nvm before this existed
 
-Earlier versions of tsuku never exported `NVM_DIR` at all, so nvm self-located to
-wherever its script was sourced from and put your Node versions there — usually
-`$TSUKU_HOME/share/shell.d/`. Those are **not** moved for you. The next time nvm
-updates, `NVM_DIR` starts naming `$TSUKU_HOME/data/nvm`, and `nvm ls` will come up empty
-until you move them:
+Your Node versions are **not** moved for you. The next time nvm updates, `NVM_DIR`
+starts naming `$TSUKU_HOME/data/nvm` and `nvm ls` comes up empty until you move them.
+Where they are depends on which tsuku installed them, and the two cases differ in
+urgency.
+
+**The common case: `$TSUKU_HOME/share/shell.d/`.** Every released tsuku up to v0.12.1
+never exported `NVM_DIR` at all, so nvm self-located to wherever its script was sourced
+from and installed there.
 
 ```bash
 mv "$TSUKU_HOME"/share/shell.d/{versions,alias,.cache} "$TSUKU_HOME/data/nvm/"
 ```
 
-Nothing is lost in the meantime — nothing garbage-collects `share/shell.d`, so the
-installs sit there until you move them. Use `mv` on the named directories rather than
-`mv src/* dst/`, which skips dotfiles and would silently leave `.cache` behind.
+Nothing is lost while you get to this — nothing garbage-collects `share/shell.d`, so the
+installs sit there indefinitely.
+
+**The urgent case: `$TSUKU_HOME/tools/nvm-<version>/`.** If you installed or updated nvm
+from an unreleased build after the shell.d lifecycle fix landed, `NVM_DIR` did resolve —
+to the versioned tool directory. That directory *is* reclaimed, on a 7-day retention
+timer, by the background updater. Check for it and move it first:
+
+```bash
+ls -d "$TSUKU_HOME"/tools/nvm-*/versions 2>/dev/null   # anything listed is at risk
+mv "$TSUKU_HOME"/tools/nvm-<version>/{versions,alias,.cache} "$TSUKU_HOME/data/nvm/"
+```
+
+In both cases move the named directories rather than using `mv src/* dst/`, which skips
+dotfiles and would silently leave `.cache` — your download cache — behind.
 
 Automatic migration was deliberately left out. Doing it properly means recipes being
 able to describe their own data layout and carry their own migration steps, so that
