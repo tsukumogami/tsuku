@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -19,6 +20,25 @@ var allowedShells = map[string]bool{
 	"fish": true,
 }
 
+// shellDTargetPattern constrains the target segment of a shell.d filename.
+//
+// Two properties depend on it. Excluding "@" makes (target, version, shell) ->
+// filename injective: the first "@" in a filename is always the version
+// separator, so no tool can write over another tool's fragment. Requiring a
+// leading [A-Za-z_] (>= 0x41) keeps every init filename sorted after every
+// exports filename, which begins with "0" (0x30) -- the ordering the
+// EnvFilePrefix exists to guarantee, now holding without case analysis.
+var shellDTargetPattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9._-]*$`)
+
+// validateShellDTarget rejects a target that would break filename injectivity
+// or the exports-before-init sort order.
+func validateShellDTarget(target string) error {
+	if !shellDTargetPattern.MatchString(target) {
+		return fmt.Errorf("target %q must match %s", target, shellDTargetPattern)
+	}
+	return nil
+}
+
 // defaultShells is used when the "shells" parameter is omitted.
 var defaultShells = []string{"bash", "zsh"}
 
@@ -27,7 +47,9 @@ var execCommandFunc = exec.Command
 
 // InstallShellInitAction copies a source file or runs a source command
 // to produce shell initialization scripts at
-// $TSUKU_HOME/share/shell.d/{target}.{shell} for each configured shell.
+// $TSUKU_HOME/share/shell.d/{target}@{version}.{shell} for each configured
+// shell. The version key is what keeps a second version's install from
+// overwriting the first version's fragment.
 type InstallShellInitAction struct{ BaseAction }
 
 // Name returns the action name.
@@ -57,11 +79,11 @@ func (a *InstallShellInitAction) Preflight(params map[string]interface{}) *Prefl
 	// target is required
 	if target, ok := GetString(params, "target"); !ok {
 		result.AddError("install_shell_init requires 'target' parameter")
-	} else if strings.HasPrefix(target, EnvFilePrefix) {
-		// Taking this prefix would put an init script ahead of the exports
-		// set_env writes, which is the ordering that prefix exists to guarantee.
-		result.AddErrorf("install_shell_init: target %q may not start with %q (reserved for set_env)",
-			target, EnvFilePrefix)
+	} else if err := validateShellDTarget(target); err != nil {
+		// The charset rule subsumes the older "may not claim the 00-env-
+		// prefix" rejection: a leading digit is illegal, so no target can
+		// sort ahead of the exports set_env writes.
+		result.AddErrorf("install_shell_init: %v", err)
 	}
 
 	// Validate shells if provided
@@ -96,6 +118,14 @@ func (a *InstallShellInitAction) Execute(ctx *ExecutionContext, params map[strin
 	target, ok := GetString(params, "target")
 	if !ok {
 		return fmt.Errorf("install_shell_init requires 'target' parameter")
+	}
+	if err := validateShellDTarget(target); err != nil {
+		return fmt.Errorf("install_shell_init: %w", err)
+	}
+
+	version, err := shellDVersion(ctx)
+	if err != nil {
+		return fmt.Errorf("install_shell_init: %w", err)
 	}
 
 	shells := defaultShells
@@ -132,9 +162,9 @@ func (a *InstallShellInitAction) Execute(ctx *ExecutionContext, params map[strin
 	}
 
 	if hasSourceFile {
-		return a.executeSourceFile(ctx, sourceFile, target, shells, shellDDir)
+		return a.executeSourceFile(ctx, sourceFile, target, version, shells, shellDDir)
 	}
-	return a.executeSourceCommand(ctx, sourceCommand, target, shells, shellDDir)
+	return a.executeSourceCommand(ctx, sourceCommand, target, version, shells, shellDDir)
 }
 
 // contentHash computes the SHA-256 hex digest of the given data.
@@ -143,19 +173,38 @@ func contentHash(data []byte) string {
 	return hex.EncodeToString(h[:])
 }
 
+// shellDFileName is the basename of a shell.d fragment. Every version gets its
+// own file, so nothing a version writes is ever reachable from another version
+// and a recorded ContentHash stays accurate for as long as the file exists.
+func shellDFileName(target, version, shell string) string {
+	return fmt.Sprintf("%s@%s.%s", target, version, shell)
+}
+
 // shellDCleanupPath is the $TSUKU_HOME-relative path recorded for a shell.d
 // file. It is the single place that formula lives; anything matching against
-// recorded cleanup paths must build them here.
-func shellDCleanupPath(target, shell string) string {
-	return fmt.Sprintf("share/shell.d/%s.%s", target, shell)
+// recorded cleanup paths must build them here. Both writers -- set_env and
+// install_shell_init -- route their destination through it, so the path that
+// is written and the path that is recorded cannot drift apart.
+func shellDCleanupPath(target, version, shell string) string {
+	return "share/shell.d/" + shellDFileName(target, version, shell)
+}
+
+// shellDVersion returns the version to key this install's shell.d files on.
+// An empty version would collapse every version onto one filename, which is
+// the bug the version key exists to remove, so it fails rather than guessing.
+func shellDVersion(ctx *ExecutionContext) (string, error) {
+	if ctx.Version == "" {
+		return "", fmt.Errorf("the tool version is not known, so the shell.d filename cannot be version-keyed")
+	}
+	return ctx.Version, nil
 }
 
 // recordCleanup appends a CleanupAction for a shell.d file to the execution context.
 // The path is stored relative to $TSUKU_HOME. The hash is the SHA-256 of the file content.
-func recordCleanup(ctx *ExecutionContext, target, shell, hash string) {
+func recordCleanup(ctx *ExecutionContext, target, version, shell, hash string) {
 	ctx.CleanupActions = append(ctx.CleanupActions, CleanupAction{
 		Action:      "delete_file",
-		Path:        shellDCleanupPath(target, shell),
+		Path:        shellDCleanupPath(target, version, shell),
 		ContentHash: hash,
 	})
 }
@@ -163,8 +212,8 @@ func recordCleanup(ctx *ExecutionContext, target, shell, hash string) {
 // cleanupRecorded reports whether this execution already recorded a cleanup
 // action for a shell.d file, which means the file on disk is this install's own
 // output rather than a leftover from a previous version.
-func cleanupRecorded(ctx *ExecutionContext, target, shell string) bool {
-	relPath := shellDCleanupPath(target, shell)
+func cleanupRecorded(ctx *ExecutionContext, target, version, shell string) bool {
+	relPath := shellDCleanupPath(target, version, shell)
 	for _, ca := range ctx.CleanupActions {
 		if ca.Path == relPath {
 			return true
@@ -177,8 +226,8 @@ func cleanupRecorded(ctx *ExecutionContext, target, shell string) bool {
 // content hash when this execution already recorded that path. Only actions
 // that may write the same path more than once in a single install need this;
 // the append-only recordCleanup is right for everything else.
-func upsertCleanup(ctx *ExecutionContext, target, shell, hash string) {
-	relPath := shellDCleanupPath(target, shell)
+func upsertCleanup(ctx *ExecutionContext, target, version, shell, hash string) {
+	relPath := shellDCleanupPath(target, version, shell)
 	for i := range ctx.CleanupActions {
 		if ctx.CleanupActions[i].Path == relPath {
 			ctx.CleanupActions[i].ContentHash = hash
@@ -193,14 +242,14 @@ func upsertCleanup(ctx *ExecutionContext, target, shell, hash string) {
 }
 
 // executeSourceFile copies a file from the tool install dir to shell.d for each shell.
-func (a *InstallShellInitAction) executeSourceFile(ctx *ExecutionContext, sourceFile, target string, shells []string, shellDDir string) error {
+func (a *InstallShellInitAction) executeSourceFile(ctx *ExecutionContext, sourceFile, target, version string, shells []string, shellDDir string) error {
 	srcPath := filepath.Join(ctx.InstallDir, sourceFile)
 	if _, err := os.Stat(srcPath); os.IsNotExist(err) {
 		return fmt.Errorf("install_shell_init: source file not found: %s", srcPath)
 	}
 
 	for _, shell := range shells {
-		destPath := filepath.Join(shellDDir, fmt.Sprintf("%s.%s", target, shell))
+		destPath := filepath.Join(shellDDir, shellDFileName(target, version, shell))
 		if err := copyFile(srcPath, destPath); err != nil {
 			return fmt.Errorf("install_shell_init: failed to copy to %s: %w", destPath, err)
 		}
@@ -215,14 +264,14 @@ func (a *InstallShellInitAction) executeSourceFile(ctx *ExecutionContext, source
 		}
 		hash := contentHash(written)
 		ctx.GetReporter().Status(fmt.Sprintf("   Installed shell init: %s", destPath))
-		recordCleanup(ctx, target, shell, hash)
+		recordCleanup(ctx, target, version, shell, hash)
 	}
 
 	return nil
 }
 
 // executeSourceCommand runs a command template for each shell, writing stdout to shell.d.
-func (a *InstallShellInitAction) executeSourceCommand(ctx *ExecutionContext, sourceCommand, target string, shells []string, shellDDir string) error {
+func (a *InstallShellInitAction) executeSourceCommand(ctx *ExecutionContext, sourceCommand, target, version string, shells []string, shellDDir string) error {
 	// Validate the executable is within ToolInstallDir before running anything.
 	// Use the raw template (before shell substitution) to find the binary,
 	// since {shell} only appears in arguments, not the executable name.
@@ -266,13 +315,13 @@ func (a *InstallShellInitAction) executeSourceCommand(ctx *ExecutionContext, sou
 			continue
 		}
 
-		destPath := filepath.Join(shellDDir, fmt.Sprintf("%s.%s", target, shell))
+		destPath := filepath.Join(shellDDir, shellDFileName(target, version, shell))
 		if err := os.WriteFile(destPath, output, 0600); err != nil {
 			return fmt.Errorf("install_shell_init: failed to write %s: %w", destPath, err)
 		}
 		hash := contentHash(output)
 		shellReporter.Status(fmt.Sprintf("   Installed shell init: %s", destPath))
-		recordCleanup(ctx, target, shell, hash)
+		recordCleanup(ctx, target, version, shell, hash)
 	}
 
 	return nil

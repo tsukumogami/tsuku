@@ -272,6 +272,12 @@ func (m *Manager) InstallWithOptions(ctx context.Context, name, version, workDir
 		return fmt.Errorf("failed to update state: %w", err)
 	}
 
+	// The active version just changed, so a fragment recorded by the version
+	// that was active a moment ago no longer belongs in the cache. The
+	// post-install phase has not run yet -- it is the caller that records this
+	// version's own fragments and rebuilds again once it has.
+	m.rebuildShellCachesForTool(name, nil)
+
 	return nil
 }
 
@@ -465,6 +471,12 @@ func (m *Manager) Activate(ctx context.Context, name, version string) error {
 	if err != nil {
 		return fmt.Errorf("failed to update state: %w", err)
 	}
+
+	// Switching the active version switches which shell.d fragment belongs in
+	// the cache. The hook lives here rather than in cmd/tsuku so that it covers
+	// `tsuku rollback`, which delegates to Activate, and auto-apply's failure
+	// rollback, which calls Activate directly from internal/updates.
+	m.rebuildShellCachesForTool(name, nil)
 
 	return nil
 }

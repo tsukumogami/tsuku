@@ -10,7 +10,6 @@ import (
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/recipe"
-	"github.com/tsukumogami/tsuku/internal/shellenv"
 )
 
 // runPlanBasedInstall installs a tool from an external plan file or stdin.
@@ -120,22 +119,11 @@ func runPlanBasedInstall(planPath, toolName string) error {
 			printInfof("Warning: post-install phase failed: %v\n", err)
 		}
 
-		// Collect cleanup actions recorded by post-install actions and
-		// rebuild shell caches for any shells that were written to.
-		postInstallCleanup := exec.GetCleanupActions()
-		if len(postInstallCleanup) > 0 {
-			affectedShells := make(map[string]bool)
-			for _, ca := range postInstallCleanup {
-				if shell := install.ShellFromCleanupPath(ca.Path); shell != "" {
-					affectedShells[shell] = true
-				}
-			}
-			for shell := range affectedShells {
-				if err := shellenv.RebuildShellCache(cfg.HomeDir, shell); err != nil {
-					printInfof("Warning: failed to rebuild shell cache for %s: %v\n", shell, err)
-				}
-			}
-		}
+		// Record the cleanup actions post-install produced and refresh the
+		// shell caches they touched.
+		finishPostInstall(cfg, mgr, effectiveToolName, exec.GetCleanupActions(), func(format string, args ...interface{}) {
+			printInfof("Warning: "+format+"\n", args...)
+		})
 
 		// Update state to mark as explicit installation
 		err = mgr.GetState().UpdateTool(effectiveToolName, func(ts *install.ToolState) {

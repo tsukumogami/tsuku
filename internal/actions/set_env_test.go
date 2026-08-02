@@ -169,7 +169,7 @@ func TestSetEnvAction_WritesShellDFiles(t *testing.T) {
 
 	shellDDir := filepath.Join(home, "share", "shell.d")
 	for _, shell := range []string{"bash", "zsh"} {
-		path := filepath.Join(shellDDir, "00-env-demo."+shell)
+		path := filepath.Join(shellDDir, "00-env-demo@2.1.0."+shell)
 		content, err := os.ReadFile(path)
 		if err != nil {
 			t.Fatalf("reading %s: %v", path, err)
@@ -218,8 +218,8 @@ func TestSetEnvAction_RecordsCleanupActions(t *testing.T) {
 		if ca.Action != "delete_file" {
 			t.Errorf("cleanup action = %q, want delete_file", ca.Action)
 		}
-		if !strings.HasPrefix(ca.Path, "share/shell.d/00-env-demo.") {
-			t.Errorf("cleanup path = %q, want a share/shell.d/00-env-demo.* entry", ca.Path)
+		if !strings.HasPrefix(ca.Path, "share/shell.d/00-env-demo@2.1.0.") {
+			t.Errorf("cleanup path = %q, want a share/shell.d/00-env-demo@2.1.0.* entry", ca.Path)
 		}
 		content, err := os.ReadFile(filepath.Join(home, ca.Path))
 		if err != nil {
@@ -249,7 +249,7 @@ func TestSetEnvAction_MultipleStepsAppend(t *testing.T) {
 		}
 	}
 
-	path := filepath.Join(home, "share", "shell.d", "00-env-demo.bash")
+	path := filepath.Join(home, "share", "shell.d", "00-env-demo@2.1.0.bash")
 	content, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("reading %s: %v", path, err)
@@ -335,7 +335,7 @@ func TestSetEnvAction_QuotesValues(t *testing.T) {
 		t.Fatalf("Execute() error = %v", err)
 	}
 
-	script := filepath.Join(home, "share", "shell.d", "00-env-demo.bash")
+	script := filepath.Join(home, "share", "shell.d", "00-env-demo@2.1.0.bash")
 	cmd := exec.Command(bashPath, "--norc", "--noprofile", "-c",
 		`. "`+script+`"; printf '%s|%s|%s' "$WITH_SPACES" "$WITH_QUOTE" "$WITH_META"`)
 	cmd.Dir = home
@@ -387,7 +387,7 @@ func TestSetEnvAction_RejectsUnsafeVars(t *testing.T) {
 			if err == nil || !strings.Contains(err.Error(), tt.errContains) {
 				t.Errorf("Execute() error = %v, want an error containing %q", err, tt.errContains)
 			}
-			if _, statErr := os.Stat(filepath.Join(home, "share", "shell.d", "00-env-demo.bash")); statErr == nil {
+			if _, statErr := os.Stat(filepath.Join(home, "share", "shell.d", "00-env-demo@2.1.0.bash")); statErr == nil {
 				t.Error("a rejected variable should not have been written")
 			}
 

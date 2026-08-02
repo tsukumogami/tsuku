@@ -2,12 +2,15 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/shellenv"
 )
 
@@ -198,31 +201,30 @@ func TestDoctorFix_CacheRebuildWithHashes(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Prepare hashes (non-nil, even if empty — verifies we never pass nil)
-	contentHashes := map[string]string{}
+	// An empty selection: nothing recorded, so nothing excluded or verified
+	selection := install.BuildShellDSelection(nil)
 
 	// Verify cache is stale before fix
-	shellCheck := shellenv.CheckShellD(dir, contentHashes)
+	shellCheck := shellenv.CheckShellD(dir, selection)
 	if !shellCheck.CacheStale["bash"] {
 		t.Skip("cache is not stale before test; skipping")
 	}
 
-	// Call RebuildShellCache with the hashes map (must not be nil)
-	if err := shellenv.RebuildShellCache(dir, "bash", contentHashes); err != nil {
+	if err := shellenv.RebuildShellCache(dir, "bash", selection); err != nil {
 		t.Fatalf("RebuildShellCache failed: %v", err)
 	}
 
 	// Verify cache is no longer stale
-	shellCheck2 := shellenv.CheckShellD(dir, contentHashes)
+	shellCheck2 := shellenv.CheckShellD(dir, selection)
 	if shellCheck2.CacheStale["bash"] {
 		t.Error("expected cache to be fresh after rebuild")
 	}
 }
 
-func TestDoctorFix_NeverCallsRebuildWithNilHashes(t *testing.T) {
-	// This test verifies the code path in the doctorCmd RunE: contentHashes is
-	// always initialized as a non-nil map before it is passed to RebuildShellCache.
-	// We inspect the runDoctorChecks return value to confirm it is never nil.
+func TestRunDoctorChecks_ReturnsInitializedSelection(t *testing.T) {
+	// The selection runDoctorChecks returns is what --fix hands to
+	// RebuildShellCache. Both maps must be non-nil so the exclusion and hash
+	// lookups behave the same whether or not any tool is installed.
 	dir := t.TempDir()
 	cfg := makeTestConfig(t, dir)
 	if err := os.MkdirAll(filepath.Join(dir, "tools", "current"), 0755); err != nil {
@@ -233,9 +235,63 @@ func TestDoctorFix_NeverCallsRebuildWithNilHashes(t *testing.T) {
 	}
 
 	captureDoctorOutput(func() {
-		_, hashes := runDoctorChecks(cfg, dir)
-		if hashes == nil {
-			t.Error("runDoctorChecks must return a non-nil hashes map")
+		_, selection := runDoctorChecks(cfg, dir)
+		if selection.Active == nil || selection.Known == nil {
+			t.Error("runDoctorChecks must return a fully initialized selection")
 		}
 	})
+}
+
+// TestDoctorFix_ConvergesOnHashMismatch pins the fix for a defect that predates
+// version-keyed filenames: RebuildShellCache excluded a hash-mismatched file
+// while isCacheStale recomputed the concatenation including it, so `doctor
+// --fix` rebuilt the cache and then immediately called it stale again, forever.
+func TestDoctorFix_ConvergesOnHashMismatch(t *testing.T) {
+	dir := t.TempDir()
+	shellDDir := filepath.Join(dir, "share", "shell.d")
+	if err := os.MkdirAll(shellDDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Two fragments: one whose recorded hash matches disk, one tampered with
+	if err := os.WriteFile(filepath.Join(shellDDir, "good@1.0.0.bash"), []byte("# good\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(shellDDir, "bad@1.0.0.bash"), []byte("# tampered\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	selection := shellenv.ShellDSelection{
+		Active: map[string]string{
+			"share/shell.d/good@1.0.0.bash": sha256Hex([]byte("# good\n")),
+			"share/shell.d/bad@1.0.0.bash":  sha256Hex([]byte("# what was installed\n")),
+		},
+		Known: map[string]string{
+			"share/shell.d/good@1.0.0.bash": sha256Hex([]byte("# good\n")),
+			"share/shell.d/bad@1.0.0.bash":  sha256Hex([]byte("# what was installed\n")),
+		},
+	}
+
+	if !shellenv.CheckShellD(dir, selection).CacheStale["bash"] {
+		t.Fatal("expected a missing cache with fragments present to read as stale")
+	}
+
+	for run := 1; run <= 2; run++ {
+		if err := shellenv.RebuildShellCache(dir, "bash", selection); err != nil {
+			t.Fatalf("run %d: RebuildShellCache failed: %v", run, err)
+		}
+		if shellenv.CheckShellD(dir, selection).CacheStale["bash"] {
+			t.Fatalf("run %d: cache still reported stale after a rebuild", run)
+		}
+	}
+
+	// The tampered fragment is still reported, just no longer as staleness
+	if mismatches := shellenv.CheckShellD(dir, selection).HashMismatches; len(mismatches) != 1 {
+		t.Errorf("expected the tampered fragment to stay reported, got %v", mismatches)
+	}
+}
+
+func sha256Hex(data []byte) string {
+	sum := sha256.Sum256(data)
+	return hex.EncodeToString(sum[:])
 }

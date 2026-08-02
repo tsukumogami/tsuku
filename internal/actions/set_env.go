@@ -27,8 +27,10 @@ var envShells = []string{"bash", "zsh"}
 const EnvFilePrefix = "00-env-"
 
 // SetEnvAction exports environment variables into the user's shell by writing
-// $TSUKU_HOME/share/shell.d/00-env-{tool}.{shell}, which RebuildShellCache
-// concatenates into the init cache that $TSUKU_HOME/env sources.
+// $TSUKU_HOME/share/shell.d/00-env-{tool}@{version}.{shell}, which
+// RebuildShellCache concatenates into the init cache that $TSUKU_HOME/env
+// sources. The version key gives each installed version its own file, so a
+// second install never overwrites the first version's exports.
 //
 // The "00-env-" prefix is load-bearing: the cache builder concatenates shell.d
 // in alphabetical order, and a tool's own init script often reads the variables
@@ -135,6 +137,11 @@ func (a *SetEnvAction) Execute(ctx *ExecutionContext, params map[string]interfac
 		return fmt.Errorf("set_env: %w", err)
 	}
 
+	version, err := shellDVersion(ctx)
+	if err != nil {
+		return fmt.Errorf("set_env: %w", err)
+	}
+
 	// {install_dir} must resolve to the tool's permanent directory, not the
 	// staging directory that ctx.InstallDir points at.
 	vars := GetStandardVars(ctx.Version, ctx.ToolInstallDir, ctx.WorkDir, ctx.LibsDir)
@@ -165,7 +172,7 @@ func (a *SetEnvAction) Execute(ctx *ExecutionContext, params map[string]interfac
 	content := []byte(buf.String())
 
 	for _, shell := range envShells {
-		destPath := filepath.Join(shellDDir, fmt.Sprintf("%s.%s", target, shell))
+		destPath := filepath.Join(shellDDir, shellDFileName(target, version, shell))
 
 		// A recipe may carry more than one set_env step, and they all target the
 		// same file. Later steps append to what this install already wrote --
@@ -173,7 +180,7 @@ func (a *SetEnvAction) Execute(ctx *ExecutionContext, params map[string]interfac
 		// file left by a previous version is not ours to keep, so the first step
 		// of each install truncates.
 		written := content
-		if cleanupRecorded(ctx, target, shell) {
+		if cleanupRecorded(ctx, target, version, shell) {
 			existing, err := os.ReadFile(destPath)
 			if err != nil {
 				return fmt.Errorf("set_env: failed to read %s to append to: %w", destPath, err)
@@ -186,7 +193,7 @@ func (a *SetEnvAction) Execute(ctx *ExecutionContext, params map[string]interfac
 		}
 		reporter.Status(fmt.Sprintf("   Installed environment exports: %s", destPath))
 
-		upsertCleanup(ctx, target, shell, contentHash(written))
+		upsertCleanup(ctx, target, version, shell, contentHash(written))
 	}
 
 	return nil
@@ -201,6 +208,12 @@ func envTargetName(ctx *ExecutionContext) (string, error) {
 	name := ctx.Recipe.Metadata.Name
 	if name != filepath.Base(name) || name == "." || name == ".." || strings.ContainsAny(name, `/\`) {
 		return "", fmt.Errorf("recipe name %q is not a valid path segment", name)
+	}
+	// "@" separates the target from the version in a shell.d filename. A name
+	// carrying one would make the decomposition ambiguous, so two tools could
+	// end up writing the same file.
+	if strings.Contains(name, "@") {
+		return "", fmt.Errorf("recipe name %q may not contain %q", name, "@")
 	}
 	return EnvFilePrefix + name, nil
 }

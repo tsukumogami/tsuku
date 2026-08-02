@@ -47,13 +47,18 @@ func (r *ShellDCheckResult) HasIssues() bool {
 }
 
 // CheckShellD runs health checks on the shell.d directory under tsukuHome.
-// contentHashes maps relative paths to expected SHA-256 hex digests (from state).
-// Pass nil to skip hash verification.
-func CheckShellD(tsukuHome string, contentHashes map[string]string) *ShellDCheckResult {
+//
+// selection is optional and carries the same meaning it has in
+// RebuildShellCache: omit it and no file is excluded and no hash is verified.
+// The two must agree on what belongs in the cache, or doctor reports a stale
+// cache that --fix rebuilds into the same state it just called stale.
+func CheckShellD(tsukuHome string, selection ...ShellDSelection) *ShellDCheckResult {
 	result := &ShellDCheckResult{
 		ActiveScripts: make(map[string][]string),
 		CacheStale:    make(map[string]bool),
 	}
+
+	sel := firstSelection(selection)
 
 	shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
 
@@ -68,6 +73,12 @@ func CheckShellD(tsukuHome string, contentHashes map[string]string) *ShellDCheck
 	for _, entry := range entries {
 		name := entry.Name()
 		if entry.IsDir() || strings.HasPrefix(name, ".") {
+			continue
+		}
+
+		// A fragment recorded for an installed-but-inactive version is not part
+		// of the cache, so it is neither an active script nor a hash to check.
+		if sel.excludes(shellDRelPath(name)) {
 			continue
 		}
 
@@ -89,22 +100,18 @@ func CheckShellD(tsukuHome string, contentHashes map[string]string) *ShellDCheck
 		for _, shell := range []string{"bash", "zsh"} {
 			suffix := "." + shell
 			if strings.HasSuffix(name, suffix) {
-				toolName := strings.TrimSuffix(name, suffix)
-				result.ActiveScripts[shell] = append(result.ActiveScripts[shell], toolName)
+				result.ActiveScripts[shell] = append(result.ActiveScripts[shell], DisplayName(name, shell))
 				shellFiles[shell] = append(shellFiles[shell], name)
 			}
 		}
 
 		// Hash verification
-		if contentHashes != nil {
-			relPath := filepath.Join("share", "shell.d", name)
-			if expectedHash, ok := contentHashes[relPath]; ok && expectedHash != "" {
-				content, err := os.ReadFile(filePath)
-				if err == nil {
-					actualHash := sha256Hex(content)
-					if actualHash != expectedHash {
-						result.HashMismatches = append(result.HashMismatches, name)
-					}
+		if expectedHash := sel.hashFor(shellDRelPath(name)); expectedHash != "" {
+			content, err := os.ReadFile(filePath)
+			if err == nil {
+				actualHash := sha256Hex(content)
+				if actualHash != expectedHash {
+					result.HashMismatches = append(result.HashMismatches, name)
 				}
 			}
 		}
@@ -135,7 +142,7 @@ func CheckShellD(tsukuHome string, contentHashes map[string]string) *ShellDCheck
 	// Check cache freshness for each shell
 	for shell, files := range shellFiles {
 		sort.Strings(files)
-		result.CacheStale[shell] = isCacheStale(shellDDir, shell, files)
+		result.CacheStale[shell] = isCacheStale(shellDDir, shell, files, sel)
 	}
 
 	return result
@@ -143,23 +150,30 @@ func CheckShellD(tsukuHome string, contentHashes map[string]string) *ShellDCheck
 
 // isCacheStale checks whether the cache file matches the expected content
 // from concatenating the given files (with error-isolation wrapping).
-func isCacheStale(shellDDir, shell string, files []string) bool {
+//
+// It has to reproduce RebuildShellCache exactly, including the files that
+// builder drops. Skipping a hash-mismatched file here is what makes
+// `doctor --fix` converge: before, the rebuild excluded the file and the
+// re-check expected it back, so the cache was reported stale forever.
+func isCacheStale(shellDDir, shell string, files []string, sel ShellDSelection) bool {
 	cachePath := filepath.Join(shellDDir, ".init-cache."+shell)
 	cacheContent, err := os.ReadFile(cachePath)
-	if err != nil {
-		// Cache missing but files exist -- stale
-		return len(files) > 0
-	}
 
 	// Rebuild what the cache should look like
-	suffix := "." + shell
 	var buf strings.Builder
+	included := 0
 	for _, name := range files {
-		content, err := os.ReadFile(filepath.Join(shellDDir, name))
-		if err != nil {
+		content, readErr := os.ReadFile(filepath.Join(shellDDir, name))
+		if readErr != nil {
 			return true // Can't read a source file -- consider stale
 		}
-		toolName := strings.TrimSuffix(name, suffix)
+		if expectedHash := sel.hashFor(shellDRelPath(name)); expectedHash != "" {
+			if sha256Hex(content) != expectedHash {
+				continue
+			}
+		}
+		included++
+		toolName := DisplayName(name, shell)
 		buf.WriteString("# tsuku: " + toolName + "\n")
 		buf.WriteString("{ # begin " + toolName + "\n")
 		contentStr := string(content)
@@ -168,6 +182,12 @@ func isCacheStale(shellDDir, shell string, files []string) bool {
 			buf.WriteByte('\n')
 		}
 		buf.WriteString("} 2>/dev/null || true\n")
+	}
+
+	if err != nil {
+		// The builder removes the cache when nothing is left to include, so a
+		// missing cache is correct in that case rather than stale.
+		return included > 0
 	}
 
 	return string(cacheContent) != buf.String()
@@ -192,18 +212,4 @@ func checkShellSyntax(filePath, shell string) error {
 		return fmt.Errorf("%s", msg)
 	}
 	return nil
-}
-
-// HasShellIntegration checks whether a tool has shell.d files installed.
-// Returns a list of shells for which init scripts exist (e.g., ["bash", "zsh"]).
-func HasShellIntegration(tsukuHome, toolName string) []string {
-	shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
-	var shells []string
-	for _, shell := range []string{"bash", "zsh"} {
-		path := filepath.Join(shellDDir, toolName+"."+shell)
-		if info, err := os.Stat(path); err == nil && info.Mode().IsRegular() {
-			shells = append(shells, shell)
-		}
-	}
-	return shells
 }

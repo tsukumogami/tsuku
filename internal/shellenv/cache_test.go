@@ -239,7 +239,7 @@ func TestRebuildShellCache_HashVerification_ValidHash(t *testing.T) {
 		"share/shell.d/tool.bash": testHash(fileContent),
 	}
 
-	if err := RebuildShellCache(tsukuHome, "bash", hashes); err != nil {
+	if err := RebuildShellCache(tsukuHome, "bash", ShellDSelection{Active: hashes}); err != nil {
 		t.Fatalf("RebuildShellCache failed: %v", err)
 	}
 
@@ -271,7 +271,7 @@ func TestRebuildShellCache_HashVerification_MismatchExcludesFile(t *testing.T) {
 		"share/shell.d/tampered.bash": testHash("# original content\n"), // Wrong hash
 	}
 
-	if err := RebuildShellCache(tsukuHome, "bash", hashes); err != nil {
+	if err := RebuildShellCache(tsukuHome, "bash", ShellDSelection{Active: hashes}); err != nil {
 		t.Fatalf("RebuildShellCache failed: %v", err)
 	}
 
@@ -304,7 +304,7 @@ func TestRebuildShellCache_HashVerification_AllMismatchRemovesCache(t *testing.T
 	cachePath := filepath.Join(shellDDir, ".init-cache.bash")
 	writeTestFile(t, cachePath, "# old cache\n")
 
-	if err := RebuildShellCache(tsukuHome, "bash", hashes); err != nil {
+	if err := RebuildShellCache(tsukuHome, "bash", ShellDSelection{Active: hashes}); err != nil {
 		t.Fatalf("RebuildShellCache failed: %v", err)
 	}
 
@@ -331,7 +331,7 @@ func TestRebuildShellCache_LegacyTolerance_NoHashIncludesFile(t *testing.T) {
 		// No entry for legacy-tool.bash -- should be included without verification
 	}
 
-	if err := RebuildShellCache(tsukuHome, "bash", hashes); err != nil {
+	if err := RebuildShellCache(tsukuHome, "bash", ShellDSelection{Active: hashes}); err != nil {
 		t.Fatalf("RebuildShellCache failed: %v", err)
 	}
 

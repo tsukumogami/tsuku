@@ -150,7 +150,7 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, projectCfg *
 			// store reconciliation handles notices; tool directories are
 			// a separate concern).
 			retention := userCfg.UpdatesVersionRetention()
-			_ = GarbageCollectVersions(cfg.ToolsDir, entry.Tool, entry.LatestWithinPin, previousVersion, retention, time.Now())
+			_ = GarbageCollectVersions(mgr, cfg.ToolsDir, entry.Tool, entry.LatestWithinPin, previousVersion, retention, time.Now())
 		}
 
 		if applyErr != nil {

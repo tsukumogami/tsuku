@@ -41,7 +41,7 @@ Use --fix to automatically repair stale env files and shell caches.`,
 			return fmt.Errorf("failed to resolve home directory: %w", err)
 		}
 
-		failed, contentHashes := runDoctorChecks(cfg, homeDir)
+		failed, selection := runDoctorChecks(cfg, homeDir)
 
 		if doctorFixFlag {
 			// Apply repairs
@@ -60,10 +60,10 @@ Use --fix to automatically repair stale env files and shell caches.`,
 			}
 
 			// Fix stale shell caches
-			shellCheck := shellenv.CheckShellD(homeDir, contentHashes)
+			shellCheck := shellenv.CheckShellD(homeDir, selection)
 			for shell, stale := range shellCheck.CacheStale {
 				if stale {
-					if fixErr := shellenv.RebuildShellCache(homeDir, shell, contentHashes); fixErr != nil {
+					if fixErr := shellenv.RebuildShellCache(homeDir, shell, selection); fixErr != nil {
 						fmt.Fprintf(os.Stderr, "  Failed to rebuild %s cache: %v\n", shell, fixErr)
 					} else {
 						fmt.Printf("  Repaired: %s shell cache rebuilt\n", shell)
@@ -95,8 +95,8 @@ func init() {
 }
 
 // runDoctorChecks performs all environment checks and returns whether any check
-// failed and the content hashes loaded from state (needed for cache repair).
-func runDoctorChecks(cfg *config.Config, homeDir string) (failed bool, contentHashes map[string]string) {
+// failed and the shell.d selection loaded from state (needed for cache repair).
+func runDoctorChecks(cfg *config.Config, homeDir string) (failed bool, selection shellenv.ShellDSelection) {
 	fmt.Println("Checking tsuku environment...")
 
 	// Check 1: Home directory
@@ -194,27 +194,15 @@ func runDoctorChecks(cfg *config.Config, homeDir string) (failed bool, contentHa
 	// Check 6: Shell.d health
 	fmt.Fprintf(os.Stdout, "  Shell integration")
 
-	// Collect content hashes from cleanup actions in state
-	contentHashes = make(map[string]string)
+	// Project state onto shell.d: which recorded fragments belong to an active
+	// version, and which belong to a version that is installed but not active.
 	stateMgr := install.NewStateManager(cfg)
 	state, stateErr := stateMgr.Load()
-	if stateErr == nil && state != nil {
-		for _, ts := range state.Installed {
-			activeVer := ts.ActiveVersion
-			if activeVer == "" {
-				activeVer = ts.Version // legacy
-			}
-			if vs, ok := ts.Versions[activeVer]; ok {
-				for _, ca := range vs.CleanupActions {
-					if ca.ContentHash != "" {
-						contentHashes[ca.Path] = ca.ContentHash
-					}
-				}
-			}
-		}
+	if stateErr == nil {
+		selection = install.BuildShellDSelection(state)
 	}
 
-	shellCheck := shellenv.CheckShellD(homeDir, contentHashes)
+	shellCheck := shellenv.CheckShellD(homeDir, selection)
 
 	// Count total active scripts across all shells
 	totalScripts := 0
@@ -297,5 +285,5 @@ func runDoctorChecks(cfg *config.Config, homeDir string) (failed bool, contentHa
 		fmt.Fprintf(os.Stderr, "    Run: rm %s/*.json to clear\n", noticesDir)
 	}
 
-	return failed, contentHashes
+	return failed, selection
 }

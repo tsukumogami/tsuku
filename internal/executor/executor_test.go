@@ -1855,7 +1855,7 @@ func TestExecutePlan_TwoPhaseSequence(t *testing.T) {
 	}
 
 	// Verify the shell init file was written to $TSUKU_HOME/share/shell.d/
-	shellDFile := filepath.Join(tsukuHome, "share", "shell.d", "test-tool.bash")
+	shellDFile := filepath.Join(tsukuHome, "share", "shell.d", "test-tool@1.0.0.bash")
 	if _, err := os.Stat(shellDFile); os.IsNotExist(err) {
 		t.Errorf("expected shell init file at %s, but it does not exist", shellDFile)
 	}
@@ -1898,7 +1898,7 @@ func TestExecutePlan_SetEnvRunsInPostInstall(t *testing.T) {
 		},
 	}
 
-	shellDFile := filepath.Join(tsukuHome, "share", "shell.d", "00-env-test-tool.bash")
+	shellDFile := filepath.Join(tsukuHome, "share", "shell.d", "00-env-test-tool@1.0.0.bash")
 
 	// ExecutePlan must skip the step rather than run it against an unset
 	// ToolInstallDir, which would fail the install.
@@ -1932,7 +1932,7 @@ func TestExecutePlan_SetEnvRunsInPostInstall(t *testing.T) {
 		paths = append(paths, ca.Path)
 	}
 	sort.Strings(paths)
-	wantPaths := []string{"share/shell.d/00-env-test-tool.bash", "share/shell.d/00-env-test-tool.zsh"}
+	wantPaths := []string{"share/shell.d/00-env-test-tool@1.0.0.bash", "share/shell.d/00-env-test-tool@1.0.0.zsh"}
 	if !reflect.DeepEqual(paths, wantPaths) {
 		t.Errorf("cleanup action paths = %v, want %v", paths, wantPaths)
 	}

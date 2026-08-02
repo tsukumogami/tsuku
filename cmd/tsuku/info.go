@@ -142,12 +142,12 @@ Examples:
 					}
 				}
 
-				// Check shell integration for installed tools
-				if status == "installed" {
-					shellIntegration = shellenv.HasShellIntegration(cfg.HomeDir, toolName)
-				}
-
-				// Get dependencies and source from state for installed tools
+				// Get dependencies, source, and shell integration from state
+				// for installed tools. Shell integration is read from the
+				// active version's recorded shell.d paths rather than probed
+				// by filename: the filename derives from the recipe's target,
+				// which need not equal the tool name, and it now carries a
+				// version key as well.
 				if status == "installed" {
 					stateMgr := install.NewStateManager(cfg)
 					toolState, err := stateMgr.GetToolState(toolName)
@@ -155,6 +155,7 @@ Examples:
 						installDeps = toolState.InstallDependencies
 						runtimeDeps = toolState.RuntimeDependencies
 						toolSource = toolState.Source
+						shellIntegration = shellenv.ShellsFromPaths(activeCleanupPaths(toolState))
 					}
 				}
 			}

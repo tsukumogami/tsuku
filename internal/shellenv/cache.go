@@ -21,12 +21,13 @@ import (
 //   - A file lock prevents concurrent cache rebuilds
 //   - Cache files are written with restrictive permissions (0600)
 //
-// contentHashes maps relative paths (e.g., "share/shell.d/tool.bash") to their
-// expected SHA-256 hex digests. Pass nil or omit to skip hash verification
-// entirely (all files are included, which preserves backward compatibility).
+// selection is optional. Omit it and nothing is excluded and no hash is
+// verified, which is the behavior every caller had before version-keyed
+// filenames landed. Pass one and a file recorded for an installed-but-inactive
+// version is left out, so only the active version's fragment reaches the cache.
 //
 // If no matching files exist, any existing cache file is removed.
-func RebuildShellCache(tsukuHome string, shell string, contentHashes ...map[string]string) error {
+func RebuildShellCache(tsukuHome string, shell string, selection ...ShellDSelection) error {
 	shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
 
 	// Ensure directory exists before acquiring lock
@@ -42,11 +43,7 @@ func RebuildShellCache(tsukuHome string, shell string, contentHashes ...map[stri
 	}
 	defer unlock()
 
-	// Build a single hash map from the variadic parameter
-	var hashes map[string]string
-	if len(contentHashes) > 0 && contentHashes[0] != nil {
-		hashes = contentHashes[0]
-	}
+	sel := firstSelection(selection)
 
 	// Read directory entries
 	entries, err := os.ReadDir(shellDDir)
@@ -72,6 +69,13 @@ func RebuildShellCache(tsukuHome string, shell string, contentHashes ...map[stri
 			continue
 		}
 		if strings.HasSuffix(name, suffix) {
+			// A file state records for a version of a tool that is installed but
+			// not active belongs to that other version; sourcing it would put the
+			// wrong version's exports in the user's shell.
+			if sel.excludes(shellDRelPath(name)) {
+				continue
+			}
+
 			filePath := filepath.Join(shellDDir, name)
 
 			// Symlink rejection: use Lstat to check the actual entry type
@@ -105,9 +109,10 @@ func RebuildShellCache(tsukuHome string, shell string, contentHashes ...map[stri
 	// is a contract. Files are sourced in this order, and a tool's init script
 	// often reads variables its recipe exported -- nvm.sh, for one, only honors
 	// NVM_DIR when it is already set. The set_env action relies on that by
-	// naming its files "00-env-<tool>.<shell>" so they sort ahead of the tool's
-	// own entry. Changing this ordering, or letting a tool install a name that
-	// sorts before "00-env-", breaks those recipes.
+	// naming its files "00-env-<tool>@<version>.<shell>" so they sort ahead of
+	// the tool's own entry. An init target must begin with a letter or an
+	// underscore, so nothing legal sorts before "0". Changing this ordering
+	// breaks those recipes.
 	sort.Strings(files)
 
 	// Concatenate file contents with hash verification and error isolation.
@@ -122,22 +127,20 @@ func RebuildShellCache(tsukuHome string, shell string, contentHashes ...map[stri
 			return fmt.Errorf("reading %s: %w", name, err)
 		}
 
-		// Hash verification: if we have a stored hash for this file, verify it
-		if hashes != nil {
-			relPath := filepath.Join("share", "shell.d", name)
-			if expectedHash, ok := hashes[relPath]; ok && expectedHash != "" {
-				actualHash := sha256Hex(content)
-				if actualHash != expectedHash {
-					fmt.Fprintf(os.Stderr, "Warning: %s content hash mismatch (expected %s, got %s), excluding from shell cache\n",
-						name, expectedHash[:12]+"...", actualHash[:12]+"...")
-					continue
-				}
+		// Hash verification: if we have a stored hash for this file, verify it.
+		// If no hash is stored for this file (legacy install), include it.
+		if expectedHash := sel.hashFor(shellDRelPath(name)); expectedHash != "" {
+			actualHash := sha256Hex(content)
+			if actualHash != expectedHash {
+				fmt.Fprintf(os.Stderr, "Warning: %s content hash mismatch (expected %s, got %s), excluding from shell cache\n",
+					name, expectedHash[:12]+"...", actualHash[:12]+"...")
+				continue
 			}
-			// If no hash is stored for this file (legacy install), include it
 		}
 
-		// Derive tool name from filename (e.g., "starship.bash" -> "starship")
-		toolName := strings.TrimSuffix(name, suffix)
+		// Derive the display name from the filename, dropping the shell suffix
+		// and the version key ("nvm@0.40.6.bash" -> "nvm").
+		toolName := DisplayName(name, shell)
 
 		// Wrap in a brace group (not a subshell) so function definitions and
 		// variable assignments propagate to the current shell. Stderr is
