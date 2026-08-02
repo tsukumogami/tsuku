@@ -497,6 +497,24 @@ func validateSteps(result *ValidationResult, r *Recipe) {
 			continue
 		}
 
+		// set_env delivers exports through the post-install phase, which the
+		// library install path never runs. Rejecting it here beats installing a
+		// library whose exports silently never appear.
+		if step.Action == "set_env" && r.IsLibrary() {
+			result.addError(stepField+".action",
+				"set_env is not supported in library recipes (libraries have no shell integration)")
+		}
+
+		// An action that asks for a later phase does so because it needs state
+		// the install phase cannot give it. Overriding that produces a step that
+		// can never work, so catch it here rather than at install time.
+		if step.Phase != "" && av != nil {
+			if want := av.DefaultPhase(step.Action); want != "" && want != "install" && step.Phase != want {
+				result.addError(stepField+".phase",
+					fmt.Sprintf("%s must run in the %q phase, not %q", step.Action, want, step.Phase))
+			}
+		}
+
 		// Validate action via registered ActionValidator (avoids circular import)
 		if av != nil {
 			actionResult := av.ValidateAction(step.Action, step.Params)

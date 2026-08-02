@@ -5,7 +5,9 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
+	"sort"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/actions"
@@ -1853,9 +1855,86 @@ func TestExecutePlan_TwoPhaseSequence(t *testing.T) {
 	}
 
 	// Verify the shell init file was written to $TSUKU_HOME/share/shell.d/
-	shellDFile := filepath.Join(tsukuHome, "share", "shell.d", "test-tool.bash")
+	shellDFile := filepath.Join(tsukuHome, "share", "shell.d", "test-tool@1.0.0.bash")
 	if _, err := os.Stat(shellDFile); os.IsNotExist(err) {
 		t.Errorf("expected shell init file at %s, but it does not exist", shellDFile)
+	}
+}
+
+// TestExecutePlan_SetEnvRunsInPostInstall exercises the chain a set_env step
+// actually travels: a plan step with no explicit phase, ExecutePlan skipping it,
+// SetToolInstallDir, then ExecutePhase("post-install") writing the exports and
+// recording cleanup. Testing SetEnvAction.Execute directly would pass even if
+// the routing were wrong and no install ever ran the action.
+func TestExecutePlan_SetEnvRunsInPostInstall(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{Name: "test-tool"},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	tsukuHome := t.TempDir()
+	exec.SetToolsDir(filepath.Join(tsukuHome, "tools"))
+
+	plan := &InstallationPlan{
+		FormatVersion: PlanFormatVersion,
+		Tool:          "test-tool",
+		Version:       "1.0.0",
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
+		Steps: []ResolvedStep{
+			{
+				// No Phase set -- exactly how a recipe writes it.
+				Action: "set_env",
+				Params: map[string]interface{}{
+					"vars": []interface{}{
+						map[string]interface{}{"name": "TEST_TOOL_HOME", "value": "{install_dir}"},
+					},
+				},
+			},
+		},
+	}
+
+	shellDFile := filepath.Join(tsukuHome, "share", "shell.d", "00-env-test-tool@1.0.0.bash")
+
+	// ExecutePlan must skip the step rather than run it against an unset
+	// ToolInstallDir, which would fail the install.
+	if err := exec.ExecutePlan(context.Background(), plan); err != nil {
+		t.Fatalf("ExecutePlan() error = %v", err)
+	}
+	if _, err := os.Stat(shellDFile); !os.IsNotExist(err) {
+		t.Fatal("set_env ran during the install phase, before ToolInstallDir was known")
+	}
+
+	finalInstallDir := filepath.Join(tsukuHome, "tools", "test-tool-1.0.0")
+	exec.SetToolInstallDir(finalInstallDir)
+
+	if err := exec.ExecutePhase(context.Background(), plan, "post-install"); err != nil {
+		t.Fatalf("ExecutePhase(post-install) error = %v", err)
+	}
+
+	content, err := os.ReadFile(shellDFile)
+	if err != nil {
+		t.Fatalf("reading %s: %v", shellDFile, err)
+	}
+	want := "export TEST_TOOL_HOME='" + finalInstallDir + "'\n"
+	if string(content) != want {
+		t.Errorf("exports = %q, want %q", content, want)
+	}
+
+	// The cleanup actions the caller reads back to rebuild shell caches and to
+	// record removal state must include the export files.
+	var paths []string
+	for _, ca := range exec.GetCleanupActions() {
+		paths = append(paths, ca.Path)
+	}
+	sort.Strings(paths)
+	wantPaths := []string{"share/shell.d/00-env-test-tool@1.0.0.bash", "share/shell.d/00-env-test-tool@1.0.0.zsh"}
+	if !reflect.DeepEqual(paths, wantPaths) {
+		t.Errorf("cleanup action paths = %v, want %v", paths, wantPaths)
 	}
 }
 

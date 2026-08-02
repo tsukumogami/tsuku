@@ -115,6 +115,7 @@ func TestInstallShellInitAction_Execute_SourceFile(t *testing.T) {
 		}
 
 		ctx := &ExecutionContext{
+			Version:    "1.2.3",
 			InstallDir: installDir,
 			ToolsDir:   toolsDir,
 		}
@@ -131,7 +132,7 @@ func TestInstallShellInitAction_Execute_SourceFile(t *testing.T) {
 
 		shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
 		for _, shell := range []string{"bash", "zsh"} {
-			path := filepath.Join(shellDDir, "mytool."+shell)
+			path := filepath.Join(shellDDir, "mytool@1.2.3."+shell)
 			content, err := os.ReadFile(path)
 			if err != nil {
 				t.Fatalf("expected file %s to exist: %v", path, err)
@@ -156,6 +157,7 @@ func TestInstallShellInitAction_Execute_SourceFile(t *testing.T) {
 		}
 
 		ctx := &ExecutionContext{
+			Version:    "1.2.3",
 			InstallDir: installDir,
 			ToolsDir:   toolsDir,
 		}
@@ -171,7 +173,7 @@ func TestInstallShellInitAction_Execute_SourceFile(t *testing.T) {
 
 		shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
 		for _, shell := range []string{"bash", "zsh"} {
-			path := filepath.Join(shellDDir, "mytool."+shell)
+			path := filepath.Join(shellDDir, "mytool@1.2.3."+shell)
 			if _, err := os.Stat(path); os.IsNotExist(err) {
 				t.Errorf("expected default shell file %s to exist", path)
 			}
@@ -191,6 +193,7 @@ func TestInstallShellInitAction_Execute_SourceFile(t *testing.T) {
 		}
 
 		ctx := &ExecutionContext{
+			Version:    "1.2.3",
 			InstallDir: installDir,
 			ToolsDir:   toolsDir,
 		}
@@ -217,6 +220,7 @@ func TestInstallShellInitAction_Execute_SourceFile(t *testing.T) {
 		}
 
 		ctx := &ExecutionContext{
+			Version:    "1.2.3",
 			InstallDir: installDir,
 			ToolsDir:   toolsDir,
 		}
@@ -253,6 +257,7 @@ func TestInstallShellInitAction_Execute_SourceCommand(t *testing.T) {
 		}
 
 		ctx := &ExecutionContext{
+			Version:        "1.2.3",
 			InstallDir:     toolInstallDir,
 			ToolInstallDir: toolInstallDir,
 			ToolsDir:       toolsDir,
@@ -270,7 +275,7 @@ func TestInstallShellInitAction_Execute_SourceCommand(t *testing.T) {
 
 		shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
 		for _, shell := range []string{"bash", "zsh"} {
-			path := filepath.Join(shellDDir, "mytool."+shell)
+			path := filepath.Join(shellDDir, "mytool@1.2.3."+shell)
 			content, err := os.ReadFile(path)
 			if err != nil {
 				t.Fatalf("expected file %s to exist: %v", path, err)
@@ -299,6 +304,7 @@ func TestInstallShellInitAction_Execute_SourceCommand(t *testing.T) {
 		}
 
 		ctx := &ExecutionContext{
+			Version:        "1.2.3",
 			InstallDir:     toolInstallDir,
 			ToolInstallDir: toolInstallDir,
 			ToolsDir:       toolsDir,
@@ -315,7 +321,7 @@ func TestInstallShellInitAction_Execute_SourceCommand(t *testing.T) {
 		}
 
 		shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
-		content, err := os.ReadFile(filepath.Join(shellDDir, "mytool.fish"))
+		content, err := os.ReadFile(filepath.Join(shellDDir, "mytool@1.2.3.fish"))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -342,6 +348,7 @@ func TestInstallShellInitAction_Execute_SourceCommand(t *testing.T) {
 		}
 
 		ctx := &ExecutionContext{
+			Version:        "1.2.3",
 			InstallDir:     toolInstallDir,
 			ToolInstallDir: toolInstallDir,
 			ToolsDir:       toolsDir,
@@ -360,7 +367,7 @@ func TestInstallShellInitAction_Execute_SourceCommand(t *testing.T) {
 
 		// File should not be created
 		shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
-		path := filepath.Join(shellDDir, "mytool.bash")
+		path := filepath.Join(shellDDir, "mytool@1.2.3.bash")
 		if _, err := os.Stat(path); !os.IsNotExist(err) {
 			t.Errorf("expected file %s to NOT exist after non-zero exit", path)
 		}
@@ -383,6 +390,7 @@ func TestInstallShellInitAction_Execute_SourceCommand(t *testing.T) {
 		}
 
 		ctx := &ExecutionContext{
+			Version:        "1.2.3",
 			InstallDir:     toolInstallDir,
 			ToolInstallDir: toolInstallDir,
 			ToolsDir:       toolsDir,
@@ -399,7 +407,7 @@ func TestInstallShellInitAction_Execute_SourceCommand(t *testing.T) {
 		}
 
 		shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
-		path := filepath.Join(shellDDir, "mytool.bash")
+		path := filepath.Join(shellDDir, "mytool@1.2.3.bash")
 		if _, err := os.Stat(path); !os.IsNotExist(err) {
 			t.Errorf("expected file %s to NOT exist for empty output", path)
 		}
@@ -415,6 +423,7 @@ func TestInstallShellInitAction_Execute_SourceCommand(t *testing.T) {
 		}
 
 		ctx := &ExecutionContext{
+			Version:        "1.2.3",
 			InstallDir:     toolInstallDir,
 			ToolInstallDir: toolInstallDir,
 			ToolsDir:       toolsDir,
@@ -451,6 +460,7 @@ func TestInstallShellInitAction_Execute_SourceCommand(t *testing.T) {
 		}
 
 		ctx := &ExecutionContext{
+			Version:        "1.2.3",
 			InstallDir:     toolInstallDir,
 			ToolInstallDir: toolInstallDir,
 			ToolsDir:       toolsDir,
@@ -484,6 +494,7 @@ func TestInstallShellInitAction_Execute_SourceCommand(t *testing.T) {
 		}
 
 		ctx := &ExecutionContext{
+			Version:        "1.2.3",
 			InstallDir:     toolInstallDir,
 			ToolInstallDir: toolInstallDir,
 			ToolsDir:       toolsDir,
@@ -612,6 +623,7 @@ func TestInstallShellInitAction_RecordsCleanupActions_SourceFile(t *testing.T) {
 	}
 
 	ctx := &ExecutionContext{
+		Version:    "1.2.3",
 		InstallDir: installDir,
 		ToolsDir:   toolsDir,
 	}
@@ -631,8 +643,8 @@ func TestInstallShellInitAction_RecordsCleanupActions_SourceFile(t *testing.T) {
 	}
 
 	expected := []CleanupAction{
-		{Action: "delete_file", Path: "share/shell.d/mytool.bash"},
-		{Action: "delete_file", Path: "share/shell.d/mytool.zsh"},
+		{Action: "delete_file", Path: "share/shell.d/mytool@1.2.3.bash"},
+		{Action: "delete_file", Path: "share/shell.d/mytool@1.2.3.zsh"},
 	}
 
 	for i, ca := range ctx.CleanupActions {
@@ -660,6 +672,7 @@ func TestInstallShellInitAction_RecordsCleanupActions_SourceCommand(t *testing.T
 	}
 
 	ctx := &ExecutionContext{
+		Version:        "1.2.3",
 		InstallDir:     toolInstallDir,
 		ToolInstallDir: toolInstallDir,
 		ToolsDir:       toolsDir,
@@ -680,8 +693,8 @@ func TestInstallShellInitAction_RecordsCleanupActions_SourceCommand(t *testing.T
 	}
 
 	expected := []CleanupAction{
-		{Action: "delete_file", Path: "share/shell.d/mytool.bash"},
-		{Action: "delete_file", Path: "share/shell.d/mytool.fish"},
+		{Action: "delete_file", Path: "share/shell.d/mytool@1.2.3.bash"},
+		{Action: "delete_file", Path: "share/shell.d/mytool@1.2.3.fish"},
 	}
 
 	for i, ca := range ctx.CleanupActions {
@@ -710,6 +723,7 @@ func TestInstallShellInitAction_NoCleanupOnSkippedShell(t *testing.T) {
 	}
 
 	ctx := &ExecutionContext{
+		Version:        "1.2.3",
 		InstallDir:     toolInstallDir,
 		ToolInstallDir: toolInstallDir,
 		ToolsDir:       toolsDir,
@@ -757,6 +771,7 @@ func TestInstallShellInitAction_ContentHash_SourceFile(t *testing.T) {
 	}
 
 	ctx := &ExecutionContext{
+		Version:    "1.2.3",
 		InstallDir: installDir,
 		ToolsDir:   toolsDir,
 	}
@@ -806,6 +821,7 @@ func TestInstallShellInitAction_ContentHash_SourceCommand(t *testing.T) {
 	}
 
 	ctx := &ExecutionContext{
+		Version:        "1.2.3",
 		InstallDir:     toolInstallDir,
 		ToolInstallDir: toolInstallDir,
 		ToolsDir:       toolsDir,
@@ -852,6 +868,7 @@ func TestInstallShellInitAction_FilePermissions(t *testing.T) {
 	}
 
 	ctx := &ExecutionContext{
+		Version:    "1.2.3",
 		InstallDir: installDir,
 		ToolsDir:   toolsDir,
 	}
@@ -877,7 +894,7 @@ func TestInstallShellInitAction_FilePermissions(t *testing.T) {
 	}
 
 	// Check file permissions
-	filePath := filepath.Join(shellDDir, "mytool.bash")
+	filePath := filepath.Join(shellDDir, "mytool@1.2.3.bash")
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
 		t.Fatal(err)
@@ -905,6 +922,7 @@ func TestInstallShellInitAction_FilePermissions_SourceCommand(t *testing.T) {
 	}
 
 	ctx := &ExecutionContext{
+		Version:        "1.2.3",
 		InstallDir:     toolInstallDir,
 		ToolInstallDir: toolInstallDir,
 		ToolsDir:       toolsDir,
@@ -921,7 +939,7 @@ func TestInstallShellInitAction_FilePermissions_SourceCommand(t *testing.T) {
 	}
 
 	shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
-	filePath := filepath.Join(shellDDir, "mytool.bash")
+	filePath := filepath.Join(shellDDir, "mytool@1.2.3.bash")
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
 		t.Fatal(err)
@@ -946,6 +964,7 @@ func TestInstallShellInitAction_NoShellInit_SourceFile(t *testing.T) {
 	}
 
 	ctx := &ExecutionContext{
+		Version:     "1.2.3",
 		InstallDir:  installDir,
 		ToolsDir:    toolsDir,
 		NoShellInit: true,
@@ -964,7 +983,7 @@ func TestInstallShellInitAction_NoShellInit_SourceFile(t *testing.T) {
 	// No files should be created
 	shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
 	for _, shell := range []string{"bash", "zsh"} {
-		path := filepath.Join(shellDDir, "mytool."+shell)
+		path := filepath.Join(shellDDir, "mytool@1.2.3."+shell)
 		if _, err := os.Stat(path); !os.IsNotExist(err) {
 			t.Errorf("expected file %s to NOT exist when NoShellInit is set", path)
 		}
@@ -994,6 +1013,7 @@ func TestInstallShellInitAction_NoShellInit_SourceCommand(t *testing.T) {
 	}
 
 	ctx := &ExecutionContext{
+		Version:        "1.2.3",
 		InstallDir:     toolInstallDir,
 		ToolInstallDir: toolInstallDir,
 		ToolsDir:       toolsDir,
@@ -1012,7 +1032,7 @@ func TestInstallShellInitAction_NoShellInit_SourceCommand(t *testing.T) {
 
 	// No files should be created
 	shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
-	path := filepath.Join(shellDDir, "mytool.bash")
+	path := filepath.Join(shellDDir, "mytool@1.2.3.bash")
 	if _, err := os.Stat(path); !os.IsNotExist(err) {
 		t.Errorf("expected file %s to NOT exist when NoShellInit is set", path)
 	}

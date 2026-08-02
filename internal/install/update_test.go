@@ -231,15 +231,12 @@ func TestUpdateStaleCleanup_EndToEnd(t *testing.T) {
 		{Action: "delete_file", Path: "share/shell.d/tool.zsh"},
 	}
 
-	// Set up state with old and new versions
+	// Set up state with only the new version installed. The old version has
+	// already been reaped, so nothing still records its paths and its dropped
+	// fish fragment really is orphaned.
 	err := mgr.state.UpdateTool("tool", func(ts *ToolState) {
 		ts.ActiveVersion = "2.0.0"
 		ts.Versions = map[string]VersionState{
-			"1.0.0": {
-				Binaries:       []string{"bin/tool"},
-				InstalledAt:    time.Now().Add(-1 * time.Hour),
-				CleanupActions: oldActions,
-			},
 			"2.0.0": {
 				Binaries:       []string{"bin/tool"},
 				InstalledAt:    time.Now(),
@@ -251,16 +248,7 @@ func TestUpdateStaleCleanup_EndToEnd(t *testing.T) {
 		t.Fatalf("failed to set up state: %v", err)
 	}
 
-	// Load state and compute stale
-	toolState, err := mgr.state.GetToolState("tool")
-	if err != nil {
-		t.Fatalf("failed to get tool state: %v", err)
-	}
-
-	oldVS := toolState.Versions["1.0.0"]
-	newVS := toolState.Versions["2.0.0"]
-
-	stale := StaleCleanupActions(oldVS.CleanupActions, newVS.CleanupActions)
+	stale := StaleCleanupActions(oldActions, newActions)
 
 	// Should find exactly one stale action: fish
 	if len(stale) != 1 {

@@ -13,7 +13,6 @@ import (
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
-	"github.com/tsukumogami/tsuku/internal/shellenv"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
@@ -581,24 +580,11 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 			reporter.Warn("post-install phase failed: %v", err)
 		}
 
-		// Collect cleanup actions recorded by post-install actions and
-		// rebuild shell caches for any shells that were written to.
-		postInstallCleanup := exec.GetCleanupActions()
-		if len(postInstallCleanup) > 0 {
-			affectedShells := make(map[string]bool)
-			for _, ca := range postInstallCleanup {
-				if shell := install.ShellFromCleanupPath(ca.Path); shell != "" {
-					affectedShells[shell] = true
-				}
-			}
-			for shell := range affectedShells {
-				if err := shellenv.RebuildShellCache(cfg.HomeDir, shell); err != nil {
-					reporter.Warn("failed to rebuild shell cache for %s: %v", shell, err)
-				}
-			}
-		}
+		// Record the cleanup actions post-install produced and refresh the
+		// shell caches they touched.
+		finishPostInstall(cfg, mgr, toolName, exec.GetCleanupActions(), reporter.Warn)
 
-		// Update state with explicit flag, parent, dependencies, and cleanup actions
+		// Update state with explicit flag, parent, and dependencies
 		// via semantic Manager methods.
 		if err := recordInstallRelationship(mgr, toolName, parent, isExplicit); err != nil {
 			reporter.Warn("failed to update state: %v", err)
@@ -608,11 +594,6 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 		}
 		if err := mgr.SetRuntimeDependencies(toolName, mapKeys(resolvedDeps.Runtime)); err != nil {
 			reporter.Warn("failed to record runtime dependencies: %v", err)
-		}
-		if len(postInstallCleanup) > 0 {
-			if err := mgr.RecordCleanup(toolName, convertCleanupActions(postInstallCleanup)); err != nil {
-				reporter.Warn("failed to record cleanup actions: %v", err)
-			}
 		}
 	}
 

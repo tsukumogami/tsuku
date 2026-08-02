@@ -226,32 +226,37 @@ func updateOutcomeMessage(toolName, previousVersion, newVersion string) string {
 }
 
 // warnShellInitChanges compares content hashes between old and new cleanup
-// actions for shell.d paths. When a matching path has different hashes, it
-// means the tool's shell init output changed during the update -- a signal
-// worth surfacing to the user.
+// actions for shell.d fragments. When the same (target, shell) has different
+// hashes across versions, the tool's shell init output changed during the
+// update -- a signal worth surfacing to the user.
+//
+// The comparison is keyed on (target, shell) rather than on the raw path
+// because shell.d filenames carry a version key, so every fragment has a new
+// path in every version and a path-keyed comparison would never match.
 func warnShellInitChanges(toolName string, old, new []install.CleanupAction, reporter progress.Reporter) {
-	// Build a map of path -> content hash from old actions
-	oldHashes := make(map[string]string)
+	type fragment struct{ target, shell string }
+
+	// Build a map of (target, shell) -> content hash from old actions
+	oldHashes := make(map[fragment]string)
 	for _, ca := range old {
-		if ca.ContentHash != "" {
-			oldHashes[ca.Path] = ca.ContentHash
+		shell := install.ShellFromCleanupPath(ca.Path)
+		if shell == "" || ca.ContentHash == "" {
+			continue
 		}
+		oldHashes[fragment{install.TargetFromCleanupPath(ca.Path), shell}] = ca.ContentHash
 	}
 
 	for _, ca := range new {
-		if ca.ContentHash == "" {
+		shell := install.ShellFromCleanupPath(ca.Path)
+		if shell == "" || ca.ContentHash == "" {
 			continue
 		}
-		oldHash, exists := oldHashes[ca.Path]
+		oldHash, exists := oldHashes[fragment{install.TargetFromCleanupPath(ca.Path), shell}]
 		if !exists {
-			// New path not in old -- new shell init file, not a change
+			// New fragment not in old -- new shell init file, not a change
 			continue
 		}
 		if oldHash != ca.ContentHash {
-			shell := install.ShellFromCleanupPath(ca.Path)
-			if shell == "" {
-				shell = ca.Path
-			}
 			reporter.Warn("shell init changed for %s (%s)", toolName, shell)
 		}
 	}

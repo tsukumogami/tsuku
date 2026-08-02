@@ -388,8 +388,11 @@ func (w *WhenClause) Matches(target Matchable) bool {
 // Step represents a single action step
 // We use interface{} for the full step data and extract fields manually
 type Step struct {
-	Action       string
-	Phase        string // Lifecycle phase: "install" (default), "post-install", "pre-remove", "pre-update"
+	Action string
+	// Phase names a lifecycle phase: "install", "post-install", "pre-remove",
+	// "pre-update". Leave it empty unless the action needs overriding -- the
+	// action picks its own default (see executor.StepPhase).
+	Phase        string
 	When         *WhenClause
 	Note         string
 	Description  string

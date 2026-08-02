@@ -141,6 +141,9 @@ func (m *Manager) RemoveVersion(ctx context.Context, name, version string) (err 
 
 	// Execute cleanup actions before removing the directory.
 	// Collect other versions' cleanup paths so we don't delete shared resources.
+	// Shell caches are rebuilt at the end of this function rather than here:
+	// removing the active version promotes another one, and a rebuild that runs
+	// before the promotion sees the pre-promotion world.
 	affectedShells := m.executeCleanupActions(ctx, name, version, versionState.CleanupActions, toolState)
 
 	// Remove version directory
@@ -157,13 +160,14 @@ func (m *Manager) RemoveVersion(ctx context.Context, name, version string) (err 
 		_ = os.Remove(versionState.ApplicationSymlink)
 	}
 
-	// Rebuild shell cache for affected shells
-	m.rebuildShellCaches(affectedShells)
-
 	// Check if this was the last version
 	if len(toolState.Versions) == 1 {
 		// Last version - remove entire tool
-		return m.removeToolEntirely(name, toolState)
+		if err := m.removeToolEntirely(name, toolState); err != nil {
+			return err
+		}
+		m.rebuildShellCachesForTool(name, affectedShells)
+		return nil
 	}
 
 	// Track if we need to switch active version
@@ -203,6 +207,12 @@ func (m *Manager) RemoveVersion(ctx context.Context, name, version string) (err 
 			return fmt.Errorf("failed to update symlinks: %w", err)
 		}
 	}
+
+	// Rebuild against the promoted world. This covers both the shells whose
+	// files were just deleted and the shells the newly active version owns a
+	// fragment for -- the promotion is what makes that fragment the one to
+	// source, and nothing else would notice.
+	m.rebuildShellCachesForTool(name, affectedShells)
 
 	return nil
 }
@@ -250,11 +260,14 @@ func (m *Manager) RemoveAllVersions(ctx context.Context, name string) (err error
 		}
 	}
 
-	// Rebuild shell cache for affected shells
-	m.rebuildShellCaches(allShells)
-
 	// Remove symlinks and state
-	return m.removeToolEntirely(name, toolState)
+	if err := m.removeToolEntirely(name, toolState); err != nil {
+		return err
+	}
+
+	// Rebuild shell cache for affected shells, against state with the tool gone
+	m.rebuildShellCaches(allShells, m.ShellDSelection())
+	return nil
 }
 
 // removeToolEntirely removes all symlinks and state for a tool.
@@ -342,17 +355,61 @@ func (m *Manager) executeCleanupActions(ctx context.Context, name, version strin
 
 	affectedShells := make(map[string]bool)
 	for _, ca := range actions {
+		if shell := shellFromCleanupPath(ca.Path); shell != "" {
+			// Mark the shell affected whether or not the file is deleted. A
+			// retained path still changes which fragment belongs in the cache,
+			// because the version that recorded it is going away.
+			affectedShells[shell] = true
+		}
 		if otherPaths[ca.Path] {
 			// Another version still references this path -- skip.
 			fmt.Printf("   Cleanup: skipping %s (still referenced by another version)\n", ca.Path)
 			continue
 		}
 		m.executeSingleCleanup(ca)
-		if shell := shellFromCleanupPath(ca.Path); shell != "" {
-			affectedShells[shell] = true
-		}
 	}
 	return affectedShells
+}
+
+// ReapVersion drops a version whose directory has already been deleted out of
+// band -- garbage collection removes tool directories directly. It runs that
+// version's cleanup actions (skipping anything another version still records),
+// removes its VersionState, and rebuilds the affected caches.
+//
+// It refuses to touch the active version. Callers that delete directories are
+// expected to protect it themselves; this is the second lock on the door.
+//
+// A version that is not in state, or a tool that is not, is a no-op: the
+// directory is gone either way and there is nothing left to reconcile.
+func (m *Manager) ReapVersion(name, version string) error {
+	toolState, err := m.state.GetToolState(name)
+	if err != nil {
+		return fmt.Errorf("failed to load state: %w", err)
+	}
+	if toolState == nil {
+		return nil
+	}
+	if toolState.ActiveVersion == version {
+		return fmt.Errorf("refusing to reap the active version %s of %s", version, name)
+	}
+	versionState, exists := toolState.Versions[version]
+	if !exists {
+		return nil
+	}
+
+	affectedShells := m.executeCleanupActions(context.Background(), name, version, versionState.CleanupActions, toolState)
+
+	if err := m.state.UpdateTool(name, func(ts *ToolState) {
+		delete(ts.Versions, version)
+		if ts.PreviousVersion == version {
+			ts.PreviousVersion = ""
+		}
+	}); err != nil {
+		return fmt.Errorf("failed to update state: %w", err)
+	}
+
+	m.rebuildShellCachesForTool(name, affectedShells)
+	return nil
 }
 
 // executeSingleCleanup performs one cleanup action. Failures log a warning
@@ -384,7 +441,7 @@ func ShellFromCleanupPath(path string) string {
 
 // shellFromCleanupPath is the unexported implementation.
 func shellFromCleanupPath(path string) string {
-	if !strings.HasPrefix(path, "share/shell.d/") {
+	if !strings.HasPrefix(path, shellDPrefix) {
 		return ""
 	}
 	ext := filepath.Ext(path)
@@ -394,10 +451,27 @@ func shellFromCleanupPath(path string) string {
 	return ext[1:] // strip leading dot
 }
 
+// TargetFromCleanupPath extracts the target a shell.d cleanup path was written
+// for, dropping the version key and the shell suffix. Returns "" if the path
+// doesn't look like a shell.d file.
+//
+// Comparing two versions' fragments has to go through this: version-keyed
+// filenames mean the same target has a different path in every version, so a
+// comparison keyed on the raw path sees two unrelated files.
+func TargetFromCleanupPath(path string) string {
+	shell := shellFromCleanupPath(path)
+	if shell == "" {
+		return ""
+	}
+	return shellenv.DisplayName(strings.TrimPrefix(path, shellDPrefix), shell)
+}
+
 // rebuildShellCaches rebuilds shell init caches for the given set of shells.
-func (m *Manager) rebuildShellCaches(shells map[string]bool) {
+// sel must be projected from state as it stands after the caller's last write,
+// or the rebuild sources the version that was active a moment ago.
+func (m *Manager) rebuildShellCaches(shells map[string]bool, sel shellenv.ShellDSelection) {
 	for shell := range shells {
-		if err := shellenv.RebuildShellCache(m.config.HomeDir, shell); err != nil {
+		if err := shellenv.RebuildShellCache(m.config.HomeDir, shell, sel); err != nil {
 			fmt.Printf("   Warning: failed to rebuild shell cache for %s: %v\n", shell, err)
 		}
 	}

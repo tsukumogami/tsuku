@@ -212,3 +212,60 @@ func TestUpdateOutcomeMessage(t *testing.T) {
 		})
 	}
 }
+
+// Version-keyed filenames mean the same fragment has a different path in every
+// version, so a comparison keyed on the raw path would never find a match and
+// this warning would silently stop firing.
+func TestWarnShellInitChanges_ComparesByTargetAndShell(t *testing.T) {
+	tests := []struct {
+		name     string
+		old      []install.CleanupAction
+		new      []install.CleanupAction
+		wantWarn bool
+	}{
+		{
+			name:     "same target and shell across versions, content changed",
+			old:      []install.CleanupAction{{Action: "delete_file", Path: "share/shell.d/nvm@0.40.5.bash", ContentHash: "old"}},
+			new:      []install.CleanupAction{{Action: "delete_file", Path: "share/shell.d/nvm@0.40.6.bash", ContentHash: "new"}},
+			wantWarn: true,
+		},
+		{
+			name:     "same target and shell across versions, content unchanged",
+			old:      []install.CleanupAction{{Action: "delete_file", Path: "share/shell.d/nvm@0.40.5.bash", ContentHash: "same"}},
+			new:      []install.CleanupAction{{Action: "delete_file", Path: "share/shell.d/nvm@0.40.6.bash", ContentHash: "same"}},
+			wantWarn: false,
+		},
+		{
+			name:     "a different target is a new fragment, not a change",
+			old:      []install.CleanupAction{{Action: "delete_file", Path: "share/shell.d/nvm@0.40.5.bash", ContentHash: "old"}},
+			new:      []install.CleanupAction{{Action: "delete_file", Path: "share/shell.d/00-env-nvm@0.40.6.bash", ContentHash: "new"}},
+			wantWarn: false,
+		},
+		{
+			name:     "a different shell is a new fragment, not a change",
+			old:      []install.CleanupAction{{Action: "delete_file", Path: "share/shell.d/nvm@0.40.5.bash", ContentHash: "old"}},
+			new:      []install.CleanupAction{{Action: "delete_file", Path: "share/shell.d/nvm@0.40.6.zsh", ContentHash: "new"}},
+			wantWarn: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			oldStderr := os.Stderr
+			r, w, _ := os.Pipe()
+			os.Stderr = w
+			reporter := progress.NewTTYReporter(os.Stderr)
+
+			warnShellInitChanges("nvm", tt.old, tt.new, reporter)
+
+			w.Close()
+			os.Stderr = oldStderr
+
+			var buf bytes.Buffer
+			_, _ = buf.ReadFrom(r)
+			if gotWarn := buf.Len() > 0; gotWarn != tt.wantWarn {
+				t.Errorf("warned = %v, want %v (output: %q)", gotWarn, tt.wantWarn, buf.String())
+			}
+		})
+	}
+}

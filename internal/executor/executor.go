@@ -601,16 +601,22 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 }
 
 // StepPhase returns the effective phase of a ResolvedStep.
-// Empty phase is treated as "install" for backward compatibility.
+//
+// A phase named by the recipe wins. Otherwise the action decides: most run in
+// "install", but an action implementing actions.PhaseDeclarer can ask for a
+// later phase because it needs state the install phase cannot provide. The
+// lookup goes through the action registry rather than the stored plan, so plans
+// written before an action started declaring a phase still route correctly.
 func StepPhase(step ResolvedStep) string {
 	if step.Phase == "" {
-		return "install"
+		return actions.DefaultPhase(step.Action)
 	}
 	return step.Phase
 }
 
 // ExecutePhase executes only the steps matching the given phase from an installation plan.
-// Steps with an empty Phase field are treated as "install" phase.
+// Steps with an empty Phase field fall back to their action's default (see StepPhase),
+// which is "install" for all but a few actions.
 // The execution context (e.ctx) must already be set up by a prior call to ExecutePlan.
 func (e *Executor) ExecutePhase(ctx context.Context, plan *InstallationPlan, phase string) error {
 	if e.ctx == nil {
