@@ -582,7 +582,13 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 
 		// Record the cleanup actions post-install produced and refresh the
 		// shell caches they touched.
-		finishPostInstall(cfg, mgr, toolName, exec.GetCleanupActions(), reporter.Warn)
+		finishPostInstall(cfg, mgr, toolName, version, exec.GetCleanupActions(), reporter.Warn)
+
+		// Dependencies the executor installed itself carry their own cleanup
+		// actions. They are not part of this tool's -- a dependency's shell.d
+		// fragment is named and version-keyed after the dependency -- so they
+		// are recorded against the dependency's own state entry.
+		recordDependencyInstalls(cfg, mgr, toolName, exec.GetDependencyInstalls(), reporter.Warn)
 
 		// Update state with explicit flag, parent, and dependencies
 		// via semantic Manager methods.

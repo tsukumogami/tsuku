@@ -121,9 +121,15 @@ func runPlanBasedInstall(planPath, toolName string) error {
 
 		// Record the cleanup actions post-install produced and refresh the
 		// shell caches they touched.
-		finishPostInstall(cfg, mgr, effectiveToolName, exec.GetCleanupActions(), func(format string, args ...interface{}) {
+		warnf := func(format string, args ...interface{}) {
 			printInfof("Warning: "+format+"\n", args...)
-		})
+		}
+		finishPostInstall(cfg, mgr, effectiveToolName, plan.Version, exec.GetCleanupActions(), warnf)
+
+		// Every dependency in an external plan is installed by the executor
+		// itself -- this path has no recipe loader to walk -- so this is where
+		// their state entries and cleanup records come from.
+		recordDependencyInstalls(cfg, mgr, effectiveToolName, exec.GetDependencyInstalls(), warnf)
 
 		// Update state to mark as explicit installation
 		err = mgr.GetState().UpdateTool(effectiveToolName, func(ts *install.ToolState) {

@@ -186,6 +186,36 @@ Circular dependencies are rejected at validation time.
 
 ---
 
+## Post-Install Steps in a Dependency Recipe
+
+A recipe installed as another tool's dependency runs the same two phases a
+top-level install runs. Its `post-install` steps run after it has been copied to
+`$TSUKU_HOME/tools/{name}-{version}`, with `{install_dir}` pointing there, so
+`set_env` and `install_shell_init` with `source_command` work in a dependency
+exactly as they do in a tool the user asked for. Nothing about the recipe changes
+depending on how it gets pulled in.
+
+What the dependency writes belongs to the dependency. A shell.d fragment is named
+after the recipe that wrote it and keyed on that recipe's version, and it is
+recorded against that recipe's own entry in `state.json` — not against the tool
+that happened to pull it in. So `tsuku remove <dependency>` takes its fragment
+with it, and the fragment stays in the shell init cache for as long as that
+version of the dependency is the active one, regardless of what happens to the
+tools that depend on it.
+
+Two limits are worth knowing:
+
+- **Library recipes are the exception.** Libraries land in `$TSUKU_HOME/libs` and
+  are tracked separately, with no place to record files written outside their own
+  directory. `set_env` is rejected outright in a library recipe by
+  `tsuku validate`. A library that writes to shell.d another way gets a warning
+  at install time and its file is not cleaned up on removal.
+- **A dependency that is already installed does not run again.** Its steps are
+  skipped entirely, post-install included, which is the same deduplication a
+  second `tsuku install` of an already-present version gets.
+
+---
+
 ## Step-Level Dependencies
 
 Individual steps can declare their own dependencies, separate from the

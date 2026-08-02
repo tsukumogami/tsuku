@@ -1,5 +1,7 @@
 package install
 
+import "time"
+
 // state_ops.go contains semantic state-mutation methods on Manager that
 // replace the `mgr.GetState().UpdateTool(name, func(ts *ToolState){...})`
 // lambda pattern used in CLI dependency-walk code. Each method is a thin
@@ -81,15 +83,96 @@ func (m *Manager) RecordCleanup(name string, actions []CleanupAction) error {
 		return nil
 	}
 	return m.state.UpdateTool(name, func(ts *ToolState) {
-		if ts.ActiveVersion == "" || ts.Versions == nil {
+		if ts.ActiveVersion == "" {
 			return
 		}
-		vs, ok := ts.Versions[ts.ActiveVersion]
-		if !ok {
+		setVersionCleanup(ts, ts.ActiveVersion, actions)
+	})
+}
+
+// RecordCleanupForVersion stores actions on a named version's state rather
+// than on whichever version is active.
+//
+// The distinction matters for a dependency. A plan can pin a dependency version
+// that is not the one the user has active, and installing it must not move the
+// active version's cleanup record out from under it. Callers that just installed
+// the version they are recording against can use RecordCleanup instead.
+//
+// No-op when actions is empty, when version is empty, or when the tool has no
+// state entry for that version.
+func (m *Manager) RecordCleanupForVersion(name, version string, actions []CleanupAction) error {
+	if len(actions) == 0 || version == "" {
+		return nil
+	}
+	return m.state.UpdateTool(name, func(ts *ToolState) {
+		setVersionCleanup(ts, version, actions)
+	})
+}
+
+// setVersionCleanup writes actions onto one version's state, leaving the tool
+// untouched when that version is not recorded.
+func setVersionCleanup(ts *ToolState, version string, actions []CleanupAction) {
+	if ts.Versions == nil {
+		return
+	}
+	vs, ok := ts.Versions[version]
+	if !ok {
+		return
+	}
+	vs.CleanupActions = actions
+	ts.Versions[version] = vs
+}
+
+// RecordDependencyInstall gives a dependency the executor installed itself a
+// state entry, so the files it wrote are attributable to it rather than
+// invisible.
+//
+// Executor.installSingleDependency copies a dependency straight into
+// $TSUKU_HOME/tools/<name>-<version> without going through Install: no
+// symlinks, no wrappers, no binaries registered. This records exactly the part
+// that has to exist for removal and the shell.d projection to work -- the
+// version entry and its install time -- and nothing that would imply the
+// dependency is on PATH.
+//
+// A dependency is hidden and marked an execution dependency, matching what
+// HiddenInstallOptions produces on the normal path. Both flags are set only
+// when the tool has no state yet: a tool the user installed explicitly and
+// which some later recipe happens to depend on must not become hidden.
+//
+// The active version is likewise only claimed when there is none. Installing a
+// dependency is not a request to switch the user's active version, and the
+// shell.d projection reads the active version to decide which fragment belongs
+// in the cache.
+func (m *Manager) RecordDependencyInstall(name, version, parent string) error {
+	if version == "" {
+		return nil
+	}
+	return m.state.UpdateTool(name, func(ts *ToolState) {
+		fresh := ts.ActiveVersion == "" && len(ts.Versions) == 0
+
+		if ts.Versions == nil {
+			ts.Versions = make(map[string]VersionState)
+		}
+		if _, exists := ts.Versions[version]; !exists {
+			ts.Versions[version] = VersionState{InstalledAt: time.Now()}
+		}
+
+		if fresh {
+			ts.ActiveVersion = version
+			ts.Version = version
+			ts.IsHidden = true
+			ts.IsExecutionDependency = true
+		}
+
+		if parent == "" {
 			return
 		}
-		vs.CleanupActions = actions
-		ts.Versions[ts.ActiveVersion] = vs
+		for _, r := range ts.RequiredBy {
+			if r == parent {
+				return
+			}
+		}
+		ts.RequiredBy = append(ts.RequiredBy, parent)
 	})
 }
 

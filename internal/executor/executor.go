@@ -39,6 +39,12 @@ type Executor struct {
 	noShellInit             bool                 // Skip install_shell_init in post-install phase
 	reporter                progress.Reporter    // Progress reporter propagated to all execution contexts
 
+	// depInstalls records what each dependency this executor installed left
+	// behind. It cannot live on e.ctx: ExecutePlan installs dependencies
+	// before it assigns e.ctx, so anything written there would be discarded
+	// by the assignment moments later.
+	depInstalls []DependencyInstall
+
 	// onEvalDepsNeeded installs missing eval-time dependencies. Set
 	// once via SetEvalDepsCallback before version resolution runs.
 	// When nil, version resolution skips the early eval-deps surface;
@@ -353,11 +359,39 @@ func (e *Executor) SetToolInstallDir(dir string) {
 // GetCleanupActions returns the cleanup actions accumulated during phase execution.
 // Returns nil if no cleanup actions were recorded or if the execution context
 // is not initialized.
+//
+// Dependencies are not included. A dependency writes under its own name and its
+// own version, so its files belong to its own state entry rather than to the
+// tool that happened to pull it in -- see GetDependencyInstalls.
 func (e *Executor) GetCleanupActions() []actions.CleanupAction {
 	if e.ctx == nil {
 		return nil
 	}
 	return e.ctx.CleanupActions
+}
+
+// DependencyInstall describes one dependency this executor installed itself,
+// through installSingleDependency rather than through the normal install path.
+//
+// The caller needs all four fields to record the install: the tool and version
+// name the state entry, RecipeType says whether the payload landed in
+// $TSUKU_HOME/tools or $TSUKU_HOME/libs, and CleanupActions lists what the
+// dependency's steps wrote outside its own install directory.
+type DependencyInstall struct {
+	Tool           string
+	Version        string
+	RecipeType     string
+	InstallDir     string
+	CleanupActions []actions.CleanupAction
+}
+
+// GetDependencyInstalls returns one entry per dependency this executor
+// installed. It is empty when every dependency was already present, which is
+// the common case: the CLI installs a recipe's declared dependencies through
+// the normal path before the plan runs, so only action-inherited dependencies
+// and `tsuku install --plan` reach installSingleDependency.
+func (e *Executor) GetDependencyInstalls() []DependencyInstall {
+	return e.depInstalls
 }
 
 // expandVars replaces {var} placeholders in a string
@@ -841,7 +875,11 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 	// constraints from recipe parsing (e.g., "latest")
 	depResolvedDeps := buildResolvedDepsFromPlan(dep.Dependencies)
 
-	// Create execution context for this dependency
+	// Create execution context for this dependency.
+	//
+	// ToolInstallDir stays empty for the install phase, the same as it does in
+	// ExecutePlan: the dependency has not reached finalDir yet. It is filled in
+	// after the copy, before the post-install phase runs.
 	execCtx := &actions.ExecutionContext{
 		Context:                 ctx,
 		WorkDir:                 depWorkDir,
@@ -862,6 +900,7 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		ExecPaths:               e.execPaths,
 		Logger:                  log.Default(),
 		Dependencies:            depResolvedDeps,
+		NoShellInit:             e.noShellInit,
 		Reporter:                e.getReporter(),
 	}
 
@@ -876,8 +915,71 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		}
 	}
 
-	// Execute each step for this dependency
+	// Run the install phase. Post-install steps are held back for the same
+	// reason ExecutePlan holds them back: they need the permanent directory,
+	// which does not exist until the copy below.
+	if err := e.executeDependencySteps(ctx, dep, execCtx, "install"); err != nil {
+		return err
+	}
+
+	// Create final directory
+	if err := os.MkdirAll(finalDir, 0755); err != nil {
+		return fmt.Errorf("failed to create final dir: %w", err)
+	}
+
+	// Copy contents from install directory to final location
+	if err := copyDir(depInstallDir, finalDir); err != nil {
+		return fmt.Errorf("failed to copy to final location: %w", err)
+	}
+
+	// For tools, add bin directory to exec paths
+	if dep.RecipeType != "library" {
+		binDir := filepath.Join(finalDir, "bin")
+		if _, err := os.Stat(binDir); err == nil {
+			e.execPaths = append(e.execPaths, binDir)
+			execCtx.ExecPaths = append(execCtx.ExecPaths, binDir)
+		}
+	}
+
+	// The dependency now lives at its permanent path, so post-install steps
+	// can be told where it is. Without this, set_env fails outright and
+	// install_shell_init's source_command rejects every executable it is
+	// handed, because an empty ToolInstallDir contains nothing.
+	execCtx.ToolInstallDir = finalDir
+	if err := e.executeDependencySteps(ctx, dep, execCtx, "post-install"); err != nil {
+		return err
+	}
+
+	// Hand the dependency's cleanup actions to the caller. They describe files
+	// outside finalDir -- shell.d fragments, mostly -- which nothing else knows
+	// about, so dropping them here is what strands them on disk forever.
+	e.depInstalls = append(e.depInstalls, DependencyInstall{
+		Tool:           dep.Tool,
+		Version:        dep.Version,
+		RecipeType:     dep.RecipeType,
+		InstallDir:     finalDir,
+		CleanupActions: execCtx.CleanupActions,
+	})
+
+	e.getReporter().Log("✅ %s@%s", dep.Tool, dep.Version)
+	return nil
+}
+
+// executeDependencySteps runs the dependency's steps for one lifecycle phase,
+// in recipe order. Phase resolution goes through StepPhase, so a step the
+// recipe marked post-install and a step whose action declares post-install are
+// both held back until the caller runs that phase.
+func (e *Executor) executeDependencySteps(
+	ctx context.Context,
+	dep *DependencyPlan,
+	execCtx *actions.ExecutionContext,
+	phase string,
+) error {
 	for i, step := range dep.Steps {
+		if StepPhase(step) != phase {
+			continue
+		}
+
 		if err := ctx.Err(); err != nil {
 			return err
 		}
@@ -902,25 +1004,6 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		}
 	}
 
-	// Create final directory
-	if err := os.MkdirAll(finalDir, 0755); err != nil {
-		return fmt.Errorf("failed to create final dir: %w", err)
-	}
-
-	// Copy contents from install directory to final location
-	if err := copyDir(depInstallDir, finalDir); err != nil {
-		return fmt.Errorf("failed to copy to final location: %w", err)
-	}
-
-	// For tools, add bin directory to exec paths
-	if dep.RecipeType != "library" {
-		binDir := filepath.Join(finalDir, "bin")
-		if _, err := os.Stat(binDir); err == nil {
-			e.execPaths = append(e.execPaths, binDir)
-		}
-	}
-
-	e.getReporter().Log("✅ %s@%s", dep.Tool, dep.Version)
 	return nil
 }
 

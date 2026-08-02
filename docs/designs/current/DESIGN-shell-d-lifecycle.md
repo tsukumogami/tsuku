@@ -190,7 +190,10 @@ Championed as a strict manifest gate, C would have silently broken three writers
 produce shell.d files without recording a cleanup action: `cmd/tsuku/plan_install.go`,
 `Executor.installSingleDependency` (which builds a throwaway execution context whose
 cleanup actions are discarded), and `cmd/tsuku/install_lib.go` (which never collects
-them). Excluding only *recorded-but-inactive* files leaves every unrecorded file behaving
+them). The first two have since been fixed — `plan_install.go` in this change, the
+dependency path in issue #2462 — and `install_lib.go` remains, which is why the rule
+stays as narrow as it is written here. Excluding only *recorded-but-inactive* files
+leaves every unrecorded file behaving
 exactly as it does on `main`, keeps the parameter optional so that passing nothing means
 excluding nothing, and still fixes the reproduction — because after the rename, v1's and
 v2's files are distinct paths and only the active one is in the active set.
@@ -460,6 +463,10 @@ fixed in the same change.
 - **`Executor.installSingleDependency`** runs every step inline with no phase filter, an
   empty `ToolInstallDir`, and a discarded cleanup slice. It fails loudly for
   `source_command` and silently orphans files for `source_file`; separate issue.
+  *Resolved in issue #2462: the dependency path now filters by phase, populates
+  `ToolInstallDir` before post-install steps run, and records its cleanup actions
+  against a state entry of the dependency's own. The narrowness of the exclusion rule
+  is unaffected — two unrecorded writers remain.*
 - **The already-installed short-circuit** returns before running any steps and `--force`
   does not bypass it, so an existing install never picks up a fix. `tsuku verify`
   recommends a `--reinstall` flag that does not exist; separate issue.

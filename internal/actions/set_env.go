@@ -122,14 +122,13 @@ func (a *SetEnvAction) Execute(ctx *ExecutionContext, params map[string]interfac
 	}
 
 	if ctx.ToolInstallDir == "" {
-		// Reached whenever the step runs outside the post-install phase: a
-		// recipe that overrode the phase, or a step-execution path with no
-		// phases at all (Executor.installSingleDependency runs every step of a
-		// dependency recipe inline). Failing loudly beats writing an export that
-		// points nowhere.
+		// Reached when the step runs outside the post-install phase, which in
+		// practice means a recipe overrode the phase. Both install paths --
+		// the top-level one and Executor.installSingleDependency -- populate
+		// ToolInstallDir before they run post-install steps. Failing loudly
+		// beats writing an export that points nowhere.
 		return fmt.Errorf("set_env ran outside the post-install phase, so the tool's final " +
-			"install directory is not known yet. Remove any 'phase' override from the step; " +
-			"note that a recipe installed as another tool's dependency cannot use set_env")
+			"install directory is not known yet. Remove any 'phase' override from the step")
 	}
 
 	target, err := envTargetName(ctx)

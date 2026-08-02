@@ -41,6 +41,11 @@ only ever produce a broken export.
 Leave `phase` off unless you need `post-install`. Setting it to `"install"`
 explicitly is redundant everywhere it is legal.
 
+Phases work the same way when the recipe is installed as another tool's
+dependency rather than being asked for directly. See
+[Post-Install Steps in a Dependency Recipe](dependencies-reference.md#post-install-steps-in-a-dependency-recipe)
+for what a dependency's post-install steps may write and who owns the result.
+
 ---
 
 ## Download and Archive Composites
