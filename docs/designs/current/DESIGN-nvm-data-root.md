@@ -558,9 +558,9 @@ directory it can name in `doctor` output and size reporting.
 - **`rm -rf $TSUKU_HOME` is now destructive to user data, and there is no code-level
   fix.** No `tsuku uninstall` command exists, which is exactly why the folk wisdom exists.
   This is the strongest surviving argument against the choice, and it is now sharper
-  because there is no `--purge` to point at. It gets a documentation step in the
-  implementation list rather than a promise, and a real uninstall command that warns is a
-  follow-up outside this design.
+  because there is no `--purge` to point at. It gets a documentation step and a
+  BREAKING CHANGE note in the commit body rather than a promise. Seeing, sizing and
+  reclaiming tool data — and what "reset tsuku" should mean now — is tracked in #2477.
 - **`make clean` destroys a contributor's dogfooded data root,** since dev builds default
   `TSUKU_HOME` to `.tsuku-dev`. Contributor-facing; worth a note in CONTRIBUTING.
 - **Nobody's existing Node installs are moved for them.** The next `tsuku update nvm`

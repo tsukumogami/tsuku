@@ -39,8 +39,10 @@ directory yourself:
 rm -rf "$TSUKU_HOME/data/nvm"
 ```
 
-There is no `tsuku` command that does this for you. Reinstalling nvm later will find the
-directory still there and pick up where you left off.
+There is no `tsuku` command that does this for you, and nothing reports that the
+directory is there or how large it has grown. That gap is tracked in issue #2477.
+Reinstalling nvm later will find the directory still there and pick up where you left
+off.
 
 ## If you installed nvm before this existed
 
@@ -91,3 +93,6 @@ This used to be a safe way to start over. It is not any more: `$TSUKU_HOME/data/
 things you cannot get back without re-downloading and re-installing them. Remove
 `$TSUKU_HOME/tools`, `$TSUKU_HOME/bin`, and `$TSUKU_HOME/state.json` instead if you want
 a clean slate while keeping what your tools are holding for you.
+
+There is no `tsuku uninstall` that would do this for you and tell you what it is about to
+destroy. That, and the absence of any way to see or reclaim tool data, is issue #2477.
