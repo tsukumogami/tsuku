@@ -593,3 +593,336 @@ adopt — `NVM_DIR` at a stable data root with two compat symlinks, versus symli
 both files in and letting nvm.sh self-locate with no `set_env` at all — closely
 followed by how to migrate existing users' Node installs out of the versioned tool
 directory without reproducing the very data loss issue #2464 is about.
+
+---
+
+# Round 1 Follow-Up: Empirical Verification
+
+Three decision-blocking questions, answered by running nvm rather than reading it.
+
+**Sandbox.** Two *real* release tarballs extracted the way tsuku's
+`download_archive` (`strip_dirs = 1`, `install_mode = "directory"`) would leave them:
+
+- `$W/prog` — nvm **v0.40.6** (`nvm.sh` md5 `31e19c75…`, `nvm-exec` md5 `b36045c7…`)
+- `$W/prog2` — nvm **v0.40.3** (`nvm.sh` md5 `db681a1c…`, `nvm-exec` md5 `aca21638…`)
+
+Both `nvm.sh` *and* `nvm-exec` genuinely differ between the two releases, so the
+upgrade test in Q3 swaps real content, not identical bytes. Every shell runs under
+`env -i HOME=… PATH=…` so nothing leaks in from my environment. The host has a system
+Node v26.5.1 on `PATH`, which is why `nvm ls` always shows a `system` entry.
+
+---
+
+## Q1. Does nvm create `$NVM_DIR` when it does not exist? — **YES, unconditionally, including missing parents**
+
+### Q1a — deeply nested, no parent exists at all
+
+`NVM_DIR=$W/q1a/deeply/nested/nvm` with `$W/q1a` itself absent (three missing levels):
+
+```
+exists before? no
+source rc=0
+install rc=0
+->     v22.23.2 *
+         system * (-> v26.5.1)
+default -> 22 (-> v22.23.2 *)
+ls rc=0
+v22.23.2
+node rc=0
+```
+
+Resulting tree — nvm built the entire path itself:
+
+```
+q1a/deeply/nested/nvm/{.cache/bin, alias/lts, versions/node}
+```
+
+### Q1b — root exists but is empty
+
+`install rc=0`, `node -v` → `v22.23.2`, and the root gained exactly `alias .cache
+versions`. No complaint about the missing subdirectories.
+
+### Q1c — does a *non-install* write command also create it?
+
+`nvm alias myalias 22` against a nonexistent `$W/q1c/nvm`:
+
+```
+! WARNING: Version '22' does not exist.
+myalias -> 22 (-> N/A)
+alias rc=0
+created? yes
+q1c/nvm/alias/{lts, myalias}
+```
+
+So it is not an `nvm install` special case — any write path creates the root.
+
+### Why
+
+Every directory creation in nvm.sh is `mkdir -p`, and `-p` builds missing parents:
+`mkdir -p "${VERSION_PATH}"` (master:2430, 2449, 2457), `mkdir -p
+"$(nvm_alias_path)/lts"` (master:1850), `mkdir -p "${NVM_ALIAS_DIR}"` (master:4753),
+`mkdir -p "${TMPDIR}"` for cache tmpdirs (master:2419, 2907), and `mkdir -p
+"${LOCK_ROOT}"` (master:3261). All of those paths are `$NVM_DIR`-rooted, so the first
+one to run materializes `$NVM_DIR` and everything above it.
+
+Note this is nvm.sh behavior and is the **opposite** of `install.sh`, which *refuses*
+to create a non-default `$NVM_DIR` (install.sh:413-415, recorded in the main findings).
+tsuku extracts the tarball itself and never runs install.sh, so nvm.sh's permissive
+behavior is the one that governs.
+
+### Failure mode when the parent is not writable (Q1d)
+
+`$W/q1d/ro` at mode 500, `NVM_DIR=$W/q1d/ro/nvm`:
+
+```
+Binary download failed, trying source.
+Detected that you have 32 CPU core(s)
+Running with 31 threads to speed up the build
+mkdir: cannot create directory '.../q1d/ro/nvm': Permission denied
+creating directory .../q1d/ro/nvm/.cache/src/node-v22.23.2/files failed
+install rc=1
+```
+
+It fails correctly (`rc=1`) but the diagnostics are bad: nvm reports the *binary
+download* as failed, starts a **from-source build** on 31 threads, and only then dies
+on the same `mkdir`. A user hitting a permissions problem on the data root gets a
+message about compiling Node.
+
+### Decision impact
+
+**tsuku does not need a directory-creating action.** No new action, no registry entry,
+no plan-evaluability entry, no preflight, no tests. Pointing `NVM_DIR` at a path that
+does not exist is completely safe — nvm materializes it on first write. The only
+requirement is that the path be *creatable*, i.e. some ancestor is writable. Since the
+data root would live under `$TSUKU_HOME`, which tsuku already owns and creates, that
+holds by construction.
+
+One caveat worth a line in the design: because nvm creates the root lazily on first
+write, a freshly-installed nvm has **no data directory on disk at all** until the user
+runs `nvm install`. Anything that reasons about "is nvm's data root present" (an
+uninstall path, a `tsuku doctor` check, GC bookkeeping) must treat absence as normal
+rather than as corruption.
+
+---
+
+## Q2. Two-symlink shape, nvm.sh sourced from a third-location copy — **YES, everything works**
+
+### Layout (exactly what tsuku would produce)
+
+```
+$W/prog/                       # the versioned tool dir, $TSUKU_HOME/tools/nvm-0.40.6/
+$W/data/nvm.sh   -> $W/prog/nvm.sh      (symlink)
+$W/data/nvm-exec -> $W/prog/nvm-exec    (symlink)
+$W/shelld/00-env-nvm@0.40.6.bash        # set_env output:  export NVM_DIR=$W/data
+$W/shelld/nvm@0.40.6.bash               # install_shell_init output: a COPY of nvm.sh, mode 0600
+```
+
+The test shell sources `$W/shelld/*.bash` in sort order — the same thing a tsuku
+login shell does — so `NVM_DIR` is exported first and nvm.sh runs **from the copy at a
+third path**, neither `$PROG` nor `$DATA`.
+
+### Results — every command rc=0
+
+```
+NVM_DIR=/…/fu-1324137/data
+nvm is a: function
+nvm --version                rc=0   | 0.40.6
+nvm install 22               rc=0   | Local cache found: ${NVM_DIR}/.cache/bin/…  Checksums matched!
+nvm alias default 22         rc=0   | default -> 22 (-> v22.23.2 *)
+nvm ls                       rc=0   | v22.23.2 * / system * / default -> 22 (-> v22.23.2 *) …
+nvm which 22                 rc=0   | /…/data/versions/node/v22.23.2/bin/node
+nvm exec 22 node -v          rc=0   | Running node v22.23.2 (npm v10.9.8)  v22.23.2
+nvm run 22 -e ...            rc=0   | Running node v22.23.2 (npm v10.9.8)  run-ok
+nvm use default              rc=0   | Now using node v22.23.2 (npm v10.9.8)
+npm -v                       rc=0   | 11.17.0
+nvm use system               rc=0   | Now using system version of node: v26.5.1
+nvm deactivate               rc=0   |
+```
+
+**`nvm exec` and `nvm run` both return 0.** That is the specific thing asked about, and
+it works because `$DATA/nvm-exec` exists and, on being invoked, self-locates to
+`$DATA` and finds the `$DATA/nvm.sh` symlink next to it. The nvm.sh that the
+interactive shell sourced (the shell.d copy) is irrelevant to `nvm-exec` — it
+re-sources nvm.sh in a fresh bash regardless.
+
+*Harness caveat, so the table is not misread:* my `t()` helper ran each command inside
+a command-substitution subshell, so `nvm use default`'s `PATH` export did not survive
+into the next row — that is why the `node -v` row reports the system v26.5.1. It is a
+test artifact, not a finding. The fresh-shell run below is the real check.
+
+### Q2b — fresh shell, nothing installed in it, `nvm use default`
+
+```
+NVM_DIR=/…/fu-1324137/data
+Now using node v22.23.2 (npm v10.9.8)
+use default rc=0
+v22.23.2                 node rc=0
+Running node v22.23.2 (npm v10.9.8)
+v22.23.2                 exec rc=0
+Running node v22.23.2 (npm v10.9.8)
+v22.23.2                 run rc=0
+```
+
+A brand-new shell picks up `NVM_DIR` from `00-env-…`, auto-uses the default alias,
+`node -v` resolves to the nvm-managed v22.23.2, and `exec`/`run` work. The shape is
+sound end to end.
+
+---
+
+## Q3. Upgrade and migration
+
+### Q3a — swap the program underneath the data: **YES, data fully survives**
+
+Repointed **both** symlinks from `$W/prog` (v0.40.6) to `$W/prog2` (v0.40.3), deleted
+the old version-keyed shell.d fragments and wrote new ones (`nvm@0.40.3.bash`,
+`00-env-nvm@0.40.3.bash`) — i.e. precisely what a tsuku upgrade plus its shell.d
+cleanup does. `$W/data` was not touched.
+
+```
+=== BEFORE (program v0.40.6) ===          === AFTER swap to v0.40.3 ===
+  nvm --version : 0.40.6                    nvm --version : 0.40.3
+  nvm ls        : ->v22.23.2* system*       nvm ls        : ->v22.23.2* system*
+  default alias : default -> 22 (-> v22.23.2 *)   default alias : default -> 22 (-> v22.23.2 *)
+  nvm exec rc   : 0                         nvm exec rc   : 0
+  nvm run  rc   : 0                         nvm run  rc   : 0
+  use default   : v22.23.2                  use default   : v22.23.2
+```
+
+Then `rm -rf $W/prog` — the actual GC event that issue #2464 is about:
+
+```
+=== after old tool dir deleted ===
+  nvm --version : 0.40.3
+  nvm ls        : ->v22.23.2* system*
+  default alias : default -> 22 (-> v22.23.2 *)
+  nvm exec rc   : 0
+  nvm run  rc   : 0
+  use default   : v22.23.2
+```
+
+Node 22 survives, the `default` alias survives, `exec`/`run` keep working, and
+`nvm --version` correctly reports the new program version. **Deleting the old
+versioned tool directory is a no-op once the symlinks are repointed** — which is
+exactly the property the issue needs.
+
+### Q3a negative — symlinks left dangling
+
+If an upgrade GCs the old tool dir *without* repointing the symlinks:
+
+```
+nvm ls   : ->v22.23.2* system*          <- still fine
+nvm exec 22 node -v  ->  rc=127
+  …/shelld/nvm@0.40.3.bash: line 4083: …/data/nvm-exec: No such file or directory
+nvm run  20          ->  rc=127
+nvm ls               ->  rc=0
+nvm install 20       ->  rc=0
+```
+
+(Clean rc measured separately with `out=$(nvm exec …); echo $?`.)
+
+So the failure is *partial and quiet*: install, ls, use, which, alias all keep
+working; only `exec` and `run` break, with a 127 and a bash "No such file" line.
+**The two symlinks are load-bearing upgrade state.** Repointing them is not an
+optional polish step, and because the breakage does not surface in the common
+commands, an upgrade that forgets it would very plausibly ship unnoticed. The design
+should make repointing part of the install action itself rather than a separate step,
+and the test suite needs an `nvm exec` assertion *after* a simulated upgrade — not
+just after a fresh install.
+
+### Q3b — migration: **YES, a plain `mv` is sufficient; nothing embeds the old path**
+
+Setup under `OLD=$W/old`: node v22.23.2, `default` alias, plus two global npm
+packages — `cowsay` (pure JS) and `esbuild` (ships a **native binary**, the harder
+case).
+
+**Pre-move inspection for embedded absolute paths:**
+
+```
+$ ls -l $OLD/versions/node/v22.23.2/bin/cowsay
+  … bin/cowsay -> ../lib/node_modules/cowsay/cli.js     <- RELATIVE symlink
+$ head -1 $(readlink -f …/bin/cowsay)
+  #!/usr/bin/env node                                    <- relocatable shebang
+$ cat $OLD/versions/node/v22.23.2/etc/npmrc
+  (no etc/npmrc)
+$ grep -rIl -- "$OLD" $OLD/versions/node/v22.23.2 | wc -l
+  0                                                      <- ZERO files embed the old root
+```
+
+npm's own config is *computed at runtime* from node's location, not stored:
+`npm config get prefix` → `$OLD/versions/node/v22.23.2`, `globalconfig` →
+`$OLD/versions/node/v22.23.2/etc/npmrc` (a file that does not exist), `cache` →
+`$HOME/.npm` (outside `$NVM_DIR` entirely).
+
+**The migration** — `mv $OLD/versions $OLD/alias $DATA3/`, add the two program
+symlinks, point `NVM_DIR=$DATA3`:
+
+```
+nvm ls        : ->v22.23.2* system*
+default alias : default -> 22 (-> v22.23.2 *)
+nvm which 22  : /…/data3/versions/node/v22.23.2/bin/node
+use default rc=0
+node -v       : v22.23.2
+npm -v        : 10.9.8
+which cowsay  : /…/data3/versions/node/v22.23.2/bin/cowsay
+cowsay rc     : 0
+esbuild rc    : 0
+esbuild ver   : 0.28.1
+npm prefix    : /…/data3/versions/node/v22.23.2      <- recomputed to the NEW root
+npm ls -g     : +-- cowsay@1.6.0  +-- esbuild@0.28.1  `-- npm@10.9.8
+nvm exec rc   : 0
+nvm run rc    : 0
+```
+
+Post-move residual check: `grep -rIl -- "$OLD" $DATA3 | wc -l` → **0**.
+
+**Nothing breaks.** The pure-JS global, the native-binary global, npm's global package
+list, the default alias, and `exec`/`run` all work. Node installs are genuinely
+location-independent.
+
+**One thing the migration must not forget:** I deliberately moved only `versions/` and
+`alias/`, leaving `.cache/` behind. nvm silently recreated it and re-downloaded on the
+next install — harmless, but it wastes bandwidth. The complete move list is
+`versions/`, `alias/`, `.cache/`, plus `default-packages` and `current` when they
+exist. A safer formulation for the design: move *everything* under the old root except
+the extracted program files, rather than enumerating known data paths — that way a
+future nvm release adding a new data path does not silently get dropped.
+
+---
+
+## Follow-Up Implications
+
+The three answers collapse a lot of the design space:
+
+**No new tsuku action is needed.** Q1 removes the directory-creation work entirely —
+action, registry entry, plan-evaluability entry, preflight, tests. `set_env NVM_DIR`
+pointed at a path that does not exist yet is sufficient and safe.
+
+**The shape is confirmed, and it is the two-symlink one.** Q2 shows the full
+tsuku-shaped layout — copy in shell.d, symlinks in the data root, `NVM_DIR` exported
+by a `00-env-` fragment — works for every command including `exec` and `run`. The
+alternative from the main findings (no `set_env`, let nvm.sh self-locate) also works,
+but Q2 proves the shape that requires the *least* change to the current recipe, and
+that shape keeps `NVM_DIR` explicit rather than implicit. I would take it.
+
+**The GC problem is genuinely solved by this, not just moved.** Q3a's `rm -rf $PROG`
+after repointing is the exact event that destroys user data today, and it becomes a
+no-op.
+
+**Migration is low-risk and should be done automatically.** Q3b found zero embedded
+absolute paths across a native-binary package, so a `mv` is safe. Combined with Q1
+(nvm creates whatever is missing), a migration step is: create nothing, move the old
+root's data subtrees, repoint. No fallback, no user prompt, no "run this command
+yourself" notice needed.
+
+**The one thing that can silently regress is `nvm exec` after an upgrade.** Everything
+else fails loudly or not at all. That deserves a dedicated regression test that
+upgrades and *then* runs `nvm exec`.
+
+## Follow-Up Open Questions
+
+1. Should `bash_completion` become a third symlink? It is free now that a symlink
+   mechanism exists, and it only reads `$NVM_DIR/alias`. Still scope creep for #2464.
+2. What happens on `tsuku uninstall nvm` — is the data root removed, kept, or
+   prompted? Q1 shows it may not exist at all, so "kept" is the low-surprise default.
+3. Does anything else in tsuku need to know the data root exists (GC bookkeeping,
+   `tsuku doctor`, disk-usage reporting)? Not investigated.
