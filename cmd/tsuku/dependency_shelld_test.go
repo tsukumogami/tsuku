@@ -429,3 +429,77 @@ func TestDependencyShellD_HonoursNoShellInit(t *testing.T) {
 		}
 	}
 }
+
+// TestDependencyShellD_RecordedWhenTheToolItselfFails covers the partial
+// install: the dependency succeeded and is on disk, then the tool that wanted it
+// failed. The dependency's files stay behind either way, so not recording them
+// because the install as a whole failed would leave exactly the orphan this path
+// is being fixed to stop producing -- and an orphan no command can reach, since
+// `tsuku remove` resolves through state.
+func TestDependencyShellD_RecordedWhenTheToolItselfFails(t *testing.T) {
+	h := newDepHarness(t)
+
+	rec := &recipe.Recipe{Metadata: recipe.MetadataSection{Name: depParentTool, Type: "tool"}}
+	exec, err := executor.NewWithVersion(rec, depParentVersion)
+	if err != nil {
+		t.Fatalf("NewWithVersion() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	exec.SetToolsDir(h.cfg.ToolsDir)
+	exec.SetLibsDir(h.cfg.LibsDir)
+	exec.SetCurrentDir(h.cfg.CurrentDir)
+	exec.SetSkipCacheSecurityChecks(true)
+
+	plan := &executor.InstallationPlan{
+		FormatVersion: executor.PlanFormatVersion,
+		Tool:          depParentTool,
+		Version:       depParentVersion,
+		Platform:      executor.Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
+		Dependencies: []executor.DependencyPlan{{
+			Tool:       depTool,
+			Version:    depVersion,
+			RecipeType: "tool",
+			Steps: []executor.ResolvedStep{writeInitBinaryStep(), {
+				Action:    "set_env",
+				Evaluable: true,
+				Params: map[string]interface{}{
+					"vars": []interface{}{
+						map[string]interface{}{"name": depInitMarker, "value": "{install_dir}"},
+					},
+				},
+			}},
+		}},
+		// The tool's own step fails after its dependency is already installed.
+		Steps: []executor.ResolvedStep{{
+			Action:    "run_command",
+			Evaluable: true,
+			Params:    map[string]interface{}{"command": "exit 1"},
+		}},
+	}
+
+	if err := exec.ExecutePlan(context.Background(), plan); err == nil {
+		t.Fatal("ExecutePlan() succeeded; the scenario needs the tool's own step to fail")
+	}
+
+	deps := exec.GetDependencyInstalls()
+	if len(deps) != 1 || len(deps[0].CleanupActions) == 0 {
+		t.Fatalf("GetDependencyInstalls() = %+v, want the dependency that finished before the failure", deps)
+	}
+	recordDependencyInstalls(h.cfg, h.mgr, depParentTool, deps, func(format string, args ...interface{}) {
+		t.Errorf("unexpected warning: "+format, args...)
+	})
+
+	// The dependency is on disk, so it has to be reachable by name.
+	if _, err := os.Stat(h.cfg.ToolDir(depTool, depVersion)); err != nil {
+		t.Fatalf("the dependency is not on disk, so the scenario is not what it claims: %v", err)
+	}
+	if got := h.fragmentPathsFor(depTool, depVersion); len(got) == 0 {
+		t.Error("the failed install left the dependency's fragment unrecorded and unreachable")
+	}
+
+	if err := h.mgr.RemoveAllVersions(lifecycleCtx(), depTool); err != nil {
+		t.Fatalf("RemoveAllVersions(%s) error = %v", depTool, err)
+	}
+	h.assertShellDEmpty()
+}

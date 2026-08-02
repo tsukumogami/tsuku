@@ -78,8 +78,17 @@ func runPlanBasedInstall(planPath, toolName string) error {
 
 	printInfof("Installing %s@%s from plan...\n", effectiveToolName, plan.Version)
 
+	warnf := func(format string, args ...interface{}) {
+		printInfof("Warning: "+format+"\n", args...)
+	}
+
 	// Execute the plan
 	if err := exec.ExecutePlan(globalCtx, plan); err != nil {
+		// Dependencies that finished before the failure are on disk and stay
+		// there. Recording them is what makes them removable; skipping the
+		// record because the tool failed would leave exactly the orphan this
+		// path is being fixed to stop producing.
+		recordDependencyInstalls(cfg, mgr, effectiveToolName, exec.GetDependencyInstalls(), warnf)
 		// Handle ChecksumMismatchError specially - it has a user-friendly message
 		var checksumErr *executor.ChecksumMismatchError
 		if errors.As(err, &checksumErr) {
@@ -121,9 +130,6 @@ func runPlanBasedInstall(planPath, toolName string) error {
 
 		// Record the cleanup actions post-install produced and refresh the
 		// shell caches they touched.
-		warnf := func(format string, args ...interface{}) {
-			printInfof("Warning: "+format+"\n", args...)
-		}
 		finishPostInstall(cfg, mgr, effectiveToolName, plan.Version, exec.GetCleanupActions(), warnf)
 
 		// Every dependency in an external plan is installed by the executor

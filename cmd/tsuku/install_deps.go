@@ -520,6 +520,11 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 	// Execute the plan
 	if err := exec.ExecutePlan(globalCtx, plan); err != nil {
 		reporter.Log("❌ %s@%s", toolName, planVersion)
+		// Dependencies that finished before the failure are on disk and stay
+		// there. Recording them is what makes them removable; skipping the
+		// record because the tool failed would leave exactly the orphan this
+		// path is being fixed to stop producing.
+		recordDependencyInstalls(cfg, mgr, toolName, exec.GetDependencyInstalls(), reporter.Warn)
 		// Handle ChecksumMismatchError specially - it has a user-friendly message
 		var checksumErr *executor.ChecksumMismatchError
 		if errors.As(err, &checksumErr) {
