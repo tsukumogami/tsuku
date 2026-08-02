@@ -373,15 +373,14 @@ func (e *Executor) GetCleanupActions() []actions.CleanupAction {
 // DependencyInstall describes one dependency this executor installed itself,
 // through installSingleDependency rather than through the normal install path.
 //
-// The caller needs all four fields to record the install: the tool and version
-// name the state entry, RecipeType says whether the payload landed in
+// The caller needs all four to record the install: the tool and version name
+// the state entry, RecipeType says whether the payload landed in
 // $TSUKU_HOME/tools or $TSUKU_HOME/libs, and CleanupActions lists what the
 // dependency's steps wrote outside its own install directory.
 type DependencyInstall struct {
 	Tool           string
 	Version        string
 	RecipeType     string
-	InstallDir     string
 	CleanupActions []actions.CleanupAction
 }
 
@@ -957,7 +956,6 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		Tool:           dep.Tool,
 		Version:        dep.Version,
 		RecipeType:     dep.RecipeType,
-		InstallDir:     finalDir,
 		CleanupActions: execCtx.CleanupActions,
 	})
 
