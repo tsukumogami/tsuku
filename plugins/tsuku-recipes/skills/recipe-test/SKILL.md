@@ -135,6 +135,8 @@ export TSUKU_HOME=$(mktemp -d)
 
 **"patchelf not found" warning.** A dependency is missing and RPATH won't be fixed. The recipe needs patchelf as a dependency, or the tool needs static linking.
 
+**"patchelf cannot run on this system" during relocation.** Different problem: patchelf installed but the host's glibc is older than the one its Homebrew bottle was built against, so nothing that needs relocation can install. Install patchelf with the system package manager -- tsuku prefers a working one over its own -- or test on a newer base image.
+
 **Golden file mismatch in CI.** Regenerate locally and diff. Use `--pin-from` to test determinism. If the change is intentional, regenerate via the Actions workflow with `commit_back` enabled.
 
 **Family-specific failures (passes on Debian, fails on Alpine).** Usually a glibc/musl difference or missing package. Test all five families before submitting. Check that family-specific install actions (`apt_install`, `apk_install`, etc.) cover every target.

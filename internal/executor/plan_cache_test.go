@@ -2,6 +2,7 @@ package executor
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -101,8 +102,11 @@ func TestValidateCachedPlan(t *testing.T) {
 				Version:       "14.1.0",
 				Platform:      Platform{OS: "linux", Arch: "amd64"},
 			},
-			key:     validKey,
-			wantErr: "plan format version 1 is outdated (current: 5)",
+			key: validKey,
+			// Built from the constant so a format bump doesn't need an
+			// edit here — TestFormatVersionConstant is the deliberate
+			// guard on the version number itself.
+			wantErr: fmt.Sprintf("plan format version 1 is outdated (current: %d)", PlanFormatVersion),
 		},
 		{
 			name: "platform OS mismatch",

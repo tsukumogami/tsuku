@@ -6,9 +6,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/version"
@@ -72,8 +74,13 @@ func (a *HomebrewRelocateAction) Execute(ctx *ExecutionContext, params map[strin
 		cellarPath = filepath.Dir(installPath)
 	}
 
+	// One patchelf lookup for the whole action. Both the per-binary pass below
+	// and the ELF chain walk further down share it, so patchelf is located and
+	// probed once per install rather than once per binary.
+	findPatchelf := newPatchelfFinder(a, ctx)
+
 	// Relocate placeholders in files
-	if err := a.relocatePlaceholders(ctx, installPath, cellarPath, formula, reporter); err != nil {
+	if err := a.relocatePlaceholders(ctx, installPath, cellarPath, formula, findPatchelf, reporter); err != nil {
 		return fmt.Errorf("failed to relocate placeholders: %w", err)
 	}
 
@@ -118,7 +125,7 @@ func (a *HomebrewRelocateAction) Execute(ctx *ExecutionContext, params map[strin
 	// relocatePlaceholders so the chain entries can be appended to the
 	// rpath that pass installed.
 	if runtime.GOOS == "linux" && (len(ctx.Dependencies.RuntimeDependencies) > 0 || len(scanResult.AutoInclude) > 0) {
-		if err := a.fixElfRpathChain(ctx, installPath, scanResult.AutoInclude, reporter); err != nil {
+		if err := a.fixElfRpathChain(ctx, installPath, scanResult.AutoInclude, findPatchelf, reporter); err != nil {
 			return fmt.Errorf("failed to fix ELF RPATH chain: %w", err)
 		}
 	}
@@ -220,7 +227,7 @@ func resolveInstallPath(ctx *ExecutionContext) string {
 // For binary files: use patchelf/install_name_tool to reset RPATH
 // prefixPath is used for @@HOMEBREW_PREFIX@@, cellarPath for @@HOMEBREW_CELLAR@@
 // formula is the Homebrew formula name (may differ from recipe name, e.g., curl vs libcurl)
-func (a *HomebrewRelocateAction) relocatePlaceholders(ctx *ExecutionContext, prefixPath, cellarPath, formula string, reporter progress.Reporter) error {
+func (a *HomebrewRelocateAction) relocatePlaceholders(ctx *ExecutionContext, prefixPath, cellarPath, formula string, findPatchelf patchelfFinder, reporter progress.Reporter) error {
 	dir := ctx.WorkDir
 	prefixReplacement := []byte(prefixPath)
 	cellarReplacement := []byte(cellarPath)
@@ -337,7 +344,7 @@ func (a *HomebrewRelocateAction) relocatePlaceholders(ctx *ExecutionContext, pre
 
 	// Fix RPATH on binary files using patchelf/install_name_tool
 	for _, binaryPath := range binariesToFix {
-		if err := a.fixBinaryRpath(ctx, binaryPath, prefixPath, reporter); err != nil {
+		if err := a.fixBinaryRpath(binaryPath, prefixPath, findPatchelf, reporter); err != nil {
 			return fmt.Errorf("failed to fix RPATH for %s: %w", binaryPath, err)
 		}
 	}
@@ -347,7 +354,7 @@ func (a *HomebrewRelocateAction) relocatePlaceholders(ctx *ExecutionContext, pre
 
 // fixBinaryRpath uses patchelf or install_name_tool to set a proper RPATH
 // This replaces the Homebrew placeholder RPATH with a working path
-func (a *HomebrewRelocateAction) fixBinaryRpath(ctx *ExecutionContext, binaryPath, installPath string, reporter progress.Reporter) error {
+func (a *HomebrewRelocateAction) fixBinaryRpath(binaryPath, installPath string, findPatchelf patchelfFinder, reporter progress.Reporter) error {
 	// Detect binary format
 	f, err := os.Open(binaryPath)
 	if err != nil {
@@ -363,7 +370,7 @@ func (a *HomebrewRelocateAction) fixBinaryRpath(ctx *ExecutionContext, binaryPat
 
 	// Check if it's an ELF binary
 	if bytes.Equal(magic, []byte{0x7f, 'E', 'L', 'F'}) {
-		return a.fixElfRpath(ctx, binaryPath, installPath, reporter)
+		return a.fixElfRpath(binaryPath, installPath, findPatchelf, reporter)
 	}
 
 	// Check if it's a Mach-O binary
@@ -380,44 +387,180 @@ func (a *HomebrewRelocateAction) fixBinaryRpath(ctx *ExecutionContext, binaryPat
 	return nil
 }
 
-// findPatchelf locates the patchelf binary by checking (in order):
+// patchelfFinder resolves a patchelf binary that can actually execute on this
+// host. It resolves on the first call and returns the same path (or the same
+// error) on every call after that, so a relocation pass that patches many
+// binaries searches for patchelf once rather than once per binary.
+type patchelfFinder func() (string, error)
+
+// newPatchelfFinder returns a patchelfFinder backed by a.findPatchelf(ctx).
+//
+// Resolution is deliberately lazy rather than done up front in Execute. The
+// binary list a relocation pass works from is produced by a content heuristic
+// (isBinaryFile), so it can hold files that are not ELF at all — compressed
+// man pages, static archives. Resolving eagerly whenever that list is
+// non-empty would fail bottles that install fine today because nothing in them
+// ever reaches patchelf. Deferring until the first genuine ELF dispatch keeps
+// that behavior intact.
+//
+// The memo lives in the closure rather than in a field on
+// HomebrewRelocateAction because the action is registered as a package-level
+// singleton, so a field would leak a resolved path across installs that have
+// different ExecPaths.
+func newPatchelfFinder(a *HomebrewRelocateAction, ctx *ExecutionContext) patchelfFinder {
+	var (
+		once sync.Once
+		path string
+		err  error
+	)
+	return func() (string, error) {
+		once.Do(func() { path, err = a.findPatchelf(ctx) })
+		return path, err
+	}
+}
+
+// glibcVersionPattern matches the dynamic loader's complaint about a missing
+// symbol version, e.g.
+//
+//	/lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.38' not found
+//
+// capturing the version the binary was built against.
+var glibcVersionPattern = regexp.MustCompile("version `GLIBC_([0-9][0-9.]*)' not found")
+
+// verifyPatchelfRunnable reports whether the patchelf at path can execute, by
+// running `patchelf --version` and inspecting the result.
+//
+// On glibc Linux tsuku installs patchelf from a Homebrew bottle, and Homebrew
+// builds its Linux bottles against a recent glibc. On a host whose C library is
+// older the bottle downloads, extracts, and installs without complaint, and
+// only fails when the dynamic loader is asked to run it. Probing here means the
+// install fails with that cause named, instead of surfacing the loader's raw
+// symbol-version message from whichever patchelf invocation happened to run
+// first.
+func verifyPatchelfRunnable(path string) error {
+	output, err := exec.Command(path, "--version").CombinedOutput()
+	if err == nil {
+		return nil
+	}
+
+	text := strings.TrimSpace(string(output))
+
+	if m := glibcVersionPattern.FindStringSubmatch(text); m != nil {
+		return fmt.Errorf("patchelf at %s needs glibc %s, which is newer than this "+
+			"system's C library, so it cannot run. Install patchelf with your system "+
+			"package manager (for example 'apt install patchelf') and tsuku will use "+
+			"that one instead. Loader reported: %s", path, m[1], text)
+	}
+
+	if text == "" {
+		return fmt.Errorf("patchelf at %s cannot run on this system: %w", path, err)
+	}
+	return fmt.Errorf("patchelf at %s cannot run on this system: %s: %w", path, text, err)
+}
+
+// findPatchelf locates a runnable patchelf binary, checking (in order):
 //  1. ctx.ExecPaths (dependency bin dirs added during plan execution)
 //  2. System PATH
 //  3. $TSUKU_HOME/tools/patchelf-*/bin/patchelf (glob for any installed version)
 //  4. $TSUKU_HOME/tools/current/patchelf (current symlink)
 //
-// Returns the path to patchelf, or an error if not found anywhere.
+// Each candidate is executed (`patchelf --version`) and skipped if it cannot
+// run, so a host where tsuku's own bottled patchelf is unusable still installs
+// successfully when a working patchelf exists elsewhere — typically one from
+// the system package manager. Note that this makes the function spawn
+// processes, which a name beginning "find" does not suggest.
+//
+// Relocation passes must not call this directly: go through the patchelfFinder
+// that Execute builds, or every binary in the bottle re-runs the whole search.
+//
+// Returns the path to the first runnable candidate. When candidates were found
+// but none run, it reports why one of them failed rather than claiming patchelf
+// is missing. A tsuku-installed candidate's failure is preferred over a system
+// one's, since that is the copy the user can act on — telling someone whose
+// system patchelf just failed to install patchelf would be circular.
 func (a *HomebrewRelocateAction) findPatchelf(ctx *ExecutionContext) (string, error) {
+	// tsukuProvided distinguishes copies tsuku installed from whatever is on
+	// PATH; it only affects which failure gets reported.
+	type candidate struct {
+		path          string
+		tsukuProvided bool
+	}
+	var candidates []candidate
+
 	// 1. Check ExecPaths (dependency bin dirs from earlier plan steps)
 	for _, p := range ctx.ExecPaths {
-		candidate := filepath.Join(p, "patchelf")
-		if _, err := os.Stat(candidate); err == nil {
-			return candidate, nil
+		path := filepath.Join(p, "patchelf")
+		if _, err := os.Stat(path); err == nil {
+			candidates = append(candidates, candidate{path, true})
 		}
 	}
 
 	// 2. Check system PATH
 	if p, err := exec.LookPath("patchelf"); err == nil {
-		return p, nil
+		candidates = append(candidates, candidate{p, false})
 	}
 
 	// 3-4. Check $TSUKU_HOME tools directory (glob and current symlink)
-	if p, err := a.findPatchelfInToolsDir(ctx.ToolsDir, ctx.CurrentDir); err == nil {
-		return p, nil
+	for _, p := range a.patchelfCandidatesInToolsDir(ctx.ToolsDir, ctx.CurrentDir) {
+		candidates = append(candidates, candidate{p, true})
+	}
+
+	// The same binary can surface more than once — an ExecPaths entry that is
+	// also on PATH, or a versioned dir that tools/current points at — and
+	// probing it twice would spawn a process to learn what we already know.
+	probed := make(map[string]bool, len(candidates))
+
+	var firstFailure, firstTsukuFailure error
+	for _, c := range candidates {
+		if probed[c.path] {
+			continue
+		}
+		probed[c.path] = true
+
+		err := verifyPatchelfRunnable(c.path)
+		if err == nil {
+			return c.path, nil
+		}
+		if firstFailure == nil {
+			firstFailure = err
+		}
+		if c.tsukuProvided && firstTsukuFailure == nil {
+			firstTsukuFailure = err
+		}
+	}
+
+	if firstTsukuFailure != nil {
+		return "", firstTsukuFailure
+	}
+	if firstFailure != nil {
+		return "", firstFailure
 	}
 
 	return "", fmt.Errorf("patchelf not found: checked ExecPaths, system PATH, %s/patchelf-*/bin/, and %s/", ctx.ToolsDir, ctx.CurrentDir)
 }
 
-// findPatchelfInToolsDir searches for patchelf in the tsuku tools directory.
-// It first globs for versioned install dirs, then checks the current symlink dir.
-func (a *HomebrewRelocateAction) findPatchelfInToolsDir(toolsDir, currentDir string) (string, error) {
+// patchelfCandidatesInToolsDir returns every patchelf in the tsuku tools
+// directory, most-preferred first: the versioned install dirs in reverse glob
+// order, then the current symlink dir.
+//
+// It returns all of them rather than just the best one so findPatchelf can
+// probe each in turn. Keeping only the top match would let a single unrunnable
+// install mask a working one sitting beside it — which is exactly the
+// situation a glibc-mismatched patchelf creates.
+//
+// Reverse glob order approximates newest-first. The sort is lexicographic, so
+// it is only an approximation, but nothing rests on it: every candidate is
+// probed and the first runnable one wins.
+func (a *HomebrewRelocateAction) patchelfCandidatesInToolsDir(toolsDir, currentDir string) []string {
+	var candidates []string
+
 	// Glob $TSUKU_HOME/tools/patchelf-*/bin/patchelf
 	if toolsDir != "" {
 		matches, err := filepath.Glob(filepath.Join(toolsDir, "patchelf-*", "bin", "patchelf"))
-		if err == nil && len(matches) > 0 {
-			// Use the last match (highest version due to lexicographic sort)
-			return matches[len(matches)-1], nil
+		if err == nil {
+			for i := len(matches) - 1; i >= 0; i-- {
+				candidates = append(candidates, matches[i])
+			}
 		}
 	}
 
@@ -425,17 +568,17 @@ func (a *HomebrewRelocateAction) findPatchelfInToolsDir(toolsDir, currentDir str
 	if currentDir != "" {
 		candidate := filepath.Join(currentDir, "patchelf")
 		if _, err := os.Stat(candidate); err == nil {
-			return candidate, nil
+			candidates = append(candidates, candidate)
 		}
 	}
 
-	return "", fmt.Errorf("patchelf not found in tools directory")
+	return candidates
 }
 
 // fixElfRpath uses patchelf to set RPATH on Linux ELF binaries
-func (a *HomebrewRelocateAction) fixElfRpath(ctx *ExecutionContext, binaryPath, installPath string, reporter progress.Reporter) error {
+func (a *HomebrewRelocateAction) fixElfRpath(binaryPath, installPath string, findPatchelf patchelfFinder, reporter progress.Reporter) error {
 	// Find patchelf using multi-location discovery
-	patchelfPath, err := a.findPatchelf(ctx)
+	patchelfPath, err := findPatchelf()
 	if err != nil {
 		return fmt.Errorf("cannot fix RPATH for %s: %w", filepath.Base(binaryPath), err)
 	}
@@ -949,7 +1092,7 @@ func (a *HomebrewRelocateAction) addChainEntriesToMachO(
 // per-binary fixElfRpath pass that wipes stale HOMEBREW rpaths and sets
 // the $ORIGIN anchor), so the chain entries are appended to a clean
 // baseline rather than racing the wipe.
-func (a *HomebrewRelocateAction) fixElfRpathChain(ctx *ExecutionContext, installPath string, extra []chainEntry, reporter progress.Reporter) error {
+func (a *HomebrewRelocateAction) fixElfRpathChain(ctx *ExecutionContext, installPath string, extra []chainEntry, findPatchelf patchelfFinder, reporter progress.Reporter) error {
 	// Only run on Linux
 	if runtime.GOOS != "linux" {
 		return nil
@@ -996,7 +1139,7 @@ func (a *HomebrewRelocateAction) fixElfRpathChain(ctx *ExecutionContext, install
 	reporter.Log("   Chaining RPATHs for %d ELF file(s) with %d runtime dependency(ies)",
 		len(binaries), len(entries))
 
-	patchelfPath, err := a.findPatchelf(ctx)
+	patchelfPath, err := findPatchelf()
 	if err != nil {
 		// Without patchelf the chain cannot be applied; surface a clear error
 		// so the install fails loudly rather than producing under-linked

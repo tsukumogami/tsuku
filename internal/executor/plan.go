@@ -18,6 +18,11 @@ import (
 //   - Version 3: Nested dependencies for self-contained plans (introduced in #621)
 //   - Version 4: Removed recipe_hash field (cache uses content-based hashing) (#1585)
 //   - Version 5: Added ExitCode to PlanVerify for sandbox verification (#1942)
+//
+// PlanVerify.Additional (#2440) was added without a bump: it is additive
+// and omitempty, so a v5 plan written before it existed decodes with an
+// empty Additional and behaves exactly as it did. Bumping would have
+// invalidated every golden plan for a field no recipe uses yet.
 const PlanFormatVersion = 5
 
 // InstallationPlan represents a fully-resolved, deterministic specification
@@ -97,6 +102,20 @@ type PlanVerify struct {
 	Pattern  string   `json:"pattern,omitempty"`
 	Patterns []string `json:"patterns,omitempty"`
 	ExitCode *int     `json:"exit_code,omitempty"` // Expected exit code (default: 0)
+
+	// Additional carries the recipe's [[verify.additional]] entries so
+	// sandbox verification can run them. Without this the entries are
+	// dropped between recipe and plan and the checks they declare never
+	// run there.
+	Additional []PlanAdditionalVerify `json:"additional,omitempty"`
+}
+
+// PlanAdditionalVerify is one secondary verification command carried in
+// the plan. It mirrors recipe.AdditionalVerify: the command must exit 0
+// and Pattern must appear in its combined output.
+type PlanAdditionalVerify struct {
+	Command string `json:"command"`
+	Pattern string `json:"pattern"`
 }
 
 // Platform identifies the target operating system and architecture.

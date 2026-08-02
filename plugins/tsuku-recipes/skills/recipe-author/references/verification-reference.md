@@ -117,6 +117,29 @@ command = "blackd --version"
 pattern = "{version}"
 ```
 
+Additional checks are evaluated after the primary verify command passes, in the
+order they're declared, so a broken primary check is reported as itself rather
+than as a downstream failure. An entry passes when its command exits 0 and its
+`pattern` appears in the combined output. There's no `exit_code` override, so a
+command that exits non-zero fails verification.
+
+`{version}` is substituted in both `command` and `pattern`. `{install_dir}` is
+substituted in `command`; don't rely on it inside `pattern`, because sandbox
+verification resolves the install directory to a shell path that won't appear
+in the tool's output.
+
+Both `command` and `pattern` are required. A check with no pattern would only
+assert that the command exited 0 while reading like it asserts more, so
+validation rejects it.
+
+Library recipes can't use `additional`. Library verification loads the library
+and checks its dependencies rather than running commands, so an additional
+check there would never execute. Validation rejects it.
+
+Reach for `patterns` instead when one command's output contains several strings
+you need to match. `additional` is for the case where you need to run a
+different command.
+
 ---
 
 ## Common Patterns by Tool Type

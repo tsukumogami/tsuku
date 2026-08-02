@@ -8,6 +8,10 @@
 # Triggers:
 #   - workflow_dispatch: manually test a recipe by name
 #   - pull_request: auto-detect changed recipes in the PR
+#
+# The build job also fails the run if it would have tested nothing: if the
+# diff holds recipe files that detection missed, or if detected recipes
+# produce zero batches. Both used to pass green. See #2445.
 
 name: Test Recipe
 
@@ -19,6 +23,15 @@ on:
         required: true
         type: string
   pull_request:
+    # Adding a recipe location here is not enough, and nothing enforces the
+    # rest. The same location has to be added to the detect step's git
+    # pathspec and to the cross-check step's grep in the `build` job (search
+    # this file for ":(glob)"), and to the four `hashFiles` cache keys.
+    #
+    # The failure modes are asymmetric. Miss the detect pathspec and the
+    # cross-check step catches it. Miss this filter, or miss the cross-check's
+    # grep, and nothing reports anything at all -- the job either never starts
+    # or goes quiet about the new location. See #2445 for what that looks like.
     paths:
       - "recipes/**/*.toml"
       - "internal/recipe/recipes/**/*.toml"
@@ -95,10 +108,33 @@ jobs:
               exit 1
             fi
           else
-            # PR trigger: detect changed recipe files
-            CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- 'recipes/**/*.toml' 'internal/recipe/recipes/**/*.toml' || true)
+            # PR trigger: detect changed recipe files.
+            #
+            # `:(glob)` is git pathspec magic (gitglossary(7)) and it is
+            # load-bearing. By default git matches pathspecs with fnmatch,
+            # where `*` also matches `/` -- so `**/` degrades to "anything,
+            # then a slash" and a directory level becomes mandatory. Embedded
+            # recipes sit flat in internal/recipe/recipes/, so the unprefixed
+            # pattern matched none of them while registry recipes under
+            # recipes/<letter>/ still matched, which is why this went unnoticed
+            # while it disabled every platform lane for embedded recipes
+            # (#2445). With `:(glob)` git uses wildmatch, where `/**/` matches
+            # zero or more directories -- the semantics the `on: paths:` filter
+            # above already uses.
+            #
+            # To check a change here, this must print files:
+            #   git ls-files -- ':(glob)internal/recipe/recipes/**/*.toml'
+            # Drop the prefix and it prints nothing.
+            #
+            # core.quotePath=false because git otherwise C-quotes any path with
+            # a non-ASCII byte -- `"internal/recipe/recipes/t\303\251st.toml"`,
+            # quotes and all -- which is not a path anything downstream can open.
+            CHANGED=$(git -c core.quotePath=false diff --name-only --diff-filter=d origin/main...HEAD -- ':(glob)recipes/**/*.toml' ':(glob)internal/recipe/recipes/**/*.toml')
             if [ -z "$CHANGED" ]; then
-              echo "No recipe files changed in this PR."
+              # A real possibility, not necessarily a bug: this workflow also
+              # triggers on changes to itself. The cross-check step below is
+              # what decides whether finding nothing was legitimate.
+              echo "::notice::No recipe files changed in this PR -- no platform lanes will run."
               echo "recipes=[]" >> "$GITHUB_OUTPUT"
               echo "has_recipes=false" >> "$GITHUB_OUTPUT"
               exit 0
@@ -130,6 +166,63 @@ jobs:
           else
             echo "has_recipes=false" >> "$GITHUB_OUTPUT"
           fi
+
+      # A run that tests nothing looks exactly like a run that tested everything
+      # and found no problems: both are green. That is how the pathspec above
+      # stayed broken. This step re-derives the recipe list with a grep --
+      # deliberately a different matcher, so the two can disagree -- and fails
+      # the run when detect missed a recipe file the diff contains.
+      #
+      # Finding nothing is not itself an error: this workflow triggers on
+      # changes to its own file, so a PR that edits only this workflow really
+      # does change no recipes.
+      #
+      # This step cannot catch drift in the `on: paths:` filter -- nothing
+      # inside a job that never started can. See the note on that filter.
+      - name: Cross-check detect against the diff
+        if: github.event_name == 'pull_request'
+        env:
+          DETECTED_JSON: ${{ steps.detect.outputs.recipes }}
+        run: |
+          # Two statements, not one pipeline: a pipeline's exit status is its
+          # last command's, so a failing `git diff` inside one is invisible
+          # (the runner's default shell sets -e but not pipefail). The list
+          # would come out empty, which reads as "no recipes changed" -- the
+          # very thing this step exists to catch. Split like this, `set -e`
+          # fails the step on a git error.
+          #
+          # core.quotePath=false for the same reason as the detect step: a
+          # C-quoted path starts with a `"`, so the anchored grep below would
+          # miss it and this step would go quiet about a file detect mangled --
+          # the failure it exists to catch, through a door it wasn't watching.
+          ALL_CHANGED=$(git -c core.quotePath=false diff --name-only --diff-filter=d origin/main...HEAD)
+          IN_DIFF=$(printf '%s\n' "$ALL_CHANGED" \
+            | grep -E '^(recipes|internal/recipe/recipes)/.*\.toml$' | sort || true)
+
+          if [ -z "$IN_DIFF" ]; then
+            echo "No recipe files in this diff -- nothing for the platform lanes to test."
+            exit 0
+          fi
+
+          DETECTED=$(printf '%s' "$DETECTED_JSON" | jq -r '.[].path' | sort)
+
+          # Compare the sets, not just whether detect found something. A
+          # partial disagreement -- detect matching one location but not
+          # another -- is the likelier kind of drift, and leaves the recipes it
+          # missed untested on every platform.
+          MISSED=$(comm -23 <(printf '%s\n' "$IN_DIFF") <(printf '%s\n' "$DETECTED"))
+          if [ -n "$MISSED" ]; then
+            echo "::error::The detect step missed $(printf '%s\n' "$MISSED" | wc -l) recipe file(s) this PR changes."
+            printf '%s\n' "$MISSED" | sed 's/^/  /'
+            echo ""
+            echo "Those files would go untested on every platform while this run"
+            echo "reported success. The detect step's git pathspec and this step's"
+            echo "grep disagree about what counts as a recipe file; reconcile them,"
+            echo "and the 'on: paths:' filter at the top of this file, before merging."
+            exit 1
+          fi
+
+          echo "Detect matched all $(printf '%s\n' "$IN_DIFF" | wc -l) recipe file(s) in the diff."
 
       - name: Split recipes into batches
         id: batch
@@ -227,6 +320,24 @@ jobs:
 
           echo "Generated $DARWIN_BATCH_COUNT Darwin batch(es) of up to $DARWIN_BATCH_SIZE recipes"
 
+          # Batching is the second way this workflow can go green having tested
+          # nothing. The platform lanes gate on has_*_batches, not on
+          # has_recipes, so a recipe list that survives detection and then
+          # collapses to zero batches skips every lane just as quietly as an
+          # empty detection did. Recipes in, no batches out is always a bug.
+          if [ "$LINUX_BATCH_COUNT" -eq 0 ] || [ "$DARWIN_BATCH_COUNT" -eq 0 ]; then
+            RECIPE_COUNT=$(echo "$RECIPES" | jq 'length')
+            echo "::error::$RECIPE_COUNT recipe(s) were detected but batching produced $LINUX_BATCH_COUNT Linux and $DARWIN_BATCH_COUNT Darwin batch(es)."
+            echo "The platform lanes gate on the batch counts, not on has_recipes, so"
+            echo "this would skip every lane and report green. The cause is almost"
+            echo "certainly a zero batch size reaching jq: check .github/ci-batch-config.json"
+            echo 'for a size of 0, or an entry like {"max": 0, ...}. jq counts 0 as truthy,'
+            echo "so resolve_bs accepts it, and range(0; n; 0) then yields an empty list"
+            echo "without erroring. A missing ecosystem entry cannot cause this -- it"
+            echo "falls back to the default size."
+            exit 1
+          fi
+
   # Linux x86_64: test in sandbox containers for all five families.
   # Recipes are split into batches (one job per batch) and families run in parallel
   # per recipe. Each family gets its own TSUKU_HOME to avoid staging conflicts, but
@@ -256,6 +367,8 @@ jobs:
         uses: actions/cache@b7e8d49f17405cc70c1c120101943203c98d3a4b  # v5.0.3
         with:
           path: /tmp/tsuku-shared-downloads
+          # hashFiles uses Actions glob semantics, where `**` also matches zero
+          # directories, so this covers the flat embedded recipes too.
           key: test-recipe-downloads-linux-amd64-${{ hashFiles('recipes/**/*.toml', 'internal/recipe/recipes/**/*.toml') }}
           restore-keys: |
             test-recipe-downloads-linux-amd64-
@@ -426,6 +539,8 @@ jobs:
         uses: actions/cache@b7e8d49f17405cc70c1c120101943203c98d3a4b  # v5.0.3
         with:
           path: /tmp/tsuku-shared-downloads
+          # hashFiles uses Actions glob semantics, where `**` also matches zero
+          # directories, so this covers the flat embedded recipes too.
           key: test-recipe-downloads-linux-arm64-${{ hashFiles('recipes/**/*.toml', 'internal/recipe/recipes/**/*.toml') }}
           restore-keys: |
             test-recipe-downloads-linux-arm64-
@@ -599,6 +714,8 @@ jobs:
         uses: actions/cache@b7e8d49f17405cc70c1c120101943203c98d3a4b  # v5.0.3
         with:
           path: /tmp/tsuku-shared-downloads
+          # hashFiles uses Actions glob semantics, where `**` also matches zero
+          # directories, so this covers the flat embedded recipes too.
           key: test-recipe-downloads-darwin-arm64-${{ hashFiles('recipes/**/*.toml', 'internal/recipe/recipes/**/*.toml') }}
           restore-keys: |
             test-recipe-downloads-darwin-arm64-
@@ -715,6 +832,8 @@ jobs:
         uses: actions/cache@b7e8d49f17405cc70c1c120101943203c98d3a4b  # v5.0.3
         with:
           path: /tmp/tsuku-shared-downloads
+          # hashFiles uses Actions glob semantics, where `**` also matches zero
+          # directories, so this covers the flat embedded recipes too.
           key: test-recipe-downloads-darwin-amd64-${{ hashFiles('recipes/**/*.toml', 'internal/recipe/recipes/**/*.toml') }}
           restore-keys: |
             test-recipe-downloads-darwin-amd64-

@@ -18,6 +18,7 @@ on:
       - 'cmd/tsuku/eval.go'
       - 'cmd/tsuku/install_deps.go'
       - 'cmd/tsuku/install_lib.go'
+      - 'cmd/tsuku/install_sandbox.go'
       - 'testdata/recipes/*.toml'
       - 'test/scripts/verify-*.sh'
       - 'test/scripts/test-*-provisioning.sh'
@@ -38,6 +39,7 @@ on:
       - 'cmd/tsuku/eval.go'
       - 'cmd/tsuku/install_deps.go'
       - 'cmd/tsuku/install_lib.go'
+      - 'cmd/tsuku/install_sandbox.go'
       - 'testdata/recipes/*.toml'
       - 'scripts/*.sh'
       - 'test/scripts/verify-*.sh'
@@ -124,8 +126,26 @@ jobs:
               echo "FAIL: ${{ matrix.tool.name }} (exit $EXIT_CODE)"
               if [ -f "$RESULT_FILE" ]; then
                 echo "Error: $(jq -r '.error // .message // "unknown"' "$RESULT_FILE")"
+                # install_output holds the tail of the container's build log and
+                # names the command that failed. Print it unescaped and
+                # uncollapsed -- this is the whole reason the job is red, and
+                # reading it out of the raw JSON below is impractical.
+                #
+                # Printing build output verbatim lets a "::" line in it act as
+                # a workflow command. That is acceptable here because the
+                # recipes this job builds live in the repo. Do not copy this
+                # into a workflow that builds recipes from a pull request
+                # without filtering those sequences first.
+                if [ -n "$(jq -r '.install_output // ""' "$RESULT_FILE")" ]; then
+                  echo "Container output:"
+                  jq -r '.install_output' "$RESULT_FILE"
+                fi
+                if [ -n "$(jq -r '.verify_output // ""' "$RESULT_FILE")" ]; then
+                  echo "Verify output:"
+                  jq -r '.verify_output' "$RESULT_FILE"
+                fi
                 echo "Full result:"
-                jq . "$RESULT_FILE"
+                jq 'del(.install_output, .verify_output)' "$RESULT_FILE"
               fi
               exit 1
             fi
@@ -134,11 +154,23 @@ jobs:
   # Test source build with zig cc in container without system gcc
   # This validates that configure_make falls back to zig when no gcc exists
   # Libtool compatibility via -print-prog-name workaround (ziglang/zig#17273)
+  #
+  # The base image must be new enough for the patchelf Homebrew bottle to run.
+  # gdbm-source pulls in make, which tsuku installs from a bottle and relocates
+  # with patchelf - and patchelf is itself a bottle, built against whatever
+  # glibc Homebrew currently targets. On an older image it installs fine and
+  # then cannot execute, taking every relocation with it (#2447).
+  #
+  # That floor moves whenever Homebrew bumps its Linux build toolchain. As of
+  # #2447 it was glibc 2.38, so ubuntu:22.04 (2.35) failed and ubuntu:24.04
+  # (2.39) works. If this job starts failing the same way again, check the
+  # bottle's requirement before assuming the image is fine. Removing the
+  # dependency on the image's glibc entirely is tracked in #2451.
   test-no-gcc:
     name: "No-GCC Container: gdbm-source"
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:22.04
+      image: ubuntu:24.04
       options: --user root
 
     steps:
