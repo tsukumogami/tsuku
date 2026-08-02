@@ -111,7 +111,7 @@ func (h *depHarness) installParentWithDependency(depSteps []executor.ResolvedSte
 }
 
 // installParentWithDependencyOpts is installParentWithDependency with the
-// --no-shell-init flag exposed, since a dependency has to honour it too.
+// --no-shell-init flag exposed, since a dependency has to honor it too.
 func (h *depHarness) installParentWithDependencyOpts(
 	depSteps []executor.ResolvedStep,
 	noShellInit bool,
@@ -396,7 +396,7 @@ func TestDependencyShellD_KeepsTheUsersActiveVersion(t *testing.T) {
 
 // TestDependencyShellD_HonoursNoShellInit checks that --no-shell-init reaches a
 // dependency. The flag is the user saying they manage their own shell config;
-// honouring it for the tool they named while a dependency writes to shell.d
+// honoring it for the tool they named while a dependency writes to shell.d
 // behind their back would be worse than not offering the flag.
 func TestDependencyShellD_HonoursNoShellInit(t *testing.T) {
 	h := newDepHarness(t)
