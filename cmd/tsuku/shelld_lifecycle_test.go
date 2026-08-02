@@ -131,6 +131,14 @@ func initScriptFor(version string) string {
 // two failure modes -- a version key that only one of them applies is a bug.
 func (h *shellDHarness) installVersion(version string) {
 	h.t.Helper()
+	h.installVersionExporting(version, "{install_dir}")
+}
+
+// installVersionExporting installs a version whose set_env step exports envDirVar at the
+// given recipe value, so a scenario can choose between the versioned {install_dir} and
+// the stable {data_dir}.
+func (h *shellDHarness) installVersionExporting(version, envValue string) {
+	h.t.Helper()
 
 	workDir := h.t.TempDir()
 	installDir := filepath.Join(workDir, ".install")
@@ -167,7 +175,7 @@ func (h *shellDHarness) installVersion(version string) {
 	setEnv := &actions.SetEnvAction{}
 	if err := setEnv.Execute(execCtx, map[string]interface{}{
 		"vars": []interface{}{
-			map[string]interface{}{"name": envDirVar, "value": "{install_dir}"},
+			map[string]interface{}{"name": envDirVar, "value": envValue},
 		},
 	}); err != nil {
 		h.t.Fatalf("set_env Execute(%s) error = %v", version, err)
@@ -446,4 +454,63 @@ func (h *shellDHarness) cleanupActionsFor(version string) []install.CleanupActio
 		h.t.Fatalf("tool %q is not installed", h.tool)
 	}
 	return ts.Versions[version].CleanupActions
+}
+
+// TestShellDLifecycle_DataRootSurvivesUpgradeAndReclaim is the guard for the failure
+// that motivated the data directory: a tool whose exported root doubles as the place the
+// user's own content lives.
+//
+// It asserts the user-visible property rather than any intermediate one. The path is
+// read out of a real shell, content is written where that shell was told to look, and
+// after an upgrade plus reclamation of the superseded version the same shell must still
+// name a root that still holds the content. Whether tsuku deleted a directory, and which
+// one, is beside the point -- what matters is whether the user's files are still where
+// their shell says they are.
+//
+// Exporting {install_dir} instead of {data_dir} fails this test at the last step: the
+// upgrade repoints the variable at a fresh empty directory and removing the superseded
+// version deletes what was in the old one.
+func TestShellDLifecycle_DataRootSurvivesUpgradeAndReclaim(t *testing.T) {
+	h := newShellDHarness(t)
+
+	h.installVersionExporting(lifecycleV1, "{data_dir}")
+
+	root := h.shellVar(envDirVar)
+	if root == "" {
+		t.Fatal("the user's shell did not get the exported data root")
+	}
+
+	// Content the tool would create on the user's behalf, at a path only the shell's
+	// value tells us about.
+	userFile := filepath.Join(root, "versions", "node", "v22.0.0", "bin", "node")
+	if err := os.MkdirAll(filepath.Dir(userFile), 0755); err != nil {
+		t.Fatalf("seeding user data: %v", err)
+	}
+	if err := os.WriteFile(userFile, []byte("#!/bin/sh\necho v22.0.0\n"), 0755); err != nil {
+		t.Fatalf("seeding user data: %v", err)
+	}
+
+	h.installVersionExporting(lifecycleV2, "{data_dir}")
+
+	afterUpgrade := h.shellVar(envDirVar)
+	if afterUpgrade != root {
+		t.Errorf("the exported data root moved on upgrade: %q -> %q", root, afterUpgrade)
+	}
+	if _, err := os.Stat(filepath.Join(afterUpgrade, "versions", "node", "v22.0.0", "bin", "node")); err != nil {
+		t.Errorf("the user's data under the exported root did not survive the upgrade: %v", err)
+	}
+
+	// Reclaiming the superseded version is what actually deletes the old directory, so
+	// the assertion is only meaningful after it has run.
+	if err := h.mgr.RemoveVersion(lifecycleCtx(), h.tool, lifecycleV1); err != nil {
+		t.Fatalf("RemoveVersion(%s) error = %v", lifecycleV1, err)
+	}
+
+	afterReclaim := h.shellVar(envDirVar)
+	if afterReclaim == "" {
+		t.Fatal("the user's shell lost the exported data root after reclamation")
+	}
+	if _, err := os.Stat(filepath.Join(afterReclaim, "versions", "node", "v22.0.0", "bin", "node")); err != nil {
+		t.Errorf("reclaiming the superseded version deleted the user's data: %v", err)
+	}
 }

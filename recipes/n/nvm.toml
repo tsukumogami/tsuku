@@ -6,10 +6,28 @@ version_format = "semver"
 curated = true
 # nvm is a shell function, not a compiled binary. The recipe downloads the source
 # archive, installs it to the tool directory, and wires it into shell init via
-# install_shell_init. Node.js versions managed by nvm are stored under NVM_DIR,
-# which set_env points at the tool directory. That export has to reach the shell
-# before nvm.sh runs: nvm.sh only honors NVM_DIR when it is already set and
-# otherwise self-locates to the directory it was sourced from.
+# install_shell_init.
+#
+# NVM_DIR is nvm's *data* root, not its program directory: every Node.js version the
+# user installs lives under it, along with their global npm packages, the alias/ tree
+# that decides which version a new shell gets, and the download cache. So it points at
+# {data_dir} — $TSUKU_HOME/data/nvm — which is stable across nvm upgrades and which
+# nothing in tsuku ever deletes. Pointing it at {install_dir} would put all of that in a
+# versioned directory tsuku reclaims, and upgrading nvm would take the user's Node
+# versions with it.
+#
+# The export has to reach the shell before nvm.sh runs: nvm.sh only honors NVM_DIR when
+# it is already set and otherwise self-locates to the directory it was sourced from.
+#
+# install_program_files copies nvm.sh and nvm-exec into the data root because `nvm exec`
+# runs "${NVM_DIR}/nvm-exec", and nvm-exec re-sources nvm.sh from its own directory.
+# Without both files there, `nvm exec` and `nvm run` fail while every other subcommand
+# keeps working.
+#
+# `tsuku remove nvm` deletes nvm and those two copies and leaves everything else in
+# $TSUKU_HOME/data/nvm, printing the path. Delete that directory by hand to reclaim the
+# space. An existing nvm installed some other way — the usual ~/.nvm — is never read,
+# written, or removed by tsuku.
 
 [version]
 github_repo = "nvm-sh/nvm"
@@ -33,7 +51,11 @@ install_mode = "directory"
 
 [[steps]]
 action = "set_env"
-vars = [{name = "NVM_DIR", value = "{install_dir}"}]
+vars = [{name = "NVM_DIR", value = "{data_dir}"}]
+
+[[steps]]
+action = "install_program_files"
+files = ["nvm.sh", "nvm-exec"]
 
 [[steps]]
 action = "install_shell_init"
