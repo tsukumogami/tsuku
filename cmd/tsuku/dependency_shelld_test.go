@@ -107,6 +107,15 @@ func writeInitBinaryStep() executor.ResolvedStep {
 // executor installs the dependency and the main tool, the manager moves the main
 // tool into place, and the cmd layer records what both left behind.
 func (h *depHarness) installParentWithDependency(depSteps []executor.ResolvedStep) []executor.DependencyInstall {
+	return h.installParentWithDependencyOpts(depSteps, false)
+}
+
+// installParentWithDependencyOpts is installParentWithDependency with the
+// --no-shell-init flag exposed, since a dependency has to honour it too.
+func (h *depHarness) installParentWithDependencyOpts(
+	depSteps []executor.ResolvedStep,
+	noShellInit bool,
+) []executor.DependencyInstall {
 	h.t.Helper()
 
 	rec := &recipe.Recipe{Metadata: recipe.MetadataSection{Name: depParentTool, Type: "tool"}}
@@ -121,6 +130,7 @@ func (h *depHarness) installParentWithDependency(depSteps []executor.ResolvedSte
 	exec.SetAppsDir(h.cfg.AppsDir)
 	exec.SetCurrentDir(h.cfg.CurrentDir)
 	exec.SetSkipCacheSecurityChecks(true)
+	exec.SetNoShellInit(noShellInit)
 
 	plan := &executor.InstallationPlan{
 		FormatVersion: executor.PlanFormatVersion,
@@ -381,5 +391,41 @@ func TestDependencyShellD_KeepsTheUsersActiveVersion(t *testing.T) {
 	}
 	if got := h.fragmentPathsFor(depTool, userVersion); len(got) != 0 {
 		t.Errorf("%s@%s records %v, want nothing -- that version wrote none of it", depTool, userVersion, got)
+	}
+}
+
+// TestDependencyShellD_HonoursNoShellInit checks that --no-shell-init reaches a
+// dependency. The flag is the user saying they manage their own shell config;
+// honouring it for the tool they named while a dependency writes to shell.d
+// behind their back would be worse than not offering the flag.
+func TestDependencyShellD_HonoursNoShellInit(t *testing.T) {
+	h := newDepHarness(t)
+
+	deps := h.installParentWithDependencyOpts([]executor.ResolvedStep{{
+		Action:    "set_env",
+		Evaluable: true,
+		Params: map[string]interface{}{
+			"vars": []interface{}{
+				map[string]interface{}{"name": depInitMarker, "value": "{install_dir}"},
+			},
+		},
+	}}, true)
+
+	if len(deps) != 1 {
+		t.Fatalf("GetDependencyInstalls() returned %d entries, want 1", len(deps))
+	}
+	if len(deps[0].CleanupActions) != 0 {
+		t.Errorf("the dependency recorded %v under --no-shell-init, want nothing",
+			deps[0].CleanupActions)
+	}
+
+	entries, err := os.ReadDir(h.shellDDir())
+	if err != nil && !os.IsNotExist(err) {
+		t.Fatalf("reading shell.d: %v", err)
+	}
+	for _, e := range entries {
+		if !strings.HasPrefix(e.Name(), ".") {
+			t.Errorf("--no-shell-init still let the dependency write %s", e.Name())
+		}
 	}
 }
