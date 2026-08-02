@@ -82,3 +82,17 @@ All three R6 predicates fire, so `/design` runs its full decision-roster shape.
 The mechanism question routes through the `shirabe:decision` framework, which the
 dispatch brief designates for contested choices and whose input shape — several
 characterized candidates with no dominant winner — this matches exactly.
+
+## Phase 3 — Exit Finalization
+
+```yaml
+exit: full-run
+chain_ran:
+  - design
+  - plan
+plan_execution_mode: single-pr
+chain_completed: 2026-08-02
+exit_artifacts:
+  - docs/designs/DESIGN-shell-d-lifecycle.md
+  - docs/plans/PLAN-shell-d-lifecycle.md
+```
