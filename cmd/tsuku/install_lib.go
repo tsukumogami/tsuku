@@ -135,8 +135,16 @@ func installLibrary(ctx context.Context, libName, reqVersion string, mgr *instal
 	}
 
 	// Execute the plan
-	if err := exec.ExecutePlan(globalCtx, plan); err != nil {
-		return fmt.Errorf("library installation failed: %w", err)
+	planErr := exec.ExecutePlan(globalCtx, plan)
+
+	// A library's own install-time dependencies are installed by the executor
+	// the same way a tool's are, so they need the same record whether or not
+	// the library itself got that far. This is not the library post-install
+	// phase -- that gap is issue #2461 and is untouched here.
+	recordDependencyInstalls(cfg, mgr, libName, exec.GetDependencyInstalls(), reporter.Warn)
+
+	if planErr != nil {
+		return fmt.Errorf("library installation failed: %w", planErr)
 	}
 
 	version := plan.Version
