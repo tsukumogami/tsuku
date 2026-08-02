@@ -64,8 +64,17 @@ tsuku finds `.tsuku.toml` by walking up from the current directory, stopping at 
 | `tsuku remove <tool>` | Remove a tool (or specific version with `@version`) | `--force` |
 | `tsuku update <tool>` | Update within pin boundaries | `--dry-run` |
 | `tsuku update --all` | Update all tools (skips exact-pinned) | `--dry-run` |
+| `tsuku activate <tool> <version>` | Switch to another already-installed version | |
+| `tsuku rollback <tool>` | Revert to the version active before the last update | |
 | `tsuku list` | List installed tools | `--json`, `--all` |
 | `tsuku outdated` | Show tools with available updates | `--json` |
+
+**Switching versions**: `activate` and `rollback` both re-point everything tsuku
+owns for that tool — the `$TSUKU_HOME/bin` symlinks and the shell integration.
+Rollback is one level deep and does not change the version pin, so auto-update
+may re-apply the update on the next cycle; pin with `tsuku install <tool>@<version>`
+to make it stick. Neither command downloads anything: the target version has to be
+installed already.
 
 **Install output**: In a terminal, `tsuku install` shows a single in-place status line that updates throughout the full install — including dependency resolution, action execution, and verification — then replaces with a permanent success line when done. In CI or piped output (non-TTY), it prints one line when a tool starts installing, one line per verification step, and one line on completion. A binary tool with one dependency produces 4 permanent lines; tools with no dependencies produce 3. Errors, retries, and command output also appear as permanent lines. `--quiet` suppresses all non-error output in both modes.
 
@@ -85,7 +94,7 @@ tsuku finds `.tsuku.toml` by walking up from the current directory, stopping at 
 |---------|-------------|--------------|
 | `tsuku run <tool> [args]` | Install if missing, then execute | `--mode suggest/confirm/auto` |
 | `tsuku verify <tool>` | Check binary integrity and deps | `--system-deps`, `--integrity` |
-| `tsuku doctor` | Environment health check | `--rebuild-cache` |
+| `tsuku doctor` | Environment health check | `--fix` |
 | `tsuku cache clear` | Clear download and version caches | `--downloads`, `--versions` |
 | `tsuku update-registry` | Refresh all cached recipes and rebuild the binary index | `--dry-run`, `--recipe` |
 
@@ -114,7 +123,23 @@ eval "$(tsuku shellenv)"
 tsuku shellenv | source
 ```
 
-`tsuku shellenv` prints the PATH exports and sources any tool-specific shell init scripts from `$TSUKU_HOME/share/shell.d/`.
+`tsuku shellenv` prints the PATH exports and sources the shell init cache for your shell.
+
+### Tool-Specific Shell Init
+
+Some tools need more than PATH — nvm is a shell function, direnv installs a hook, and a recipe can export variables the tool reads at startup. Those land in `$TSUKU_HOME/share/shell.d/`, one fragment per tool version per shell, named `<target>@<version>.<shell>`:
+
+```
+share/shell.d/
+  00-env-nvm@0.40.6.bash     # variables the recipe exports
+  nvm@0.40.5.bash            # nvm 0.40.5's own init script
+  nvm@0.40.6.bash            # nvm 0.40.6's own init script
+  .init-cache.bash           # what your shell actually sources
+```
+
+Your shell never sources those fragments directly. tsuku concatenates them in filename order into `.init-cache.{bash,zsh}`, and `$TSUKU_HOME/env` sources the cache. Only the active version's fragment goes in — install 0.40.6 alongside 0.40.5 and the older fragment stays on disk but drops out of the cache. Anything tsuku has no record of is included as-is, so a fragment you dropped in yourself keeps working.
+
+The cache is rebuilt whenever the active version changes: install, upgrade, `activate`, `rollback`, and removing one version among several.
 
 ### Verifying Your Setup
 
@@ -124,7 +149,19 @@ tsuku doctor
 
 Doctor checks that `$TSUKU_HOME` exists, both directories are on PATH, the state file is accessible, shell init caches are current, and no orphaned staging directories remain. If something's wrong, it tells you what to fix.
 
-Use `--rebuild-cache` to force a rebuild of shell init caches.
+Three shell.d diagnostics are worth knowing:
+
+| Message | Meaning |
+|---------|---------|
+| `<shell> cache is stale` | A fragment changed since the cache was built. `--fix` rebuilds it. |
+| `<file>: content hash mismatch` | The fragment's bytes no longer match what tsuku recorded when it wrote them — the file was edited or replaced after install. |
+| `<file>: symlink detected` | A shell.d entry is a symlink. tsuku refuses to source it. |
+
+```bash
+tsuku doctor --fix
+```
+
+`--fix` repairs the two things it can generate from scratch: a stale `$TSUKU_HOME/env`, and stale shell caches. It won't touch a hash mismatch or a symlink, because both mean something outside tsuku wrote into `share/shell.d/` and tsuku can't reproduce the original bytes. Recover with `tsuku remove <tool>@<version> && tsuku install <tool>@<version>`, or delete the offending file if you put it there.
 
 ## Troubleshooting
 

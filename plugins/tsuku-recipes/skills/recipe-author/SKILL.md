@@ -80,8 +80,8 @@ and action-specific parameters.
 | `set_rpath` | Modify ELF RPATH for library resolution (Linux) |
 | `set_env` | Export environment variables into the user's shell via shell.d |
 | `text_replace` | Find/replace in files |
-| `install_shell_init` | Write shell initialization scripts |
-| `install_completions` | Write shell completion scripts |
+| `install_shell_init` | Write shell init scripts to `share/shell.d/{target}@{version}.{shell}` |
+| `install_completions` | Write completions to `share/completions/{shell}/{target}` |
 | `homebrew_relocate` | Fix @@HOMEBREW_PREFIX@@ paths in bottles |
 
 ### Special
@@ -95,6 +95,29 @@ and action-specific parameters.
 
 See [references/action-reference.md](references/action-reference.md) for full
 parameter tables and usage notes.
+
+### Step Phases
+
+Steps run in one of two phases. `install` is the default and does the work.
+`post-install` runs after the tool has moved from its staging directory to
+`$TSUKU_HOME/tools/{name}-{version}`, which is the only point where
+`{install_dir}` names a path that survives the install.
+
+```toml
+[[steps]]
+action = "install_shell_init"
+phase = "post-install"
+source_command = "{install_dir}/bin/mytool init {shell}"
+target = "mytool"
+```
+
+An action can declare its own default when it cannot work in `install` —
+`set_env` declares `post-install` — and `tsuku validate` rejects a step that
+overrides such a declaration with a phase the action can't honor. Leave `phase`
+off unless you need `post-install`.
+
+See [Step Phases](references/action-reference.md#step-phases) for the resolution
+order and which actions declare a default.
 
 ## Version Providers
 
