@@ -118,6 +118,37 @@ func (c *DownloadCache) Check(url, destPath, expectedChecksum, checksumAlgo stri
 	return true, nil
 }
 
+// CheckAny looks up a cached download under each of several candidate URLs,
+// returning on the first key that hits.
+//
+// Cache entries are keyed by URL, and plan generation saves under whichever
+// source actually served. Without a candidate-key probe, an install whose
+// plan records several sources would miss a cache that already holds exactly
+// the right bytes — and for an archive the size of a zig toolchain, that miss
+// costs a 50 MB re-download.
+//
+// Trying another source's key is safe because every source in a list serves
+// byte-identical content for the one pinned checksum, and Check's existing
+// checksum verification is what proves it before the bytes are used.
+//
+// A single-element list behaves exactly as a direct Check call.
+func (c *DownloadCache) CheckAny(urls []string, destPath, expectedChecksum, checksumAlgo string) (bool, error) {
+	for _, url := range urls {
+		found, err := c.Check(url, destPath, expectedChecksum, checksumAlgo)
+		if err != nil {
+			// Check only errors on cache-directory security and permission
+			// problems, which are properties of the directory rather than of
+			// the URL. They would repeat for every candidate, so surface the
+			// first one instead of probing on.
+			return false, err
+		}
+		if found {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 // Save stores a downloaded file in the cache.
 // The file at sourcePath is copied to the cache.
 // checksum is optional and stored for reference.

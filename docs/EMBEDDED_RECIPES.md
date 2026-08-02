@@ -58,6 +58,28 @@ When this flag is set, action dependencies must resolve from the embedded regist
 
 During migration, known gaps are tracked in `embedded-validation-exclusions.json`. Recipes in this file are excluded from CI validation until their dependencies are properly embedded.
 
+### Multi-Source Recipes and Golden Files
+
+An embedded recipe can declare `fallback_urls` alongside its `url` so a single
+host outage does not fail plan generation for every recipe that depends on it.
+`zig.toml` is the live example, and its comment block records why.
+
+The generated plan carries `fallback_urls` only when the recipe declared it, so
+a single-source recipe's golden is byte-identical to what it was before the
+parameter existed. Two consequences when regenerating:
+
+- A golden that grows a `fallback_urls` array grew it because its recipe (or a
+  recipe it depends on) gained a source list. If one appears in a golden whose
+  recipe you did not touch, stop and find out why.
+- zig is an implicit dependency of `cmake_build`, `configure_make` and
+  `meson_build`, so its download step is embedded in other recipes' goldens.
+  `grep -rl zig- testdata/golden/plans/embedded/` finds the current set. ninja
+  is on the code-validation exclusion list, so its goldens take a URL-only edit
+  rather than a full regeneration, which would sweep in unrelated format drift.
+
+See [GUIDE-actions-and-primitives.md](guides/GUIDE-actions-and-primitives.md)
+for the recipe-authoring side.
+
 ### Adding a New Embedded Recipe
 
 To add a recipe to the embedded list:

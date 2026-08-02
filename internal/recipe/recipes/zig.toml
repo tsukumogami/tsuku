@@ -8,65 +8,85 @@ supported_libc = ["glibc", "musl"]
 [version]
 github_repo = "ziglang/zig"
 
-# Download source: ziglang.freetls.fastly.net. The upstream list of community
-# mirrors lives at ziglang.org/download/community-mirrors.txt — re-read it
-# rather than trusting any list written here.
+# Download sources, in order: ziglang.freetls.fastly.net, then zig.squirl.dev,
+# then canonical ziglang.org. The upstream list of community mirrors lives at
+# ziglang.org/download/community-mirrors.txt — re-read it rather than trusting
+# any list written here.
+#
+# All three must serve byte-identical archives for the one pinned checksum;
+# the upstream MIRRORS.md spec mandates that, and tsuku verifies it at install
+# time whichever source answered. Verified at authoring time for
+# zig-x86_64-linux-0.14.1.tar.xz: all three return content-length 49086504,
+# and zig.squirl.dev's bytes hash to 24aeeec8af16c381934a6cd7d95c807a8cb2cf7d
+# f9fa40d359aa884195c4716c, the value the goldens already pin.
 #
 # Source history. ziglang.org, intermittently unreachable from CI (#2384) ->
-# zigmirror.hryx.net, unreachable entirely (#2441) -> here. Both predecessors
-# were a single origin host with nothing cached in front of them. Note that
-# download_archive pre-downloads to compute a checksum, so an unreachable
-# source breaks `tsuku eval`, not just install, which is why one dead host
-# turns CI red across every recipe that reaches zig.
+# zigmirror.hryx.net, unreachable entirely (#2441) -> a single Fastly URL
+# (#2444) -> this list (#2443). Every predecessor was one host, so every
+# outage was a recipe edit that could not reach plans already published to R2.
+# Note that download_archive pre-downloads to compute a checksum, so an
+# unreachable source breaks `tsuku eval`, not just install, which is why one
+# dead host used to turn CI red across every recipe that reaches zig.
 #
 # TRIAGE — match the symptom before switching anything:
 #   - Timeouts / unreachable at the edge -> a path problem. Another
 #     CDN-fronted source may help.
-#   - 5xx or revalidation errors -> suspect the origin. This mirror is Fastly
-#     in front of ziglang.org's own bytes, not an independent copy: both
-#     return the same ETag and Last-Modified from the same nginx, with a
-#     one-hour TTL and pull-through revalidation. So an origin outage is
-#     survived for about a cache TTL per POP and no longer. Switch to a mirror
-#     that stores its OWN copies — test for that by comparing Last-Modified
-#     against ziglang.org's, since an independent mirror carries its own mtime
-#     and an alias reproduces ziglang.org's exactly. zig.squirl.dev is the
-#     strongest such candidate, independently operated and CDN-backed
-#     (BunnyCDN, at time of writing). It was not taken in #2441 only because
-#     reachability from GitHub runners was proven for Fastly and unproven for
-#     it.
+#   - 5xx or revalidation errors -> suspect the origin. The first two entries
+#     do NOT fail independently: ziglang.freetls.fastly.net is Fastly in front
+#     of ziglang.org's own bytes, not an independent copy, and both return the
+#     same ETag and Last-Modified from the same nginx with a one-hour TTL and
+#     pull-through revalidation. An origin outage is survived for about a cache
+#     TTL per POP and no longer, and the canonical entry goes down with it.
+#     zig.squirl.dev is the entry that stores its OWN copies — independently
+#     operated and CDN-backed (BunnyCDN, at time of writing). The test for that
+#     is Last-Modified against ziglang.org's: an independent mirror carries its
+#     own mtime, an alias reproduces ziglang.org's exactly. squirl reported
+#     2025-07-01 where both others reported 2025-05-23, which is why it sits
+#     second rather than third.
 #   - 404 on an older version while current ones still serve -> retention, not
-#     an outage. Mirrors need not keep old releases.
+#     an outage. Mirrors need not keep old releases. Fallback now papers over
+#     this on the way to a source that kept the release, so it will not turn CI
+#     red — check the per-source failure lines in the log to notice it at all.
 #
-# Picking a replacement. Require HTTPS, byte-identical archives (the upstream
-# MIRRORS.md spec mandates this and tsuku's pinned checksums catch divergence
-# at install time), and reachability from GitHub-hosted CI runners. Prove that
-# last one by pushing a branch and letting Validate Embedded Dependencies run
-# — a local probe does not establish it, and skipping that step is what
-# produced #2441. Prefer a CDN edge over a bare origin host as the tiebreak,
-# but do not use DNS address count to judge that: ziglang.org is dual-stack
-# and still one box, while a BunnyCDN pull zone answers with one address per
-# family via geo-DNS. Check the CNAME chain instead.
+# Adding or reordering an entry. Require HTTPS, byte-identical archives (the
+# upstream MIRRORS.md spec mandates this and tsuku's pinned checksums catch
+# divergence at install time), and reachability from GitHub-hosted CI runners.
+# Prove that last one by pushing a branch and letting Validate Embedded
+# Dependencies run — a local probe does not establish it, and skipping that
+# step is what produced #2441. Note that reachability now only has to hold for
+# the FIRST entry to keep CI green, which is why an alternate whose CI
+# reachability is unproven is worth adding anyway: it costs nothing until the
+# proven source is already down. Prefer a CDN edge over a bare origin host as
+# the tiebreak, but do not use DNS address count to judge that: ziglang.org is
+# dual-stack and still one box, while a BunnyCDN pull zone answers with one
+# address per family via geo-DNS. Check the CNAME chain instead.
 #
-# A swap is not a one-file change. zig is an implicit install-time dependency
-# of cmake_build/configure_make/meson_build, so its URL is baked into nine
-# goldens under testdata/golden/plans/embedded/: the three zig ones and six
-# ninja ones. They pin more than one zig version — 0.14.1 and 0.15.1 at time
-# of writing — so verify every version a candidate must serve, not just
-# current. `grep -rl zig- testdata/golden/plans/embedded/` finds the current
-# set. Regenerate the zig goldens; the ninja ones need a URL-only edit,
-# because ninja sits on the #988 code-validation exclusion list and a full
-# regeneration would sweep in unrelated format drift.
+# Editing the source list is not a one-file change. zig is an implicit
+# install-time dependency of cmake_build/configure_make/meson_build, so its
+# URLs are baked into nine goldens under testdata/golden/plans/embedded/: the
+# three zig ones and six ninja ones. They pin more than one zig version —
+# 0.14.1 and 0.15.1 at time of writing — so verify every version each entry
+# must serve, not just current. `grep -rl zig- testdata/golden/plans/embedded/`
+# finds the current set. Regenerate the zig goldens; the ninja ones need a
+# URL-only edit, because ninja sits on the #988 code-validation exclusion list
+# and a full regeneration would sweep in unrelated format drift.
 #
 # GitHub Releases is not an option: ziglang/zig publishes only
 # zig-bootstrap-<version>.tar.xz source archives there, never the per-platform
 # binaries this recipe needs (verified for 0.14.1 and 0.15.1 via
 # `gh release view <ver> -R ziglang/zig`).
 #
-# This is still one URL. #2443 tracks giving download_archive a fallback list
-# so the next outage is not another recipe edit.
+# The plan-time checksum is still minted from whichever source answers first —
+# nothing anchors it to an upstream-published value, because zig publishes
+# .minisig signatures and no .sha256 sidecar, and tsuku has no minisign
+# support. Adding it would let checksum_url close that gap.
 [[steps]]
 action = "download_archive"
 url = "https://ziglang.freetls.fastly.net/zig-{arch}-{os}-{version}.tar.xz"
+fallback_urls = [
+  "https://zig.squirl.dev/zig-{arch}-{os}-{version}.tar.xz",
+  "https://ziglang.org/download/{version}/zig-{arch}-{os}-{version}.tar.xz",
+]
 strip_dirs = 1
 binaries = ["zig"]
 install_mode = "directory"
