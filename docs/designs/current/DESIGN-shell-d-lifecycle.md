@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Current
 problem: |
   Files under $TSUKU_HOME/share/shell.d have version-independent names but
   version-specific contents, and nothing ever re-renders one. Installing a second
@@ -33,7 +33,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Current
 
 ## Context and Problem Statement
 
@@ -115,7 +115,7 @@ the active version with no shell integration at all.
 
 Four mechanisms were built out in full — each championed by an agent that then attacked
 its own design — and cross-examined on two axes, acceptance-criteria conformance and
-landing risk. The full bakeoff is in the branch's `wip/` artifacts; the summary:
+landing risk. The summary:
 
 ### Option A — re-render on lifecycle events
 
