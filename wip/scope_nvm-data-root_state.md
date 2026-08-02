@@ -103,3 +103,15 @@ All three fire, so `/design` runs with a full decision roster. `/plan` fires ALW
 `plan_execution_mode: single-pr` — the dispatch brief's deliverable is one
 review-ready PR with green CI, so the PLAN is a self-contained document rather than
 a GitHub milestone with per-issue PRs.
+
+## Phase 2: Child invocation — design
+
+`parent_orchestration:` sentinel active for the `/design` child.
+
+```yaml
+parent_orchestration:
+  parent: scope
+  child: design
+  pre_invocation_sha: 82c88b5fdcd9c7e3ce94be9aeacd825556db9122
+  invoked_at: 2026-08-02T17:10:00Z
+```
