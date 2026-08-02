@@ -460,6 +460,12 @@ fixed in the same change.
 - **`Executor.installSingleDependency`** runs every step inline with no phase filter, an
   empty `ToolInstallDir`, and a discarded cleanup slice. It fails loudly for
   `source_command` and silently orphans files for `source_file`; separate issue.
+  *Resolved for tool dependencies in issue #2462: the dependency path now filters by
+  phase, populates `ToolInstallDir` before post-install steps run, and records its
+  cleanup actions against a state entry of the dependency's own. The exclusion rule is
+  unchanged and still has writers to protect — `install_lib.go` runs no post-install
+  phase, a library pulled in as a dependency has no field to record into, and every
+  fragment written by an earlier release stays unrecorded.*
 - **The already-installed short-circuit** returns before running any steps and `--force`
   does not bypass it, so an existing install never picks up a fix. `tsuku verify`
   recommends a `--reinstall` flag that does not exist; separate issue.

@@ -182,7 +182,7 @@ func (h *shellDHarness) installVersion(version string) {
 		h.t.Fatalf("install_shell_init Execute(%s) error = %v", version, err)
 	}
 
-	finishPostInstall(h.cfg, h.mgr, h.tool, execCtx.CleanupActions, func(format string, args ...interface{}) {
+	finishPostInstall(h.cfg, h.mgr, h.tool, version, execCtx.CleanupActions, func(format string, args ...interface{}) {
 		h.t.Errorf("post-install warning for %s: "+format, append([]interface{}{version}, args...)...)
 	})
 }

@@ -78,8 +78,13 @@ func runPlanBasedInstall(planPath, toolName string) error {
 
 	printInfof("Installing %s@%s from plan...\n", effectiveToolName, plan.Version)
 
+	warnf := func(format string, args ...interface{}) {
+		printInfof("Warning: "+format+"\n", args...)
+	}
+
 	// Execute the plan
 	if err := exec.ExecutePlan(globalCtx, plan); err != nil {
+		recordDependencyInstalls(cfg, mgr, effectiveToolName, exec.GetDependencyInstalls(), warnf)
 		// Handle ChecksumMismatchError specially - it has a user-friendly message
 		var checksumErr *executor.ChecksumMismatchError
 		if errors.As(err, &checksumErr) {
@@ -88,6 +93,14 @@ func runPlanBasedInstall(planPath, toolName string) error {
 		}
 		return fmt.Errorf("plan execution failed: %w", err)
 	}
+
+	// Every dependency in an external plan is installed by the executor itself
+	// -- this path has no recipe loader to walk -- so this is where their state
+	// entries and cleanup records come from. Outside the system-dependency
+	// branch below on purpose: whether the plan turned out to be a
+	// require_system stub says nothing about the dependencies installed on the
+	// way to finding out.
+	recordDependencyInstalls(cfg, mgr, effectiveToolName, exec.GetDependencyInstalls(), warnf)
 
 	// Check if this is a system dependency recipe (only require_system steps)
 	// System dependencies are validated but not tracked in state or installed
@@ -121,9 +134,7 @@ func runPlanBasedInstall(planPath, toolName string) error {
 
 		// Record the cleanup actions post-install produced and refresh the
 		// shell caches they touched.
-		finishPostInstall(cfg, mgr, effectiveToolName, exec.GetCleanupActions(), func(format string, args ...interface{}) {
-			printInfof("Warning: "+format+"\n", args...)
-		})
+		finishPostInstall(cfg, mgr, effectiveToolName, plan.Version, exec.GetCleanupActions(), warnf)
 
 		// Update state to mark as explicit installation
 		err = mgr.GetState().UpdateTool(effectiveToolName, func(ts *install.ToolState) {

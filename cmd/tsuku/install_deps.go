@@ -220,8 +220,13 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 	mgr := install.New(cfg, install.WithEventBus(bus))
 	mgr.SetReporter(reporter)
 
-	// If explicit install, check if tool is hidden and just expose it
-	if isExplicit && parent == "" {
+	// If explicit install, check if tool is hidden and just expose it.
+	//
+	// Not when a version was asked for: exposing links whatever version the
+	// entry already records, so taking this shortcut for `tsuku install foo@2`
+	// while foo@1 sits there hidden would hand the user version 1 and report
+	// success. Falling through installs the version they named.
+	if isExplicit && parent == "" && reqVersion == "" && versionConstraint == "" {
 		wasHidden, err := install.CheckAndExposeHidden(ctx, mgr, toolName)
 		if err != nil {
 			reporter.Warn("failed to check hidden status: %v", err)
@@ -505,7 +510,12 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 	if planVersion == "" {
 		planVersion = "dev"
 	}
-	if mgr.IsVersionInstalled(toolName, planVersion) {
+	// A hidden entry is deliberately not short-circuited on. Its payload is on
+	// disk but it has no symlinks, so reporting "already installed" would leave
+	// the user without the command they just asked for. CheckAndExposeHidden
+	// above already took the cheap path when the entry knew its own binaries;
+	// reaching here means it did not, and a real install is the fix.
+	if mgr.IsVersionInstalled(toolName, planVersion) && !isHiddenTool(mgr, toolName) {
 		reporter.Status(fmt.Sprintf("%s@%s is already installed", toolName, planVersion))
 		if err := recordInstallRelationship(mgr, toolName, parent, isExplicit); err != nil {
 			reporter.Warn("failed to update state: %v", err)
@@ -520,6 +530,7 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 	// Execute the plan
 	if err := exec.ExecutePlan(globalCtx, plan); err != nil {
 		reporter.Log("❌ %s@%s", toolName, planVersion)
+		recordDependencyInstalls(cfg, mgr, toolName, exec.GetDependencyInstalls(), reporter.Warn)
 		// Handle ChecksumMismatchError specially - it has a user-friendly message
 		var checksumErr *executor.ChecksumMismatchError
 		if errors.As(err, &checksumErr) {
@@ -582,7 +593,7 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 
 		// Record the cleanup actions post-install produced and refresh the
 		// shell caches they touched.
-		finishPostInstall(cfg, mgr, toolName, exec.GetCleanupActions(), reporter.Warn)
+		finishPostInstall(cfg, mgr, toolName, version, exec.GetCleanupActions(), reporter.Warn)
 
 		// Update state with explicit flag, parent, and dependencies
 		// via semantic Manager methods.
@@ -596,6 +607,12 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 			reporter.Warn("failed to record runtime dependencies: %v", err)
 		}
 	}
+
+	// Record the dependencies the executor installed itself. Outside the
+	// system-dependency branch on purpose: whether the parent turned out to be
+	// a require_system stub says nothing about the dependencies that were
+	// installed on the way to finding out.
+	recordDependencyInstalls(cfg, mgr, toolName, exec.GetDependencyInstalls(), reporter.Warn)
 
 	// Update used_by for any library dependencies now that we know the tool version
 	toolNameVersion := fmt.Sprintf("%s-%s", toolName, version)
@@ -703,6 +720,13 @@ func resolveRuntimeDeps(r *recipe.Recipe, mgr *install.Manager, reporter progres
 // appends parent to RequiredBy. When isExplicit is false but parent is
 // non-empty, only the required-by edge is recorded via AddRequiredBy.
 // Both branches are no-ops when there is nothing to record.
+// isHiddenTool reports whether the tool is recorded as somebody's hidden
+// dependency rather than something the user installed.
+func isHiddenTool(mgr *install.Manager, toolName string) bool {
+	ts, err := mgr.GetToolState(toolName)
+	return err == nil && ts != nil && ts.IsHidden
+}
+
 func recordInstallRelationship(mgr *install.Manager, toolName, parent string, isExplicit bool) error {
 	if isExplicit {
 		return mgr.MarkExplicit(toolName, parent)

@@ -242,9 +242,23 @@ func IsActionEvaluable(action string) bool {
 // - directory mode: paths kept as-is (e.g., "bin/cmake", "cargo/bin/cargo")
 // - map {src, dest}: uses dest directly
 func ExtractBinariesFromPlan(plan *InstallationPlan) []string {
+	if binaries := extractBinariesFromSteps(plan.Steps); len(binaries) > 0 {
+		return binaries
+	}
+	return plan.Binaries
+}
+
+// ExtractBinariesFromSteps is ExtractBinariesFromPlan over a bare step list, so
+// a DependencyPlan -- which carries steps but is not an InstallationPlan -- can
+// be asked the same question.
+func ExtractBinariesFromSteps(steps []ResolvedStep) []string {
+	return extractBinariesFromSteps(steps)
+}
+
+func extractBinariesFromSteps(steps []ResolvedStep) []string {
 	var binaries []string
 	seen := make(map[string]bool)
-	for _, step := range plan.Steps {
+	for _, step := range steps {
 		// npm_exec and pipx_install create bin/<exe> symlinks themselves; extract
 		// their executables so the install manager creates tools/current/ symlinks.
 		if step.Action == "npm_exec" || step.Action == "pip_exec" {
@@ -308,9 +322,6 @@ func ExtractBinariesFromPlan(plan *InstallationPlan) []string {
 				}
 			}
 		}
-	}
-	if len(binaries) == 0 {
-		return plan.Binaries
 	}
 	return binaries
 }

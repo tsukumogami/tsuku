@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/shellenv"
 )
@@ -13,22 +14,27 @@ import (
 type warnFunc func(format string, args ...interface{})
 
 // finishPostInstall records the cleanup actions a post-install phase produced
-// and rebuilds the shell caches those actions touched.
+// against the named version, and rebuilds the shell caches those actions
+// touched.
 //
 // Both the recipe-driven install and `tsuku install --plan` need exactly this,
 // and they had already drifted: the plan path rebuilt the cache but never
 // recorded anything, so its shell.d files were orphaned -- invisible to remove,
 // to doctor's hash check, and to the active-version projection.
 //
+// The version is explicit rather than resolved from state because dependency
+// installs also come through here, and a dependency's version is not
+// necessarily the tool's active one.
+//
 // Recording comes first. The projection that decides which fragments belong in
 // the cache is read back out of state, so a rebuild that runs before the write
 // cannot see the files this install just produced.
-func finishPostInstall(cfg *config.Config, mgr *install.Manager, toolName string, cleanup []actions.CleanupAction, warnf warnFunc) {
+func finishPostInstall(cfg *config.Config, mgr *install.Manager, toolName, version string, cleanup []actions.CleanupAction, warnf warnFunc) {
 	if len(cleanup) == 0 {
 		return
 	}
 
-	if err := mgr.RecordCleanup(toolName, convertCleanupActions(cleanup)); err != nil {
+	if err := mgr.RecordCleanupForVersion(toolName, version, convertCleanupActions(cleanup)); err != nil {
 		warnf("failed to record cleanup actions: %v", err)
 	}
 
@@ -47,6 +53,61 @@ func finishPostInstall(cfg *config.Config, mgr *install.Manager, toolName string
 		if err := shellenv.RebuildShellCache(cfg.HomeDir, shell, selection); err != nil {
 			warnf("failed to rebuild shell cache for %s: %v", shell, err)
 		}
+	}
+}
+
+// recordDependencyInstalls persists what the executor's own dependency installs
+// left behind.
+//
+// A dependency installed by Executor.installSingleDependency never reaches
+// install.Manager, so before this ran it had no state entry at all: nothing knew
+// the tool was there, and the shell.d fragment its steps wrote was invisible to
+// remove, to doctor and to the active-version projection. Giving the dependency
+// its own entry and recording against that entry -- rather than against the tool
+// that pulled it in -- is what makes `tsuku remove <dep>` able to take its own
+// files with it. It also keeps the projection honest: the fragment is named
+// after the dependency and keyed on the dependency's version, so the state that
+// decides whether it belongs in the cache has to be the dependency's too.
+//
+// parent names the tool whose install pulled the dependency in, and is recorded
+// as a RequiredBy edge so removing the dependency warns first. That edge is
+// never retired when the parent is removed -- see EnsureDependencyEntry and
+// issue #2476.
+//
+// Each dependency that wrote a fragment rebuilds the shell caches through
+// finishPostInstall, so an install with N such dependencies writes the init
+// cache N+1 times counting the parent's own. The projection is read back out of
+// state each time, so a single rebuild at the end would be equivalent and
+// cheaper; it is not worth a second code path for the one or two dependencies a
+// real recipe has.
+func recordDependencyInstalls(
+	cfg *config.Config,
+	mgr *install.Manager,
+	parent string,
+	deps []executor.DependencyInstall,
+	warnf warnFunc,
+) {
+	for _, dep := range deps {
+		if dep.RecipeType == "library" {
+			// Libraries live under $TSUKU_HOME/libs and are tracked in
+			// state.Libs, which has no cleanup-action field. Nothing in the
+			// registry ships a library recipe that writes outside its own
+			// directory today -- set_env is rejected in library recipes by the
+			// validator -- so warn rather than invent a home for it.
+			if len(dep.CleanupActions) > 0 {
+				warnf("library dependency %s@%s wrote %d file(s) outside its install directory; "+
+					"tsuku cannot record those yet, so removing it will leave them behind",
+					dep.Tool, dep.Version, len(dep.CleanupActions))
+			}
+			continue
+		}
+
+		if err := mgr.EnsureDependencyEntry(dep.Tool, dep.Version, parent, dep.Binaries); err != nil {
+			warnf("failed to record dependency %s@%s: %v", dep.Tool, dep.Version, err)
+			continue
+		}
+
+		finishPostInstall(cfg, mgr, dep.Tool, dep.Version, dep.CleanupActions, warnf)
 	}
 }
 

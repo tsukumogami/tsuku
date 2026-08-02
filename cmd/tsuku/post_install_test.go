@@ -60,7 +60,7 @@ func TestFinishPostInstall_RecordsCleanupAndRebuilds(t *testing.T) {
 	}}
 
 	var warnings []string
-	finishPostInstall(cfg, mgr, "mytool", cleanup, func(format string, args ...interface{}) {
+	finishPostInstall(cfg, mgr, "mytool", "1.0.0", cleanup, func(format string, args ...interface{}) {
 		warnings = append(warnings, format)
 	})
 	if len(warnings) != 0 {
@@ -102,7 +102,7 @@ func TestFinishPostInstall_RebuildUsesTheJustRecordedSelection(t *testing.T) {
 		ContentHash: "0000000000000000000000000000000000000000000000000000000000000000",
 	}}
 
-	finishPostInstall(cfg, mgr, "mytool", cleanup, func(string, ...interface{}) {})
+	finishPostInstall(cfg, mgr, "mytool", "1.0.0", cleanup, func(string, ...interface{}) {})
 
 	// A hash mismatch keeps the fragment out of the cache, which only happens
 	// if the rebuild saw the record.
@@ -114,7 +114,7 @@ func TestFinishPostInstall_RebuildUsesTheJustRecordedSelection(t *testing.T) {
 func TestFinishPostInstall_NoCleanupIsANoOp(t *testing.T) {
 	cfg, mgr, shellDDir := postInstallHome(t)
 
-	finishPostInstall(cfg, mgr, "mytool", nil, func(format string, args ...interface{}) {
+	finishPostInstall(cfg, mgr, "mytool", "1.0.0", nil, func(format string, args ...interface{}) {
 		t.Errorf("unexpected warning: "+format, args...)
 	})
 
