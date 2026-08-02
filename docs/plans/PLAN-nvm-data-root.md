@@ -1,8 +1,8 @@
 ---
 schema: plan/v1
-status: Active
+status: Done
 execution_mode: single-pr
-upstream: docs/designs/DESIGN-nvm-data-root.md
+upstream: docs/designs/current/DESIGN-nvm-data-root.md
 milestone: "nvm data root"
 issue_count: 9
 ---
@@ -11,7 +11,7 @@ issue_count: 9
 
 ## Status
 
-Active
+Done
 
 ## Scope Summary
 
