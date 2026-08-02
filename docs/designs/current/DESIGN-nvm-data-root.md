@@ -556,7 +556,9 @@ directory it can name in `doctor` output and size reporting.
 **What becomes harder, honestly.**
 
 - **`rm -rf $TSUKU_HOME` is now destructive to user data, and there is no code-level
-  fix.** No `tsuku uninstall` command exists, which is exactly why the folk wisdom exists.
+  fix.** `tsuku remove <tool>` uninstalls a tool, but nothing removes the tsuku
+  installation itself — `self-update` has no counterpart — which is why wiping the
+  directory became the folk answer.
   This is the strongest surviving argument against the choice, and it is now sharper
   because there is no `--purge` to point at. It gets a documentation step and a
   BREAKING CHANGE note in the commit body rather than a promise. Seeing, sizing and

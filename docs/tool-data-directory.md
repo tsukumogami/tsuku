@@ -94,5 +94,7 @@ things you cannot get back without re-downloading and re-installing them. Remove
 `$TSUKU_HOME/tools`, `$TSUKU_HOME/bin`, and `$TSUKU_HOME/state.json` instead if you want
 a clean slate while keeping what your tools are holding for you.
 
-There is no `tsuku uninstall` that would do this for you and tell you what it is about to
-destroy. That, and the absence of any way to see or reclaim tool data, is issue #2477.
+Nothing removes the tsuku installation for you and tells you what it is about to destroy
+— `tsuku remove <tool>` uninstalls a tool, but there is no counterpart to `self-update`
+for tsuku itself. That, and the absence of any way to see or reclaim tool data, is issue
+#2477.
