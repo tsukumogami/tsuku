@@ -505,7 +505,12 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 	if planVersion == "" {
 		planVersion = "dev"
 	}
-	if mgr.IsVersionInstalled(toolName, planVersion) {
+	// A hidden entry is deliberately not short-circuited on. Its payload is on
+	// disk but it has no symlinks, so reporting "already installed" would leave
+	// the user without the command they just asked for. CheckAndExposeHidden
+	// above already took the cheap path when the entry knew its own binaries;
+	// reaching here means it did not, and a real install is the fix.
+	if mgr.IsVersionInstalled(toolName, planVersion) && !isHiddenTool(mgr, toolName) {
 		reporter.Status(fmt.Sprintf("%s@%s is already installed", toolName, planVersion))
 		if err := recordInstallRelationship(mgr, toolName, parent, isExplicit); err != nil {
 			reporter.Warn("failed to update state: %v", err)
@@ -714,6 +719,13 @@ func resolveRuntimeDeps(r *recipe.Recipe, mgr *install.Manager, reporter progres
 // appends parent to RequiredBy. When isExplicit is false but parent is
 // non-empty, only the required-by edge is recorded via AddRequiredBy.
 // Both branches are no-ops when there is nothing to record.
+// isHiddenTool reports whether the tool is recorded as somebody's hidden
+// dependency rather than something the user installed.
+func isHiddenTool(mgr *install.Manager, toolName string) bool {
+	ts, err := mgr.GetToolState(toolName)
+	return err == nil && ts != nil && ts.IsHidden
+}
+
 func recordInstallRelationship(mgr *install.Manager, toolName, parent string, isExplicit bool) error {
 	if isExplicit {
 		return mgr.MarkExplicit(toolName, parent)

@@ -486,9 +486,11 @@ Where it does not apply:
 - **Library recipes** (`type = "library"`) — rejected by recipe validation.
   Libraries are installed without a post-install phase and have no shell
   integration.
-- **Recipes installed as a dependency of another tool** — the dependency
-  installer runs every step inline with no post-install phase, so `set_env`
-  fails the install with an explicit error rather than exporting nothing.
+- **Already installed as somebody's dependency** — see the bullet below; a
+  dependency that is already present runs no steps at all. A dependency being
+  installed for the first time does run `set_env` normally, in its own
+  post-install phase. See
+  [Post-Install Steps in a Dependency Recipe](dependencies-reference.md#post-install-steps-in-a-dependency-recipe).
 - **Already-installed tools** — an install that short-circuits on "already
   installed" runs no steps, so the exports appear on the next fresh install or
   version upgrade. `tsuku remove <tool> && tsuku install <tool>` applies them now.

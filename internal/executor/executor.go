@@ -373,14 +373,21 @@ func (e *Executor) GetCleanupActions() []actions.CleanupAction {
 // DependencyInstall describes one dependency this executor installed itself,
 // through installSingleDependency rather than through the normal install path.
 //
-// The caller needs all four to record the install: the tool and version name
+// The caller needs all of it to record the install: the tool and version name
 // the state entry, RecipeType says whether the payload landed in
-// $TSUKU_HOME/tools or $TSUKU_HOME/libs, and CleanupActions lists what the
-// dependency's steps wrote outside its own install directory.
+// $TSUKU_HOME/tools or $TSUKU_HOME/libs, CleanupActions lists what the
+// dependency's steps wrote outside its own install directory, and Binaries
+// names what the dependency provides.
+//
+// Binaries matters more than it looks. A dependency's state entry is hidden,
+// and the only way out of hidden is ExposeHidden, which links exactly the
+// binaries the entry records. An entry that records none is one `tsuku install
+// <dep>` away from a dangling symlink.
 type DependencyInstall struct {
 	Tool           string
 	Version        string
 	RecipeType     string
+	Binaries       []string
 	CleanupActions []actions.CleanupAction
 }
 
@@ -903,6 +910,29 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		Reporter:                e.getReporter(),
 	}
 
+	// Hand the dependency's cleanup actions to the caller on every exit, not
+	// only the successful one. They describe files outside finalDir -- shell.d
+	// fragments, mostly -- that are already written by the time a later step
+	// fails, and the os.Stat(finalDir) dedup above means a retry will not run
+	// these steps again to re-record them. Dropping them on the error path is
+	// the same permanent orphan as dropping them altogether.
+	//
+	// Nothing is recorded when the dependency left nothing behind: no payload
+	// at its permanent path and no files written outside it.
+	defer func() {
+		_, payloadLanded := os.Stat(finalDir)
+		if payloadLanded != nil && len(execCtx.CleanupActions) == 0 {
+			return
+		}
+		e.depInstalls = append(e.depInstalls, DependencyInstall{
+			Tool:           dep.Tool,
+			Version:        dep.Version,
+			RecipeType:     dep.RecipeType,
+			Binaries:       ExtractBinariesFromSteps(dep.Steps),
+			CleanupActions: execCtx.CleanupActions,
+		})
+	}()
+
 	// Validate all steps before execution (fail fast)
 	for i, step := range dep.Steps {
 		action := actions.Get(step.Action)
@@ -948,16 +978,6 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 	if err := e.executeDependencySteps(ctx, dep, execCtx, "post-install"); err != nil {
 		return err
 	}
-
-	// Hand the dependency's cleanup actions to the caller. They describe files
-	// outside finalDir -- shell.d fragments, mostly -- which nothing else knows
-	// about, so dropping them here is what strands them on disk forever.
-	e.depInstalls = append(e.depInstalls, DependencyInstall{
-		Tool:           dep.Tool,
-		Version:        dep.Version,
-		RecipeType:     dep.RecipeType,
-		CleanupActions: execCtx.CleanupActions,
-	})
 
 	e.getReporter().Log("✅ %s@%s", dep.Tool, dep.Version)
 	return nil

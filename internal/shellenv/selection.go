@@ -11,10 +11,12 @@ import (
 // inactive version and is excluded. A file in neither is unrecorded and is included
 // unchanged, which is the behavior on every release to date.
 //
-// The narrowness is deliberate. Three code paths write shell.d without recording a
-// cleanup action, so a stricter "source only what state records" rule would silently
-// disable a working shell integration -- no error, no log line, just a tool that has
-// vanished from the user's shell.
+// The narrowness is deliberate. Code paths that write shell.d without recording a
+// cleanup action still exist -- library installs run no post-install phase, and a
+// library pulled in as a dependency has nowhere to record -- so a stricter "source
+// only what state records" rule would silently disable a working shell integration:
+// no error, no log line, just a tool that has vanished from the user's shell. Any
+// fragment written by an older tsuku is in the same position.
 type ShellDSelection struct {
 	Active map[string]string // $TSUKU_HOME-relative path -> recorded SHA-256
 	Known  map[string]string // every recorded shell.d path, active or not

@@ -22,6 +22,15 @@ func (a *stateReaderAdapter) AllTools() (map[string]index.ToolInfo, error) {
 
 	result := make(map[string]index.ToolInfo, len(state.Installed))
 	for name, ts := range state.Installed {
+		// A hidden tool is somebody's dependency: its payload is on disk but
+		// it has no symlinks, so its commands are not runnable. The index
+		// answers "is this command available", and `installed = 1` there
+		// drives `tsuku which`, `tsuku suggest` and the autoinstall
+		// short-circuit. Claiming a command the user cannot run is worse than
+		// omitting it.
+		if ts.IsHidden {
+			continue
+		}
 		info := index.ToolInfo{
 			ActiveVersion: ts.ActiveVersion,
 			Source:        ts.Source,

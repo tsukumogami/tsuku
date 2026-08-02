@@ -143,7 +143,14 @@ func setVersionCleanup(ts *ToolState, version string, actions []CleanupAction) {
 // dependency is not a request to switch the user's active version, and the
 // shell.d projection reads the active version to decide which fragment belongs
 // in the cache.
-func (m *Manager) RecordDependencyInstall(name, version, parent string) error {
+//
+// binaries names what the dependency provides. Recording it is not optional
+// bookkeeping: hidden is a state a tool leaves through ExposeHidden, which
+// links exactly the binaries the entry records, so an entry that records none
+// is one `tsuku install <dep>` away from a dangling symlink. When the
+// dependency's steps do not name any, CheckAndExposeHidden declines to expose
+// it and the user gets a real install instead.
+func (m *Manager) RecordDependencyInstall(name, version, parent string, binaries []string) error {
 	if version == "" {
 		return nil
 	}
@@ -154,12 +161,13 @@ func (m *Manager) RecordDependencyInstall(name, version, parent string) error {
 			ts.Versions = make(map[string]VersionState)
 		}
 		if _, exists := ts.Versions[version]; !exists {
-			ts.Versions[version] = VersionState{InstalledAt: time.Now()}
+			ts.Versions[version] = VersionState{InstalledAt: time.Now(), Binaries: binaries}
 		}
 
 		if fresh {
 			ts.ActiveVersion = version
 			ts.Version = version
+			ts.Binaries = binaries
 			ts.IsHidden = true
 			ts.IsExecutionDependency = true
 		}

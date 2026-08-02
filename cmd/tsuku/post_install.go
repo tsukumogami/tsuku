@@ -93,7 +93,7 @@ func recordDependencyInstalls(
 			continue
 		}
 
-		if err := mgr.RecordDependencyInstall(dep.Tool, dep.Version, parent); err != nil {
+		if err := mgr.RecordDependencyInstall(dep.Tool, dep.Version, parent, dep.Binaries); err != nil {
 			warnf("failed to record dependency %s@%s: %v", dep.Tool, dep.Version, err)
 			continue
 		}

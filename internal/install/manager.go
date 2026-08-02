@@ -266,6 +266,12 @@ func (m *Manager) InstallWithOptions(ctx context.Context, name, version, workDir
 		if opts.IsHidden {
 			ts.IsHidden = true
 			ts.IsExecutionDependency = true
+		} else {
+			// A visible install is the user asking for the tool by name. If it
+			// was only here as somebody's hidden dependency, it is not any
+			// more -- leaving the flag set would keep it out of `tsuku list`
+			// and out of update checks for a tool the user just installed.
+			ts.IsHidden = false
 		}
 	})
 	if err != nil {
