@@ -9,6 +9,17 @@ import (
 	"time"
 )
 
+// DataDirName is the $TSUKU_HOME subdirectory holding per-tool user data.
+//
+// Everything under it belongs to the user, not to tsuku: a tool's own state that has to
+// outlive any single installed version. Nothing tsuku ships deletes anything here. That
+// is the whole point of the tree being separate from share/, whose contents tsuku
+// regenerates freely.
+//
+// Exported because internal/actions computes the same path from the execution context
+// rather than from a Config, and the two must not drift on the spelling.
+const DataDirName = "data"
+
 const (
 	// EnvTsukuHome is the environment variable to override the default tsuku home directory
 	EnvTsukuHome = "TSUKU_HOME"
@@ -331,6 +342,7 @@ type Config struct {
 	KeyCacheDir           string // $TSUKU_HOME/cache/keys (PGP public keys)
 	TapCacheDir           string // $TSUKU_HOME/cache/taps (Homebrew tap metadata)
 	ShareDir              string // $TSUKU_HOME/share (shared data files, e.g. shell hook files)
+	DataDir               string // $TSUKU_HOME/data (per-tool user data; never deleted by tsuku)
 	ConfigFile            string // $TSUKU_HOME/config.toml
 }
 
@@ -365,6 +377,7 @@ func DefaultConfig() (*Config, error) {
 		KeyCacheDir:           filepath.Join(tsukuHome, "cache", "keys"),
 		TapCacheDir:           filepath.Join(tsukuHome, "cache", "taps"),
 		ShareDir:              filepath.Join(tsukuHome, "share"),
+		DataDir:               filepath.Join(tsukuHome, DataDirName),
 		ConfigFile:            filepath.Join(tsukuHome, "config.toml"),
 	}, nil
 }
@@ -396,6 +409,19 @@ func (c *Config) EnsureDirectories() error {
 	for _, dir := range dirs {
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			return fmt.Errorf("failed to create directory %s: %w", dir, err)
+		}
+	}
+
+	// DataDir holds user data rather than tsuku's own files, so it is created 0700 like
+	// share/shell.d and share/completions rather than 0755 like tools/. Only the root is
+	// ours; a tool creates its own subtree underneath under the user's umask.
+	//
+	// Guarded for the same reason ShareDir is: a Config built directly without this field
+	// would otherwise make filepath.Join("", "data") yield the relative path "data" and
+	// scatter a stray directory into the process's working directory.
+	if c.DataDir != "" {
+		if err := os.MkdirAll(c.DataDir, 0700); err != nil {
+			return fmt.Errorf("failed to create directory %s: %w", c.DataDir, err)
 		}
 	}
 

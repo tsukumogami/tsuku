@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/tsukumogami/tsuku/internal/datamigration"
 	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/shellenv"
 )
@@ -146,6 +147,9 @@ func (m *Manager) RemoveVersion(ctx context.Context, name, version string) (err 
 	// before the promotion sees the pre-promotion world.
 	affectedShells := m.executeCleanupActions(ctx, name, version, versionState.CleanupActions, toolState)
 
+	// Rescue any user data still sitting in the version directory before it goes.
+	m.rescueToolData(name)
+
 	// Remove version directory
 	toolDir := m.config.ToolDir(name, version)
 	if err := os.RemoveAll(toolDir); err != nil {
@@ -251,6 +255,9 @@ func (m *Manager) RemoveAllVersions(ctx context.Context, name string) (err error
 			}
 		}
 	}
+
+	// Rescue any user data still sitting in the version directories before they go.
+	m.rescueToolData(name)
 
 	// Remove all version directories
 	for version := range toolState.Versions {
@@ -474,5 +481,35 @@ func (m *Manager) rebuildShellCaches(shells map[string]bool, sel shellenv.ShellD
 		if err := shellenv.RebuildShellCache(m.config.HomeDir, shell, sel); err != nil {
 			fmt.Printf("   Warning: failed to rebuild shell cache for %s: %v\n", shell, err)
 		}
+	}
+}
+
+// rescueToolData moves user data out of a tool's version directories before they are
+// deleted, for tools whose data root used to live inside them.
+//
+// This is not the migration -- it is the backstop for a user the migration never reached.
+// The migration runs when a tool's recipe installs; a user who stays on their current
+// version never triggers it, and then `tsuku remove` would delete a directory that still
+// holds their data. That would make the promise that removal preserves the data root
+// vacuous for exactly the people it was written for. It also covers removals the user
+// never asked for by name, such as an orphaned dependency being reaped.
+//
+// It needs no guard against moving data out from under a live export, which the
+// migration itself does need: cleanup actions have already torn down the shell fragment
+// by the time this runs, so there is no export left to invalidate.
+func (m *Manager) rescueToolData(name string) {
+	if name != datamigration.NvmTool {
+		return
+	}
+	result, err := datamigration.MigrateNvm(m.config.HomeDir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: could not move all nvm data to %s: %v\n", datamigration.NvmDataDir(m.config.HomeDir), err)
+		return
+	}
+	if len(result.Moved) > 0 {
+		fmt.Printf("Kept your nvm data in %s\n", datamigration.NvmDataDir(m.config.HomeDir))
+	}
+	if msg := datamigration.ConflictReport(datamigration.NvmDataDir(m.config.HomeDir), result.Conflicts); msg != "" {
+		fmt.Fprintln(os.Stderr, msg)
 	}
 }

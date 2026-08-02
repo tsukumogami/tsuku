@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/tsukumogami/tsuku/internal/datamigration"
+	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
@@ -146,6 +148,15 @@ func (a *SetEnvAction) Execute(ctx *ExecutionContext, params map[string]interfac
 	// staging directory that ctx.InstallDir points at.
 	vars := GetStandardVars(ctx.Version, ctx.ToolInstallDir, ctx.WorkDir, ctx.LibsDir)
 
+	// {data_dir} is expanded here rather than in GetStandardVars: widening that would
+	// push the placeholder into all nine of its callers to serve the two actions that
+	// understand it.
+	toolDataDir, err := dataDir(ctx)
+	if err != nil {
+		return fmt.Errorf("set_env: %w", err)
+	}
+	vars["data_dir"] = toolDataDir
+
 	// Derive $TSUKU_HOME from ToolsDir (which is $TSUKU_HOME/tools)
 	tsukuHome := filepath.Dir(ctx.ToolsDir)
 	shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
@@ -196,7 +207,51 @@ func (a *SetEnvAction) Execute(ctx *ExecutionContext, params map[string]interfac
 		upsertCleanup(ctx, target, version, shell, contentHash(written))
 	}
 
+	migrateExportedDataRoots(envVars, tsukuHome, reporter)
+
 	return nil
+}
+
+// dataRootVars are environment variables that name a tool's data root rather than its
+// program directory -- the ones tsuku used to point at a directory it later reclaimed.
+var dataRootVars = map[string]func(tsukuHome string) (datamigration.Result, error){
+	"NVM_DIR": datamigration.MigrateNvm,
+}
+
+// migrateExportedDataRoots relocates data left in a legacy location for any data-root
+// variable this step just exported.
+//
+// This runs here, inline, rather than as its own recipe step, and the reason is the
+// whole correctness argument. The export written above is an absolute path, frozen into
+// a version-keyed fragment and single-quoted so the shell never re-expands it; nothing
+// else in tsuku rewrites a fragment's body. So the only moment at which the data moving
+// and NVM_DIR being rewritten are the same event is right here. Anywhere else -- a
+// general install hook, a later phase, a separate command -- fires at times when this
+// recipe has not run, the export still names the old directory, and moving the data
+// would cause precisely the disappearance this migration exists to prevent. Being a
+// call rather than a step also means no future recipe edit can reorder it wrongly.
+//
+// Failures are reported and swallowed. Returning an error would abort the rest of the
+// post-install phase, costing later steps the cleanup records they need; and nothing
+// here is worth failing an install over, because the merge cannot destroy data.
+func migrateExportedDataRoots(envVars []recipe.EnvVar, tsukuHome string, reporter progress.Reporter) {
+	for _, envVar := range envVars {
+		migrate, ok := dataRootVars[envVar.Name]
+		if !ok {
+			continue
+		}
+		result, err := migrate(tsukuHome)
+		if err != nil {
+			reporter.Status(fmt.Sprintf("   Could not finish moving %s data: %v", envVar.Name, err))
+			continue
+		}
+		if len(result.Moved) > 0 {
+			reporter.Status(fmt.Sprintf("   Moved %d existing %s item(s) into the new data directory", len(result.Moved), envVar.Name))
+		}
+		if len(result.Conflicts) > 0 {
+			reporter.Status(fmt.Sprintf("   %d %s item(s) could not be moved; run 'tsuku doctor' for details", len(result.Conflicts), envVar.Name))
+		}
+	}
 }
 
 // envTargetName builds the shell.d basename for this recipe's exports.

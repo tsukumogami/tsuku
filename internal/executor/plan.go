@@ -173,16 +173,17 @@ type ResolvedStep struct {
 // - Package manager actions: External dependency resolution
 var ActionEvaluability = map[string]bool{
 	// Primitive actions - evaluable (direct execution with deterministic outcomes)
-	"download_file":      true, // Primitive: requires checksum, used in plans
-	"extract":            true,
-	"chmod":              true,
-	"install_binaries":   true,
-	"set_env":            true,
-	"set_rpath":          true,
-	"link_dependencies":  true,
-	"install_libraries":  true,
-	"validate_checksum":  true,
-	"install_shell_init": true, // Lifecycle: copies init scripts to shell.d
+	"download_file":         true, // Primitive: requires checksum, used in plans
+	"extract":               true,
+	"chmod":                 true,
+	"install_binaries":      true,
+	"set_env":               true,
+	"set_rpath":             true,
+	"link_dependencies":     true,
+	"install_libraries":     true,
+	"validate_checksum":     true,
+	"install_shell_init":    true, // Lifecycle: copies init scripts to shell.d
+	"install_program_files": true, // Lifecycle: copies a tool's program files into its data dir
 
 	// Ecosystem primitives - evaluable through ecosystem-specific configuration
 	"npm_exec": true,
