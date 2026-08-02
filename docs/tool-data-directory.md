@@ -61,7 +61,8 @@ installs sit there until you move them. Use `mv` on the named directories rather
 Automatic migration was deliberately left out. Doing it properly means recipes being
 able to describe their own data layout and carry their own migration steps, so that
 knowledge ships and versions with the recipe instead of being compiled into the CLI.
-That is a design in its own right rather than a special case for one tool.
+That is a design in its own right rather than a special case for one tool, tracked in
+issue #2472.
 
 ## An existing nvm you installed some other way
 

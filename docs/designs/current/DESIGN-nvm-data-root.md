@@ -308,7 +308,7 @@ step in the same phase satisfies it equally.
 What a correct version needs is for a recipe to describe its own data layout and carry
 its own migration, so the knowledge ships and versions with the recipe. That is a
 recipe-schema design, and it deserves to be worked out against more than one example
-rather than inferred from nvm. Tracked separately.
+rather than inferred from nvm. Tracked in #2472.
 
 Deferring it costs the user a manual `mv`, and costs nothing else: nothing garbage-collects
 `share/shell.d`, where every released tsuku left nvm's data, so the installs sit there
@@ -590,10 +590,10 @@ directory it can name in `doctor` output and size reporting.
 
 ## Deliberately out of scope
 
-- **Recipe-carried migration.** The reason this design ships no migration: a recipe needs
-  to be able to describe its own data layout and carry its own migration steps, so the
-  knowledge ships and versions with the recipe rather than being compiled into the CLI.
-  nvm is the motivating example, not the whole requirement.
+- **Recipe-carried migration (#2472).** The reason this design ships no migration: a
+  recipe needs to be able to describe its own data layout and carry its own migration
+  steps, so the knowledge ships and versions with the recipe rather than being compiled
+  into the CLI. nvm is the motivating example, not the whole requirement.
 - **Making `Activate` re-run `set_env`** so activate and rollback rewrite fragments. The
   general fix for the gap above.
 - **`set_env` gaining `if_unset` semantics** so a user-set `NVM_DIR` wins regardless of
