@@ -79,8 +79,8 @@ func TestCheckAndExposeHidden_DependencyEntry(t *testing.T) {
 			if err := os.WriteFile(filepath.Join(depDir, tt.binaryPath), []byte("#!/bin/sh\n"), 0755); err != nil {
 				t.Fatalf("writing dep binary: %v", err)
 			}
-			if err := mgr.RecordDependencyInstall("mydep", "1.0.0", "parent", tt.recorded); err != nil {
-				t.Fatalf("RecordDependencyInstall() error = %v", err)
+			if err := mgr.EnsureDependencyEntry("mydep", "1.0.0", "parent", tt.recorded); err != nil {
+				t.Fatalf("EnsureDependencyEntry() error = %v", err)
 			}
 
 			exposed, err := CheckAndExposeHidden(context.Background(), mgr, "mydep")
@@ -116,8 +116,8 @@ func TestCheckAndExposeHidden_DependencyEntry(t *testing.T) {
 func TestInstallWithOptions_ClearsHiddenOnVisibleInstall(t *testing.T) {
 	_, mgr := exposeHome(t)
 
-	if err := mgr.RecordDependencyInstall("mydep", "1.0.0", "parent", nil); err != nil {
-		t.Fatalf("RecordDependencyInstall() error = %v", err)
+	if err := mgr.EnsureDependencyEntry("mydep", "1.0.0", "parent", nil); err != nil {
+		t.Fatalf("EnsureDependencyEntry() error = %v", err)
 	}
 	before, err := mgr.GetToolState("mydep")
 	if err != nil || before == nil || !before.IsHidden {

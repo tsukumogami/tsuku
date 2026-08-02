@@ -71,6 +71,13 @@ func finishPostInstall(cfg *config.Config, mgr *install.Manager, toolName, versi
 //
 // parent names the tool whose install pulled the dependency in, and is recorded
 // as a RequiredBy edge so removing the dependency warns first.
+//
+// Each dependency that wrote a fragment rebuilds the shell caches through
+// finishPostInstall, so an install with N such dependencies writes the init
+// cache N+1 times counting the parent's own. The projection is read back out of
+// state each time, so a single rebuild at the end would be equivalent and
+// cheaper; it is not worth a second code path for the one or two dependencies a
+// real recipe has.
 func recordDependencyInstalls(
 	cfg *config.Config,
 	mgr *install.Manager,
@@ -93,7 +100,7 @@ func recordDependencyInstalls(
 			continue
 		}
 
-		if err := mgr.RecordDependencyInstall(dep.Tool, dep.Version, parent, dep.Binaries); err != nil {
+		if err := mgr.EnsureDependencyEntry(dep.Tool, dep.Version, parent, dep.Binaries); err != nil {
 			warnf("failed to record dependency %s@%s: %v", dep.Tool, dep.Version, err)
 			continue
 		}

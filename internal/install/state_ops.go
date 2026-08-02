@@ -103,9 +103,11 @@ func setVersionCleanup(ts *ToolState, version string, actions []CleanupAction) {
 	ts.Versions[version] = vs
 }
 
-// RecordDependencyInstall gives a dependency the executor installed itself a
+// EnsureDependencyEntry gives a dependency the executor installed itself a
 // state entry, so the files it wrote are attributable to it rather than
-// invisible.
+// invisible. It is deliberately not named after Install: nothing here installs
+// anything, and the entry it writes describes a directory that is already on
+// disk.
 //
 // Executor.installSingleDependency copies a dependency straight into
 // $TSUKU_HOME/tools/<name>-<version> without going through Install: no
@@ -130,12 +132,19 @@ func setVersionCleanup(ts *ToolState, version string, actions []CleanupAction) {
 // is one `tsuku install <dep>` away from a dangling symlink. When the
 // dependency's steps do not name any, CheckAndExposeHidden declines to expose
 // it and the user gets a real install instead.
-func (m *Manager) RecordDependencyInstall(name, version, parent string, binaries []string) error {
+func (m *Manager) EnsureDependencyEntry(name, version, parent string, binaries []string) error {
 	if version == "" {
 		return nil
 	}
 	return m.state.UpdateTool(name, func(ts *ToolState) {
-		fresh := ts.ActiveVersion == "" && len(ts.Versions) == 0
+		// Two separate questions, deliberately not one. Whether to claim the
+		// active version turns on there not being one -- an entry with versions
+		// but no active version would otherwise record a fragment the shell.d
+		// projection never sources, silently. Whether to mark the tool hidden
+		// turns on the tool being unknown until now: a tool the user installed
+		// explicitly must not go hidden because something later depended on it.
+		needsActiveVersion := ts.ActiveVersion == ""
+		unknownUntilNow := needsActiveVersion && len(ts.Versions) == 0
 
 		if ts.Versions == nil {
 			ts.Versions = make(map[string]VersionState)
@@ -144,10 +153,12 @@ func (m *Manager) RecordDependencyInstall(name, version, parent string, binaries
 			ts.Versions[version] = VersionState{InstalledAt: time.Now(), Binaries: binaries}
 		}
 
-		if fresh {
+		if needsActiveVersion {
 			ts.ActiveVersion = version
 			ts.Version = version
 			ts.Binaries = binaries
+		}
+		if unknownUntilNow {
 			ts.IsHidden = true
 			ts.IsExecutionDependency = true
 		}

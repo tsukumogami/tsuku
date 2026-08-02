@@ -530,10 +530,6 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 	// Execute the plan
 	if err := exec.ExecutePlan(globalCtx, plan); err != nil {
 		reporter.Log("❌ %s@%s", toolName, planVersion)
-		// Dependencies that finished before the failure are on disk and stay
-		// there. Recording them is what makes them removable; skipping the
-		// record because the tool failed would leave exactly the orphan this
-		// path is being fixed to stop producing.
 		recordDependencyInstalls(cfg, mgr, toolName, exec.GetDependencyInstalls(), reporter.Warn)
 		// Handle ChecksumMismatchError specially - it has a user-friendly message
 		var checksumErr *executor.ChecksumMismatchError
@@ -599,12 +595,6 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 		// shell caches they touched.
 		finishPostInstall(cfg, mgr, toolName, version, exec.GetCleanupActions(), reporter.Warn)
 
-		// Dependencies the executor installed itself carry their own cleanup
-		// actions. They are not part of this tool's -- a dependency's shell.d
-		// fragment is named and version-keyed after the dependency -- so they
-		// are recorded against the dependency's own state entry.
-		recordDependencyInstalls(cfg, mgr, toolName, exec.GetDependencyInstalls(), reporter.Warn)
-
 		// Update state with explicit flag, parent, and dependencies
 		// via semantic Manager methods.
 		if err := recordInstallRelationship(mgr, toolName, parent, isExplicit); err != nil {
@@ -617,6 +607,12 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 			reporter.Warn("failed to record runtime dependencies: %v", err)
 		}
 	}
+
+	// Record the dependencies the executor installed itself. Outside the
+	// system-dependency branch on purpose: whether the parent turned out to be
+	// a require_system stub says nothing about the dependencies that were
+	// installed on the way to finding out.
+	recordDependencyInstalls(cfg, mgr, toolName, exec.GetDependencyInstalls(), reporter.Warn)
 
 	// Update used_by for any library dependencies now that we know the tool version
 	toolNameVersion := fmt.Sprintf("%s-%s", toolName, version)

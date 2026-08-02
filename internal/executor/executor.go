@@ -581,7 +581,8 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 		}
 	}
 
-	// Execute each step (including flattened dependency steps).
+	// Execute the main tool's steps. Dependencies were installed above, each in
+	// its own context, and their steps are not in this list.
 	// Post-install steps are skipped here — they run after SetToolInstallDir
 	// is called, via a separate ExecutePhase("post-install") call.
 	for i, step := range allSteps {

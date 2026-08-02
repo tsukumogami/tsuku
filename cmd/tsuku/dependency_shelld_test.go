@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -9,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
@@ -622,4 +624,62 @@ func TestDependencyShellD_RecordedWhenTheDependencyItselfFails(t *testing.T) {
 		t.Fatalf("RemoveAllVersions(%s) error = %v", depTool, err)
 	}
 	h.assertShellDEmpty()
+}
+
+// TestDependencyShellD_LibraryDependencyWarns covers the one branch that talks
+// to the user. A library dependency lands in $TSUKU_HOME/libs and is tracked in
+// state.Libs, whose LibraryVersionState has no cleanup-action field, so there is
+// nowhere to record what it wrote. The validator blocks set_env in library
+// recipes, but `tsuku install --plan` takes arbitrary plans, and this branch
+// became reachable the moment ToolInstallDir started being populated for
+// dependencies. Warning is the honest answer; silence would be the orphan this
+// whole change exists to stop.
+func TestDependencyShellD_LibraryDependencyWarns(t *testing.T) {
+	h := newDepHarness(t)
+
+	deps := []executor.DependencyInstall{{
+		Tool:       "qalib",
+		Version:    "1.2.3",
+		RecipeType: "library",
+		CleanupActions: []actions.CleanupAction{{
+			Action: "delete_file",
+			Path:   "share/shell.d/qalib@1.2.3.bash",
+		}},
+	}}
+
+	var warnings []string
+	recordDependencyInstalls(h.cfg, h.mgr, depParentTool, deps, func(format string, args ...interface{}) {
+		warnings = append(warnings, fmt.Sprintf(format, args...))
+	})
+
+	if len(warnings) != 1 {
+		t.Fatalf("warnings = %v, want exactly one naming the library", warnings)
+	}
+	if !strings.Contains(warnings[0], "qalib@1.2.3") {
+		t.Errorf("warning %q does not name the library and version the user has to clean up", warnings[0])
+	}
+
+	// No tool entry may be invented for it: its payload is in libs/, so a
+	// ToolState would point at a tools/ directory that does not exist.
+	ts, err := h.mgr.GetToolState("qalib")
+	if err != nil {
+		t.Fatalf("GetToolState() error = %v", err)
+	}
+	if ts != nil {
+		t.Errorf("a library dependency got a tool state entry: %+v", ts)
+	}
+}
+
+// A library dependency that wrote nothing outside its own directory is the
+// ordinary case and must stay silent.
+func TestDependencyShellD_QuietLibraryDependency(t *testing.T) {
+	h := newDepHarness(t)
+
+	recordDependencyInstalls(h.cfg, h.mgr, depParentTool, []executor.DependencyInstall{{
+		Tool:       "qalib",
+		Version:    "1.2.3",
+		RecipeType: "library",
+	}}, func(format string, args ...interface{}) {
+		t.Errorf("unexpected warning: "+format, args...)
+	})
 }
