@@ -966,7 +966,11 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		binDir := filepath.Join(finalDir, "bin")
 		if _, err := os.Stat(binDir); err == nil {
 			e.execPaths = append(e.execPaths, binDir)
-			execCtx.ExecPaths = append(execCtx.ExecPaths, binDir)
+			// Post-install steps run below and may need the dependency's own
+			// binaries. Re-point rather than append a second time: the two
+			// slices were aliased when the context was built, so appending to
+			// both happens to work only while they share a backing array.
+			execCtx.ExecPaths = e.execPaths
 		}
 	}
 

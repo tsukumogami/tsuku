@@ -122,11 +122,13 @@ func (a *SetEnvAction) Execute(ctx *ExecutionContext, params map[string]interfac
 	}
 
 	if ctx.ToolInstallDir == "" {
-		// Reached when the step runs outside the post-install phase, which in
-		// practice means a recipe overrode the phase. Both install paths --
-		// the top-level one and Executor.installSingleDependency -- populate
-		// ToolInstallDir before they run post-install steps. Failing loudly
-		// beats writing an export that points nowhere.
+		// Both install paths -- the top-level one and
+		// Executor.installSingleDependency -- populate ToolInstallDir before
+		// they run post-install steps, and the validator rejects a recipe that
+		// tries to move set_env out of that phase. What is left is a
+		// hand-written plan passed to `tsuku install --plan`, which no
+		// validator sees. Failing loudly beats writing an export that points
+		// nowhere.
 		return fmt.Errorf("set_env ran outside the post-install phase, so the tool's final " +
 			"install directory is not known yet. Remove any 'phase' override from the step")
 	}

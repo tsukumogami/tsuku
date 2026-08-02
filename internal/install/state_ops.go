@@ -70,36 +70,16 @@ func (m *Manager) SetRuntimeDependencies(name string, deps []string) error {
 	})
 }
 
-// RecordCleanup stores actions on the tool's active version state.
-// CleanupActions live on VersionState (not ToolState directly), so this
-// method resolves the active version internally via ts.ActiveVersion.
+// RecordCleanupForVersion stores actions on a named version's state.
 //
-// No-op when actions is empty. No-op when ts.ActiveVersion is unset or
-// ts.Versions does not contain an entry for the active version — both
-// indicate the tool has not yet been installed in this lifecycle and
-// there is no version-state to attach cleanup actions to.
-func (m *Manager) RecordCleanup(name string, actions []CleanupAction) error {
-	if len(actions) == 0 {
-		return nil
-	}
-	return m.state.UpdateTool(name, func(ts *ToolState) {
-		if ts.ActiveVersion == "" {
-			return
-		}
-		setVersionCleanup(ts, ts.ActiveVersion, actions)
-	})
-}
-
-// RecordCleanupForVersion stores actions on a named version's state rather
-// than on whichever version is active.
-//
-// The distinction matters for a dependency. A plan can pin a dependency version
-// that is not the one the user has active, and installing it must not move the
-// active version's cleanup record out from under it. Callers that just installed
-// the version they are recording against can use RecordCleanup instead.
+// CleanupActions live on VersionState rather than on ToolState, and the version
+// is named explicitly rather than resolved from ts.ActiveVersion. A plan can pin
+// a dependency version that is not the one the user has active, and installing
+// it must not move the active version's cleanup record out from under it.
 //
 // No-op when actions is empty, when version is empty, or when the tool has no
-// state entry for that version.
+// state entry for that version — the last of which means the tool has not been
+// installed in this lifecycle and there is no version state to attach to.
 func (m *Manager) RecordCleanupForVersion(name, version string, actions []CleanupAction) error {
 	if len(actions) == 0 || version == "" {
 		return nil

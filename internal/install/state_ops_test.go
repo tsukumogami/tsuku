@@ -160,81 +160,75 @@ func TestManager_SetRuntimeDependencies_Overwrites(t *testing.T) {
 	}
 }
 
-func TestManager_RecordCleanup_StoresOnActiveVersion(t *testing.T) {
+func TestManager_RecordCleanupForVersion_StoresOnTheNamedVersion(t *testing.T) {
 	mgr := newOpsManager(t)
 
-	// Seed the tool with an ActiveVersion and matching Versions entry.
+	// Two versions installed, with the one being recorded against deliberately
+	// not the active one -- a plan can pin a dependency version the user does
+	// not have active, and recording must not move the active version's record.
 	if err := mgr.state.UpdateTool("gh", func(ts *ToolState) {
 		ts.ActiveVersion = "2.50.0"
 		ts.Versions = map[string]VersionState{
 			"2.50.0": {Requested: "2.50.0"},
+			"2.40.0": {Requested: "2.40.0"},
 		}
 	}); err != nil {
 		t.Fatalf("seed UpdateTool error: %v", err)
 	}
 
 	actions := []CleanupAction{
-		{Action: "delete_file", Path: "shell/completions/gh.bash"},
-		{Action: "delete_dir", Path: "share/gh"},
+		{Action: "delete_file", Path: "share/shell.d/gh@2.40.0.bash"},
 	}
-	if err := mgr.RecordCleanup("gh", actions); err != nil {
-		t.Fatalf("RecordCleanup error: %v", err)
+	if err := mgr.RecordCleanupForVersion("gh", "2.40.0", actions); err != nil {
+		t.Fatalf("RecordCleanupForVersion error: %v", err)
 	}
 
 	ts := readToolState(t, mgr, "gh")
-	vs, ok := ts.Versions["2.50.0"]
-	if !ok {
-		t.Fatalf("Versions[2.50.0] missing after RecordCleanup")
+	if !reflect.DeepEqual(ts.Versions["2.40.0"].CleanupActions, actions) {
+		t.Errorf("2.40.0 CleanupActions = %v, want %v", ts.Versions["2.40.0"].CleanupActions, actions)
 	}
-	if !reflect.DeepEqual(vs.CleanupActions, actions) {
-		t.Errorf("CleanupActions = %v, want %v", vs.CleanupActions, actions)
+	if len(ts.Versions["2.50.0"].CleanupActions) != 0 {
+		t.Errorf("the active version picked up %v, want nothing -- it wrote none of it",
+			ts.Versions["2.50.0"].CleanupActions)
 	}
 }
 
-func TestManager_RecordCleanup_EmptyActions_NoOp(t *testing.T) {
-	mgr := newOpsManager(t)
-
-	// Seed with an ActiveVersion so an accidental write would be detectable.
-	if err := mgr.state.UpdateTool("gh", func(ts *ToolState) {
-		ts.ActiveVersion = "1.0.0"
-		ts.Versions = map[string]VersionState{
-			"1.0.0": {
-				Requested:      "1.0.0",
-				CleanupActions: []CleanupAction{{Action: "delete_file", Path: "preexisting"}},
-			},
-		}
-	}); err != nil {
-		t.Fatalf("seed UpdateTool error: %v", err)
+func TestManager_RecordCleanupForVersion_NoOps(t *testing.T) {
+	tests := []struct {
+		name    string
+		version string
+		actions []CleanupAction
+	}{
+		{"empty actions", "1.0.0", nil},
+		{"empty version", "", []CleanupAction{{Action: "delete_file", Path: "x"}}},
+		{"version not in state", "9.9.9", []CleanupAction{{Action: "delete_file", Path: "x"}}},
 	}
 
-	if err := mgr.RecordCleanup("gh", nil); err != nil {
-		t.Fatalf("RecordCleanup(nil) error: %v", err)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mgr := newOpsManager(t)
+			if err := mgr.state.UpdateTool("gh", func(ts *ToolState) {
+				ts.ActiveVersion = "1.0.0"
+				ts.Versions = map[string]VersionState{
+					"1.0.0": {
+						Requested:      "1.0.0",
+						CleanupActions: []CleanupAction{{Action: "delete_file", Path: "preexisting"}},
+					},
+				}
+			}); err != nil {
+				t.Fatalf("seed UpdateTool error: %v", err)
+			}
 
-	ts := readToolState(t, mgr, "gh")
-	vs := ts.Versions["1.0.0"]
-	if len(vs.CleanupActions) != 1 || vs.CleanupActions[0].Path != "preexisting" {
-		t.Errorf("CleanupActions should be unchanged on no-op; got %v", vs.CleanupActions)
-	}
-}
+			if err := mgr.RecordCleanupForVersion("gh", tt.version, tt.actions); err != nil {
+				t.Fatalf("RecordCleanupForVersion error: %v", err)
+			}
 
-func TestManager_RecordCleanup_NoActiveVersion_NoOp(t *testing.T) {
-	mgr := newOpsManager(t)
-
-	// Tool exists in state but has no ActiveVersion (e.g., entry created
-	// by MarkExplicit before Install ran).
-	if err := mgr.MarkExplicit("gh", ""); err != nil {
-		t.Fatalf("seed MarkExplicit error: %v", err)
-	}
-
-	actions := []CleanupAction{{Action: "delete_file", Path: "x"}}
-	if err := mgr.RecordCleanup("gh", actions); err != nil {
-		t.Fatalf("RecordCleanup error: %v", err)
-	}
-
-	ts := readToolState(t, mgr, "gh")
-	if len(ts.Versions) > 0 {
-		t.Errorf("Versions should remain empty when ActiveVersion is unset; got %v", ts.Versions)
+			ts := readToolState(t, mgr, "gh")
+			vs := ts.Versions["1.0.0"]
+			if len(vs.CleanupActions) != 1 || vs.CleanupActions[0].Path != "preexisting" {
+				t.Errorf("CleanupActions should be unchanged on a no-op; got %v", vs.CleanupActions)
+			}
+		})
 	}
 }
 
