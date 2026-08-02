@@ -82,6 +82,7 @@ and action-specific parameters.
 | `text_replace` | Find/replace in files |
 | `install_shell_init` | Write shell init scripts to `share/shell.d/{target}@{version}.{shell}` |
 | `install_completions` | Write completions to `share/completions/{shell}/{target}` |
+| `install_program_files` | Copy a tool's own program files into its stable data dir `data/{tool}` |
 | `homebrew_relocate` | Fix @@HOMEBREW_PREFIX@@ paths in bottles |
 
 ### Special

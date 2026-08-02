@@ -269,3 +269,26 @@ jobs:
             exit 1
           fi
           echo "All darwin dlopen tests passed"
+
+  nvm-data-root:
+    name: "nvm Data Root Tests"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Run nvm data root tests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Points the registry at this PR's head, so the run installs the nvm recipe as
+          # changed here rather than the one already on main.
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
+        run: |
+          ./test/scripts/test-nvm-data-root.sh

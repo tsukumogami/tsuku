@@ -472,6 +472,17 @@ Notes:
   which one that is by rebuilding the cache.
 - Names must match `[A-Za-z_][A-Za-z0-9_]*`, and values may not contain newlines.
   Values are single-quoted, so no shell metacharacter in a value is interpreted.
+  That also means `$HOME` and `${TSUKU_HOME}` in a value reach the shell
+  literally; there is no way to make a recipe value expand at shell time.
+- **Use `{data_dir}`, not `{install_dir}`, for a variable that names a tool's
+  data root.** `{data_dir}` expands to `$TSUKU_HOME/data/{tool}`, which is stable
+  across versions and which tsuku never deletes. `{install_dir}` is versioned and
+  reclaimed, so a data root pointed at it is emptied on the next upgrade and
+  eventually garbage-collected. The variables this applies to are the ones a tool
+  treats as the root of everything it manages for the user -- `NVM_DIR`,
+  `PYENV_ROOT`, `RBENV_ROOT`, `GOPATH`, `CARGO_HOME`, `VOLTA_HOME`, `SDKMAN_DIR`
+  and their kin. If the variable names the program you installed, `{install_dir}`
+  is right; if it names where the tool will put the user's things, it is not.
 - Several `set_env` steps in one recipe append to the same file rather than
   overwrite, so platform-gated variants and plain multiple steps both work.
 - Skipped entirely under `--no-shell-init`.
@@ -556,6 +567,48 @@ phase rule `install_shell_init` has: `source_command` needs
 Completion paths are not version-keyed — the filename is `{target}` alone, unlike
 `install_shell_init`'s `{target}@{version}`. There is no completions cache, so
 nothing concatenates or selects among them.
+
+### install_program_files
+
+Copies files from the tool's install directory into that tool's stable data
+directory, `$TSUKU_HOME/data/{tool}`.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `files` | []string | Yes | Paths relative to the tool's install dir |
+
+Runs in `post-install` — the source is the tool's final directory, which does not
+exist until the atomic rename.
+
+There is no destination parameter, and that is deliberate rather than an
+omission: the destination is always the tool's own data directory. A
+recipe-supplied path could reach `share/shell.d`, whose contents are
+concatenated into the script the user's shell sources, which would turn archive
+contents into shell startup code.
+
+Use it for a tool whose data root also has to contain part of the program. nvm is
+the case it exists for: `nvm exec` runs `"${NVM_DIR}/nvm-exec"`, and `nvm-exec`
+re-sources `nvm.sh` from its own directory, so both files must sit beside the
+user's Node versions:
+
+```toml
+[[steps]]
+action = "set_env"
+vars = [{name = "NVM_DIR", value = "{data_dir}"}]
+
+[[steps]]
+action = "install_program_files"
+files = ["nvm.sh", "nvm-exec"]
+```
+
+Files are copied, not symlinked, and re-copied on every install. `activate`,
+`rollback`, and removal-promotion do not re-run the post-install phase, so a
+symlink placed by a recipe would track the last-installed version and dangle once
+that version is reclaimed. Copying makes placement and refresh the same
+operation.
+
+`tsuku remove` deletes the copies. It does not delete anything else in the data
+directory.
 
 ---
 

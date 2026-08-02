@@ -89,3 +89,4 @@ CI automatically validates all recipes on PR:
 | `nix_install` | Nix packages | - |
 | `install_shell_init` | Install shell init scripts to `$TSUKU_HOME/share/shell.d/` | `source_file` or `source_command`, `target`, `shells` |
 | `install_completions` | Install shell completion scripts to `$TSUKU_HOME/share/completions/` | `source_file` or `source_command`, `target`, `shells` |
+| `install_program_files` | Copy a tool's own program files into its stable data dir `$TSUKU_HOME/data/{tool}` | `files` |
