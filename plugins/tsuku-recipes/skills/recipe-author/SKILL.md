@@ -75,6 +75,7 @@ and action-specific parameters.
 
 | Action | Description |
 |--------|-------------|
+| `extract` | Unpack an archive from the work dir; contained, so no entry can be written outside the destination |
 | `install_binaries` | Copy binaries to install dir; register for PATH symlinking |
 | `chmod` | Set file permissions |
 | `set_rpath` | Modify ELF RPATH for library resolution (Linux) |

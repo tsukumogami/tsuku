@@ -403,6 +403,59 @@ APT also has `apt_repo` (add repository) and `apt_ppa` (add Ubuntu PPA).
 
 ## File Operations
 
+### extract
+
+Unpacks an archive already present in the work directory. The download and
+archive composites above decompose to this action, so its rules apply to them
+too.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `archive` | string | Yes | Archive filename in the work dir |
+| `format` | string | Yes | `tar.gz`, `tar.xz`, `tar.bz2`, `tar.zst`, `tar.lz`, `tar`, `zip`, or `auto` |
+| `dest` | string | No | Destination directory relative to the work dir (default: the work dir) |
+| `strip_dirs` | int | No | Leading path components to strip (default: 0) |
+| `files` | []string | No | Extract only these paths (default: everything) |
+
+Platform: All.
+
+#### What extraction accepts
+
+Extraction is contained: no archive entry can cause a write outside the
+destination directory. The rule is about **traversal**, not about where a link
+points:
+
+- A symlink may point anywhere the packaging needs, including at a path that
+  leaves the destination. Creating the link writes nothing.
+- No entry may be **written through** a path that leaves the destination. An
+  archive that ships a symlink and then writes a later entry through it is
+  refused, whether the symlink escapes directly or via a chain.
+- Writing through a symlink that stays **inside** the destination works
+  normally, so the common `lib -> lib64` layout extracts as expected.
+
+Two further rules apply to symlink entries as packaging policy: the target must
+be relative (an absolute target is rejected), and it must resolve inside the
+destination. A bottle-style link that climbs above the destination and comes
+back down is rejected today; a link that stays within it is fine.
+
+Errors name the offending entry, for example:
+
+```
+archive entry "b/pwned": failed to create parent directory: ...
+symlink target escapes destination directory: bin/tool -> ../../../opt/pkg/bin/tool
+```
+
+If a recipe fails with either, the archive is asking for something extraction
+will not do. Prefer restructuring with `strip_dirs` or `dest` over trying to
+work around it.
+
+#### Zip archives flatten symlinks
+
+The `zip` format writes symlink members as regular files containing the link
+target text, with no warning. This is a long-standing gap rather than a
+deliberate rule. A recipe that needs real symlinks should prefer a tar format
+where upstream publishes one.
+
 ### install_binaries
 
 Copies binaries (or entire directories) into the tool's install location and
