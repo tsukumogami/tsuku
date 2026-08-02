@@ -1,10 +1,11 @@
 ```yaml
 topic: nvm-data-root
 chain_started: 2026-08-02T16:45:00Z
-last_updated: 2026-08-02T17:06:00Z
-phase_pointer: phase-2
-exit: UNSET
-exit_artifacts: []
+last_updated: 2026-08-02T19:05:00Z
+phase_pointer: phase-3
+exit: full-run
+exit_artifacts:
+  - docs/plans/PLAN-nvm-data-root.md
 visibility: Public
 execution_mode: auto
 max_rounds: 5
@@ -17,7 +18,9 @@ chain_skipped:
     reason: requirements-given-upstream-no-framing-shift
   - name: prd
     reason: requirements-given-upstream-repo-precedent-design-direct
-chain_ran: []
+chain_ran:
+  - design
+  - plan
 child_snapshots:
   design:
     status: Proposed
@@ -104,14 +107,22 @@ All three fire, so `/design` runs with a full decision roster. `/plan` fires ALW
 review-ready PR with green CI, so the PLAN is a self-contained document rather than
 a GitHub milestone with per-issue PRs.
 
-## Phase 2: Child invocation — design
+## Phase 2: Children ran
 
-`parent_orchestration:` sentinel active for the `/design` child.
+`/design` and `/plan` both returned. The `parent_orchestration:` sentinel was cleared
+after each. Validator pass-through was clean on both intermediates
+(`shirabe validate --format json --visibility=Public`, exit 0).
 
-```yaml
-parent_orchestration:
-  parent: scope
-  child: design
-  pre_invocation_sha: 82c88b5fdcd9c7e3ce94be9aeacd825556db9122
-  invoked_at: 2026-08-02T17:10:00Z
-```
+`/design` ran its full roster: four decision questions, two of them critical and each
+resolved through an adversarial bakeoff; a mandatory security review; and a two-reviewer
+jury (architecture, pragmatism). Fourteen findings adopted, two rejected with evidence,
+two partially adopted — recorded in `wip/design_nvm-data-root_review_disposition.md`.
+The reviews cut roughly a third of the proposed surface, including one change
+(dropping the recipe-controlled destination parameter) that the security and pragmatism
+reviewers reached independently from different lenses.
+
+## Phase 3: Exit
+
+`exit: full-run`. Terminal artifact is `docs/plans/PLAN-nvm-data-root.md` at
+`status: Active` (single-pr auto-transition; no GitHub milestone, no issues).
+`docs/designs/DESIGN-nvm-data-root.md` is at `status: Planned`.
