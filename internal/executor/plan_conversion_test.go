@@ -221,26 +221,47 @@ func assertFullyPopulated(t *testing.T, v reflect.Value, path string, seen map[r
 func TestRoundTripPreservesPreviouslyDroppedFields(t *testing.T) {
 	got := FromStoragePlan(ToStoragePlan(fullyPopulatedPlan()))
 
+	// Each case reads through a closure rather than being evaluated up front,
+	// so a dropped field reports which assertion failed instead of panicking
+	// on a nil dereference while the table is being built.
 	tests := []struct {
 		name string
-		got  interface{}
+		get  func() interface{}
 		want interface{}
 	}{
-		{"step phase routes post-install steps", got.Steps[0].Phase, "post-install"},
-		{"dependency tree, the only source of deps on the --plan path", len(got.Dependencies), 1},
-		{"nested dependency tree", len(got.Dependencies[0].Dependencies), 1},
-		{"verify block, whose absence skips verification silently", got.Verify.Command, "kubectl version --client"},
-		{"verify additional commands", len(got.Verify.Additional), 1},
-		{"dependency verify block", got.Dependencies[0].Verify.Command, "openssl version"},
-		{"recipe type, which decides library handling", got.Dependencies[0].RecipeType, "library"},
-		{"binaries, the fallback when no install_binaries step exists", len(got.Binaries), 1},
-		{"linux family targeting", got.Platform.LinuxFamily, "debian"},
+		{"step phase routes post-install steps",
+			func() interface{} { return got.Steps[0].Phase }, "post-install"},
+		{"dependency tree, the only source of deps on the --plan path",
+			func() interface{} { return len(got.Dependencies) }, 1},
+		{"nested dependency tree",
+			func() interface{} { return len(got.Dependencies[0].Dependencies) }, 1},
+		{"verify block, whose absence skips verification silently",
+			func() interface{} { return got.Verify.Command }, "kubectl version --client"},
+		{"verify additional commands",
+			func() interface{} { return len(got.Verify.Additional) }, 1},
+		{"verify exit code",
+			func() interface{} { return *got.Verify.ExitCode }, 3},
+		{"dependency verify block",
+			func() interface{} { return got.Dependencies[0].Verify.Command }, "openssl version"},
+		{"recipe type of the tool itself",
+			func() interface{} { return got.RecipeType }, "tool"},
+		{"recipe type of a dependency, which decides library handling",
+			func() interface{} { return got.Dependencies[0].RecipeType }, "library"},
+		{"binaries, the fallback when no install_binaries step exists",
+			func() interface{} { return len(got.Binaries) }, 1},
+		{"linux family targeting",
+			func() interface{} { return got.Platform.LinuxFamily }, "debian"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if !reflect.DeepEqual(tt.got, tt.want) {
-				t.Errorf("got %v, want %v", tt.got, tt.want)
+			defer func() {
+				if r := recover(); r != nil {
+					t.Fatalf("reading the field panicked, so the round trip dropped what it hangs off: %v", r)
+				}
+			}()
+			if actual := tt.get(); !reflect.DeepEqual(actual, tt.want) {
+				t.Errorf("got %v, want %v", actual, tt.want)
 			}
 		})
 	}
