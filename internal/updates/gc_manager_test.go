@@ -37,9 +37,10 @@ func installFixture(t *testing.T, mgr *install.Manager, cfg *config.Config, name
 
 // The end-to-end shape of the collision, driven through the real
 // install.Manager rather than a stand-in: git updates, its reclamation runs
-// unattended, and git-lfs must still be installed afterwards -- on disk and in
-// state, since a surviving state entry with a deleted directory is the failure
-// users saw as "command not found" for a tool tsuku list still showed.
+// unattended, and git-lfs must still be installed afterwards -- on disk and as
+// something Manager.List reports. Both halves matter. List skips a version
+// whose directory is missing, so a deleted directory takes the tool out of
+// tsuku list entirely while its bin/ symlinks stay behind pointing at nothing.
 func TestGarbageCollectVersions_RealManagerSparesPrefixSharingTool(t *testing.T) {
 	cfg, cleanup := testutil.NewTestConfig(t)
 	defer cleanup()
