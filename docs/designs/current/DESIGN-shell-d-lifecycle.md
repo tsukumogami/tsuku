@@ -434,9 +434,11 @@ assumption. No `state.json` schema change, no import surgery, no hot-path cost.
 **Negative.** The blast radius is wide: twelve non-test files across six packages, and
 five consumers that must change or the rename regresses. One of those —
 `StaleCleanupActions` — is a defect this design creates, whose failure mode is deleting a
-live file that no existing test covers. Repair is structurally impossible: a user who
-deletes a shell.d file has no recovery but remove-and-reinstall, made worse by the
-already-installed short-circuit that `--force` does not bypass. Pre-existing
+live file that no existing test covers. Repair was structurally impossible when this was
+written: a user who deleted a shell.d file had no recovery but remove-and-reinstall, made
+worse by the already-installed short-circuit that `--force` does not bypass. Issue #2463
+closed that gap. `tsuku install <tool> --reinstall` re-executes the plan and rewrites the
+fragment, so the repair path now exists. Pre-existing
 multi-version corruption is grandfathered. Disk use grows by one fragment per installed
 version per shell — for nvm, ~324 KB per extra version, against a tool directory that
 already holds a full copy of the same file.
@@ -469,6 +471,13 @@ fixed in the same change.
 - **The already-installed short-circuit** returns before running any steps and `--force`
   does not bypass it, so an existing install never picks up a fix. `tsuku verify`
   recommends a `--reinstall` flag that does not exist; separate issue.
+  *Resolved in issue #2463: `tsuku install <tool> --reinstall` bypasses the
+  short-circuit and re-executes the plan, so an existing install can pick up a fix and
+  a deleted or modified shell.d fragment has a repair. The flag also bypasses the
+  hidden-tool expose and the library path's two reuse checks, and runs
+  `StaleCleanupActions` against the record the replaced install left, so a fragment the
+  recipe no longer writes is deleted rather than orphaned. Reinstall is scoped to the
+  named tool; its dependencies are left alone.*
 - **`recipes/n/nvm.toml`'s `NVM_DIR` model.** `NVM_DIR` is nvm's data root as well as its
   program directory — it holds `versions/node/`, `alias/`, `.cache/`, and
   `default-packages`. Pointing it at a tsuku-versioned directory puts every node version
