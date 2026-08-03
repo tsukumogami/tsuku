@@ -662,6 +662,12 @@ func (m *Manager) collectLibraryPaths(ctx context.Context) []string {
 		if !entry.IsDir() {
 			continue
 		}
+		// Skip tsuku's own bookkeeping directories. A library staging
+		// directory holds a tree that is still being written, or one a crashed
+		// install abandoned; neither belongs on a tool's library search path.
+		if strings.HasPrefix(entry.Name(), ".") {
+			continue
+		}
 		libLibDir := filepath.Join(libsDir, entry.Name(), "lib")
 		if info, err := os.Stat(libLibDir); err == nil && info.IsDir() {
 			if validateShellSafePath(libLibDir) == nil {

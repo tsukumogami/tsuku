@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/config"
@@ -23,6 +24,13 @@ type LibraryInstallOptions struct {
 // - Are installed to libs/ instead of tools/
 // - Do not create symlinks in current/
 // - Track used_by instead of required_by
+//
+// Installation is atomic, the same way Manager.InstallWithOptions is: files are
+// copied into a staging directory, the existing library directory is removed,
+// and staging is renamed into place. The rename makes the replacement
+// all-or-nothing; the removal makes the resulting file set match the plan
+// rather than accumulate across installs, which is what `tsuku verify` promises
+// when it tells a user to reinstall a library to restore the original.
 //
 // Publishes on the install lifecycle bus:
 //   - err == nil -> LibraryInstalled
@@ -63,17 +71,52 @@ func (m *Manager) InstallLibrary(ctx context.Context, name, version, workDir str
 		return err
 	}
 
-	// Create library-specific directory
 	libDir := m.config.LibDir(name, version)
-	if err := os.MkdirAll(libDir, 0755); err != nil {
-		return fmt.Errorf("failed to create library directory: %w", err)
+	stagingDir := m.libStagingDir(name, version)
+
+	// Clean up any stale staging directory from a previous failed installation
+	if err := os.RemoveAll(stagingDir); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to clean up stale staging directory: %w", err)
 	}
 
-	// Copy from work directory to library directory
+	// Create staging directory
+	if err := os.MkdirAll(stagingDir, 0755); err != nil {
+		return fmt.Errorf("failed to create staging directory: %w", err)
+	}
+
+	// Copy from work directory into staging, never into the live directory.
+	// A copy that dies partway leaves the previous installation untouched.
 	srcInstallDir := filepath.Join(workDir, ".install")
 
-	if err := copyDir(srcInstallDir, libDir); err != nil {
+	if err := copyDir(srcInstallDir, stagingDir); err != nil {
+		os.RemoveAll(stagingDir)
 		return fmt.Errorf("failed to copy library installation: %w", err)
+	}
+
+	// Last cancellation check while bailing out is still free. copyDir does
+	// not watch ctx, so a cancellation during a long copy first becomes
+	// visible here. The tool path runs the equivalent check after removing the
+	// destination; running it before means a canceled install leaves the
+	// existing library where it was instead of deleting it and stopping.
+	if err := ctx.Err(); err != nil {
+		os.RemoveAll(stagingDir)
+		return err
+	}
+
+	// Remove the existing directory before the rename. This is what makes a
+	// reinstall replace the library rather than merge into it: copyFile
+	// truncates the files the plan writes, but nothing removes a file the plan
+	// does not write, and the checksums computed below would then record that
+	// file as part of the library.
+	if err := os.RemoveAll(libDir); err != nil && !os.IsNotExist(err) {
+		os.RemoveAll(stagingDir)
+		return fmt.Errorf("failed to remove existing library installation: %w", err)
+	}
+
+	// Atomically rename staging into the final location
+	if err := os.Rename(stagingDir, libDir); err != nil {
+		os.RemoveAll(stagingDir)
+		return fmt.Errorf("failed to finalize library installation: %w", err)
 	}
 
 	// Compute checksums for integrity verification (before state update)
@@ -140,6 +183,14 @@ func (m *Manager) publishLibraryInstallOutcome(name, version string, source inst
 		Source:           source,
 		Timestamp:        now,
 	})
+}
+
+// libStagingDir returns the path to the staging directory for an atomic library
+// installation. It sits in the same parent as the final library directory so
+// os.Rename stays within one filesystem, and it is dot-prefixed so the two
+// places that enumerate $TSUKU_HOME/libs by directory scan can skip it.
+func (m *Manager) libStagingDir(name, version string) string {
+	return filepath.Join(m.config.LibsDir, fmt.Sprintf(".%s-%s.staging", name, version))
 }
 
 // IsLibraryInstalled checks if a specific library version is already installed
@@ -226,6 +277,15 @@ func (m *Manager) ListLibraries() ([]InstalledLibrary, error) {
 
 		// Expected format: name-version (e.g., libyaml-0.2.5)
 		name := entry.Name()
+
+		// Skip tsuku's own bookkeeping directories. An in-flight or
+		// crash-orphaned staging directory is named .<name>-<version>.staging,
+		// which would otherwise parse as a library called ".<name>" at version
+		// "<version>.staging".
+		if strings.HasPrefix(name, ".") {
+			continue
+		}
+
 		lastHyphen := -1
 		// Find the last hyphen that's followed by a digit (version start)
 		for i := len(name) - 1; i >= 0; i-- {
