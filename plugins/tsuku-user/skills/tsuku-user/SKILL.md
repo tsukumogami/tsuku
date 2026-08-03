@@ -212,8 +212,16 @@ By default, tsuku checks for updates in the background and applies them within y
 1. On most commands, tsuku spawns a background check for newer versions.
 2. If `updates.auto_apply` is enabled, updates within pin boundaries are installed automatically.
 3. After the command finishes, a summary of any updates is displayed.
+4. Superseded versions of the updated tool are reclaimed once they're older than
+   `updates.version_retention`. The active version and the rollback target are always
+   kept.
 
 Exact-pinned tools (`go = "1.23.4"`) are never auto-updated.
+
+Reclamation only touches versions tsuku installed and still records in its state. A
+directory under `$TSUKU_HOME/tools` that tsuku has no record of -- left behind by an
+interrupted install, or put there by hand -- is left alone however old it is. Remove
+those yourself if you want the space back.
 
 ### Controlling Updates
 
@@ -266,7 +274,8 @@ tsuku config set telemetry false
 - `auto_apply` -- auto-install updates within pin boundaries (default: true)
 - `check_interval` -- minimum time between checks, e.g. `"12h"` (default: `"24h"`)
 - `self_update` -- check for tsuku self-updates (default: true)
-- `version_retention` -- how long to keep old versions, e.g. `"168h"` (default: 7 days)
+- `version_retention` -- how long to keep superseded versions of a tool before reclaiming
+  them, e.g. `"168h"` (default: 7 days)
 
 **Registries**: Add third-party recipe sources:
 ```bash

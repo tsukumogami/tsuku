@@ -235,7 +235,13 @@ func TestReapVersion_RunsCleanupAndDropsVersionState(t *testing.T) {
 	if err := mgr.ReapVersion("mytool", "2.0.0"); err == nil {
 		t.Error("ReapVersion must refuse the active version")
 	}
-	if err := mgr.ReapVersion("mytool", "9.9.9"); err != nil {
-		t.Errorf("reaping an unknown version should be a no-op, got %v", err)
+	// The caller is about to delete that version's directory. A version state
+	// has no record of is one this tool cannot claim, so refusing is what stops
+	// a directory belonging to something else from being removed.
+	if err := mgr.ReapVersion("mytool", "9.9.9"); err == nil {
+		t.Error("ReapVersion must refuse a version state has no record of")
+	}
+	if err := mgr.ReapVersion("nosuchtool", "1.0.0"); err == nil {
+		t.Error("ReapVersion must refuse a tool state has no record of")
 	}
 }
