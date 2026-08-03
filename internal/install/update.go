@@ -135,6 +135,9 @@ func (m *Manager) SnapshotCleanup(tool string) CleanupSnapshot {
 //
 // warn may be nil, which drops the warning half.
 func (m *Manager) ReconcileUpdate(snap CleanupSnapshot, warn WarnFunc) {
+	// A snapshot with nothing in it produces no stale actions and no warnings
+	// either way; this only saves the state read below, which `--all` would
+	// otherwise pay once per tool that writes nothing outside its own directory.
 	if snap.Tool == "" || len(snap.Actions) == 0 {
 		return
 	}

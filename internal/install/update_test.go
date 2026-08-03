@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
+	"sort"
 	"testing"
 	"time"
 
@@ -582,6 +584,23 @@ func TestReconcileUpdate_Inert(t *testing.T) {
 			name: "the active version did not change",
 			snap: func(mgr *Manager) CleanupSnapshot { return mgr.SnapshotCleanup("mytool") },
 		},
+		{
+			// `tsuku update` on a tool already at latest installs over the same
+			// version, and that install rewrites the version's cleanup record.
+			// Reconciling then would compare a version against its own newer
+			// record and delete the difference -- reinstall semantics, on a path
+			// that did not ask for them. The version check is what stops it, so
+			// this snapshot records a path nothing installed still claims.
+			name: "the active version did not change but its record was rewritten",
+			snap: func(mgr *Manager) CleanupSnapshot {
+				snap := mgr.SnapshotCleanup("mytool")
+				snap.Actions = append(append([]CleanupAction{}, snap.Actions...), CleanupAction{
+					Action: "delete_file",
+					Path:   "share/shell.d/" + orphanFragment,
+				})
+				return snap
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -591,18 +610,51 @@ func TestReconcileUpdate_Inert(t *testing.T) {
 			mgr := New(cfg)
 			twoVersionTool(t, mgr, cfg, "mytool", "1.0.0")
 
+			// A file no installed version records. Every guard under test sits
+			// upstream of the retained-path check, so this is the one thing a
+			// reconcile that should not have run is able to delete.
+			shellDDir := filepath.Join(cfg.HomeDir, "share", "shell.d")
+			if err := os.WriteFile(filepath.Join(shellDDir, orphanFragment), []byte("# orphan\n"), 0600); err != nil {
+				t.Fatal(err)
+			}
+
+			before := shellDContents(t, shellDDir)
+
 			var warns []string
 			mgr.ReconcileUpdate(tt.snap(mgr), recordWarns(&warns))
 
 			if len(warns) != 0 {
 				t.Errorf("warnings = %q, want none", warns)
 			}
-			for _, v := range []string{"1.0.0", "2.0.0"} {
-				path := filepath.Join(cfg.HomeDir, "share", "shell.d", "mytool@"+v+".bash")
-				if _, err := os.Stat(path); err != nil {
-					t.Errorf("mytool@%s.bash was deleted: %v", v, err)
+			after := shellDContents(t, shellDDir)
+			for _, name := range before {
+				if !slices.Contains(after, name) {
+					t.Errorf("%s was deleted by a reconcile that should have done nothing", name)
 				}
 			}
 		})
 	}
+}
+
+// orphanFragment names a shell.d file no version of any tool records. Nothing
+// protects it, so it is what a reconcile that ran when it should not have would
+// take with it.
+const orphanFragment = "mytool@0.9.0.bash"
+
+// shellDContents lists the files in a shell.d directory, sorted.
+func shellDContents(t *testing.T, dir string) []string {
+	t.Helper()
+
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatalf("reading %s: %v", dir, err)
+	}
+	var names []string
+	for _, e := range entries {
+		if !e.IsDir() {
+			names = append(names, e.Name())
+		}
+	}
+	sort.Strings(names)
+	return names
 }
