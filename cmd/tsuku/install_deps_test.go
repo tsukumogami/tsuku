@@ -56,9 +56,10 @@ func TestGetOrGeneratePlanWith_CacheHit(t *testing.T) {
 
 	// Create a valid cached plan
 	cachedPlan := &install.Plan{
-		FormatVersion: executor.PlanFormatVersion,
-		Tool:          "gh",
-		Version:       "2.40.0",
+		StorageVersion: install.PlanStorageVersion,
+		FormatVersion:  executor.PlanFormatVersion,
+		Tool:           "gh",
+		Version:        "2.40.0",
 		Platform: install.PlanPlatform{
 			OS:   "linux",
 			Arch: "amd64",
@@ -194,11 +195,14 @@ func TestGetOrGeneratePlanWith_FreshFlag(t *testing.T) {
 func TestGetOrGeneratePlanWith_InvalidCachedPlan_FormatVersion(t *testing.T) {
 	ctx := context.Background()
 
-	// Create a cached plan with old format version
+	// Create a cached plan with old format version. StorageVersion is current
+	// so the format-version path is what this test exercises, not the
+	// storage-version gate.
 	cachedPlan := &install.Plan{
-		FormatVersion: 1, // Old version
-		Tool:          "gh",
-		Version:       "2.40.0",
+		StorageVersion: install.PlanStorageVersion,
+		FormatVersion:  1, // Old version
+		Tool:           "gh",
+		Version:        "2.40.0",
 		Platform: install.PlanPlatform{
 			OS:   "linux",
 			Arch: "amd64",
@@ -234,6 +238,72 @@ func TestGetOrGeneratePlanWith_InvalidCachedPlan_FormatVersion(t *testing.T) {
 	// Should regenerate due to format version mismatch
 	if result.RecipeSource != "regenerated" {
 		t.Errorf("result.RecipeSource = %q, want %q (regenerated plan)", result.RecipeSource, "regenerated")
+	}
+}
+
+// TestGetOrGeneratePlanWith_StaleStorageVersion covers the record every
+// existing install has: written by the conversion that dropped the plan's
+// dependencies, verify block, and recipe type. It passes format-version and
+// platform validation, so nothing else rejects it -- and executing it would
+// install a tool without the dependencies it needs. The storage-version gate
+// is the only thing standing between that record and ExecutePlan.
+func TestGetOrGeneratePlanWith_StaleStorageVersion(t *testing.T) {
+	ctx := context.Background()
+
+	cachedPlan := &install.Plan{
+		// StorageVersion deliberately absent, as on disk today.
+		FormatVersion: executor.PlanFormatVersion,
+		Tool:          "gh",
+		Version:       "2.40.0",
+		Platform: install.PlanPlatform{
+			OS:   "linux",
+			Arch: "amd64",
+		},
+		GeneratedAt:   time.Now(),
+		RecipeSource:  "registry",
+		Deterministic: true,
+		Steps:         []install.PlanStep{},
+	}
+
+	generatedPlan := &executor.InstallationPlan{
+		FormatVersion: executor.PlanFormatVersion,
+		Tool:          "gh",
+		Version:       "2.40.0",
+		Platform: executor.Platform{
+			OS:   "linux",
+			Arch: "amd64",
+		},
+		RecipeSource: "regenerated",
+		Dependencies: []executor.DependencyPlan{{Tool: "openssl", Version: "3.2.1"}},
+		Verify:       &executor.PlanVerify{Command: "gh --version"},
+	}
+
+	resolver := &mockVersionResolver{version: "2.40.0"}
+	generator := &mockPlanGenerator{plan: generatedPlan}
+	cacheReader := &mockPlanCacheReader{plan: cachedPlan}
+
+	cfg := planRetrievalConfig{
+		Tool: "gh",
+		OS:   "linux",
+		Arch: "amd64",
+	}
+
+	result, err := getOrGeneratePlanWith(ctx, resolver, generator, cacheReader, cfg, progress.NoopReporter{})
+	if err != nil {
+		t.Fatalf("getOrGeneratePlanWith() error = %v, want nil", err)
+	}
+
+	if result.RecipeSource != "regenerated" {
+		t.Errorf("result.RecipeSource = %q, want %q; the stale record was used instead of regenerated",
+			result.RecipeSource, "regenerated")
+	}
+	// The point of regenerating: the plan that comes back has the dependency
+	// tree and verify block the stored record could not have carried.
+	if len(result.Dependencies) != 1 {
+		t.Errorf("len(result.Dependencies) = %d, want 1", len(result.Dependencies))
+	}
+	if result.Verify == nil {
+		t.Error("result.Verify is nil; a regenerated plan carries the recipe's verification")
 	}
 }
 

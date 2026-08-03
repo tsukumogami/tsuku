@@ -110,6 +110,7 @@ func runPlanShow(cmd *cobra.Command, args []string) {
 	}
 
 	plan := versionState.Plan
+	warnIfPlanIncomplete(toolName, plan)
 
 	// JSON output
 	if planShowJSON {
@@ -271,7 +272,27 @@ func getPlanForTool(toolName string) *install.Plan {
 		exitWithCode(ExitGeneral)
 	}
 
-	return versionState.Plan
+	plan := versionState.Plan
+	warnIfPlanIncomplete(toolName, plan)
+	return plan
+}
+
+// warnIfPlanIncomplete tells the user when a stored plan was written by a
+// conversion that dropped fields.
+//
+// Such a record has no dependency tree, no verify block, and no recipe type,
+// and there is no way to tell that from a tool that genuinely has none. It
+// still displays and still exports -- a user asking for what was stored should
+// get it -- but an exported plan fed to `tsuku install --plan` would install
+// without its dependencies and without verification, because that path has no
+// recipe to fall back on. Reinstalling refreshes the record.
+func warnIfPlanIncomplete(toolName string, plan *install.Plan) {
+	if plan == nil || plan.StorageVersion >= install.PlanStorageVersion {
+		return
+	}
+	fmt.Fprintf(os.Stderr, "Warning: the stored plan for '%s' predates the current storage format.\n", toolName)
+	fmt.Fprintf(os.Stderr, "It may omit dependencies, verification, and recipe type. To refresh it:\n")
+	fmt.Fprintf(os.Stderr, "  tsuku install %s --fresh\n\n", toolName)
 }
 
 func runPlanExport(cmd *cobra.Command, args []string) {
