@@ -95,6 +95,15 @@ func getOrGeneratePlanWith(
 	// Check cache (unless --fresh)
 	if !cfg.Fresh {
 		cachedPlan, err := cacheReader.GetCachedPlan(cfg.Tool, resolvedVersion)
+		// A record below the current storage version was written by a
+		// conversion that dropped the plan's dependencies, verify block, and
+		// recipe type. Nil dependencies and a tool with no dependencies are
+		// indistinguishable on disk, so the record cannot be trusted and the
+		// plan is regenerated instead.
+		if cachedPlan != nil && cachedPlan.StorageVersion < install.PlanStorageVersion {
+			reporter.Status("Cached plan predates the current storage format, regenerating...")
+			cachedPlan = nil
+		}
 		if err == nil && cachedPlan != nil {
 			// Convert storage plan to executor plan for validation
 			execPlan := executor.FromStoragePlan(cachedPlan)

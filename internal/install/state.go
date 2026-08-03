@@ -32,10 +32,29 @@ type VersionState struct {
 	CleanupActions     []CleanupAction   `json:"cleanup_actions,omitempty"`     // Files to delete on remove (recorded by post-install actions)
 }
 
-// Plan represents a stored installation plan. This is a simplified view of
-// executor.InstallationPlan that can be stored in state.json.
-// The full plan structure is preserved for plan inspection and future replay.
+// PlanStorageVersion versions the conversion of an executor plan into a
+// state.json record. It is not the plan format version -- Plan.FormatVersion
+// is that, and it tracks the shape of the plan itself.
+//
+// Version 1 is the first conversion that carries the whole plan: its
+// dependency tree, verify block, recipe type, binaries, per-step phases, and
+// Linux family. Earlier conversions dropped all of those, so a record written
+// before version 1 existed decodes as 0 and cannot be trusted to be complete.
+// Readers treat a record below the current version as untrusted rather than
+// as a plan with nothing to declare -- an absent dependency tree and a tool
+// with no dependencies look identical on disk.
+const PlanStorageVersion = 1
+
+// Plan represents a stored installation plan: the executor's InstallationPlan
+// in the shape state.json holds it. Its fields mirror the executor types
+// rather than referencing them, because internal/executor imports this
+// package and the dependency cannot run the other way.
 type Plan struct {
+	// StorageVersion records which conversion wrote this record.
+	// See PlanStorageVersion. Absent (0) means the record predates the
+	// conversion carrying every field.
+	StorageVersion int `json:"storage_version,omitempty"`
+
 	FormatVersion int          `json:"format_version"`
 	Tool          string       `json:"tool"`
 	Version       string       `json:"version"`
@@ -47,17 +66,41 @@ type Plan struct {
 	RecipeSource  string     `json:"recipe_source"`
 	Deterministic bool       `json:"deterministic"`
 	Steps         []PlanStep `json:"steps"`
+
+	// Dependencies holds the nested install-time dependency plans. On the
+	// plan-based install path there is no recipe to walk, so this is the only
+	// record of what the tool needs installed alongside it.
+	Dependencies []PlanDependency `json:"dependencies,omitempty"`
+
+	// Verify is the recipe's verification block. A nil Verify means
+	// verification is skipped rather than failed, so losing it is silent.
+	Verify *PlanVerify `json:"verify,omitempty"`
+
+	// RecipeType is "tool" or "library". Empty means tool.
+	RecipeType string `json:"recipe_type,omitempty"`
+
+	// Binaries mirrors the recipe's declared binary names. It is the fallback
+	// for recipes whose actions leave no install_binaries step to infer from.
+	Binaries []string `json:"binaries,omitempty"`
 }
 
-// PlanPlatform identifies the target OS and architecture for a plan.
+// PlanPlatform identifies the target platform for a plan.
 type PlanPlatform struct {
 	OS   string `json:"os"`
 	Arch string `json:"arch"`
+	// LinuxFamily is set only when the plan targets a specific Linux family
+	// (e.g., "debian", "fedora"), which happens when the recipe uses
+	// family-specific steps.
+	LinuxFamily string `json:"linux_family,omitempty"`
 }
 
 // PlanStep represents a resolved installation step.
 type PlanStep struct {
-	Action        string                 `json:"action"`
+	Action string `json:"action"`
+	// Phase is the lifecycle phase the recipe named for this step. Empty
+	// means the recipe named none and the action decides, which is what
+	// executor.StepPhase implements.
+	Phase         string                 `json:"phase,omitempty"`
 	Params        map[string]interface{} `json:"params"`
 	Evaluable     bool                   `json:"evaluable"`
 	Deterministic bool                   `json:"deterministic"`
@@ -66,8 +109,43 @@ type PlanStep struct {
 	Size          int64                  `json:"size,omitempty"`
 }
 
-// NewPlanFromExecutor creates a Plan from executor plan types.
-// This is a conversion helper that preserves all plan data for storage.
+// PlanDependency is a nested installation plan for one dependency. Mirrors
+// executor.DependencyPlan, including the recursion.
+type PlanDependency struct {
+	Tool         string           `json:"tool"`
+	Version      string           `json:"version"`
+	Dependencies []PlanDependency `json:"dependencies,omitempty"`
+	Steps        []PlanStep       `json:"steps"`
+	Verify       *PlanVerify      `json:"verify,omitempty"`
+	RecipeType   string           `json:"recipe_type,omitempty"`
+}
+
+// PlanVerify captures verification information from the recipe. Mirrors
+// executor.PlanVerify: Pattern is the legacy single-substring form, Patterns
+// is the multi-substring AND-list, and a recipe sets one or the other.
+type PlanVerify struct {
+	Command  string   `json:"command,omitempty"`
+	Pattern  string   `json:"pattern,omitempty"`
+	Patterns []string `json:"patterns,omitempty"`
+	ExitCode *int     `json:"exit_code,omitempty"`
+	// Additional carries the recipe's secondary verification commands.
+	Additional []PlanAdditionalVerify `json:"additional,omitempty"`
+}
+
+// PlanAdditionalVerify is one secondary verification command carried in a
+// stored plan. Mirrors executor.PlanAdditionalVerify.
+type PlanAdditionalVerify struct {
+	Command string `json:"command"`
+	Pattern string `json:"pattern"`
+}
+
+// NewPlanFromExecutor builds a Plan from the fields passed to it. It has no
+// production callers.
+//
+// It does not set StorageVersion, dependencies, verify, recipe type, or
+// binaries, so a record it produces is indistinguishable from one written
+// before those fields existed and readers will treat it as untrusted. The
+// lossless conversion is executor.ToStoragePlan; use that.
 func NewPlanFromExecutor(formatVersion int, tool, version string, platform PlanPlatform,
 	generatedAt time.Time, recipeSource string, deterministic bool, steps []PlanStep) *Plan {
 	return &Plan{

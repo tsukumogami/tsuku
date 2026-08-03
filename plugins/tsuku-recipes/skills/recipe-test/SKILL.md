@@ -57,6 +57,12 @@ From a plan:
 tsuku eval <tool> | tsuku install --plan - --sandbox --force
 ```
 
+Use `tsuku eval` here, not `tsuku plan export`. They look interchangeable and are
+not: `eval` resolves the recipe now, while `plan export` replays what was recorded
+when the tool was installed. A record written by an older tsuku can be missing the
+dependency tree and verify block, which would make the sandbox run pass for the
+wrong reason. `plan export` warns when it hands you one.
+
 ### Cross-Family Testing
 
 Supported families: debian, rhel, alpine, arch, suse.

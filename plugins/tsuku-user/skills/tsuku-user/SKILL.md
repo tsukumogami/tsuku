@@ -113,8 +113,22 @@ installed already.
 | `tsuku doctor` | Environment health check | `--fix` |
 | `tsuku cache clear` | Clear download and version caches | `--downloads`, `--versions` |
 | `tsuku update-registry` | Refresh all cached recipes and rebuild the binary index | `--dry-run`, `--recipe` |
+| `tsuku plan show <tool>` | Show the plan an installed tool was installed from | `--json` |
+| `tsuku plan export <tool>` | Write that plan to a file for `tsuku install --plan` | `-o` (`-` for stdout) |
 
 All commands accept `--verbose` (`-v`), `--quiet` (`-q`), and `--debug` for log control.
+
+### Stored plans
+
+`tsuku plan show` and `tsuku plan export` read the plan recorded at install time,
+not a fresh one. If that record was written by an older tsuku, it may be missing
+the tool's dependencies, its verification block, and its recipe type -- so an
+exported copy would install less than the original did. Both commands warn on
+stderr when they hit one. Reinstalling refreshes the record:
+
+```bash
+tsuku install <tool> --fresh
+```
 
 ## Shell Integration
 
