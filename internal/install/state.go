@@ -139,8 +139,13 @@ type PlanAdditionalVerify struct {
 	Pattern string `json:"pattern"`
 }
 
-// NewPlanFromExecutor creates a Plan from executor plan types.
-// This is a conversion helper that preserves all plan data for storage.
+// NewPlanFromExecutor builds a Plan from the fields passed to it. It has no
+// production callers.
+//
+// It does not set StorageVersion, dependencies, verify, recipe type, or
+// binaries, so a record it produces is indistinguishable from one written
+// before those fields existed and readers will treat it as untrusted. The
+// lossless conversion is executor.ToStoragePlan; use that.
 func NewPlanFromExecutor(formatVersion int, tool, version string, platform PlanPlatform,
 	generatedAt time.Time, recipeSource string, deterministic bool, steps []PlanStep) *Plan {
 	return &Plan{
