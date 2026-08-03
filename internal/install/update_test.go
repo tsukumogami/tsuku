@@ -1,6 +1,7 @@
 package install
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -273,5 +274,335 @@ func TestUpdateStaleCleanup_EndToEnd(t *testing.T) {
 		if _, err := os.Stat(f); os.IsNotExist(err) {
 			t.Errorf("%s file should still exist", shell)
 		}
+	}
+}
+
+// recordWarns collects what a WarnFunc was handed, so a test can assert on the
+// message a user would see rather than on a boolean.
+func recordWarns(into *[]string) WarnFunc {
+	return func(format string, args ...any) {
+		*into = append(*into, fmt.Sprintf(format, args...))
+	}
+}
+
+// TestWarnShellInitChanges covers the whole comparison in one table. The keying
+// cases matter most: version-keyed filenames mean the same fragment has a
+// different path in every version, so a comparison keyed on the raw path would
+// never find a match and this warning would silently stop firing.
+func TestWarnShellInitChanges(t *testing.T) {
+	tests := []struct {
+		name string
+		tool string
+		old  []CleanupAction
+		new  []CleanupAction
+		want []string
+	}{
+		{
+			name: "matching hashes say nothing",
+			tool: "tool",
+			old: []CleanupAction{
+				{Action: "delete_file", Path: "share/shell.d/tool.bash", ContentHash: "abc123"},
+				{Action: "delete_file", Path: "share/shell.d/tool.zsh", ContentHash: "def456"},
+			},
+			new: []CleanupAction{
+				{Action: "delete_file", Path: "share/shell.d/tool.bash", ContentHash: "abc123"},
+				{Action: "delete_file", Path: "share/shell.d/tool.zsh", ContentHash: "def456"},
+			},
+		},
+		{
+			name: "only the shell whose hash changed is named",
+			tool: "tool",
+			old: []CleanupAction{
+				{Action: "delete_file", Path: "share/shell.d/tool.bash", ContentHash: "abc123"},
+				{Action: "delete_file", Path: "share/shell.d/tool.zsh", ContentHash: "def456"},
+			},
+			new: []CleanupAction{
+				{Action: "delete_file", Path: "share/shell.d/tool.bash", ContentHash: "changed"},
+				{Action: "delete_file", Path: "share/shell.d/tool.zsh", ContentHash: "def456"},
+			},
+			want: []string{"shell init changed for tool (bash)"},
+		},
+		{
+			name: "every changed shell is named",
+			tool: "tool",
+			old: []CleanupAction{
+				{Action: "delete_file", Path: "share/shell.d/tool.bash", ContentHash: "hash1"},
+				{Action: "delete_file", Path: "share/shell.d/tool.zsh", ContentHash: "hash2"},
+				{Action: "delete_file", Path: "share/shell.d/tool.fish", ContentHash: "hash3"},
+			},
+			new: []CleanupAction{
+				{Action: "delete_file", Path: "share/shell.d/tool.bash", ContentHash: "changed1"},
+				{Action: "delete_file", Path: "share/shell.d/tool.zsh", ContentHash: "changed2"},
+				{Action: "delete_file", Path: "share/shell.d/tool.fish", ContentHash: "hash3"},
+			},
+			want: []string{
+				"shell init changed for tool (bash)",
+				"shell init changed for tool (zsh)",
+			},
+		},
+		{
+			name: "a shell the old version did not have is an addition, not a change",
+			tool: "tool",
+			old:  []CleanupAction{},
+			new: []CleanupAction{
+				{Action: "delete_file", Path: "share/shell.d/tool.bash", ContentHash: "abc123"},
+			},
+		},
+		{
+			name: "actions without a recorded hash are skipped",
+			tool: "tool",
+			old:  []CleanupAction{{Action: "delete_file", Path: "share/shell.d/tool.bash"}},
+			new:  []CleanupAction{{Action: "delete_file", Path: "share/shell.d/tool.bash"}},
+		},
+		{
+			name: "same target and shell across version keys, content changed",
+			tool: "nvm",
+			old:  []CleanupAction{{Action: "delete_file", Path: "share/shell.d/nvm@0.40.5.bash", ContentHash: "old"}},
+			new:  []CleanupAction{{Action: "delete_file", Path: "share/shell.d/nvm@0.40.6.bash", ContentHash: "new"}},
+			want: []string{"shell init changed for nvm (bash)"},
+		},
+		{
+			name: "same target and shell across version keys, content unchanged",
+			tool: "nvm",
+			old:  []CleanupAction{{Action: "delete_file", Path: "share/shell.d/nvm@0.40.5.bash", ContentHash: "same"}},
+			new:  []CleanupAction{{Action: "delete_file", Path: "share/shell.d/nvm@0.40.6.bash", ContentHash: "same"}},
+		},
+		{
+			name: "a different target is a new fragment, not a change",
+			tool: "nvm",
+			old:  []CleanupAction{{Action: "delete_file", Path: "share/shell.d/nvm@0.40.5.bash", ContentHash: "old"}},
+			new:  []CleanupAction{{Action: "delete_file", Path: "share/shell.d/00-env-nvm@0.40.6.bash", ContentHash: "new"}},
+		},
+		{
+			name: "a different shell is a new fragment, not a change",
+			tool: "nvm",
+			old:  []CleanupAction{{Action: "delete_file", Path: "share/shell.d/nvm@0.40.5.bash", ContentHash: "old"}},
+			new:  []CleanupAction{{Action: "delete_file", Path: "share/shell.d/nvm@0.40.6.zsh", ContentHash: "new"}},
+		},
+		{
+			name: "a path outside shell.d is not a shell init fragment",
+			tool: "tool",
+			old:  []CleanupAction{{Action: "delete_file", Path: "share/completions/zsh/_tool", ContentHash: "old"}},
+			new:  []CleanupAction{{Action: "delete_file", Path: "share/completions/zsh/_tool", ContentHash: "new"}},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got []string
+			warnShellInitChanges(tt.tool, tt.old, tt.new, recordWarns(&got))
+
+			// The order is the order of the new version's actions, which is a
+			// slice, so it is deterministic and worth asserting on.
+			if len(got) != len(tt.want) {
+				t.Fatalf("warnings = %q, want %q", got, tt.want)
+			}
+			for i, want := range tt.want {
+				if got[i] != want {
+					t.Errorf("warning %d = %q, want %q", i, got[i], want)
+				}
+			}
+		})
+	}
+}
+
+// A nil sink is the auto-apply-with-no-reporter case. It has to be inert rather
+// than a panic in a background process nobody is watching.
+func TestWarnShellInitChanges_NilSink(t *testing.T) {
+	warnShellInitChanges("tool",
+		[]CleanupAction{{Action: "delete_file", Path: "share/shell.d/tool@1.0.0.bash", ContentHash: "old"}},
+		[]CleanupAction{{Action: "delete_file", Path: "share/shell.d/tool@2.0.0.bash", ContentHash: "new"}},
+		nil)
+}
+
+// TestSnapshotCleanup covers what the snapshot has to survive: a tool that is
+// not installed, a legacy state file with no ActiveVersion, and the normal case.
+func TestSnapshotCleanup(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+	mgr := New(cfg)
+
+	if got := mgr.SnapshotCleanup("absent"); got.Tool != "" {
+		t.Errorf("SnapshotCleanup on an uninstalled tool = %+v, want the zero snapshot", got)
+	}
+
+	twoVersionTool(t, mgr, cfg, "mytool", "1.0.0")
+
+	snap := mgr.SnapshotCleanup("mytool")
+	if snap.Tool != "mytool" || snap.Version != "1.0.0" {
+		t.Fatalf("SnapshotCleanup() = %s@%s, want mytool@1.0.0", snap.Tool, snap.Version)
+	}
+	if len(snap.Actions) != 1 || snap.Actions[0].Path != "share/shell.d/mytool@1.0.0.bash" {
+		t.Errorf("snapshot actions = %v, want the active version's fragment", snap.Actions)
+	}
+
+}
+
+// activeVersionOf's fallback to the pre-multi-version field is defensive: a
+// state file loaded from disk has already been through migrateToMultiVersion,
+// which sets ActiveVersion. It is asserted directly rather than through a load
+// for exactly that reason -- a test that went through the loader would be
+// asserting the migration, not this.
+func TestActiveVersionOf(t *testing.T) {
+	tests := []struct {
+		name string
+		ts   ToolState
+		want string
+	}{
+		{"active version wins", ToolState{ActiveVersion: "2.0.0", Version: "1.0.0"}, "2.0.0"},
+		{"legacy field is the fallback", ToolState{Version: "1.0.0"}, "1.0.0"},
+		{"neither is set", ToolState{}, ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := activeVersionOf(tt.ts); got != tt.want {
+				t.Errorf("activeVersionOf(%+v) = %q, want %q", tt.ts, got, tt.want)
+			}
+		})
+	}
+}
+
+// TestReconcileUpdate_DeletesOnlyWhatNothingRecords is the acceptance case from
+// issue #2470, run through the real state machinery in both configurations.
+//
+// A tool drops a shell between versions. While the replaced version is still
+// installed -- which it is immediately after an update, as the rollback target --
+// its fragment is retained and stays on disk. Once that version is reaped, the
+// same reconcile deletes it. Asserting only the first half would pass against a
+// reconcile that never deletes anything at all.
+func TestReconcileUpdate_DeletesOnlyWhatNothingRecords(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+	mgr := New(cfg)
+
+	shellDDir := filepath.Join(cfg.HomeDir, "share", "shell.d")
+	if err := os.MkdirAll(shellDDir, 0700); err != nil {
+		t.Fatal(err)
+	}
+
+	// v1 integrates with bash and zsh; v2 drops zsh. The recorded hashes have to
+	// be real digests of the files on disk, or the cache rebuild that follows
+	// the cleanup drops the fragments as tampered-with.
+	body := "export TOOL_HOME=1\n"
+	writeFragment := func(path string) CleanupAction {
+		t.Helper()
+		if err := os.WriteFile(filepath.Join(cfg.HomeDir, filepath.FromSlash(path)), []byte(body), 0600); err != nil {
+			t.Fatal(err)
+		}
+		return CleanupAction{Action: "delete_file", Path: path, ContentHash: hashOf(body)}
+	}
+
+	v1 := []CleanupAction{
+		writeFragment("share/shell.d/mytool@1.0.0.bash"),
+		writeFragment("share/shell.d/mytool@1.0.0.zsh"),
+	}
+	v2 := []CleanupAction{
+		writeFragment("share/shell.d/mytool@2.0.0.bash"),
+	}
+
+	if err := mgr.state.UpdateTool("mytool", func(ts *ToolState) {
+		ts.ActiveVersion = "1.0.0"
+		ts.Versions = map[string]VersionState{"1.0.0": {CleanupActions: v1}}
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	snap := mgr.SnapshotCleanup("mytool")
+
+	// The update lands: v2 becomes active, v1 stays installed as the rollback
+	// target.
+	if err := mgr.state.UpdateTool("mytool", func(ts *ToolState) {
+		ts.ActiveVersion = "2.0.0"
+		ts.PreviousVersion = "1.0.0"
+		ts.Versions["2.0.0"] = VersionState{CleanupActions: v2}
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	var warns []string
+	mgr.ReconcileUpdate(snap, recordWarns(&warns))
+
+	droppedShell := filepath.Join(cfg.HomeDir, "share", "shell.d", "mytool@1.0.0.zsh")
+	if _, err := os.Stat(droppedShell); err != nil {
+		t.Fatalf("the rollback target's zsh fragment was deleted while 1.0.0 is still installed: %v", err)
+	}
+	if len(warns) != 0 {
+		t.Errorf("warnings = %q, want none: bash is the only shared shell and its target changed version, not content", warns)
+	}
+
+	// Reap 1.0.0 the way garbage collection eventually does, then reconcile the
+	// same snapshot again. Nothing records the zsh fragment now.
+	if err := mgr.state.UpdateTool("mytool", func(ts *ToolState) {
+		delete(ts.Versions, "1.0.0")
+		ts.PreviousVersion = ""
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	mgr.ReconcileUpdate(snap, nil)
+
+	if _, err := os.Stat(droppedShell); !os.IsNotExist(err) {
+		t.Errorf("the dropped shell's fragment survived once no installed version recorded it: %v", err)
+	}
+	// The shell the new version still integrates with keeps its file.
+	if _, err := os.Stat(filepath.Join(cfg.HomeDir, "share", "shell.d", "mytool@2.0.0.bash")); err != nil {
+		t.Errorf("the active version's own fragment was deleted: %v", err)
+	}
+}
+
+// TestReconcileUpdate_Inert covers every shape that must do nothing. Each one
+// reaching ExecuteStaleCleanup would compare a version against itself or against
+// a version that is not there, and delete on the strength of it.
+func TestReconcileUpdate_Inert(t *testing.T) {
+	tests := []struct {
+		name string
+		snap func(mgr *Manager) CleanupSnapshot
+	}{
+		{
+			name: "the zero snapshot",
+			snap: func(*Manager) CleanupSnapshot { return CleanupSnapshot{} },
+		},
+		{
+			name: "a snapshot with no recorded actions",
+			snap: func(*Manager) CleanupSnapshot {
+				return CleanupSnapshot{Tool: "mytool", Version: "1.0.0"}
+			},
+		},
+		{
+			name: "a tool that is no longer installed",
+			snap: func(*Manager) CleanupSnapshot {
+				return CleanupSnapshot{
+					Tool:    "removed",
+					Version: "1.0.0",
+					Actions: []CleanupAction{{Action: "delete_file", Path: "share/shell.d/removed@1.0.0.bash"}},
+				}
+			},
+		},
+		{
+			name: "the active version did not change",
+			snap: func(mgr *Manager) CleanupSnapshot { return mgr.SnapshotCleanup("mytool") },
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg, cleanup := testutil.NewTestConfig(t)
+			defer cleanup()
+			mgr := New(cfg)
+			twoVersionTool(t, mgr, cfg, "mytool", "1.0.0")
+
+			var warns []string
+			mgr.ReconcileUpdate(tt.snap(mgr), recordWarns(&warns))
+
+			if len(warns) != 0 {
+				t.Errorf("warnings = %q, want none", warns)
+			}
+			for _, v := range []string{"1.0.0", "2.0.0"} {
+				path := filepath.Join(cfg.HomeDir, "share", "shell.d", "mytool@"+v+".bash")
+				if _, err := os.Stat(path); err != nil {
+					t.Errorf("mytool@%s.bash was deleted: %v", v, err)
+				}
+			}
+		})
 	}
 }

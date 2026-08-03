@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -139,6 +140,21 @@ func (h *shellDHarness) installVersion(version string) {
 // the stable {data_dir}.
 func (h *shellDHarness) installVersionExporting(version, envValue string) {
 	h.t.Helper()
+	h.installVersionWith(version, envValue, []string{"bash"})
+}
+
+// installVersionShells installs a version whose install_shell_init step targets the
+// given shells, so a scenario can drop one between versions. set_env is not
+// configurable this way -- it always writes both bash and zsh -- which is why the
+// dropped shell shows up as an orphaned init fragment and not as an orphaned
+// export.
+func (h *shellDHarness) installVersionShells(version string, shells []string) {
+	h.t.Helper()
+	h.installVersionWith(version, "{install_dir}", shells)
+}
+
+func (h *shellDHarness) installVersionWith(version, envValue string, shells []string) {
+	h.t.Helper()
 
 	workDir := h.t.TempDir()
 	installDir := filepath.Join(workDir, ".install")
@@ -182,10 +198,14 @@ func (h *shellDHarness) installVersionExporting(version, envValue string) {
 	}
 
 	shellInit := &actions.InstallShellInitAction{}
+	shellParam := make([]interface{}, len(shells))
+	for i, s := range shells {
+		shellParam[i] = s
+	}
 	if err := shellInit.Execute(execCtx, map[string]interface{}{
 		"source_file": "init.sh",
 		"target":      h.tool,
-		"shells":      []interface{}{"bash"},
+		"shells":      shellParam,
 	}); err != nil {
 		h.t.Fatalf("install_shell_init Execute(%s) error = %v", version, err)
 	}
@@ -513,4 +533,94 @@ func TestShellDLifecycle_DataRootSurvivesUpgradeAndReclaim(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(afterReclaim, "versions", "node", "v22.0.0", "bin", "node")); err != nil {
 		t.Errorf("reclaiming the superseded version deleted the user's data: %v", err)
 	}
+}
+
+// initCacheFor reads the init cache a shell of the given name would source. An
+// absent cache reads as empty, which is what a shell with no fragments gets.
+func (h *shellDHarness) initCacheFor(shell string) string {
+	h.t.Helper()
+
+	data, err := os.ReadFile(filepath.Join(h.home, "share", "shell.d", ".init-cache."+shell))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return ""
+		}
+		h.t.Fatalf("reading the %s init cache: %v", shell, err)
+	}
+	return string(data)
+}
+
+// TestShellDLifecycle_UpdateAllDropsAShell is issue #2470's scenario, run
+// through the sequence `tsuku update --all` performs per tool. Only recipe
+// resolution and download are substituted; everything the update does to
+// $TSUKU_HOME is the production path.
+//
+// Before this change `runUpdateAll` ran no part of the pass, so none of the
+// warnings below were emitted on that path.
+//
+// The two disk assertions are the reachability finding the issue predates. Its
+// acceptance criterion asks for the dropped shell's fragment to be gone right
+// after the update. It cannot be: the replaced version is still installed as the
+// rollback target and still records that path, so ExecuteStaleCleanup's
+// retained-path guard exempts it. What the user actually gets is that the
+// fragment stops being sourced immediately and goes when the version is
+// reclaimed -- which is what a rollback needs and what this asserts.
+func TestShellDLifecycle_UpdateAllDropsAShell(t *testing.T) {
+	h := newShellDHarness(t)
+
+	h.installVersionShells(lifecycleV1, []string{"bash", "zsh"})
+
+	droppedFragment := filepath.Join(h.home, "share", "shell.d", h.tool+"@"+lifecycleV1+".zsh")
+	if _, err := os.Stat(droppedFragment); err != nil {
+		t.Fatalf("the scenario needs %s's zsh fragment on disk to start with: %v", lifecycleV1, err)
+	}
+	if !strings.Contains(h.initCacheFor("zsh"), initVar(lifecycleV1)) {
+		t.Fatalf("the scenario needs %s's init script in the zsh cache to start with", lifecycleV1)
+	}
+
+	var warns []string
+	err := updateWithCleanup(h.mgr, h.tool, func(format string, args ...any) {
+		warns = append(warns, fmt.Sprintf(format, args...))
+	}, func() error {
+		h.installVersionShells(lifecycleV2, []string{"bash"})
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("updateWithCleanup() error = %v", err)
+	}
+
+	// The tool rewrote its bash init between versions, which is the whole point
+	// of the warning: it is the only notice a user gets that the script their
+	// shell runs at every start is not the one it ran yesterday.
+	if len(warns) == 0 {
+		t.Error("updating through the --all path announced no shell init change")
+	}
+	for _, w := range warns {
+		if !strings.Contains(w, "shell init changed for "+h.tool) {
+			t.Errorf("unexpected warning %q", w)
+		}
+	}
+
+	// A real bash shell gets the new version and nothing of the old one.
+	h.assertShellSees(lifecycleV2, lifecycleV1)
+
+	// zsh has no fragment from the new version, and must not still be sourcing
+	// the old one. This is the "orphan keeps being sourced" half of the issue.
+	if cache := h.initCacheFor("zsh"); strings.Contains(cache, initVar(lifecycleV1)) {
+		t.Errorf("the dropped shell's cache still sources %s's init script:\n%s", lifecycleV1, cache)
+	}
+
+	// The file itself stays while the version that wrote it is the rollback
+	// target. Deleting it here is what PR #2465's guard exists to prevent.
+	if _, err := os.Stat(droppedFragment); err != nil {
+		t.Errorf("the rollback target's zsh fragment was deleted: %v", err)
+	}
+
+	// Reclaiming the superseded version is what finally takes it.
+	if err := h.mgr.RemoveVersion(lifecycleCtx(), h.tool, lifecycleV1); err != nil {
+		t.Fatalf("RemoveVersion(%s) error = %v", lifecycleV1, err)
+	}
+	h.assertNoFragmentFor(lifecycleV1)
+	h.assertShellSees(lifecycleV2)
+	h.assertDoctorClean()
 }

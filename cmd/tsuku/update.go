@@ -114,18 +114,6 @@ Examples:
 			}
 		}
 
-		// Snapshot old version's cleanup actions before installing new version.
-		// These are needed to compute stale cleanup (files the old version
-		// created that the new version no longer needs).
-		var oldCleanupActions []install.CleanupAction
-		if state != nil {
-			if ts, ok := state.Installed[toolName]; ok {
-				if vs, ok := ts.Versions[previousVersion]; ok {
-					oldCleanupActions = vs.CleanupActions
-				}
-			}
-		}
-
 		// Create a reporter here so that both the install progress and the
 		// outcome line share the same stream (stderr). This lets the TTY
 		// spinner be replaced in-place by the permanent outcome line via
@@ -133,12 +121,17 @@ Examples:
 		// the outcome appearing on a separate stdout line. See #2280/#2359.
 		reporter := progress.NewTTYReporter(os.Stderr)
 
-		if err := runInstallWithReporter(installevents.WithSource(globalCtx, installevents.SourceManual), installArgs{
-			Tool:            toolName,
-			ReqVersion:      reqVersion,
-			IsExplicit:      true,
-			TelemetryClient: telemetryClient,
-			Reporter:        reporter,
+		// The install is bracketed by the stale-cleanup pass: files the old
+		// version created that the new one no longer needs go, and a shell init
+		// script that changed content across the upgrade is announced.
+		if err := updateWithCleanup(mgr, toolName, reporter.Warn, func() error {
+			return runInstallWithReporter(installevents.WithSource(globalCtx, installevents.SourceManual), installArgs{
+				Tool:            toolName,
+				ReqVersion:      reqVersion,
+				IsExplicit:      true,
+				TelemetryClient: telemetryClient,
+				Reporter:        reporter,
+			})
 		}); err != nil {
 			reporter.Stop()
 			// UpdateFailed event was already published from Manager.Install
@@ -168,28 +161,6 @@ Examples:
 		}
 		reporter.Stop()
 		reporter.FlushDeferred()
-
-		// Lifecycle-aware stale cleanup: delete files the old version created
-		// that the new version no longer needs (e.g., shell.d scripts for a
-		// shell the new version dropped). Only runs when the version changed
-		// and the old version had cleanup actions recorded.
-		if newVersion != "" && newVersion != previousVersion && len(oldCleanupActions) > 0 {
-			// Reload state to get the new version's cleanup actions
-			newState, _ := mgr.GetState().Load()
-			if newState != nil {
-				if ts, ok := newState.Installed[toolName]; ok {
-					if vs, ok := ts.Versions[newVersion]; ok {
-						stale := install.StaleCleanupActions(oldCleanupActions, vs.CleanupActions)
-						mgr.ExecuteStaleCleanup(stale)
-
-						// Update diff visibility: warn when shell init content
-						// changed between versions. This surfaces silent supply-chain
-						// changes where an upstream binary alters its init output.
-						warnShellInitChanges(toolName, oldCleanupActions, vs.CleanupActions, reporter)
-					}
-				}
-			}
-		}
 
 		// Send action telemetry for update. The UpdateOutcomeSuccess
 		// event is emitted automatically by the telemetry subscriber when
@@ -225,41 +196,25 @@ func updateOutcomeMessage(toolName, previousVersion, newVersion string) string {
 	return fmt.Sprintf("%s is already at the latest version (%s).", toolName, newVersion)
 }
 
-// warnShellInitChanges compares content hashes between old and new cleanup
-// actions for shell.d fragments. When the same (target, shell) has different
-// hashes across versions, the tool's shell init output changed during the
-// update -- a signal worth surfacing to the user.
+// updateWithCleanup runs an install that replaces one version of a tool with
+// another, bracketed by the lifecycle-aware cleanup pass every such install
+// needs: snapshot what the outgoing version wrote outside its own directory,
+// install, then reconcile against what the incoming version writes.
 //
-// The comparison is keyed on (target, shell) rather than on the raw path
-// because shell.d filenames carry a version key, so every fragment has a new
-// path in every version and a path-keyed comparison would never match.
-func warnShellInitChanges(toolName string, old, new []install.CleanupAction, reporter progress.Reporter) {
-	type fragment struct{ target, shell string }
-
-	// Build a map of (target, shell) -> content hash from old actions
-	oldHashes := make(map[fragment]string)
-	for _, ca := range old {
-		shell := install.ShellFromCleanupPath(ca.Path)
-		if shell == "" || ca.ContentHash == "" {
-			continue
-		}
-		oldHashes[fragment{install.TargetFromCleanupPath(ca.Path), shell}] = ca.ContentHash
+// It exists so the three paths that update a tool -- `tsuku update <tool>`,
+// `tsuku update --all`, and background auto-apply -- cannot each hold a
+// different two thirds of that sequence. They already had: only the single-tool
+// path ran the pass at all, which is issue #2470.
+//
+// The install error is returned unchanged, and nothing is reconciled when the
+// install fails.
+func updateWithCleanup(mgr *install.Manager, toolName string, warn install.WarnFunc, doInstall func() error) error {
+	snapshot := mgr.SnapshotCleanup(toolName)
+	if err := doInstall(); err != nil {
+		return err
 	}
-
-	for _, ca := range new {
-		shell := install.ShellFromCleanupPath(ca.Path)
-		if shell == "" || ca.ContentHash == "" {
-			continue
-		}
-		oldHash, exists := oldHashes[fragment{install.TargetFromCleanupPath(ca.Path), shell}]
-		if !exists {
-			// New fragment not in old -- new shell init file, not a change
-			continue
-		}
-		if oldHash != ca.ContentHash {
-			reporter.Warn("shell init changed for %s (%s)", toolName, shell)
-		}
-	}
+	mgr.ReconcileUpdate(snapshot, warn)
+	return nil
 }
 
 // isDistributedSource returns true if the source string is a distributed
@@ -337,12 +292,14 @@ func runUpdateAll(cmd *cobra.Command) {
 		// outcome line, consistent with the single-tool path.
 		toolReporter := progress.NewTTYReporter(os.Stderr)
 
-		if err := runInstallWithReporter(installevents.WithSource(globalCtx, installevents.SourceManual), installArgs{
-			Tool:            tool.Name,
-			ReqVersion:      requested,
-			IsExplicit:      true,
-			TelemetryClient: telemetryClient,
-			Reporter:        toolReporter,
+		if err := updateWithCleanup(mgr, tool.Name, toolReporter.Warn, func() error {
+			return runInstallWithReporter(installevents.WithSource(globalCtx, installevents.SourceManual), installArgs{
+				Tool:            tool.Name,
+				ReqVersion:      requested,
+				IsExplicit:      true,
+				TelemetryClient: telemetryClient,
+				Reporter:        toolReporter,
+			})
 		}); err != nil {
 			toolReporter.Log("failed to update %s: %v", tool.Name, err)
 			toolReporter.Stop()

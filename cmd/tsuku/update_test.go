@@ -1,164 +1,13 @@
 package main
 
 import (
-	"bytes"
-	"os"
+	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/install"
-	"github.com/tsukumogami/tsuku/internal/progress"
+	"github.com/tsukumogami/tsuku/internal/testutil"
 )
-
-func TestWarnShellInitChanges_NoWarningWhenHashesMatch(t *testing.T) {
-	old := []install.CleanupAction{
-		{Action: "delete_file", Path: "share/shell.d/tool.bash", ContentHash: "abc123"},
-		{Action: "delete_file", Path: "share/shell.d/tool.zsh", ContentHash: "def456"},
-	}
-	new := []install.CleanupAction{
-		{Action: "delete_file", Path: "share/shell.d/tool.bash", ContentHash: "abc123"},
-		{Action: "delete_file", Path: "share/shell.d/tool.zsh", ContentHash: "def456"},
-	}
-
-	// Capture stderr
-	oldStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-	reporter := progress.NewTTYReporter(os.Stderr)
-
-	warnShellInitChanges("tool", old, new, reporter)
-
-	w.Close()
-	os.Stderr = oldStderr
-
-	var buf bytes.Buffer
-	_, _ = buf.ReadFrom(r)
-	if buf.Len() != 0 {
-		t.Errorf("expected no output when hashes match, got: %s", buf.String())
-	}
-}
-
-func TestWarnShellInitChanges_WarnsWhenHashChanges(t *testing.T) {
-	old := []install.CleanupAction{
-		{Action: "delete_file", Path: "share/shell.d/tool.bash", ContentHash: "abc123"},
-		{Action: "delete_file", Path: "share/shell.d/tool.zsh", ContentHash: "def456"},
-	}
-	new := []install.CleanupAction{
-		{Action: "delete_file", Path: "share/shell.d/tool.bash", ContentHash: "changed"},
-		{Action: "delete_file", Path: "share/shell.d/tool.zsh", ContentHash: "def456"},
-	}
-
-	oldStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-	reporter := progress.NewTTYReporter(os.Stderr)
-
-	warnShellInitChanges("tool", old, new, reporter)
-
-	w.Close()
-	os.Stderr = oldStderr
-
-	var buf bytes.Buffer
-	_, _ = buf.ReadFrom(r)
-	output := buf.String()
-
-	if output == "" {
-		t.Fatal("expected warning output when hash changes")
-	}
-	if !bytes.Contains([]byte(output), []byte("shell init changed for tool (bash)")) {
-		t.Errorf("expected warning about bash, got: %s", output)
-	}
-	// zsh hash didn't change, so no warning for it
-	if bytes.Contains([]byte(output), []byte("(zsh)")) {
-		t.Errorf("did not expect warning about zsh, got: %s", output)
-	}
-}
-
-func TestWarnShellInitChanges_NoWarningForNewPaths(t *testing.T) {
-	// Old version had no shell.d files, new version adds them
-	old := []install.CleanupAction{}
-	new := []install.CleanupAction{
-		{Action: "delete_file", Path: "share/shell.d/tool.bash", ContentHash: "abc123"},
-	}
-
-	oldStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-	reporter := progress.NewTTYReporter(os.Stderr)
-
-	warnShellInitChanges("tool", old, new, reporter)
-
-	w.Close()
-	os.Stderr = oldStderr
-
-	var buf bytes.Buffer
-	_, _ = buf.ReadFrom(r)
-	if buf.Len() != 0 {
-		t.Errorf("expected no output for new paths, got: %s", buf.String())
-	}
-}
-
-func TestWarnShellInitChanges_SkipsActionsWithoutHash(t *testing.T) {
-	old := []install.CleanupAction{
-		{Action: "delete_file", Path: "share/shell.d/tool.bash"},
-	}
-	new := []install.CleanupAction{
-		{Action: "delete_file", Path: "share/shell.d/tool.bash"},
-	}
-
-	oldStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-	reporter := progress.NewTTYReporter(os.Stderr)
-
-	warnShellInitChanges("tool", old, new, reporter)
-
-	w.Close()
-	os.Stderr = oldStderr
-
-	var buf bytes.Buffer
-	_, _ = buf.ReadFrom(r)
-	if buf.Len() != 0 {
-		t.Errorf("expected no output for actions without hash, got: %s", buf.String())
-	}
-}
-
-func TestWarnShellInitChanges_MultipleShellChanges(t *testing.T) {
-	old := []install.CleanupAction{
-		{Action: "delete_file", Path: "share/shell.d/tool.bash", ContentHash: "hash1"},
-		{Action: "delete_file", Path: "share/shell.d/tool.zsh", ContentHash: "hash2"},
-		{Action: "delete_file", Path: "share/shell.d/tool.fish", ContentHash: "hash3"},
-	}
-	new := []install.CleanupAction{
-		{Action: "delete_file", Path: "share/shell.d/tool.bash", ContentHash: "changed1"},
-		{Action: "delete_file", Path: "share/shell.d/tool.zsh", ContentHash: "changed2"},
-		{Action: "delete_file", Path: "share/shell.d/tool.fish", ContentHash: "hash3"},
-	}
-
-	oldStderr := os.Stderr
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-	reporter := progress.NewTTYReporter(os.Stderr)
-
-	warnShellInitChanges("tool", old, new, reporter)
-
-	w.Close()
-	os.Stderr = oldStderr
-
-	var buf bytes.Buffer
-	_, _ = buf.ReadFrom(r)
-	output := buf.String()
-
-	if !bytes.Contains([]byte(output), []byte("(bash)")) {
-		t.Errorf("expected warning about bash, got: %s", output)
-	}
-	if !bytes.Contains([]byte(output), []byte("(zsh)")) {
-		t.Errorf("expected warning about zsh, got: %s", output)
-	}
-	// fish hash didn't change
-	if bytes.Contains([]byte(output), []byte("(fish)")) {
-		t.Errorf("did not expect warning about fish, got: %s", output)
-	}
-}
 
 func TestUpdateOutcomeMessage(t *testing.T) {
 	cases := []struct {
@@ -213,58 +62,113 @@ func TestUpdateOutcomeMessage(t *testing.T) {
 	}
 }
 
-// Version-keyed filenames mean the same fragment has a different path in every
-// version, so a comparison keyed on the raw path would never find a match and
-// this warning would silently stop firing.
-func TestWarnShellInitChanges_ComparesByTargetAndShell(t *testing.T) {
+// recordUpdateVersion writes a version's state directly and makes it active,
+// standing in for the install that would normally do so.
+func recordUpdateVersion(t *testing.T, mgr *install.Manager, tool, version string, actions []install.CleanupAction) {
+	t.Helper()
+
+	if err := mgr.GetState().UpdateTool(tool, func(ts *install.ToolState) {
+		if ts.Versions == nil {
+			ts.Versions = map[string]install.VersionState{}
+		}
+		ts.Versions[version] = install.VersionState{CleanupActions: actions}
+		ts.ActiveVersion = version
+	}); err != nil {
+		t.Fatalf("UpdateTool(%s@%s) error = %v", tool, version, err)
+	}
+}
+
+// updateFragment builds the cleanup action a version-keyed shell.d fragment
+// records, the same shape install_shell_init produces.
+func updateFragment(target, version, shell, hash string) install.CleanupAction {
+	return install.CleanupAction{
+		Action:      "delete_file",
+		Path:        "share/shell.d/" + target + "@" + version + "." + shell,
+		ContentHash: hash,
+	}
+}
+
+// TestUpdateWithCleanup pins the ordering contract the three update paths share:
+// the snapshot is taken before the install, the reconcile runs after it, and a
+// failed install reconciles nothing.
+//
+// Ordering is the whole point of the helper. A reconcile run against a snapshot
+// taken after the install would compare the new version with itself, find no
+// change, and stay silent -- indistinguishable from a clean update.
+func TestUpdateWithCleanup(t *testing.T) {
 	tests := []struct {
-		name     string
-		old      []install.CleanupAction
-		new      []install.CleanupAction
-		wantWarn bool
+		name       string
+		installErr error
+		install    func(t *testing.T, mgr *install.Manager)
+		wantWarns  []string
+		wantErr    bool
 	}{
 		{
-			name:     "same target and shell across versions, content changed",
-			old:      []install.CleanupAction{{Action: "delete_file", Path: "share/shell.d/nvm@0.40.5.bash", ContentHash: "old"}},
-			new:      []install.CleanupAction{{Action: "delete_file", Path: "share/shell.d/nvm@0.40.6.bash", ContentHash: "new"}},
-			wantWarn: true,
+			name: "a shell init rewrite during the install is announced",
+			install: func(t *testing.T, mgr *install.Manager) {
+				recordUpdateVersion(t, mgr, "tool", "2.0.0", []install.CleanupAction{
+					updateFragment("tool", "2.0.0", "bash", "after"),
+				})
+			},
+			wantWarns: []string{"shell init changed for tool (bash)"},
 		},
 		{
-			name:     "same target and shell across versions, content unchanged",
-			old:      []install.CleanupAction{{Action: "delete_file", Path: "share/shell.d/nvm@0.40.5.bash", ContentHash: "same"}},
-			new:      []install.CleanupAction{{Action: "delete_file", Path: "share/shell.d/nvm@0.40.6.bash", ContentHash: "same"}},
-			wantWarn: false,
+			name: "an unchanged shell init says nothing",
+			install: func(t *testing.T, mgr *install.Manager) {
+				recordUpdateVersion(t, mgr, "tool", "2.0.0", []install.CleanupAction{
+					updateFragment("tool", "2.0.0", "bash", "before"),
+				})
+			},
 		},
 		{
-			name:     "a different target is a new fragment, not a change",
-			old:      []install.CleanupAction{{Action: "delete_file", Path: "share/shell.d/nvm@0.40.5.bash", ContentHash: "old"}},
-			new:      []install.CleanupAction{{Action: "delete_file", Path: "share/shell.d/00-env-nvm@0.40.6.bash", ContentHash: "new"}},
-			wantWarn: false,
-		},
-		{
-			name:     "a different shell is a new fragment, not a change",
-			old:      []install.CleanupAction{{Action: "delete_file", Path: "share/shell.d/nvm@0.40.5.bash", ContentHash: "old"}},
-			new:      []install.CleanupAction{{Action: "delete_file", Path: "share/shell.d/nvm@0.40.6.zsh", ContentHash: "new"}},
-			wantWarn: false,
+			name:       "a failed install reconciles nothing",
+			installErr: errors.New("download failed"),
+			install: func(t *testing.T, mgr *install.Manager) {
+				// A partial install that got as far as recording state is the
+				// case worth pinning: the error still has to suppress the
+				// reconcile, or an update that did not land warns about a
+				// change the user never received.
+				recordUpdateVersion(t, mgr, "tool", "2.0.0", []install.CleanupAction{
+					updateFragment("tool", "2.0.0", "bash", "after"),
+				})
+			},
+			wantErr: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			oldStderr := os.Stderr
-			r, w, _ := os.Pipe()
-			os.Stderr = w
-			reporter := progress.NewTTYReporter(os.Stderr)
+			cfg, cleanup := testutil.NewTestConfig(t)
+			defer cleanup()
 
-			warnShellInitChanges("nvm", tt.old, tt.new, reporter)
+			mgr := install.New(cfg)
+			recordUpdateVersion(t, mgr, "tool", "1.0.0", []install.CleanupAction{
+				updateFragment("tool", "1.0.0", "bash", "before"),
+			})
 
-			w.Close()
-			os.Stderr = oldStderr
+			var warns []string
+			installed := false
+			err := updateWithCleanup(mgr, "tool", func(format string, args ...any) {
+				warns = append(warns, fmt.Sprintf(format, args...))
+			}, func() error {
+				installed = true
+				tt.install(t, mgr)
+				return tt.installErr
+			})
 
-			var buf bytes.Buffer
-			_, _ = buf.ReadFrom(r)
-			if gotWarn := buf.Len() > 0; gotWarn != tt.wantWarn {
-				t.Errorf("warned = %v, want %v (output: %q)", gotWarn, tt.wantWarn, buf.String())
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("updateWithCleanup() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !installed {
+				t.Fatal("updateWithCleanup() never ran the install")
+			}
+			if len(warns) != len(tt.wantWarns) {
+				t.Fatalf("warnings = %q, want %q", warns, tt.wantWarns)
+			}
+			for i, want := range tt.wantWarns {
+				if warns[i] != want {
+					t.Errorf("warning %d = %q, want %q", i, warns[i], want)
+				}
 			}
 		})
 	}

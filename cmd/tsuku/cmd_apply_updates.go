@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/notices"
 	"github.com/tsukumogami/tsuku/internal/progress"
@@ -36,36 +37,72 @@ var applyUpdatesCmd = &cobra.Command{
 			return nil
 		}
 
-		noticesDir := notices.NoticesDir(cfg.HomeDir)
-		var reporters []*progress.InboxReporter
-
 		// Background auto-apply: tag every event with SourceAuto on the
 		// context once so all downstream callsites read it via
 		// installevents.SourceFromContext.
 		ctx := installevents.WithSource(globalCtx, installevents.SourceAuto)
-		installFn := func(toolName, version, constraint string) error {
-			reporter := progress.NewInboxReporter(toolName, noticesDir)
-			reporters = append(reporters, reporter)
-			return runInstallWithReporter(ctx, installArgs{
+
+		installFn, flushNotices := autoApplyInstaller(
+			install.New(cfg),
+			notices.NoticesDir(cfg.HomeDir),
+			func(args installArgs) error { return runInstallWithReporter(ctx, args) },
+		)
+
+		updates.MaybeAutoApply(cfg, userCfg, nil, installFn, nil)
+		flushNotices()
+
+		return nil
+	},
+}
+
+// autoApplyInstaller builds the install callback the background apply path hands
+// to MaybeAutoApply, plus the function that flushes what those installs had to
+// say into $TSUKU_HOME/notices/.
+//
+// It takes the install itself as a parameter, rather than calling
+// runInstallWithReporter directly, so the wiring below can be driven by a test
+// that has no network.
+//
+// The stale-cleanup pass belongs here rather than inside MaybeAutoApply: that
+// function decides which tools to update, and this callback decides how one gets
+// installed. Bracketing it here gives the background path the same pass the two
+// foreground ones run, through the same helper.
+//
+// Warnings do reach the user even though apply-updates sends stdout and stderr
+// to /dev/null, because an InboxReporter accumulates them in memory and writes
+// them as a notice on Stop(). That is what makes the ordering load-bearing: the
+// reconcile has to happen inside the callback, before flushNotices runs, or the
+// warning is composed after the only thing that would have persisted it.
+func autoApplyInstaller(
+	mgr *install.Manager,
+	noticesDir string,
+	runInstall func(installArgs) error,
+) (updates.InstallFunc, func()) {
+	var reporters []*progress.InboxReporter
+
+	installFn := func(toolName, version, constraint string) error {
+		reporter := progress.NewInboxReporter(toolName, noticesDir)
+		reporters = append(reporters, reporter)
+
+		return updateWithCleanup(mgr, toolName, reporter.Warn, func() error {
+			return runInstall(installArgs{
 				Tool:              toolName,
 				ReqVersion:        version,
 				VersionConstraint: constraint,
 				Reporter:          reporter,
 			})
-		}
+		})
+	}
 
-		updates.MaybeAutoApply(cfg, userCfg, nil, installFn, nil)
-
-		// Stop reporters after MaybeAutoApply has written success notices.
-		// Reporters with no accumulated messages return early, leaving the
-		// success notice intact. Reporters with warnings (e.g., version_fallback)
-		// overwrite the success notice with a richer notice.
+	// Stopping the reporters is deferred until MaybeAutoApply has written its
+	// success notices. A reporter with nothing accumulated returns early and
+	// leaves that notice intact; one with warnings overwrites it with a richer
+	// notice.
+	return installFn, func() {
 		for _, r := range reporters {
 			r.Stop()
 		}
-
-		return nil
-	},
+	}
 }
 
 func init() {
