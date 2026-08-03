@@ -93,50 +93,90 @@ func TestGarbageCollectVersions_ProtectsPrevious(t *testing.T) {
 }
 
 func TestGarbageCollectVersions_RetentionBoundary(t *testing.T) {
-	dir := t.TempDir()
-	mkdir(t, filepath.Join(dir, "jq-1.6"))
-	setMtime(t, filepath.Join(dir, "jq-1.6"), time.Now().Add(-6*24*time.Hour))
-
-	store := storeFor("jq", "1.6", "1.7")
-	if err := GarbageCollectVersions(store, dir, "jq", "1.7", "", 7*24*time.Hour, time.Now()); err != nil {
-		t.Fatal(err)
+	retention := 7 * 24 * time.Hour
+	tests := []struct {
+		name    string
+		age     time.Duration
+		removed bool
+	}{
+		{"one day inside retention", retention - 24*time.Hour, false},
+		{"a second inside retention", retention - time.Second, false},
+		{"exactly at retention", retention, true},
+		{"a second past retention", retention + time.Second, true},
 	}
 
-	if _, err := os.Stat(filepath.Join(dir, "jq-1.6")); err != nil {
-		t.Error("version within retention period should not be removed")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := t.TempDir()
+			old := filepath.Join(dir, "jq-1.6")
+			mkdir(t, old)
+			now := time.Now()
+			setMtime(t, old, now.Add(-tt.age))
+
+			store := storeFor("jq", "1.6", "1.7")
+			if err := GarbageCollectVersions(store, dir, "jq", "1.7", "", retention, now); err != nil {
+				t.Fatal(err)
+			}
+
+			_, err := os.Stat(old)
+			if tt.removed && !os.IsNotExist(err) {
+				t.Errorf("jq-1.6 aged %s against a %s retention should have been removed", tt.age, retention)
+			}
+			if !tt.removed && err != nil {
+				t.Errorf("jq-1.6 aged %s against a %s retention should have been kept", tt.age, retention)
+			}
+		})
 	}
 }
 
-func TestGarbageCollectVersions_EmptyDir(t *testing.T) {
+// State can outlive the directory it names -- someone deletes it by hand. GC
+// has nothing to reclaim then, and must not treat the missing directory as an
+// error or reconcile state on the strength of a failed stat.
+func TestGarbageCollectVersions_VersionWithNoDirectoryOnDisk(t *testing.T) {
 	dir := t.TempDir()
-	store := storeFor("node", "20.0.0")
+	store := storeFor("node", "18.0.0", "20.0.0")
+
 	if err := GarbageCollectVersions(store, dir, "node", "20.0.0", "", 7*24*time.Hour, time.Now()); err != nil {
-		t.Fatal("should not error on empty directory")
+		t.Fatalf("a recorded version with no directory should not be an error: %v", err)
+	}
+	if len(store.reaped) != 0 {
+		t.Errorf("nothing should have been reaped, got %v", store.reaped)
 	}
 }
 
 func TestGarbageCollectVersions_IgnoresOtherTools(t *testing.T) {
 	dir := t.TempDir()
+	mkdir(t, filepath.Join(dir, "node-18.0.0"))
+	mkdir(t, filepath.Join(dir, "node-20.0.0"))
 	mkdir(t, filepath.Join(dir, "ripgrep-14.0.0"))
+	// Both aged out, so GC has real work to do for node while ripgrep sits in
+	// the same directory being equally old and none of its business.
+	setMtime(t, filepath.Join(dir, "node-18.0.0"), time.Now().Add(-30*24*time.Hour))
 	setMtime(t, filepath.Join(dir, "ripgrep-14.0.0"), time.Now().Add(-30*24*time.Hour))
 
 	store := &fakeVersionStore{versions: map[string][]string{
-		"node":    {"20.0.0"},
+		"node":    {"18.0.0", "20.0.0"},
 		"ripgrep": {"14.0.0"},
 	}}
 	if err := GarbageCollectVersions(store, dir, "node", "20.0.0", "", 7*24*time.Hour, time.Now()); err != nil {
 		t.Fatal(err)
 	}
 
+	if _, err := os.Stat(filepath.Join(dir, "node-18.0.0")); !os.IsNotExist(err) {
+		t.Error("node-18.0.0 is node's own aged-out version and should have been removed")
+	}
 	if _, err := os.Stat(filepath.Join(dir, "ripgrep-14.0.0")); err != nil {
 		t.Error("GC should not touch other tools' directories")
 	}
+	if len(store.reaped) != 1 || store.reaped[0] != "node@18.0.0" {
+		t.Errorf("expected only node@18.0.0 to be reaped, got %v", store.reaped)
+	}
 }
 
-// The registry ships 59 name pairs where one tool's name prefixes another's --
-// git/git-lfs, docker/docker-compose, helm/helm-docs. Reclaiming the shorter
-// name used to read "git-lfs-3.5.0" as version "lfs-3.5.0" of git and delete a
-// working installation of a different tool.
+// The registry ships name pairs where one tool's name prefixes another's --
+// git/git-lfs, docker/docker-compose, helm/helm-docs, 59 of them when this was
+// written. Reclaiming the shorter name used to read "git-lfs-3.5.0" as version
+// "lfs-3.5.0" of git and delete a working installation of a different tool.
 func TestGarbageCollectVersions_LeavesToolWhoseNameSharesAPrefix(t *testing.T) {
 	dir := t.TempDir()
 	mkdir(t, filepath.Join(dir, "git-2.46.0"))
@@ -192,9 +232,9 @@ func TestGarbageCollectVersions_ReclaimsOwnVersionDespiteCollidingName(t *testin
 	}
 }
 
-// A directory nothing in state claims is left alone. Reclaiming it would mean
-// deleting on the strength of a filesystem name, which is the mistake this
-// function used to make.
+// A directory that nothing in state claims is left alone. Reclaiming it would
+// mean deleting on the strength of a filesystem name, which is the mistake
+// this function used to make.
 func TestGarbageCollectVersions_KeepsDirectoryStateDoesNotClaim(t *testing.T) {
 	dir := t.TempDir()
 	mkdir(t, filepath.Join(dir, "node-17.0.0"))
@@ -206,7 +246,7 @@ func TestGarbageCollectVersions_KeepsDirectoryStateDoesNotClaim(t *testing.T) {
 	}
 
 	if _, err := os.Stat(filepath.Join(dir, "node-17.0.0")); err != nil {
-		t.Error("a directory state has no record of should be left where it is")
+		t.Error("a directory that state has no record of should be left where it is")
 	}
 	if len(store.reaped) != 0 {
 		t.Errorf("nothing should have been reaped, got %v", store.reaped)

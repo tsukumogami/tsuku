@@ -371,10 +371,21 @@ func (m *Manager) executeCleanupActions(ctx context.Context, name, version strin
 	return affectedShells
 }
 
-// ReapVersion drops a version whose directory has already been deleted out of
-// band -- garbage collection removes tool directories directly. It runs that
-// version's cleanup actions (skipping anything another version still records),
-// removes its VersionState, and rebuilds the affected caches.
+// ReapVersion drops a version whose directory is about to be, or has already
+// been, deleted out of band -- garbage collection removes tool directories
+// directly. It runs that version's cleanup actions (skipping anything another
+// version still records), removes its VersionState, and rebuilds the affected
+// caches.
+//
+// Callers are expected to reap before deleting, and the one that exists does.
+// Reconciling first means a failed reap leaves the version installed rather
+// than recorded but absent; deleting first opens a window where it is the other
+// way round. Do not reorder this without reading GarbageCollectVersions.
+//
+// Unlike RemoveVersion, this does not tear down the version's .app bundle or
+// its ~/Applications symlink, so reaping a macOS app tool orphans both -- and
+// dropping the VersionState throws away the only record of where they were.
+// That is a known gap, not a decision; see issue #2490.
 //
 // It refuses to touch the active version. Callers that delete directories are
 // expected to protect it themselves; this is the second lock on the door.

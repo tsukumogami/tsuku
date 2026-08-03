@@ -74,7 +74,7 @@ func (m *Manager) ListWithOptions(includeHidden bool) ([]InstalledTool, error) {
 }
 
 // InstalledVersions returns the versions state records for a tool, sorted. A
-// tool state has no record of yields no versions and no error.
+// tool that state has no record of yields no versions and no error.
 //
 // Callers that need to know which directories under $TSUKU_HOME/tools belong to
 // a tool must ask this rather than matching directory names against a

@@ -232,16 +232,37 @@ func TestReapVersion_RunsCleanupAndDropsVersionState(t *testing.T) {
 		t.Error("the active version must survive a reap of another version")
 	}
 
+}
+
+// The refusals are the safety property garbage collection leans on, so they get
+// their own test rather than living at the bottom of the happy path. The caller
+// is about to delete the version's directory; a version that state cannot vouch
+// for is one this tool has no business claiming, and saying so is what stops a
+// directory belonging to something else from being removed.
+func TestReapVersion_RefusesWhatStateCannotVouchFor(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+	mgr := New(cfg)
+
+	twoVersionTool(t, mgr, cfg, "mytool", "2.0.0")
+
 	if err := mgr.ReapVersion("mytool", "2.0.0"); err == nil {
 		t.Error("ReapVersion must refuse the active version")
 	}
-	// The caller is about to delete that version's directory. A version state
-	// has no record of is one this tool cannot claim, so refusing is what stops
-	// a directory belonging to something else from being removed.
 	if err := mgr.ReapVersion("mytool", "9.9.9"); err == nil {
-		t.Error("ReapVersion must refuse a version state has no record of")
+		t.Error("ReapVersion must refuse a version that state has no record of")
 	}
 	if err := mgr.ReapVersion("nosuchtool", "1.0.0"); err == nil {
-		t.Error("ReapVersion must refuse a tool state has no record of")
+		t.Error("ReapVersion must refuse a tool that state has no record of")
+	}
+
+	// Refusing must not be a side-effect-free lie: the versions it declined to
+	// reap are still recorded.
+	ts, err := mgr.state.GetToolState("mytool")
+	if err != nil || ts == nil {
+		t.Fatalf("GetToolState() = %v, %v", ts, err)
+	}
+	if _, ok := ts.Versions["2.0.0"]; !ok {
+		t.Error("a refused reap must leave the version recorded")
 	}
 }
