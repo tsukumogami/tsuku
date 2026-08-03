@@ -99,6 +99,9 @@ func init() {
 func runDoctorChecks(cfg *config.Config, homeDir string) (failed bool, selection shellenv.ShellDSelection) {
 	fmt.Println("Checking tsuku environment...")
 
+	// Set by check 6, which is where state is loaded, and consumed by check 9.
+	var managedBinaries []shellenv.ManagedBinaries
+
 	// Check 1: Home directory
 	fmt.Fprintf(os.Stdout, "  Home directory: %s", homeDir)
 	if info, err := os.Stat(homeDir); err != nil {
@@ -200,6 +203,7 @@ func runDoctorChecks(cfg *config.Config, homeDir string) (failed bool, selection
 	state, stateErr := stateMgr.Load()
 	if stateErr == nil {
 		selection = install.BuildShellDSelection(state)
+		managedBinaries = install.BuildManagedBinaries(state)
 	}
 
 	shellCheck := shellenv.CheckShellD(homeDir, selection)
@@ -283,6 +287,39 @@ func runDoctorChecks(cfg *config.Config, homeDir string) (failed bool, selection
 	} else {
 		fmt.Printf(" ... WARN (%d stale, >30 days old)\n", len(staleNotices))
 		fmt.Fprintf(os.Stderr, "    Run: rm %s/*.json to clear\n", noticesDir)
+	}
+
+	// Check 9: Tool precedence.
+	//
+	// Checks 2 and 3 ask whether tsuku's directories are on PATH. This one asks
+	// whether they win. A competing installer that prepends its own prefix after
+	// $TSUKU_HOME/env has been sourced leaves both checks above green while every
+	// command actually runs the other copy.
+	//
+	// It warns rather than fails. Doctor is documented as a CI gate, and which
+	// binary wins is a property of the user's PATH that they may well have
+	// arranged deliberately.
+	fmt.Fprintf(os.Stdout, "  Tool precedence")
+	shadowed := shellenv.CheckPrecedence(shellenv.PrecedenceInput{
+		TsukuHome: homeDir,
+		PathDirs:  pathDirs,
+		Tools:     managedBinaries,
+	})
+	if len(shadowed) == 0 {
+		fmt.Println(" ... ok")
+	} else {
+		fmt.Printf(" ... WARN (%d shadowed)\n", len(shadowed))
+		for _, s := range shadowed {
+			// Name the tool too when it differs from the binary, so the reader
+			// knows which `tsuku` entry to act on -- ripgrep provides rg.
+			label := s.Binary
+			if s.Tool != s.Binary {
+				label = fmt.Sprintf("%s (%s)", s.Binary, s.Tool)
+			}
+			fmt.Fprintf(os.Stderr, "    %s resolves to %s, not tsuku's %s\n", label, s.Resolved, s.Expected)
+		}
+		fmt.Fprintf(os.Stderr, "    Something earlier on PATH is shadowing a tsuku-managed tool.\n")
+		fmt.Fprintf(os.Stderr, "    Move the tsuku entries ahead of it, or remove the other copy.\n")
 	}
 
 	return failed, selection
