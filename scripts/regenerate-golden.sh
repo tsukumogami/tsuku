@@ -288,7 +288,7 @@ for VERSION in $VERSIONS; do
         fi
 
         if "$TSUKU" eval "${eval_args[@]}" 2>/dev/null | \
-            jq 'del(.generated_at, .recipe_source)' > "$OUTPUT.tmp"; then
+            jq 'del(.generated_at, .recipe_source, .storage_version)' > "$OUTPUT.tmp"; then
             mv "$OUTPUT.tmp" "$OUTPUT"
             echo "  Generated: $OUTPUT"
         else

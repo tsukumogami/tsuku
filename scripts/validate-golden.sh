@@ -519,16 +519,20 @@ for VERSION in $VERSIONS; do
         # Generate current plan with constrained evaluation (stripping non-deterministic fields)
         # The --pin-from flag extracts constraints from the golden file (pip versions,
         # go.sum, cargo.lock, etc.) to produce deterministic output.
+        # storage_version is stripped for the same reason as generated_at and
+        # recipe_source: it describes the writer, not the installation. Golden
+        # files record what a plan installs, so a change to how plans are marked
+        # must not invalidate them.
         # Note: missing platforms already caught by pre-check above
         if ! "$TSUKU" eval "${eval_args[@]}" 2>/dev/null | \
-            jq 'del(.generated_at, .recipe_source)' > "$ACTUAL"; then
+            jq 'del(.generated_at, .recipe_source, .storage_version)' > "$ACTUAL"; then
             echo "Failed to generate plan for $RECIPE@$VERSION ($filename)" >&2
             continue
         fi
 
         # Fast hash comparison
         GOLDEN_NORMALIZED="$TEMP_DIR/golden-$filename"
-        jq 'del(.generated_at, .recipe_source)' "$GOLDEN" > "$GOLDEN_NORMALIZED"
+        jq 'del(.generated_at, .recipe_source, .storage_version)' "$GOLDEN" > "$GOLDEN_NORMALIZED"
         GOLDEN_HASH=$(sha256sum "$GOLDEN_NORMALIZED" | cut -d' ' -f1)
         ACTUAL_HASH=$(sha256sum "$ACTUAL" | cut -d' ' -f1)
 

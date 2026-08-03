@@ -21,9 +21,10 @@ import (
 func fullyPopulatedPlan() *InstallationPlan {
 	exitCode := 3
 	return &InstallationPlan{
-		FormatVersion: PlanFormatVersion,
-		Tool:          "kubectl",
-		Version:       "1.29.0",
+		FormatVersion:  PlanFormatVersion,
+		StorageVersion: install.PlanStorageVersion,
+		Tool:           "kubectl",
+		Version:        "1.29.0",
 		Platform: Platform{
 			OS:          "linux",
 			Arch:        "arm64",
@@ -274,17 +275,36 @@ func TestToStoragePlan(t *testing.T) {
 		}
 	})
 
-	t.Run("stamps the current storage version", func(t *testing.T) {
+	t.Run("carries the storage version of the plan it converts", func(t *testing.T) {
 		stored := ToStoragePlan(fullyPopulatedPlan())
 		if stored.StorageVersion != install.PlanStorageVersion {
 			t.Errorf("StorageVersion = %d, want %d", stored.StorageVersion, install.PlanStorageVersion)
 		}
 	})
 
+	t.Run("does not stamp a plan that arrived unmarked", func(t *testing.T) {
+		// `tsuku install --plan` on a file exported before the fields existed
+		// converts that plan into the state.json record. Stamping the current
+		// version here would make the record claim to be complete, and the
+		// readers that gate on it -- the plan cache, plan show, plan export --
+		// would stop warning about it after one install.
+		stale := fullyPopulatedPlan()
+		stale.StorageVersion = 0
+		stale.Dependencies = nil
+		stale.Verify = nil
+
+		stored := ToStoragePlan(stale)
+		if stored.StorageVersion != 0 {
+			t.Errorf("StorageVersion = %d, want 0; an unmarked plan must not be laundered into a marked record",
+				stored.StorageVersion)
+		}
+	})
+
 	t.Run("a plan with nothing optional to say stays lean", func(t *testing.T) {
 		// The added fields are all omitempty, so a minimal plan must not grow
-		// new keys. A rewritten state.json record should differ from what the
-		// old conversion wrote only by storage_version.
+		// new keys. This plan is unmarked, so it should serialize to exactly
+		// what the old conversion wrote -- storage_version included, since a
+		// zero value is the encoding of "written before the fields existed".
 		stored := ToStoragePlan(&InstallationPlan{
 			FormatVersion: PlanFormatVersion,
 			Tool:          "jq",
@@ -300,7 +320,7 @@ func TestToStoragePlan(t *testing.T) {
 		if err := json.Unmarshal(encoded, &keys); err != nil {
 			t.Fatalf("unmarshal: %v", err)
 		}
-		for _, absent := range []string{"dependencies", "verify", "recipe_type", "binaries", "linux_family", "phase"} {
+		for _, absent := range []string{"dependencies", "verify", "recipe_type", "binaries", "linux_family", "phase", "storage_version"} {
 			if _, present := keys[absent]; present {
 				t.Errorf("key %q written for a plan that has none", absent)
 			}
@@ -346,6 +366,21 @@ func TestFromStoragePlan(t *testing.T) {
 		}
 		if plan.Steps[0].Phase != "" {
 			t.Errorf("Steps[0].Phase = %q, want empty", plan.Steps[0].Phase)
+		}
+		// The zero has to reach the executor plan, not stop at the storage
+		// type. A cached record replayed through here would otherwise look
+		// complete to anything downstream that asks.
+		if plan.StorageVersion != 0 {
+			t.Errorf("StorageVersion = %d, want 0; the converter invented a marker the record does not carry",
+				plan.StorageVersion)
+		}
+	})
+
+	t.Run("carries the marker of a record written by the current conversion", func(t *testing.T) {
+		stored := ToStoragePlan(fullyPopulatedPlan())
+		plan := FromStoragePlan(stored)
+		if plan.StorageVersion != install.PlanStorageVersion {
+			t.Errorf("StorageVersion = %d, want %d", plan.StorageVersion, install.PlanStorageVersion)
 		}
 	})
 }

@@ -166,12 +166,17 @@ func (h *reinstallHarness) seedInstalledTool(tool string, deps, runtimeDeps []st
 		Verify: &recipe.VerifySection{Command: "true"},
 	})
 
+	// Marked, because a real completed install stores what GeneratePlan
+	// produced and generation stamps the marker. An unmarked record is one the
+	// plan cache treats as a miss, which would make the reinstall regenerate
+	// instead of replaying.
 	plan := &executor.InstallationPlan{
-		FormatVersion: executor.PlanFormatVersion,
-		Tool:          tool,
-		Version:       reinstallVersion,
-		Platform:      executor.Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
-		Steps:         reinstallPlanSteps(tool),
+		FormatVersion:  executor.PlanFormatVersion,
+		StorageVersion: install.PlanStorageVersion,
+		Tool:           tool,
+		Version:        reinstallVersion,
+		Platform:       executor.Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
+		Steps:          reinstallPlanSteps(tool),
 	}
 
 	if err := h.mgr.GetState().UpdateTool(tool, func(ts *install.ToolState) {

@@ -21,13 +21,14 @@ import (
 // have been inferred from.
 func planWithDependencyAndVerify() *executor.InstallationPlan {
 	return &executor.InstallationPlan{
-		FormatVersion: executor.PlanFormatVersion,
-		Tool:          "httpie",
-		Version:       "3.2.2",
-		Platform:      executor.Platform{OS: "linux", Arch: "amd64"},
-		GeneratedAt:   time.Date(2026, 8, 3, 12, 0, 0, 0, time.UTC),
-		RecipeSource:  "registry",
-		Deterministic: true,
+		FormatVersion:  executor.PlanFormatVersion,
+		StorageVersion: install.PlanStorageVersion,
+		Tool:           "httpie",
+		Version:        "3.2.2",
+		Platform:       executor.Platform{OS: "linux", Arch: "amd64"},
+		GeneratedAt:    time.Date(2026, 8, 3, 12, 0, 0, 0, time.UTC),
+		RecipeSource:   "registry",
+		Deterministic:  true,
 		Dependencies: []executor.DependencyPlan{
 			{
 				Tool:       "openssl",

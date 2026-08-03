@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/actions"
+	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/platform"
 	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
@@ -331,17 +332,24 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 
 	return &InstallationPlan{
 		FormatVersion: PlanFormatVersion,
-		Tool:          e.recipe.Metadata.Name,
-		Version:       versionInfo.Version,
-		Platform:      planPlatform,
-		GeneratedAt:   time.Now().UTC(),
-		RecipeSource:  recipeSource,
-		Deterministic: planDeterministic,
-		Dependencies:  dependencies,
-		Steps:         steps,
-		Verify:        verify,
-		RecipeType:    string(e.recipe.Metadata.Type),
-		Binaries:      planBinaries,
+		// A generated plan carries every field by construction, so it is
+		// marked complete. Without this, `tsuku eval` output -- which is a
+		// first-class input to `tsuku install --plan` -- would be
+		// indistinguishable from a plan exported before the storage
+		// conversion carried everything, and the load-time warning would
+		// fire on healthy plans.
+		StorageVersion: install.PlanStorageVersion,
+		Tool:           e.recipe.Metadata.Name,
+		Version:        versionInfo.Version,
+		Platform:       planPlatform,
+		GeneratedAt:    time.Now().UTC(),
+		RecipeSource:   recipeSource,
+		Deterministic:  planDeterministic,
+		Dependencies:   dependencies,
+		Steps:          steps,
+		Verify:         verify,
+		RecipeType:     string(e.recipe.Metadata.Type),
+		Binaries:       planBinaries,
 	}, nil
 }
 

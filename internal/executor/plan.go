@@ -33,6 +33,20 @@ type InstallationPlan struct {
 	// See PlanFormatVersion for the current version.
 	FormatVersion int `json:"format_version"`
 
+	// StorageVersion records that whatever wrote this plan carried every
+	// field. See install.PlanStorageVersion for what each version means; it
+	// is not the plan format version, which tracks the shape of the plan
+	// itself rather than the completeness of the writer.
+	//
+	// The field lives here, and not only on install.Plan, because a plan
+	// reaches `tsuku install --plan` as a file rather than as a state.json
+	// record, and the reader on that path has no recipe to fall back on.
+	// Both writers stamp it: plan generation, and executor.ToStoragePlan by
+	// carrying it across. Absent (0) means the file was written before the
+	// conversion carried every field, so its dependency tree, verify block
+	// and recipe type cannot be trusted to be absent on purpose.
+	StorageVersion int `json:"storage_version,omitempty"`
+
 	// Metadata
 	Tool        string    `json:"tool"`
 	Version     string    `json:"version"`

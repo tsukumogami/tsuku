@@ -130,6 +130,20 @@ stderr when they hit one. Reinstalling refreshes the record:
 tsuku install <tool> --fresh
 ```
 
+`tsuku install --plan` warns too, which is what covers a file exported before
+that warning existed and kept for offline use. It says the plan file predates
+the format that carries every field, names what may be missing, and points at
+`tsuku eval <tool>` for a current one. It installs anyway -- refusing would
+strand anyone whose whole reason for holding the file is that the target machine
+cannot reach the registry. If you can reach it, regenerate:
+
+```bash
+tsuku eval <tool> > <tool>.plan.json
+```
+
+Plans written by the current `tsuku eval` and the current `tsuku plan export`
+never trigger the warning, so seeing it means the file really is old.
+
 ## Shell Integration
 
 tsuku needs two directories on your PATH: `$TSUKU_HOME/bin` (wrapper scripts) and `$TSUKU_HOME/tools/current` (active tool symlinks). The `shellenv` command sets this up.

@@ -61,7 +61,9 @@ Use `tsuku eval` here, not `tsuku plan export`. They look interchangeable and ar
 not: `eval` resolves the recipe now, while `plan export` replays what was recorded
 when the tool was installed. A record written by an older tsuku can be missing the
 dependency tree and verify block, which would make the sandbox run pass for the
-wrong reason. `plan export` warns when it hands you one.
+wrong reason. `plan export` warns when it hands you one, and `install --plan`
+warns again when it reads one -- if you see either warning during a sandbox run,
+treat the result as meaningless and re-run from `tsuku eval`.
 
 ### Cross-Family Testing
 
