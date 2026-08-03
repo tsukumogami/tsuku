@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -578,16 +577,18 @@ func TestShellDLifecycle_UpdateAllDropsAShell(t *testing.T) {
 		t.Fatalf("the scenario needs %s's init script in the zsh cache to start with", lifecycleV1)
 	}
 
-	var warns []string
-	err := updateWithCleanup(h.mgr, h.tool, func(format string, args ...any) {
-		warns = append(warns, fmt.Sprintf(format, args...))
-	}, func() error {
+	reporter := &recordingReporter{}
+	newVersion, err := updateInstalledTool(h.mgr, h.tool, reporter, func() error {
 		h.installVersionShells(lifecycleV2, []string{"bash"})
 		return nil
 	})
 	if err != nil {
-		t.Fatalf("updateWithCleanup() error = %v", err)
+		t.Fatalf("updateInstalledTool() error = %v", err)
 	}
+	if newVersion != lifecycleV2 {
+		t.Fatalf("updateInstalledTool() reported version %q active, want %q", newVersion, lifecycleV2)
+	}
+	warns := reporter.warns
 
 	// The tool rewrote its bash init between versions, which is the whole point
 	// of the warning: it is the only notice a user gets that the script their

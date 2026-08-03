@@ -121,10 +121,7 @@ Examples:
 		// the outcome appearing on a separate stdout line. See #2280/#2359.
 		reporter := progress.NewTTYReporter(os.Stderr)
 
-		// The install is bracketed by the stale-cleanup pass: files the old
-		// version created that the new one no longer needs go, and a shell init
-		// script that changed content across the upgrade is announced.
-		if err := updateWithCleanup(mgr, toolName, reporter.Warn, func() error {
+		newVersion, err := updateInstalledTool(mgr, toolName, reporter, func() error {
 			return runInstallWithReporter(installevents.WithSource(globalCtx, installevents.SourceManual), installArgs{
 				Tool:            toolName,
 				ReqVersion:      reqVersion,
@@ -132,25 +129,13 @@ Examples:
 				TelemetryClient: telemetryClient,
 				Reporter:        reporter,
 			})
-		}); err != nil {
+		})
+		if err != nil {
 			reporter.Stop()
 			// UpdateFailed event was already published from Manager.Install
 			// via the bus; the telemetry subscriber emitted the
 			// UpdateOutcomeFailure event. No direct telemetry call needed.
 			exitWithCode(ExitInstallFailed)
-		}
-
-		// Get the active version after update. List returns one entry
-		// per retained version, so we must pick the entry where
-		// IsActive is true — otherwise an older retained version
-		// could shadow the just-installed one in the loop below.
-		tools, _ = mgr.List()
-		var newVersion string
-		for _, tool := range tools {
-			if tool.Name == toolName && tool.IsActive {
-				newVersion = tool.Version
-				break
-			}
 		}
 
 		// Emit the no-op outcome via the reporter so the TTY spinner is
@@ -215,6 +200,42 @@ func updateWithCleanup(mgr *install.Manager, toolName string, warn install.WarnF
 	}
 	mgr.ReconcileUpdate(snapshot, warn)
 	return nil
+}
+
+// updateInstalledTool is one foreground tool update end to end: the
+// cleanup-bracketed install, then the version that ended up active. Both
+// `tsuku update <tool>` and `tsuku update --all` go through it, so neither the
+// pass nor the version readback can be right on one and wrong on the other.
+//
+// The returned version is empty when the install failed, and when state cannot
+// say which version is active afterwards. Callers that treat "no version" as
+// "unchanged" have to say so themselves -- the two commands differ on that.
+//
+// doInstall is a parameter rather than a direct call so a test can drive the
+// sequence without resolving a recipe or downloading anything.
+func updateInstalledTool(mgr *install.Manager, toolName string, reporter progress.Reporter, doInstall func() error) (string, error) {
+	if err := updateWithCleanup(mgr, toolName, reporter.Warn, doInstall); err != nil {
+		return "", err
+	}
+	return activeVersionAfterUpdate(mgr, toolName), nil
+}
+
+// activeVersionAfterUpdate reports which version of the tool is active now.
+//
+// List returns one entry per retained version, so the entry flagged IsActive is
+// the one to read: an older retained version would otherwise shadow the version
+// that was just installed.
+func activeVersionAfterUpdate(mgr *install.Manager, toolName string) string {
+	tools, err := mgr.List()
+	if err != nil {
+		return ""
+	}
+	for _, tool := range tools {
+		if tool.Name == toolName && tool.IsActive {
+			return tool.Version
+		}
+	}
+	return ""
 }
 
 // isDistributedSource returns true if the source string is a distributed
@@ -292,7 +313,7 @@ func runUpdateAll(cmd *cobra.Command) {
 		// outcome line, consistent with the single-tool path.
 		toolReporter := progress.NewTTYReporter(os.Stderr)
 
-		if err := updateWithCleanup(mgr, tool.Name, toolReporter.Warn, func() error {
+		newVersion, err := updateInstalledTool(mgr, tool.Name, toolReporter, func() error {
 			return runInstallWithReporter(installevents.WithSource(globalCtx, installevents.SourceManual), installArgs{
 				Tool:            tool.Name,
 				ReqVersion:      requested,
@@ -300,7 +321,8 @@ func runUpdateAll(cmd *cobra.Command) {
 				TelemetryClient: telemetryClient,
 				Reporter:        toolReporter,
 			})
-		}); err != nil {
+		})
+		if err != nil {
 			toolReporter.Log("failed to update %s: %v", tool.Name, err)
 			toolReporter.Stop()
 			// UpdateFailed was published from Manager.Install; the
@@ -309,24 +331,16 @@ func runUpdateAll(cmd *cobra.Command) {
 			continue
 		}
 
-		// Detect whether the install actually changed the active version
-		// or whether the tool was already at latest. The install
+		// Whether the install changed the active version or the tool was
+		// already at latest decides which counter moves. The install
 		// machinery's "is already installed" status is a transient TTY
-		// message; we need to count up-to-date separately so the summary
-		// at the end is accurate.
-		//
-		// List returns one entry per retained version; pick the one
-		// flagged IsActive so we don't shadow the just-installed
-		// version with an older retained one.
-		newVersion := previousVersion
-		if afterTools, listErr := mgr.List(); listErr == nil {
-			for _, t := range afterTools {
-				if t.Name == tool.Name && t.IsActive {
-					newVersion = t.Version
-					break
-				}
-			}
+		// message, so up-to-date has to be counted separately for the summary
+		// to be accurate. A version state cannot vouch for reads as unchanged
+		// here rather than as an update, which is the conservative count.
+		if newVersion == "" {
+			newVersion = previousVersion
 		}
+
 		// Emit the no-op outcome via the reporter so the TTY spinner is
 		// replaced in-place. Real updates already get a permanent
 		// "✅ <name>@<version>" line from the install reporter (#2280).

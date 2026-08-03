@@ -3,9 +3,12 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 
+	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/testutil"
 )
 
@@ -64,8 +67,16 @@ func TestUpdateOutcomeMessage(t *testing.T) {
 
 // recordUpdateVersion writes a version's state directly and makes it active,
 // standing in for the install that would normally do so.
-func recordUpdateVersion(t *testing.T, mgr *install.Manager, tool, version string, actions []install.CleanupAction) {
+//
+// The version directory has to exist alongside the state entry: Manager.List
+// skips a version state records but disk does not have, so a state-only entry
+// would be invisible to the version readback.
+func recordUpdateVersion(t *testing.T, cfg *config.Config, mgr *install.Manager, tool, version string, actions []install.CleanupAction) {
 	t.Helper()
+
+	if err := os.MkdirAll(cfg.ToolDir(tool, version), 0755); err != nil {
+		t.Fatalf("creating the version directory for %s@%s: %v", tool, version, err)
+	}
 
 	if err := mgr.GetState().UpdateTool(tool, func(ts *install.ToolState) {
 		if ts.Versions == nil {
@@ -88,47 +99,70 @@ func updateFragment(target, version, shell, hash string) install.CleanupAction {
 	}
 }
 
-// TestUpdateWithCleanup pins the ordering contract the three update paths share:
-// the snapshot is taken before the install, the reconcile runs after it, and a
-// failed install reconciles nothing.
+// recordingReporter captures what an update wanted to tell the user, so a test
+// can assert on the message rather than on stderr.
+type recordingReporter struct {
+	progress.NoopReporter
+	warns []string
+}
+
+func (r *recordingReporter) Warn(format string, args ...any) {
+	r.warns = append(r.warns, fmt.Sprintf(format, args...))
+}
+
+// TestUpdateInstalledTool pins the ordering contract both foreground update
+// commands share: the snapshot is taken before the install, the reconcile runs
+// after it, a failed install reconciles nothing, and the version reported back
+// is the one that ended up active.
 //
 // Ordering is the whole point of the helper. A reconcile run against a snapshot
 // taken after the install would compare the new version with itself, find no
 // change, and stay silent -- indistinguishable from a clean update.
-func TestUpdateWithCleanup(t *testing.T) {
+func TestUpdateInstalledTool(t *testing.T) {
 	tests := []struct {
-		name       string
-		installErr error
-		install    func(t *testing.T, mgr *install.Manager)
-		wantWarns  []string
-		wantErr    bool
+		name        string
+		installErr  error
+		install     func(t *testing.T, cfg *config.Config, mgr *install.Manager)
+		wantWarns   []string
+		wantVersion string
+		wantErr     bool
 	}{
 		{
 			name: "a shell init rewrite during the install is announced",
-			install: func(t *testing.T, mgr *install.Manager) {
-				recordUpdateVersion(t, mgr, "tool", "2.0.0", []install.CleanupAction{
+			install: func(t *testing.T, cfg *config.Config, mgr *install.Manager) {
+				recordUpdateVersion(t, cfg, mgr, "tool", "2.0.0", []install.CleanupAction{
 					updateFragment("tool", "2.0.0", "bash", "after"),
 				})
 			},
-			wantWarns: []string{"shell init changed for tool (bash)"},
+			wantWarns:   []string{"shell init changed for tool (bash)"},
+			wantVersion: "2.0.0",
 		},
 		{
 			name: "an unchanged shell init says nothing",
-			install: func(t *testing.T, mgr *install.Manager) {
-				recordUpdateVersion(t, mgr, "tool", "2.0.0", []install.CleanupAction{
+			install: func(t *testing.T, cfg *config.Config, mgr *install.Manager) {
+				recordUpdateVersion(t, cfg, mgr, "tool", "2.0.0", []install.CleanupAction{
 					updateFragment("tool", "2.0.0", "bash", "before"),
 				})
 			},
+			wantVersion: "2.0.0",
+		},
+		{
+			name:    "an install that changed nothing reports the version already active",
+			install: func(*testing.T, *config.Config, *install.Manager) {},
+			// The tool was already at latest: no warning, and the version the
+			// caller reads back is the one it started on, which is how
+			// `--all` tells "up to date" from "updated".
+			wantVersion: "1.0.0",
 		},
 		{
 			name:       "a failed install reconciles nothing",
 			installErr: errors.New("download failed"),
-			install: func(t *testing.T, mgr *install.Manager) {
+			install: func(t *testing.T, cfg *config.Config, mgr *install.Manager) {
 				// A partial install that got as far as recording state is the
 				// case worth pinning: the error still has to suppress the
 				// reconcile, or an update that did not land warns about a
 				// change the user never received.
-				recordUpdateVersion(t, mgr, "tool", "2.0.0", []install.CleanupAction{
+				recordUpdateVersion(t, cfg, mgr, "tool", "2.0.0", []install.CleanupAction{
 					updateFragment("tool", "2.0.0", "bash", "after"),
 				})
 			},
@@ -142,32 +176,33 @@ func TestUpdateWithCleanup(t *testing.T) {
 			defer cleanup()
 
 			mgr := install.New(cfg)
-			recordUpdateVersion(t, mgr, "tool", "1.0.0", []install.CleanupAction{
+			recordUpdateVersion(t, cfg, mgr, "tool", "1.0.0", []install.CleanupAction{
 				updateFragment("tool", "1.0.0", "bash", "before"),
 			})
 
-			var warns []string
+			reporter := &recordingReporter{}
 			installed := false
-			err := updateWithCleanup(mgr, "tool", func(format string, args ...any) {
-				warns = append(warns, fmt.Sprintf(format, args...))
-			}, func() error {
+			gotVersion, err := updateInstalledTool(mgr, "tool", reporter, func() error {
 				installed = true
-				tt.install(t, mgr)
+				tt.install(t, cfg, mgr)
 				return tt.installErr
 			})
 
 			if (err != nil) != tt.wantErr {
-				t.Fatalf("updateWithCleanup() error = %v, wantErr %v", err, tt.wantErr)
+				t.Fatalf("updateInstalledTool() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !installed {
-				t.Fatal("updateWithCleanup() never ran the install")
+				t.Fatal("updateInstalledTool() never ran the install")
 			}
-			if len(warns) != len(tt.wantWarns) {
-				t.Fatalf("warnings = %q, want %q", warns, tt.wantWarns)
+			if gotVersion != tt.wantVersion {
+				t.Errorf("updateInstalledTool() version = %q, want %q", gotVersion, tt.wantVersion)
+			}
+			if len(reporter.warns) != len(tt.wantWarns) {
+				t.Fatalf("warnings = %q, want %q", reporter.warns, tt.wantWarns)
 			}
 			for i, want := range tt.wantWarns {
-				if warns[i] != want {
-					t.Errorf("warning %d = %q, want %q", i, warns[i], want)
+				if reporter.warns[i] != want {
+					t.Errorf("warning %d = %q, want %q", i, reporter.warns[i], want)
 				}
 			}
 		})

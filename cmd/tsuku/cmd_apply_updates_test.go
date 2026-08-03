@@ -25,14 +25,14 @@ func TestAutoApplyInstaller_ShellInitChangeReachesTheNoticeInbox(t *testing.T) {
 	mgr := install.New(cfg)
 	noticesDir := notices.NoticesDir(cfg.HomeDir)
 
-	recordUpdateVersion(t, mgr, "mytool", "1.0.0", []install.CleanupAction{
+	recordUpdateVersion(t, cfg, mgr, "mytool", "1.0.0", []install.CleanupAction{
 		updateFragment("mytool", "1.0.0", "bash", "before"),
 	})
 
 	installFn, flushNotices := autoApplyInstaller(mgr, noticesDir, func(installArgs) error {
 		// What the install would leave behind: a new active version whose bash
 		// init has different content.
-		recordUpdateVersion(t, mgr, "mytool", "2.0.0", []install.CleanupAction{
+		recordUpdateVersion(t, cfg, mgr, "mytool", "2.0.0", []install.CleanupAction{
 			updateFragment("mytool", "2.0.0", "bash", "after"),
 		})
 		return nil
@@ -71,12 +71,12 @@ func TestAutoApplyInstaller_UnchangedShellInitWritesNoNotice(t *testing.T) {
 	mgr := install.New(cfg)
 	noticesDir := notices.NoticesDir(cfg.HomeDir)
 
-	recordUpdateVersion(t, mgr, "mytool", "1.0.0", []install.CleanupAction{
+	recordUpdateVersion(t, cfg, mgr, "mytool", "1.0.0", []install.CleanupAction{
 		updateFragment("mytool", "1.0.0", "bash", "same"),
 	})
 
 	installFn, flushNotices := autoApplyInstaller(mgr, noticesDir, func(installArgs) error {
-		recordUpdateVersion(t, mgr, "mytool", "2.0.0", []install.CleanupAction{
+		recordUpdateVersion(t, cfg, mgr, "mytool", "2.0.0", []install.CleanupAction{
 			updateFragment("mytool", "2.0.0", "bash", "same"),
 		})
 		return nil
