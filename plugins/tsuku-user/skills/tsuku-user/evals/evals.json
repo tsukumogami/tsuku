@@ -92,6 +92,18 @@
         "Agent does NOT confuse recipe validation with tool installation or shell setup"
       ],
       "files": []
+    },
+    {
+      "id": 9,
+      "name": "reinstall-modified-files",
+      "prompt": "tsuku verify says my tool's binary was modified after installation. How do I put the original files back without losing anything?",
+      "expected_output": "Skill triggers on install repair. Agent points at tsuku install <tool> --reinstall, explains that plain tsuku install is idempotent and will not re-run for an already-installed version, and notes that data under $TSUKU_HOME/data/<tool> is not touched.",
+      "assertions": [
+        "Output names 'tsuku install <tool> --reinstall' as the repair",
+        "Output explains that plain 'tsuku install' does nothing for an already-installed version",
+        "Output does not recommend 'tsuku remove' as the only way to reinstall"
+      ],
+      "files": []
     }
   ]
 }

@@ -16,6 +16,25 @@ Feature: Install
     When I run "tsuku install nonexistent-tool-xyz-12345"
     Then the exit code is 3
 
+  # The middle step is the point: a plain install of an already-installed
+  # version reports success and changes nothing, which is why a broken install
+  # had no recovery before --reinstall existed.
+  @critical
+  Scenario: Reinstall repairs a modified install
+    When I run "tsuku install actionlint --force"
+    Then the exit code is 0
+    When I create home file "tools/current/actionlint" with content:
+      """
+      corrupted-by-the-test
+      """
+    And I run "tsuku install actionlint --force"
+    Then the exit code is 0
+    And the file "tools/current/actionlint" contains "corrupted-by-the-test"
+    When I run "tsuku install actionlint --force --reinstall"
+    Then the exit code is 0
+    And the file "tools/current/actionlint" does not contain "corrupted-by-the-test"
+    And I can run "actionlint -version"
+
   Scenario: Install with --from generates recipe and installs
     When I run "tsuku install shfmt --from homebrew:shfmt --force --deterministic-only"
     Then the exit code is 0

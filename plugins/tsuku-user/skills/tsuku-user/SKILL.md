@@ -59,8 +59,8 @@ tsuku finds `.tsuku.toml` by walking up from the current directory, stopping at 
 
 | Command | Description | Common Flags |
 |---------|-------------|--------------|
-| `tsuku install <tool>` | Install a tool (supports `@version` suffix) | `--force`, `--sandbox`, `--dry-run` |
-| `tsuku install` | Install all tools from `.tsuku.toml` | `--yes`, `--dry-run`, `--fresh` |
+| `tsuku install <tool>` | Install a tool (supports `@version` suffix) | `--force`, `--sandbox`, `--dry-run`, `--reinstall` |
+| `tsuku install` | Install all tools from `.tsuku.toml` | `--yes`, `--dry-run`, `--fresh`, `--reinstall` |
 | `tsuku remove <tool>` | Remove a tool (or specific version with `@version`) | `--force` |
 | `tsuku update <tool>` | Update within pin boundaries | `--dry-run` |
 | `tsuku update --all` | Update all tools (skips exact-pinned) | `--dry-run` |
@@ -70,6 +70,15 @@ tsuku finds `.tsuku.toml` by walking up from the current directory, stopping at 
 | `tsuku outdated` | Show tools with available updates | `--json` |
 
 **Tool data outlives the tool**: a few tools keep things for you rather than just being a program — nvm holds every Node version you install, their global npm packages, and your `default` alias. Those live in `$TSUKU_HOME/data/<tool>/`, which is separate from the versioned directory tsuku installs into and recycles. Upgrading the tool leaves them alone, and so does `tsuku remove`. Nothing tsuku ships deletes that directory, so reclaim the space with `rm -rf "$TSUKU_HOME/data/<tool>"`. Data an older tsuku left somewhere else is not moved for you — see `docs/tool-data-directory.md`. Note this makes `rm -rf $TSUKU_HOME` destructive to data you cannot get back cheaply.
+
+**Reinstalling**: plain `tsuku install <tool>` is idempotent — if the version it
+resolves to is already installed, it says so and stops. `--reinstall` makes it run
+the installation again and replace the files on disk, which is how an existing
+install picks up a fix and how a modified install gets repaired. It reinstalls the
+tool you name and leaves its dependencies alone, so reinstall a dependency by
+naming it. Anything the tool keeps in `$TSUKU_HOME/data/<tool>/` is untouched.
+With no tool argument, `tsuku install --reinstall` reinstalls every tool declared
+in `.tsuku.toml`.
 
 **Switching versions**: `activate` and `rollback` both re-point everything tsuku
 owns for that tool — the `$TSUKU_HOME/bin` symlinks and the shell integration.
@@ -197,6 +206,11 @@ tsuku doctor
 tsuku verify <tool>
 ```
 This checks that the binary exists, its version matches the recorded state, and runs the tool's verification command if one is defined.
+
+If verify reports files were modified after installation, put the original files back:
+```bash
+tsuku install <tool> --reinstall
+```
 
 **Registry out of date?** Refresh it:
 ```bash
