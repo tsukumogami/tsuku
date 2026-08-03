@@ -76,10 +76,9 @@ Error: Dependency validation failed: libunknown.so.1 - UNKNOWN
    Some tools have optional dependencies that aren't automatically detected. Check the tool's documentation.
 
 3. **Verify the binary:**
-   The binary may be malformed or built incorrectly. Try reinstalling:
+   The binary may be malformed or built incorrectly. Reinstall it:
    ```bash
-   tsuku remove yourtool
-   tsuku install yourtool
+   tsuku install yourtool --reinstall
    ```
 
 ### Symptom: Limited validation for old library installations
@@ -92,8 +91,7 @@ Warning: Library installed before Tier 2 support - limited validation available
 
 **Solution**: Reinstall the library to populate metadata:
 ```bash
-tsuku remove libfoo
-tsuku install libfoo
+tsuku install libfoo --reinstall
 ```
 
 ## Tier 1: Header Validation Failures
@@ -108,8 +106,7 @@ Error: Header validation failed: invalid ELF magic number
 
 **Solution**: Reinstall the tool/library:
 ```bash
-tsuku remove yourtool
-tsuku install yourtool
+tsuku install yourtool --reinstall
 ```
 
 ### Symptom: Architecture mismatch
@@ -154,8 +151,7 @@ Error: dlopen failed: permission denied
 chmod +x $TSUKU_HOME/tools/yourtool-1.0.0/lib/libfoo.so
 
 # Or reinstall
-tsuku remove yourtool
-tsuku install yourtool
+tsuku install yourtool --reinstall
 ```
 
 ## Tier 4: Integrity Verification Failures
@@ -174,9 +170,13 @@ Got: def456...
 
 1. **Reinstall if unexpected:**
    ```bash
-   tsuku remove yourtool
-   tsuku install yourtool
+   tsuku install yourtool --reinstall
    ```
+
+   This re-runs the installation and replaces the files on disk. Plain
+   `tsuku install` will not do it: an already-installed version is reported as
+   present and nothing is rewritten. Anything the tool keeps in
+   `$TSUKU_HOME/data/<tool>/` is left alone.
 
 2. **If you intentionally modified the file:**
    This is expected behavior. Tier 4 detects post-installation changes. You can skip integrity checks:

@@ -12,4 +12,4 @@ Feature: Rollback and notices
   Scenario: Notices command with no notices
     When I run "tsuku notices"
     Then the exit code is 0
-    And the output contains "No update failure notices"
+    And the output contains "No update notices."

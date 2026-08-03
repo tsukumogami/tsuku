@@ -23,7 +23,13 @@ import (
 // (Issue 4 adds the four library event types). The Source extraction in
 // installevents.SourceFromContext at the publish callsite is set up by callers
 // who wrap globalCtx with installevents.WithSource.
-func installLibrary(ctx context.Context, libName, reqVersion string, mgr *install.Manager, telemetryClient *telemetry.Client, reporter progress.Reporter) error {
+//
+// reinstall re-runs the install for a version that is already present. Both
+// reuse checks below are skipped when it is set: `tsuku verify` tells the user
+// to run `tsuku install <library> --reinstall` when a library's files no longer
+// match their recorded checksums, and a flag that took either shortcut would
+// answer that with "reusing" and change nothing.
+func installLibrary(ctx context.Context, libName, reqVersion string, reinstall bool, mgr *install.Manager, telemetryClient *telemetry.Client, reporter progress.Reporter) error {
 	// Load recipe
 	r, err := loader.Get(libName, recipe.LoaderOptions{})
 	if err != nil {
@@ -33,7 +39,7 @@ func installLibrary(ctx context.Context, libName, reqVersion string, mgr *instal
 	// Check if we can skip installation (reuse existing version)
 	// For now, just check if any version is installed
 	existingVersion := mgr.GetInstalledLibraryVersion(libName)
-	if existingVersion != "" && reqVersion == "" {
+	if existingVersion != "" && reqVersion == "" && !reinstall {
 		reporter.Status(fmt.Sprintf("Library %s@%s already installed, reusing", libName, existingVersion))
 		return nil
 	}
@@ -153,7 +159,7 @@ func installLibrary(ctx context.Context, libName, reqVersion string, mgr *instal
 	}
 
 	// Check if this specific version is already installed
-	if mgr.IsLibraryInstalled(libName, version) {
+	if mgr.IsLibraryInstalled(libName, version) && !reinstall {
 		reporter.Status(fmt.Sprintf("Library %s@%s already installed", libName, version))
 		return nil
 	}

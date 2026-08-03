@@ -92,6 +92,30 @@
         "Agent does NOT confuse recipe validation with tool installation or shell setup"
       ],
       "files": []
+    },
+    {
+      "id": 9,
+      "name": "reinstall-modified-files",
+      "prompt": "tsuku verify says my tool's binary was modified after installation. How do I put the original files back without losing anything?",
+      "expected_output": "Skill triggers on install repair. Agent points at tsuku install <tool> --reinstall, explains that plain tsuku install is idempotent and will not re-run for an already-installed version, and notes that data under $TSUKU_HOME/data/<tool> is not touched.",
+      "assertions": [
+        "Output names 'tsuku install <tool> --reinstall' as the repair",
+        "Output explains that plain 'tsuku install' does nothing for an already-installed version",
+        "Output does not recommend 'tsuku remove' as the only way to reinstall"
+      ],
+      "files": []
+    },
+    {
+      "id": 10,
+      "name": "reinstall-after-recipe-fix",
+      "prompt": "The recipe for a tool I already have installed was fixed upstream. I ran tsuku install <tool> --reinstall and I still get the old behavior. What am I missing?",
+      "expected_output": "Skill triggers on the plan-cache interaction. Agent explains that --reinstall re-runs the plan stored at install time, which does not reflect a changed recipe, and that --fresh regenerates the plan from the current recipe.",
+      "assertions": [
+        "Output explains that --reinstall re-runs the plan stored when the tool was installed",
+        "Output names '--fresh' as the flag that regenerates the plan from the current recipe",
+        "Output does not claim --reinstall alone picks up recipe changes"
+      ],
+      "files": []
     }
   ]
 }

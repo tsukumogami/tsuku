@@ -37,6 +37,7 @@ var installEnv []string
 var installSkipSecurity bool
 var installYes bool
 var installNoShellInit bool
+var installReinstall bool
 
 var installCmd = &cobra.Command{
 	Use:   "install [tool]...",
@@ -51,6 +52,10 @@ Examples:
   tsuku install kubectl
   tsuku install kubectl@v1.29.0
   tsuku install terraform@latest
+
+Repair an install that is already present:
+  tsuku install kubectl --reinstall
+  tsuku install kubectl@v1.29.0 --reinstall
 
 Project install (batch from .tsuku.toml):
   tsuku install                    # install all project tools
@@ -372,6 +377,7 @@ func init() {
 	installCmd.Flags().BoolVar(&installDryRun, "dry-run", false, "Show what would be installed without making changes")
 	installCmd.Flags().BoolVar(&installForce, "force", false, "Skip security warnings and proceed without prompts")
 	installCmd.Flags().BoolVar(&installFresh, "fresh", false, "Force fresh plan generation, bypassing cached plans")
+	installCmd.Flags().BoolVar(&installReinstall, "reinstall", false, "Re-run the installation even if the version is already installed, replacing the files on disk")
 	installCmd.Flags().BoolVar(&installJSON, "json", false, "Emit structured JSON error output on failure")
 	installCmd.Flags().StringVar(&installPlanPath, "plan", "", "Install from a pre-computed plan file (use '-' for stdin)")
 	installCmd.Flags().BoolVar(&installSandbox, "sandbox", false, "Run installation in an isolated container for testing")

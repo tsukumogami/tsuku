@@ -178,6 +178,28 @@ type installArgs struct {
 	Parent            string
 	Reporter          progress.Reporter
 	TelemetryClient   *telemetry.Client
+
+	// Reinstall re-runs the installation for a version that is already
+	// installed, instead of reporting it as present and returning. It lives on
+	// the args rather than being read from the --reinstall flag directly
+	// because the dependency walk derives child invocations from this struct:
+	// a package-level read would silently cascade the reinstall into every
+	// dependency, and reinstall is scoped to the tool the user named.
+	Reinstall bool
+}
+
+// withInstallFlags applies the install command's package-level flags to a set
+// of arguments. It exists so the flags reach the pipeline from one place: the
+// install command builds installArgs at seven call sites, and a flag added to
+// six of them is a flag that silently does nothing on the seventh.
+//
+// runInstall applies it; runInstallWithReporter does not. That is not an
+// oversight -- only `tsuku update` and the auto-apply path call the borrowed-
+// reporter entry point, and neither registers an install flag, so applying them
+// there would read every value as false and claim a wiring that does not exist.
+func withInstallFlags(args installArgs) installArgs {
+	args.Reinstall = installReinstall
+	return args
 }
 
 func runInstall(ctx context.Context, args installArgs) error {
@@ -187,7 +209,7 @@ func runInstall(ctx context.Context, args installArgs) error {
 		reporter.FlushDeferred()
 	}()
 	args.Reporter = reporter
-	return installWithDependencies(ctx, args, make(map[string]bool))
+	return installWithDependencies(ctx, withInstallFlags(args), make(map[string]bool))
 }
 
 // runInstallWithReporter runs the install flow using a caller-provided
@@ -207,6 +229,7 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 	parent := args.Parent
 	reporter := args.Reporter
 	telemetryClient := args.TelemetryClient
+	reinstall := args.Reinstall
 
 	// Initialize manager for state updates. The event bus dispatches
 	// lifecycle events to the notices and telemetry subscribers; src
@@ -226,7 +249,11 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 	// entry already records, so taking this shortcut for `tsuku install foo@2`
 	// while foo@1 sits there hidden would hand the user version 1 and report
 	// success. Falling through installs the version they named.
-	if isExplicit && parent == "" && reqVersion == "" && versionConstraint == "" {
+	//
+	// Not under --reinstall either. Exposing only creates symlinks; it never
+	// touches the payload. Someone repairing a hidden tool's files would get
+	// links to the same broken files and a success message.
+	if isExplicit && parent == "" && reqVersion == "" && versionConstraint == "" && !reinstall {
 		wasHidden, err := install.CheckAndExposeHidden(ctx, mgr, toolName)
 		if err != nil {
 			reporter.Warn("failed to check hidden status: %v", err)
@@ -312,7 +339,7 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 
 	// Check if this is a library recipe
 	if r.IsLibrary() {
-		return installLibrary(ctx, toolName, reqVersion, mgr, telemetryClient, reporter)
+		return installLibrary(ctx, toolName, reqVersion, reinstall, mgr, telemetryClient, reporter)
 	}
 
 	// Check and display system dependency instructions (for explicit installs only)
@@ -359,6 +386,11 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 			sub.Parent = toolName
 			sub.ReqVersion = ""
 			sub.VersionConstraint = ""
+			// Reinstall is scoped to the tool the user named. A dependency that
+			// is already installed stays as it is; one that is missing is
+			// installed normally. Carrying the flag down would rewrite every
+			// tree in the dependency graph for a repair aimed at one tool.
+			sub.Reinstall = false
 			if err := installWithDependencies(ctx, sub, visited); err != nil {
 				return fmt.Errorf("failed to install dependency '%s': %w", dep, err)
 			}
@@ -398,6 +430,8 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 			sub.Parent = ""
 			sub.ReqVersion = ""
 			sub.VersionConstraint = ""
+			// Same scoping as the install-time dependency loop above.
+			sub.Reinstall = false
 			if err := installWithDependencies(ctx, sub, visited); err != nil {
 				return fmt.Errorf("failed to install runtime dependency '%s': %w", dep, err)
 			}
@@ -515,7 +549,13 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 	// the user without the command they just asked for. CheckAndExposeHidden
 	// above already took the cheap path when the entry knew its own binaries;
 	// reaching here means it did not, and a real install is the fix.
-	if mgr.IsVersionInstalled(toolName, planVersion) && !isHiddenTool(mgr, toolName) {
+	//
+	// --reinstall is the other way past this. It is what makes an existing
+	// install able to pick up a fix: the plan runs again and the manager
+	// replaces the tool directory, so files written by older code are rewritten
+	// by the current code. Nothing else reaches that path -- `--force` only
+	// suppresses security prompts, and `--fresh` only regenerates the plan.
+	if mgr.IsVersionInstalled(toolName, planVersion) && !isHiddenTool(mgr, toolName) && !reinstall {
 		reporter.Status(fmt.Sprintf("%s@%s is already installed", toolName, planVersion))
 		if err := recordInstallRelationship(mgr, toolName, parent, isExplicit); err != nil {
 			reporter.Warn("failed to update state: %v", err)
@@ -557,6 +597,18 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 	isSystemDep := isSystemDependencyPlan(plan)
 
 	if !isSystemDep {
+		// Snapshot what the version being replaced wrote outside its own tool
+		// directory, before InstallWithOptions resets its VersionState. Only a
+		// reinstall can reach this with a prior record under the same version
+		// key -- every other path either short-circuits or writes a new key --
+		// and without the snapshot a fragment the recipe has since stopped
+		// writing would be orphaned: gone from state, still on disk, still
+		// concatenated into the user's shell by the init cache.
+		var priorCleanup []install.CleanupAction
+		if reinstall {
+			priorCleanup = recordedCleanupFor(mgr, toolName, version)
+		}
+
 		// Extract binaries from recipe to store in state
 		binaries := r.ExtractBinaries()
 		installOpts := install.DefaultInstallOptions()
@@ -594,6 +646,15 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 		// Record the cleanup actions post-install produced and refresh the
 		// shell caches they touched.
 		finishPostInstall(cfg, mgr, toolName, version, exec.GetCleanupActions(), reporter.Warn)
+
+		// Delete what the replaced install wrote outside the tool directory and
+		// this one no longer writes. Recording comes first, so ExecuteStaleCleanup
+		// reads the new record when it checks whether some other installed
+		// version still claims the path.
+		if reinstall {
+			newCleanup := convertCleanupActions(exec.GetCleanupActions())
+			mgr.ExecuteStaleCleanup(install.StaleCleanupActions(priorCleanup, newCleanup))
+		}
 
 		// Update state with explicit flag, parent, and dependencies
 		// via semantic Manager methods.
@@ -725,6 +786,22 @@ func resolveRuntimeDeps(r *recipe.Recipe, mgr *install.Manager, reporter progres
 func isHiddenTool(mgr *install.Manager, toolName string) bool {
 	ts, err := mgr.GetToolState(toolName)
 	return err == nil && ts != nil && ts.IsHidden
+}
+
+// recordedCleanupFor returns the cleanup actions state currently records for
+// one version of a tool -- the files that version wrote outside its own install
+// directory. Returns nil when the tool or the version has no entry, which is
+// the ordinary case for a first install.
+func recordedCleanupFor(mgr *install.Manager, toolName, version string) []install.CleanupAction {
+	ts, err := mgr.GetToolState(toolName)
+	if err != nil || ts == nil {
+		return nil
+	}
+	vs, ok := ts.Versions[version]
+	if !ok {
+		return nil
+	}
+	return vs.CleanupActions
 }
 
 func recordInstallRelationship(mgr *install.Manager, toolName, parent string, isExplicit bool) error {
