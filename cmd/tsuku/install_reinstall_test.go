@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"slices"
 	"strings"
 	"testing"
 
@@ -357,9 +358,21 @@ func TestReinstall_ShellFragmentMatchesFreshHash(t *testing.T) {
 	}
 
 	recorded := h.recordedCleanup()
-	if len(recorded) == 0 {
-		t.Fatalf("no cleanup actions recorded after reinstall")
+
+	// The record has to name exactly the fragments this install writes -- one
+	// per shell set_env covers. Anything more means the stale entry was kept
+	// alongside the fresh one.
+	var gotPaths []string
+	for _, ca := range recorded {
+		gotPaths = append(gotPaths, ca.Path)
 	}
+	slices.Sort(gotPaths)
+	wantPaths := []string{fragmentPath("bash"), fragmentPath("zsh")}
+	slices.Sort(wantPaths)
+	if !slices.Equal(gotPaths, wantPaths) {
+		t.Fatalf("recorded cleanup paths = %v, want %v", gotPaths, wantPaths)
+	}
+
 	for _, ca := range recorded {
 		abs := filepath.Join(h.home, ca.Path)
 		if got := sha256File(t, abs); got != ca.ContentHash {
