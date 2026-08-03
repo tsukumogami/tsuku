@@ -266,28 +266,37 @@ func extractZIP(archivePath, destDir string) error {
 	}
 	defer reader.Close()
 
-	if err := os.MkdirAll(destDir, 0755); err != nil {
+	// App bundles are symlink-heavy (every .framework carries a Versions/Current
+	// link), so this loop both creates symlinks from archive entries and writes
+	// through them. Route everything via the contained root.
+	root, err := openDestRoot(filepath.Dir(destDir), filepath.Base(destDir))
+	if err != nil {
 		return err
 	}
+	defer func() { _ = root.Close() }()
 
 	for _, file := range reader.File {
-		targetPath := filepath.Join(destDir, file.Name)
+		relPath := filepath.Clean(file.Name)
+		if relPath == "" {
+			relPath = "."
+		}
+		targetPath := filepath.Join(destDir, relPath)
 
-		// Security: validate path is within destination
+		// Lexical pre-filter; the root is the containment guarantee.
 		if !isPathWithinDirectory(targetPath, destDir) {
 			return fmt.Errorf("ZIP contains path traversal: %s", file.Name)
 		}
 
 		if file.FileInfo().IsDir() {
-			if err := os.MkdirAll(targetPath, file.Mode()); err != nil {
-				return err
+			if err := root.MkdirAll(relPath, file.Mode().Perm()); err != nil {
+				return fmt.Errorf("ZIP entry %q: %w", file.Name, err)
 			}
 			continue
 		}
 
 		// Ensure parent directory exists
-		if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
-			return err
+		if err := root.MkdirAll(filepath.Dir(relPath), 0755); err != nil {
+			return fmt.Errorf("ZIP entry %q: %w", file.Name, err)
 		}
 
 		// Handle symlinks
@@ -302,13 +311,13 @@ func extractZIP(archivePath, destDir string) error {
 				return err
 			}
 
-			// Security: validate symlink target
+			// Policy check on where the link may point.
 			if err := validateSymlinkTarget(string(linkTarget), targetPath, destDir); err != nil {
 				return err
 			}
 
-			if err := os.Symlink(string(linkTarget), targetPath); err != nil {
-				return err
+			if err := atomicSymlinkAt(root, string(linkTarget), relPath); err != nil {
+				return fmt.Errorf("ZIP entry %q: %w", file.Name, err)
 			}
 			continue
 		}
@@ -319,10 +328,10 @@ func extractZIP(archivePath, destDir string) error {
 			return err
 		}
 
-		outFile, err := os.OpenFile(targetPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, file.Mode())
+		outFile, err := root.OpenFile(relPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, file.Mode().Perm())
 		if err != nil {
 			rc.Close()
-			return err
+			return fmt.Errorf("ZIP entry %q: %w", file.Name, err)
 		}
 
 		_, err = io.Copy(outFile, rc)
