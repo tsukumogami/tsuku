@@ -73,6 +73,30 @@ func (m *Manager) ListWithOptions(includeHidden bool) ([]InstalledTool, error) {
 	return tools, nil
 }
 
+// InstalledVersions returns the versions state records for a tool, sorted. A
+// tool that state has no record of yields no versions and no error.
+//
+// Callers that need to know which directories under $TSUKU_HOME/tools belong to
+// a tool must ask this rather than matching directory names against a
+// "<tool>-" prefix. The registry ships both "git" and "git-lfs", and a prefix
+// match cannot tell one's directory from the other's.
+func (m *Manager) InstalledVersions(name string) ([]string, error) {
+	toolState, err := m.state.GetToolState(name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load state: %w", err)
+	}
+	if toolState == nil {
+		return nil, nil
+	}
+
+	versions := make([]string, 0, len(toolState.Versions))
+	for version := range toolState.Versions {
+		versions = append(versions, version)
+	}
+	sort.Strings(versions)
+	return versions, nil
+}
+
 // InstalledApp represents an installed macOS application bundle
 type InstalledApp struct {
 	Name               string // Tool name from recipe

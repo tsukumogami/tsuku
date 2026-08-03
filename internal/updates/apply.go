@@ -150,7 +150,12 @@ func MaybeAutoApply(cfg *config.Config, userCfg *userconfig.Config, projectCfg *
 			// store reconciliation handles notices; tool directories are
 			// a separate concern).
 			retention := userCfg.UpdatesVersionRetention()
-			_ = GarbageCollectVersions(mgr, cfg.ToolsDir, entry.Tool, entry.LatestWithinPin, previousVersion, retention, time.Now())
+			if gcErr := GarbageCollectVersions(mgr, cfg.ToolsDir, entry.Tool, entry.LatestWithinPin, previousVersion, retention, time.Now()); gcErr != nil {
+				// Reclamation failing is not a reason to fail the update that
+				// just succeeded, but it should not vanish either: this fires
+				// when state cannot be read, which stops reclamation entirely.
+				log.Default().Debug("auto-apply: garbage collect", "tool", entry.Tool, "error", gcErr)
+			}
 		}
 
 		if applyErr != nil {

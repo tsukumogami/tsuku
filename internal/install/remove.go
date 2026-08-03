@@ -371,30 +371,45 @@ func (m *Manager) executeCleanupActions(ctx context.Context, name, version strin
 	return affectedShells
 }
 
-// ReapVersion drops a version whose directory has already been deleted out of
-// band -- garbage collection removes tool directories directly. It runs that
-// version's cleanup actions (skipping anything another version still records),
-// removes its VersionState, and rebuilds the affected caches.
+// ReapVersion drops a version whose directory is about to be, or has already
+// been, deleted out of band -- garbage collection removes tool directories
+// directly. It runs that version's cleanup actions (skipping anything another
+// version still records), removes its VersionState, and rebuilds the affected
+// caches.
+//
+// Callers are expected to reap before deleting, and the one that exists does.
+// Reconciling first means a failed reap leaves the version installed rather
+// than recorded but absent; deleting first opens a window where it is the other
+// way round. Do not reorder this without reading GarbageCollectVersions.
+//
+// Unlike RemoveVersion, this does not tear down the version's .app bundle or
+// its ~/Applications symlink, so reaping a macOS app tool orphans both -- and
+// dropping the VersionState throws away the only record of where they were.
+// That is a known gap, not a decision; see issue #2490.
 //
 // It refuses to touch the active version. Callers that delete directories are
 // expected to protect it themselves; this is the second lock on the door.
 //
-// A version that is not in state, or a tool that is not, is a no-op: the
-// directory is gone either way and there is nothing left to reconcile.
+// It also refuses a version, or a tool, that state has no record of. Every
+// caller is about to delete that version's directory, or has just deleted it,
+// and a version state cannot vouch for is one whose directory this process has
+// no business claiming. Returning nil there would report "reconciled" when
+// nothing was reconciled, which is how a directory belonging to another tool
+// got past this check and deleted.
 func (m *Manager) ReapVersion(name, version string) error {
 	toolState, err := m.state.GetToolState(name)
 	if err != nil {
 		return fmt.Errorf("failed to load state: %w", err)
 	}
 	if toolState == nil {
-		return nil
+		return fmt.Errorf("refusing to reap %s@%s: %s is not installed", name, version, name)
 	}
 	if toolState.ActiveVersion == version {
 		return fmt.Errorf("refusing to reap the active version %s of %s", version, name)
 	}
 	versionState, exists := toolState.Versions[version]
 	if !exists {
-		return nil
+		return fmt.Errorf("refusing to reap %s@%s: state records no such version of %s", name, version, name)
 	}
 
 	affectedShells := m.executeCleanupActions(context.Background(), name, version, versionState.CleanupActions, toolState)
