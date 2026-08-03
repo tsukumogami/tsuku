@@ -73,8 +73,10 @@ func GarbageCollectVersions(store VersionStore, toolsDir, toolName, activeVersio
 			continue
 		}
 
+		// Lstat, not Stat: a symlink here is not a version directory this
+		// function installed, and its target's mtime is not this version's age.
 		dirPath := filepath.Join(toolsDir, toolName+"-"+version)
-		info, err := os.Stat(dirPath)
+		info, err := os.Lstat(dirPath)
 		if err != nil || !info.IsDir() {
 			continue
 		}

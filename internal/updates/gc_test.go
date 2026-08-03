@@ -276,6 +276,34 @@ func TestGarbageCollectVersions_RefusesVersionThatEscapesToolsDir(t *testing.T) 
 	}
 }
 
+// A symlink where a version directory should be is not one, and the thing it
+// points at has its own mtime and its own owner. Leave it alone.
+func TestGarbageCollectVersions_DoesNotFollowASymlinkedVersionDir(t *testing.T) {
+	root := t.TempDir()
+	toolsDir := filepath.Join(root, "tools")
+	mkdir(t, toolsDir)
+	target := filepath.Join(root, "elsewhere")
+	mkdir(t, target)
+	setMtime(t, target, time.Now().Add(-30*24*time.Hour))
+
+	link := filepath.Join(toolsDir, "node-18.0.0")
+	if err := os.Symlink(target, link); err != nil {
+		t.Fatal(err)
+	}
+
+	store := storeFor("node", "18.0.0", "20.1.0")
+	if err := GarbageCollectVersions(store, toolsDir, "node", "20.1.0", "", 7*24*time.Hour, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := os.Lstat(link); err != nil {
+		t.Error("a symlink is not a version directory and should not be reclaimed")
+	}
+	if len(store.reaped) != 0 {
+		t.Errorf("nothing should have been reaped, got %v", store.reaped)
+	}
+}
+
 func TestGarbageCollectVersions_RequiresAStore(t *testing.T) {
 	dir := t.TempDir()
 	mkdir(t, filepath.Join(dir, "node-18.0.0"))
