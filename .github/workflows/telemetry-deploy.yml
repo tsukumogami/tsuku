@@ -15,14 +15,14 @@ jobs:
       run:
         working-directory: telemetry
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Inject D1 database ID
         run: |
           sed -i 's/00000000-0000-0000-0000-000000000000/${{ vars.BATCH_METRICS_DATABASE_ID }}/' wrangler.toml
 
       - name: Deploy to Cloudflare Workers
-        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd  # v3
+        uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0  # v4.0.0
         env:
           COMMIT_SHA: ${{ github.sha }}
           DEPLOY_TIME: ${{ github.event.head_commit.timestamp }}
