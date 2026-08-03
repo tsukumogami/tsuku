@@ -44,7 +44,10 @@ func checkEvalDepsInHome(deps []string, tsukuHome string) []string {
 	// resolvers that go looking for the binary afterwards -- ResolveGo,
 	// ResolveCargo, ResolvePythonStandalone -- and they all read GetToolsDir,
 	// so answering from a different directory than they read would put the
-	// check and the thing it guards out of step.
+	// check and the thing it guards out of step. Both of them ignore
+	// config.DefaultHomeOverride, which is a real divergence from the rest of
+	// the CLI and is tracked as issue #2501; fixing it here alone would only
+	// widen the gap.
 	//
 	// HomeDir locates state.json and ToolsDir locates the version
 	// directories. Those two fields are all this reads.

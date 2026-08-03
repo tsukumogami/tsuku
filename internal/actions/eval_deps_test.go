@@ -102,6 +102,16 @@ func TestCheckEvalDepsInHome_AsksStateNotDirectoryNames(t *testing.T) {
 			wantMissing: []string{"git"},
 		},
 		{
+			name:      "git satisfies git",
+			installed: []tool{{"git", "2.47.1"}},
+			deps:      []string{"git"},
+		},
+		{
+			name:      "git satisfies git with git-lfs alongside it",
+			installed: []tool{{"git", "2.47.1"}, {"git-lfs", "3.5.0"}},
+			deps:      []string{"git"},
+		},
+		{
 			name:      "go satisfies go",
 			installed: []tool{{"go", "1.23.4"}},
 			deps:      []string{"go"},
