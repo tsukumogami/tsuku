@@ -135,6 +135,8 @@ export TSUKU_HOME=$(mktemp -d)
 
 **Exit code 8 -- dependency failed.** A required dependency isn't available or its recipe is broken. Test the dependency in isolation: `tsuku eval <dep>`.
 
+**"go not found" (or cargo, or python) during eval, with the toolchain apparently installed.** Eval-time dependency detection asks tsuku's state which tools are installed; it does not read directory names under `$TSUKU_HOME/tools`. A toolchain staged there by hand is not installed as far as `tsuku eval` is concerned, and neither is a tool whose name merely starts the same way -- `go-task` is not `go`. Install the dependency with `tsuku install <dep>`, or let `--install-deps` do it.
+
 **Sandbox won't start.** Docker/Podman not running or not in PATH. Run `docker --version` or `podman --version` to confirm. Sandbox failures typically surface as exit code 6 (installation failed).
 
 **Verification fails after successful install.** Run the tool manually (e.g., `my-tool --version`) to see what it actually prints. Then update the recipe's `[verify]` section: set `command` to the correct binary, `pattern` to match the actual output format, and add `strip_v = true` if the tool prints a `v` prefix. Check that `verify.command` matches the installed binary name and that it lands on PATH.
