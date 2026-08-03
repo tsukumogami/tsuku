@@ -59,7 +59,7 @@ tsuku finds `.tsuku.toml` by walking up from the current directory, stopping at 
 
 | Command | Description | Common Flags |
 |---------|-------------|--------------|
-| `tsuku install <tool>` | Install a tool (supports `@version` suffix) | `--force`, `--sandbox`, `--dry-run`, `--reinstall` |
+| `tsuku install <tool>` | Install a tool (supports `@version` suffix) | `--force`, `--sandbox`, `--dry-run`, `--reinstall`, `--fresh` |
 | `tsuku install` | Install all tools from `.tsuku.toml` | `--yes`, `--dry-run`, `--fresh`, `--reinstall` |
 | `tsuku remove <tool>` | Remove a tool (or specific version with `@version`) | `--force` |
 | `tsuku update <tool>` | Update within pin boundaries | `--dry-run` |
@@ -73,12 +73,17 @@ tsuku finds `.tsuku.toml` by walking up from the current directory, stopping at 
 
 **Reinstalling**: plain `tsuku install <tool>` is idempotent — if the version it
 resolves to is already installed, it says so and stops. `--reinstall` makes it run
-the installation again and replace the files on disk, which is how an existing
-install picks up a fix and how a modified install gets repaired. It reinstalls the
-tool you name and leaves its dependencies alone, so reinstall a dependency by
-naming it. Anything the tool keeps in `$TSUKU_HOME/data/<tool>/` is untouched.
-With no tool argument, `tsuku install --reinstall` reinstalls every tool declared
-in `.tsuku.toml`.
+the installation again and replace the files on disk, which is how a modified
+install gets repaired. It reinstalls the tool you name and leaves its dependencies
+alone, so reinstall a dependency by naming it. Anything the tool keeps in
+`$TSUKU_HOME/data/<tool>/` is untouched. With no tool argument,
+`tsuku install --reinstall` reinstalls every tool declared in `.tsuku.toml`.
+
+`--reinstall` re-runs the plan stored when the tool was installed, so it picks up
+a fix in tsuku itself but not a fix in the recipe — the stored plan still
+describes the old steps. Add `--fresh` to regenerate the plan from the current
+recipe: `tsuku install <tool> --fresh --reinstall`. Repairing modified files is
+the case where you want the stored plan, since it is what produced the originals.
 
 **Switching versions**: `activate` and `rollback` both re-point everything tsuku
 owns for that tool — the `$TSUKU_HOME/bin` symlinks and the shell integration.

@@ -724,3 +724,79 @@ func TestReinstall_FromCommandEntryPoint(t *testing.T) {
 		t.Errorf("marker content = %q, want %q", got, reinstallGoodContent)
 	}
 }
+
+// TestReinstall_CachedPlanVersusFresh pins which kind of fix --reinstall picks
+// up on its own.
+//
+// getOrGeneratePlan prefers the plan stored in state.json, and only --fresh
+// bypasses it. ValidateCachedPlan checks the format version and the platform;
+// CacheKeyFor never populates ContentHash, so a recipe that has changed since
+// the plan was stored does not invalidate it.
+//
+// So the two cases differ. A fix in tsuku's own code reaches the user through a
+// plain --reinstall, because the stored steps are re-executed by the new
+// binary. A fix in the recipe does not: the stored plan still describes the old
+// steps, and regenerating it takes --fresh as well.
+func TestReinstall_CachedPlanVersusFresh(t *testing.T) {
+	// The harness's stored plan writes reinstallGoodContent; the recipe
+	// registered below writes something else, so which plan ran is visible in
+	// the file.
+	const recipeContent = "written-by-the-current-recipe\n"
+
+	tests := []struct {
+		name  string
+		fresh bool
+		want  string
+	}{
+		{
+			name:  "--reinstall alone replays the stored plan",
+			fresh: false,
+			want:  reinstallGoodContent,
+		},
+		{
+			name:  "--fresh --reinstall regenerates from the recipe",
+			fresh: true,
+			want:  recipeContent,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newReinstallHarness(t)
+
+			// Re-register the recipe so a freshly generated plan writes
+			// different content than the stored plan does. This stands in for a
+			// recipe that has been fixed since the tool was installed.
+			loader.CacheRecipe(reinstallTool, &recipe.Recipe{
+				Metadata: recipe.MetadataSection{
+					Name:     reinstallTool,
+					Binaries: []string{"bin/" + reinstallTool},
+				},
+				Steps: []recipe.Step{
+					{
+						Action: "run_command",
+						Params: map[string]any{
+							"command": "mkdir -p {install_dir}/bin {install_dir}/share && " +
+								"printf '#!/bin/sh\\necho ok\\n' > {install_dir}/bin/" + reinstallTool + " && " +
+								"chmod 0755 {install_dir}/bin/" + reinstallTool + " && " +
+								"printf '" + recipeContent + "' > {install_dir}/share/marker.txt",
+						},
+					},
+				},
+				Verify: &recipe.VerifySection{Command: "true"},
+			})
+
+			origFresh := installFresh
+			t.Cleanup(func() { installFresh = origFresh })
+			installFresh = tt.fresh
+
+			if err := h.run(true); err != nil {
+				t.Fatalf("install(reinstall=true, fresh=%v) error = %v", tt.fresh, err)
+			}
+
+			if got := h.markerContent(); got != tt.want {
+				t.Errorf("marker content = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
