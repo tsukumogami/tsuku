@@ -1,0 +1,32 @@
+name: Lifecycle Check
+
+# Adopts shirabe's reusable chain-lifecycle gate. The reusable workflow builds
+# the shirabe binary at the referenced ref and runs `shirabe validate
+# --lifecycle .` against the whole tree: DRAFT PRs run in draft posture (mid-
+# chain states pass), READY PRs run in ready posture and require single-pr
+# chains to be at their terminal state (PLAN deleted, BRIEF/PRD Done, DESIGN
+# Current). See shirabe's docs/briefs/BRIEF-lifecycle-draft-ready-discipline.md
+# for the DRAFT-vs-READY discipline this enforces.
+#
+# Pinned to @main to match this repo's other shirabe reusable-workflow
+# adoption (validate-docs.yml, validate-pr-body.yml), so the gate always runs
+# the current engine without per-release pin bumps.
+#
+# `types:` includes ready_for_review and converted_to_draft so the strictness
+# branch is re-evaluated on every draft-to-ready and ready-to-draft
+# transition, mirroring shirabe's own self-caller (validate-lifecycle.yml).
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
+
+# Granted on the caller so the called reusable workflow's `permissions` block
+# (contents: read + pull-requests: read) is a subset of what this caller has.
+# A reusable workflow cannot request a permission the caller lacks.
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  lifecycle:
+    uses: tsukumogami/shirabe/.github/workflows/lifecycle.yml@main
