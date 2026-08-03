@@ -8,7 +8,6 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
-	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/testutil"
 )
 
@@ -99,15 +98,12 @@ func updateFragment(target, version, shell, hash string) install.CleanupAction {
 	}
 }
 
-// recordingReporter captures what an update wanted to tell the user, so a test
-// can assert on the message rather than on stderr.
-type recordingReporter struct {
-	progress.NoopReporter
-	warns []string
-}
-
-func (r *recordingReporter) Warn(format string, args ...any) {
-	r.warns = append(r.warns, fmt.Sprintf(format, args...))
+// collectWarns returns a WarnFunc that appends formatted messages to into, so a
+// test can assert on the message a user would see rather than on stderr.
+func collectWarns(into *[]string) install.WarnFunc {
+	return func(format string, args ...any) {
+		*into = append(*into, fmt.Sprintf(format, args...))
+	}
 }
 
 // TestUpdateInstalledTool pins the ordering contract both foreground update
@@ -180,9 +176,9 @@ func TestUpdateInstalledTool(t *testing.T) {
 				updateFragment("tool", "1.0.0", "bash", "before"),
 			})
 
-			reporter := &recordingReporter{}
+			var warns []string
 			installed := false
-			gotVersion, err := updateInstalledTool(mgr, "tool", reporter, func() error {
+			gotVersion, err := updateInstalledTool(mgr, "tool", collectWarns(&warns), func() error {
 				installed = true
 				tt.install(t, cfg, mgr)
 				return tt.installErr
@@ -197,12 +193,12 @@ func TestUpdateInstalledTool(t *testing.T) {
 			if gotVersion != tt.wantVersion {
 				t.Errorf("updateInstalledTool() version = %q, want %q", gotVersion, tt.wantVersion)
 			}
-			if len(reporter.warns) != len(tt.wantWarns) {
-				t.Fatalf("warnings = %q, want %q", reporter.warns, tt.wantWarns)
+			if len(warns) != len(tt.wantWarns) {
+				t.Fatalf("warnings = %q, want %q", warns, tt.wantWarns)
 			}
 			for i, want := range tt.wantWarns {
-				if reporter.warns[i] != want {
-					t.Errorf("warning %d = %q, want %q", i, reporter.warns[i], want)
+				if warns[i] != want {
+					t.Errorf("warning %d = %q, want %q", i, warns[i], want)
 				}
 			}
 		})

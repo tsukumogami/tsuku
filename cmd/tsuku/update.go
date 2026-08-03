@@ -121,7 +121,7 @@ Examples:
 		// the outcome appearing on a separate stdout line. See #2280/#2359.
 		reporter := progress.NewTTYReporter(os.Stderr)
 
-		newVersion, err := updateInstalledTool(mgr, toolName, reporter, func() error {
+		newVersion, err := updateInstalledTool(mgr, toolName, reporter.Warn, func() error {
 			return runInstallWithReporter(installevents.WithSource(globalCtx, installevents.SourceManual), installArgs{
 				Tool:            toolName,
 				ReqVersion:      reqVersion,
@@ -213,8 +213,8 @@ func updateWithCleanup(mgr *install.Manager, toolName string, warn install.WarnF
 //
 // doInstall is a parameter rather than a direct call so a test can drive the
 // sequence without resolving a recipe or downloading anything.
-func updateInstalledTool(mgr *install.Manager, toolName string, reporter progress.Reporter, doInstall func() error) (string, error) {
-	if err := updateWithCleanup(mgr, toolName, reporter.Warn, doInstall); err != nil {
+func updateInstalledTool(mgr *install.Manager, toolName string, warn install.WarnFunc, doInstall func() error) (string, error) {
+	if err := updateWithCleanup(mgr, toolName, warn, doInstall); err != nil {
 		return "", err
 	}
 	return activeVersionAfterUpdate(mgr, toolName), nil
@@ -313,7 +313,7 @@ func runUpdateAll(cmd *cobra.Command) {
 		// outcome line, consistent with the single-tool path.
 		toolReporter := progress.NewTTYReporter(os.Stderr)
 
-		newVersion, err := updateInstalledTool(mgr, tool.Name, toolReporter, func() error {
+		newVersion, err := updateInstalledTool(mgr, tool.Name, toolReporter.Warn, func() error {
 			return runInstallWithReporter(installevents.WithSource(globalCtx, installevents.SourceManual), installArgs{
 				Tool:            tool.Name,
 				ReqVersion:      requested,
@@ -335,8 +335,11 @@ func runUpdateAll(cmd *cobra.Command) {
 		// already at latest decides which counter moves. The install
 		// machinery's "is already installed" status is a transient TTY
 		// message, so up-to-date has to be counted separately for the summary
-		// to be accurate. A version state cannot vouch for reads as unchanged
-		// here rather than as an update, which is the conservative count.
+		// to be accurate.
+		//
+		// When state cannot say which version is active, count the tool as
+		// unchanged rather than as an update. Reporting an update that may not
+		// have happened is the worse of the two errors here.
 		if newVersion == "" {
 			newVersion = previousVersion
 		}
