@@ -116,7 +116,7 @@ func runCheckDeps(cmd *cobra.Command, args []string) {
 		output := CheckDepsOutput{
 			Tool:         toolName,
 			Dependencies: statuses,
-			AllSatisfied: !hasSystemIssue,
+			AllSatisfied: allDepsSatisfied(statuses),
 		}
 		printJSON(output)
 	} else {
@@ -127,6 +127,21 @@ func runCheckDeps(cmd *cobra.Command, args []string) {
 	if hasSystemIssue {
 		exitWithCode(ExitDependencyFailed)
 	}
+}
+
+// allDepsSatisfied reports whether every dependency is installed.
+//
+// A missing provisionable dependency does not block the install -- tsuku can
+// provision it, which is why the exit code stays 0 -- but it is still not
+// satisfied. Reporting otherwise tells any script reading the JSON that there
+// is nothing left to install.
+func allDepsSatisfied(statuses []DepStatus) bool {
+	for _, s := range statuses {
+		if s.Status != "installed" {
+			return false
+		}
+	}
+	return true
 }
 
 // mergeDeps combines install-time and runtime deps into a single map

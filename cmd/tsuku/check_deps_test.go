@@ -160,6 +160,65 @@ func TestDepStatus(t *testing.T) {
 	}
 }
 
+func TestAllDepsSatisfied(t *testing.T) {
+	tests := []struct {
+		name     string
+		statuses []DepStatus
+		want     bool
+	}{
+		{
+			name:     "no dependencies",
+			statuses: nil,
+			want:     true,
+		},
+		{
+			name: "everything installed",
+			statuses: []DepStatus{
+				{Name: "libyaml", Type: "provisionable", Status: "installed"},
+				{Name: "git", Type: "system-required", Status: "installed"},
+			},
+			want: true,
+		},
+		{
+			name: "missing provisionable dependency",
+			statuses: []DepStatus{
+				{Name: "libyaml", Type: "provisionable", Status: "missing"},
+				{Name: "git", Type: "system-required", Status: "installed"},
+			},
+			want: false,
+		},
+		{
+			name: "missing system dependency",
+			statuses: []DepStatus{
+				{Name: "git", Type: "system-required", Status: "missing"},
+			},
+			want: false,
+		},
+		{
+			name: "system dependency with a version mismatch",
+			statuses: []DepStatus{
+				{Name: "git", Type: "system-required", Status: "version_mismatch", Version: "2.0.0", Required: "2.30.0"},
+			},
+			want: false,
+		},
+		{
+			name: "dependency whose recipe was not found",
+			statuses: []DepStatus{
+				{Name: "mystery", Type: "unknown", Status: "missing"},
+			},
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := allDepsSatisfied(tt.statuses); got != tt.want {
+				t.Errorf("allDepsSatisfied() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestCheckDepsOutput(t *testing.T) {
 	// Test CheckDepsOutput struct
 	output := CheckDepsOutput{
