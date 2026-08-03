@@ -513,3 +513,55 @@ func TestCompletionFileName(t *testing.T) {
 		})
 	}
 }
+
+// TestInstallCompletionsAction_StillAcceptsFish guards the narrowing done for
+// issue #2471. install_shell_init dropped fish because init fragments only
+// reach a shell through the POSIX init cache; a completion script has no such
+// constraint, so fish must keep working here. If a future change shares one
+// allowlist between the two actions again, this fails.
+func TestInstallCompletionsAction_StillAcceptsFish(t *testing.T) {
+	a := &InstallCompletionsAction{}
+
+	tsukuHome := t.TempDir()
+	toolsDir := filepath.Join(tsukuHome, "tools")
+	toolInstallDir := filepath.Join(toolsDir, "gh-2.0")
+	if err := os.MkdirAll(toolInstallDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	completionBody := "complete -c gh\n"
+	if err := os.WriteFile(filepath.Join(toolInstallDir, "gh.fish"), []byte(completionBody), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		Version:        "2.0.0",
+		InstallDir:     toolInstallDir,
+		ToolInstallDir: toolInstallDir,
+		ToolsDir:       toolsDir,
+	}
+
+	if err := a.Execute(ctx, map[string]interface{}{
+		"source_file": "gh.fish",
+		"target":      "gh",
+		"shells":      []interface{}{"fish"},
+	}); err != nil {
+		t.Fatalf("install_completions should still accept fish: %v", err)
+	}
+
+	fishPath := filepath.Join(tsukuHome, "share", "completions", "fish", "gh")
+	content, err := os.ReadFile(fishPath)
+	if err != nil {
+		t.Fatalf("expected fish completion at %s: %v", fishPath, err)
+	}
+	if string(content) != completionBody {
+		t.Errorf("fish completion content = %q, want %q", string(content), completionBody)
+	}
+
+	if result := a.Preflight(map[string]interface{}{
+		"source_file": "gh.fish",
+		"target":      "gh",
+		"shells":      []interface{}{"fish"},
+	}); result.HasErrors() {
+		t.Errorf("Preflight should still accept fish for completions: %v", result.Errors)
+	}
+}

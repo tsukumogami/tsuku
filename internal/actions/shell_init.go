@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -12,12 +13,31 @@ import (
 	"strings"
 )
 
-// allowedShells is the hardcoded allowlist for shell values.
-// Arbitrary strings are rejected to prevent template injection.
-var allowedShells = map[string]bool{
+// shellInitShells is the hardcoded allowlist for install_shell_init's shell
+// values. Arbitrary strings are rejected to prevent template injection.
+//
+// fish is absent for the same reason it is absent from set_env's envShells:
+// fragments only reach a shell through the init cache, and the file that
+// sources that cache -- config.EnvFileContent, written to $TSUKU_HOME/env --
+// is POSIX shell that fish cannot parse. A fish fragment would be written,
+// hashed, and never loaded. Accepting the value would advertise support the
+// delivery path does not have, so it is rejected at validation instead.
+var shellInitShells = map[string]bool{
 	"bash": true,
 	"zsh":  true,
-	"fish": true,
+}
+
+// shellInitShellError explains a rejected shell value. fish gets a message
+// naming what does work, because a recipe author reaching for it has a real
+// need that other parts of tsuku do serve; anything else is a typo and only
+// needs the allowed set.
+func shellInitShellError(shell string) string {
+	if shell == "fish" {
+		return fmt.Sprintf("install_shell_init: shell %q is not supported (allowed: bash, zsh) -- "+
+			"init fragments load from the cache that $TSUKU_HOME/env sources, which is POSIX shell fish cannot parse. "+
+			"fish users get tsuku on PATH with 'tsuku shellenv | source', and install_completions still accepts fish", shell)
+	}
+	return fmt.Sprintf("install_shell_init: invalid shell %q (allowed: bash, zsh)", shell)
 }
 
 // shellDTargetPattern constrains the target segment of a shell.d filename.
@@ -89,8 +109,8 @@ func (a *InstallShellInitAction) Preflight(params map[string]interface{}) *Prefl
 	// Validate shells if provided
 	if shells, ok := GetStringSlice(params, "shells"); ok {
 		for _, s := range shells {
-			if !allowedShells[s] {
-				result.AddErrorf("install_shell_init: invalid shell %q (allowed: bash, zsh, fish)", s)
+			if !shellInitShells[s] {
+				result.AddError(shellInitShellError(s))
 			}
 		}
 	}
@@ -131,8 +151,8 @@ func (a *InstallShellInitAction) Execute(ctx *ExecutionContext, params map[strin
 	shells := defaultShells
 	if s, ok := GetStringSlice(params, "shells"); ok && len(s) > 0 {
 		for _, sh := range s {
-			if !allowedShells[sh] {
-				return fmt.Errorf("install_shell_init: invalid shell %q (allowed: bash, zsh, fish)", sh)
+			if !shellInitShells[sh] {
+				return errors.New(shellInitShellError(sh))
 			}
 		}
 		shells = s

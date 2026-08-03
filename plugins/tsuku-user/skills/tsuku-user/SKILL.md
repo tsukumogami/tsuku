@@ -155,6 +155,8 @@ tsuku shellenv | source
 
 `tsuku shellenv` prints the PATH exports and sources the shell init cache for your shell.
 
+On fish this gets you PATH. Tool-specific shell init — the next section — is bash and zsh only.
+
 ### Tool-Specific Shell Init
 
 Some tools need more than PATH — nvm is a shell function, direnv installs a hook, and a recipe can export variables the tool reads at startup. Those land in `$TSUKU_HOME/share/shell.d/`, one fragment per tool version per shell, named `<target>@<version>.<shell>`:
@@ -170,6 +172,8 @@ share/shell.d/
 Your shell never sources those fragments directly. tsuku concatenates them in filename order into `.init-cache.{bash,zsh}`, and `$TSUKU_HOME/env` sources the cache. Only the active version's fragment goes in — install 0.40.6 alongside 0.40.5 and the older fragment stays on disk but drops out of the cache. Anything tsuku has no record of is included as-is, so a fragment you dropped in yourself keeps working.
 
 The cache is rebuilt whenever the active version changes: install, upgrade, `activate`, `rollback`, and removing one version among several.
+
+**bash and zsh only.** Recipes can target those two shells for init fragments, and nothing else. The cache is plain POSIX shell and it reaches you through `$TSUKU_HOME/env`, which fish can't parse — so rather than write a fish fragment nothing would load, tsuku rejects `shells = ["fish"]` when a recipe is validated. On fish you still get PATH from `tsuku shellenv | source`. What you don't get is a tool's own startup script, so something like nvm — which only exists as a shell function the fragment defines — won't be there. A recipe can still install a fish completion file, which lands in `$TSUKU_HOME/share/completions/fish/`; putting that directory somewhere your shell looks is currently up to you.
 
 ### Verifying Your Setup
 

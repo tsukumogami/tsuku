@@ -89,7 +89,7 @@ func TestInstallShellInitAction_Preflight(t *testing.T) {
 		result := a.Preflight(map[string]interface{}{
 			"source_command": "niwa shell-init {shell}",
 			"target":         "niwa",
-			"shells":         []interface{}{"bash", "zsh", "fish"},
+			"shells":         []interface{}{"bash", "zsh"},
 		})
 		if result.HasErrors() {
 			t.Errorf("unexpected errors: %v", result.Errors)
@@ -313,7 +313,7 @@ func TestInstallShellInitAction_Execute_SourceCommand(t *testing.T) {
 		params := map[string]interface{}{
 			"source_command": "{install_dir}/mytool {shell} {install_dir}",
 			"target":         "mytool",
-			"shells":         []interface{}{"fish"},
+			"shells":         []interface{}{"zsh"},
 		}
 
 		if err := a.Execute(ctx, params); err != nil {
@@ -321,11 +321,11 @@ func TestInstallShellInitAction_Execute_SourceCommand(t *testing.T) {
 		}
 
 		shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
-		content, err := os.ReadFile(filepath.Join(shellDDir, "mytool@1.2.3.fish"))
+		content, err := os.ReadFile(filepath.Join(shellDDir, "mytool@1.2.3.zsh"))
 		if err != nil {
 			t.Fatal(err)
 		}
-		expected := "shell=fish dir=" + toolInstallDir + "\n"
+		expected := "shell=zsh dir=" + toolInstallDir + "\n"
 		if string(content) != expected {
 			t.Errorf("expected %q, got %q", expected, string(content))
 		}
@@ -681,7 +681,7 @@ func TestInstallShellInitAction_RecordsCleanupActions_SourceCommand(t *testing.T
 	params := map[string]interface{}{
 		"source_command": "{install_dir}/mytool {shell}",
 		"target":         "mytool",
-		"shells":         []interface{}{"bash", "fish"},
+		"shells":         []interface{}{"bash", "zsh"},
 	}
 
 	if err := a.Execute(ctx, params); err != nil {
@@ -694,7 +694,7 @@ func TestInstallShellInitAction_RecordsCleanupActions_SourceCommand(t *testing.T
 
 	expected := []CleanupAction{
 		{Action: "delete_file", Path: "share/shell.d/mytool@1.2.3.bash"},
-		{Action: "delete_file", Path: "share/shell.d/mytool@1.2.3.fish"},
+		{Action: "delete_file", Path: "share/shell.d/mytool@1.2.3.zsh"},
 	}
 
 	for i, ca := range ctx.CleanupActions {
@@ -1040,5 +1040,151 @@ func TestInstallShellInitAction_NoShellInit_SourceCommand(t *testing.T) {
 	// No cleanup actions should be recorded
 	if len(ctx.CleanupActions) != 0 {
 		t.Errorf("expected 0 cleanup actions when NoShellInit is set, got %d", len(ctx.CleanupActions))
+	}
+}
+
+// TestInstallShellInitAction_ShellAllowlist pins which shells the action
+// accepts. fish is rejected because a fish fragment would be written and never
+// loaded: the init cache reaches a shell only through $TSUKU_HOME/env, which is
+// POSIX shell fish cannot parse. See issue #2471.
+func TestInstallShellInitAction_ShellAllowlist(t *testing.T) {
+	a := &InstallShellInitAction{}
+
+	tests := []struct {
+		name        string
+		shell       string
+		wantErr     bool
+		wantMessage []string
+	}{
+		{name: "bash accepted", shell: "bash", wantErr: false},
+		{name: "zsh accepted", shell: "zsh", wantErr: false},
+		{
+			name:    "fish rejected with a pointer to what works",
+			shell:   "fish",
+			wantErr: true,
+			// The message has to name the alternative, not just say no.
+			wantMessage: []string{"fish", "bash, zsh", "tsuku shellenv", "install_completions"},
+		},
+		{
+			name:        "unknown shell rejected with the allowed set",
+			shell:       "powershell",
+			wantErr:     true,
+			wantMessage: []string{"powershell", "bash, zsh"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := a.Preflight(map[string]interface{}{
+				"source_file": "init.sh",
+				"target":      "mytool",
+				"shells":      []interface{}{tt.shell},
+			})
+
+			if !tt.wantErr {
+				if result.HasErrors() {
+					t.Fatalf("shell %q should be accepted, got errors: %v", tt.shell, result.Errors)
+				}
+				return
+			}
+
+			if !result.HasErrors() {
+				t.Fatalf("shell %q should be rejected, got no errors", tt.shell)
+			}
+			joined := strings.Join(result.Errors, "\n")
+			for _, want := range tt.wantMessage {
+				if !strings.Contains(joined, want) {
+					t.Errorf("error message should mention %q, got: %s", want, joined)
+				}
+			}
+		})
+	}
+}
+
+// TestInstallShellInitAction_Execute_RejectsFish drives Execute rather than
+// Preflight, and asserts the outcome a recipe author would see: no fragment on
+// disk and no cleanup action recorded. Checking only the returned error would
+// not catch a guard that rejects after already writing the file.
+func TestInstallShellInitAction_Execute_RejectsFish(t *testing.T) {
+	a := &InstallShellInitAction{}
+
+	tsukuHome := t.TempDir()
+	toolsDir := filepath.Join(tsukuHome, "tools")
+	toolInstallDir := filepath.Join(toolsDir, "mytool-1.0")
+	if err := os.MkdirAll(toolInstallDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	srcPath := filepath.Join(toolInstallDir, "init.sh")
+	if err := os.WriteFile(srcPath, []byte("# init\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		Version:        "1.2.3",
+		InstallDir:     toolInstallDir,
+		ToolInstallDir: toolInstallDir,
+		ToolsDir:       toolsDir,
+	}
+
+	err := a.Execute(ctx, map[string]interface{}{
+		"source_file": "init.sh",
+		"target":      "mytool",
+		"shells":      []interface{}{"fish"},
+	})
+	if err == nil {
+		t.Fatal("Execute should reject shells = [fish]")
+	}
+	if !strings.Contains(err.Error(), "tsuku shellenv") {
+		t.Errorf("error should point at the supported fish path, got: %v", err)
+	}
+
+	fragment := filepath.Join(tsukuHome, "share", "shell.d", "mytool@1.2.3.fish")
+	if _, statErr := os.Stat(fragment); !os.IsNotExist(statErr) {
+		t.Errorf("no fish fragment should be written, but %s exists", fragment)
+	}
+	if len(ctx.CleanupActions) != 0 {
+		t.Errorf("no cleanup action should be recorded, got %d: %v", len(ctx.CleanupActions), ctx.CleanupActions)
+	}
+}
+
+// TestInstallShellInitAction_Execute_RejectsFishAlongsideValidShell covers the
+// mixed list. A recipe asking for bash and fish must be rejected outright
+// rather than silently installing the bash half.
+func TestInstallShellInitAction_Execute_RejectsFishAlongsideValidShell(t *testing.T) {
+	a := &InstallShellInitAction{}
+
+	tsukuHome := t.TempDir()
+	toolsDir := filepath.Join(tsukuHome, "tools")
+	toolInstallDir := filepath.Join(toolsDir, "mytool-1.0")
+	if err := os.MkdirAll(toolInstallDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(toolInstallDir, "init.sh"), []byte("# init\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		Version:        "1.2.3",
+		InstallDir:     toolInstallDir,
+		ToolInstallDir: toolInstallDir,
+		ToolsDir:       toolsDir,
+	}
+
+	if err := a.Execute(ctx, map[string]interface{}{
+		"source_file": "init.sh",
+		"target":      "mytool",
+		"shells":      []interface{}{"bash", "fish"},
+	}); err == nil {
+		t.Fatal("Execute should reject a shells list containing fish")
+	}
+
+	shellDDir := filepath.Join(tsukuHome, "share", "shell.d")
+	for _, name := range []string{"mytool@1.2.3.bash", "mytool@1.2.3.fish"} {
+		if _, err := os.Stat(filepath.Join(shellDDir, name)); !os.IsNotExist(err) {
+			t.Errorf("nothing should be written when the shells list is invalid, but %s exists", name)
+		}
+	}
+	if len(ctx.CleanupActions) != 0 {
+		t.Errorf("no cleanup action should be recorded, got %d", len(ctx.CleanupActions))
 	}
 }
