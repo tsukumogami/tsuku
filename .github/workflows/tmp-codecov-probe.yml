@@ -42,22 +42,25 @@ jobs:
       - name: Produce a coverage profile
         run: go test -short -coverprofile=coverage.out ./internal/platform/...
 
-      # Same pin and same inputs as the fixed test.yml step. dry_run keeps this from
-      # writing anything to Codecov while still exercising download plus signature
-      # verification, which is the part that fails today.
-      - name: Run the repinned action (dry run)
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f  # v7.0.0
+      # The old pin has to run FIRST. gpg's keyring lives in ~/.gnupg and persists
+      # across steps, so whichever action runs first is the only one testing against a
+      # clean keyring -- run the new pin first and the old pin verifies happily off the
+      # key the new one just imported. This ordering is what makes it a real control.
+      # Expected to fail; continue-on-error keeps both results in one run.
+      - name: Run the old pin against a clean keyring (expected to fail)
+        continue-on-error: true
+        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2  # v6.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.out
           fail_ci_if_error: true
           dry_run: true
 
-      # The pin main is stuck on. Expected to fail at the GPG import; continue-on-error
-      # keeps that from failing the probe job so both results land in one run.
-      - name: Run the old pin for comparison (expected to fail)
-        continue-on-error: true
-        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2  # v6.0.0
+      # Same pin and same inputs as the fixed test.yml step. dry_run keeps this from
+      # writing anything to Codecov while still exercising download plus signature
+      # verification, which is the part that fails today.
+      - name: Run the repinned action (dry run)
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f  # v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.out
