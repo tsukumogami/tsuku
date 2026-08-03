@@ -194,7 +194,7 @@ func warnShellInitChanges(toolName string, old, new []CleanupAction, warn WarnFu
 		if shell == "" || ca.ContentHash == "" {
 			continue
 		}
-		oldHashes[fragment{TargetFromCleanupPath(ca.Path), shell}] = ca.ContentHash
+		oldHashes[fragment{targetFromCleanupPath(ca.Path), shell}] = ca.ContentHash
 	}
 
 	for _, ca := range new {
@@ -202,7 +202,7 @@ func warnShellInitChanges(toolName string, old, new []CleanupAction, warn WarnFu
 		if shell == "" || ca.ContentHash == "" {
 			continue
 		}
-		oldHash, exists := oldHashes[fragment{TargetFromCleanupPath(ca.Path), shell}]
+		oldHash, exists := oldHashes[fragment{targetFromCleanupPath(ca.Path), shell}]
 		if !exists {
 			// Not present in the old version -- a newly added shell, not a change.
 			continue
