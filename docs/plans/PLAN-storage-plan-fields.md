@@ -3,6 +3,7 @@ schema: plan/v1
 status: Draft
 execution_mode: single-pr
 upstream: docs/designs/current/DESIGN-storage-plan-fields.md
+milestone: "Plan storage fidelity"
 issue_count: 5
 ---
 
@@ -31,15 +32,15 @@ The sequence is strict.
 
 ### Issue 1: fix(install): mirror the dropped plan fields onto the storage types
 
-**Complexity:** simple
+**Complexity**: simple
 
-**Goal:** Add to `internal/install/state.go` the fields `install.Plan` needs to hold a
+**Goal**: Add to `internal/install/state.go` the fields `install.Plan` needs to hold a
 whole executor plan: `StorageVersion`, `Dependencies`, `Verify`, `RecipeType`,
 `Binaries` on `Plan`; `LinuxFamily` on `PlanPlatform`; `Phase` on `PlanStep`. Add the
 mirror types `PlanDependency`, `PlanVerify`, `PlanAdditionalVerify`. Add the
 `PlanStorageVersion` constant.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**:
 - `install.Plan` has `StorageVersion int`, `Dependencies []PlanDependency`,
   `Verify *PlanVerify`, `RecipeType string`, `Binaries []string`
 - `install.PlanPlatform` has `LinuxFamily string`; `install.PlanStep` has `Phase string`
@@ -51,20 +52,20 @@ mirror types `PlanDependency`, `PlanVerify`, `PlanAdditionalVerify`. Add the
   `Plan.FormatVersion`
 - `go build ./...` passes
 
-**Dependencies:** None
+**Dependencies**: None
 
 ---
 
 ### Issue 2: fix(executor): carry all six fields through the plan converters
 
-**Complexity:** testable
+**Complexity**: testable
 
-**Goal:** Make `ToStoragePlan` and `FromStoragePlan` in
+**Goal**: Make `ToStoragePlan` and `FromStoragePlan` in
 `internal/executor/plan_conversion.go` lossless. Convert steps with `Phase`, platform
 with `LinuxFamily`, the verify block, the recipe type, the binaries, and the dependency
 tree recursively. Stamp `StorageVersion` on the way out.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**:
 - `ToStoragePlan` copies `Phase`, `LinuxFamily`, `Dependencies` (recursively), `Verify`
   (including `Additional` and `ExitCode`), `RecipeType`, `Binaries`
 - `FromStoragePlan` restores every one of them
@@ -74,20 +75,20 @@ tree recursively. Stamp `StorageVersion` on the way out.
 - Nested dependencies at two levels deep round-trip intact
 - `go test ./...` passes
 
-**Dependencies:** <<ISSUE:1>>
+**Dependencies**: <<ISSUE:1>>
 
 ---
 
 ### Issue 3: test(executor): guard the converter against the next dropped field
 
-**Complexity:** testable
+**Complexity**: testable
 
-**Goal:** Replace the field-by-field round-trip test in
+**Goal**: Replace the field-by-field round-trip test in
 `internal/executor/plan_conversion_test.go` with the two structural guards: a
 reflection census asserting the fixture leaves no exported field zero, and a
 whole-value round trip through JSON compared with `reflect.DeepEqual`.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**:
 - A census walks `InstallationPlan`, `ResolvedStep`, `Platform`, `PlanVerify`,
   `DependencyPlan`, `PlanAdditionalVerify` by reflection and fails naming any exported
   field the fixture leaves at its zero value
@@ -99,20 +100,20 @@ whole-value round trip through JSON compared with `reflect.DeepEqual`.
 - The nil-input cases from the existing tests survive
 - `go test ./...` passes
 
-**Dependencies:** <<ISSUE:2>>
+**Dependencies**: <<ISSUE:2>>
 
 ---
 
 ### Issue 4: fix(cli): give a pre-fix stored plan a defined meaning at both read sites
 
-**Complexity:** testable
+**Complexity**: testable
 
-**Goal:** Treat a stored plan whose `StorageVersion` is below current as untrusted.
+**Goal**: Treat a stored plan whose `StorageVersion` is below current as untrusted.
 `getOrGeneratePlanWith` (`cmd/tsuku/install_deps.go`, the plan-cache read) skips it and
 regenerates. `tsuku plan show` and `tsuku plan export` still work but warn on stderr
 that the plan predates the fix and may omit dependencies and verification.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**:
 - A cached plan with `StorageVersion` 0 does not satisfy the cache read; the plan is
   regenerated
 - A cached plan at the current `StorageVersion` is used as before
@@ -123,20 +124,20 @@ that the plan predates the fix and may omit dependencies and verification.
   the already-installed short-circuit
 - `go test ./...` passes
 
-**Dependencies:** <<ISSUE:2>>
+**Dependencies**: <<ISSUE:2>>
 
 ---
 
 ### Issue 5: test(cli): cover plan export into plan-based install
 
-**Complexity:** testable
+**Complexity**: testable
 
-**Goal:** Prove the user-visible break is closed: a plan stored by an install, exported,
+**Goal**: Prove the user-visible break is closed: a plan stored by an install, exported,
 and reinstalled with `--plan` carries its dependencies, verify block, recipe type, and
 binaries. This is the acceptance test for the whole change; the unit round trip proves
 the converter, this proves the path.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**:
 - A test builds an `InstallationPlan` with a dependency, a verify block, a non-empty
   `RecipeType`, and `Binaries`; stores it through `ToStoragePlan` into a `state.json`
   under `t.TempDir()`; reads it back the way `plan export` does; and asserts the
@@ -147,28 +148,17 @@ the converter, this proves the path.
 - Not gated behind `testing.Short()`
 - `go test ./...` passes
 
-**Dependencies:** <<ISSUE:2>>, <<ISSUE:4>>
+**Dependencies**: <<ISSUE:2>>, <<ISSUE:4>>
 
 ---
 
-### Plugin skill assessment
+## Plugin skill assessment
 
 Required by the root `CLAUDE.md` plugin-maintenance table, since this change touches
 `internal/executor/` and `cmd/tsuku/`. Assess `plugins/tsuku-recipes/` and
 `plugins/tsuku-user/` against the diff and update whatever the change makes wrong or
 newly undocumented. Record the assessment in the PR body either way -- "no skill
 documents this surface" is an outcome, not a skipped step.
-
-## Dependency Graph
-
-```mermaid
-graph TD
-    I1[1: storage types] --> I2[2: converters]
-    I2 --> I3[3: converter guard]
-    I2 --> I4[4: read-site behavior]
-    I2 --> I5[5: export path test]
-    I4 --> I5
-```
 
 ## Implementation Sequence
 
