@@ -59,9 +59,14 @@ func currentEvalPlan() *executor.InstallationPlan {
 
 // stalePlanJSON is what `tsuku plan export` wrote before the conversion carried
 // every field: the storage record as it looked then. No storage_version key, no
-// dependencies, no verify, no recipe type. Written as literal JSON rather than
-// marshaled from a struct, because the whole question is what an old file on
-// disk looks like, and a struct that no longer exists cannot answer it.
+// dependencies, no verify, no recipe type.
+//
+// Written as literal JSON rather than marshaled from the current struct. A
+// struct fixture produces the same bytes today, and would quietly stop doing so
+// the first time someone adds a field to the plan types without omitempty --
+// the fixture would gain a key no old file ever had, and the test would still
+// pass while no longer testing an old file. The subject here is a shape on
+// disk, so the fixture is that shape.
 func stalePlanJSON(t *testing.T) []byte {
 	t.Helper()
 

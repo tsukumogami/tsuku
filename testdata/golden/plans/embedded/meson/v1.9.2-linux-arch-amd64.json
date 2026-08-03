@@ -1,5 +1,6 @@
 {
   "format_version": 5,
+  "storage_version": 1,
   "tool": "meson",
   "version": "1.9.2",
   "platform": {

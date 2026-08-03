@@ -519,10 +519,13 @@ for VERSION in $VERSIONS; do
         # Generate current plan with constrained evaluation (stripping non-deterministic fields)
         # The --pin-from flag extracts constraints from the golden file (pip versions,
         # go.sum, cargo.lock, etc.) to produce deterministic output.
-        # storage_version is stripped for the same reason as generated_at and
-        # recipe_source: it describes the writer, not the installation. Golden
-        # files record what a plan installs, so a change to how plans are marked
-        # must not invalidate them.
+        # storage_version is stripped from both sides here, but unlike
+        # generated_at and recipe_source it is kept in the golden files
+        # themselves -- validate-golden-execution.yml feeds them to `tsuku
+        # install --plan`, which warns about an unmarked plan, and 110 warnings
+        # per run would make that warning worthless. Stripping it here is what
+        # keeps a future PlanStorageVersion bump from invalidating every golden
+        # over a field that describes the writer, not the installation.
         # Note: missing platforms already caught by pre-check above
         if ! "$TSUKU" eval "${eval_args[@]}" 2>/dev/null | \
             jq 'del(.generated_at, .recipe_source, .storage_version)' > "$ACTUAL"; then
