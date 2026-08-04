@@ -582,12 +582,24 @@ Writes shell initialization scripts (sourced on shell startup) to
 | `source_file` | string | Mutual | Path to init script, relative to the tool's install dir |
 | `source_command` | string | Mutual | Command that outputs the init script; supports `{shell}` and `{install_dir}` |
 | `target` | string | Yes | Target name for the init file |
-| `shells` | []string | No | Shell types: `bash`, `zsh`, `fish` (default: bash, zsh) |
+| `shells` | []string | No | Shell types: `bash`, `zsh` (default: bash, zsh) |
 
 Exactly one of `source_file` and `source_command` is required. `source_command`
 needs `phase = "post-install"`: the executable has to resolve inside the tool's
 permanent directory, and the action rejects anything outside it. `source_file`
 copies out of the staging directory and works in either phase.
+
+**bash and zsh only — same limit `set_env` has.** A fragment reaches a shell only
+through the init cache, and the file that sources that cache,
+`$TSUKU_HOME/env`, is POSIX shell fish cannot parse. `shells = ["fish"]` is
+rejected at validation rather than accepted into a file nothing would load. fish
+users still get tsuku on PATH with `tsuku shellenv | source`.
+
+`install_completions` does still accept fish, because completions are written as
+standalone per-shell files and never pass through the POSIX cache that rules
+fish out here. Be aware that is a statement about what the action accepts, not a
+promise the shell will find the file — nothing currently puts
+`share/completions` on any shell's lookup path (#2520).
 
 **Output path and version keying.** Each installed version gets its own fragment.
 `nvm` at 0.40.5 and 0.40.6 write `nvm@0.40.5.bash` and `nvm@0.40.6.bash`, so a

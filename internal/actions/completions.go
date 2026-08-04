@@ -8,6 +8,21 @@ import (
 	"strings"
 )
 
+// completionShells is the hardcoded allowlist for install_completions' shell
+// values. Arbitrary strings are rejected to prevent template injection.
+//
+// fish belongs here even though install_shell_init declines it. What rules fish
+// out there is the POSIX init cache every fragment has to pass through;
+// completions are written as standalone per-shell files and never touch it, so
+// that constraint does not apply. Note this says nothing about whether a shell
+// ever finds the file -- nothing currently puts share/completions on any
+// lookup path. See #2520.
+var completionShells = map[string]bool{
+	"bash": true,
+	"zsh":  true,
+	"fish": true,
+}
+
 // InstallCompletionsAction copies a source file or runs a source command
 // to produce shell completion scripts at
 // $TSUKU_HOME/share/completions/{shell}/{target} for each configured shell.
@@ -42,7 +57,7 @@ func (a *InstallCompletionsAction) Preflight(params map[string]interface{}) *Pre
 
 	if shells, ok := GetStringSlice(params, "shells"); ok {
 		for _, s := range shells {
-			if !allowedShells[s] {
+			if !completionShells[s] {
 				result.AddErrorf("install_completions: invalid shell %q (allowed: bash, zsh, fish)", s)
 			}
 		}
@@ -68,7 +83,7 @@ func (a *InstallCompletionsAction) Execute(ctx *ExecutionContext, params map[str
 	shells := defaultShells
 	if s, ok := GetStringSlice(params, "shells"); ok && len(s) > 0 {
 		for _, sh := range s {
-			if !allowedShells[sh] {
+			if !completionShells[sh] {
 				return fmt.Errorf("install_completions: invalid shell %q (allowed: bash, zsh, fish)", sh)
 			}
 		}
