@@ -25,12 +25,13 @@ type LibraryInstallOptions struct {
 // - Do not create symlinks in current/
 // - Track used_by instead of required_by
 //
-// Installation is atomic, the same way Manager.InstallWithOptions is: files are
-// copied into a staging directory, the existing library directory is removed,
-// and staging is renamed into place. The rename makes the replacement
-// all-or-nothing; the removal makes the resulting file set match the plan
-// rather than accumulate across installs, which is what `tsuku verify` promises
-// when it tells a user to reinstall a library to restore the original.
+// The library directory is never written in place. Files are copied into a
+// staging directory and swapped in by swapIntoPlace, so a failed install leaves
+// the previous library where it was rather than a mix of old and new files.
+// Clearing the destination during the swap is what makes the resulting file set
+// match the plan rather than accumulate across installs, which is what `tsuku
+// verify` promises when it tells a user to reinstall a library to restore the
+// original. See swapIntoPlace for what the swap does and does not guarantee.
 //
 // Publishes on the install lifecycle bus:
 //   - err == nil -> LibraryInstalled
@@ -74,8 +75,10 @@ func (m *Manager) InstallLibrary(ctx context.Context, name, version, workDir str
 	libDir := m.config.LibDir(name, version)
 	stagingDir := m.libStagingDir(name, version)
 
-	// Clean up any stale staging directory from a previous failed installation
-	if err := os.RemoveAll(stagingDir); err != nil && !os.IsNotExist(err) {
+	// Clean up a staging directory a previous failed installation left behind.
+	// The other half of the swap, previousDirFor(libDir), is swapIntoPlace's to
+	// clear.
+	if err := os.RemoveAll(stagingDir); err != nil {
 		return fmt.Errorf("failed to clean up stale staging directory: %w", err)
 	}
 
@@ -93,28 +96,22 @@ func (m *Manager) InstallLibrary(ctx context.Context, name, version, workDir str
 		return fmt.Errorf("failed to copy library installation: %w", err)
 	}
 
-	// Last cancellation check while bailing out is still free. copyDir does
-	// not watch ctx, so a cancellation during a long copy first becomes
-	// visible here. The tool path runs the equivalent check after removing the
-	// destination; running it before means a canceled install leaves the
-	// existing library where it was instead of deleting it and stopping.
+	// Last cancellation check while bailing out is still free. copyDir does not
+	// watch ctx, so a cancellation during a long copy first becomes visible
+	// here. The tool path runs the equivalent check after removing the
+	// destination, which deletes the installation and then stops (issue #2512);
+	// running it before the swap leaves the existing library where it was.
 	if err := ctx.Err(); err != nil {
 		os.RemoveAll(stagingDir)
 		return err
 	}
 
-	// Remove the existing directory before the rename. This is what makes a
-	// reinstall replace the library rather than merge into it: copyFile
-	// truncates the files the plan writes, but nothing removes a file the plan
-	// does not write, and the checksums computed below would then record that
-	// file as part of the library.
-	if err := os.RemoveAll(libDir); err != nil && !os.IsNotExist(err) {
-		os.RemoveAll(stagingDir)
-		return fmt.Errorf("failed to remove existing library installation: %w", err)
-	}
-
-	// Atomically rename staging into the final location
-	if err := os.Rename(stagingDir, libDir); err != nil {
+	// Replace the destination with the staged tree. Clearing the destination
+	// is what makes a reinstall replace the library rather than merge into it:
+	// copyFile truncates the files the plan writes, but nothing removes a file
+	// the plan does not write, and the checksums computed below would then
+	// record that file as part of the library.
+	if err := swapIntoPlace(stagingDir, libDir); err != nil {
 		os.RemoveAll(stagingDir)
 		return fmt.Errorf("failed to finalize library installation: %w", err)
 	}
@@ -185,10 +182,78 @@ func (m *Manager) publishLibraryInstallOutcome(name, version string, source inst
 	})
 }
 
+// previousDirFor returns the path an existing tree is moved to while dst is
+// being replaced. It is a dot-prefixed sibling of dst, so the swap's renames
+// stay within one filesystem and directory scans that skip dot-prefixed entries
+// skip it too.
+func previousDirFor(dst string) string {
+	return filepath.Join(filepath.Dir(dst), "."+filepath.Base(dst)+".previous")
+}
+
+// swapIntoPlace replaces the tree at dst with the one assembled at staging,
+// which must be a sibling of dst so the rename stays within one filesystem.
+// Nothing else is required of the caller: any leftover previousDirFor(dst) from
+// an earlier crash is cleared here, because renaming onto a non-empty directory
+// fails and the resulting error would point at dst rather than at the leftover.
+//
+// The existing tree moves aside to previousDirFor(dst) rather than being
+// deleted outright, the way updates.ApplySelfUpdate swaps the tsuku binary.
+// Deleting first would leave dst missing for as long as a recursive delete of
+// the whole tree takes, and anything resolving a path through dst during that
+// window would fail. Two renames narrow the window to a single syscall and
+// leave something to restore. Manager.InstallWithOptions still deletes first;
+// unifying the two is issue #2512.
+//
+// On error, dst holds what it held before: either nothing moved, or the
+// previous tree went back. The one case where that is not true -- both the
+// swap and the restore failing -- is reported in the returned error, because
+// it is the case where dst ends up missing entirely.
+func swapIntoPlace(staging, dst string) error {
+	previous := previousDirFor(dst)
+	if err := os.RemoveAll(previous); err != nil {
+		return fmt.Errorf("failed to clear %s left by an earlier install: %w", filepath.Base(previous), err)
+	}
+
+	movedAside := false
+	if _, err := os.Lstat(dst); err == nil {
+		if err := os.Rename(dst, previous); err != nil {
+			return fmt.Errorf("failed to move aside the existing installation: %w", err)
+		}
+		movedAside = true
+	}
+
+	if err := os.Rename(staging, dst); err != nil {
+		if movedAside {
+			if restoreErr := os.Rename(previous, dst); restoreErr != nil {
+				return fmt.Errorf("failed to move the new installation into place: %w; the previous installation could not be restored either and %s is now missing: %v", err, filepath.Base(dst), restoreErr)
+			}
+		}
+		return fmt.Errorf("failed to move the new installation into place: %w", err)
+	}
+
+	// The new tree is in place, so the previous one is unreachable. Removing it
+	// is cleanup, not part of the swap, and a failure here is not worth failing
+	// an otherwise complete install over. What it leaves is a dot-prefixed
+	// directory that scanners skip and the next swap of this path clears. It is
+	// a full copy of a library, so `tsuku doctor` should report it -- that it
+	// does not is issue #2517.
+	if movedAside {
+		_ = os.RemoveAll(previous)
+	}
+
+	return nil
+}
+
 // libStagingDir returns the path to the staging directory for an atomic library
-// installation. It sits in the same parent as the final library directory so
-// os.Rename stays within one filesystem, and it is dot-prefixed so the two
-// places that enumerate $TSUKU_HOME/libs by directory scan can skip it.
+// installation: where the new tree is assembled before it is swapped into
+// place.
+//
+// It sits in the same parent as the final library directory so os.Rename stays
+// within one filesystem, and it is dot-prefixed so directory scans of
+// $TSUKU_HOME/libs can skip it. Four scans read that directory: ListLibraries
+// and collectLibraryPaths skip dot-prefixed entries explicitly, while
+// GetInstalledLibraryVersion and actions.discoverLibraryVersion match on a
+// "<name>-" prefix a dot-prefixed entry cannot satisfy.
 func (m *Manager) libStagingDir(name, version string) string {
 	return filepath.Join(m.config.LibsDir, fmt.Sprintf(".%s-%s.staging", name, version))
 }

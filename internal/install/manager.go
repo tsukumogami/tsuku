@@ -662,9 +662,12 @@ func (m *Manager) collectLibraryPaths(ctx context.Context) []string {
 		if !entry.IsDir() {
 			continue
 		}
-		// Skip tsuku's own bookkeeping directories. A library staging
-		// directory holds a tree that is still being written, or one a crashed
-		// install abandoned; neither belongs on a tool's library search path.
+		// Skip tsuku's own bookkeeping directories. The dot-prefixed entries
+		// under libs are a library install's work directories: a staging tree
+		// still being written, or a superseded tree kept until the swap
+		// finishes. Neither belongs on a tool's library search path, and a
+		// superseded one least of all -- it is a complete copy of an older
+		// library, so admitting it would put two versions on the same path.
 		if strings.HasPrefix(entry.Name(), ".") {
 			continue
 		}

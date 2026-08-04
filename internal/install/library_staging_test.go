@@ -180,6 +180,8 @@ func TestManager_InstallLibrary_ReinstallReplacesDirectory(t *testing.T) {
 			if !reflect.DeepEqual(gotPaths, wantPaths) {
 				t.Errorf("recorded checksums cover %v, want exactly the plan's files %v", gotPaths, wantPaths)
 			}
+
+			assertNoWorkDirectoriesLeft(t, cfg, "libyaml", "0.2.5")
 		})
 	}
 }
@@ -189,11 +191,11 @@ func TestManager_InstallLibrary_ReinstallReplacesDirectory(t *testing.T) {
 // library holding a mix of old and new files, and every tool whose RPATH points
 // into it links against that mix.
 //
-// The failure is injected the way TestManager_InstallWithOptions_SymlinkFailureRollback
-// injects its own: something the process cannot read. Directory entries are
-// walked in name order, so a file copies successfully before the unreadable
-// directory is reached -- that is what makes it a partial copy rather than a
-// copy that never started.
+// The failure is injected with a permission the process does not have, the way
+// TestInstallWithOptions_RollbackOnSymlinkFailure injects its own. Directory
+// entries are walked in name order, so a file copies successfully before the
+// unreadable directory is reached -- that is what makes it a partial copy
+// rather than a copy that never started.
 func TestManager_InstallLibrary_FailedCopyLeavesPreviousInstallIntact(t *testing.T) {
 	if os.Geteuid() == 0 {
 		t.Skip("running as root: an unreadable directory is still readable, so the copy cannot be made to fail")
@@ -241,43 +243,66 @@ func TestManager_InstallLibrary_FailedCopyLeavesPreviousInstallIntact(t *testing
 		t.Error("a file from the failed install reached the live library directory")
 	}
 
-	stagingDir := filepath.Join(cfg.LibsDir, ".libyaml-0.2.5.staging")
-	if _, err := os.Stat(stagingDir); !os.IsNotExist(err) {
-		t.Error("staging directory should not survive a failed install")
+	assertNoWorkDirectoriesLeft(t, cfg, "libyaml", "0.2.5")
+}
+
+// TestManager_InstallLibrary_StaleWorkDirectoriesAreReplaced covers what a crash
+// leaves behind. An install killed mid-swap leaves a staging directory, a
+// moved-aside previous directory, or both; neither may block or contaminate the
+// next install.
+func TestManager_InstallLibrary_StaleWorkDirectoriesAreReplaced(t *testing.T) {
+	tests := []struct {
+		name string
+		dir  string
+	}{
+		{name: "staging directory", dir: ".libyaml-0.2.5.staging"},
+		{name: "moved-aside previous directory", dir: ".libyaml-0.2.5.previous"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg, cleanup := testutil.NewTestConfig(t)
+			defer cleanup()
+
+			mgr := New(cfg)
+
+			stale := filepath.Join(cfg.LibsDir, tt.dir)
+			if err := os.MkdirAll(filepath.Join(stale, "lib"), 0755); err != nil {
+				t.Fatalf("failed to create stale dir: %v", err)
+			}
+			if err := os.WriteFile(filepath.Join(stale, "lib", "leftover.so"), []byte("stale"), 0644); err != nil {
+				t.Fatalf("failed to write stale file: %v", err)
+			}
+
+			workDir := newLibraryWorkDir(t, map[string]string{"lib/libyaml.so": "fresh"})
+			if err := mgr.InstallLibrary(libraryTestCtx(), "libyaml", "0.2.5", workDir, LibraryInstallOptions{}); err != nil {
+				t.Fatalf("InstallLibrary() error = %v", err)
+			}
+
+			libDir := cfg.LibDir("libyaml", "0.2.5")
+			if _, err := os.Stat(filepath.Join(libDir, "lib", "leftover.so")); !os.IsNotExist(err) {
+				t.Error("stale content reached the installed library")
+			}
+			if _, err := os.Stat(filepath.Join(libDir, "lib", "libyaml.so")); err != nil {
+				t.Errorf("installed library missing its own file: %v", err)
+			}
+			assertNoWorkDirectoriesLeft(t, cfg, "libyaml", "0.2.5")
+		})
 	}
 }
 
-// TestManager_InstallLibrary_StaleStagingDirectoryIsReplaced covers what a crash
-// leaves behind: an install killed between creating the staging directory and
-// renaming it must not block or contaminate the next one.
-func TestManager_InstallLibrary_StaleStagingDirectoryIsReplaced(t *testing.T) {
-	cfg, cleanup := testutil.NewTestConfig(t)
-	defer cleanup()
+// assertNoWorkDirectoriesLeft checks that neither half of the swap for
+// name@version is still on disk. Both are dot-prefixed, so both would linger
+// unnoticed: the LibsDir scans skip dot-prefixed entries by design.
+func assertNoWorkDirectoriesLeft(t *testing.T, cfg *config.Config, name, version string) {
+	t.Helper()
 
+	libDir := cfg.LibDir(name, version)
 	mgr := New(cfg)
-
-	stagingDir := filepath.Join(cfg.LibsDir, ".libyaml-0.2.5.staging")
-	if err := os.MkdirAll(filepath.Join(stagingDir, "lib"), 0755); err != nil {
-		t.Fatalf("failed to create stale staging dir: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(stagingDir, "lib", "leftover.so"), []byte("stale"), 0644); err != nil {
-		t.Fatalf("failed to write stale staging file: %v", err)
-	}
-
-	workDir := newLibraryWorkDir(t, map[string]string{"lib/libyaml.so": "fresh"})
-	if err := mgr.InstallLibrary(libraryTestCtx(), "libyaml", "0.2.5", workDir, LibraryInstallOptions{}); err != nil {
-		t.Fatalf("InstallLibrary() error = %v", err)
-	}
-
-	libDir := cfg.LibDir("libyaml", "0.2.5")
-	if _, err := os.Stat(filepath.Join(libDir, "lib", "leftover.so")); !os.IsNotExist(err) {
-		t.Error("stale staging content reached the installed library")
-	}
-	if _, err := os.Stat(filepath.Join(libDir, "lib", "libyaml.so")); err != nil {
-		t.Errorf("installed library missing its own file: %v", err)
-	}
-	if _, err := os.Stat(stagingDir); !os.IsNotExist(err) {
-		t.Error("staging directory should not survive a successful install")
+	for _, dir := range []string{mgr.libStagingDir(name, version), previousDirFor(libDir)} {
+		if _, err := os.Stat(dir); !os.IsNotExist(err) {
+			t.Errorf("%s should not survive the install", filepath.Base(dir))
+		}
 	}
 }
 
@@ -295,9 +320,10 @@ func TestLibsDirScans_IgnoreStagingDirectories(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(realLib, "lib"), 0755); err != nil {
 		t.Fatalf("failed to create library dir: %v", err)
 	}
-	staging := filepath.Join(cfg.LibsDir, ".libffi-3.4.4.staging")
-	if err := os.MkdirAll(filepath.Join(staging, "lib"), 0755); err != nil {
-		t.Fatalf("failed to create staging dir: %v", err)
+	for _, name := range []string{".libffi-3.4.4.staging", ".libffi-3.4.4.previous"} {
+		if err := os.MkdirAll(filepath.Join(cfg.LibsDir, name, "lib"), 0755); err != nil {
+			t.Fatalf("failed to create %s: %v", name, err)
+		}
 	}
 
 	t.Run("ListLibraries", func(t *testing.T) {
@@ -322,18 +348,67 @@ func TestLibsDirScans_IgnoreStagingDirectories(t *testing.T) {
 	})
 }
 
-// TestLibStagingDir_SharesParentWithLibraryDir pins the property the atomic
-// rename depends on: staging and destination sit in the same directory, so they
-// are always on the same filesystem.
-func TestLibStagingDir_SharesParentWithLibraryDir(t *testing.T) {
+// TestSwapIntoPlace_RestoresPreviousWhenTheSwapFails is the reason the swap
+// moves the existing tree aside instead of deleting it. Half a swap must not
+// leave the destination missing, because every tool whose RPATH points into a
+// library directory resolves through that path.
+//
+// The failure is injected by pointing the swap at a staging directory that does
+// not exist: the move-aside succeeds, the move-in cannot, and the restore is
+// what decides whether the destination survives.
+func TestSwapIntoPlace_RestoresPreviousWhenTheSwapFails(t *testing.T) {
+	root := t.TempDir()
+	dst := filepath.Join(root, "libyaml-0.2.5")
+	previous := previousDirFor(dst)
+	missingStaging := filepath.Join(root, ".libyaml-0.2.5.staging")
+
+	if err := os.MkdirAll(filepath.Join(dst, "lib"), 0755); err != nil {
+		t.Fatalf("failed to create destination: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dst, "lib", "libyaml.so"), []byte("original"), 0644); err != nil {
+		t.Fatalf("failed to write destination file: %v", err)
+	}
+
+	if err := swapIntoPlace(missingStaging, dst); err == nil {
+		t.Fatal("swapIntoPlace() should fail when the staged tree is not there")
+	}
+
+	got, err := os.ReadFile(filepath.Join(dst, "lib", "libyaml.so"))
+	if err != nil {
+		t.Fatalf("destination did not survive the failed swap: %v", err)
+	}
+	if string(got) != "original" {
+		t.Errorf("destination file = %q, want %q", got, "original")
+	}
+	if _, err := os.Stat(previous); !os.IsNotExist(err) {
+		t.Error("the moved-aside tree should be back at the destination, not left at previous")
+	}
+}
+
+// TestLibWorkDirs_SharesParentWithLibraryDir pins the two properties the swap
+// depends on: both work directories sit in the same parent as the destination,
+// so every rename stays within one filesystem, and both are dot-prefixed, so
+// the LibsDir scans skip them.
+func TestLibWorkDirs_SharesParentWithLibraryDir(t *testing.T) {
 	cfg := &config.Config{LibsDir: "/home/user/.tsuku/libs"}
 	mgr := New(cfg)
 
-	staging := mgr.libStagingDir("libyaml", "0.2.5")
-	if got, want := filepath.Dir(staging), filepath.Dir(cfg.LibDir("libyaml", "0.2.5")); got != want {
-		t.Errorf("libStagingDir parent = %q, want %q", got, want)
+	tests := []struct {
+		name string
+		got  string
+		want string
+	}{
+		{name: "staging", got: mgr.libStagingDir("libyaml", "0.2.5"), want: ".libyaml-0.2.5.staging"},
+		{name: "previous", got: previousDirFor(cfg.LibDir("libyaml", "0.2.5")), want: ".libyaml-0.2.5.previous"},
 	}
-	if got, want := filepath.Base(staging), ".libyaml-0.2.5.staging"; got != want {
-		t.Errorf("libStagingDir base = %q, want %q", got, want)
+
+	wantParent := filepath.Dir(cfg.LibDir("libyaml", "0.2.5"))
+	for _, tt := range tests {
+		if got := filepath.Dir(tt.got); got != wantParent {
+			t.Errorf("%s parent = %q, want %q", tt.name, got, wantParent)
+		}
+		if got := filepath.Base(tt.got); got != tt.want {
+			t.Errorf("%s base = %q, want %q", tt.name, got, tt.want)
+		}
 	}
 }
