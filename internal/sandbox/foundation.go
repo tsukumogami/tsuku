@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/executor"
+	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
@@ -92,14 +93,18 @@ func dependencyToPlan(dep *executor.DependencyPlan, platform executor.Platform) 
 
 	return &executor.InstallationPlan{
 		FormatVersion: executor.PlanFormatVersion,
-		Tool:          dep.Tool,
-		Version:       dep.Version,
-		Platform:      platform,
-		GeneratedAt:   time.Time{}, // Zero value -- stripped for determinism
-		Dependencies:  nestedDeps,
-		Steps:         dep.Steps,
-		Verify:        dep.Verify,
-		RecipeType:    dep.RecipeType,
+		// The subtree this is built from came out of a generated plan, so it
+		// carries every field. Marking it keeps the foundation Dockerfile's
+		// `tsuku install --plan` steps out of the stale-plan warning.
+		StorageVersion: install.PlanStorageVersion,
+		Tool:           dep.Tool,
+		Version:        dep.Version,
+		Platform:       platform,
+		GeneratedAt:    time.Time{}, // Zero value -- stripped for determinism
+		Dependencies:   nestedDeps,
+		Steps:          dep.Steps,
+		Verify:         dep.Verify,
+		RecipeType:     dep.RecipeType,
 	}
 }
 

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/executor"
+	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
@@ -142,6 +143,12 @@ func TestFlattenDependencies_SingleDep(t *testing.T) {
 	}
 	if len(result[0].Plan.Steps) != 1 {
 		t.Errorf("Expected 1 step, got %d", len(result[0].Plan.Steps))
+	}
+	// The foundation Dockerfile installs each of these with `tsuku install
+	// --plan`, which warns on an unmarked plan. Unmarked here means every
+	// sandbox build prints a staleness warning about plans it just built.
+	if result[0].Plan.StorageVersion != install.PlanStorageVersion {
+		t.Errorf("Plan StorageVersion = %d, want %d", result[0].Plan.StorageVersion, install.PlanStorageVersion)
 	}
 }
 

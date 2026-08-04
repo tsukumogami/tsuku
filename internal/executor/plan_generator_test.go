@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -16,6 +17,7 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/actions"
+	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/platform"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
@@ -3076,5 +3078,60 @@ func TestGeneratePlan_GPUDependencyChain_NoneNoDeps(t *testing.T) {
 	}
 	if !hasCPUStep {
 		t.Error("expected CPU variant step in plan, not found")
+	}
+}
+
+// TestGeneratePlan_MarksThePlanComplete pins the stamp that makes an absent
+// marker mean something. `tsuku eval` prints this plan straight out, and its
+// output is a first-class input to `tsuku install --plan`, so an unstamped
+// generated plan would make the load-time warning fire on healthy plans --
+// which is how a warning stops being read.
+//
+// PinnedVersion keeps this offline: no version provider, no download.
+func TestGeneratePlan_MarksThePlanComplete(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{Name: "marker-tool"},
+		Steps: []recipe.Step{
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{"path": "bin/marker-tool", "mode": "0755"},
+			},
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	defer exec.Cleanup()
+
+	plan, err := exec.GeneratePlan(context.Background(), PlanConfig{
+		OS:            "linux",
+		Arch:          "amd64",
+		RecipeSource:  "test",
+		PinnedVersion: "1.0.0",
+	})
+	if err != nil {
+		t.Fatalf("GeneratePlan() error: %v", err)
+	}
+
+	if plan.StorageVersion != install.PlanStorageVersion {
+		t.Errorf("StorageVersion = %d, want %d; eval output would warn on load",
+			plan.StorageVersion, install.PlanStorageVersion)
+	}
+
+	// And it has to survive serialization, because that is the only form the
+	// load site ever sees it in.
+	encoded, err := json.Marshal(plan)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var decoded InstallationPlan
+	if err := json.Unmarshal(encoded, &decoded); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if decoded.StorageVersion != install.PlanStorageVersion {
+		t.Errorf("StorageVersion after JSON round trip = %d, want %d",
+			decoded.StorageVersion, install.PlanStorageVersion)
 	}
 }

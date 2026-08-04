@@ -140,6 +140,23 @@ stderr when they hit one. Reinstalling refreshes the record:
 tsuku install <tool> --fresh
 ```
 
+`tsuku install --plan` warns too, which is what covers a file exported before
+that warning existed and kept for offline use. It fires when the plan declares
+no recipe type, no dependencies and no verification *and* carries no marker
+saying that is deliberate -- the shape of a plan exported before those fields
+were stored. It installs anyway: refusing would strand anyone whose whole reason
+for holding the file is that the target machine cannot reach the registry. If
+you can reach it, regenerate:
+
+```bash
+tsuku eval <tool> > <tool>.plan.json
+```
+
+A plan that carries any of those fields never triggers the warning, whichever
+tsuku wrote it, so `tsuku eval` output is unaffected. Seeing the warning means
+the file genuinely declares nothing -- either because the tool has nothing to
+declare, or because an old export dropped it, and the file cannot say which.
+
 ## Shell Integration
 
 tsuku needs two directories on your PATH: `$TSUKU_HOME/bin` (wrapper scripts) and `$TSUKU_HOME/tools/current` (active tool symlinks). The `shellenv` command sets this up.

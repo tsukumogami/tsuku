@@ -103,6 +103,9 @@ Each read site gets a defined behavior:
 |---|---|
 | plan cache, `getOrGeneratePlanWith` | treat as a cache miss, regenerate |
 | `tsuku plan show`, `tsuku plan export` | proceed, and warn on stderr that the stored plan predates the fix and may omit dependencies and verification, naming `tsuku install <tool> --fresh` as the refresh |
+| `tsuku install --plan` (added by #2496) | proceed, and warn that the plan file predates the format that carries every field, naming `tsuku eval <tool>` as the way to produce a current one |
+
+The third row is the follow-up. Marking only `install.Plan` covered reads of `state.json` and not a plan file already on disk, because `loadPlanFromSource` decodes into `executor.InstallationPlan`, which had no field to receive the key. #2496 put the marker on the executor plan too, stamped at plan generation so `tsuku eval` output carries it.
 
 `StorageVersion` versions the conversion into `state.json`. `FormatVersion`, already on the same struct, versions the plan itself. The doc comments say which is which, because two version numbers on one struct is a readability cost that has to be paid down explicitly.
 
@@ -155,6 +158,8 @@ All new fields carry `omitempty`, so a plan with nothing to say about them seria
 ### Converter (`internal/executor/plan_conversion.go`)
 
 `ToStoragePlan` and `FromStoragePlan` gain step, dependency, and verify conversion in both directions. Dependency conversion recurses. `ToStoragePlan` stamps `StorageVersion: install.PlanStorageVersion`; `FromStoragePlan` does not read it, because the executor plan has no field for it and the read sites, not the converter, decide what a stale record means.
+
+Both halves of that last sentence changed in #2496. The executor plan now has the field, so both converters carry the value rather than stamping or discarding it -- stamping would have let `tsuku install --plan` on an unmarked file write a record claiming to be complete, silencing the read sites above after a single install. The read sites still decide what a stale record means; the converters just stop destroying the evidence.
 
 ### Read sites
 

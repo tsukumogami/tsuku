@@ -8,13 +8,21 @@ import "github.com/tsukumogami/tsuku/internal/install"
 // record, including the dependency tree, the verify block, and the per-step phases.
 // TestPlanConversionCarriesEveryField enforces that, so a field added to the plan
 // types and forgotten here fails a test rather than shipping.
+//
+// StorageVersion is carried across rather than stamped with the current value.
+// Stamping would launder an incomplete plan: `tsuku install --plan` on a file
+// exported before the fields existed would write a record claiming to be
+// complete, and the readers that trust that claim -- the plan cache, plan show,
+// plan export -- would stop warning about it after one install. Plans the
+// executor generates are stamped at generation, so a record written on any
+// recipe-driven path still declares the current version.
 func ToStoragePlan(plan *InstallationPlan) *install.Plan {
 	if plan == nil {
 		return nil
 	}
 
 	return &install.Plan{
-		StorageVersion: install.PlanStorageVersion,
+		StorageVersion: plan.StorageVersion,
 		FormatVersion:  plan.FormatVersion,
 		Tool:           plan.Tool,
 		Version:        plan.Version,
@@ -37,19 +45,21 @@ func ToStoragePlan(plan *InstallationPlan) *install.Plan {
 // FromStoragePlan converts an install.Plan back to InstallationPlan for execution.
 // This enables re-execution of cached plans from state.json.
 //
-// StorageVersion is deliberately not consulted here. What a record written by an
-// older conversion means is a question for the code reading it -- the plan cache
-// regenerates, plan show and plan export warn -- not for a converter with nowhere
-// to put the answer.
+// StorageVersion is carried, not acted on. What a record written by an older
+// conversion means is a question for the code reading it -- the plan cache
+// regenerates, plan show and plan export warn, plan-based install warns -- not
+// for a converter with nowhere to put the answer. Carrying it is what lets
+// those readers ask.
 func FromStoragePlan(plan *install.Plan) *InstallationPlan {
 	if plan == nil {
 		return nil
 	}
 
 	return &InstallationPlan{
-		FormatVersion: plan.FormatVersion,
-		Tool:          plan.Tool,
-		Version:       plan.Version,
+		StorageVersion: plan.StorageVersion,
+		FormatVersion:  plan.FormatVersion,
+		Tool:           plan.Tool,
+		Version:        plan.Version,
 		Platform: Platform{
 			OS:          plan.Platform.OS,
 			Arch:        plan.Platform.Arch,
