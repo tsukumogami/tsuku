@@ -38,6 +38,20 @@ func unescapeArg(s string) string {
 	return b.String()
 }
 
+// homePlaceholder is the token a feature file writes where it needs the
+// scenario's home directory spelled out. Each scenario gets a fresh temporary
+// home, so no feature file can name that path literally; expandHome substitutes
+// it in command arguments and in output assertions.
+const homePlaceholder = "$TSUKU_HOME"
+
+// expandHome replaces every homePlaceholder in s with the scenario's home path.
+func expandHome(state *testState, s string) string {
+	if state == nil || !strings.Contains(s, homePlaceholder) {
+		return s
+	}
+	return strings.ReplaceAll(s, homePlaceholder, state.homeDir)
+}
+
 // iRun executes a command string, replacing "tsuku" with the test binary path.
 func iRun(ctx context.Context, command string) (context.Context, error) {
 	state := getState(ctx)
@@ -46,13 +60,13 @@ func iRun(ctx context.Context, command string) (context.Context, error) {
 	}
 
 	// Replace "tsuku" at the start of the command with the test binary path
-	args := strings.Fields(unescapeArg(command))
+	args := strings.Fields(expandHome(state, unescapeArg(command)))
 	if len(args) > 0 && args[0] == "tsuku" {
 		args[0] = state.binPath
 	}
 
 	cmd := exec.Command(args[0], args[1:]...)
-	// Run from the same directory as the binary, where .tsuku-test lives
+	// Run from the repo root, so relative recipe and registry paths resolve
 	cmd.Dir = filepath.Dir(state.binPath)
 
 	// Determine registry URL: empty directory for @empty-registry, or repo root for local recipes
@@ -119,7 +133,7 @@ func theExitCodeIsNot(ctx context.Context, notExpected int) error {
 
 func theOutputContains(ctx context.Context, text string) error {
 	state := getState(ctx)
-	text = unescapeArg(text)
+	text = expandHome(state, unescapeArg(text))
 	if !strings.Contains(state.stdout, text) {
 		return fmt.Errorf("expected stdout to contain %q, got:\n%s", text, state.stdout)
 	}
@@ -128,7 +142,7 @@ func theOutputContains(ctx context.Context, text string) error {
 
 func theOutputDoesNotContain(ctx context.Context, text string) error {
 	state := getState(ctx)
-	text = unescapeArg(text)
+	text = expandHome(state, unescapeArg(text))
 	if strings.Contains(state.stdout, text) {
 		return fmt.Errorf("expected stdout not to contain %q, got:\n%s", text, state.stdout)
 	}
@@ -137,7 +151,7 @@ func theOutputDoesNotContain(ctx context.Context, text string) error {
 
 func theErrorOutputContains(ctx context.Context, text string) error {
 	state := getState(ctx)
-	text = unescapeArg(text)
+	text = expandHome(state, unescapeArg(text))
 	if !strings.Contains(state.stderr, text) {
 		return fmt.Errorf("expected stderr to contain %q, got:\n%s", text, state.stderr)
 	}
@@ -146,7 +160,7 @@ func theErrorOutputContains(ctx context.Context, text string) error {
 
 func theErrorOutputDoesNotContain(ctx context.Context, text string) error {
 	state := getState(ctx)
-	text = unescapeArg(text)
+	text = expandHome(state, unescapeArg(text))
 	if strings.Contains(state.stderr, text) {
 		return fmt.Errorf("expected stderr not to contain %q, got:\n%s", text, state.stderr)
 	}
@@ -235,7 +249,7 @@ func iRunFromDir(ctx context.Context, dir, command string) (context.Context, err
 		return ctx, fmt.Errorf("creating dir %s: %w", dir, err)
 	}
 
-	args := strings.Fields(unescapeArg(command))
+	args := strings.Fields(expandHome(state, unescapeArg(command)))
 	if len(args) > 0 && args[0] == "tsuku" {
 		args[0] = state.binPath
 	}
@@ -356,9 +370,13 @@ func iCanRun(ctx context.Context, command string) (context.Context, error) {
 		}
 	}
 
-	cmd := exec.Command("bash", "-c", unescapeArg(command))
+	cmd := exec.Command("bash", "-c", expandHome(state, unescapeArg(command)))
 	cmd.Env = append(os.Environ(),
 		"PATH="+toolBins+":"+os.Getenv("PATH"),
+		// The scenario home is a temporary directory, so a command that reaches
+		// for tsuku has to be told where it is rather than falling back to the
+		// binary's compiled-in default.
+		"TSUKU_HOME="+state.homeDir,
 		"TSUKU_NO_TELEMETRY=1",
 	)
 

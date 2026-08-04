@@ -12,7 +12,7 @@ Feature: Create
     And the file "recipes/prettier.toml" exists
 
 Scenario: Create recipe with --output flag
-    When I run "tsuku create prettier --from npm --yes --skip-sandbox --output .tsuku-test/custom/prettier.toml"
+    When I run "tsuku create prettier --from npm --yes --skip-sandbox --output $TSUKU_HOME/custom/prettier.toml"
     Then the exit code is 0
     And the output contains "Recipe created:"
     And the file "custom/prettier.toml" exists
