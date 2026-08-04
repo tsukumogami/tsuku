@@ -239,6 +239,8 @@ Two ways out: move the tsuku entries ahead of the competing prefix in your profi
 
 Only tools that are visible on PATH are checked. Execution dependencies tsuku installed for its own use — the npm or Python behind a recipe — are deliberately kept off PATH, so a system copy answering for them isn't a conflict.
 
+Symlinks are followed, so if you link managed binaries into a directory that's already on your PATH instead of adding `$TSUKU_HOME/bin` to it, none of them is reported. The name is outside `$TSUKU_HOME`, but the file it runs is tsuku's. Point those links at `$TSUKU_HOME/tools/current/<binary>` rather than at a specific version's directory — a link to `current` follows updates, and one pinned to `tools/<tool>-<version>/bin/<binary>` keeps running that version after you upgrade. Doctor doesn't yet flag the pinned case.
+
 ## Troubleshooting
 
 ### Exit Codes

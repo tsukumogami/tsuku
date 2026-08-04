@@ -61,16 +61,20 @@ type PrecedenceInput struct {
 // on PATH behind a competing installer's prefix and never be reached. The
 // invariant is that a binary tsuku put on PATH is the one that answers.
 //
-// A binary is shadowed when the first executable of that name along PATH lies
-// outside $TSUKU_HOME entirely. The question is whether a competing installer's
-// prefix is winning, so anywhere under $TSUKU_HOME counts as tsuku's and none of
-// them is a conflict. There are more of those than the two the env file puts on
-// PATH: $TSUKU_HOME/bin holds shims and comes first, $TSUKU_HOME/tools/current
-// holds the version symlinks, and a tool's own $TSUKU_HOME/tools/<name>-<version>/bin
-// lands on PATH whenever a recipe exports it or tsuku runs the tool with its
-// runtime dependencies. Comparing against tools/current alone reports all three
-// of the others, which on a real machine means a warning per shim and per
-// exported install directory.
+// A binary is shadowed when the first executable of that name along PATH is a
+// file outside $TSUKU_HOME. The question is whether a competing installer's
+// prefix is winning, so any file under $TSUKU_HOME counts as tsuku's and none of
+// them is a conflict. There are more places for one than the two directories the
+// env file puts on PATH: $TSUKU_HOME/bin holds shims and comes first,
+// $TSUKU_HOME/tools/current holds the version symlinks, and a tool's own
+// $TSUKU_HOME/tools/<name>-<version>/bin lands on PATH whenever a recipe exports
+// it or tsuku runs the tool with its runtime dependencies. Comparing against
+// tools/current alone reports all three of the others, which on a real machine
+// means a warning per shim and per exported install directory.
+//
+// The test follows symlinks, so a managed binary linked into a directory ahead
+// of $TSUKU_HOME is tsuku's file under another name rather than a shadow. See
+// withinHome for what that deliberately does not distinguish.
 //
 // A binary that resolves nowhere is not reported. That is a broken install
 // rather than a precedence problem, and the tools/current and bin checks
@@ -136,14 +140,52 @@ func absHome(tsukuHome string) string {
 	return home
 }
 
-// withinHome reports whether path lies inside home. Both are already cleaned
-// absolute paths.
+// withinHome reports whether path is a file inside home, following symlinks
+// when the literal path is not. Both arguments are cleaned absolute paths.
+//
+// The literal comparison comes first because it answers for every PATH entry
+// tsuku puts there itself, without a syscall.
+//
+// Following links is what covers the user who symlinks managed binaries into a
+// directory already on PATH -- ~/.local/bin, on a machine where editing the
+// shell profile is awkward -- rather than putting $TSUKU_HOME/bin on PATH. The
+// name is outside $TSUKU_HOME while the file it runs is tsuku's, so a literal
+// test alone reports every one of those tools as shadowed.
+//
+// Resolution is deliberately full rather than hop-by-hop, which means a link
+// aimed straight at a version directory reads the same as one aimed at
+// tools/current. It has to: tools/current/<bin> is itself a symlink into a
+// version directory, so a link through tools/current resolves into one too, and
+// no comparison of the final path can tell the two apart. Telling them apart
+// would mean inspecting every hop of the chain. That is a different diagnostic
+// -- "this PATH entry or link pins a version and will not track updates" -- and
+// it applies just as much to a PATH entry naming a version directory outright,
+// which this check treats as tsuku's. Tracked as issue #2522.
+func withinHome(home, path string) bool {
+	if hasPrefixDir(path, home) {
+		return true
+	}
+
+	realPath, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return false
+	}
+	// The home is resolved too, so a $TSUKU_HOME reached through a symlinked
+	// parent -- /home a link to /var/home, say -- still recognizes its own files.
+	realHome, err := filepath.EvalSymlinks(home)
+	if err != nil {
+		return false
+	}
+	return hasPrefixDir(realPath, realHome)
+}
+
+// hasPrefixDir reports whether path sits under dir.
 //
 // The trailing separator is what keeps a sibling from matching: without it
 // "/home/u/.tsuku-backup/bin/rg" reads as living under "/home/u/.tsuku". Same
 // reason ValidateSymlinkTarget adds one.
-func withinHome(home, path string) bool {
-	return strings.HasPrefix(path, home+string(filepath.Separator))
+func hasPrefixDir(path, dir string) bool {
+	return strings.HasPrefix(path, dir+string(filepath.Separator))
 }
 
 // ownedCopy returns tsuku's own path for a binary, preferring bin/ because PATH
