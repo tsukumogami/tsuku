@@ -1,6 +1,5 @@
 {
   "format_version": 5,
-  "storage_version": 1,
   "tool": "rust",
   "version": "1.93.1",
   "platform": {
