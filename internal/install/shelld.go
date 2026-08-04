@@ -28,10 +28,7 @@ func BuildShellDSelection(state *State) shellenv.ShellDSelection {
 	}
 
 	for _, ts := range state.Installed {
-		activeVersion := ts.ActiveVersion
-		if activeVersion == "" {
-			activeVersion = ts.Version // legacy state files
-		}
+		activeVersion := activeVersionOf(ts)
 		for version, vs := range ts.Versions {
 			for _, ca := range vs.CleanupActions {
 				if !strings.HasPrefix(ca.Path, shellDPrefix) {

@@ -162,8 +162,8 @@ func TestTargetFromCleanupPath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.path, func(t *testing.T) {
-			if got := TargetFromCleanupPath(tt.path); got != tt.want {
-				t.Errorf("TargetFromCleanupPath(%q) = %q, want %q", tt.path, got, tt.want)
+			if got := targetFromCleanupPath(tt.path); got != tt.want {
+				t.Errorf("targetFromCleanupPath(%q) = %q, want %q", tt.path, got, tt.want)
 			}
 		})
 	}

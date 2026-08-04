@@ -261,6 +261,24 @@ By default, tsuku checks for updates in the background and applies them within y
 
 Exact-pinned tools (`go = "1.23.4"`) are never auto-updated.
 
+### When a tool changes its shell init
+
+Some tools ship a script your shell runs at every start (see Shell Integration
+below). When an update changes what that script contains, tsuku says so:
+
+```
+warning: shell init changed for nvm (bash)
+```
+
+Every update path reports it — `tsuku update <tool>`, `tsuku update --all`, and
+the background auto-apply. Auto-apply has no terminal to print to, so its warning
+arrives as a notice shown by your next tsuku command instead.
+
+It isn't an error. It means the tool rewrote code that runs in your shell, which
+is worth a look if you didn't expect it. Read the new fragment under
+`$TSUKU_HOME/share/shell.d/` if you want to see what changed, and
+`tsuku rollback <tool>` if you'd rather go back.
+
 Reclamation only touches versions tsuku installed and still records in its state. A
 directory under `$TSUKU_HOME/tools` that tsuku has no record of -- left behind by an
 interrupted install, or put there by hand -- is left alone however old it is. Remove

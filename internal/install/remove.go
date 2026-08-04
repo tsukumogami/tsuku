@@ -466,14 +466,14 @@ func shellFromCleanupPath(path string) string {
 	return ext[1:] // strip leading dot
 }
 
-// TargetFromCleanupPath extracts the target a shell.d cleanup path was written
+// targetFromCleanupPath extracts the target a shell.d cleanup path was written
 // for, dropping the version key and the shell suffix. Returns "" if the path
 // doesn't look like a shell.d file.
 //
 // Comparing two versions' fragments has to go through this: version-keyed
 // filenames mean the same target has a different path in every version, so a
 // comparison keyed on the raw path sees two unrelated files.
-func TargetFromCleanupPath(path string) string {
+func targetFromCleanupPath(path string) string {
 	shell := shellFromCleanupPath(path)
 	if shell == "" {
 		return ""
