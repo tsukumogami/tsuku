@@ -662,6 +662,15 @@ func (m *Manager) collectLibraryPaths(ctx context.Context) []string {
 		if !entry.IsDir() {
 			continue
 		}
+		// Skip tsuku's own bookkeeping directories. The dot-prefixed entries
+		// under libs are a library install's work directories: a staging tree
+		// still being written, or a superseded tree kept until the swap
+		// finishes. Neither belongs on a tool's library search path, and a
+		// superseded one least of all -- it is a complete copy of an older
+		// library, so admitting it would put two versions on the same path.
+		if strings.HasPrefix(entry.Name(), ".") {
+			continue
+		}
 		libLibDir := filepath.Join(libsDir, entry.Name(), "lib")
 		if info, err := os.Stat(libLibDir); err == nil && info.IsDir() {
 			if validateShellSafePath(libLibDir) == nil {
