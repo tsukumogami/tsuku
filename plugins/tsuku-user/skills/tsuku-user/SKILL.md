@@ -109,6 +109,7 @@ installed already.
 | Command | Description | Common Flags |
 |---------|-------------|--------------|
 | `tsuku run <tool> [args]` | Install if missing, then execute | `--mode suggest/confirm/auto` |
+| `tsuku check-deps <tool>` | Report each dependency's type and status before installing | `--json` |
 | `tsuku verify <tool>` | Check binary integrity and deps | `--system-deps`, `--integrity` |
 | `tsuku doctor` | Environment health check | `--fix` |
 | `tsuku cache clear` | Clear download and version caches | `--downloads`, `--versions` |
@@ -117,6 +118,15 @@ installed already.
 | `tsuku plan export <tool>` | Write that plan to a file for `tsuku install --plan` | `-o` (`-` for stdout) |
 
 All commands accept `--verbose` (`-v`), `--quiet` (`-q`), and `--debug` for log control.
+
+### Reading `check-deps --json`
+
+Don't infer "ready to install" from the exit code. `check-deps` exits 0 whenever
+every system dependency is present, even if provisionable ones are missing --
+tsuku installs those for you. The `all_satisfied` field is the stricter signal:
+it's `true` only when every dependency, provisionable or system, already reports
+`"status": "installed"`. Script against `all_satisfied`, or against each
+dependency's own `status`, rather than against the exit code alone.
 
 ### Stored plans
 

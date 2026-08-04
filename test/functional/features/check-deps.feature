@@ -16,10 +16,13 @@ Feature: Check dependencies
     When I run "tsuku check-deps"
     Then the exit code is 1
 
+  @critical
   Scenario: Check deps JSON output reflects missing dependencies
-    # See #2099
+    # See #2099. ruby's provisionable deps are absent from a clean environment,
+    # so all_satisfied has to say so even though the exit code stays 0.
     When I run "tsuku check-deps ruby --json"
     Then the exit code is 0
+    And the output contains "\"all_satisfied\": false"
     And the output does not contain "\"all_satisfied\":true"
     And the output does not contain "\"all_satisfied\": true"
 

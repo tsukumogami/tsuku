@@ -58,8 +58,13 @@ func TestFeatures(t *testing.T) {
 	}
 
 	opts := &godog.Options{
-		Format:   "pretty",
-		Paths:    paths,
+		Format: "pretty",
+		Paths:  paths,
+		// Strict fails the run on an undefined, pending, or ambiguous step.
+		// Without it godog skips such a step, and the scenario still reports
+		// green on whatever steps did match -- so an assertion can sit in a
+		// feature file for months without ever executing.
+		Strict:   true,
 		TestingT: t,
 	}
 	if tags := os.Getenv("TSUKU_TEST_TAGS"); tags != "" {
@@ -147,29 +152,54 @@ func initializeScenario(ctx *godog.ScenarioContext, binPath string) {
 		return setState(ctx, state), nil
 	})
 
-	// Environment steps
-	ctx.Step(`^a clean tsuku environment$`, aCleanTsukuEnvironment)
+	for _, def := range stepDefinitions() {
+		ctx.Step(def.pattern, def.handler)
+	}
+}
 
-	// Command steps
-	ctx.Step(`^I run "([^"]*)"$`, iRun)
+// quotedArg matches a double-quoted step argument. Backslash escapes are
+// allowed inside the quotes so a step can carry a literal `"` -- the check-deps
+// JSON assertions need one. A plain `[^"]*` class stops at the first quote, so
+// such a step matches nothing and godog reports it as undefined. Handlers pass
+// the captured value through unescapeArg before using it.
+const quotedArg = `"((?:[^"\\]|\\.)*)"`
 
-	// Assertion steps
-	ctx.Step(`^the exit code is (\d+)$`, theExitCodeIs)
-	ctx.Step(`^the exit code is not (\d+)$`, theExitCodeIsNot)
-	ctx.Step(`^the output contains "([^"]*)"$`, theOutputContains)
-	ctx.Step(`^the output does not contain "([^"]*)"$`, theOutputDoesNotContain)
-	ctx.Step(`^the error output contains "([^"]*)"$`, theErrorOutputContains)
-	ctx.Step(`^the error output does not contain "([^"]*)"$`, theErrorOutputDoesNotContain)
-	ctx.Step(`^the file "([^"]*)" exists$`, theFileExists)
-	ctx.Step(`^the file "([^"]*)" does not exist$`, theFileDoesNotExist)
-	ctx.Step(`^the file "([^"]*)" eventually does not exist within (\d+) seconds$`, theFileEventuallyDoesNotExist)
-	ctx.Step(`^the file "([^"]*)" contains "([^"]*)"$`, theFileContains)
-	ctx.Step(`^the file "([^"]*)" does not contain "([^"]*)"$`, theFileDoesNotContain)
-	ctx.Step(`^I source home file "([^"]*)" and can run "([^"]*)"$`, iSourceHomeFileAndCanRun)
-	ctx.Step(`^I can run "([^"]*)"$`, iCanRun)
-	ctx.Step(`^I create home file "([^"]*)" with content:$`, iCreateHomeFile)
-	ctx.Step(`^I run from "([^"]*)" "([^"]*)"$`, iRunFromDir)
-	ctx.Step(`^I set env "([^"]*)" to "([^"]*)"$`, iSetEnv)
+// stepDefinition pairs a step pattern with the function implementing it.
+type stepDefinition struct {
+	pattern string
+	handler any
+}
+
+// stepDefinitions returns every step this suite understands. Registration and
+// the binding check in step_binding_test.go both read this one table, so a
+// feature step that matches nothing here fails the unit-test job rather than
+// waiting for someone to notice "undefined" in a functional run.
+func stepDefinitions() []stepDefinition {
+	return []stepDefinition{
+		// Environment steps
+		{`^a clean tsuku environment$`, aCleanTsukuEnvironment},
+
+		// Command steps
+		{`^I run ` + quotedArg + `$`, iRun},
+		{`^I run from ` + quotedArg + ` ` + quotedArg + `$`, iRunFromDir},
+		{`^I can run ` + quotedArg + `$`, iCanRun},
+		{`^I source home file ` + quotedArg + ` and can run ` + quotedArg + `$`, iSourceHomeFileAndCanRun},
+		{`^I create home file ` + quotedArg + ` with content:$`, iCreateHomeFile},
+		{`^I set env ` + quotedArg + ` to ` + quotedArg + `$`, iSetEnv},
+
+		// Assertion steps
+		{`^the exit code is (\d+)$`, theExitCodeIs},
+		{`^the exit code is not (\d+)$`, theExitCodeIsNot},
+		{`^the output contains ` + quotedArg + `$`, theOutputContains},
+		{`^the output does not contain ` + quotedArg + `$`, theOutputDoesNotContain},
+		{`^the error output contains ` + quotedArg + `$`, theErrorOutputContains},
+		{`^the error output does not contain ` + quotedArg + `$`, theErrorOutputDoesNotContain},
+		{`^the file ` + quotedArg + ` exists$`, theFileExists},
+		{`^the file ` + quotedArg + ` does not exist$`, theFileDoesNotExist},
+		{`^the file ` + quotedArg + ` eventually does not exist within (\d+) seconds$`, theFileEventuallyDoesNotExist},
+		{`^the file ` + quotedArg + ` contains ` + quotedArg + `$`, theFileContains},
+		{`^the file ` + quotedArg + ` does not contain ` + quotedArg + `$`, theFileDoesNotContain},
+	}
 }
 
 // filteredPATH returns a PATH string with directories containing any of the

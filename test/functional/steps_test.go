@@ -18,6 +18,26 @@ func aCleanTsukuEnvironment(ctx context.Context) (context.Context, error) {
 	return ctx, nil
 }
 
+// unescapeArg resolves the backslash escapes that quotedArg lets a step
+// argument carry. Only `\"` and `\\` mean anything; every other backslash
+// passes through untouched, so a step can still assert on a literal `\n` or a
+// Windows-style path without the escape being eaten.
+func unescapeArg(s string) string {
+	if !strings.Contains(s, `\`) {
+		return s
+	}
+	var b strings.Builder
+	for i := 0; i < len(s); i++ {
+		if s[i] == '\\' && i+1 < len(s) && (s[i+1] == '"' || s[i+1] == '\\') {
+			b.WriteByte(s[i+1])
+			i++
+			continue
+		}
+		b.WriteByte(s[i])
+	}
+	return b.String()
+}
+
 // iRun executes a command string, replacing "tsuku" with the test binary path.
 func iRun(ctx context.Context, command string) (context.Context, error) {
 	state := getState(ctx)
@@ -26,7 +46,7 @@ func iRun(ctx context.Context, command string) (context.Context, error) {
 	}
 
 	// Replace "tsuku" at the start of the command with the test binary path
-	args := strings.Fields(command)
+	args := strings.Fields(unescapeArg(command))
 	if len(args) > 0 && args[0] == "tsuku" {
 		args[0] = state.binPath
 	}
@@ -99,6 +119,7 @@ func theExitCodeIsNot(ctx context.Context, notExpected int) error {
 
 func theOutputContains(ctx context.Context, text string) error {
 	state := getState(ctx)
+	text = unescapeArg(text)
 	if !strings.Contains(state.stdout, text) {
 		return fmt.Errorf("expected stdout to contain %q, got:\n%s", text, state.stdout)
 	}
@@ -107,6 +128,7 @@ func theOutputContains(ctx context.Context, text string) error {
 
 func theOutputDoesNotContain(ctx context.Context, text string) error {
 	state := getState(ctx)
+	text = unescapeArg(text)
 	if strings.Contains(state.stdout, text) {
 		return fmt.Errorf("expected stdout not to contain %q, got:\n%s", text, state.stdout)
 	}
@@ -115,6 +137,7 @@ func theOutputDoesNotContain(ctx context.Context, text string) error {
 
 func theErrorOutputContains(ctx context.Context, text string) error {
 	state := getState(ctx)
+	text = unescapeArg(text)
 	if !strings.Contains(state.stderr, text) {
 		return fmt.Errorf("expected stderr to contain %q, got:\n%s", text, state.stderr)
 	}
@@ -123,6 +146,7 @@ func theErrorOutputContains(ctx context.Context, text string) error {
 
 func theErrorOutputDoesNotContain(ctx context.Context, text string) error {
 	state := getState(ctx)
+	text = unescapeArg(text)
 	if strings.Contains(state.stderr, text) {
 		return fmt.Errorf("expected stderr not to contain %q, got:\n%s", text, state.stderr)
 	}
@@ -131,7 +155,7 @@ func theErrorOutputDoesNotContain(ctx context.Context, text string) error {
 
 func theFileExists(ctx context.Context, path string) error {
 	state := getState(ctx)
-	fullPath := filepath.Join(state.homeDir, path)
+	fullPath := filepath.Join(state.homeDir, unescapeArg(path))
 	// Use Lstat to detect symlinks even if their target doesn't resolve
 	if _, err := os.Lstat(fullPath); os.IsNotExist(err) {
 		return fmt.Errorf("expected file %q to exist", fullPath)
@@ -141,7 +165,7 @@ func theFileExists(ctx context.Context, path string) error {
 
 func theFileDoesNotExist(ctx context.Context, path string) error {
 	state := getState(ctx)
-	fullPath := filepath.Join(state.homeDir, path)
+	fullPath := filepath.Join(state.homeDir, unescapeArg(path))
 	if _, err := os.Lstat(fullPath); err == nil {
 		return fmt.Errorf("expected file %q not to exist", fullPath)
 	}
@@ -155,7 +179,7 @@ func theFileDoesNotExist(ctx context.Context, path string) error {
 // after the foreground command (`tsuku list`, etc.) returns.
 func theFileEventuallyDoesNotExist(ctx context.Context, path string, timeoutSeconds int) error {
 	state := getState(ctx)
-	fullPath := filepath.Join(state.homeDir, path)
+	fullPath := filepath.Join(state.homeDir, unescapeArg(path))
 	deadline := time.Now().Add(time.Duration(timeoutSeconds) * time.Second)
 	for time.Now().Before(deadline) {
 		if _, err := os.Lstat(fullPath); os.IsNotExist(err) {
@@ -178,7 +202,7 @@ func iSetEnv(ctx context.Context, key, value string) (context.Context, error) {
 	if state.envOverrides == nil {
 		state.envOverrides = make(map[string]string)
 	}
-	state.envOverrides[key] = value
+	state.envOverrides[unescapeArg(key)] = unescapeArg(value)
 	return ctx, nil
 }
 
@@ -188,7 +212,7 @@ func iCreateHomeFile(ctx context.Context, path string, content *godog.DocString)
 	if state == nil {
 		return ctx, fmt.Errorf("no test state")
 	}
-	fullPath := filepath.Join(state.homeDir, path)
+	fullPath := filepath.Join(state.homeDir, unescapeArg(path))
 	if err := os.MkdirAll(filepath.Dir(fullPath), 0o755); err != nil {
 		return ctx, fmt.Errorf("creating parent dirs for %s: %w", path, err)
 	}
@@ -206,12 +230,12 @@ func iRunFromDir(ctx context.Context, dir, command string) (context.Context, err
 		return ctx, fmt.Errorf("no test state")
 	}
 
-	fullDir := filepath.Join(state.homeDir, dir)
+	fullDir := filepath.Join(state.homeDir, unescapeArg(dir))
 	if err := os.MkdirAll(fullDir, 0o755); err != nil {
 		return ctx, fmt.Errorf("creating dir %s: %w", dir, err)
 	}
 
-	args := strings.Fields(command)
+	args := strings.Fields(unescapeArg(command))
 	if len(args) > 0 && args[0] == "tsuku" {
 		args[0] = state.binPath
 	}
@@ -262,7 +286,8 @@ func iRunFromDir(ctx context.Context, dir, command string) (context.Context, err
 
 func theFileContains(ctx context.Context, path, text string) error {
 	state := getState(ctx)
-	fullPath := filepath.Join(state.homeDir, path)
+	fullPath := filepath.Join(state.homeDir, unescapeArg(path))
+	text = unescapeArg(text)
 	data, err := os.ReadFile(fullPath)
 	if err != nil {
 		return fmt.Errorf("reading %q: %w", fullPath, err)
@@ -275,7 +300,8 @@ func theFileContains(ctx context.Context, path, text string) error {
 
 func theFileDoesNotContain(ctx context.Context, path, text string) error {
 	state := getState(ctx)
-	fullPath := filepath.Join(state.homeDir, path)
+	fullPath := filepath.Join(state.homeDir, unescapeArg(path))
+	text = unescapeArg(text)
 	data, err := os.ReadFile(fullPath)
 	if err != nil {
 		return fmt.Errorf("reading %q: %w", fullPath, err)
@@ -290,9 +316,9 @@ func theFileDoesNotContain(ctx context.Context, path, text string) error {
 // runs a command in the same shell. It verifies the command succeeds.
 func iSourceHomeFileAndCanRun(ctx context.Context, sourceFile, command string) (context.Context, error) {
 	state := getState(ctx)
-	fullPath := filepath.Join(state.homeDir, sourceFile)
+	fullPath := filepath.Join(state.homeDir, unescapeArg(sourceFile))
 
-	script := fmt.Sprintf(`. "%s" && %s`, fullPath, command)
+	script := fmt.Sprintf(`. "%s" && %s`, fullPath, unescapeArg(command))
 	cmd := exec.Command("bash", "-c", script)
 	cmd.Env = append(os.Environ(),
 		"TSUKU_HOME="+state.homeDir,
@@ -330,7 +356,7 @@ func iCanRun(ctx context.Context, command string) (context.Context, error) {
 		}
 	}
 
-	cmd := exec.Command("bash", "-c", command)
+	cmd := exec.Command("bash", "-c", unescapeArg(command))
 	cmd.Env = append(os.Environ(),
 		"PATH="+toolBins+":"+os.Getenv("PATH"),
 		"TSUKU_NO_TELEMETRY=1",
