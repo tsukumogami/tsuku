@@ -204,7 +204,7 @@ The cache is rebuilt whenever the active version changes: install, upgrade, `act
 tsuku doctor
 ```
 
-Doctor checks that `$TSUKU_HOME` exists, both directories are on PATH, the state file is accessible, shell init caches are current, and no orphaned staging directories remain. If something's wrong, it tells you what to fix.
+Doctor checks that `$TSUKU_HOME` exists, both directories are on PATH, the state file is accessible, shell init caches are current, no orphaned staging directories remain, and every tool tsuku manages is the one your shell actually reaches. If something's wrong, it tells you what to fix.
 
 Three shell.d diagnostics are worth knowing:
 
@@ -219,6 +219,25 @@ tsuku doctor --fix
 ```
 
 `--fix` repairs the two things it can generate from scratch: a stale `$TSUKU_HOME/env`, and stale shell caches. It won't touch a hash mismatch or a symlink, because both mean something outside tsuku wrote into `share/shell.d/` and tsuku can't reproduce the original bytes. Recover with `tsuku remove <tool>@<version> && tsuku install <tool>@<version>`, or delete the offending file if you put it there.
+
+### When Another Copy Wins
+
+The `Tool precedence` check is the one that catches a problem nothing else reports:
+
+```
+  Tool precedence ... WARN (1 shadowed)
+    koto resolves to /home/you/.koto/bin/koto, not tsuku's $TSUKU_HOME/tools/current/koto
+```
+
+tsuku is fine here. It resolved the pin, installed the right version, and pointed `tools/current` at it. What's wrong is your PATH: something earlier on it provides a binary of the same name, so that's what runs. It happens when another installer prepends its own prefix — `~/.koto/env`, `~/.cargo/env`, a language version manager — and your shell profile sources it *after* `$TSUKU_HOME/env`. Whichever prepend runs last wins.
+
+This is easy to miss, because every other signal looks healthy. `tsuku list` shows the version you expect, `tsuku outdated` finds nothing, and the tool keeps working — it just keeps working at whatever version the other copy is pinned to, forever.
+
+Two ways out: move the tsuku entries ahead of the competing prefix in your profile (source `$TSUKU_HOME/env` last), or remove the other copy. If you put the other one first on purpose, ignore the warning — it's a `WARN`, it doesn't change the exit code, and `tsuku doctor || exit 1` keeps passing.
+
+`--fix` won't touch this. Which directory wins is a property of your shell profile, and tsuku doesn't edit that.
+
+Only tools that are visible on PATH are checked. Execution dependencies tsuku installed for its own use — the npm or Python behind a recipe — are deliberately kept off PATH, so a system copy answering for them isn't a conflict.
 
 ## Troubleshooting
 
