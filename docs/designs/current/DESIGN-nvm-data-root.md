@@ -25,18 +25,19 @@ decision: |
   reports a migration that did not complete and can retry it. tsuku remove nvm
   preserves the data root and prints its path; nothing tsuku ships ever deletes it.
 rationale: |
-  The data root has to leave tools/ entirely, because garbage collection matches a
-  raw name prefix and the install path removes a tool directory before its atomic
-  rename. share/ was rejected as the destination because its defining property is
-  that everything in it is regenerable, which is the opposite of the policy this
-  data needs. Copies beat symlinks for the program files because activate, rollback,
-  and removal-promotion never re-run post-install, so a recipe-placed symlink tracks
-  the last-installed version and goes dangling, breaking nvm exec while every other
-  subcommand stays green. Migration was built and then removed: the export is an
-  absolute literal frozen into a fragment nothing else rewrites, so a migration must
-  run in the same post-install execution as set_env — but that constrains when it
-  runs, not whether it must be Go, and Go is the one place a tool's layout cannot be
-  shipped alongside that tool's recipe.
+  The data root has to leave tools/ entirely, because everything under it is
+  version-scoped and tsuku deletes it on two clocks: garbage collection reclaims a
+  superseded version once it ages past retention, and the install path removes a tool
+  directory before its atomic rename. share/ was rejected as the destination because
+  its defining property is that everything in it is regenerable, which is the opposite
+  of the policy this data needs. Copies beat symlinks for the program files because
+  activate, rollback, and removal-promotion never re-run post-install, so a
+  recipe-placed symlink tracks the last-installed version and goes dangling, breaking
+  nvm exec while every other subcommand stays green. Migration was built and then
+  removed: the export is an absolute literal frozen into a fragment nothing else
+  rewrites, so a migration must run in the same post-install execution as set_env — but
+  that constrains when it runs, not whether it must be Go, and Go is the one place a
+  tool's layout cannot be shipped alongside that tool's recipe.
 ---
 
 # DESIGN: nvm data root
@@ -75,12 +76,12 @@ Three paths now bear on that data, on very different clocks:
   period. On the normal path `mgr.IsVersionInstalled` short-circuits at
   `cmd/tsuku/install_deps.go:508` first, so this needs an external plan file naming an
   installed version — narrow, but it is a deletion with no timer at all.
-- **Later, unattended.** `GarbageCollectVersions` (`internal/updates/gc.go`) keeps only
-  the active and previous versions and deletes the rest past
-  `DefaultVersionRetention` (7 days). Its single call site is the background auto-apply
-  loop (`internal/updates/apply.go:153`), reached only after that same tool has
-  successfully auto-updated, and it protects the just-superseded directory as
-  `previousVersion`. In practice this needs two nvm releases plus seven days.
+- **Later, unattended.** `GarbageCollectVersions` (`internal/updates/gc.go`) asks state
+  which versions it records for the tool, keeps only the active and previous, and
+  deletes the rest past `DefaultVersionRetention` (7 days). Its single call site is the
+  background auto-apply loop (`internal/updates/apply.go:153`), reached only after that
+  same tool has successfully auto-updated, and it protects the just-superseded directory
+  as `previousVersion`. In practice this needs two nvm releases plus seven days.
 
 The issue frames this as a garbage-collection bug. That framing is the least urgent of
 the three: a fix scoped to GC leaves the bug that fires in one second untouched while
@@ -142,9 +143,15 @@ version string into a path nvm does string-prefix arithmetic on
 (`nvm_tree_contains_path`, `nvm_change_path`, `nvm_sanitize_path`). "Smallest diff" is
 not a differentiator.
 
-**Nothing stable can live under `tools/`.** `GarbageCollectVersions` matches a raw
-`strings.HasPrefix(name, toolName+"-")` and `ReapVersion` returns nil for an
-unrecognized version rather than objecting, so `os.RemoveAll` runs anyway.
+**Nothing stable can live under `tools/`.** Every directory there is a
+`<tool>-<version>` pair tsuku expects to reclaim, and it gets deleted on two independent
+clocks: `GarbageCollectVersions` removes every version state records once it ages past
+retention, and the install path removes an existing tool directory outright before its
+atomic rename, with no timer at all. The only path a recipe can name under `tools/` is
+`{install_dir}`, which is exactly the directory both of those delete. A directory no
+version claims is spared only for as long as reclamation stays per-tool, since a per-tool
+sweep cannot prove such a directory belongs to no installed tool at all; #2482 owns the
+whole-state pass that can. Either side of that, `tools/` is no place for stable data.
 
 **Dropping the export does not restore upstream behavior.** `install_shell_init`
 *copies* `nvm.sh` into `$TSUKU_HOME/share/shell.d`, so self-location lands there, not at
@@ -605,7 +612,8 @@ directory it can name in `doctor` output and size reporting.
   `set_env`'s emitted form for every future consumer and stands on its own.
 - **`GarbageCollectVersions` deleting other tools' directories on recipe-name prefix
   collisions (#2474)** (`git`/`git-lfs`, `docker`/`docker-compose` — 59 pairs, verified
-  empirically). A real bug, independent of this one.
+  empirically). A real bug, independent of this one. Fixed since, in #2491, by sourcing
+  the candidate versions from state instead of from the directory listing.
 - **The archive extractor's containment is purely lexical (#2473).**
   `isPathWithinDirectory` and `validateSymlinkTarget` (`internal/actions/extract.go:19-55`)
   compare cleaned strings and resolve with `filepath.Join`, so a symlink chain in a

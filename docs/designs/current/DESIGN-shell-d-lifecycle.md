@@ -220,10 +220,14 @@ $TSUKU_HOME/share/shell.d/00-env-<name>@<version>.<shell>
 
 `@` is the separator because it is already tsuku's user-facing tool-version separator
 (`tsuku install nvm@0.40.6`), so a directory listing reads itself. `-` is unavailable:
-`GarbageCollectVersions` and `config.ToolDir` already match versioned directories by the
-`name + "-"` prefix, which is ambiguous for a tool whose name contains a hyphen, and
-copying that convention into the one place we are making a bug unrepresentable would
-import a latent one.
+`config.ToolDir` names versioned directories `name + "-" + version`, and that mapping is
+not injective — a tool whose name contains a hyphen collides with a shorter-named tool at
+a hyphenated version. Nothing can read the layout back by prefix and recover the pair,
+and every place that has tried has produced a real bug: reclamation deleting a
+prefix-sharing tool's entire directory (#2474), an eval dependency on `git` reported
+satisfied when only `git-lfs` is installed (#2480), and `libcurl` resolving to
+`libcurl-source`'s version (#2481). Copying that convention into the one place we are
+making a bug unrepresentable would import a latent one.
 
 `install_shell_init`'s preflight gains `target` must match `^[A-Za-z_][A-Za-z0-9._-]*$`.
 This runs in recipe-validation CI, subsumes the prototype's narrower

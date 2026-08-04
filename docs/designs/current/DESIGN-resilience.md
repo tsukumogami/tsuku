@@ -94,11 +94,13 @@ Key assumptions:
 
 #### Chosen: Post-apply GC in MaybeAutoApply
 
-After a successful auto-apply for a tool, scan `$TSUKU_HOME/tools/` for directories matching `<tool>-*`. For each:
-1. Skip if it's the active version directory
-2. Skip if it's the PreviousVersion directory
-3. Check the directory's mtime against the retention period (configurable via `updates.version_retention`, default 7 days)
+After a successful auto-apply for a tool, ask `state.json` which versions it records for that tool. For each:
+1. Skip if it's the active version
+2. Skip if it's the PreviousVersion
+3. Build the directory path from the (tool, version) pair the way `config.ToolDir` does, and check its mtime against the retention period (configurable via `updates.version_retention`, default 7 days)
 4. Remove if older than the retention period
+
+Sourcing the candidates from state rather than from a directory listing is what keeps a directory name out of the delete decision. What that leaves unreclaimed, and why, is in Implementation Amendments below.
 
 GC runs per-tool after each successful apply, not as a global sweep. This keeps the scope narrow and the duration short. A global `tsuku gc` command is out of scope for this feature.
 
@@ -120,7 +122,7 @@ Three changes, each targeted at a specific rough edge.
 
 For consecutive-failure suppression, `Notice` gains a `ConsecutiveFailures` field. `MaybeAutoApply` reads the existing notice before writing, increments the counter on transient failures, and pre-marks notices below the threshold as shown. Actionable errors (classified by pattern-matching the error string for "checksum", "disk", "recipe") bypass the counter. `DisplayNotifications` already skips shown notices, so no rendering changes are needed.
 
-For version GC, `MaybeAutoApply` calls a new `GarbageCollectVersions(toolsDir, toolName, activeVersion, previousVersion, retention, now)` function after each successful apply. It lists directories matching `<tool>-*`, skips active and previous, and removes those with mtime older than the retention period. A new `updates.version_retention` config key controls the period (default "168h" = 7 days).
+For version GC, `MaybeAutoApply` calls a new `GarbageCollectVersions(store, toolsDir, toolName, activeVersion, previousVersion, retention, now)` function after each successful apply. It asks the store which versions state records for the tool, skips active and previous, rebuilds each remaining version's directory path, and removes those with mtime older than the retention period. A new `updates.version_retention` config key controls the period (default "168h" = 7 days).
 
 For offline degradation, no new code is needed in the core path. The background checker already writes error entries when resolution fails, and `MaybeAutoApply` already skips entries with errors. The design adds two doctor checks: orphaned staging directories (leftover temp files in `$TSUKU_HOME/tools/` matching `.staging-*`) and stale notices (files in `$TSUKU_HOME/notices/` older than 30 days).
 
@@ -145,7 +147,8 @@ internal/updates/apply.go (MODIFIED)
   +-- MaybeAutoApply: call GarbageCollectVersions after successful apply
 
 internal/updates/gc.go (NEW)
-  +-- GarbageCollectVersions(toolsDir, toolName, active, previous, retention, now)
+  +-- VersionStore interface (InstalledVersions, ReapVersion) -- satisfied by install.Manager
+  +-- GarbageCollectVersions(store, toolsDir, toolName, active, previous, retention, now)
 
 internal/userconfig/userconfig.go (MODIFIED)
   +-- UpdatesVersionRetention() config accessor
@@ -159,7 +162,12 @@ cmd/tsuku/doctor.go (MODIFIED)
 
 ```go
 // internal/updates/gc.go
-func GarbageCollectVersions(toolsDir, toolName, activeVersion, previousVersion string, retention time.Duration, now time.Time) error
+type VersionStore interface {
+    InstalledVersions(tool string) ([]string, error)
+    ReapVersion(tool, version string) error
+}
+
+func GarbageCollectVersions(store VersionStore, toolsDir, toolName, activeVersion, previousVersion string, retention time.Duration, now time.Time) error
 
 // internal/notices/notices.go (extended struct)
 type Notice struct {
@@ -219,7 +227,7 @@ Deliverables:
 
 ## Security Considerations
 
-These are hardening changes with no new external inputs. GC deletes directories that tsuku itself created, scoped to `$TSUKU_HOME/tools/`. The deletion path validates the directory name matches `<tool>-<version>` format before removing. No new network access, permissions, or data exposure.
+These are hardening changes with no new external inputs. GC deletes directories that tsuku itself created, scoped to `$TSUKU_HOME/tools/`. It never takes a path from the filesystem: each candidate is a version string state records, and that string passes `install.ValidateVersionString` before it reaches the path join, so nothing that could steer `os.RemoveAll` out of the tools directory gets there. The directory is then checked with `Lstat`, so a symlink sitting where a version directory should be is skipped rather than followed. No new network access, permissions, or data exposure.
 
 ## Consequences
 
@@ -241,6 +249,38 @@ These are hardening changes with no new external inputs. GC deletes directories 
 - The `omitempty` tag means existing notice files without the field parse correctly (counter defaults to 0, treated as first failure)
 - The retention period is configurable. Users who need longer retention can set `updates.version_retention = "720h"` (30 days)
 - `tsuku doctor` warns about conditions, it doesn't auto-fix them
+
+## Implementation Amendments
+
+### GC candidate selection: directory listing → state
+
+As originally implemented, `GarbageCollectVersions` picked its candidates by listing
+`$TSUKU_HOME/tools/` and keeping every directory whose name started with `<tool>-`. That
+was a data-loss bug (#2474): the remainder after the prefix cannot be validated back into
+a version, so reclaiming `git` treated `git-lfs-3.5.0` as a version of `git` named
+`lfs-3.5.0` and deleted a working installation of a different tool. The registry ships 59
+such name pairs, and the delete fired unattended from the auto-apply loop.
+
+#2491 fixed it by inverting where the candidate list comes from. The function gained a
+`VersionStore` first parameter, asks it which versions state records for the tool, and
+rebuilds each directory name from the (tool, version) pair. A directory name is no longer
+an input to the delete decision. `install.Manager` satisfies the interface, and its
+existing `List` already worked this way.
+
+Two consequences worth stating, both deliberate:
+
+- **#2491 stopped reclaiming a directory state has no record of.** Deleting it would mean
+  deleting on the strength of a filesystem name, which is the mistake being fixed. A
+  per-tool sweep genuinely cannot tell an orphan from another tool's installation, so
+  reclaiming those needs a pass over the whole state rather than one tool's slice of it.
+  #2482 owns that pass.
+- **#2491 made `ReapVersion` refuse a version, or a tool, that state does not record.** It
+  used to return nil, which reported "reconciled" when nothing was, and that is how the
+  wrong directory got past the check that looked like it would stop this.
+
+The rest of the design held. GC still runs post-apply, still protects the active version
+and the rollback target, still keys on mtime against `updates.version_retention`, and is
+still per-tool rather than a global sweep.
 
 ## Implementation Issues
 
