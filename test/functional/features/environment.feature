@@ -9,7 +9,7 @@ Feature: Developer Environment
     When I run "tsuku shellenv"
     Then the exit code is 0
     And the output contains "export PATH="
-    And the output contains ".tsuku-test"
+    And the output contains "$TSUKU_HOME"
 
   @critical
   Scenario: doctor reports PATH issues in unconfigured environment

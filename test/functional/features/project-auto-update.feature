@@ -51,7 +51,15 @@ Feature: Project-level auto-update integration
     # Without .tsuku.toml, auto-apply should attempt the update.
     # Use a fake tool name so the install fails fast on recipe lookup
     # — the test verifies cache consumption, not a real install.
-    Given I create home file "cache/updates/fake-auto-apply-tool.json" with content:
+    #
+    # The background update check is off so that `tsuku list` spawns only one
+    # detached process. It otherwise spawns `check-updates` a few milliseconds
+    # ahead of `apply-updates`, and the two race for state.json.lock: the loser
+    # is apply-updates, whose single non-blocking probe gives up silently and
+    # leaves the cache entry behind. Auto-apply itself is untouched -- it keys
+    # off TSUKU_AUTO_UPDATE, set in the Background above.
+    Given I set env "TSUKU_NO_UPDATE_CHECK" to "1"
+    And I create home file "cache/updates/fake-auto-apply-tool.json" with content:
       """
       {"tool":"fake-auto-apply-tool","active_version":"0.6.0","requested":"","latest_within_pin":"0.7.0","latest_overall":"0.7.0","source":"github","checked_at":"2026-04-01T00:00:00Z","expires_at":"2026-04-02T00:00:00Z","error":""}
       """
@@ -69,7 +77,9 @@ Feature: Project-level auto-update integration
   Scenario: undeclared tool in project config uses global pin
     # Project config declares python but not the cached tool -- the
     # cached tool uses global pin. Fake name fails install fast.
-    Given I create home file "cache/updates/fake-auto-apply-tool.json" with content:
+    # The background update check is off for the same reason as above.
+    Given I set env "TSUKU_NO_UPDATE_CHECK" to "1"
+    And I create home file "cache/updates/fake-auto-apply-tool.json" with content:
       """
       {"tool":"fake-auto-apply-tool","active_version":"0.6.0","requested":"","latest_within_pin":"0.7.0","latest_overall":"0.7.0","source":"github","checked_at":"2026-04-01T00:00:00Z","expires_at":"2026-04-02T00:00:00Z","error":""}
       """

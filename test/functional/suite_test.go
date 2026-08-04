@@ -57,6 +57,17 @@ func TestFeatures(t *testing.T) {
 		paths = strings.Split(p, string(os.PathListSeparator))
 	}
 
+	// One root for the whole run, holding a directory per scenario. A detached
+	// background process can outlive the scenario that spawned it and re-create
+	// paths under its home after the After hook has removed them, so the run
+	// clears the root once at the end rather than trusting per-scenario removal
+	// to be the last write.
+	suiteRoot, err := os.MkdirTemp("", "tsuku-functional-")
+	if err != nil {
+		t.Fatalf("creating suite home root: %v", err)
+	}
+	defer func() { _ = os.RemoveAll(suiteRoot) }()
+
 	opts := &godog.Options{
 		Format: "pretty",
 		Paths:  paths,
@@ -73,7 +84,7 @@ func TestFeatures(t *testing.T) {
 
 	suite := godog.TestSuite{
 		ScenarioInitializer: func(ctx *godog.ScenarioContext) {
-			initializeScenario(ctx, binPath)
+			initializeScenario(ctx, binPath, suiteRoot)
 		},
 		Options: opts,
 	}
@@ -82,15 +93,27 @@ func TestFeatures(t *testing.T) {
 	}
 }
 
-func initializeScenario(ctx *godog.ScenarioContext, binPath string) {
-	// Reset home directory before each scenario
+func initializeScenario(ctx *godog.ScenarioContext, binPath, suiteRoot string) {
+	// Give every scenario its own home directory.
+	//
+	// Scenarios that exercise auto-update deliberately trigger detached
+	// background processes -- `tsuku check-updates` and `tsuku apply-updates` --
+	// that outlive the command that spawned them, and nothing reaps them. A
+	// single shared home would let such a process from one scenario read and
+	// write the paths the next scenario is setting up under it. Each scenario
+	// gets its own directory instead, so a stray process carries the TSUKU_HOME
+	// of the scenario that started it and cannot name any other scenario's
+	// files.
 	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		repoRoot := filepath.Dir(binPath)
-		// homeDir is relative to the binary's directory (repo root)
-		homeDir := filepath.Join(repoRoot, ".tsuku-test")
-		os.RemoveAll(homeDir)
-		if err := os.MkdirAll(homeDir, 0o755); err != nil {
-			return ctx, err
+		homeDir, err := os.MkdirTemp(suiteRoot, "scenario-")
+		if err != nil {
+			return ctx, fmt.Errorf("creating scenario home: %w", err)
+		}
+		// MkdirTemp uses 0700; keep the 0755 the fixed home had, so scenarios
+		// that inspect directory permissions see what they saw before.
+		if err := os.Chmod(homeDir, 0o755); err != nil {
+			return ctx, fmt.Errorf("setting scenario home permissions: %w", err)
 		}
 
 		// Seed the discovery registry cache from the repo's per-tool files
@@ -150,6 +173,17 @@ func initializeScenario(ctx *godog.ScenarioContext, binPath string) {
 			envOverrides:   envOverrides,
 		}
 		return setState(ctx, state), nil
+	})
+
+	// Best-effort removal, so a long suite does not hold every scenario's home
+	// at once. A detached process can re-create paths here afterward -- the
+	// update checker reliably does -- which is why the suite root is cleared
+	// again at the end of the run.
+	ctx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
+		if state := getState(ctx); state != nil && state.homeDir != "" {
+			_ = os.RemoveAll(state.homeDir)
+		}
+		return ctx, nil
 	})
 
 	for _, def := range stepDefinitions() {
