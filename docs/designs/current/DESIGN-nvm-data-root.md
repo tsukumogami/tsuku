@@ -149,9 +149,9 @@ clocks: `GarbageCollectVersions` removes every version state records once it age
 retention, and the install path removes an existing tool directory outright before its
 atomic rename, with no timer at all. The only path a recipe can name under `tools/` is
 `{install_dir}`, which is exactly the directory both of those delete. A directory no
-version claims does survive reclamation today, but only because a per-tool sweep cannot
-prove such a directory belongs to no installed tool — #2482 owns closing that gap, and
-closing it makes `tools/` hostile to stable data again.
+version claims is spared only for as long as reclamation stays per-tool, since a per-tool
+sweep cannot prove such a directory belongs to no installed tool at all; #2482 owns the
+whole-state pass that can. Either side of that, `tools/` is no place for stable data.
 
 **Dropping the export does not restore upstream behavior.** `install_shell_init`
 *copies* `nvm.sh` into `$TSUKU_HOME/share/shell.d`, so self-location lands there, not at

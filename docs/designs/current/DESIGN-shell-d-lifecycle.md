@@ -220,13 +220,13 @@ $TSUKU_HOME/share/shell.d/00-env-<name>@<version>.<shell>
 
 `@` is the separator because it is already tsuku's user-facing tool-version separator
 (`tsuku install nvm@0.40.6`), so a directory listing reads itself. `-` is unavailable:
-`config.ToolDir` already names versioned directories `name + "-" + version`, which is
-ambiguous for a tool whose name contains a hyphen, and code that reads that layout back
-by prefix cannot recover the pair. `isToolInstalled` (`internal/actions/eval_deps.go`)
-still does, and reports an eval dependency on `git` satisfied when only `git-lfs` is
-installed (#2480); `GetInstalledLibraryVersion` (`internal/install/library.go`) does the
-same over `libs/` and returns `source-8.5.0` as the installed version of `libcurl` when
-`libcurl-source` is present (#2481). Copying that convention into the one place we are
+`config.ToolDir` names versioned directories `name + "-" + version`, and that mapping is
+not injective — a tool whose name contains a hyphen collides with a shorter-named tool at
+a hyphenated version. Nothing can read the layout back by prefix and recover the pair,
+and every place that has tried has produced a real bug: reclamation deleting a
+prefix-sharing tool's entire directory (#2474), an eval dependency on `git` reported
+satisfied when only `git-lfs` is installed (#2480), and `libcurl` resolving to
+`libcurl-source`'s version (#2481). Copying that convention into the one place we are
 making a bug unrepresentable would import a latent one.
 
 `install_shell_init`'s preflight gains `target` must match `^[A-Za-z_][A-Za-z0-9._-]*$`.

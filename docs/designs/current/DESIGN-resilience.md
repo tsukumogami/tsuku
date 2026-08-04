@@ -100,7 +100,7 @@ After a successful auto-apply for a tool, ask `state.json` which versions it rec
 3. Build the directory path from the (tool, version) pair the way `config.ToolDir` does, and check its mtime against the retention period (configurable via `updates.version_retention`, default 7 days)
 4. Remove if older than the retention period
 
-Sourcing the candidates from state rather than from a directory listing is what keeps a directory name out of the delete decision. A directory state has no record of is left alone -- see Implementation Amendments below.
+Sourcing the candidates from state rather than from a directory listing is what keeps a directory name out of the delete decision. What that leaves unreclaimed, and why, is in Implementation Amendments below.
 
 GC runs per-tool after each successful apply, not as a global sweep. This keeps the scope narrow and the duration short. A global `tsuku gc` command is out of scope for this feature.
 
@@ -269,13 +269,14 @@ existing `List` already worked this way.
 
 Two consequences worth stating, both deliberate:
 
-- **A directory state has no record of is now kept, not reclaimed.** Deleting it would
-  mean deleting on the strength of a filesystem name, which is the mistake being fixed. A
-  per-tool sweep genuinely cannot tell an orphan from another tool's installation. #2482
-  owns the whole-state pass that can.
-- **`ReapVersion` refuses a version, or a tool, that state does not record.** It used to
-  return nil, which reported "reconciled" when nothing was, and that is how the wrong
-  directory got past the check that looked like it would stop this.
+- **#2491 stopped reclaiming a directory state has no record of.** Deleting it would mean
+  deleting on the strength of a filesystem name, which is the mistake being fixed. A
+  per-tool sweep genuinely cannot tell an orphan from another tool's installation, so
+  reclaiming those needs a pass over the whole state rather than one tool's slice of it.
+  #2482 owns that pass.
+- **#2491 made `ReapVersion` refuse a version, or a tool, that state does not record.** It
+  used to return nil, which reported "reconciled" when nothing was, and that is how the
+  wrong directory got past the check that looked like it would stop this.
 
 The rest of the design held. GC still runs post-apply, still protects the active version
 and the rollback target, still keys on mtime against `updates.version_retention`, and is
