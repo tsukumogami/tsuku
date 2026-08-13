@@ -1,22 +1,26 @@
 [metadata]
-  name = "vale"
-  description = "Syntax-aware linter for prose"
-  homepage = "https://vale.sh/"
-  version_format = ""
-  requires_sudo = false
-  tier = 0
-  type = ""
-  llm_validation = "skipped"
+name = "vale"
+description = "Syntax-aware linter for prose"
+homepage = "https://vale.sh/"
+version_format = "semver"
+curated = true
 supported_libc = ["glibc"]
+unsupported_reason = "Upstream publishes only glibc-linked Linux binaries (cgo-enabled); there is no musl release asset"
+
+[version]
+github_repo = "vale-cli/vale"
+tag_prefix = "v"
 
 [[steps]]
-  action = "homebrew"
-  formula = "vale"
-
-[[steps]]
-  action = "install_binaries"
-  binaries = ["bin/vale"]
+action = "github_archive"
+repo = "vale-cli/vale"
+asset_pattern = "vale_{version}_{os}_{arch}.tar.gz"
+checksum_asset = "vale_{version}_checksums.txt"
+strip_dirs = 0
+binaries = ["vale"]
+os_mapping = { darwin = "macOS", linux = "Linux" }
+arch_mapping = { amd64 = "64-bit", arm64 = "arm64" }
 
 [verify]
-  command = "vale --version"
-  pattern = ""
+command = "vale --version"
+pattern = "{version}"
