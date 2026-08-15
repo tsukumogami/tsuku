@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   tsuku's `pipx_install` action installs Python CLI tools from PyPI, but

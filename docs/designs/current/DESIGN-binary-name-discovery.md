@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   Recipe builders discover binary names by fetching source files (Cargo.toml,
@@ -29,7 +30,7 @@ rationale: |
 
 ## Status
 
-**Current**
+Current
 
 ## Context and Problem Statement
 

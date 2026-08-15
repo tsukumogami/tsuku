@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: The recipe registry separation design requires a validated embedded recipe list, but there's no runtime enforcement that action dependencies can actually be resolved from embedded recipes.
 decision: Add a --require-embedded flag to the loader that fails if action dependencies can't be resolved from the embedded registry. Use CI with this flag to iteratively discover and validate the embedded recipe list.

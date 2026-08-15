@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: The current release workflow can't handle native binaries like the Rust dlopen helper because cross-compilation to macOS requires the macOS SDK, which is only legally available on macOS hardware.
 decision: Use parallel matrix builds on native runners with a draft-then-publish pattern, both glibc and musl Linux variants, and ad-hoc code signing for macOS.

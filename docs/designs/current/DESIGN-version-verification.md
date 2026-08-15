@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Recipe verification currently uses inconsistent patterns to match version output, causing mismatches between version provider formats and tool output formats, weak verification for tools without version support, and inadequate validation coverage in CI.
 decision: Implement version format transforms and an output mode fallback to provide flexible yet robust verification that covers all tools while maintaining security through required justification fields and validator enforcement.

@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   recipes/n/nvm.toml exports NVM_DIR as {install_dir}, which resolves to

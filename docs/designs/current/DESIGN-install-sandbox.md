@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Sandbox testing behavior was scattered across individual builders rather than being a unified recipe-driven operation, preventing independent invocation and creating duplicated action knowledge.
 decision: Implement a NetworkValidator interface on actions and a SandboxRequirements struct that derives container configuration from plan content, enabling unified sandbox testing via a single Sandbox() entry point.

@@ -1,4 +1,5 @@
 ---
+schema: prd/v1
 status: Done
 problem: |
   The tsuku repo has no committed CLAUDE.md and no AI skills for recipe authoring,

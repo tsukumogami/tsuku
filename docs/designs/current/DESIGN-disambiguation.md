@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   When multiple ecosystem registries return matches for a tool name (e.g., "bat" exists

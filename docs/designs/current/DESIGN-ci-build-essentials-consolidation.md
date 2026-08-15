@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   The Build Essentials workflow allocates 7 separate Linux runners for tool
@@ -29,7 +30,7 @@ rationale: |
 
 ## Status
 
-**Status:** Current
+Current
 
 ## Upstream Design Reference
 

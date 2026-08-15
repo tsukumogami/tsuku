@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   Recipe creation often fails at the verification step because generated recipes

@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   Four of six ecosystem circuit breakers are permanently stuck open because

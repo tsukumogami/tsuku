@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Recipes with system dependencies use free-form `install_guide` text that cannot be machine-executed, and platform filtering is inconsistent between step-level `when` clauses and embedded parameter keys.
 decision: Replace `install_guide` with typed actions (`apt_install`, `brew_cask`, etc.) and enforce platform filtering exclusively through step-level `when` clauses with `linux_family` support.

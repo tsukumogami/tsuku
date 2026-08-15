@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   The batch-generate workflow runs hourly, creating PRs that modify shared state files

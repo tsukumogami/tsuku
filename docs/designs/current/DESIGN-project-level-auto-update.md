@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   The auto-update system ignores .tsuku.toml project-level version constraints.

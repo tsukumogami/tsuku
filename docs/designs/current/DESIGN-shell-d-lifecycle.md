@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   Files under $TSUKU_HOME/share/shell.d have version-independent names but

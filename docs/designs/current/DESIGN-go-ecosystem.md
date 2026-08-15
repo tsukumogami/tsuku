@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Go tools dominate DevOps and cloud-native environments, but tsuku lacks native support for building and installing Go modules, limiting utility for this critical user base.
 decision: Implement go_install action with explicit Go toolchain as a dependency, following the established npm_install/nodejs pattern for consistency and transparency.

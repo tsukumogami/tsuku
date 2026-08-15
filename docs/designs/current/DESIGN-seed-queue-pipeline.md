@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: >
   The batch generation pipeline reads from data/priority-queue.json to decide which packages

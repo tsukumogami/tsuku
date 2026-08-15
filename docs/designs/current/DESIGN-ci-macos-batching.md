@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: GitHub-hosted macOS runners have low concurrency limits (5 jobs vs 20 for Linux), causing queue saturation and 30+ minute delays when PRs touch many recipes.
 decision: Aggregate macOS CI jobs into a single job per architecture that iterates over all changed items sequentially, reducing concurrent jobs from 170+ to 5 maximum.

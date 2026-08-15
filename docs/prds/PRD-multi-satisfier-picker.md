@@ -1,4 +1,5 @@
 ---
+schema: prd/v1
 status: In Progress
 problem: |
   Users typing `tsuku install <name>` cannot pick among multiple recipes that

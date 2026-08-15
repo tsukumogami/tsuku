@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   Tsuku's shell integration features (command-not-found suggestions, auto-install)

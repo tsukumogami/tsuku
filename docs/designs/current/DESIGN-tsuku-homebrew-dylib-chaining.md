@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   tsuku's homebrew action does not chain dylibs from sibling tsuku-installed

@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   tsuku's recipe generation requires cloud API keys (Anthropic or Google), breaking the self-contained promise. Users must create accounts, set up billing, and configure environment variables before core LLM features work. Small open-source models (1.5-3B parameters) now handle structured extraction well enough for tsuku's use cases.

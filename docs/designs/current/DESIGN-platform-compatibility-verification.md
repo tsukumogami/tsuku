@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: tsuku claims support for multiple platforms and Linux families but testing doesn't verify actual compatibility, as discovered when musl-based systems couldn't load embedded libraries.
 decision: Adopt a hybrid approach - keep Homebrew bottles for glibc systems (preserving hermetic version control) while using system packages for musl systems (fixing Alpine compatibility).
@@ -9,7 +10,7 @@ rationale: Homebrew bottles work well on glibc and provide valuable version cont
 
 ## Status
 
-**Current**
+Current
 
 ## Implementation Issues
 

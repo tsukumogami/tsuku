@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   The batch pipeline's unified queue has 5,275 entries but 97% come from Homebrew.

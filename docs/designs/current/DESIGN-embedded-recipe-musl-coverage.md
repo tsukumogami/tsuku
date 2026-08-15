@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   Six embedded recipes (rust, python-standalone, nodejs, ruby, perl,
@@ -30,7 +31,7 @@ rationale: |
 
 ## Status
 
-**Current**
+Current
 
 ## Implementation Issues
 

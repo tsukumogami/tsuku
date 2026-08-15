@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   Several upstreams publish their current release version in a JSON manifest

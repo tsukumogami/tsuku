@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Tsuku recipes need to declare dependencies with different provisioning strategies (downloadable, buildable, system-required), but currently lack mechanisms to handle this or guide users when dependencies are missing.
 decision: Implement a unified recipe model where all dependencies are recipes whose actions determine provisioning strategy (homebrew, configure_make, or require_system).

@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: The current require_system action is polymorphic and conflates multiple concerns (checking, installing, filtering, configuring), uses free-form text that cannot be machine-executed, and relies on implicit platform assumptions that don't account for Linux family diversity.
 decision: Replace require_system with granular typed actions (apt_install, brew_cask, etc.) that use linux_family as a targeting dimension for plan generation, idempotent installation with final verification, separate actions for post-install configuration, and implicit constraints on package manager actions.

@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Tsuku's ecosystem-specific builders only work for tools with structured metadata (Cargo, npm, PyPI), but fail for the majority of tools distributed via GitHub releases or documentation without standard metadata, limiting coverage.
 decision: Build LLM-based builder infrastructure using provider abstraction, container-based validation, and repair loops to generate recipes from unstructured sources like GitHub release assets and documentation.

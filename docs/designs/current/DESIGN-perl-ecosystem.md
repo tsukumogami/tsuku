@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Tsuku lacks support for installing Perl/CPAN CLI tools despite Perl being prevalent in DevOps contexts.
 decision: Implement cpan_install action with explicit Perl dependency, following the go_install and npm_install patterns.

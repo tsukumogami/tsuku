@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Levels 1-2 of library verification can't confirm a library will actually load; only dlopen() can test this, but it requires native code which conflicts with tsuku's CGO_ENABLED=0 build.
 decision: Use a dedicated Rust helper binary (tsuku-dltest) with JSON protocol and batched invocation.

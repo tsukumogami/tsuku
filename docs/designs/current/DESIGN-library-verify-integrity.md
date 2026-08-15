@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Libraries can be modified after installation (malware injection, disk corruption, unauthorized changes) but tsuku verify's Tiers 1-3 only check validity and loadability, not whether files match their original state.
 decision: Add optional Tier 4 integrity verification that compares SHA256 checksums of library files against values stored at installation time, enabled via the --integrity flag.

@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Dependencies between tools are handled inconsistently across actions, creating opacity about what each tool needs and making dependency graphs impossible to compute statically.
 decision: Implement fully implicit dependencies where actions declare their install-time and runtime requirements, with step and recipe-level overrides for edge cases.

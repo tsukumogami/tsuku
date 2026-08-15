@@ -1,4 +1,5 @@
 ---
+schema: prd/v1
 status: In Progress
 problem: |
   Every tsuku recipe lives in the central registry. Tool authors who want their

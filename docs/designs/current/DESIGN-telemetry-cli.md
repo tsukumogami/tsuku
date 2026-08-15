@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Tsuku lacks visibility into recipe usage patterns, platform distribution, and user preferences, making it impossible to prioritize maintenance and feature development based on actual usage data.
 decision: Implement a privacy-first telemetry client in the CLI that collects anonymous usage statistics (action type, recipe name, version, platform, and dependency status) with environment variable opt-out and transparent first-run notice.

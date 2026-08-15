@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Tsuku lacks support for building tools from source when they are hosted on Fossil SCM repositories, limiting installation options for Fossil-hosted projects like SQLite and Tcl.
 decision: Implement a `fossil_archive` action that downloads and extracts tarballs from Fossil repositories, following the same pattern as `github_archive` but adapted for Fossil's URL conventions and timeline API.

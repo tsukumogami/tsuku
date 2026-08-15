@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Recipes can contain hardcoded version numbers in URLs, archive paths, and source directories instead of using dynamic {version} placeholders, violating best practices and requiring manual updates for each version bump.
 decision: Implement context-aware detection with field-level rules that understand which fields should contain version placeholders based on action type, combining with pattern matching to identify hardcoded versions.

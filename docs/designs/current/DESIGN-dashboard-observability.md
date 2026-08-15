@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   The pipeline dashboard shows aggregate failure counts but can't answer "why did

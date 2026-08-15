@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   M47 delivered platform compatibility infrastructure (libc detection, recipe conditionals, coverage analysis in internal/recipe/coverage.go) but 0 of 13 library recipes were migrated. Coverage analysis code exists and test infrastructure validates recipes on declared platforms, but there's no visibility into which recipes support which platforms. The execution-exclusions.json file tracks blockers but doesn't show the full coverage picture. We can't see the M47 gap (libraries without musl) or identify other coverage gaps across the 265-recipe registry.
@@ -12,7 +13,7 @@ rationale: |
 
 ## Status
 
-**Current**
+Current
 
 ## Implementation Issues
 

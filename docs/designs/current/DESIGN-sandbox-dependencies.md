@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Sandbox testing fails for tools with declared dependencies because plan generation doesn't embed dependency information, so containers receive plans without the dependency tree needed for installation.
 decision: Ensure all plan generation paths pass RecipeLoader, producing self-contained plans with embedded dependency trees that work identically in normal and sandbox modes.

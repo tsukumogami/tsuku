@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Recipe changes and code updates can cause silent regressions in plan generation, and integration tests are slow and non-deterministic due to network dependencies on external services.
 decision: Implement golden plan testing by generating and validating deterministic installation plans for every recipe across all supported platforms, with CI workflows to detect and enforce updates.

@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   When gem_install recipes are decomposed into gem_exec for reproducible installs,
@@ -25,7 +26,7 @@ rationale: |
 
 ## Status
 
-**Status: Current**
+Current
 
 ## Context and Problem Statement
 

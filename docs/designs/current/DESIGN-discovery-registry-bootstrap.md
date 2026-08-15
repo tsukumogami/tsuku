@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   The discovery registry has 1 entry but needs ~500 for the resolver to deliver value.

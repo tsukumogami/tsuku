@@ -1,4 +1,5 @@
 ---
+schema: prd/v1
 status: Done
 problem: |
   github_archive and download_archive composite actions cannot

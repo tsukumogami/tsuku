@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   The tsuku-llm addon builds 10 platform variants across GPU backends (CUDA, Vulkan, Metal, CPU),

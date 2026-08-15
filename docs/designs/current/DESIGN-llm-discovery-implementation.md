@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   The LLM discovery stage in tsuku's resolver chain is an unimplemented stub. Tools not

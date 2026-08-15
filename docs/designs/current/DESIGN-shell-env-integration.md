@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   When a tool with install_shell_init is installed, its shell functions are written to

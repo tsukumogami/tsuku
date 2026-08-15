@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   tsuku requires `--from` flags on every `tsuku create` invocation, forcing users to

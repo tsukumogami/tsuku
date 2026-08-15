@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   PR CI runs in the tsuku repo spawn 50-87 GitHub Actions jobs because matrix
@@ -29,7 +30,7 @@ rationale: |
 
 ## Status
 
-**Status:** Current
+Current
 
 ## Implementation Issues
 

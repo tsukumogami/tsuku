@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   tsuku.dev needs a blog section but has no build system. The site is pure

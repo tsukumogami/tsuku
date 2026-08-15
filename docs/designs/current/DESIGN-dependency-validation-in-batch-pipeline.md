@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   The Homebrew builder writes unresolvable dependency names into generated

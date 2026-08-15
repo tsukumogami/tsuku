@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   tsuku runs full tool installs synchronously in PersistentPreRun before the

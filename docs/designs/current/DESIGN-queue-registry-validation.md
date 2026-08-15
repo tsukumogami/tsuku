@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   The batch pipeline hardcodes `--force` when installing generated recipes for validation, meaning any queue entry that duplicates an existing recipe will silently overwrite it. Seed-time filtering (#1267) prevents new duplicates from entering the queue, but entries already present before that change -- or intentionally re-queued by operators -- have no safety net.

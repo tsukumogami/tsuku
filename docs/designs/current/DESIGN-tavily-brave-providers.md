@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   The DDG scraper is the only search provider for local LLMs. Users with API keys

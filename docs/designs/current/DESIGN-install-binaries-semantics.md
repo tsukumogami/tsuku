@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: The install_binaries action's binaries parameter conflates two separate concerns (files to export vs files to make executable) and uses misleading semantics, creating confusion for recipe authors and blocking static analysis.
 decision: Rename binaries parameter to outputs and infer executability from path prefix (bin/ = executable) with an optional executables parameter for edge cases.

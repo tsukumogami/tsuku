@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   Org-scoped recipes (like tsukumogami/koto) have no working syntax in

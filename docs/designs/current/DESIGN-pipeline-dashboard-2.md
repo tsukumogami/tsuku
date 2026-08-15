@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   The batch pipeline runs hourly but generates zero new recipes because all remaining

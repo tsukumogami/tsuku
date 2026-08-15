@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   The batch pipeline generates zero recipes because the orchestrator filters queue entries
