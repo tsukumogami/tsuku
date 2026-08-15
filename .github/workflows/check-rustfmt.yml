@@ -45,11 +45,32 @@ jobs:
 
       - name: Set up Rust
         # SHA pin for dtolnay/rust-toolchain@stable (resolved from the stable
-        # branch HEAD). No `toolchain:` input: the action reads the
-        # rust-toolchain.toml nearest the working directory, which is what makes
-        # the per-crate resolution below work. rustup fetches cmd/tsuku-dltest's
-        # pinned 1.80 on first use in that directory.
+        # branch HEAD). This installs a working rustup plus the stable channel,
+        # which is what tsuku-llm pins.
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8  # stable
+
+      - name: Install each crate's pinned channel, with rustfmt
+        # Do not rely on rustup's on-demand install. When `cargo fmt` is invoked
+        # in a directory whose rust-toolchain.toml names a channel that is not
+        # yet present, rustup fetches it with a minimal profile that has no
+        # rustfmt, and the step dies on "'cargo-fmt' is not installed for the
+        # toolchain". Installing each channel up front with an explicit
+        # --component rustfmt is what makes the per-crate resolution below work.
+        #
+        # The channel is read from each crate's own rust-toolchain.toml rather
+        # than hardcoded, so bumping a pin does not silently leave this behind.
+        run: |
+          set -euo pipefail
+          for crate in tsuku-llm cmd/tsuku-dltest; do
+            channel=$(sed -n 's/^channel[[:space:]]*=[[:space:]]*"\(.*\)"/\1/p' "$crate/rust-toolchain.toml")
+            if [ -z "$channel" ]; then
+              echo "::error::no channel found in $crate/rust-toolchain.toml"
+              exit 1
+            fi
+            echo "::group::$crate pins $channel"
+            rustup toolchain install "$channel" --profile minimal --component rustfmt
+            echo "::endgroup::"
+          done
 
       - name: Cargo fmt (tsuku-llm)
         working-directory: tsuku-llm
