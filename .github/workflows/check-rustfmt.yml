@@ -1,0 +1,60 @@
+name: Check rustfmt
+
+# Fails a PR that leaves either Rust crate unformatted.
+#
+# Nothing ran `cargo fmt --check` before this, so drift accumulated unnoticed:
+# seven of tsuku-llm's twelve source files had diverged from rustfmt's output by
+# the time this gate was written. The damage that causes is indirect — the next
+# author who runs the obvious `cargo fmt` in that crate silently adopts every
+# pre-existing deviation and sweeps it into an unrelated PR.
+#
+# The two crates are independent cargo projects, not a workspace, and they pin
+# different channels (tsuku-llm reads `stable`, cmd/tsuku-dltest reads `1.80`).
+# So the check runs once per crate with `working-directory:` set, letting each
+# crate's own rust-toolchain.toml resolve exactly as it does for that crate's
+# build step in test.yml. A gate that forced a single version on both would
+# disagree with one of the two builds.
+#
+# `cargo fmt --check` compiles nothing, so neither the protobuf compiler nor the
+# cargo cache that test.yml needs for its builds is required here.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/*.rs'
+      - '**/Cargo.toml'
+      - '**/rust-toolchain.toml'
+      - '.github/workflows/check-rustfmt.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - '**/*.rs'
+      - '**/Cargo.toml'
+      - '**/rust-toolchain.toml'
+      - '.github/workflows/check-rustfmt.yml'
+
+jobs:
+  check-rustfmt:
+    name: Check rustfmt
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Set up Rust
+        # SHA pin for dtolnay/rust-toolchain@stable (resolved from the stable
+        # branch HEAD). No `toolchain:` input: the action reads the
+        # rust-toolchain.toml nearest the working directory, which is what makes
+        # the per-crate resolution below work. rustup fetches cmd/tsuku-dltest's
+        # pinned 1.80 on first use in that directory.
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8  # stable
+
+      - name: Cargo fmt (tsuku-llm)
+        working-directory: tsuku-llm
+        run: cargo fmt --all --check
+
+      - name: Cargo fmt (cmd/tsuku-dltest)
+        working-directory: cmd/tsuku-dltest
+        run: cargo fmt --all --check
