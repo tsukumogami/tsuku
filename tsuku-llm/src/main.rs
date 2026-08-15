@@ -702,8 +702,12 @@ async fn main() -> Result<()> {
 
     // Select and load model (env overrides for testing)
     let model_config = model::ModelConfig {
-        local_model: std::env::var("TSUKU_LLM_MODEL").ok().filter(|s| !s.is_empty()),
-        local_backend: std::env::var("TSUKU_LLM_BACKEND").ok().filter(|s| !s.is_empty()),
+        local_model: std::env::var("TSUKU_LLM_MODEL")
+            .ok()
+            .filter(|s| !s.is_empty()),
+        local_backend: std::env::var("TSUKU_LLM_BACKEND")
+            .ok()
+            .filter(|s| !s.is_empty()),
     };
     let selector = model::ModelSelector::with_config(model_config);
     let model_spec = selector

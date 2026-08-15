@@ -45,7 +45,10 @@ fn compile_llama_cpp() -> Result<(), Box<dyn std::error::Error>> {
         // driver can JIT-compile for newer architectures.
         if let Ok(archs) = env::var("TSUKU_CUDA_ARCHITECTURES") {
             cmake_config.define("CMAKE_CUDA_ARCHITECTURES", &archs);
-            println!("cargo:warning=Building with CUDA support (architectures: {})", archs);
+            println!(
+                "cargo:warning=Building with CUDA support (architectures: {})",
+                archs
+            );
         } else {
             println!("cargo:warning=Building with CUDA support (native architectures)");
         }
