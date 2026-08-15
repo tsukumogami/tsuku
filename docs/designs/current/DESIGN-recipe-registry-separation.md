@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: All 171 recipes are embedded in the CLI binary, causing unnecessary bloat and coupling recipe updates to CLI releases.
 decision: Separate recipes into embedded (in binary) and registry (registry-fetched) based on directory location. Store registry golden files in Cloudflare R2 for scalability.
@@ -9,7 +10,7 @@ rationale: Location-based categorization is simplest. R2 storage scales to 10K+ 
 
 ## Status
 
-**Current**
+Current
 
 ## Implementation Issues
 

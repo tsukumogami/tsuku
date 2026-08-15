@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Users cannot see detailed information about recipes before installing them, including hidden dependencies, and there is no way to link directly to specific tool pages.
 decision: Implement recipe detail pages using client-side routing with the History API, extending recipes.json to include dependency information.

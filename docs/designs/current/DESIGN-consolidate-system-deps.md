@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   Two overlapping implementations extract system packages from recipes and plans:
@@ -27,7 +28,7 @@ rationale: |
 
 ## Status
 
-**Current**
+Current
 
 ## Upstream Design Reference
 

@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   The extract action decides containment with string math and then performs writes

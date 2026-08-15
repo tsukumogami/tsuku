@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Installed binaries can be modified after installation (malware injection, disk corruption, unauthorized modifications) with no detection mechanism.
 decision: Compute and store SHA256 checksums of installed binaries after installation, then verify them on demand via `tsuku verify` to detect tampering or corruption.

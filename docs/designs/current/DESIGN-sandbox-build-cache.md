@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   When testing recipes across Linux families, each family independently installs

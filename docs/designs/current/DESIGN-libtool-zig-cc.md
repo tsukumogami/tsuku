@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Libtool-based autotools projects fail to build with zig cc because libtool calls the compiler with `-print-prog-name=ld` to discover the linker, but zig cc doesn't support this GCC-specific flag.
 decision: Enhance the cc wrapper script to detect and handle `-print-prog-name` introspection flags by returning paths to the corresponding tool wrappers (ld, ar, ranlib).

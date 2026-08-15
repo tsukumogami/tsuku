@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Native libraries required by tools like Ruby are embedded as 30+ lines of shell script in tool recipes, causing maintenance burden from hardcoded SHA256s, code duplication across tools, tight coupling to Homebrew internals, and inability to resolve library versions at runtime.
 decision: Libraries become first-class recipes with type = "library", installed via a suite of actions (homebrew, install_libraries, link_dependencies, set_rpath) that handle downloading, extraction, linking, and RPATH modification.

@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Golden files for ecosystem recipes drift over time due to dependency resolution at eval time picking up new transitive versions, causing CI failures in validate-golden-code.yml even when recipes and tsuku code haven't changed.
 decision: Implement constrained evaluation by passing version constraints from golden files to tsuku eval via a --pin-from flag, ensuring all eval code paths execute while producing deterministic output for exact comparison.

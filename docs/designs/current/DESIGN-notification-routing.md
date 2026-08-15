@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   When tsuku runs in background auto-update mode, all warnings and non-fatal events

@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Users cannot discover what tools tsuku can install without installing the CLI and running `tsuku recipes`, despite the marketing claim of "150+ tools".
 decision: Build a static recipe browser page at `/recipes/` that fetches recipe metadata via client-side JavaScript and provides search/filter functionality.

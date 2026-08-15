@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   The batch recipe generation pipeline collects structured data about failures,
@@ -43,7 +44,7 @@ rationale: |
 
 ## Status
 
-**Current**
+Current
 
 ## Context and Problem Statement
 

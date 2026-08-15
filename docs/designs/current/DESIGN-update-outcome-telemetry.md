@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   Auto-updates produce no outcome telemetry. Successful auto-applies reuse the

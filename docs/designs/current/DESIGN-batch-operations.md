@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: The batch recipe generation pipeline can auto-merge recipes into the registry, but without operational controls, operators have no way to halt runaway generation, revert problematic recipes, or respond to incidents.
 decision: Batch ID metadata + git revert for rollback; Circuit breaker + control file for emergency stop; Time-windowed budget + sampling for cost control; Per-ecosystem SLIs with severity alerting; Hybrid storage (repository-primary)

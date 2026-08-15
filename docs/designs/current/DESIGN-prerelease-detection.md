@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   The GitHub version provider's `isStableVersion` filter uses substring matching

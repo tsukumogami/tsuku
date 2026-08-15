@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Version providers return versions in inconsistent and arbitrary order, making it impossible to reliably identify the latest version through programmatic access or CLI output.
 decision: Implement a centralized SortVersionsDescending() function that all version providers call before returning results, combined with test-time validation to catch providers that forget to sort.

@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   The pipeline dashboard's "Top Blockers" panel is nearly empty despite hundreds of

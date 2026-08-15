@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: >
   Tsuku's test suite covers internal correctness and specific integration dimensions

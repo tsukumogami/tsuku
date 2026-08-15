@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: The tsuku info command always resolves dependencies and doesn't support local recipe files, creating performance and usability friction for automation scenarios like golden plan testing and CI integration that only need static recipe metadata.
 decision: Add --recipe and --metadata-only flags to tsuku info, expand JSON output schema with static recipe fields including computed platform lists, maintaining backward compatibility with additive schema changes.

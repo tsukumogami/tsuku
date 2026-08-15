@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Planned
 problem: |
   tsuku has ~1,400 recipes but roughly 20-50 developer tools that users install most

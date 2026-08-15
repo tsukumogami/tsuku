@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Recipe steps cannot express OR conditions across multiple platform tuples without duplicating entire steps.
 decision: Implement a structured WhenClause type to replace map[string]string, supporting platform arrays with proper type safety.

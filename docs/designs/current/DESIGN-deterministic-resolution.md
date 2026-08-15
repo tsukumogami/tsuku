@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Tsuku recipes are dynamic and non-deterministic; the same tool version can produce different installation results across days or machines due to platform detection, asset selection, and external API responses, preventing reproducible team installations and making recipe testing difficult.
 decision: Separate recipe evaluation (dynamic, produces deterministic installation plans) from plan execution (deterministic, downloads from exact URLs), making all installations plan-based to guarantee reproducibility by architecture.

@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Recipes must hardcode dependency versions in action parameters like RPATH configuration, creating maintenance burden when dependency versions change and contradicting tsuku's version-aware design.
 decision: Extend variable expansion syntax to support dot-notation references like `{deps.openssl.version}` by flattening resolved dependency versions into the existing variable map.

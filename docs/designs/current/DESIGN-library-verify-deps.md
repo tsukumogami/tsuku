@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Tools and libraries can have valid binary headers yet fail at runtime if their dependencies are missing or unresolvable, preventing proactive detection of these issues.
 decision: Implement hybrid dependency validation using soname extraction, pattern-based system library detection, RPATH-aware resolution, and recursive dependency checking to verify all runtime dependencies are available and compatible.

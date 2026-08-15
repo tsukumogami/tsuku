@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   Container images in container-images.json use mutable tags like alpine:3.21
@@ -25,7 +26,7 @@ rationale: |
 
 ## Status
 
-**Status:** Current
+Current
 
 ## Context and Problem Statement
 

@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   The local LLM runtime's test infrastructure covers lifecycle management and cloud provider recipe quality but has no automated way to detect local model quality regressions or server stability failures. This gap let two failure categories -- server crashes during long inference sessions and model quality regression on Rust-style naming patterns -- reach QA without being caught by any test. Changes to prompts, models, or inference parameters can ship regressions silently.

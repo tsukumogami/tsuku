@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Determine if a file is a valid shared library for the current platform, with cross-platform complexity across Linux (ELF) and macOS (Mach-O, including universal binaries).
 decision: Implement a unified ValidateHeader function with early magic number detection that efficiently dispatches to format-specific validators for ELF, Mach-O, and fat binary formats.

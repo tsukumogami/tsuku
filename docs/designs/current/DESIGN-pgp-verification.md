@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Tsuku recipes cannot verify downloads for projects that only provide PGP signatures instead of checksums, limiting adoption for security-critical tools like curl.
 decision: Use ProtonMail's gopenpgp v2 library with fingerprint-based key management, allowing recipes to specify signature and public key URLs with expected fingerprints for verification.

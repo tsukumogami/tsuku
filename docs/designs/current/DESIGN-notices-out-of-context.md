@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   tsuku's deferred-notice system flushes all unshown success notices at the head of

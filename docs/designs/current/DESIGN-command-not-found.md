@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   When users type an unknown command, the shell prints "command not found" and

@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   `tsuku install <name>` cannot route the user through a choice when an alias

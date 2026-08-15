@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Accepted
 problem: |
   tsuku install produces 40+ sequential lines instead of a single updating status

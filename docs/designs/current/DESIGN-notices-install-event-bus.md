@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   Notice files under $TSUKU_HOME/notices/ drift from state.json because every

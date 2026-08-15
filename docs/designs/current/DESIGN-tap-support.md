@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Tsuku users cannot install tools from third-party Homebrew taps, requiring them to either use Homebrew directly or maintain custom recipes.
 decision: Implement a dedicated `tap` version provider that queries GitHub API to fetch formula metadata from third-party tap repositories, following the pattern established in the cask design.

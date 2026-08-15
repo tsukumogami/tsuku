@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   The deterministic recipe generator fails on library-only Homebrew bottles

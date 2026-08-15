@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   Batch recipe generation requires coordination between multiple concurrent workflows

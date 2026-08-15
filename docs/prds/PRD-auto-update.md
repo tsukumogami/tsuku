@@ -1,4 +1,5 @@
 ---
+schema: prd/v1
 status: Accepted
 problem: |
   Tsuku has manual update and outdated commands, but no automatic update mechanism
@@ -17,8 +18,7 @@ goals: |
 
 Accepted
 
-## Problem statement
-
+## Problem Statement
 Tsuku users install developer tools and then forget about them. Patches ship, security fixes land, minor versions improve things, but nothing happens unless the user remembers to run `tsuku outdated` and then `tsuku update` for each tool. Most don't.
 
 Three specific problems make this worse:
@@ -39,8 +39,7 @@ These problems compound. Users who try to stay current have incomplete informati
 4. CI pipelines and non-interactive environments aren't affected by auto-update behavior.
 5. Users can see what's available, control what updates, and roll back when something goes wrong.
 
-## User stories
-
+## User Stories
 **US1: Daily developer, automatic patches.** As a developer with 15 tools installed, I want tools to receive updates automatically within my install-time constraints so that I get bug fixes and security patches without running commands manually.
 
 **US2: Daily developer, major version awareness.** As a developer pinned to Node 20, I want to know when Node 22 is available so that I can decide whether to adopt it on my own schedule.
@@ -115,8 +114,7 @@ In all cases, the check is non-blocking: the entry point stats the cache file, s
 
 **R22: Update outcome telemetry.** Successful and failed auto-updates are tracked via the existing telemetry system (extending `NewUpdateEvent`). Telemetry respects the existing opt-out mechanism.
 
-## Acceptance criteria
-
+## Acceptance Criteria
 ### Version pinning
 - [ ] `tsuku install ripgrep` (no version) enables auto-update to any newer version
 - [ ] `tsuku install node@20` enables auto-update within 20.x.y only
@@ -191,8 +189,7 @@ In all cases, the check is non-blocking: the entry point stats the cache file, s
 - [ ] A tool with an exact version in `.tsuku.toml` (e.g., `node = "20.16.0"`) is never auto-updated, even if global config has `updates.enabled = true`
 - [ ] A tool with a prefix version in `.tsuku.toml` (e.g., `node = "20"`) allows auto-update within 20.x.y
 
-## Out of scope
-
+## Out of Scope
 - **Pre-release channel opt-in** (beta/nightly): tools filter pre-releases by default. Named channels are a separate initiative.
 - **Version range constraints in .tsuku.toml**: semver range syntax (e.g., `>=1.29, <2`) is more complexity than needed. Prefix-level pinning is sufficient.
 - **Pre/post-update hooks**: user-defined scripts that run around updates. Separate feature surface.

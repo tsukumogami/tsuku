@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Tsuku has 329 registry recipes and an operational hourly batch pipeline, but thousands of developer tools remain uncovered across ecosystems (8K+ Homebrew formulas, 200K+ Rust crates, 11M+ npm packages). The pipeline works. The remaining challenge is closing quality gaps, resolving script/schema debt, and deciding whether file-based failure tracking needs to move to a database backend.
 decision: Adopt fully deterministic batch generation with structured failure analysis. Failures reveal capability gaps that drive manual fixes. LLM builders remain a user feature, not part of automation.

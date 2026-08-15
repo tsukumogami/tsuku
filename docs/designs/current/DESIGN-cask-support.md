@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Tsuku lacks support for macOS GUI applications distributed via Homebrew Casks, limiting unified tool management to CLI tools only.
 decision: Implement a hybrid approach using a cask version provider for metadata (URLs, checksums) combined with a generic app_bundle action for installation.

@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   GHA integration tests for musl/Alpine use hardcoded package lists instead of
@@ -26,7 +27,7 @@ rationale: |
 
 ## Status
 
-**Current**
+Current
 
 Implementation completed in [Milestone 74: Recipe-Driven CI Testing](https://github.com/tsukumogami/tsuku/milestone/74).
 

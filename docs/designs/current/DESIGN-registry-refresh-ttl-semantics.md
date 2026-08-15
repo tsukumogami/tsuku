@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   `tsuku update-registry` applies a 24-hour TTL to skip recently-cached recipes, so a

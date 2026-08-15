@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   Container image versions for Linux families are defined independently in Go

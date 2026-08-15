@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   Tsuku's LLM and discovery features require API keys that are currently read

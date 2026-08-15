@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: No CI pipeline exists to orchestrate batch recipe generation across deterministic ecosystem builders, validate recipes across target environments, record failures with structured metadata, and merge passing recipes at scale.
 decision: A GitHub Actions workflow (scheduled hourly + manual dispatch) that reads from the priority queue, runs a Go orchestrator for generation with progressive validation (Linux first, then arm64/musl/macOS on pass), records failures to JSONL artifacts, and creates one PR per batch with auto-merge gated on validation and run_command absence.

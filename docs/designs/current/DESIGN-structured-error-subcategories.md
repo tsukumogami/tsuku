@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   Pipeline failure classification is inconsistent across three producers:
@@ -29,7 +30,7 @@ rationale: |
 
 ## Status
 
-**Current**
+Current
 
 ## Implementation Issues
 

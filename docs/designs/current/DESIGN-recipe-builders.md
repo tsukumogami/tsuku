@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Thousands of CLI tools exist across package ecosystems that are not included in tsuku's embedded recipes, preventing users from installing them without manually writing recipes.
 decision: Implement ecosystem-specific recipe builders as a thin layer that generates recipes by querying package registry APIs, returning pure Recipe structs that are written to local storage and executed through existing actions.

@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 spawned_from:
   issue: 2168

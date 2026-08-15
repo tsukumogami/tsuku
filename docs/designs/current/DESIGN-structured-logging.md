@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: tsuku lacks structured diagnostic logging, making it difficult for users to troubleshoot installation failures without examining code or using ad-hoc debug patterns scattered across the codebase.
 decision: Implement a unified Logger interface backed by Go stdlib slog, with subsystems receiving the logger via functional options, enabling debug and verbose output controlled by command-line flags.

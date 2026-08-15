@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: Tsuku currently supports only one installed version per tool, forcing developers to reinstall when switching between projects that require different versions.
 decision: Implement multi-version support with automatic state.json migration, new activate command, and modified install/remove/list behaviors to keep existing versions while managing an active version via symlinks.

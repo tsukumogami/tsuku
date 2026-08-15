@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   The batch-generate merge job has working constraint derivation and PR creation but lacks structured commit messages with batch metadata, SLI metrics collection, circuit breaker state updates, and auto-merge gating required by DESIGN-batch-recipe-generation.md for pipeline observability and scale.

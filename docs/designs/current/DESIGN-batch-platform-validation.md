@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   The batch recipe generation pipeline validates recipes only on Linux x86_64 glibc before creating a PR. These recipes claim all-platform support by default, but nobody verifies that download URLs resolve to working binaries on ARM64, macOS, musl-based distros, or non-debian Linux families. Users on those platforms can get broken installs -- missing binaries, wrong architecture, or shared library failures -- with no warning until they run `tsuku install`.

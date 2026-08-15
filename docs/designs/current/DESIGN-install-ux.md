@@ -1,4 +1,5 @@
 ---
+schema: design/v1
 status: Current
 problem: |
   tsuku install and update emit 20–50+ lines per install via raw fmt.Printf() calls
