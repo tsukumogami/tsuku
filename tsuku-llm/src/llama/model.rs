@@ -51,9 +51,7 @@ impl LlamaModel {
         backend_init();
 
         // Convert path to C string
-        let path_str = path
-            .to_str()
-            .ok_or(LlamaError::InvalidPathEncoding)?;
+        let path_str = path.to_str().ok_or(LlamaError::InvalidPathEncoding)?;
         let c_path = CString::new(path_str)?;
 
         // Load the model

@@ -62,7 +62,10 @@ impl Sampler {
         // Softmax for probabilities
         let max_logit = scaled.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
         let exp_sum: f32 = scaled.iter().map(|x| (x - max_logit).exp()).sum();
-        let probs: Vec<f32> = scaled.iter().map(|x| (x - max_logit).exp() / exp_sum).collect();
+        let probs: Vec<f32> = scaled
+            .iter()
+            .map(|x| (x - max_logit).exp() / exp_sum)
+            .collect();
 
         // Sample from distribution
         let random: f32 = rand_simple();

@@ -40,7 +40,10 @@ impl std::str::FromStr for Backend {
             "cuda" => Ok(Backend::Cuda),
             "metal" => Ok(Backend::Metal),
             "vulkan" => Ok(Backend::Vulkan),
-            _ => Err(format!("unknown backend: {} (gpu required, cpu not supported)", s)),
+            _ => Err(format!(
+                "unknown backend: {} (gpu required, cpu not supported)",
+                s
+            )),
         }
     }
 }
@@ -68,19 +71,11 @@ pub enum SelectionError {
     /// No GPU detected — GPU acceleration is required
     NoGpuDetected,
     /// GPU doesn't have enough VRAM for the minimum model (7B)
-    InsufficientVram {
-        vram_gb: f64,
-        minimum_gb: f64,
-    },
+    InsufficientVram { vram_gb: f64, minimum_gb: f64 },
     /// Config specifies unknown model name
-    InvalidConfigModel {
-        name: String,
-    },
+    InvalidConfigModel { name: String },
     /// Config specifies invalid or incompatible backend
-    InvalidConfigBackend {
-        backend: String,
-        reason: String,
-    },
+    InvalidConfigBackend { backend: String, reason: String },
 }
 
 impl std::fmt::Display for SelectionError {
@@ -92,7 +87,10 @@ impl std::fmt::Display for SelectionError {
                     "no GPU detected: tsuku-llm requires a GPU with at least 8 GB VRAM"
                 )
             }
-            SelectionError::InsufficientVram { vram_gb, minimum_gb } => {
+            SelectionError::InsufficientVram {
+                vram_gb,
+                minimum_gb,
+            } => {
                 write!(
                     f,
                     "insufficient VRAM: {:.1} GB available, {:.1} GB required for minimum model (7B)",
@@ -277,12 +275,13 @@ impl ModelSelector {
     fn select_backend(&self, profile: &HardwareProfile) -> Result<Backend, SelectionError> {
         // Check for config override
         if let Some(ref backend_str) = self.config.local_backend {
-            let backend: Backend = backend_str.parse().map_err(|_| {
-                SelectionError::InvalidConfigBackend {
-                    backend: backend_str.clone(),
-                    reason: "must be one of: cuda, metal, vulkan".to_string(),
-                }
-            })?;
+            let backend: Backend =
+                backend_str
+                    .parse()
+                    .map_err(|_| SelectionError::InvalidConfigBackend {
+                        backend: backend_str.clone(),
+                        reason: "must be one of: cuda, metal, vulkan".to_string(),
+                    })?;
 
             self.validate_backend(backend, profile)?;
             return Ok(backend);
@@ -298,7 +297,11 @@ impl ModelSelector {
     }
 
     /// Validate that a backend is available on the current hardware.
-    fn validate_backend(&self, backend: Backend, profile: &HardwareProfile) -> Result<(), SelectionError> {
+    fn validate_backend(
+        &self,
+        backend: Backend,
+        profile: &HardwareProfile,
+    ) -> Result<(), SelectionError> {
         let backend_str = backend.to_string();
 
         match backend {
@@ -319,7 +322,9 @@ impl ModelSelector {
                 }
             }
             Backend::Vulkan => {
-                if profile.gpu_backend != GpuBackend::Vulkan && profile.gpu_backend != GpuBackend::Cuda {
+                if profile.gpu_backend != GpuBackend::Vulkan
+                    && profile.gpu_backend != GpuBackend::Cuda
+                {
                     return Err(SelectionError::InvalidConfigBackend {
                         backend: backend_str,
                         reason: "Vulkan not available on this system".to_string(),
@@ -337,11 +342,12 @@ impl ModelSelector {
         model_name: &str,
         profile: &HardwareProfile,
     ) -> Result<ModelSpec, SelectionError> {
-        let entry = self.manifest.get(model_name).ok_or_else(|| {
-            SelectionError::InvalidConfigModel {
-                name: model_name.to_string(),
-            }
-        })?;
+        let entry =
+            self.manifest
+                .get(model_name)
+                .ok_or_else(|| SelectionError::InvalidConfigModel {
+                    name: model_name.to_string(),
+                })?;
 
         let backend = self.select_backend(profile)?;
 
@@ -368,11 +374,12 @@ impl ModelSelector {
 
     /// Build a ModelSpec from auto-selected model name and backend.
     fn build_spec(&self, model_name: &str, backend: Backend) -> Result<ModelSpec, SelectionError> {
-        let entry = self.manifest.get(model_name).ok_or_else(|| {
-            SelectionError::InvalidConfigModel {
-                name: model_name.to_string(),
-            }
-        })?;
+        let entry =
+            self.manifest
+                .get(model_name)
+                .ok_or_else(|| SelectionError::InvalidConfigModel {
+                    name: model_name.to_string(),
+                })?;
 
         Ok(ModelSpec {
             name: model_name.to_string(),
@@ -438,7 +445,10 @@ mod tests {
         let profile = make_profile(GpuBackend::Vulkan, 4, 16);
 
         let result = selector.select(&profile);
-        assert!(matches!(result, Err(SelectionError::InsufficientVram { .. })));
+        assert!(matches!(
+            result,
+            Err(SelectionError::InsufficientVram { .. })
+        ));
     }
 
     #[test]

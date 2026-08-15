@@ -34,10 +34,7 @@ pub enum ModelError {
     },
 
     #[error("download failed after {attempts} attempts: {last_error}")]
-    DownloadFailed {
-        attempts: u32,
-        last_error: String,
-    },
+    DownloadFailed { attempts: u32, last_error: String },
 }
 
 /// Progress information during download.
@@ -115,7 +112,8 @@ impl ModelManager {
 
     /// Get the temporary path for an in-progress download.
     fn temp_path(&self, model_name: &str) -> PathBuf {
-        self.download_dir().join(format!("{}.gguf.part", model_name))
+        self.download_dir()
+            .join(format!("{}.gguf.part", model_name))
     }
 
     /// Check if a model exists and has valid checksum.
@@ -155,7 +153,10 @@ impl ModelManager {
 
         // Skip verification when checksum is not yet computed
         if entry.sha256.is_empty() {
-            debug!("Skipping checksum verification for {} (no checksum in manifest)", model_name);
+            debug!(
+                "Skipping checksum verification for {} (no checksum in manifest)",
+                model_name
+            );
             return Ok(true);
         }
 
@@ -185,11 +186,7 @@ impl ModelManager {
     ///
     /// # Returns
     /// Path to the downloaded model file (first split for split models)
-    pub async fn download<F>(
-        &self,
-        model_name: &str,
-        progress: F,
-    ) -> Result<PathBuf, ModelError>
+    pub async fn download<F>(&self, model_name: &str, progress: F) -> Result<PathBuf, ModelError>
     where
         F: Fn(DownloadProgress) + Send,
     {
@@ -218,24 +215,31 @@ impl ModelManager {
 
             for (i, (url, path)) in urls.iter().zip(paths.iter()).enumerate() {
                 if path.exists() {
-                    info!("Split file {}/{} already exists, skipping", i + 1, entry.split_count);
+                    info!(
+                        "Split file {}/{} already exists, skipping",
+                        i + 1,
+                        entry.split_count
+                    );
                     continue;
                 }
 
-                let temp_path = self.download_dir().join(
-                    format!("{}.part", path.file_name().unwrap_or_default().to_string_lossy())
-                );
+                let temp_path = self.download_dir().join(format!(
+                    "{}.part",
+                    path.file_name().unwrap_or_default().to_string_lossy()
+                ));
 
-                info!("Downloading split {}/{} from {}", i + 1, entry.split_count, url);
+                info!(
+                    "Downloading split {}/{} from {}",
+                    i + 1,
+                    entry.split_count,
+                    url
+                );
 
                 // Retry with exponential backoff
                 let mut last_error = String::new();
                 let mut downloaded = false;
                 for attempt in 1..=3 {
-                    match self
-                        .download_file(url, &temp_path, &progress)
-                        .await
-                    {
+                    match self.download_file(url, &temp_path, &progress).await {
                         Ok(()) => {
                             fs::rename(&temp_path, path).await?;
                             info!("Split {}/{} downloaded", i + 1, entry.split_count);
@@ -246,7 +250,10 @@ impl ModelManager {
                             last_error = e.to_string();
                             warn!(
                                 "Download attempt {} failed for split {}/{}: {}",
-                                attempt, i + 1, entry.split_count, e
+                                attempt,
+                                i + 1,
+                                entry.split_count,
+                                e
                             );
                             let _ = fs::remove_file(&temp_path).await;
                             if attempt < 3 {
@@ -275,7 +282,10 @@ impl ModelManager {
 
             // Clean up existing invalid file
             if final_path.exists() {
-                warn!("Model {} exists but failed verification, re-downloading", model_name);
+                warn!(
+                    "Model {} exists but failed verification, re-downloading",
+                    model_name
+                );
                 fs::remove_file(&final_path).await?;
             }
 
@@ -334,9 +344,7 @@ impl ModelManager {
     {
         let response = self.client.get(url).send().await?.error_for_status()?;
 
-        let total_bytes = response
-            .content_length()
-            .unwrap_or(expected_size);
+        let total_bytes = response.content_length().unwrap_or(expected_size);
 
         let mut file = File::create(temp_path).await?;
         let mut hasher = Sha256::new();
@@ -482,8 +490,8 @@ async fn compute_file_sha256(path: &Path) -> Result<String, std::io::Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
     use crate::model::{Backend, ModelEntry};
+    use std::collections::HashMap;
 
     fn test_manifest() -> ModelManifest {
         let mut models = HashMap::new();
@@ -492,7 +500,8 @@ mod tests {
             ModelEntry {
                 quantization: "q4_k_m".to_string(),
                 size_bytes: 1000,
-                sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".to_string(), // SHA256 of empty file
+                sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                    .to_string(), // SHA256 of empty file
                 download_url: "https://example.com/test-model.gguf".to_string(),
                 split_count: 1,
                 supported_backends: vec![Backend::Cuda],
@@ -606,9 +615,11 @@ mod tests {
         let progress_count = Arc::new(AtomicU64::new(0));
         let progress_count_clone = Arc::clone(&progress_count);
 
-        let result = manager.download("test-model", move |_progress| {
-            progress_count_clone.fetch_add(1, Ordering::SeqCst);
-        }).await;
+        let result = manager
+            .download("test-model", move |_progress| {
+                progress_count_clone.fetch_add(1, Ordering::SeqCst);
+            })
+            .await;
 
         assert!(result.is_ok());
         // Since file already exists and is valid, no progress updates should happen
@@ -634,7 +645,8 @@ mod tests {
             ModelEntry {
                 quantization: "test".to_string(),
                 size_bytes: 11,
-                sha256: "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9".to_string(),
+                sha256: "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
+                    .to_string(),
                 download_url: "https://httpbin.org/base64/aGVsbG8gd29ybGQ=".to_string(),
                 split_count: 1,
                 supported_backends: vec![Backend::Cuda],
@@ -650,10 +662,12 @@ mod tests {
         let progress_calls = Arc::new(AtomicU64::new(0));
         let progress_calls_clone = Arc::clone(&progress_calls);
 
-        let result = manager.download("test-download", move |progress| {
-            bytes_received_clone.store(progress.bytes_downloaded, Ordering::SeqCst);
-            progress_calls_clone.fetch_add(1, Ordering::SeqCst);
-        }).await;
+        let result = manager
+            .download("test-download", move |progress| {
+                bytes_received_clone.store(progress.bytes_downloaded, Ordering::SeqCst);
+                progress_calls_clone.fetch_add(1, Ordering::SeqCst);
+            })
+            .await;
 
         // Should succeed
         assert!(result.is_ok(), "Download failed: {:?}", result.err());
@@ -667,8 +681,15 @@ mod tests {
         assert_eq!(content, "hello world");
 
         // Progress callback should have been called
-        assert!(progress_calls.load(Ordering::SeqCst) > 0, "Progress callback was never called");
-        assert_eq!(bytes_received.load(Ordering::SeqCst), 11, "Final bytes should be 11");
+        assert!(
+            progress_calls.load(Ordering::SeqCst) > 0,
+            "Progress callback was never called"
+        );
+        assert_eq!(
+            bytes_received.load(Ordering::SeqCst),
+            11,
+            "Final bytes should be 11"
+        );
 
         // Verification should pass
         assert!(manager.verify("test-download").await.unwrap());
@@ -686,7 +707,8 @@ mod tests {
             ModelEntry {
                 quantization: "test".to_string(),
                 size_bytes: 11,
-                sha256: "0000000000000000000000000000000000000000000000000000000000000000".to_string(),
+                sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+                    .to_string(),
                 download_url: "https://httpbin.org/base64/aGVsbG8gd29ybGQ=".to_string(),
                 split_count: 1,
                 supported_backends: vec![Backend::Cuda],
@@ -707,9 +729,18 @@ mod tests {
         let first_url = "https://example.com/model-q4_k_m-00001-of-00003.gguf";
         let urls = split_file_urls(first_url, 3);
         assert_eq!(urls.len(), 3);
-        assert_eq!(urls[0], "https://example.com/model-q4_k_m-00001-of-00003.gguf");
-        assert_eq!(urls[1], "https://example.com/model-q4_k_m-00002-of-00003.gguf");
-        assert_eq!(urls[2], "https://example.com/model-q4_k_m-00003-of-00003.gguf");
+        assert_eq!(
+            urls[0],
+            "https://example.com/model-q4_k_m-00001-of-00003.gguf"
+        );
+        assert_eq!(
+            urls[1],
+            "https://example.com/model-q4_k_m-00002-of-00003.gguf"
+        );
+        assert_eq!(
+            urls[2],
+            "https://example.com/model-q4_k_m-00003-of-00003.gguf"
+        );
     }
 
     #[test]
@@ -717,9 +748,18 @@ mod tests {
         let first_url = "https://example.com/model-q4_k_m-00001-of-00003.gguf";
         let paths = split_file_paths(Path::new("/tmp/models"), first_url, 3);
         assert_eq!(paths.len(), 3);
-        assert_eq!(paths[0], PathBuf::from("/tmp/models/model-q4_k_m-00001-of-00003.gguf"));
-        assert_eq!(paths[1], PathBuf::from("/tmp/models/model-q4_k_m-00002-of-00003.gguf"));
-        assert_eq!(paths[2], PathBuf::from("/tmp/models/model-q4_k_m-00003-of-00003.gguf"));
+        assert_eq!(
+            paths[0],
+            PathBuf::from("/tmp/models/model-q4_k_m-00001-of-00003.gguf")
+        );
+        assert_eq!(
+            paths[1],
+            PathBuf::from("/tmp/models/model-q4_k_m-00002-of-00003.gguf")
+        );
+        assert_eq!(
+            paths[2],
+            PathBuf::from("/tmp/models/model-q4_k_m-00003-of-00003.gguf")
+        );
     }
 
     #[tokio::test]
@@ -731,7 +771,8 @@ mod tests {
                 quantization: "q4_k_m".to_string(),
                 size_bytes: 9000,
                 sha256: "".to_string(),
-                download_url: "https://example.com/split-model-q4_k_m-00001-of-00003.gguf".to_string(),
+                download_url: "https://example.com/split-model-q4_k_m-00001-of-00003.gguf"
+                    .to_string(),
                 split_count: 3,
                 supported_backends: vec![Backend::Cuda],
             },

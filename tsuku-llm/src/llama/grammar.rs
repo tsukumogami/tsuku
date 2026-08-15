@@ -8,9 +8,9 @@ use std::ffi::CString;
 use std::ptr::NonNull;
 
 use super::bindings::{
-    llama_sampler, llama_sampler_accept, llama_sampler_chain_add, llama_sampler_chain_default_params,
-    llama_sampler_chain_init, llama_sampler_free, llama_sampler_init_grammar,
-    llama_sampler_init_greedy, llama_sampler_sample, llama_vocab,
+    llama_sampler, llama_sampler_accept, llama_sampler_chain_add,
+    llama_sampler_chain_default_params, llama_sampler_chain_init, llama_sampler_free,
+    llama_sampler_init_grammar, llama_sampler_init_greedy, llama_sampler_sample, llama_vocab,
 };
 use super::error::{LlamaError, Result};
 
@@ -37,32 +37,24 @@ impl GrammarSampler {
     ///
     /// A sampler chain with grammar constraint followed by greedy sampling.
     /// Returns an error if the grammar is invalid.
-    pub fn new(
-        vocab: *const llama_vocab,
-        grammar_str: &str,
-        grammar_root: &str,
-    ) -> Result<Self> {
-        let grammar_c = CString::new(grammar_str).map_err(|e| {
-            LlamaError::Grammar(format!("Invalid grammar string: {}", e))
-        })?;
-        let root_c = CString::new(grammar_root).map_err(|e| {
-            LlamaError::Grammar(format!("Invalid root rule name: {}", e))
-        })?;
+    pub fn new(vocab: *const llama_vocab, grammar_str: &str, grammar_root: &str) -> Result<Self> {
+        let grammar_c = CString::new(grammar_str)
+            .map_err(|e| LlamaError::Grammar(format!("Invalid grammar string: {}", e)))?;
+        let root_c = CString::new(grammar_root)
+            .map_err(|e| LlamaError::Grammar(format!("Invalid root rule name: {}", e)))?;
 
         unsafe {
             // Create the sampler chain
             let params = llama_sampler_chain_default_params();
             let chain = llama_sampler_chain_init(params);
             if chain.is_null() {
-                return Err(LlamaError::Grammar("Failed to create sampler chain".to_string()));
+                return Err(LlamaError::Grammar(
+                    "Failed to create sampler chain".to_string(),
+                ));
             }
 
             // Create grammar sampler
-            let grammar = llama_sampler_init_grammar(
-                vocab,
-                grammar_c.as_ptr(),
-                root_c.as_ptr(),
-            );
+            let grammar = llama_sampler_init_grammar(vocab, grammar_c.as_ptr(), root_c.as_ptr());
             if grammar.is_null() {
                 llama_sampler_free(chain);
                 return Err(LlamaError::Grammar(format!(
@@ -154,9 +146,9 @@ impl GbnfBuilder {
 
     /// Process a JSON Schema and generate rules for the given rule name.
     fn process_schema(&mut self, schema: &serde_json::Value, rule_name: &str) -> Result<()> {
-        let obj = schema.as_object().ok_or_else(|| {
-            LlamaError::Grammar("Schema must be an object".to_string())
-        })?;
+        let obj = schema
+            .as_object()
+            .ok_or_else(|| LlamaError::Grammar("Schema must be an object".to_string()))?;
 
         let schema_type = obj.get("type").and_then(|v| v.as_str());
 
@@ -241,7 +233,9 @@ impl GbnfBuilder {
 
         // Add optional properties (each wrapped in optional marker)
         for (name, _) in &optional_props {
-            if !required_props.is_empty() || optional_props.iter().position(|(n, _)| n == name).unwrap() > 0 {
+            if !required_props.is_empty()
+                || optional_props.iter().position(|(n, _)| n == name).unwrap() > 0
+            {
                 object_rule.push_str(&format!(r#" ("," ws {})?"#, &kv_rules[name]));
             } else {
                 object_rule.push_str(&format!("({})?", &kv_rules[name]));
@@ -331,10 +325,7 @@ impl GbnfBuilder {
             );
         }
         if !self.defined_rules.contains("array") {
-            self.add_rule(
-                "array",
-                r#""[" ws (value ("," ws value)*)? ws "]""#,
-            );
+            self.add_rule("array", r#""[" ws (value ("," ws value)*)? ws "]""#);
         }
         if !self.defined_rules.contains("string") {
             self.add_rule(
@@ -360,7 +351,8 @@ impl GbnfBuilder {
     fn build(mut self) -> String {
         // Add whitespace rule at the end
         if !self.defined_rules.contains("ws") {
-            self.rules.push(r#"ws ::= | " " | "\n" [ \t]{0,20}"#.to_string());
+            self.rules
+                .push(r#"ws ::= | " " | "\n" [ \t]{0,20}"#.to_string());
         }
 
         self.rules.join("\n")
@@ -401,7 +393,11 @@ mod tests {
         assert!(grammar.contains("root ::="), "root rule missing");
         assert!(grammar.contains("root-path-kv"), "path-kv rule missing");
         // The key should be escaped with backslash-quote in GBNF
-        assert!(grammar.contains(r#"\"path\""#), "path key missing in grammar: {}", grammar);
+        assert!(
+            grammar.contains(r#"\"path\""#),
+            "path key missing in grammar: {}",
+            grammar
+        );
     }
 
     #[test]
@@ -484,7 +480,11 @@ mod tests {
 
         assert!(grammar.contains("root ::="), "root rule missing");
         // The key should be escaped with backslash-quote in GBNF
-        assert!(grammar.contains(r#"\"path\""#), "path key missing: {}", grammar);
+        assert!(
+            grammar.contains(r#"\"path\""#),
+            "path key missing: {}",
+            grammar
+        );
         // Root should require path
         assert!(grammar.contains("root-path-kv"), "path-kv rule missing");
     }
