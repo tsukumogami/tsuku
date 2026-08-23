@@ -15,8 +15,8 @@ description: >-
   it). It also settles `--reinstall` against `--fresh`, which is genuinely
   surprising: one replays the plan stored at install time, the other regenerates
   it from the current recipe. Do NOT use it to write or change a recipe
-  (`tsuku-recipe-author`), to test one under development or read a CI failure on
-  a recipe PR (`tsuku-recipe-test`), or to change tsuku's own Go code -- new
+  (`tsuku-recipe-author`), to validate or test one under development or read a
+  CI failure on a recipe PR (`tsuku-recipe-test`), or to change tsuku's own Go code -- new
   commands, flags, and config fields live under `cmd/` and `internal/`, which no
   skill covers.
 ---

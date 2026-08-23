@@ -13,8 +13,8 @@ description: >-
   investigated, and a sandbox run off a stored plan passes for the wrong reason
   because that plan carries no dependencies and no verification. Do NOT use it
   to decide what a recipe should do in the first place (`tsuku-recipe-author`),
-  to fix a tool on someone's own machine, where the
-  install being debugged is theirs rather than a recipe under development
+  to install, update, configure, or repair tools on someone's own machine, where
+  the install in question is theirs rather than a recipe under development
   (`tsuku-user`), or to change tsuku's own Go code -- validation rules, exit
   codes, and plan generation live under `cmd/` and `internal/`, which no skill
   covers.

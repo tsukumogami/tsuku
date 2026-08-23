@@ -5,13 +5,14 @@ description: >-
   tsuku recipe TOML -- the actions that fetch or build it, the version provider,
   the platform conditionals, the verify block, the dependencies. Reach for it
   even when nobody says "recipe": "tsuku can't install ripgrep, can you add
-  support for it?" is a recipe, and so are "users type `nvim`, not `neovim` --
-  make that work" (an alias), "we want the team installing our internal CLIs
-  from our own repo" (a distributed `.tsuku-recipes/` directory), "this only
-  works on glibc and our CI images are Alpine" (a libc split), and "the tool
-  needs a shell function defined at startup". Without it an agent hand-writes
-  TOML from a half-remembered format and misses the parts with no obvious
-  syntax: which phase a step runs in, aliases, libc coverage, the transforms
+  support for it?" is a recipe that does not exist yet, and so are "users type
+  `nvim`, not `neovim` -- make that work" (an alias), "we want the team
+  installing our internal CLIs from our own repo" (a distributed
+  `.tsuku-recipes/` directory), "this only works on glibc and our CI images are
+  Alpine" (a libc split), and "installing this tool has to define a shell
+  function the way nvm does" (an init fragment the recipe declares). Without it
+  an agent hand-writes TOML from a half-remembered format and misses the parts
+  with no obvious syntax: which phase a step runs in, aliases, libc coverage, the transforms
   that make a verify pattern match what the tool actually prints. Do NOT use it
   to prove a recipe installs or to read a failing sandbox run or CI diff
   (`tsuku-recipe-test`), to help someone install and configure tools on their
