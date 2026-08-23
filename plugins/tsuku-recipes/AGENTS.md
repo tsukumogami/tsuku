@@ -1,6 +1,7 @@
 # tsuku-recipes Plugin
 
-Contextual guidance for authoring and testing tsuku recipes.
+Contextual guidance for two jobs: deciding how a tool gets installed and writing
+that down as a recipe, and proving a recipe you're working on actually installs.
 
 Tsuku is a package manager for developer tools. Recipes are TOML files that
 define how to download, build, and verify a tool installation. They live in
@@ -47,9 +48,11 @@ The full list of actions with parameter tables is in:
 
     skills/recipe-author/references/action-reference.md
 
-The recipe-author SKILL.md also has a summary table of all action names
-grouped by category (download, ecosystem, package managers, build systems,
-file operations, special).
+The tsuku-recipe-author skill (skills/recipe-author/SKILL.md) is where to go
+when you're deciding what a recipe should do -- it carries a summary table of
+action names grouped by category (download, ecosystem, package managers, build
+systems, file operations, special) alongside version providers, when clauses,
+aliases, and distributed recipes.
 
 ## Testing Workflow
 
@@ -94,8 +97,9 @@ for family in debian rhel alpine arch suse; do
 done
 ```
 
-The tsuku-recipe-test skill (skills/recipe-test/SKILL.md) covers golden file
-validation, common failure patterns, and test infrastructure in detail.
+The tsuku-recipe-test skill (skills/recipe-test/SKILL.md) is where to go once
+the recipe exists and you need to prove it installs, or find out why it doesn't:
+golden plans, cross-family runs, and a symptom-by-symptom failure catalogue.
 
 ## Guides
 

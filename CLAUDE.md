@@ -137,11 +137,15 @@ This applies to code comments, design documents, README and other documentation,
 
 Skills in `plugins/` guide agents through recipe authoring, testing, and end-user workflows. They drift silently when tsuku internals change without a corresponding skill update.
 
+The three split on whose problem it is, not on which command shows up in the request:
+
 | Skill | Path | Scope |
 |-------|------|-------|
-| tsuku-recipe-author | plugins/tsuku-recipes/skills/recipe-author/ | Recipe TOML writing |
-| tsuku-recipe-test | plugins/tsuku-recipes/skills/recipe-test/ | Recipe testing workflow |
-| tsuku-user | plugins/tsuku-user/skills/tsuku-user/ | CLI usage, project config, shell integration, updates |
+| tsuku-recipe-author | plugins/tsuku-recipes/skills/recipe-author/ | Deciding how a tool gets installed and writing it down -- actions, version providers, when clauses, aliases, distributed recipes |
+| tsuku-recipe-test | plugins/tsuku-recipes/skills/recipe-test/ | Proving a recipe under development installs across platforms, and diagnosing why it doesn't |
+| tsuku-user | plugins/tsuku-user/skills/tsuku-user/ | Someone using tsuku on their own machine or repo hitting something wrong, surprising, or needing configuration |
+
+Changing tsuku's own Go code is none of them -- no skill covers `internal/` or `cmd/`. The table below is the map for that work, and it reads in the other direction: it says which skill's documentation a source change obliges you to refresh.
 
 **After completing any source change in the areas below, assess the relevant skills:**
 

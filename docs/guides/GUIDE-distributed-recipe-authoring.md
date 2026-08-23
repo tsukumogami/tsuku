@@ -178,7 +178,7 @@ Add this to your project's `.claude/settings.json` to install the plugin:
 
 This gives Claude Code two skills:
 
-- **recipe-author** -- guidance on recipe TOML structure, actions, version providers, platform conditionals, verification, and dependencies. Includes bundled reference files so the agent doesn't need access to the full tsuku repo.
-- **recipe-test** -- the validate-eval-sandbox testing workflow, cross-family testing, golden file validation, and common failure patterns.
+- **recipe-author** -- reach for it when you're deciding how a tool gets installed and writing that down: which actions fetch or build it, how versions resolve, which steps run on which platforms, what verification proves it worked. It fires on requests that never say "recipe", like "tsuku can't install our internal CLI yet" or "users type `nvim`, not `neovim`". It ships its reference files, so the agent doesn't need the tsuku repo.
+- **recipe-test** -- reach for it when you're proving a recipe you're working on actually installs, across linux families and macOS, or working out why it doesn't. It covers validate, eval, sandbox runs, and golden plans, plus the failure symptoms that name none of those, like a tool that installs on Debian and blows up on Alpine.
 
 The `autoUpdate` field is intentionally omitted. This means Claude Code won't pull plugin updates automatically -- you control when updates happen by re-fetching the plugin on your own schedule.

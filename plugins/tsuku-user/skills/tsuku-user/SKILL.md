@@ -1,9 +1,24 @@
 ---
 name: tsuku-user
-description: |
-  Use when helping someone manage tools with tsuku -- installing, configuring
-  .tsuku.toml project files, setting up shell integration, or debugging
-  PATH and update issues.
+description: >-
+  Use when someone is using tsuku on their own machine or repo and something is
+  wrong, surprising, or needs configuring -- installing and updating tools,
+  pinning a project's toolchain in `.tsuku.toml`, shell integration, `doctor`,
+  rollback, auto-update, telemetry, and secrets. Most of the situations that
+  need it never say "tsuku". "I upgraded but I'm still getting the old version"
+  is PATH shadowing, and it is the one worth catching because every other signal
+  looks healthy: the right version is installed, nothing reports as outdated,
+  and the wrong binary keeps answering forever. So are "new hires keep ending
+  up on the wrong node version" (pin the repo's toolchain), "my shell function vanished after I installed the tool" (init
+  fragments are bash and zsh only), and "$TSUKU_HOME is 40GB, what can I delete"
+  (tool data survives both upgrade and remove, and nothing tsuku ships deletes
+  it). It also settles `--reinstall` against `--fresh`, which is genuinely
+  surprising: one replays the plan stored at install time, the other regenerates
+  it from the current recipe. Do NOT use it to write or change a recipe
+  (`tsuku-recipe-author`), to test one under development or read a CI failure on
+  a recipe PR (`tsuku-recipe-test`), or to change tsuku's own Go code -- new
+  commands, flags, and config fields live under `cmd/` and `internal/`, which no
+  skill covers.
 ---
 
 ## .tsuku.toml Project Configuration

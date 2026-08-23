@@ -1,9 +1,23 @@
 ---
 name: tsuku-recipe-test
-description: |
-  Use when a recipe needs testing or an installation is failing. Covers
-  the full validate-eval-sandbox-golden workflow with exact commands,
-  cross-family testing, and common failure patterns with exit codes.
+description: >-
+  Use when you are proving that a recipe you are working on actually installs,
+  across linux families and macOS, or working out why it doesn't. Covers the
+  validate, eval, sandbox, and golden-plan checks, and the symptoms that name
+  none of them: "CI is red with a golden file diff I didn't expect", "it
+  installs on Debian and blows up on Alpine", "patchelf cannot run on this
+  system" (a different failure from "patchelf not found"), "why is tsuku warning
+  me that this plan declares no dependencies", or "I want to see which steps my
+  when clauses select before anything installs". Skipping it costs real time in
+  both directions: an unexpected golden diff gets accepted instead of
+  investigated, and a sandbox run off a stored plan passes for the wrong reason
+  because that plan carries no dependencies and no verification. Do NOT use it
+  to decide what a recipe should do in the first place (`tsuku-recipe-author`),
+  to fix a tool on someone's own machine, where the
+  install being debugged is theirs rather than a recipe under development
+  (`tsuku-user`), or to change tsuku's own Go code -- validation rules, exit
+  codes, and plan generation live under `cmd/` and `internal/`, which no skill
+  covers.
 ---
 
 ## Phase 1: Validate
