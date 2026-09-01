@@ -16,7 +16,12 @@ func TestGolangCILint(t *testing.T) {
 	if testing.Short() {
 		t.Skip("short mode: skipping golangci-lint")
 	}
-	rungo(t, "run", "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest", "run", "--timeout=5m")
+	// Pinned rather than @latest: CI runs with GOTOOLCHAIN=local, so a linter
+	// release that raises its minimum Go version above go.mod's breaks this gate
+	// with no change on our side. v2.13.0 moved to go 1.26.0; v2.12.2 declares
+	// go 1.25.0 and is the newest release that resolves under our go directive.
+	// Bump this deliberately, alongside the go directive when that moves.
+	rungo(t, "run", "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2", "run", "--timeout=5m")
 }
 
 func TestGoFmt(t *testing.T) {
