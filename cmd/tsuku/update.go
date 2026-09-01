@@ -68,15 +68,7 @@ Examples:
 			exitWithCode(ExitGeneral)
 		}
 
-		var previousVersion string
-		installed := false
-		for _, tool := range tools {
-			if tool.Name == toolName {
-				installed = true
-				previousVersion = tool.Version
-				break
-			}
-		}
+		previousVersion, installed := activeVersionOf(tools, toolName)
 
 		if !installed {
 			fmt.Fprintf(os.Stderr, "Error: %s is not installed. Use 'tsuku install %s' to install it.\n", toolName, toolName)
@@ -230,12 +222,38 @@ func activeVersionAfterUpdate(mgr *install.Manager, toolName string) string {
 	if err != nil {
 		return ""
 	}
+	version, _ := activeVersionOf(tools, toolName)
+	return version
+}
+
+// activeVersionOf reports the active version of toolName among tools, and
+// whether tools holds any entry for it at all.
+//
+// The two answers are separate because List returns one entry per retained
+// version: a tool can be present under several versions while only one of them
+// is active, and it can in principle be present with none of them flagged
+// active. Callers deciding "is this installed?" need the second return; callers
+// comparing versions across an update need the first.
+//
+// Reading the first name match instead of the active entry is the bug this
+// exists to prevent. List sorts ascending by version, so the first match is the
+// *oldest* retained version -- for a tool sitting at 0.19.1 with 0.16.0 still on
+// disk, it reads 0.16.0. Compared against the version active after an update
+// that changed nothing, the two never match: `tsuku update` printed no
+// "already at the latest version" line and sent a telemetry event claiming an
+// upgrade from 0.16.0 to 0.19.1 that never happened.
+func activeVersionOf(tools []install.InstalledTool, toolName string) (string, bool) {
+	installed := false
 	for _, tool := range tools {
-		if tool.Name == toolName && tool.IsActive {
-			return tool.Version
+		if tool.Name != toolName {
+			continue
+		}
+		installed = true
+		if tool.IsActive {
+			return tool.Version, true
 		}
 	}
-	return ""
+	return "", installed
 }
 
 // isDistributedSource returns true if the source string is a distributed
