@@ -11,6 +11,99 @@ import (
 	"github.com/tsukumogami/tsuku/internal/testutil"
 )
 
+func TestActiveVersionOf(t *testing.T) {
+	// The ordering here mirrors Manager.List, which sorts ascending by version:
+	// the oldest retained version comes first and the active one is last. A
+	// selection that takes the first name match reads 0.16.0 and reports an
+	// update that never happened.
+	retained := []install.InstalledTool{
+		{Name: "koto", Version: "0.12.2", IsActive: true},
+		{Name: "shirabe", Version: "0.16.0"},
+		{Name: "shirabe", Version: "0.18.0"},
+		{Name: "shirabe", Version: "0.19.1", IsActive: true},
+	}
+
+	cases := []struct {
+		name          string
+		tools         []install.InstalledTool
+		tool          string
+		wantVersion   string
+		wantInstalled bool
+	}{
+		{
+			name:          "several retained versions picks the active one",
+			tools:         retained,
+			tool:          "shirabe",
+			wantVersion:   "0.19.1",
+			wantInstalled: true,
+		},
+		{
+			name:          "single version",
+			tools:         retained,
+			tool:          "koto",
+			wantVersion:   "0.12.2",
+			wantInstalled: true,
+		},
+		{
+			name:          "not installed",
+			tools:         retained,
+			tool:          "kubectl",
+			wantVersion:   "",
+			wantInstalled: false,
+		},
+		{
+			name: "present but no active entry is still installed",
+			tools: []install.InstalledTool{
+				{Name: "shirabe", Version: "0.16.0"},
+			},
+			tool:          "shirabe",
+			wantVersion:   "",
+			wantInstalled: true,
+		},
+		{
+			name:          "empty list",
+			tools:         nil,
+			tool:          "shirabe",
+			wantVersion:   "",
+			wantInstalled: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			version, installed := activeVersionOf(tc.tools, tc.tool)
+			if version != tc.wantVersion || installed != tc.wantInstalled {
+				t.Errorf("activeVersionOf(_, %q) = (%q, %v), want (%q, %v)",
+					tc.tool, version, installed, tc.wantVersion, tc.wantInstalled)
+			}
+		})
+	}
+}
+
+// TestActiveVersionOfFeedsOutcomeMessage covers the two helpers in the
+// combination the update command uses them in: the version read before the
+// install and the version read after must agree when nothing changed, so the
+// user sees "already at the latest version" rather than silence.
+func TestActiveVersionOfFeedsOutcomeMessage(t *testing.T) {
+	tools := []install.InstalledTool{
+		{Name: "shirabe", Version: "0.16.0"},
+		{Name: "shirabe", Version: "0.19.1", IsActive: true},
+	}
+
+	before, installed := activeVersionOf(tools, "shirabe")
+	if !installed {
+		t.Fatal("shirabe should be reported as installed")
+	}
+	// A no-op update leaves the same version active.
+	after, _ := activeVersionOf(tools, "shirabe")
+
+	got := updateOutcomeMessage("shirabe", before, after)
+	want := "shirabe is already at the latest version (0.19.1)."
+	if got != want {
+		t.Errorf("updateOutcomeMessage = %q, want %q", got, want)
+	}
+}
+
 func TestUpdateOutcomeMessage(t *testing.T) {
 	cases := []struct {
 		name   string

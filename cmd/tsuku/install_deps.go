@@ -366,19 +366,6 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 		}
 	}
 
-	// Check for checksum verification (only warn for explicit installs)
-	if isExplicit {
-		switch r.GetChecksumVerification() {
-		case recipe.ChecksumDynamic:
-			// Downloads without static checksums — inform but don't block.
-			// The plan generator computes checksums at install time.
-			reporter.Log("Note: Checksums for '%s' will be computed during installation.", toolName)
-
-		case recipe.ChecksumEcosystem, recipe.ChecksumStatic:
-			// Ecosystem verification or static checksums — silent.
-		}
-	}
-
 	// Check and install dependencies
 	if len(r.Metadata.Dependencies) > 0 {
 		reporter.Status(fmt.Sprintf("Checking dependencies for %s...", toolName))
@@ -571,6 +558,26 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 		}
 		setInstalledInIndex(toolName, true)
 		return nil
+	}
+
+	// Disclose a recipe that pins no upstream checksum, for explicit installs
+	// only. This sits after the already-installed short-circuit on purpose:
+	// the note describes an integrity property of the download that is about
+	// to happen, and on the no-op path there is no download -- the cached plan
+	// is reused and nothing is hashed. Printed earlier it was a permanent line
+	// narrating work that never ran, while the actual outcome ("already
+	// installed") was a transient spinner message the terminal then cleared.
+	if isExplicit && !quietFlag {
+		switch r.GetChecksumVerification() {
+		case recipe.ChecksumDynamic:
+			// No upstream checksum to compare against: the plan pins whatever
+			// the server served at generation time, which catches later
+			// corruption but not a substitution made before we first looked.
+			reporter.Log("Note: '%s' publishes no checksums; integrity is pinned to the artifact fetched now.", toolName)
+
+		case recipe.ChecksumEcosystem, recipe.ChecksumStatic:
+			// Ecosystem verification or an upstream-declared checksum -- silent.
+		}
 	}
 
 	// Emit the install-start line now that the version is resolved from the plan.
