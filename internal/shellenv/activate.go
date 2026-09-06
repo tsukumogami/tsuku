@@ -1,3 +1,22 @@
+// REBASE WARNING for tsukumogami/tsuku#2554, which moves this file into a new
+// internal/activation package and rewrites the emitter around a shared
+// exportLine helper.
+//
+// That helper still formats with %q. Taking their side of the conflict compiles
+// cleanly, passes review as a package move, and silently reverts the quoting fix
+// this file carries -- %q is a Go string-literal quoter, so $ and backticks stay
+// live inside the double quotes it produces, and the shell hook evaluates this
+// output. The correct resolution is setVar's body plus their additions, not
+// either side whole.
+//
+// TestFormatExports_HostileValuesDoNotExecute is what catches the revert
+// (mutation-verified), and internal/shellenv/injection_test.go will fail to
+// compile after the package move -- which is intended. Move that file; do not
+// delete it to fix the build.
+//
+// This warning lives here rather than only in the test files because the person
+// resolving that conflict is working in this one.
+
 // Package shellenv computes per-directory PATH activation for tsuku projects.
 // A project directory with a .tsuku.toml file declares tool requirements;
 // ComputeActivation resolves those to concrete bin directories under

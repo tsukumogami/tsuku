@@ -62,8 +62,14 @@ func TestPOSIX_NewlineIsNotEscaped(t *testing.T) {
 }
 
 func TestFish_EscapesBackslashBeforeQuote(t *testing.T) {
-	// Order is load-bearing. Escaping the quote first would escape the
-	// backslash introduced by that escape, yielding '\\\'' rather than '\\\''.
+	// Order is load-bearing. Escaping the quote first introduces a backslash,
+	// which the backslash pass then escapes as well: the input's one backslash
+	// and the introduced one both double, yielding '\\\\'' where the correct
+	// order yields '\\\''.
+	//
+	// This sentence previously gave the same string on both sides of "rather
+	// than", so it justified nothing -- and it is the reader's only reason not
+	// to swap the two lines in Fish().
 	got := Fish(`\'`)
 	want := `'\\\''`
 	if got != want {
@@ -168,7 +174,7 @@ var fishLive = []struct {
 	{"bare_paren", "x(touch INJECTED)y"},
 	{"brace_expansion", "x{a,b}y"},
 	{"embedded_single_quote", `it's a path`},
-	{"double_backslash", `a\b`},
+	{"double_backslash", `a\\b`},
 	{"newline", "line1\nline2"},
 	{"plain", "/usr/bin:/bin"},
 }
@@ -231,18 +237,19 @@ func TestRoundTripUnderFish(t *testing.T) {
 // than it looks like, because seven of the eleven round-trip identically under
 // both quoters and so cannot detect a shared-quoter mistake.
 //
-// Measured by handing the real POSIX and Fish functions to a real fish, on 3.6.0
-// and confirmed against the 3.7.0 CI provisions. Of nine candidates, exactly
+// Measured by handing the real POSIX and Fish functions to a real fish -- on
+// 3.6.0, 3.7.0 (what CI provisions) and 4.0.2. Of nine candidates, exactly
 // these four fail when POSIX-quoted output is handed to fish. Three that look
 // like they should diverge and do not are recorded so nobody adds them
 // expecting signal: a *single* backslash (`a\b`), a literal backslash-n
 // (`a\nb`), and a single quote followed by a backslash (`a'\b`).
 //
-// The earlier note here credited a probe of 3.7.1 that emulated the quoting in
-// sed instead of calling these functions. It is named rather than deleted
-// because it is what produced the corrupted fixtures described below: an
-// emulation can agree with the real thing about which values diverge and still
-// be measuring something else.
+// "By handing the real functions to a real fish" is the load-bearing part. The
+// first version of this measurement re-implemented the quoting in sed instead
+// of calling POSIX and Fish, reached the correct conclusion about which values
+// diverge, and produced the corrupted fixtures below off the wrong bytes. An
+// emulation can agree with the real thing about the answer and still be
+// measuring something else.
 
 // backslashes states how many backslashes the value is supposed to contain.
 // It is not decoration: these four fixtures were once written through a shell

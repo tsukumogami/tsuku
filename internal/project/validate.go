@@ -48,6 +48,12 @@ func validateDeclarations(tools map[string]ToolRequirement) (map[string]ToolRequ
 		// The declared version becomes a path component too, and is as
 		// unchecked as the name was. A name-only fix leaves the identical hole
 		// through the other half of the same composition.
+		//
+		// internal/updates/apply.go removed its own version check citing this
+		// one. Named here so that relaxing this rule -- permitting '+' for
+		// semver build metadata, say -- is visibly a decision about two
+		// packages rather than one. Its comment records a second, independent
+		// reason it is safe, so this is not the only thing holding it up.
 		if err := pinsafe.ValidateRequested(req.Version); err != nil {
 			diags = append(diags, fmt.Sprintf("ignoring %q: %v", key, err))
 			continue
@@ -80,6 +86,26 @@ func validateKey(key string) error {
 	if isOrgScoped {
 		if serr := validateOrgSource(source); serr != nil {
 			return serr
+		}
+		// A key has a third component, and it was reaching a path sink
+		// unchecked. SplitOrgKey strips everything after the last '@' before it
+		// splits owner/repo from the tool name, so the version inside an
+		// org-scoped key -- "owner/repo:tool@1.2.3" -- is discarded by the
+		// splitter and never seen by either of the checks above. It is then
+		// promoted to the effective version at install time and composed into a
+		// path, which is the whole reason versions are validated at all.
+		//
+		// "owner/repo@1.0:evil" and "owner/repo@x$(id):jq" both passed this
+		// function before this check existed. The traversal case did not, but
+		// only incidentally: SplitOrgKey rejects ".." anywhere in the key as a
+		// substring, which catches that one shape and nothing else.
+		//
+		// This is the same rule the value half already gets, applied to the
+		// component that happened to be spelled inside the key instead.
+		if atIdx := strings.LastIndex(key, "@"); atIdx > 0 {
+			if verr := pinsafe.ValidateRequested(key[atIdx+1:]); verr != nil {
+				return fmt.Errorf("version in key %q: %w", key, verr)
+			}
 		}
 	}
 

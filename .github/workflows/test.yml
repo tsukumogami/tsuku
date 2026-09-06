@@ -63,17 +63,17 @@ jobs:
           fi
 
       - name: Install fish
-        # internal/shellquote evaluates its emitted output in a real fish to
-        # prove the fish dialect round-trips. Fish's single quotes recognise an
-        # escaped quote and an escaped backslash where POSIX's recognise
-        # nothing, so a shared POSIX quoter corrupts a backslash under fish --
-        # and every other fixture in that suite round-trips identically under
-        # both dialects, so nothing else catches it.
+        # internal/shellquote and internal/shellenv evaluate their emitted
+        # output in a real fish; the dialect difference that makes this
+        # necessary is documented at internal/shellquote/shellquote.go.
         #
         # Guarding those tests on LookPath alone would leave them skipped on
-        # every run: green, and reading as coverage while testing nothing.
-        # bash needs no step; ubuntu-latest already has it.
-        run: sudo apt-get install -y --no-install-recommends fish
+        # every run: green, and reading as coverage while testing nothing. That
+        # is what TSUKU_REQUIRE_FISH below prevents, and why this step is not
+        # optional. bash needs no step; ubuntu-latest already has it.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends fish
 
       - name: Run tests
         # PRs: fast feedback without race detector or coverage

@@ -514,17 +514,16 @@ func evalAndRead(t *testing.T, shell, output, varName string) string {
 // TestFormatExports_HostileValuesDoNotExecute is the assertion the old tests
 // could not make.
 //
-// It is also the rebase guard. A sibling change moves this file into a new
-// package and rewrites the emitter around a shared exportLine helper; taking
-// that side of the conflict compiles cleanly and silently reverts the quoting
-// fix, because it still formats with %q. This test fails in that case --
-// verified by mutation -- so the revert is loud rather than silent. If you are
-// resolving that conflict: the correct result is this body plus their
-// additions, not either side whole. Every value here is attacker-influenced in production: Dir is
-// the directory holding the project config, named by whoever authored the
-// cloned repository, and it reaches the emitted output with no validation and
-// no existence check. The marker file is what separates "the string looks
-// escaped" from "nothing ran".
+// It is also the rebase guard for tsukumogami/tsuku#2554 -- this test failing
+// is what makes that revert loud. The full explanation is at the top of
+// activate.go, where the person resolving that conflict will be working.
+//
+// Every value here is attacker-influenced in production: Dir is the directory
+// holding the project config, named by whoever authored the cloned repository,
+// and it reaches the emitted output with no validation and no existence check.
+// The marker file is what separates "the string looks escaped" from "nothing
+// ran"; the read-back is what separates "nothing ran" from "the value was
+// mangled into something harmless".
 func TestFormatExports_HostileValuesDoNotExecute(t *testing.T) {
 	for _, shell := range []string{"bash", "fish"} {
 		t.Run(shell, func(t *testing.T) {

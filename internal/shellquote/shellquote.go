@@ -22,11 +22,23 @@ import "strings"
 
 // POSIX quotes s for sh, bash and zsh.
 //
-// The result is single-quoted, with each embedded single quote rendered as the
-// close-reopen idiom '\”. Everything else -- $, backticks, backslashes,
-// newlines, glob characters, whitespace -- is literal inside single quotes and
-// needs no escaping. The empty string yields ”, which is required rather than
-// cosmetic: an unquoted empty value disappears from the command line.
+// The result is single-quoted. Each embedded single quote is rendered with the
+// close-reopen idiom, and the empty string yields an empty quoted pair:
+//
+//	it's  ->  'it'\''s'
+//	      ->  ''
+//
+// Everything else -- $, backticks, backslashes, newlines, glob characters,
+// whitespace -- is literal inside single quotes and needs no escaping. The
+// empty case is required rather than cosmetic: an unquoted empty value
+// disappears from the command line entirely.
+//
+// Those two lines are indented deliberately. gofmt reformats doc comments and
+// converts a pair of apostrophes into a Unicode right quotation mark, so this
+// idiom written in running prose does not survive the formatter -- it had
+// already been silently rewritten here once, in the one package where the
+// difference between an apostrophe and a typographic quote is the entire
+// subject. Indented lines are preformatted and are left alone.
 func POSIX(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
 }

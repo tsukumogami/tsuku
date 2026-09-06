@@ -2,6 +2,7 @@ package project
 
 import (
 	"bytes"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -87,8 +88,23 @@ func TestFprintDiagnostics_WritesWhereItIsTold(t *testing.T) {
 		Diagnostics: []string{`refused tool name "x$(id)y"`},
 	}
 
-	var stderr, stdout bytes.Buffer
+	// The real os.Stdout, not a second buffer. This assertion used to compare a
+	// bytes.Buffer that was never passed to anything, so it could not fail --
+	// and the property it was reaching for is the load-bearing one here, since
+	// hook-env's stdout is evaluated by the shell.
+	realStdout := os.Stdout
+	pr, pw, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("pipe: %v", err)
+	}
+	os.Stdout = pw
+
+	var stderr bytes.Buffer
 	r.FprintDiagnostics(&stderr)
+
+	os.Stdout = realStdout
+	pw.Close()
+	leaked, _ := io.ReadAll(pr)
 
 	if !strings.Contains(stderr.String(), "x$(id)y") {
 		t.Errorf("diagnostic did not name the offending key: %q", stderr.String())
@@ -96,8 +112,10 @@ func TestFprintDiagnostics_WritesWhereItIsTold(t *testing.T) {
 	if !strings.Contains(stderr.String(), "/tmp/proj/.tsuku.toml") {
 		t.Errorf("diagnostic did not say which file to edit: %q", stderr.String())
 	}
-	if stdout.Len() != 0 {
-		t.Errorf("nothing should reach a stream that was not passed in: %q", stdout.String())
+	if len(leaked) != 0 {
+		t.Errorf("diagnostics reached os.Stdout: %q.\n\n"+
+			"hook-env writes shell text there for the shell to evaluate, and these "+
+			"messages quote a key that came from the config file.", leaked)
 	}
 }
 
