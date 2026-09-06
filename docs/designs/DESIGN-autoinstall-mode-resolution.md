@@ -570,6 +570,16 @@ that a `tsuku install` against the fixture must pin `indexfixture.SharedVersion`
 — an empty constraint silently falls back to the `dev` version and `latest`
 fails.
 
+**Correction, from building it (Issue 2).** "AC18's prefix half needs a fixture
+provider or it is cut" is wrong, and R20 is why. R20 puts resolution of a
+non-exact version outside this work — it stays the installer's job, unchanged —
+and asks only that carrying the recipe identity does not change what is carried
+alongside it. AC18's subject is therefore which recipe was chosen, and both
+halves are observable at the declaration layer, where the string is carried
+verbatim and never resolved. The mechanism the sentence above describes is
+accurate; the conclusion drawn from it was not. No fixture version provider is
+needed and none was built.
+
 **The R17 check is an AST pass keyed on element count, not a grep on names.**
 A grep cannot work, for the reason R17 itself gives: several registry names are
 ordinary words, so text matching cannot separate a deliberate fixture from an

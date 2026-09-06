@@ -137,41 +137,56 @@ func TestDeclarationsFor_TwoOrgSourcesAreTwoDeclarations(t *testing.T) {
 	}
 }
 
-// AC11a, second half. Adding a bare key alongside the two org-scoped ones does
-// not resolve the ambiguity.
+// AC11a, second half. Adding a bare key alongside the two org-scoped ones
+// still yields two declarations: the bare key does not break the tie, and it
+// is not a third candidate either. The ambiguity to report is the one between
+// the two registries.
 //
 // This is the case that separates the stated rule from "the bare key wins the
 // tie", which is the more dangerous wrong implementation because it looks
 // principled: it passes AC11, AC12 and the first half above, and only here
-// does it return one declaration where the configuration is still ambiguous
-// between two different registries.
+// does it collapse a configuration that is still ambiguous.
 func TestDeclarationsFor_BareKeyDoesNotBreakTheTieBetweenTwoOrgSources(t *testing.T) {
 	fx := indexfixture.New(t)
+	const bareOnlyVersion = "3.0.0"
 	r := declaringResolver(map[string]string{
-		indexfixture.DeclaredRecipe: "3.0.0",
+		indexfixture.DeclaredRecipe: bareOnlyVersion,
 		orgKeyA:                     "1.0.0",
 		orgKeyB:                     "2.0.0",
 	}, "/project/.tsuku.toml")
 
 	declared := declarationsFor(t, r, fx, indexfixture.CommandTwoProviders)
 
-	if len(declared) < 2 {
-		t.Fatalf("declarations = %v, want more than one: a bare key does not select "+
-			"between two org-scoped sources, so this configuration is still ambiguous",
-			configKeys(declared))
-	}
-	// Every key the user wrote stands on its own, so the refusal can name all
-	// of them. Collapsing the bare key into one of the org keys would have to
-	// choose which, and there is no basis for the choice.
-	want := []string{indexfixture.DeclaredRecipe, orgKeyA, orgKeyB}
+	want := []string{orgKeyA, orgKeyB}
 	if !equalStrings(configKeys(declared), want) {
-		t.Errorf("declarations came from %v, want %v", configKeys(declared), want)
+		t.Fatalf("declarations came from %v, want %v: a bare key does not select "+
+			"between two org-scoped sources", configKeys(declared), want)
+	}
+	// The versions are what catch a collapse that kept the shape. "The bare
+	// key wins the tie" returns one declaration carrying 3.0.0; nothing here
+	// may carry it, because the bare key declared no source to resolve from.
+	for i, d := range declared {
+		if d.Version == bareOnlyVersion {
+			t.Errorf("declaration %d from %q carries the bare key's version %q; "+
+				"the bare key contributes no declaration here",
+				i, d.ConfigKey, bareOnlyVersion)
+		}
+	}
+	if declared[0].Version != "1.0.0" || declared[1].Version != "2.0.0" {
+		t.Errorf("versions = %q, %q, want %q, %q",
+			declared[0].Version, declared[1].Version, "1.0.0", "2.0.0")
 	}
 }
 
 // Two keys denoting the same recipe from the same source are one declaration.
 // SplitOrgKey strips the version suffix, so these two keys reduce to the same
 // org-scoped recipe rather than to two.
+//
+// Which of the two versions survives is settled by a sort and nothing is
+// reported, which is the shape R2a rejects for *differing* sources. It is
+// tolerated here because there is one recipe to install either way, so the
+// choice cannot run the wrong tool -- it can only pin the wrong version of the
+// right one. Pinned so a later change to that judgment is a visible one.
 func TestDeclarationsFor_SameSourceTwiceIsOneDeclaration(t *testing.T) {
 	fx := indexfixture.New(t)
 	r := declaringResolver(map[string]string{
@@ -212,9 +227,16 @@ func TestDeclarationsFor_RecipeInNoIndexDeclaresNothing(t *testing.T) {
 		t.Run(command, func(t *testing.T) {
 			got := declarationsFor(t, declaring, fx, command)
 			want := declarationsFor(t, none, fx, command)
-			if len(got) != len(want) {
+			if !equalStrings(configKeys(got), configKeys(want)) {
 				t.Errorf("with the config: %v; with no config at all: %v; AC17 requires these to agree",
 					configKeys(got), configKeys(want))
+			}
+			// Naming the baseline rather than only comparing against it. A
+			// comparison alone would hold if both sides started reporting a
+			// declaration, which is the state AC17 exists to rule out.
+			if len(got) != 0 {
+				t.Errorf("declarations = %v, want none: no declared recipe provides %q",
+					configKeys(got), command)
 			}
 		})
 	}

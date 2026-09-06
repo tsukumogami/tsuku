@@ -142,12 +142,13 @@ refused, and keeping both invites a later reader to remove whichever one they
 meet first. AC11a is the criterion: the cheapest wrong implementation dedups on
 the bare name, collapses the pair, and still passes AC11, AC12 and AC13.
 
-**A bare key alongside two org sources is a third declaration, not a
-tiebreaker.** R2's collapse presupposes a single recipe, and with two sources
-that presupposition fails, so every key the user wrote stands on its own and
-the refusal names all three. Collapsing the bare key into one of the org keys
-would have to choose which, and there is no basis for the choice — which is the
-behavior this requirement set exists to remove.
+**A bare key alongside two org sources contributes no declaration.** AC11a says
+the set is still two, so the bare key neither breaks the tie nor stands as a
+third candidate. R2's collapse presupposes a single recipe, and with two
+sources that presupposition fails, so the bare key has no recipe to collapse
+into and the ambiguity to report is the one between the two registries. The
+version it declares does not reach the set, which is what a test can see: "the
+bare key wins the tie" returns one declaration carrying that version.
 
 `ProjectVersionFor` is retained in this unit so the package still compiles
 against its existing caller. Its deletion, with `Tools()`, the `lookup` field

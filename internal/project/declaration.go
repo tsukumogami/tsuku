@@ -52,10 +52,11 @@ type ProjectDeclaration struct {
 //     the configuration has a bare key, else the sorted-first key of the one
 //     org-scoped source.
 //   - Two or more org-scoped sources: one declaration per source, ordered by
-//     source, plus one for the bare key if there is one. The bare key does not
-//     break the tie -- the collapse above presupposes a single recipe, and
-//     with two sources that presupposition fails, so every key the user wrote
-//     stands on its own and the refusal names all of them.
+//     source. A bare key alongside them adds nothing and is dropped -- it does
+//     not break the tie, and it is not a third candidate either. The collapse
+//     above presupposes a single recipe; with two sources that presupposition
+//     fails, and the ambiguity the refusal has to report is the one between
+//     the two registries.
 //
 // A malformed key -- one SplitOrgKey rejects -- is skipped. It cannot denote a
 // recipe, so it cannot be declared, and treating it as a bare name would let
@@ -112,10 +113,7 @@ func buildDeclarations(tools map[string]ToolRequirement, configPath string) map[
 			continue
 		}
 
-		set := make([]ProjectDeclaration, 0, len(bySource))
-		if hasBareKey {
-			set = append(set, declare(""))
-		}
+		set := make([]ProjectDeclaration, 0, len(orgSources))
 		for _, source := range orgSources {
 			set = append(set, declare(source))
 		}
