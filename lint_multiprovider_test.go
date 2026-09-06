@@ -7,7 +7,6 @@ import (
 	"go/printer"
 	"go/token"
 	"os"
-	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -195,18 +194,25 @@ func h() map[string][]byte {
 }
 
 // TestMultiProviderCheckReadsHelperCallArgument is the other half of the pair
-// above, and exists to make the []byte-conversion branch falsifiable in both
-// directions. Reading a helper's argument as TOML rather than as a path finds
-// nothing here, because "libexec/vi" contains no "bin/" for the TOML scanner
-// to key on -- so a checker that took the wrong branch would report zero and
-// this test would fail.
+// above, and pins the split between the two arms. A helper's argument says
+// nothing about which command the recipe declares -- the helper decides that,
+// and "vi" here is a name, not a path -- so the pair is reported under the
+// conditional message rather than as a command. What makes the two keys a pair
+// is that the same argument produces the same recipe.
 func TestMultiProviderCheckReadsHelperCallArgument(t *testing.T) {
 	src := `package p
 
 func g() map[string][]byte {
 	return map[string][]byte{
-		"neovim": recipeTOML("libexec/vi"),
-		"vim":    recipeTOML("libexec/vi"),
+		"neovim": recipeTOML("vi"),
+		"vim":    recipeTOML("vi"),
+	}
+}
+
+func h() map[string][]byte {
+	return map[string][]byte{
+		"neovim": recipeTOML("vi"),
+		"vim":    recipeTOML("jq"),
 	}
 }
 `
@@ -216,6 +222,10 @@ func g() map[string][]byte {
 	}
 	if len(violations) != 1 || violations[0].Rule != ruleRecipeMap {
 		t.Fatalf("got %v, want one %s violation", violations, ruleRecipeMap)
+	}
+	if !strings.Contains(violations[0].What, "if it declares a binary") {
+		t.Errorf("helper-argument pair was reported as a settled command rather than a conditional pair: %s",
+			violations[0].What)
 	}
 }
 
@@ -304,7 +314,7 @@ func single(toml []byte) map[string][]byte {
 			len(violations), violations)
 	}
 	for _, v := range violations {
-		if strings.Contains(v.What, identPrefix) {
+		if strings.Contains(v.What, sharedPrefix) {
 			t.Errorf("internal marker leaked into the message: %s", v.What)
 		}
 	}
@@ -337,11 +347,13 @@ const (
 	ruleMatchLiteral = "multi-element BinaryMatch literal"
 	ruleRecipeMap    = "recipe map with two keys yielding the same command"
 
-	// identPrefix marks a key that stands for "whatever this expression
-	// evaluates to" rather than for a real command, so the two namespaces
-	// share one counting map without colliding. A Go expression cannot
-	// contain a colon outside a string, and a command name never does.
-	identPrefix = "expr:"
+	// sharedPrefix marks a key that stands for "whatever these keys have in
+	// common" rather than for a command read out of a recipe, so the two
+	// namespaces share one counting map without colliding. Only this side is
+	// prefixed, and a command name is the base of a path from a recipe's
+	// binaries list, so colliding would take a recipe declaring a binary
+	// literally named "shared:something".
+	sharedPrefix = "shared:"
 )
 
 // scanMultiProviderConstruction parses every _test.go file under root,
@@ -439,10 +451,10 @@ func checkMultiProviderSource(name, src string) ([]multiProviderViolation, error
 
 		if isRecipeMap(lit.Type) {
 			if cmd, n := duplicateCommandInRecipeMap(lit); n >= 2 {
-				what := fmt.Sprintf("%d keys yield command %q", n, cmd)
-				if text, ok := strings.CutPrefix(cmd, identPrefix); ok {
-					what = fmt.Sprintf("%d keys hold the same recipe bytes (%s); "+
-						"if that recipe declares a binary, they are two providers of one command", n, text)
+				what := fmt.Sprintf("%d keys declare the command %q", n, cmd)
+				if text, ok := strings.CutPrefix(cmd, sharedPrefix); ok {
+					what = fmt.Sprintf("%d keys hold the same recipe, built from %s; "+
+						"if it declares a binary, they are two providers of one command", n, text)
 				}
 				violations = append(violations, multiProviderViolation{
 					Pos:  pos,
@@ -498,10 +510,13 @@ func elementType(expr ast.Expr) (ast.Expr, bool) {
 // fact about those packages, not about the type.
 //
 // If this ever produces a false positive -- a map[string][]byte in one of the
-// four that is not a recipe map, whose values happen to yield one name twice
-// -- the fix is to narrow duplicateCommandInRecipeMap, not to add a suppression
-// comment. There is deliberately no exemption mechanism: an escape hatch on
-// this rule is an escape hatch on R17.
+// four that is not a recipe map at all, or one whose shared value carries no
+// binary -- the fix is to change the construct or to narrow this predicate so
+// the map is not read as a recipe map. It is not to narrow
+// duplicateCommandInRecipeMap, which for an opaque value has nothing finer to
+// go on, and it is not to add a suppression comment: there is deliberately no
+// exemption mechanism, because an escape hatch on this rule is an escape hatch
+// on R17.
 func isRecipeMap(expr ast.Expr) bool {
 	m, ok := expr.(*ast.MapType)
 	if !ok {
@@ -519,14 +534,10 @@ func isRecipeMap(expr ast.Expr) bool {
 	return ok && elt.Name == "byte"
 }
 
-// duplicateCommandInRecipeMap returns the command that two or more entries of
-// lit yield, and how many entries yield it.
-//
-// The command a recipe TOML yields is the base name of its declared binary
-// path, which Rebuild derives the same way. Two forms are read: a helper call
-// carrying the binary path as its only string argument (minimalRecipeTOML
-// ("bin/vi")), and a literal TOML string, from which every bin/<name> is
-// taken.
+// duplicateCommandInRecipeMap returns the key that two or more entries of lit
+// share, and how many share it. See commandsYieldedBy for what a key is: a
+// command read out of inline TOML, or a sharedPrefix key standing for the
+// bytes two opaque values have in common.
 func duplicateCommandInRecipeMap(lit *ast.CompositeLit) (string, int) {
 	counts := map[string]int{}
 	var order []string
@@ -557,24 +568,29 @@ func duplicateCommandInRecipeMap(lit *ast.CompositeLit) (string, int) {
 //
 // A map[string][]byte entry cannot be a bare string literal -- an untyped
 // string constant is not assignable to []byte -- so there is no literal form
-// to read. Two forms can be read for their contents:
+// to read. Exactly one form can be read for the commands it actually
+// declares: a []byte conversion wrapping inline TOML,
+// []byte("[metadata]\nbinaries = [\"bin/vi\"]"), scanned for its binaries.
+// Those keys are unprefixed, and a duplicate among them is a duplicate
+// command with nothing left to assume.
 //
-//   - a []byte conversion wrapping inline TOML, []byte("[metadata]\n..."),
-//     scanned for the binaries it declares;
-//   - a single-argument helper carrying a string literal,
-//     minimalRecipeTOML("bin/vi"), read as the binary path it names.
+// Everything else -- a helper call, a variable, a field, an index expression
+// -- is opaque. Those are keyed on what two entries would have to share to
+// hold the same bytes: the helper's argument where there is one, the source
+// text of the expression otherwise. A duplicate among them says the two keys
+// hold the same recipe, and *if* that recipe declares a binary they are two
+// providers of one command.
 //
-// Anything else is opaque, and is keyed on the source text of the expression
-// instead. Two keys holding the textually identical expression -- one shared
-// variable, one shared field, the same helper called with the same arguments
-// -- hold the same recipe bytes, so if that recipe declares a binary the pair
-// is a multi-provider case.
-//
-// The "if" is real and is not proved here: a shared value declaring no binary
+// The "if" is real and is not proved here. A shared value declaring no binary
 // produces no index rows and is not a multi-provider case, but which it is
-// cannot be known from the syntax. The rule reports the pair and leaves the
-// author to say which. nil is the one shape excluded outright, because it
-// never carries a recipe and reporting it would only ever be noise.
+// cannot be known from the syntax, so the rule reports the pair and leaves
+// the author to say which. The assumption underneath is that a repeated
+// expression evaluates to the same bytes both times, which an impure one
+// breaks; nobody writes a recipe map that way, and if someone does, being
+// asked about it is the right outcome.
+//
+// nil is the one shape excluded outright, because it never carries a recipe
+// and reporting it would only ever be noise.
 //
 // See the package comment on internal/indexfixture for what this rule misses.
 // That list names the cases worth knowing about; it is not exhaustive, and a
@@ -583,17 +599,25 @@ func commandsYieldedBy(expr ast.Expr) []string {
 	if call, ok := expr.(*ast.CallExpr); ok && len(call.Args) == 1 {
 		if s, ok := stringLiteral(call.Args[0]); ok {
 			if isByteSliceConversion(call.Fun) {
-				return commandsInRecipeTOML(s)
+				// Inline TOML that declares no binary under bin/ falls through
+				// to the opaque key rather than yielding nothing: two keys
+				// holding identical TOML are the same pair either way, and the
+				// scanner only recognizes one layout.
+				if cmds := commandsInRecipeTOML(s); len(cmds) > 0 {
+					return cmds
+				}
+			} else {
+				// A helper's argument, whatever the helper does with it. Two
+				// keys built from the same argument hold the same recipe even
+				// when the helpers differ.
+				return []string{sharedPrefix + strconv.Quote(s)}
 			}
-			return []string{commandFromBinaryPath(s)}
 		}
 	}
 	if ident, ok := expr.(*ast.Ident); ok && ident.Name == "nil" {
 		return nil
 	}
-	// Prefixed so the text of an expression cannot collide with a command
-	// name derived from a binary path.
-	return []string{identPrefix + exprText(expr)}
+	return []string{sharedPrefix + exprText(expr)}
 }
 
 // exprText renders an expression back to source, so two values can be compared
@@ -651,10 +675,4 @@ func commandsInRecipeTOML(toml string) []string {
 			cmds = append(cmds, strings.TrimSuffix(name, ".exe"))
 		}
 	}
-}
-
-// commandFromBinaryPath mirrors how Rebuild derives a command name from a
-// declared binary path.
-func commandFromBinaryPath(binaryPath string) string {
-	return strings.TrimSuffix(path.Base(binaryPath), ".exe")
 }

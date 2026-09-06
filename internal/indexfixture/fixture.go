@@ -18,18 +18,19 @@
 //     elements, including one whose type is elided one level inside a
 //     container -- `map[string][]index.BinaryMatch{"vi": {{...}, {...}}}`,
 //     the usual shape for a command-keyed LookupFunc stub;
-//   - a `map[string][]byte` whose keys yield one command twice, where a value
-//     is read as inline TOML, as a single-argument helper's string, or -- when
-//     it can be read as neither -- as a body two keys hold the same
-//     expression for.
+//   - a `map[string][]byte` where two keys hold the same recipe: read as the
+//     command a value's inline TOML declares, or -- for a value whose contents
+//     cannot be read -- as the helper argument or expression text two keys
+//     have in common.
 //
 // Everything else passes. A slice built by append or in a loop, a named slice
-// type, an elided literal two levels down, a recipe map assembled by
-// statement rather than written as a literal: all invisible to it. That list
-// is the shapes worth knowing about rather than a closed set, and a construct
-// missing from it is not thereby sanctioned -- if you find yourself checking
-// whether the rule will catch what you are about to write, that is the
-// question answering itself. Build it here.
+// type, an elided literal two levels down, a recipe map assembled by statement
+// rather than written as a literal, and the one most likely to be reached for
+// by accident: two *different* variables that happen to hold the same recipe,
+// which nothing here can see. That list is the shapes worth knowing about
+// rather than a closed set, and a construct missing from it is not thereby
+// sanctioned -- if you find yourself checking whether the rule will catch what
+// you are about to write, that is the question answering itself. Build it here.
 //
 // The whole fixture is offline. "Offline" means no external network rather
 // than no sockets: installation runs a run_command step that writes a shell
@@ -124,8 +125,11 @@ const (
 	//
 	// This pair exists to exercise Lookup's ordering, not to stand in for a
 	// completed install. A unit that needs a real one writes the tool tree
-	// itself, at Cfg.ToolBinDir(recipe, version) for the declared path and
-	// Cfg.CurrentDir for the globally-active one.
+	// itself, and which path depends on which branch it is aiming at: the
+	// declared branch stats Cfg.ToolBinDir(<the declared recipe>, <the
+	// declared version>), the undeclared one execs from Cfg.CurrentDir. Those
+	// name the same recipe only once Issue 3's narrowing lands -- before it,
+	// the declared branch builds its path from matches[0].Recipe.
 	RecipeRankedInstalled = "fixture-ranked-zulu"
 
 	// RecipeRankedUninstalled provides CommandInstalledFirst and is not
@@ -350,8 +354,8 @@ func (f *Fixture) Lookup(ctx context.Context, command string) ([]index.BinaryMat
 //     a loader passed in. Skipping this gives a recipe-not-found error.
 //
 //  3. In cmd/tsuku, set the package-level `globalCtx`. main sets it and tests
-//     have to. Skipping this panics deep inside plan execution, in a stack
-//     that names neither globalCtx nor this package.
+//     have to. Skipping this panics somewhere below plan generation, in a
+//     stack that names neither globalCtx nor this package.
 //
 // See cmd/tsuku/install_fixture_test.go for the whole shape.
 func (f *Fixture) Loader() *recipe.Loader {
