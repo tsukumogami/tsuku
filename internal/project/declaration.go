@@ -48,12 +48,10 @@ type ProjectDeclaration struct {
 // `@version` suffix -- but only on the org-scoped branch, so a bare
 // "koto@2.0.0" would denote a recipe of that whole name instead. Row four is a
 // different recipe from rows two and three despite the matching bare name,
-// because its source differs; that is the case the rule below turns on.
-//
-// Grouping on the denoted recipe rather than on the bare name is the whole
-// point of the rule below. Two org-scoped keys whose sources differ denote
-// different recipes from different registries; only the index's bare-name
-// representation makes them look alike.
+// because its source differs; that is the case the rule below turns on, and it
+// is why the grouping keys on the denoted recipe rather than on the bare name.
+// Rows two and four are different recipes from different registries, and only
+// the index's bare-name representation makes them look alike.
 //
 // # The rule
 //
@@ -64,7 +62,9 @@ type ProjectDeclaration struct {
 //   - At most one org-scoped source: ONE declaration, however many keys are
 //     involved. A bare key's version wins if there is a bare key, else the one
 //     source's. This is the ordinary case, and it covers a bare key alone, an
-//     org key alone, and the two together.
+//     org key alone, and the two together. Where several keys denote that one
+//     source -- rows two and three above -- the lowest by string order wins,
+//     and it is that key the declaration reports as its ConfigKey.
 //   - Two or more org-scoped sources: one declaration per source, ordered by
 //     source, so the caller sees an ambiguity and refuses. A bare key
 //     alongside them is dropped rather than added as a third.
@@ -98,6 +98,10 @@ func buildDeclarations(tools map[string]ToolRequirement, configPath string) map[
 		if !isOrg {
 			source = ""
 		}
+		// Creating an entry and writing to it stay in one iteration with no
+		// condition between them, so no entry is ever left empty. The second
+		// loop relies on that; putting a `continue` or an `if` between these
+		// two statements is what would break it.
 		if byRecipe[bare] == nil {
 			byRecipe[bare] = make(map[string]string)
 		}
@@ -108,10 +112,8 @@ func buildDeclarations(tools map[string]ToolRequirement, configPath string) map[
 
 	declarations := make(map[string][]ProjectDeclaration, len(byRecipe))
 	for bare, bySource := range byRecipe {
-		// Every entry in byRecipe is created and written in the same iteration
-		// of the loop above, with nothing between the two that can skip the
-		// write, so bySource is never empty. That is what makes the fallback in
-		// the one-source branch safe; keep it true if you ever filter here.
+		// bySource is never empty -- see the loop above, which is where that
+		// could be broken. The one-source branch indexes orgSources on it.
 		orgSources := make([]string, 0, len(bySource))
 		for source := range bySource {
 			if source != "" {

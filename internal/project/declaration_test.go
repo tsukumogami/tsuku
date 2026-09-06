@@ -310,6 +310,43 @@ func TestDeclarationsFor_MalformedKeyDeclaresNothing(t *testing.T) {
 	}
 }
 
+// A recipe appearing twice in matches contributes its declarations once. The
+// production index cannot emit that -- (command, recipe) is its primary key --
+// but matches is a parameter, and a duplicated declaration would read to the
+// caller as an ambiguity, refusing a command that is not ambiguous at all.
+//
+// The repeated match is taken from the fixture's own single-provider lookup
+// rather than written out, which is what the multi-provider rule is for: the
+// recipe name here is whatever the index says provides the command. Doubling
+// it afterwards is not a second provider, and the fixture has no construct for
+// one provider listed twice because no index produces one.
+func TestDeclarationsFor_DuplicateMatchDeclaresOnce(t *testing.T) {
+	fx := indexfixture.New(t)
+	ctx := context.Background()
+
+	matches, err := fx.Lookup(ctx, indexfixture.CommandOneProvider)
+	if err != nil {
+		t.Fatalf("Lookup(%q) error = %v", indexfixture.CommandOneProvider, err)
+	}
+	if len(matches) != 1 {
+		t.Fatalf("%q has %d providers, want 1", indexfixture.CommandOneProvider, len(matches))
+	}
+	doubled := append(matches, matches[0])
+
+	r := declaringResolver(map[string]string{
+		indexfixture.RecipeSolo: "1.0.0",
+	}, "/project/.tsuku.toml")
+
+	declared, err := r.DeclarationsFor(ctx, doubled)
+	if err != nil {
+		t.Fatalf("DeclarationsFor error = %v", err)
+	}
+	if len(declared) != 1 {
+		t.Fatalf("declarations = %v, want exactly one: a repeated match is still "+
+			"one declared recipe", configKeys(declared))
+	}
+}
+
 func TestDeclarationsFor_NoConfig(t *testing.T) {
 	r := NewResolver(nil, nil).(*Resolver)
 	declared, err := r.DeclarationsFor(context.Background(), []index.BinaryMatch{
