@@ -177,7 +177,18 @@ Add the package var at the lookup boundary in `cmd/tsuku` so the wiring in
 `cmd_run.go` is testable for the first time. It is a wiring seam, not a fixture
 source: a hand-written match slice is what Issue 1's check rejects.
 
-**Acceptance Criteria**: AC1, AC3 through AC10, AC19, AC44, AC47. AC1, AC3 and AC4
+**The deletion of `ProjectVersionFor` is the load-bearing half of this issue,
+not tidying after it.** Issue 2 leaves a correct declaration set behind a
+single-value compat shim that `run.go` still calls, so between Issue 2 and this
+one the run path keeps single-picking while every test passes — the set is
+produced and not consumed. Deleting the accessor is what makes the compiler
+force the rewire; leaving it in place lets a correct set sit unused beside a
+path that ignores it, and no behavioral test can see that, because a redundant
+accessor produces no wrong answer while nothing calls it. AC11c is the
+criterion, and it is satisfied by the symbol's absence rather than by an
+assertion about output.
+
+**Acceptance Criteria**: AC1, AC3 through AC10, AC11c, AC19, AC44, AC47. AC1, AC3 and AC4
 are run against the command whose declared recipe ranks second or later, per
 Issue 1 — otherwise a narrowing that never matches passes them. AC44 is the
 single-provider regression bar and belongs here because this is the unit that
@@ -203,7 +214,7 @@ version, its config key, and one invocation that works — `tsuku install
 `ExitAmbiguous`, with a new case in `cmd_run.go`'s switch. Identical with and
 without a terminal; no picker in either.
 
-**Acceptance Criteria**: AC13, AC14, AC15, AC16, AC26. AC16 exercises `tsuku
+**Acceptance Criteria**: AC11b, AC13, AC14, AC15, AC16, AC26. AC16 exercises `tsuku
 install` against the same two-provider fixture, which is why Issue 1 must make
 the substitution reachable from that path.
 

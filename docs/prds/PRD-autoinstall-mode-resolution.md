@@ -774,7 +774,8 @@ mechanical check over this table is sufficient.
 |---|---|
 | R1 | AC1, AC3, AC4, AC18 |
 | R2 | AC11, AC12 |
-| R2a | AC11a |
+| R2a | AC11a, AC11b |
+| R1 [d] | AC11c |
 | R3 | AC1, AC2, AC3, AC4 |
 | R3a | AC19, AC47 |
 | R3b | AC1, AC2 |
@@ -810,6 +811,9 @@ mechanical check over this table is sufficient.
 - **[b]** R15's origin-linkage clause is verified only through R12's enum, not
   separately.
 - **[c]** AC34 is reachable only under the never-raise alternative.
+- **[d]** AC11c verifies R1's single-production-site property by removing the
+  competing accessor rather than by observing behavior, because a redundant
+  accessor produces no wrong output while it is unused.
 
 A note states a fact about coverage — which criteria are reachable, and what a
 row leaves unverified. It never restates requirement content, which would be
@@ -870,11 +874,30 @@ because auto or suggest remains reachable under every outcome.
       recipe rather than being refused as ambiguous.
 - [ ] **AC11a** A project declaring two org-scoped keys whose org components differ but
       whose bare names agree — `org-a/koto` and `org-b/koto`, with no bare `koto`
-      key — refuses under R6 rather than resolving, and the refusal names both
-      configuration keys. Adding a bare `koto` key alongside them does not resolve
-      it. This is the criterion that catches a dedup keyed on the bare name rather
-      than on the recipe a key denotes: the cheapest wrong implementation collapses
-      the two and still passes AC11, AC12 and AC13 unchanged.
+      key — yields **two** declarations, carrying both configuration keys and both
+      declared versions separately. Adding a bare `koto` key alongside them still
+      yields two. This is the criterion that catches a dedup keyed on the bare name
+      rather than on the recipe a key denotes: that implementation collapses the
+      pair and still passes AC11, AC12 and AC13 unchanged. The bare-key case is
+      separate because "the bare key wins the tie" is the more dangerous wrong rule
+      — it looks principled and passes everything else.
+- [ ] **AC11b** With that same configuration, `tsuku run <command>` refuses under R6
+      rather than resolving, and the refusal names both configuration keys.
+
+      AC11a and AC11b are split because one unit produces the declaration set and a
+      later one consumes it, and a criterion that spans both would be reported as
+      met by whichever ran first. AC11a is satisfiable the moment the set is right;
+      AC11b is not satisfiable until the run path stops single-picking. Between
+      those two points the set is correct and unused, and only AC11b can tell.
+- [ ] **AC11c** No caller resolves a project declaration through a single-value
+      accessor. `Resolver.ProjectVersionFor` — which answers "the version", implying
+      one — is gone from the tree, not merely bypassed, and nothing in
+      `internal/autoinstall` reaches a declaration except through the set.
+
+      This exists because deleting the accessor is what forces the run path to be
+      rewired: leave it in place and a correct declaration set can sit beside a run
+      path that still single-picks, with every test passing. The failure mode is not
+      a wrong answer, it is a right answer nobody consumes.
 - [ ] **AC12** In that case the version used is the one the bare key declares, matching
       the precedence that holds today.
 - [ ] **AC13** With a project declaring two providers of one command, `tsuku run
