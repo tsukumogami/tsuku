@@ -309,10 +309,15 @@ reads the config.
 - The slice is populated from the silent-skip sites that exist **today**, so
   this issue has a testable property of its own and is not dead plumbing: a
   declaration that is currently dropped without a word now says so.
-- Five consumers print it: `internal/shellenv/activate.go:48`,
-  `cmd/tsuku/install_project.go:55`, `cmd/tsuku/cmd_shim.go:65`,
-  `cmd/tsuku/cmd_run.go:95` and `internal/updates/apply.go`. `cmd_run.go:95`
-  discards the load error today (`projectCfg, _ :=`) and needs the most change.
+- **Four** consumers print it: `internal/shellenv/activate.go`,
+  `cmd/tsuku/install_project.go`, `cmd/tsuku/cmd_shim.go` and
+  `cmd/tsuku/cmd_run.go`. The last discards the load error today
+  (`projectCfg, _ :=`) and needs the most change.
+- `internal/updates/apply.go` was originally counted as a fifth. It is not one:
+  it receives a `*project.ConfigResult` rather than loading one, and its only
+  production caller (`cmd/tsuku/cmd_apply_updates.go:51`) passes `nil`. There
+  is nothing for it to print. This is the same fact that makes Issue 7's
+  `effectivePin` fallback already dead.
 - **Asserted per consumer, concretely**: given a config with one bad key and
   one good one, each of the five commands prints a message naming the bad key
   on **stderr**, prints **nothing about it on stdout**, and still honours the

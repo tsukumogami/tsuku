@@ -6,6 +6,7 @@ package project
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -66,6 +67,33 @@ type ConfigResult struct {
 	Config *ProjectConfig
 	Path   string // absolute path to the .tsuku.toml file
 	Dir    string // directory containing the config file
+
+	// Diagnostics are things wrong with the file that did not stop it loading:
+	// a declaration that was refused, a section that was ignored. They are
+	// carried here rather than returned as an error because an error aborts
+	// the whole load, and most of these concern one entry.
+	//
+	// Consumers MUST render these to stderr. Not stdout: tsuku hook-env writes
+	// activation output to stdout and the shell hook evaluates it, so a
+	// diagnostic there would be executed rather than read -- and these messages
+	// quote the offending key, which is attacker-controlled. Use
+	// FprintDiagnostics rather than printing them ad hoc.
+	Diagnostics []string
+}
+
+// FprintDiagnostics writes each diagnostic to w, one per line, prefixed with
+// the config's path so the reader knows which file to edit.
+//
+// It exists so the stderr rule has one implementation rather than five, and so
+// that a consumer added later inherits it. Passing os.Stdout here would defeat
+// the point; callers pass os.Stderr.
+func (r *ConfigResult) FprintDiagnostics(w io.Writer) {
+	if r == nil {
+		return
+	}
+	for _, d := range r.Diagnostics {
+		fmt.Fprintf(w, "%s: %s\n", r.Path, d)
+	}
 }
 
 // LoadProjectConfig finds the nearest .tsuku.toml by walking up from startDir.
@@ -92,14 +120,15 @@ func LoadProjectConfig(startDir string) (*ConfigResult, error) {
 
 		configPath := filepath.Join(dir, ConfigFileName)
 		if _, err := os.Stat(configPath); err == nil {
-			cfg, parseErr := parseConfigFile(configPath)
+			cfg, diags, parseErr := parseConfigFile(configPath)
 			if parseErr != nil {
 				return nil, parseErr
 			}
 			return &ConfigResult{
-				Config: cfg,
-				Path:   configPath,
-				Dir:    dir,
+				Config:      cfg,
+				Path:        configPath,
+				Dir:         dir,
+				Diagnostics: diags,
 			}, nil
 		}
 
@@ -153,20 +182,41 @@ func isCeiling(dir string, ceilings map[string]struct{}) bool {
 }
 
 // parseConfigFile reads and validates a .tsuku.toml file.
-func parseConfigFile(path string) (*ProjectConfig, error) {
+//
+// It returns diagnostics alongside the config: things wrong with the file that
+// do not justify refusing to load it. An error is reserved for the case where
+// nothing about the file's contents is known -- it could not be read, or it is
+// not TOML -- because there is then no per-entry judgement to make.
+func parseConfigFile(path string) (*ProjectConfig, []string, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("reading %s: %w", path, err)
+		return nil, nil, fmt.Errorf("reading %s: %w", path, err)
 	}
 
 	var cfg ProjectConfig
-	if _, err := toml.Decode(string(data), &cfg); err != nil {
-		return nil, fmt.Errorf("parsing %s: %w", path, err)
+	md, err := toml.Decode(string(data), &cfg)
+	if err != nil {
+		return nil, nil, fmt.Errorf("parsing %s: %w", path, err)
 	}
 
 	if len(cfg.Tools) > MaxTools {
-		return nil, fmt.Errorf("parsing %s: declares %d tools, maximum is %d", path, len(cfg.Tools), MaxTools)
+		return nil, nil, fmt.Errorf("parsing %s: declares %d tools, maximum is %d", path, len(cfg.Tools), MaxTools)
 	}
 
-	return &cfg, nil
+	var diags []string
+
+	// A key tsuku does not understand is dropped by the decoder without a
+	// word. That is how a typo'd section name becomes "my tools stopped
+	// working" with nothing to go on.
+	for _, key := range md.Undecoded() {
+		diags = append(diags, fmt.Sprintf("ignoring unrecognized key %q", key.String()))
+	}
+
+	// `tools = "something"` parses cleanly and yields no tools at all, so the
+	// file looks fine and activates nothing. Worth saying out loud.
+	if len(cfg.Tools) == 0 {
+		diags = append(diags, "no tools declared (a [tools] table is expected)")
+	}
+
+	return &cfg, diags, nil
 }

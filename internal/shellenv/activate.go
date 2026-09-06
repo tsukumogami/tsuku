@@ -50,6 +50,8 @@ func ComputeActivation(cwd, prevPath, curDir string, cfg *config.Config) (*Activ
 	if err != nil {
 		return nil, fmt.Errorf("loading project config: %w", err)
 	}
+	// Stderr, never stdout: hook-env's stdout is what the shell hook evaluates.
+	result.FprintDiagnostics(os.Stderr)
 	if result == nil {
 		if prevPath != "" {
 			// Was active, now leaving project directory -- deactivate.

@@ -320,11 +320,15 @@ consumer.
 This is the one place the "no consumer changes" claim does not hold, and the
 distinction matters: **the security property is inherited without any consumer
 changing, because a refused declaration is already absent from the map they
-read. The diagnostic is not.** Five call sites have to print it:
-`internal/shellenv/activate.go:48`, `cmd/tsuku/install_project.go:55`,
-`cmd/tsuku/cmd_shim.go:65`, `cmd/tsuku/cmd_run.go:95` and
-`internal/updates/apply.go`. `cmd_run.go:95` discards the load error entirely
-today (`projectCfg, _ :=`), so it needs the most work.
+read. The diagnostic is not.** Four call sites have to print it: `internal/shellenv/activate.go`,
+`cmd/tsuku/install_project.go`, `cmd/tsuku/cmd_shim.go` and
+`cmd/tsuku/cmd_run.go`, the last of which discards the load error entirely
+today (`projectCfg, _ :=`) and needs the most work.
+
+An earlier draft counted `internal/updates/apply.go` as a fifth. It is not: it
+receives a `*project.ConfigResult` rather than loading one, and its only
+production caller passes `nil`, so it has nothing to print. That is the same
+fact that makes the `effectivePin` fallback dead code.
 
 Diagnostics go to **stderr**, without exception, and this is load-bearing
 rather than conventional. `cmd/tsuku/hook_env.go:51` prints `FormatExports` to
