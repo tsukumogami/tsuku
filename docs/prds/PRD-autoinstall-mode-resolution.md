@@ -16,7 +16,7 @@ goals: |
   resolves to the declared recipe or to an error naming the declared
   candidates, never to something else. The consent question is settled on the
   record and every document describing it agrees with the code.
-upstream: docs/briefs/BRIEF-autoinstall-mode-resolution.md
+absorbed: docs/briefs/BRIEF-autoinstall-mode-resolution.md
 source_issue: 2542
 motivating_context: |
   Four issues sit on the same eight lines and were filed as separate defects:
@@ -33,6 +33,8 @@ motivating_context: |
 ## Status
 
 Accepted
+
+Absorbed [BRIEF: Autoinstall Mode Resolution](docs/briefs/BRIEF-autoinstall-mode-resolution.md); carried in Absorbed Brief.
 
 Requirements are grouped for sequencing, so that the consent decision holds up
 only what genuinely depends on it. **Group A** is behaviour, and holds under
@@ -52,6 +54,46 @@ the running code rather than reasoned about.
 So of the five issues this PRD covers, tsukumogami/tsuku#2542, #2545 and #2547
 are satisfiable in Group A, and #2550 in Group C. Only #2544 waits on the
 decision.
+
+## Absorbed Brief
+
+The framing this document's requirements were written from. Carried here because
+the brief held its contribution and nothing beyond it, and the Problem Statement
+below states the same problem more fully — a reader would otherwise read one
+idea twice.
+
+**Who is affected and when.** Anyone whose project checks a `.tsuku.toml` into
+its repository and whose command is provided by more than one recipe, which is
+27 commands in the recipe tree and a shifting set in the published registry.
+Four journeys exercised it: a developer joining a team and running a pinned
+tool; a developer working in a repository they have not read, with a consent
+mode set deliberately; a developer whose pipeline goes red on a runner with no
+terminal, running the command that worked on their laptop; and a developer
+running a tool their project never claimed to manage, in a project that
+declares something else.
+
+**What each should get.** The recipe the project named, at the version it
+pinned, without needing to know which commands in the registry are ambiguous.
+An accurate account of what a configured consent mode does and does not prevent
+inside a cloned repository. A reason on the output rather than an exit code to
+guess from. And no change at all to commands the project has not declared —
+declaring `jq` is a statement about `jq`.
+
+**The boundary the brief drew**, which the requirements below implement: in
+scope are the declaration lookup and what it must return, recipe selection,
+ambiguity the config did not resolve, whether an explicitly set mode is a floor,
+whether a gate that changes the mode says so, the terminal guard's per-command
+test, and bringing every document that describes this into line with whatever is
+decided. Out of scope are activation's pin handling, the install path's
+multi-satisfier picker, the registry's refresh cadence, the hook and shim
+mechanisms themselves, and which recipes may be installed at all.
+
+**The framing correction worth keeping.** The brief first claimed all five
+failures reduce to one cause. They do not: the consent override would survive a
+resolver that returned full recipe identity, because it is a project declaration
+treated as unconditional authority to raise the mode rather than a lost fact.
+Two adjacent causes in one function, which is why two issues that appeared to
+contradict are one piece of work, and why neither one's fix implies the other's.
 
 ## Problem Statement
 
@@ -509,8 +551,22 @@ suggest` — is contradicted by the code, and by the same document three hundred
 lines earlier. Whether it becomes true or is withdrawn is R13's to settle, and
 whichever way it lands, R16's obligation applies to the resulting text: if it
 stays it must work, and if it goes the remaining list must still leave the user
-something that does. This requirement belongs to Group B and is named here so
-R16 can be shipped without it.
+something that does.
+
+**This requirement exists to give the exemption a landing event**, not to
+restate R16's carve-out. Group C ships first, and R16's criterion is signed off
+against a mitigation list that still contains the exempt entry. The decision
+then rewrites that list. Something has to re-open R16 at that moment, and
+AC43's re-run clause hangs on R16b by name — so without R16b the obligation
+degrades into a subordinate phrase inside a requirement that has already passed
+and is therefore never revisited.
+
+The failure that permits is not a misreading. An implementer who lands the
+decision, updates the prose and considers R16 satisfied is reading correctly:
+R16 *was* satisfied, when it was checked. The end state is a design document
+offering a mitigation that does not work, attested to by a signed-off criterion
+describing text that no longer exists — which is #2544 exactly, recreated by
+the process meant to fix it.
 
 ### Group C: documentation defects that wait on nothing
 
@@ -552,10 +608,10 @@ offered against, and it is named here because "the stated threat" appears in
 the criteria and was nowhere stated.
 
 At least one mitigation shall be listed, and every mitigation listed shall work
-against that threat — except the one R16b defers, which is exempt until R16b
-lands and is then held to the same bar. Without that carve-out a reviewer must
-either fail this requirement on a deliberately pending item or waive a clause
-that says "every". Two of the three it currently offers fail for reasons that
+against that threat — except the `suggest` mitigation, whose fate the consent
+decision settles, and which is held to the same bar once settled. Without that
+carve-out a reviewer must either fail this requirement on a deliberately
+pending item or waive a clause that says "every". Two of the three it currently offers fail for reasons that
 have nothing to do with the consent decision, which is why this requirement is
 here rather than in Group B:
 
