@@ -75,6 +75,13 @@ ships one per distribution — the same ambiguity the install path built a picke
 for. Any curated registry that grows sideways, adding a second implementation of
 a tool it already carries, adds commands to this set by construction.
 
+Two cautions about all of these numbers. They come from the recipe tree, and
+`tsuku run` consults the published registry, which lags it — the two agree that
+the problem exists and disagree about which commands are affected. And the
+membership moves whenever the registry does. Nothing downstream should treat a
+list of affected commands as settled; the property is what matters, which is
+that a command is claimed by more than one recipe.
+
 It surfaces as a version welded to the wrong tool. A project that declares
 `fdclone` and never mentions `fd` still gets `Install fd@0.0.0-nope?` when
 someone runs `fd`: the pin from one recipe's declaration, paired with a
