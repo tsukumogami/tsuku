@@ -866,14 +866,27 @@ because auto or suggest remains reachable under every outcome.
       including the command whose name resembles the unknown recipe.
 - [ ] **AC18** A declaration whose version is `latest` or a prefix resolves as it does
       today; the recipe chosen is still the declared one.
-- [ ] **AC19** With the effective consent mode resolved to auto, a project declaring a
-      recipe that has no checksum verification for the current platform, and a
-      sibling provider of the same command that does: `tsuku run <command>`
-      behaves according to the declared recipe's verification status and not
-      the sibling's. Auto is named because the verification gate only runs from
-      auto; from confirm or suggest it is unobservable. This is the criterion
-      that catches a narrowing applied between the recipe-reading gates and the
-      installer.
+- [ ] **AC19** With the effective consent mode resolved to auto and a project
+      declaring a recipe that is not the index's top-ranked provider of the
+      command, the verification gate is invoked with the **declared** recipe's
+      name and not the sibling's. Auto is named because the gate only runs from
+      auto; from confirm or suggest it is unobservable.
+
+      This asserts which recipe the gate is *asked about* rather than what it
+      answers, and that is deliberate. An earlier form required a recipe with no
+      checksum verification alongside a sibling that has one — which cannot be
+      constructed, because every branch of `GetChecksumVerification` returns a
+      level at or above `ChecksumDynamic` and `ChecksumNone` is assigned nowhere
+      in the tree. That form made this criterion unsatisfiable until a defect
+      outside this work was fixed, which would have shipped a criterion nobody
+      could meet.
+
+      The restatement is also the better test of R3a. R3a's claim is that a
+      recipe-reading gate evaluates the recipe that will actually be installed;
+      the gate's verdict is not the subject, its subject is. `RecipeHasVerification`
+      is an injectable function field, so a recorder can observe the name it
+      receives — and that is precisely what catches a narrowing applied between
+      the recipe-reading gates and the installer.
 - [ ] **AC20** With a project declaring any tool, running an *undeclared* command under
       confirm mode with no terminal produces the not-interactive message and
       exit code, not a prompt written to a closed stdin.

@@ -507,11 +507,20 @@ level at or above `ChecksumDynamic`; `ChecksumNone` is declared as the iota
 zero value, appears in two comments, and is assigned nowhere in the tree. So
 `HasChecksumVerification()` is true for every recipe that loads, and the
 verification gate fires only when `loader.Get` itself fails. The doc comment
-above the function states the opposite of what it does. **AC19 cannot be
-written against this code**, and the fix is a prerequisite with a blast radius
-outside this PRD — it turns the auto-mode verification gate on for the first
-time, for every recipe without a static checksum. It is tracked separately and
-AC19 depends on it; it is not folded in here.
+above the function states the opposite of what it does.
+
+**AC19 has been restated so that it does not depend on this defect.** It now
+asserts which recipe the gate is *invoked with* rather than what the gate
+answers — which is R3a's actual claim, and is observable today through the
+injectable `RecipeHasVerification` field. The fixture property the original
+form would have needed is therefore not required either.
+
+The underlying defect is still real, and fixing it is a prerequisite with a
+blast radius outside this PRD: it turns the auto-mode verification gate on for
+the first time, for every recipe without a static checksum. It is tracked
+separately and not folded in here. What this work owes it is documentary — the
+consent model ships while one of the three controls it describes does nothing,
+so the documentation has to say so.
 
 A consequence worth stating plainly: **R3a's fail-open hazard is currently
 moot** — narrowing the installer without narrowing the gate cannot fail open

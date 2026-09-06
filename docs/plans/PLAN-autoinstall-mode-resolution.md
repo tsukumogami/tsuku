@@ -78,13 +78,17 @@ The three existing violations migrate — `internal/index/lookup_test.go:43-46`,
 single-element literals are untouched, which is why the rule keys on element
 count rather than on names.
 
-**AC49 is partially deferred and cannot be closed in full here.** Two of its
-eight properties are not buildable: a recipe with no checksum verification
-cannot be constructed at all, and a prefix version cannot resolve offline. The
-first blocks AC19 behind the verification-gate prerequisite; the second means
+**AC49 is partially deferred and cannot be closed in full here.** One of its
+eight properties is not buildable: a prefix version cannot resolve offline, so
 AC18's prefix half needs a fixture provider or is cut. `latest` does resolve
 offline against a local `httptest` server, where offline means no external
 network rather than no sockets.
+
+The verification-pair property is **not** required. AC19 was restated to assert
+which recipe the gate is invoked with rather than what it answers, so no recipe
+without verification has to exist for it — which also removes the only criterion
+in this plan that depended on a defect outside it. No acceptance criterion here
+is unsatisfiable at merge.
 
 **Complexity**: testable
 
@@ -130,7 +134,7 @@ Add the package var at the lookup boundary in `cmd/tsuku` so the wiring in
 `cmd_run.go` is testable for the first time. It is a wiring seam, not a fixture
 source: a hand-written match slice is what Issue 1's check rejects.
 
-**Acceptance Criteria**: AC1, AC3 through AC10, AC44, AC47. AC1, AC3 and AC4
+**Acceptance Criteria**: AC1, AC3 through AC10, AC19, AC44, AC47. AC1, AC3 and AC4
 are run against the command whose declared recipe ranks second or later, per
 Issue 1 — otherwise a narrowing that never matches passes them. AC44 is the
 single-provider regression bar and belongs here because this is the unit that
@@ -226,11 +230,18 @@ That needs an origin, which nothing carries today: `resolveMode` returns a bare
 `Mode`. It returns an origin alongside it here, and `Run` takes both. Issue 6
 consumes that plumbing rather than introducing it.
 
-**Acceptance Criteria**: AC31, AC36, AC37, AC38, AC39, AC40, and the design's
-D1-1 through D1-5. D1-5 is the one that distinguishes this decision from the
-one it was nearly confused with: with `TSUKU_AUTO_INSTALL_MODE=auto` and no
-corroborating config, the declaration must not re-raise the output of the
-escalation restriction.
+**Acceptance Criteria**: AC31, AC33, AC36, AC37, AC38, AC39, AC40, and the
+design's D1-1 through D1-5. D1-5 is the one that distinguishes this decision
+from the one it was nearly confused with: with `TSUKU_AUTO_INSTALL_MODE=auto`
+and no corroborating config, the declaration must not re-raise the output of
+the escalation restriction.
+
+**AC33 is the floor, and it is this issue's rather than the documentation
+issue's.** It is D1-3 restated — `suggest` set by the flag, the environment
+variable and the configuration key in turn, each honoured — and the bounded
+alternative is precisely the one under which it holds. An earlier draft filed
+it with the never-raise criteria and so left the decision's own floor assigned
+to nobody.
 
 Closes #2544.
 
@@ -324,10 +335,11 @@ setting as a mitigation to name a case it does not cover.
 
 **Acceptance Criteria**: AC28, AC29, AC41, AC42, AC43, AC51, AC53.
 
-AC32, AC33 and AC34 are **not** criteria of this issue and are not satisfiable
-under the chosen alternative: they belong to the never-raise branch, and AC32
-is the direct negation of AC36, which Issue 6 carries. The PRD's note [c]
-records AC34 as reachable only under never-raise.
+AC32 and AC34 are **not** criteria of this issue and are not satisfiable under
+the chosen alternative: they belong to the never-raise branch. AC32 is the
+direct negation of AC36, which Issue 6 carries, and the PRD's note [c] records
+AC34 as reachable only under never-raise. AC33 is not among them — it holds
+under the bounded alternative and Issue 6 carries it.
 
 **Complexity**: simple
 
@@ -358,6 +370,7 @@ paragraph gates nothing.
 version that reaches `ToolBinDir` and lets a cloned repository's config name an
 arbitrary path for the fast path to exec, and the verification gate that never
 fires. Both are prerequisite defects with blast radius outside this work, both
-are held pending a disclosure decision, and AC19 depends on the second. Issue 10
-carries the obligation to say the gate is inert rather than let the
+are held pending a disclosure decision, and neither is a prerequisite for any
+criterion here — AC19 was restated so it is not. Issue 10 still carries the
+obligation to say the verification gate is inert, rather than let the
 documentation imply a control that does not run.
