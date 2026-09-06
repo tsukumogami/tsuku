@@ -10,14 +10,24 @@
 // builds a multi-provider case some other way.
 //
 // What that check actually catches is worth stating, because it is narrower
-// than "any other way" and reading it as total is how a gap goes unnoticed. It
-// catches composite literals: a `[]index.BinaryMatch` with two or more
-// elements, and a `map[string][]byte` whose keys yield one command twice. It
-// does not catch a slice built by append or in a loop, an array-typed literal,
-// a named slice type, or a recipe map assembled by assignment. Those are not
-// how anyone writes one of these by hand today -- the rule found five real
-// violations where the design predicted three -- but a case built that way
-// passes, and the fixture is still the right place to build it.
+// than "any other way" and reading it as total is how a gap goes unnoticed.
+//
+// It catches composite literals, and only composite literals:
+//
+//   - a `[]index.BinaryMatch` or `[N]index.BinaryMatch` with two or more
+//     elements, including one whose type is elided inside a container --
+//     `map[string][]index.BinaryMatch{"vi": {{...}, {...}}}`, the usual shape
+//     for a command-keyed LookupFunc stub;
+//   - a `map[string][]byte` whose keys yield one command twice, where a value
+//     is read as inline TOML, as a helper's binary-path argument, or as a
+//     variable two keys share.
+//
+// It misses a slice built by append or in a loop, a named slice type, a recipe
+// map assembled by assignment, and a recipe map whose two values are different
+// variables or multi-argument calls. Nothing in the tree is written that way
+// today -- the rule found five real violations where the design predicted
+// three -- but a case built that way passes, and the fixture is still the
+// right place to build it.
 //
 // The whole fixture is offline. "Offline" means no external network rather
 // than no sockets: installation runs a run_command step that writes a shell
@@ -100,10 +110,14 @@ const (
 	//
 	// "Installed" here means installed *in the index*, and nowhere else. No
 	// files exist under $TSUKU_HOME/tools for it and state.json does not know
-	// it, so install.Manager.GetToolState returns nil and the already-installed
-	// fast path in autoinstall.Runner.Run will not fire for it. It exists to
-	// exercise Lookup's ordering, not to stand in for a completed install. A
-	// unit that needs a real one has to lay it down itself.
+	// it, so install.Manager.GetToolState returns nil for it.
+	//
+	// Do not hand CommandInstalledFirst to autoinstall.Runner.Run. Run's
+	// already-installed fast path reads matches[0].Installed straight off the
+	// index, so it fires for this recipe and execs a binary that was never
+	// laid down. This pair exists to exercise Lookup's ordering, not to stand
+	// in for a completed install; a unit that needs a real one has to write
+	// the tool tree itself.
 	RecipeRankedInstalled = "fixture-ranked-zulu"
 
 	// RecipeRankedUninstalled provides CommandInstalledFirst and is not
@@ -155,6 +169,12 @@ const recipeVersionHost = "https://tsuku-fixture.invalid"
 // implementing VersionLister, and HTTPJSONProvider implements none, so the
 // constraint passes through verbatim. Closing that gap needs a fixture version
 // provider, which is deliberately not built here.
+//
+// A unit reaching for a prefix should read R20 before building one. R20 says
+// resolution of a non-exact version stays the installer's job, unchanged, and
+// that what the declaration carries is the recipe identity -- so a criterion
+// about a prefix declaration can be satisfied at the declaration layer, where
+// the string is carried verbatim and never resolved.
 const LatestVersionKeyword = "latest"
 
 // Fixture is a throwaway $TSUKU_HOME holding the fixture recipes, a rebuilt
@@ -197,8 +217,9 @@ type Fixture struct {
 // Two consequences of the $TSUKU_HOME redirection, because it goes through
 // t.Setenv:
 //
-//   - A test that calls New cannot call t.Parallel. t.Setenv panics if it
-//     does, so this fails loudly rather than corrupting a neighbor.
+//   - A test that calls New cannot call t.Parallel afterwards: t.Parallel
+//     panics once t.Setenv has run. That fails loudly rather than corrupting
+//     a neighbor, but it is a constraint on every consumer.
 //   - Every config.DefaultConfig() after this call reads the fixture's home,
 //     including one built by code that has never heard of this package. If a
 //     test builds its own *config.Config as well, the two disagree about where
@@ -303,8 +324,8 @@ func (f *Fixture) Lookup(ctx context.Context, command string) ([]index.BinaryMat
 // This is what makes the fixture reachable from the `tsuku install` path as
 // well as from `tsuku run`.
 //
-// Three conditions come with driving an install, and all three are silent
-// failures rather than loud ones:
+// Three conditions come with driving an install. Only the first fails
+// silently, which is why it is first:
 //
 //  1. Pin the install to [SharedVersion]. An exact version resolves with no
 //     network, but an empty or `latest` constraint sends the install to the
@@ -315,10 +336,10 @@ func (f *Fixture) Lookup(ctx context.Context, command string) ([]index.BinaryMat
 //
 //  2. In cmd/tsuku, assign this loader to the package-level `loader` variable
 //     and restore it afterwards. The install pipeline reads that variable, not
-//     a loader passed in.
+//     a loader passed in. Skipping this gives a recipe-not-found error.
 //
 //  3. In cmd/tsuku, set the package-level `globalCtx`. main sets it and tests
-//     have to; leaving it nil panics deep inside plan execution, in a stack
+//     have to. Skipping this panics deep inside plan execution, in a stack
 //     that names neither globalCtx nor this package.
 //
 // See cmd/tsuku/install_fixture_test.go for the whole shape.

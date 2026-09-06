@@ -193,9 +193,119 @@ func h() map[string][]byte {
 	}
 }
 
+// TestMultiProviderCheckReadsHelperCallArgument is the other half of the pair
+// above, and exists to make the []byte-conversion branch falsifiable in both
+// directions. Reading a helper's argument as TOML rather than as a path finds
+// nothing here, because "libexec/vi" contains no "bin/" for the TOML scanner
+// to key on -- so a checker that took the wrong branch would report zero and
+// this test would fail.
+func TestMultiProviderCheckReadsHelperCallArgument(t *testing.T) {
+	src := `package p
+
+func g() map[string][]byte {
+	return map[string][]byte{
+		"neovim": recipeTOML("libexec/vi"),
+		"vim":    recipeTOML("libexec/vi"),
+	}
+}
+`
+	violations, err := checkMultiProviderSource("helper_test.go", src)
+	if err != nil {
+		t.Fatalf("parsing source: %v", err)
+	}
+	if len(violations) != 1 || violations[0].Rule != ruleRecipeMap {
+		t.Fatalf("got %v, want one %s violation", violations, ruleRecipeMap)
+	}
+}
+
+// TestMultiProviderCheckCatchesElidedLiterals covers the shape a command-keyed
+// LookupFunc stub takes. The inner literals carry no type of their own, so the
+// type-keyed rule cannot see them and they have to be reached through their
+// container.
+func TestMultiProviderCheckCatchesElidedLiterals(t *testing.T) {
+	src := `package p
+
+import "github.com/tsukumogami/tsuku/internal/index"
+
+var byCommand = map[string][]index.BinaryMatch{
+	"vi": {
+		{Recipe: "neovim", Command: "vi"},
+		{Recipe: "vim", Command: "vi"},
+	},
+	"jq": {
+		{Recipe: "jq", Command: "jq"},
+	},
+}
+
+var nested = [][]index.BinaryMatch{
+	{
+		{Recipe: "neovim", Command: "vi"},
+		{Recipe: "vim", Command: "vi"},
+	},
+}
+
+var fixed = [2]index.BinaryMatch{
+	{Recipe: "neovim", Command: "vi"},
+	{Recipe: "vim", Command: "vi"},
+}
+`
+	violations, err := checkMultiProviderSource("elided_test.go", src)
+	if err != nil {
+		t.Fatalf("parsing source: %v", err)
+	}
+	if len(violations) != 3 {
+		t.Fatalf("got %d violations, want 3 (map value, nested slice, fixed array): %v",
+			len(violations), violations)
+	}
+	for _, v := range violations {
+		if v.Rule != ruleMatchLiteral {
+			t.Errorf("rule = %q, want %q", v.Rule, ruleMatchLiteral)
+		}
+	}
+}
+
+// TestMultiProviderCheckCatchesSharedRecipeVariable covers the recipe-map form
+// whose values are identifiers. What the variable holds is unknowable here,
+// but two keys bound to the same one hold the same recipe, so the pair is a
+// multi-provider case whatever that recipe turns out to declare.
+func TestMultiProviderCheckCatchesSharedRecipeVariable(t *testing.T) {
+	src := `package p
+
+func g(toml, other []byte) map[string][]byte {
+	return map[string][]byte{"neovim": toml, "vim": toml}
+}
+
+func h(toml, other []byte) map[string][]byte {
+	return map[string][]byte{"neovim": toml, "vim": other}
+}
+
+func i(toml []byte) map[string][]byte {
+	return map[string][]byte{"multi": toml}
+}
+`
+	violations, err := checkMultiProviderSource("sharedvar_test.go", src)
+	if err != nil {
+		t.Fatalf("parsing source: %v", err)
+	}
+	if len(violations) != 1 {
+		t.Fatalf("got %d violations, want 1 (only the pair sharing one variable): %v",
+			len(violations), violations)
+	}
+	if !strings.Contains(violations[0].What, "toml") {
+		t.Errorf("violation does not name the shared variable: %s", violations[0].What)
+	}
+	if strings.Contains(violations[0].What, identPrefix) {
+		t.Errorf("internal marker leaked into the message: %s", violations[0].What)
+	}
+}
+
 const (
 	ruleMatchLiteral = "multi-element BinaryMatch literal"
 	ruleRecipeMap    = "recipe map with two keys yielding the same command"
+
+	// identPrefix marks a command name that stands for "whatever this variable
+	// holds" rather than for a real command, so the two cannot collide.
+	identPrefix = "ident:"
 )
 
 // scanMultiProviderConstruction parses every _test.go file under root,
@@ -265,12 +375,42 @@ func checkMultiProviderSource(name, src string) ([]multiProviderViolation, error
 			return true
 		}
 
+		// A literal whose elements are themselves []BinaryMatch elides the
+		// inner types: in
+		//
+		//	map[string][]index.BinaryMatch{"vi": {{...}, {...}}}
+		//
+		// the inner literal has a nil Type, so the check above never sees it.
+		// That is the natural shape for a command-keyed LookupFunc stub, which
+		// is what the units consuming this fixture reach for, so it is caught
+		// here rather than left as a documented gap.
+		if elt, ok := elementType(lit.Type); ok && isBinaryMatchSlice(elt) {
+			for _, e := range lit.Elts {
+				inner := e
+				if kv, ok := e.(*ast.KeyValueExpr); ok {
+					inner = kv.Value
+				}
+				il, ok := inner.(*ast.CompositeLit)
+				if ok && il.Type == nil && len(il.Elts) >= 2 {
+					violations = append(violations, multiProviderViolation{
+						Pos:  fset.Position(il.Pos()).String(),
+						Rule: ruleMatchLiteral,
+						What: fmt.Sprintf("%d elements, in an elided literal", len(il.Elts)),
+					})
+				}
+			}
+		}
+
 		if isRecipeMap(lit.Type) {
 			if cmd, n := duplicateCommandInRecipeMap(lit); n >= 2 {
+				what := fmt.Sprintf("%d keys yield command %q", n, cmd)
+				if name, ok := strings.CutPrefix(cmd, identPrefix); ok {
+					what = fmt.Sprintf("%d keys are bound to %s, so they hold the same recipe", n, name)
+				}
 				violations = append(violations, multiProviderViolation{
 					Pos:  pos,
 					Rule: ruleRecipeMap,
-					What: fmt.Sprintf("%d keys yield command %q", n, cmd),
+					What: what,
 				})
 			}
 		}
@@ -280,10 +420,11 @@ func checkMultiProviderSource(name, src string) ([]multiProviderViolation, error
 }
 
 // isBinaryMatchSlice reports whether expr is []index.BinaryMatch or, inside
-// the index package itself, []BinaryMatch.
+// the index package itself, []BinaryMatch. Fixed-size arrays count: an
+// [2]index.BinaryMatch literal is the same construct with a length on it.
 func isBinaryMatchSlice(expr ast.Expr) bool {
 	arr, ok := expr.(*ast.ArrayType)
-	if !ok || arr.Len != nil {
+	if !ok {
 		return false
 	}
 	switch elt := arr.Elt.(type) {
@@ -293,6 +434,18 @@ func isBinaryMatchSlice(expr ast.Expr) bool {
 		return elt.Sel.Name == "BinaryMatch"
 	}
 	return false
+}
+
+// elementType returns the type a composite literal of type expr gives its
+// elements, which is the type the elements may elide.
+func elementType(expr ast.Expr) (ast.Expr, bool) {
+	switch t := expr.(type) {
+	case *ast.ArrayType:
+		return t.Elt, true
+	case *ast.MapType:
+		return t.Value, true
+	}
+	return nil, false
 }
 
 // isRecipeMap reports whether expr is map[string][]byte, which is the shape
@@ -355,34 +508,46 @@ func duplicateCommandInRecipeMap(lit *ast.CompositeLit) (string, int) {
 
 // commandsYieldedBy extracts the command names a recipe map value declares.
 //
-// A recipe map value is always a call, because a map[string][]byte entry
-// cannot be a bare string literal -- an untyped string constant is not
-// assignable to []byte. So there are exactly two forms to read, and both are
-// calls:
+// A map[string][]byte entry cannot be a bare string literal -- an untyped
+// string constant is not assignable to []byte -- so there is no literal form
+// to read. Three forms are:
 //
 //   - a []byte conversion wrapping inline TOML, []byte("[metadata]\n..."),
 //     read by scanning the TOML for the binaries it declares;
 //   - a helper carrying the binary path as its only string argument,
-//     minimalRecipeTOML("bin/vi"), read as that path.
+//     minimalRecipeTOML("bin/vi"), read as that path;
+//   - an identifier, map[string][]byte{"neovim": toml, "vim": toml}. Its
+//     contents are not known here, but two keys bound to the *same* variable
+//     hold the same TOML and so yield the same command, whatever it is. The
+//     identifier's own name stands in for that command.
 //
-// Only single-argument calls are read either way, so an unrelated two-argument
-// helper cannot collide by accident.
+// Only single-argument calls are read, so an unrelated two-argument helper
+// cannot collide by accident. Two keys bound to two *different* variables that
+// happen to declare the same command are not caught; see the package comment
+// on internal/indexfixture for the full list of what this rule misses.
 func commandsYieldedBy(expr ast.Expr) []string {
-	call, ok := expr.(*ast.CallExpr)
-	if !ok || len(call.Args) != 1 {
-		return nil
+	switch v := expr.(type) {
+	case *ast.Ident:
+		// Prefixed so an identifier named "vi" cannot collide with a binary
+		// path that yields the command "vi".
+		return []string{identPrefix + v.Name}
+	case *ast.CallExpr:
+		if len(v.Args) != 1 {
+			return nil
+		}
+		s, ok := stringLiteral(v.Args[0])
+		if !ok {
+			return nil
+		}
+		if isByteSliceConversion(v.Fun) {
+			return commandsInRecipeTOML(s)
+		}
+		if !strings.Contains(s, "/") {
+			return nil
+		}
+		return []string{commandFromBinaryPath(s)}
 	}
-	s, ok := stringLiteral(call.Args[0])
-	if !ok {
-		return nil
-	}
-	if isByteSliceConversion(call.Fun) {
-		return commandsInRecipeTOML(s)
-	}
-	if !strings.Contains(s, "/") {
-		return nil
-	}
-	return []string{commandFromBinaryPath(s)}
+	return nil
 }
 
 // isByteSliceConversion reports whether fun is the []byte in []byte("...").
