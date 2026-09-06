@@ -149,8 +149,9 @@ The warning covered slightly more than what now refuses. Its condition was two
 or more org-scoped keys reducing to one bare name, which includes two naming
 the *same* source — `org-a/koto` and `org-a/koto@2.0.0`, which `SplitOrgKey`
 reduces alike. Those denote one recipe, stay one declaration, and are still
-settled by a sort with nothing printed. Accepted, because there is one recipe
-to install either way, so the pick can only choose a version of the right tool.
+settled by string order on the key, with nothing printed. Accepted, because
+there is one recipe to install either way, so the pick can only choose a
+version of the right tool.
 
 **A bare key alongside two org sources contributes no declaration.** AC11a says
 the set is still two, so the bare key neither breaks the tie nor stands as a

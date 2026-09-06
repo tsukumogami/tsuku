@@ -327,7 +327,7 @@ tool, and here there is one recipe to install whichever key wins, so the pick
 can only choose a version of the right tool — the same trade R2 and AC12
 already make when a bare key outranks an org key. It is weaker than R2's rule
 in one respect worth writing down: R2 names its winner, and this one is
-whichever key sorts first.
+whichever key is lowest by string order.
 
 ### D3. How the single-production-site property is enforced
 
