@@ -1,6 +1,6 @@
 ---
 schema: design/v1
-status: Proposed
+status: Current
 problem: |
   Values a cloned repository declares reach four sinks unchecked: a path
   component, shell-evaluated text, an exec target, and a registry fetch URL.
@@ -34,7 +34,7 @@ user_visible_surface: true
 
 ## Status
 
-Proposed
+Current
 
 ## Context and Problem Statement
 

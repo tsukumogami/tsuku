@@ -1,6 +1,6 @@
 ---
 schema: prd/v1
-status: Draft
+status: Done
 problem: |
   A `.tsuku.toml` comes with a repository, and tsuku treats every value it
   declares as trusted. Tool names and declared versions become filesystem
@@ -26,7 +26,7 @@ source_issue: 2553
 
 ## Status
 
-Draft
+Done
 
 Absorbed [BRIEF-activation-injection](docs/briefs/BRIEF-activation-injection.md); carried in Absorbed Brief.
 
