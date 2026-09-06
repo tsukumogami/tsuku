@@ -240,8 +240,13 @@ and the two chains need to agree which of them fixes the raw-key iteration.
    `IsValidRecipeName`) and route `validateRuntimeDependencyNames` through it,
    so there is one definition rather than a third copy.
 4. Validate at `parseConfigFile` — the derived bare name after `SplitOrgKey`,
-   **and the version** — rejecting with an error. This covers activation,
-   install, shim install and auto-apply at once.
+   **and the version** — rejecting with an error naming the offending key. This
+   covers activation, install, shim install, auto-apply and the `tsuku run`
+   fast path at once. For the version, reuse `install.ValidateRequested`, which
+   `internal/updates/apply.go:36` already applies to this exact field; this
+   codebase's disease is duplicate near-identical validators, not missing ones.
+4b. Two `IsValidRecipeName` calls at `recipePath` and `Registry.cachePath` as
+   sink-level backstop, documented as defence in depth beneath the boundary.
 5. Correct the false claims in `DESIGN-shell-env-activation.md` (`:388`, `:391`,
    `:393`, `:401`, `:411`, `:418`, `:420`) and the two other designs.
 6. Tests per the discriminating fixtures, not the illustrative ones.
@@ -264,6 +269,98 @@ and the two chains need to agree which of them fixes the raw-key iteration.
 - Resolved version strings reaching `sh -c` unvalidated
   (`internal/version/transform.go:29` has no non-test caller) → folds into the
   chokepoint issue.
+
+## Landed after the first report (round 1, sixth lead + sibling chain)
+
+I reported this explore complete when one of six leads was still running — a
+miscount, and the gate was passed on a false premise. Both items below arrived
+after that and both change the scope. Recorded here rather than smoothed over,
+because "an approval carries premises" is one of this batch's own findings.
+
+### The version component escapes at a third sink, and that one execs
+
+Predicted above; now confirmed from two directions. Reproduced here first-hand
+against a build of `main`, with an entirely ordinary tool name:
+
+```toml
+[tools]
+jq = "../../../../../../../../../../../../../../../../../../../../tmp/evil"
+```
+
+```
+$ tsuku shell --shell bash
+export PATH="/tmp/evil/bin:/home/…/.tsuku/bin:…"
+```
+
+The name is `jq`. **No name validator can reach this**, and `Skipped` stays
+empty. `tsuku_autoinstall_consent` found the same thing at
+`internal/autoinstall/run.go:100-108` — the already-installed fast path in
+`Runner.Run`, which stats the constructed path and hands the process to it via
+`syscall.Exec`, **returning before the mode dispatch and all four security
+gates**. No consent mode, no audit record. It needs no activation hook at all,
+which makes it broader than #2553's reported vector.
+
+Two mechanical notes for whoever writes the test, both learned by getting it
+wrong: `filepath.Clean` drops excess `..` past root, so over-deep is safe; but
+the first component is `jq-..`, a literal directory name rather than an ascent,
+so a traversal one segment shy lands somewhere harmless and looks like the bug
+is absent. My first reproduction failed exactly that way and nearly went down as
+a false negative.
+
+Constraint from that chain, compatible with this fix: its R20 requires the
+declared version to be reported **verbatim** by the resolver, so nothing may
+normalise or rewrite versions on the read path. Rejecting at parse is fine — a
+config that never loads never reaches the resolver. A *sanitising* fix at the
+resolver would not be.
+
+### The same key controls the registry fetch URL and the cache write path
+
+`.tsuku.toml` gets full control of the central registry fetch — owner, repo, ref
+and path. Verified first-hand:
+
+```toml
+[tools]
+"../../../../example-nonexistent-owner/reg/main/tool" = "1"
+```
+
+```
+recipe not found: HTTP 404 from
+https://raw.githubusercontent.com/example-nonexistent-owner/reg/main/tool.toml
+```
+
+The default registry is `tsukumogami/tsuku`; the traversal climbed out of
+`main/recipes/` and out of the repository. The host does not change, so this is
+not SSRF — it is **recipe substitution**, and a recipe that resolves is then
+parsed and executed by the normal install machinery. Wider than PATH injection,
+same feed, same unvalidated key.
+
+The same string is the disk-cache **write** key: `HTTPStore.Get` sets
+`key := recipePath(name)`, and on a 200 `DiskCache.Put` does a bare
+`filepath.Join(c.dir, key)` then `MkdirAll` + `WriteFile` with no containment
+check — attacker-chosen path, attacker-chosen content. **Code-established, not
+executed**: the researcher could not land a 200 (outbound requests gated in that
+environment), and this wording should not be upgraded without one.
+
+`FSStore.Get` (`internal/recipe/backing_store.go:68`) is the read equivalent for
+local-directory registries — precisely the case `IsValidRecipeName`'s doc
+comment names, from a function neither path calls.
+
+### Scope amendment, ruled by the coordinator
+
+Take **two extra `IsValidRecipeName` calls** — at `recipePath`
+(`internal/recipe/provider_unified.go:271`) and `Registry.cachePath`
+(`internal/registry/registry.go:95`). Two call sites of a function that already
+exists; the exact case its own doc comment names; and declining to move a
+control two lines while fixing the disease of controls sitting one consumer deep
+would be committing the defect in the act of correcting it.
+
+**Framing condition, and it matters:** these are **defence in depth, not the
+fix**. The parse-time validator is the fix. If the design presents the sink
+checks as the remedy, someone later removes the boundary check on the grounds
+the sink is guarded, and the drive-by feed reopens. State the layer order
+explicitly — boundary first, sink second, neither sufficient alone.
+
+Everything else in the registry area stays with the deferred hardening issue.
 
 ## Settled during convergence
 
