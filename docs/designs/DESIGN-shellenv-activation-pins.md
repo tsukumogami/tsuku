@@ -225,8 +225,20 @@ depends on the shell.d cache". Moving `activate.go` to `internal/activation` is
 and `internal/version` directly.
 
 Extracting `pin.go` (Decision 1 option A) remains a good change on its own terms
-and should be done separately. It is not coupled to this work, and doing both at
-once would double the diff for a structural improvement #2543 doesn't need.
+and should be done separately. The reason is stronger than keeping the diff
+small: after the move, `internal/activation → internal/install` is a legal edge,
+so the matcher reuse this issue needs no longer requires the leaf package at
+all. The extraction stops being a blocker and becomes what it always was on its
+merits — a question about where shared version logic lives, with its own
+consumers and its own argument. Bundling them would tie a file move to a
+shared-utility boundary change, and a revert would take both.
+
+So it isn't deferred to "someday", the trigger for revisiting: when a third
+consumer needs the matcher, or when `internal/activation`'s import of
+`internal/install` starts dragging in things activation has no business
+touching. Today the edge is consistent with the existing layout —
+`internal/version` already imports `internal/install` — so it is not a new sin,
+just one worth not deepening.
 
 **A note on the acceptance criterion, because it surprised the investigation.**
 PRD R7's criterion requires that a change to the shared rule which activation
