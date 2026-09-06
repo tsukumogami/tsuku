@@ -344,6 +344,117 @@ func TestReportActivation_QuietSuppressesEveryReason(t *testing.T) {
 	}
 }
 
+// The once-per-entry budget, end to end through the real hook-env command:
+// entering a project with an unhonorable declaration reports once, and staying
+// there reports nothing however many prompts fire.
+//
+// This exists because the two unit tests below and in internal/activation cover
+// the halves and not the composition. TestReportActivation_SilentWhenNotEntering
+// hands itself Entered=false, so it would keep passing if ComputeActivation
+// stopped setting the flag correctly in the real flow; TestResolve_EnteredTracks
+// TheDirectoryChange checks the flag but never renders a message. A cadence that
+// broke between them -- the hook nagging on every cd -- would leave both green.
+//
+// Each subsequent environment is built only from what the previous invocation
+// emitted. Assembling it by hand would manufacture exactly the state a broken
+// implementation failed to produce.
+func TestHookEnv_ReasonsAreReportedOncePerEntry(t *testing.T) {
+	projectDir, cfg := shellSetupProject(t, "[tools]\njq = \"9\"\n",
+		map[string][]string{"jq": {"1.7.1"}})
+
+	t.Setenv("PATH", "/usr/bin")
+	t.Setenv("HOME", filepath.Dir(projectDir))
+	t.Setenv("TSUKU_HOME", cfg.HomeDir)
+	chdir(t, projectDir)
+
+	// Arrival: the declaration cannot be honored, so it is reported.
+	stdout, stderr, err := runHookEnv(t, "bash")
+	if err != nil {
+		t.Fatalf("unexpected error on arrival: %v", err)
+	}
+	if !strings.Contains(stderr, "nothing installed matches") {
+		t.Fatalf("expected the no-match reason on arrival, got:\n%s", stderr)
+	}
+
+	applyExports(t, stdout)
+
+	// Every subsequent prompt in the same project is silent.
+	for i := 2; i <= 4; i++ {
+		out, errOut, err := runHookEnv(t, "bash")
+		if err != nil {
+			t.Fatalf("unexpected error on prompt %d: %v", i, err)
+		}
+		if errOut != "" {
+			t.Errorf("prompt %d in the same project reported again, so the hook "+
+				"nags on every cd:\n%s", i, errOut)
+		}
+		applyExports(t, out)
+	}
+
+	// A subdirectory of the same project is still the same project.
+	sub := filepath.Join(projectDir, "pkg")
+	if err := os.MkdirAll(sub, 0755); err != nil {
+		t.Fatal(err)
+	}
+	chdir(t, sub)
+
+	if _, errOut, err := runHookEnv(t, "bash"); err != nil {
+		t.Fatalf("unexpected error from a subdirectory: %v", err)
+	} else if errOut != "" {
+		t.Errorf("moving within the project reported again:\n%s", errOut)
+	}
+}
+
+// applyExports feeds an emitted export block back into the environment, the way
+// the shell's eval would.
+func applyExports(t *testing.T, script string) {
+	t.Helper()
+	for name, value := range parseExports(script) {
+		t.Setenv(name, value)
+	}
+}
+
+// Leaving the project and coming back is a new entry, so it reports again --
+// the budget is per entry, not once per shell.
+func TestHookEnv_ReasonsReportAgainOnReEntry(t *testing.T) {
+	projectDir, cfg := shellSetupProject(t, "[tools]\njq = \"9\"\n",
+		map[string][]string{"jq": {"1.7.1"}})
+	outside := t.TempDir()
+
+	t.Setenv("PATH", "/usr/bin")
+	t.Setenv("HOME", filepath.Dir(projectDir))
+	t.Setenv("TSUKU_HOME", cfg.HomeDir)
+	chdir(t, projectDir)
+
+	stdout, stderr, err := runHookEnv(t, "bash")
+	if err != nil || !strings.Contains(stderr, "nothing installed matches") {
+		t.Fatalf("expected a report on first entry, got err=%v stderr=%q", err, stderr)
+	}
+	applyExports(t, stdout)
+
+	// Leave: deactivation, and nothing to say on the way out.
+	chdir(t, outside)
+	stdout, stderr, err = runHookEnv(t, "bash")
+	if err != nil {
+		t.Fatalf("unexpected error leaving: %v", err)
+	}
+	if stderr != "" {
+		t.Errorf("leaving a project should say nothing, got:\n%s", stderr)
+	}
+	// Deactivation unsets the tracking variables; clear them as the shell would.
+	for _, name := range []string{"_TSUKU_DIR", "_TSUKU_PREV_PATH", "_TSUKU_STATE_STAMP"} {
+		t.Setenv(name, "")
+	}
+
+	// Come back: a fresh entry, so the developer is told again.
+	chdir(t, projectDir)
+	if _, stderr, err = runHookEnv(t, "bash"); err != nil {
+		t.Fatalf("unexpected error on re-entry: %v", err)
+	} else if !strings.Contains(stderr, "nothing installed matches") {
+		t.Errorf("re-entering the project should report again, got:\n%s", stderr)
+	}
+}
+
 // The once-per-entry budget is gated on the flag activation computed, so a
 // prompt hook firing again in the same directory says nothing more.
 func TestReportActivation_SilentWhenNotEntering(t *testing.T) {
