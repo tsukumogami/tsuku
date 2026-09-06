@@ -158,6 +158,15 @@ An `owner/repo` source reaches path and URL construction downstream, so a key
 whose source half carries traversal is refused even when its bare name is
 well-formed.
 
+The source rule is **not** R2. It must be wider: GitHub permits `[A-Za-z0-9-]`
+in an owner and `[A-Za-z0-9._-]` in a repository, and uppercase owners are
+ordinary — `BurntSushi/toml` is what parses `.tsuku.toml` in this very
+repository. Applying R2's lowercase-only rule to the source half would refuse
+it. Each of the two segments must be non-empty, must not be `.` or `..`, and
+must contain no path separator; case is not restricted. R9's one-definition
+principle applies to the *name* rule and must not be extended here, which is
+the mistake this paragraph exists to prevent.
+
 **R2.** A valid bare name is a single safe path segment: it consists only of
 lowercase letters, digits, `.`, `_` and `-`; it is non-empty; it does not
 begin with `-` or `.`; and it is not `..`. The rule is an **allowlist**:
@@ -245,8 +254,12 @@ claims listed here. This is a closed set, not an open sweep:
 ### Non-functional
 
 **R12.** No configuration that is valid today and that doesn't exercise a
-defect becomes invalid. Every tool name in the recipe registry and every
-version literal in the repository's fixtures continues to be accepted.
+defect becomes invalid, with one recorded exception: an uppercase *tool name*,
+which R9's shared rule refuses and which the Decisions section records as
+chosen rather than free. The exception is confined to the bare name — it does
+not extend to org sources (R1b) or to versions, both of which remain
+case-permissive. Every tool name in the recipe registry continues to be
+accepted.
 
 **R13.** A declaration refused at config load is refused for every command
 that reads that config — activation, install, shim install, background
@@ -351,6 +364,10 @@ Accept cases, which pin the rule against over-rejection:
 - [ ] A declared name of `hdrhistogram_c` is **accepted**. (The only registry
       name containing an underscore character; fails a rule that allows only
       `[a-z0-9.-]`.)
+- [ ] A declared name of `7zip` is **accepted**. R2 bars only `-` and `.` as a
+      first character, so a leading digit is legal — but zero of the 1449
+      registry names start with one, so the corpus sweep does not exclude
+      `^[a-z][a-z0-9._-]*$`, which is the natural pattern to write.
 - [ ] A declared name of `foo..bar` is **accepted**. (Pins R2's segment
       semantics against the substring test both reused rules currently use, so
       the extraction required by R9 cannot silently adopt the looser form.)
@@ -359,6 +376,12 @@ Accept cases, which pin the rule against over-rejection:
       which would reject every org-scoped declaration.)
 - [ ] A declared key of `tsukumogami/registry:mytool@2.0.0` is **accepted** and
       resolves to the bare name `mytool`.
+- [ ] A declared key of `BurntSushi/toml` is **accepted**. Uppercase is legal
+      in a GitHub owner, and this one parses `.tsuku.toml` in this repository.
+      (Fails an implementation that applies R2's lowercase-only bare-name rule
+      to the source half — which R9's one-definition principle actively
+      encourages, and which passes every refuse fixture and both all-lowercase
+      org accepts.)
 - [ ] A name that passes validation but whose directory does not exist is
       skipped without an error, and that outcome is distinguishable from a
       refusal. (Pins skip and reject as different outcomes, so an
@@ -379,6 +402,9 @@ Accept cases, which pin the rule against over-rejection:
       prerelease suffix and a channel marker are the version forms most likely
       to be lost to an over-strict pattern, and the pin matcher special-cases
       a leading `@`.
+- [ ] A declared version of `1.2.3-RC1` is accepted. The version rule is
+      case-permissive and must not be harmonised with R2's lowercase-only name
+      rule — a real risk in a change whose theme is one definition reused.
 - [ ] A declared version of `v1.2.3` is accepted **and reaches the resolver as
       `v1.2.3`**. (Fails a sanitising implementation. Every other accept
       fixture here is a fixed point of a leading-`v` strip, so this is the
@@ -487,6 +513,16 @@ Accept cases, which pin the rule against over-rejection:
       activation formatter's. (Fails an implementation that fixes the
       activation formatter and stops — which passes every other quoting
       criterion here, since they all exercise activation.)
+- [ ] **After evaluating `shellenv` output, `PATH` still contains the `PATH`
+      that preceded it.** That command emits
+      `export PATH="<binDir>:<currentDir>:$PATH"`, and the trailing `$PATH` is
+      the one expansion in the file that must keep expanding. An implementation
+      that single-quotes the whole statement round-trips both interpolated
+      components byte-identical, satisfies every "no substitution occurs"
+      criterion above, and silently discards the user's `PATH` for everyone
+      following the `eval $(tsuku shellenv)` the command's own help documents.
+      This is the only place where the safe fix and the correct fix diverge,
+      so it is the only criterion that catches over-quoting.
 
 ## Decisions and Trade-offs
 

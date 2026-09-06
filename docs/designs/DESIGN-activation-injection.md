@@ -10,12 +10,15 @@ problem: |
   quoter shape that the next emitter cannot ignore.
 decision: |
   Validate at `parseConfigFile`, the single point where `.tsuku.toml` becomes
-  a `ProjectConfig`, using one strict predicate extracted into
+  a `ProjectConfig`, using one strict name predicate extracted into
   `internal/recipe` and shared with the existing dependency-reference
-  consumer. Quote with a dependency-free leaf package `internal/shellquote`
-  exposing separate POSIX and Fish functions, called by both emitters. Add
-  sink-level rejection at the registry name path as a backstop beneath the
-  boundary, not as the remedy.
+  consumer, plus the existing pin rule extracted into a leaf `internal/pinsyntax`
+  because `internal/project` cannot import `internal/install` without a cycle.
+  Quote with a dependency-free leaf `internal/shellquote` exposing separate
+  POSIX and Fish functions, called by both emitters. Carry per-declaration
+  refusals as diagnostics on `ConfigResult`, printed to stderr by each
+  consumer. Add sink-level rejection at the registry name path as a backstop
+  beneath the boundary, not as the remedy.
 rationale: |
   Sink-level validation is what produced the current state: six guards, each
   covering one consumer. A boundary covers every consumer including ones not
@@ -133,7 +136,12 @@ One check where the file becomes a config object.
 
 Put the shell quoter next to `FormatExports`.
 
-Rejected on D3. It compiles — `internal/shellenv` sits below `internal/install`
+Rejected on D3, and it has a real advantage this design gives up: no new
+package, and the quoter sits beside its principal caller where a reader of
+`FormatExports` finds it without knowing it exists. Against a codebase with
+fewer emitters that would win.
+
+It also compiles — `internal/shellenv` sits below `internal/install`
 and `internal/actions`, so there is no cycle. But `cmd/tsuku/shellenv.go` also
 emits evaluated shell text and would have to import a package named for
 per-directory PATH activation to get a string function, which reads as a
@@ -148,13 +156,30 @@ leaving the correct one somewhere awkward to reach.
 `parseConfigFile` gains validation of each declared key and version before it
 returns a `ProjectConfig`. Every consumer — activation, `tsuku install`,
 `tsuku shim install`, background auto-apply, and the `tsuku run` fast path —
-reaches its values through that function, so all five inherit the guarantee
-without any of them changing (D1, R13).
+reaches its values through that function, so all five inherit the **security
+guarantee** without changing: a refused declaration is simply absent from the
+map they read (D1, R13).
+
+The **diagnostic** is a different matter and all five do change, because a
+per-declaration refusal cannot travel on the error return that aborts the whole
+load. See "How a refusal reaches the user" below. An earlier draft of this
+section claimed no consumer changes at all, which was true of the security
+property and false of the requirement that a refusal be visible.
 
 The name rule is extracted as one exported predicate in `internal/recipe`,
 layering the strict character rule over `IsValidRecipeName`, and
-`validateRuntimeDependencyNames` is refactored to call it. That refactor is
-the extraction's own proof: its existing tests must still pass (D2, R9).
+`validateRuntimeDependencyNames` is refactored to call it (D2, R9).
+
+That refactor is **not** behaviour-preserving, and an earlier draft of this
+design claimed it was. `IsValidRecipeName` rejects `..` by substring
+(`internal/recipe/name.go:31`), and two fixtures pin the consequence —
+`internal/recipe/name_test.go:24` and
+`internal/recipe/validator_runtime_deps_names_test.go:59` both assert
+`foo..bar` is rejected. R2 requires it accepted, because `..` is a path-segment
+rule rather than a substring one. So adopting R2's semantics changes those two
+fixtures, and the change is deliberate: a name with an internal doubled dot is
+not traversal, and rejecting it was over-broad. Every *other* existing test
+must pass unchanged, which is what still makes the extraction checkable.
 
 Shell quoting moves to `internal/shellquote`, a leaf importing only the
 standard library, exporting `POSIX` and `Fish`. `FormatExports` and
@@ -175,12 +200,12 @@ parseConfigFile (internal/project/config.go)
     |  for each key:
     |    SplitOrgKey(key) ---- err ----> refuse, naming the key
     |         |
-    |         +-- source half --> IsStrictRecipeSource
+    |         +-- source half --> source rule (wider than the name rule)
     |         +-- bare name ----> recipe.IsStrictRecipeName
     |    for each value:
-    |         version ---------> install.ValidateRequested
+    |         version ---------> pinsyntax.ValidateRequested
     v
-ProjectConfig  (every value already checked)
+ProjectConfig + per-declaration diagnostics
     |
     +--> activation      +--> tsuku install    +--> shim install
     +--> auto-apply      +--> tsuku run fast path
@@ -188,6 +213,49 @@ ProjectConfig  (every value already checked)
 
 `SplitOrgKey`'s error is propagated rather than discarded (R1a). Its current
 sole caller discards it, which is why the traversal reaches a sink at all.
+
+**The version rule cannot be called where it lives.** `internal/project` cannot
+import `internal/install`: the cycle is `project -> install -> shellenv ->
+project` (`internal/install/precedence.go:7`, `internal/shellenv/activate.go:15`).
+So `install.ValidateRequested` is extracted into a leaf, `internal/pinsyntax`,
+importing only `fmt`, `strings` and `unicode` — which is everything the current
+function uses — and `internal/install` re-exports or delegates to it. This is
+the same extraction shape as the name predicate and carries the same proof
+obligation: `install`'s existing tests must pass unchanged.
+
+That edge is fragile in both directions, which is worth naming given D7. The
+sibling change moving `activate.go` out of `shellenv` would break the cycle
+from the other side — but relying on that would couple this fix to a PR that
+lands after it, and the whole point of D7 is that this one stays independently
+cherry-pickable.
+
+**The source half gets a different rule from the bare name**, deliberately.
+GitHub permits uppercase in an owner and a repository; `BurntSushi/toml` parses
+`.tsuku.toml` in this repository. Each segment must be non-empty, must not be
+`.` or `..`, and must contain no separator, but case is unrestricted. R9's
+one-definition principle governs the name rule and stops there — extending it
+to the source is the mistake this paragraph exists to prevent.
+
+### How a refusal reaches the user
+
+R4 forbids the write-only-field answer and R5 makes refusal per-declaration, so
+`parseConfigFile`'s `error` return cannot carry it — that return aborts the
+whole load, which is now reserved for a TOML parse failure. The carrier is a
+diagnostics slice on `ConfigResult`, populated at parse and surfaced by each
+consumer.
+
+This is the one place the "no consumer changes" claim does not hold, and the
+distinction matters: **the security property is inherited without any consumer
+changing, because a refused declaration is already absent from the map they
+read. The diagnostic is not.** Five call sites have to print it:
+`internal/shellenv/activate.go:48`, `cmd/tsuku/install_project.go:55`,
+`cmd/tsuku/cmd_shim.go:65`, `cmd/tsuku/cmd_run.go:95` and
+`internal/updates/apply.go`. `cmd_run.go:95` discards the load error entirely
+today (`projectCfg, _ :=`), so it needs the most work.
+
+Diagnostics go to **stderr**, without exception. `cmd/tsuku/hook_env.go:51`
+prints `FormatExports` to stdout and the shell hook evaluates it, so a
+diagnostic written to stdout would be executed rather than read.
 
 ### The name predicate
 
@@ -223,6 +291,23 @@ To satisfy D3, emitters take the value rather than a format string — an
 `export`/`set` helper that quotes internally — so that adding a variable
 without quoting requires deliberately bypassing the helper rather than merely
 forgetting to call it.
+
+**One emission is not a single value and must not be quoted as one.**
+`cmd/tsuku/shellenv.go:39` emits `export PATH="<binDir>:<currentDir>:$PATH"`,
+where the trailing `$PATH` has to keep expanding — it is how the user's
+existing `PATH` survives. Applying the helper to the whole statement quotes
+`$PATH` too and silently discards the user's `PATH` for everyone following the
+`eval $(tsuku shellenv)` the command documents. The correct emission quotes the
+two interpolated components and leaves the expansion live:
+
+```
+export PATH='<binDir>':'<currentDir>':"$PATH"
+```
+
+This is the only place in the change where the safe transformation and the
+correct one diverge, and it ships in Batch 1 — the batch described as
+independently landable, which is exactly when a silent `PATH` wipe would be
+least expected.
 
 ## Implementation Approach
 
@@ -265,11 +350,27 @@ a colon in a name. Registry substitution through a traversing recipe name.
 The install path's `os.RemoveAll`/`os.Rename` reachable via `--recipe`, whose
 entry point is a local file the user chose rather than a cloned repository.
 
-**Residual risk accepted.** A caller that constructs a `ProjectConfig`
-directly in Go bypasses the boundary. R10's backstop covers the registry path;
-the path helpers remain unguarded until the deferred hardening lands. This is
-stated rather than mitigated because closing it is Option B, which this design
-rejected on scope grounds and not on merit.
+**Residual risks accepted**, stated in full because a partial list is how a
+gap becomes a claim.
+
+- A caller constructing a `ProjectConfig` directly in Go bypasses the boundary.
+  R10's backstop covers the registry path; the path helpers stay unguarded
+  until the deferred hardening lands. Closing it is Option B, rejected on scope
+  and not on merit.
+- **`state.json` is a second read path into the same sinks.** `install/list.go:48`,
+  `cmd_rollback.go:56` and `install/remove.go:49,150,257` — the last reaching
+  `os.RemoveAll` — compose `ToolDir` from recorded names and versions that
+  never pass this boundary. A malformed name cannot get *into* state once the
+  boundary holds, but an existing one is not retroactively cleaned, and nothing
+  validates on load.
+- **The run path escalates to auto mode for project-declared tools.**
+  `internal/autoinstall/run.go:117-121` sets `ModeAuto` because a tool is
+  declared in the project config, so `evil-owner/evil-repo:jq = "1.0"` —
+  impeccable under every rule this design adds — installs and executes from an
+  attacker-chosen registry with no prompt at all. The PRD files the neighbouring
+  problem as "the consent prompt should show the source"; on this path there is
+  no prompt to fix. That is a consent gap rather than a validation gap, and this
+  design does not close it.
 
 **A control this design deliberately does not claim.** Containment assertion on
 composed paths is *not* part of this fix, and the colon case is why it would
@@ -294,7 +395,13 @@ not be sufficient if it were.
 - **Per-declaration refusal changes behaviour.** A malformed entry that is
   silently skipped today becomes a named error. That is the point, but it will
   surface configs that were quietly broken.
-- **Three tests change.** They currently assert the broken quoter's output.
+- **Five tests change.** Three assert the broken quoter's output. Two more —
+  `internal/recipe/name_test.go:24` and
+  `internal/recipe/validator_runtime_deps_names_test.go:59` — pin `foo..bar` as
+  rejected, which R2's segment semantics reverse.
+- **Batch 2 alone loosens runtime-dependency validation** before the boundary
+  lands, since `foo..bar` becomes acceptable there first. Harmless, and worth
+  knowing if the batches are reviewed separately.
 - **A fifth quoting answer becomes possible.** The leaf package reduces the
   incentive but does not prevent it; only the emit-helper shape does, and that
   is a convention rather than a compiler constraint.
