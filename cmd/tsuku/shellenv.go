@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/shellquote"
 )
 
 var shellenvCmd = &cobra.Command{
@@ -37,14 +38,20 @@ Usage for one-off sessions:
 		binDir := filepath.Join(homeDir, "bin")
 		currentDir := filepath.Join(homeDir, "tools", "current")
 
-		fmt.Fprintf(os.Stdout, "export PATH=\"%s:%s:$PATH\"\n", binDir, currentDir)
+		// Each interpolated component is quoted; the trailing $PATH is left
+		// live on purpose. Quoting the whole statement would round-trip both
+		// components perfectly and silently discard the user's existing PATH,
+		// which is the one place in this change where the safe transformation
+		// and the correct one diverge.
+		fmt.Fprintf(os.Stdout, "export PATH=%s:%s:\"$PATH\"\n",
+			shellquote.POSIX(binDir), shellquote.POSIX(currentDir))
 
 		// Source the shell init cache if it exists.
 		// Detect the current shell to pick the right cache file.
 		shell := detectShellForEnv()
 		cachePath := filepath.Join(homeDir, "share", "shell.d", ".init-cache."+shell)
 		if _, err := os.Stat(cachePath); err == nil {
-			fmt.Fprintf(os.Stdout, ". \"%s\"\n", cachePath)
+			fmt.Fprintf(os.Stdout, ". %s\n", shellquote.POSIX(cachePath))
 		}
 
 		return nil
