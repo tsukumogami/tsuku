@@ -72,11 +72,15 @@ func TestValidateRequestedNamesTheActualProblem(t *testing.T) {
 		{`1.0\evil`, "path separator"},
 		{"../../evil", "path separator"},
 		{"1.0..evil", "path traversal"},
-		// The colon has no dedicated branch and should not get one: it is
-		// refused by the charset loop, and "invalid character" is the honest
-		// message for it. Present so that a future edit adding a colon branch
-		// has to change a test that says why there isn't one.
-		{"1.0:evil", "invalid character"},
+		// The colon gets its own branch for the same reason the separators do.
+		// It is the PATH separator, so <tools>/jq-1.0:evil/bin is one entry to
+		// Go and two to a shell -- the same defect a colon in a *name* causes,
+		// and the name rule reports it by name. Reporting it here as an invalid
+		// character at some offset would describe a style violation instead.
+		{"1.0:evil", "PATH separator"},
+		// Still the charset loop's job, and its message is right for these.
+		{"1.0 evil", "invalid character"},
+		{"1.0;id", "invalid character"},
 	} {
 		t.Run(tc.requested, func(t *testing.T) {
 			err := ValidateRequested(tc.requested)

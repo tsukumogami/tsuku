@@ -56,6 +56,18 @@ func ValidateStrictName(name string) error {
 	if strings.Contains(name, `\`) {
 		return fmt.Errorf(`name %q must not contain '\'`, name)
 	}
+	// The colon is a separator too -- of PATH entries rather than of path
+	// components -- and it belongs in this group for the same reason: the
+	// charset pattern below refuses it anyway, but only as "must match
+	// ^[a-z0-9._-]+$", which reads as a naming convention. It is not one.
+	// <tools>/a:b-1.0/bin is a single entry to Go and two to a shell, and the
+	// second half is relative, so it resolves against the working directory.
+	// That is the defect this rule was extended to catch, and a message that
+	// buries it behind a regex is the message that gets the check removed.
+	if strings.Contains(name, ":") {
+		return fmt.Errorf("name %q must not contain ':' (it separates PATH entries, "+
+			"so the composed directory would split in two)", name)
+	}
 	if strings.HasPrefix(name, "-") {
 		return fmt.Errorf("name %q must not start with '-' (looks like a CLI flag)", name)
 	}

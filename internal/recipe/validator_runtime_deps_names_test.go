@@ -56,7 +56,7 @@ func TestValidateRuntimeDependencyNames_RejectsBadPattern(t *testing.T) {
 	}{
 		{"uppercase", "OpenSSL", "must match"},
 		{"space", "open ssl", "must match"},
-		{"colon", "name:tag", "must match"},
+		{"colon", "name:tag", "must not contain ':'"},
 		{"at_sign", "python@3.11", "must match"},
 		{"unicode", "café", "must match"},
 		{"path_traversal", "..", "path traversal"},

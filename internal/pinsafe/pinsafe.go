@@ -56,6 +56,14 @@ func ValidateRequested(requested string) error {
 	if strings.ContainsAny(requested, `/\`) {
 		return fmt.Errorf("path separator in requested version %q", requested)
 	}
+	// A colon in a version splits PATH exactly as one in a name does:
+	// <tools>/jq-1.0:evil/bin is one entry to Go and two to a shell, with the
+	// second relative. Named rather than left to the charset loop, which would
+	// report it as an invalid character and read like a style rule.
+	if strings.Contains(requested, ":") {
+		return fmt.Errorf("PATH separator ':' in requested version %q "+
+			"(the composed directory would split in two)", requested)
+	}
 	if strings.Contains(requested, "..") {
 		return fmt.Errorf("path traversal pattern in requested version %q", requested)
 	}

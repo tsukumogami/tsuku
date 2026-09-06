@@ -90,6 +90,11 @@ func TestValidateStrictName_MessagesAreSpecific(t *testing.T) {
 		{"..", "path traversal"},
 		{"a/b", "must not contain '/'"},
 		{`a\b`, `must not contain '\'`},
+		// The colon is here because the charset pattern refuses it anyway, and
+		// that is exactly the problem: "must match ^[a-z0-9._-]+$" reads as a
+		// naming convention for the one character in this set whose effect is
+		// to split a PATH entry in two.
+		{"a:b", "must not contain ':'"},
 		{"-rf", "must not start with '-'"},
 		{".hidden", "must not start with '.'"},
 		{"UPPER", "must match"},
