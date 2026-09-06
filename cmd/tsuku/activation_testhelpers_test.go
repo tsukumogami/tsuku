@@ -89,6 +89,19 @@ func runShellCmd(t *testing.T) (stdout, stderr string, err error) {
 	})
 }
 
+// parseUnsets reads the variable names out of emitted bash unset statements.
+func parseUnsets(script string) []string {
+	var names []string
+	for _, line := range strings.Split(script, "\n") {
+		rest, ok := strings.CutPrefix(strings.TrimSpace(line), "unset ")
+		if !ok {
+			continue
+		}
+		names = append(names, strings.Fields(rest)...)
+	}
+	return names
+}
+
 // parseExports reads variable assignments back out of emitted bash export
 // statements.
 //

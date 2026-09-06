@@ -405,12 +405,20 @@ func TestHookEnv_ReasonsAreReportedOncePerEntry(t *testing.T) {
 	}
 }
 
-// applyExports feeds an emitted export block back into the environment, the way
-// the shell's eval would.
+// applyExports feeds an emitted block back into the environment, the way the
+// shell's eval would — assignments and unsets both.
+//
+// The unsets matter as much as the assignments: deactivation's whole job is to
+// clear the tracking variables, and a replay that only applied the assignments
+// would leave them set and make a later re-entry look like a fresh one for the
+// wrong reason.
 func applyExports(t *testing.T, script string) {
 	t.Helper()
 	for name, value := range parseExports(script) {
 		t.Setenv(name, value)
+	}
+	for _, name := range parseUnsets(script) {
+		t.Setenv(name, "")
 	}
 }
 
@@ -441,10 +449,11 @@ func TestHookEnv_ReasonsReportAgainOnReEntry(t *testing.T) {
 	if stderr != "" {
 		t.Errorf("leaving a project should say nothing, got:\n%s", stderr)
 	}
-	// Deactivation unsets the tracking variables; clear them as the shell would.
-	for _, name := range []string{"_TSUKU_DIR", "_TSUKU_PREV_PATH", "_TSUKU_STATE_STAMP"} {
-		t.Setenv(name, "")
-	}
+	// Apply what deactivation emitted, including its unsets, rather than
+	// clearing the variables by hand. Hand-clearing would make the re-entry
+	// below pass even if deactivation failed to unset anything -- the same
+	// self-blinding move this file warns about one test up.
+	applyExports(t, stdout)
 
 	// Come back: a fresh entry, so the developer is told again.
 	chdir(t, projectDir)
