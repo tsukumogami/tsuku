@@ -72,6 +72,24 @@ reordering on scheduling grounds and this argument does not.
 
 Batch 3 depends on Batch 2 because it calls the predicate that batch extracts.
 
+## Preconditions that must survive filing
+
+Three criteria in this plan discriminate **only** because of a precondition
+stated in the sentence after them. Each is the kind of qualifying sentence that
+gets trimmed for brevity when an outline becomes an issue body, and each is the
+sole reason its criterion is not satisfied by an implementation that does
+nothing. If any filing step summarises, these sentences are kept verbatim:
+
+| Criterion | Precondition | Without it |
+| --- | --- | --- |
+| Issue 4, `$PATH` survives evaluation | the fixture sets `TSUKU_HOME` to a path containing a metacharacter | both interpolated components derive from a benign home, round-trip untouched, and the criterion passes against zero change |
+| Issue 4, line 47 round-trip | the shell.d cache file exists | the emission sits behind an `os.Stat` at `cmd/tsuku/shellenv.go:45` and never runs |
+| Issue 11, traversal fixtures | the escaped bin directory exists on disk | activation stats before adding to PATH, so an unfixed binary also produces no entry |
+
+This table exists because two of the three were originally written without
+their precondition and were caught in review, not because the risk is
+hypothetical.
+
 ## Issue Outlines
 
 ### Issue 1: Add `internal/shellquote`
