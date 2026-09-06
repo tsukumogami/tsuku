@@ -46,6 +46,10 @@ func (r *Resolver) DeclarationsFor(_ context.Context, matches []index.BinaryMatc
 		return nil, nil
 	}
 
+	// A recipe appearing twice in matches would duplicate its declarations.
+	// The index cannot produce that -- (command, recipe) is its primary key --
+	// but matches arrives from the caller, so the guard is here rather than
+	// left to an invariant this package does not own.
 	var set []ProjectDeclaration
 	seen := make(map[string]bool)
 	for _, m := range matches {
@@ -60,10 +64,17 @@ func (r *Resolver) DeclarationsFor(_ context.Context, matches []index.BinaryMatc
 
 // ProjectVersionFor returns the project-pinned version for a command.
 //
-// It is the pre-existing entry point, kept so this package still compiles
-// against its caller in cmd/tsuku. It reports a version alone, so it cannot
-// say which of several declared recipes the version belongs to; DeclarationsFor
-// is what replaces it.
+// It is the pre-existing entry point and is on its way out. It reports a
+// version alone, so it cannot say which of several declared recipes the
+// version belongs to; DeclarationsFor is what replaces it.
+//
+// It is kept here only so the tree still builds: it is the single method of
+// autoinstall.ProjectVersionResolver, which NewResolver returns, and the one
+// production call is internal/autoinstall/run.go through that interface.
+// cmd/tsuku only constructs the resolver -- start at the run path, not there.
+// Deleting it is a separate unit's work, together with the lookup field and
+// NewResolver's second parameter and return type, because those are what make
+// this package import internal/autoinstall at all.
 func (r *Resolver) ProjectVersionFor(ctx context.Context, command string) (string, bool, error) {
 	if r.config == nil {
 		return "", false, nil

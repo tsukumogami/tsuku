@@ -3,6 +3,7 @@ package project
 import (
 	"context"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/index"
@@ -60,18 +61,6 @@ func configKeys(declared []ProjectDeclaration) []string {
 	return keys
 }
 
-func equalStrings(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
-}
-
 // AC11 and AC12. A bare key and an org-scoped key reducing to it denote one
 // recipe, so they are one declaration, and the version is the bare key's.
 func TestDeclarationsFor_BareAndOrgKeyForOneRecipeAreOneDeclaration(t *testing.T) {
@@ -118,7 +107,7 @@ func TestDeclarationsFor_TwoOrgSourcesAreTwoDeclarations(t *testing.T) {
 	declared := declarationsFor(t, r, fx, indexfixture.CommandTwoProviders)
 
 	want := []string{orgKeyA, orgKeyB}
-	if !equalStrings(configKeys(declared), want) {
+	if !slices.Equal(configKeys(declared), want) {
 		t.Fatalf("declarations came from %v, want %v: two org-scoped keys whose sources "+
 			"differ denote different recipes and must not collapse to one declaration",
 			configKeys(declared), want)
@@ -158,7 +147,7 @@ func TestDeclarationsFor_BareKeyDoesNotBreakTheTieBetweenTwoOrgSources(t *testin
 	declared := declarationsFor(t, r, fx, indexfixture.CommandTwoProviders)
 
 	want := []string{orgKeyA, orgKeyB}
-	if !equalStrings(configKeys(declared), want) {
+	if !slices.Equal(configKeys(declared), want) {
 		t.Fatalf("declarations came from %v, want %v: a bare key does not select "+
 			"between two org-scoped sources", configKeys(declared), want)
 	}
@@ -233,7 +222,7 @@ func TestDeclarationsFor_RecipeInNoIndexDeclaresNothing(t *testing.T) {
 		t.Run(command, func(t *testing.T) {
 			got := declarationsFor(t, declaring, fx, command)
 			want := declarationsFor(t, none, fx, command)
-			if !equalStrings(configKeys(got), configKeys(want)) {
+			if !slices.Equal(configKeys(got), configKeys(want)) {
 				t.Errorf("with the config: %v; with no config at all: %v; AC17 requires these to agree",
 					configKeys(got), configKeys(want))
 			}
@@ -298,7 +287,7 @@ func TestDeclarationsFor_FollowsIndexRanking(t *testing.T) {
 	for _, d := range declared {
 		got = append(got, d.Recipe)
 	}
-	if !equalStrings(got, ranked) {
+	if !slices.Equal(got, ranked) {
 		t.Errorf("declaration order = %v, want the index's ranking %v", got, ranked)
 	}
 }
