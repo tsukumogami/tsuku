@@ -50,8 +50,6 @@ func ComputeActivation(cwd, prevPath, curDir string, cfg *config.Config) (*Activ
 	if err != nil {
 		return nil, fmt.Errorf("loading project config: %w", err)
 	}
-	// Stderr, never stdout: hook-env's stdout is what the shell hook evaluates.
-	result.FprintDiagnostics(os.Stderr)
 	if result == nil {
 		if prevPath != "" {
 			// Was active, now leaving project directory -- deactivate.
@@ -63,6 +61,15 @@ func ComputeActivation(cwd, prevPath, curDir string, cfg *config.Config) (*Activ
 		// No prior activation and no project config -- no-op.
 		return nil, nil
 	}
+
+	// Stderr, never stdout: hook-env's stdout is what the shell hook evaluates,
+	// and these lines quote a key that came from the config file.
+	//
+	// Below the nil check rather than above it. It read correctly above only
+	// because FprintDiagnostics guards its own nil receiver, which is a subtle
+	// thing to rest on when the equivalent placement needs no guard at all: a
+	// nil result means no config was found, so there is nothing to report.
+	result.FprintDiagnostics(os.Stderr)
 
 	// Determine the base PATH: use prevPath if we already have an activation,
 	// otherwise use the current PATH from the environment.
