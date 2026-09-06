@@ -133,10 +133,14 @@ func TestFixtureNamesAreNotInTheRecipeTree(t *testing.T) {
 // fixture's own endpoint. "Offline" means no external network rather than no
 // sockets, which is what makes `latest` resolvable here at all.
 //
-// The prefix half of AC18 is deliberately absent: ResolveWithinBoundary
-// narrows a prefix only for providers implementing VersionLister, and
-// HTTPJSONProvider implements none, so a prefix passes through verbatim. That
-// needs a fixture version provider, which this issue does not build.
+// A prefix is deliberately absent here: ResolveWithinBoundary narrows one only
+// for providers implementing VersionLister, and HTTPJSONProvider implements
+// none, so a prefix passes through verbatim.
+//
+// That is not a hole in AC18, which Issue 2 closed at the declaration layer.
+// R20 puts resolution of a non-exact version outside this work, so AC18's
+// subject is which recipe was chosen, and a prefix is observable where it is
+// carried verbatim and never resolved. No fixture version provider is needed.
 func TestLatestResolvesOffline(t *testing.T) {
 	fx := indexfixture.New(t)
 

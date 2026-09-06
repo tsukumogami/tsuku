@@ -164,7 +164,8 @@ func TestDeclarationsFor_BareKeyDoesNotBreakTheTieBetweenTwoOrgSources(t *testin
 	}
 	// The versions are what catch a collapse that kept the shape. "The bare
 	// key wins the tie" returns one declaration carrying 3.0.0; nothing here
-	// may carry it, because the bare key declared no source to resolve from.
+	// may carry it, because the bare key names no recipe the set does not
+	// already have and cannot say which of the two it meant.
 	for i, d := range declared {
 		if d.Version == bareOnlyVersion {
 			t.Errorf("declaration %d from %q carries the bare key's version %q; "+
@@ -179,8 +180,8 @@ func TestDeclarationsFor_BareKeyDoesNotBreakTheTieBetweenTwoOrgSources(t *testin
 }
 
 // Two keys denoting the same recipe from the same source are one declaration.
-// SplitOrgKey strips the version suffix, so these two keys reduce to the same
-// org-scoped recipe rather than to two.
+// SplitOrgKey strips an org-scoped key's version suffix -- only that branch
+// does -- so these two reduce to the same org-scoped recipe rather than to two.
 //
 // Which of the two versions survives is settled by a sort and nothing is
 // reported, which is the shape R2a rejects for *differing* sources. It is

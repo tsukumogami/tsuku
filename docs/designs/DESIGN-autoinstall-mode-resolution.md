@@ -283,6 +283,15 @@ distinct bare name the config declares, take the bare key's version if present,
 else the first org key's, which is well-defined because `buildBareToOrgMap`
 sorts.
 
+**Correction, from building it (Issue 2).** That sentence is the rule AC11a
+names as the dangerous wrong one, because it has no carve-out for a collision.
+It holds only where the config declares at most one org-scoped source for the
+bare name. Where it declares two or more, the set is one declaration per
+source and a bare key is dropped rather than being allowed to pick: the
+collapse identifies the bare key with each org key separately, so it adds no
+recipe the set does not already carry and cannot say which of the two it
+meant.
+
 `Resolver.Tools()` is removed: zero production callers, and its documented
 purpose is what `hasProjectTools` did, which R9 deletes.
 
@@ -304,6 +313,21 @@ seeing it happen rather than reasoning about it is what settled this.
 Keeping both would be worse than either. A refusal that also prints a warning
 about the condition it just refused invites a later reader to delete one of
 them, and there is no way to tell from the code which.
+
+**Correction, from building it (Issue 2).** "The case reaches R6 and refuses"
+is true of what the warning was about and not of everything it fired on. Its
+condition was two or more org-scoped keys reducing to one bare name, which
+includes two keys naming the *same* source — `org-a/koto` and
+`org-a/koto@2.0.0`, which `SplitOrgKey` reduces alike. Those denote one recipe,
+so they stay one declaration and are still settled by a sort with nothing
+printed. The warning went for that subset too.
+
+That is accepted rather than overlooked. R2a's stated harm is running the wrong
+tool, and here there is one recipe to install whichever key wins, so the pick
+can only choose a version of the right tool — the same trade R2 and AC12
+already make when a bare key outranks an org key. It is weaker than R2's rule
+in one respect worth writing down: R2 names its winner, and this one is
+whichever key sorts first.
 
 ### D3. How the single-production-site property is enforced
 

@@ -52,11 +52,18 @@ type ProjectDeclaration struct {
 //     the configuration has a bare key, else the sorted-first key of the one
 //     org-scoped source.
 //   - Two or more org-scoped sources: one declaration per source, ordered by
-//     source. A bare key alongside them adds nothing and is dropped -- it does
-//     not break the tie, and it is not a third candidate either. The collapse
-//     above presupposes a single recipe; with two sources that presupposition
-//     fails, and the ambiguity the refusal has to report is the one between
-//     the two registries.
+//     source. A bare key alongside them is dropped rather than added as a
+//     third.
+//
+// Dropping it rather than adding it follows from the collapse above, not from
+// the bare key being uninstallable -- it is perfectly installable, from the
+// default loader chain. The collapse says a bare key and an org-scoped key
+// reducing to it are the same recipe. With two org sources that holds against
+// each of them separately, so the bare key introduces no recipe the set does
+// not already carry; all it does is fail to say which of the two it meant.
+// The ambiguity to report is the one between the two registries, and adding a
+// third entry would put a recipe in the refusal that the user cannot choose
+// between the others by naming.
 //
 // A malformed key -- one SplitOrgKey rejects -- is skipped. It cannot denote a
 // recipe, so it cannot be declared, and treating it as a bare name would let
