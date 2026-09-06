@@ -86,5 +86,10 @@ func runShell(cwd, prevPath, shell string, cfg *config.Config) (string, error) {
 		return "", nil
 	}
 
+	// Reasons to stderr, shell code to stdout. tsuku shell passes an empty
+	// curDir above, so Entered is always true here: an explicit invocation
+	// reports every time, and only the prompt hook is on a budget.
+	reportActivation(result)
+
 	return activation.FormatExports(result, shell), nil
 }

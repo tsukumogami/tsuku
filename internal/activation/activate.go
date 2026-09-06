@@ -73,6 +73,12 @@ type ActivationResult struct {
 	// Unreadable is non-nil when installation state could not be read at all,
 	// in which case no declaration needing that read was classified.
 	Unreadable *StateUnreadable
+
+	// Entered is true when this activation entered a project directory that was
+	// not already the recorded one. Callers gate the once-per-entry reporting
+	// budget on it rather than re-deriving it from curDir, so the rule lives in
+	// one place and both entry points get the same answer.
+	Entered bool
 }
 
 // ComputeActivation determines the PATH changes needed for the current
@@ -198,6 +204,7 @@ func ComputeActivation(cwd, prevPath, curDir string, cfg *config.Config, install
 		Active:      true,
 		Unhonorable: unhonorable,
 		Unreadable:  unreadable,
+		Entered:     result.Dir != curDir,
 	}, nil
 }
 

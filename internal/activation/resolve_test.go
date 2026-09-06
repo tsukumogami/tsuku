@@ -6,6 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/install"
 )
 
 // activate runs ComputeActivation for a project whose .tsuku.toml is the given
@@ -557,6 +560,107 @@ func TestResolve_VersionsTsukuInstalledAlwaysActivate(t *testing.T) {
 			}
 			wantOnly(t, result, toolsDir, "jq-"+v)
 		})
+	}
+}
+
+// An absent state file is no-match, not unreadable. The state loader returns an
+// empty state and no error for a missing file, so a machine whose state was
+// deleted is indistinguishable from one that has installed nothing -- and
+// unreadable would be the different, false claim that the read failed.
+//
+// This runs against a real StateManager rather than the fake, because the
+// behavior under test belongs to the loader: a fake can be made to return
+// whatever the test expects, which is exactly the wrong oracle for "what does
+// the real accessor do when the file is not there".
+func TestResolve_AbsentStateFileIsNoMatchNotUnreadable(t *testing.T) {
+	projectDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(projectDir, ".tsuku.toml"),
+		[]byte("[tools]\njq = \"latest\"\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	tsukuHome := t.TempDir()
+	cfg := &config.Config{HomeDir: tsukuHome, ToolsDir: filepath.Join(tsukuHome, "tools")}
+
+	t.Setenv("PATH", "/usr/bin")
+	t.Setenv("HOME", filepath.Dir(projectDir))
+
+	// No state.json is ever written.
+	result, err := ComputeActivation(projectDir, "", "", cfg, install.NewStateManager(cfg))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Unreadable != nil {
+		t.Errorf("Unreadable = %+v, want nil: a missing state file is not a failed read", result.Unreadable)
+	}
+	if len(result.Unhonorable) != 1 || result.Unhonorable[0].Reason != ReasonNoMatch {
+		t.Errorf("Unhonorable = %+v, want one no-match entry", result.Unhonorable)
+	}
+}
+
+// R19: bad-form is exactly what tsuku install's string validation rejects, and
+// activation adds no second, stricter validator. A string of letters, digits,
+// dots and hyphens passes that validation and is classified as a prefix, so it
+// is a well-formed pin that matches nothing.
+func TestResolve_BadFormIsTheInstallValidatorAndNothingStricter(t *testing.T) {
+	cases := []struct {
+		declared string
+		want     Reason
+	}{
+		{">=26", ReasonBadForm},
+		{"^1.2", ReasonBadForm},
+		{"~1.2", ReasonBadForm},
+		// Well-formed by that validation, and simply matches nothing.
+		{"twenty-six", ReasonNoMatch},
+		{"26.x", ReasonNoMatch},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.declared, func(t *testing.T) {
+			result, toolsDir := activate(t,
+				"[tools]\nnodejs = '"+tc.declared+"'\n",
+				map[string][]string{"nodejs": {"20.16.0"}})
+
+			wantOnly(t, result, toolsDir)
+			if len(result.Unhonorable) != 1 {
+				t.Fatalf("Unhonorable = %+v, want one entry", result.Unhonorable)
+			}
+			if got := result.Unhonorable[0].Reason; got != tc.want {
+				t.Errorf("Reason for %q = %v, want %v", tc.declared, got, tc.want)
+			}
+		})
+	}
+}
+
+// Entered is true exactly when this activation entered a project directory that
+// was not already the recorded one.
+func TestResolve_EnteredTracksTheDirectoryChange(t *testing.T) {
+	projectDir, cfg, installed := setupProject(t, "[tools]\njq = \"latest\"\n",
+		map[string][]string{"jq": {"1.7.1"}})
+	t.Setenv("PATH", "/usr/bin")
+	t.Setenv("HOME", filepath.Dir(projectDir))
+
+	// Arriving from elsewhere.
+	entering, err := ComputeActivation(projectDir, "", "/somewhere/else", cfg, installed)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !entering.Entered {
+		t.Error("Entered = false when arriving from another directory, want true")
+	}
+
+	// Already recorded as being in this project: a subdirectory of it walks up
+	// to the same project dir, so activation recomputes but has not entered.
+	sub := filepath.Join(projectDir, "cmd")
+	if err := os.MkdirAll(sub, 0755); err != nil {
+		t.Fatal(err)
+	}
+	staying, err := ComputeActivation(sub, "/usr/bin", projectDir, cfg, installed)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if staying.Entered {
+		t.Error("Entered = true when the project directory has not changed, want false")
 	}
 }
 

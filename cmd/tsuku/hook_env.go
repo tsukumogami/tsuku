@@ -49,6 +49,11 @@ var hookEnvCmd = &cobra.Command{
 			return nil
 		}
 
+		// Reasons to stderr, shell code to stdout, and always exit 0: a prompt
+		// hook that exits non-zero gets wrapped in "|| true" by users, which
+		// would discard this reporting entirely.
+		reportActivation(result)
+
 		fmt.Print(activation.FormatExports(result, shell))
 		return nil
 	},

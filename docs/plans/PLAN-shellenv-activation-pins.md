@@ -107,6 +107,16 @@ and those are different problems with different fixes. Untested wants a test.
 Unreachable wants the honest note saying so, and a test at the level where the
 thing can still fail.
 
+One practical trap, since the harness is the thing being trusted: **a mutation
+that does not compile is not a passing mutation.** Go reports an unused import
+as a build error, so a mutation that deletes the last use of one produces
+`FAIL <pkg> [build failed]` rather than `--- FAIL: TestName`. A harness counting
+`--- FAIL` lines reads that as "nothing broke" and reports a gap that is not
+there. One of the mutations here did exactly that, and the false gap was only
+caught by re-running it by hand. Check the build separately from the tests, and
+treat a build failure as an invalid mutation to be rewritten, never as a
+result.
+
 ### On approvals whose premises move
 
 A second finding generalises past this feature, and like the one above it is
