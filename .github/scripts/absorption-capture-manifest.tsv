@@ -1,0 +1,27 @@
+# Absorption capture manifest: which external check produces each shirabe
+# parity baseline, and over which corpus document.
+#
+# Consumed by capture-absorption-baseline.sh --manifest <this-file> <golden-dir>,
+# where <golden-dir> is the shirabe checkout's
+# crates/shirabe/tests/fixtures/absorption-golden. For each row the script runs
+# the named check (resolved under scripts/ci/checks/) over
+# <golden-dir>/corpus/<case_id>/<doc_relpath> and writes the captured fired-rule
+# set to <golden-dir>/expected/<case_id>/external_rules.
+#
+# Only the three current-model checks are captured here: frontmatter.sh,
+# sections.sh, and status-directory.sh validate something a design doc still
+# carries. The legacy design-doc-issues checks (implementation-issues.sh,
+# issue-status.sh, strikethrough-all-docs.sh) are NOT captured -- they validate
+# a retired pattern and are retired as legacy, their intent already covered by
+# the engine's FC05/FC06/FC09 on PLAN/ROADMAP.
+#
+# case_id	check	doc_relpath
+frontmatter-clean	frontmatter.sh	docs/designs/DESIGN-x.md
+frontmatter-missing-field	frontmatter.sh	docs/designs/DESIGN-x.md
+frontmatter-invalid-status	frontmatter.sh	docs/designs/DESIGN-x.md
+frontmatter-status-mismatch	frontmatter.sh	docs/designs/DESIGN-x.md
+sections-clean	sections.sh	docs/designs/DESIGN-x.md
+sections-missing	sections.sh	docs/designs/DESIGN-x.md
+sections-order	sections.sh	docs/designs/DESIGN-x.md
+sections-security-empty	sections.sh	docs/designs/DESIGN-x.md
+status-directory-misplaced	status-directory.sh	docs/designs/DESIGN-x.md
