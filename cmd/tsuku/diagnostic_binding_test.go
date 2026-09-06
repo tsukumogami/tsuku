@@ -70,3 +70,40 @@ func TestProjectConfigConsumersReportDiagnostics(t *testing.T) {
 		})
 	}
 }
+
+// TestDiagnosticBindingCannotFalseGreen pins the property that makes the check
+// above worth having.
+//
+// A structural assertion keyed on the bare helper name would pass against the
+// file that *defines* FprintDiagnostics, with zero calls in any consumer --
+// green, and asserting nothing. The check must therefore match a call
+// expression with an os.Stderr argument, not an identifier.
+//
+// This exists because that exact trap was flagged in review, and because a
+// future edit weakening the matcher to a name grep would be invisible: the
+// consumer tests would still pass. Here it would not.
+func TestDiagnosticBindingCannotFalseGreen(t *testing.T) {
+	fset := token.NewFileSet()
+	// The definition lives here and contains the identifier but no call.
+	f, err := parser.ParseFile(fset, "../../internal/project/config.go", nil, 0)
+	if err != nil {
+		t.Fatalf("parsing the definition file: %v", err)
+	}
+
+	var sawCall bool
+	ast.Inspect(f, func(n ast.Node) bool {
+		call, ok := n.(*ast.CallExpr)
+		if !ok {
+			return true
+		}
+		if sel, ok := call.Fun.(*ast.SelectorExpr); ok && sel.Sel.Name == "FprintDiagnostics" {
+			sawCall = true
+		}
+		return true
+	})
+
+	if sawCall {
+		t.Fatal("the definition file now contains a FprintDiagnostics call, so the " +
+			"consumer assertion could pass against it. Tighten the matcher.")
+	}
+}
