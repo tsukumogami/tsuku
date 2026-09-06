@@ -4,7 +4,7 @@ status: Draft
 execution_mode: single-pr
 upstream: docs/designs/DESIGN-activation-injection.md
 milestone: "Guard externally-supplied values at the config boundary"
-issue_count: 10
+issue_count: 11
 ---
 
 # PLAN: Guarding externally-supplied values at the config boundary
@@ -16,7 +16,7 @@ Draft
 ## Scope Summary
 
 Implements `DESIGN-activation-injection` against `PRD-activation-injection`,
-closing tsukumogami/tsuku#2553. Ten work items in four batches: a leaf shell
+closing tsukumogami/tsuku#2553. Eleven work items in four batches: a leaf shell
 quoter and the two emitters that need it, one extracted name predicate shared
 with its existing consumer, validation at `parseConfigFile` covering both
 components of every declaration, a sink-level backstop on the registry name
@@ -185,16 +185,27 @@ dialect-correct quoting, and shape emission so a future value cannot bypass it.
   rule is its sole control rather than defence in depth over an existing one.
 - Accepts `llama.cpp` and `hdrhistogram_c`, the only registry names with a dot
   and an underscore respectively.
-- `validateRuntimeDependencyNames` calls the predicate. **Two existing fixtures
-  change and no others**: `internal/recipe/name_test.go:24` and
-  `internal/recipe/validator_runtime_deps_names_test.go:59` both pin `foo..bar`
-  as rejected, and R2's segment semantics reverse that. Both are updated with a
-  comment saying why. Every other existing test in both files passes unchanged,
-  and that is what proves the extraction faithful rather than merely similar.
+- **The predicate does not call `IsValidRecipeName`.** That function rejects
+  `..` by substring, so delegating to it would reject `foo..bar`, which R2
+  requires accepted. `IsStrictRecipeName` applies the charset allowlist and its
+  own segment rule instead. `IsValidRecipeName` is left untouched, so
+  `internal/recipe/name_test.go:24` still passes and Issue 8's backstop is
+  unaffected.
+- `validateRuntimeDependencyNames` calls the strict predicate alone, replacing
+  both its pattern check and its belt-and-suspenders `IsValidRecipeName` call.
+- **Exactly one existing fixture changes**:
+  `internal/recipe/validator_runtime_deps_names_test.go:59`, which pins
+  `foo..bar` as rejected. It flips to accepted, with a comment saying why.
+  Every other existing test in both files passes unchanged.
+- **The predicate returns an error, not a bool**, so per-rule messages survive.
+  The existing rejects assert `"must match"`, `"path traversal"` and
+  `"must not start with '-'"`; a boolean collapses them and weakens exactly the
+  diagnostics this change is strengthening elsewhere.
 
-  *An earlier draft of this plan claimed no fixture changed. That claim came
-  from grepping `validator_test.go` — the wrong file — and was wrong. The
-  fixture lives in `validator_runtime_deps_names_test.go`.*
+  *An earlier draft claimed no fixture changed at all, from grepping
+  `validator_test.go` — the wrong file. A later draft said two changed, which
+  over-corrected: `name_test.go:24` only changes if `IsValidRecipeName` itself
+  changes, and it does not.*
 - A test sweeps all 1449 names in `recipes/` and accepts every one.
 
 - A **separate, wider** rule for an org source half: each of the two segments
@@ -214,30 +225,35 @@ shell metacharacter nor traversal, so no denylist catches it, and it is the
 to the working directory. A containment check passes it and the quoter cannot
 reach it. Only an allowlist stops it.*
 
-### Issue 10: Extract the pin rule into `internal/pinsyntax`
+### Issue 10: Extract the pin rule into `internal/pinsafe`
 
 **Goal**: Make the existing version rule callable from `internal/project`.
 
 **Acceptance Criteria**:
-- A leaf package `internal/pinsyntax` holds `ValidateRequested`, importing only
-  `fmt`, `strings` and `unicode` — everything the current function uses.
+- A leaf package `internal/pinsafe` holds `ValidateRequested` and **only** that
+  symbol, importing only `fmt`, `strings` and `unicode` — everything the
+  current function uses. `pin.go`'s other three symbols stay where they are;
+  moving them costs the same later and would have a caller to justify it.
 - `internal/install.ValidateRequested` delegates to it, and `internal/install`'s
   existing tests pass unchanged.
 - No new rule: the accept/reject set is identical to today's. `1.0:evil` is
   refused (verified: `invalid character ":"`), `1.2.3-RC1` and `@lts` accepted.
+- The package name says which question the function answers. Two same-named
+  `ValidateVersionString`s exist in this tree — `internal/version`'s accepts
+  `../../evil`, `internal/install`'s rejects it — so a package called `pin`
+  holding a path-safety check is the shape that invites the wrong import.
 
 **Dependencies**: None.
 **Type**: refactor. **Complexity**: simple.
-**Files**: `internal/pinsyntax/pinsyntax.go`, `internal/pinsyntax/pinsyntax_test.go`, `internal/install/pin.go`.
+**Files**: `internal/pinsafe/pinsyntax.go`, `internal/pinsafe/pinsyntax_test.go`, `internal/install/pin.go`.
 
 *Why this issue exists: `internal/project` **cannot** import `internal/install`.
 The cycle is `project -> install -> shellenv -> project`
 (`internal/install/precedence.go:7`, `internal/shellenv/activate.go:15`), and an
 earlier draft of this plan wired `install.ValidateRequested` into
-`parseConfigFile` directly, which does not compile. The sibling PR moving
-`activate.go` out of `shellenv` would break the cycle from the other side, but
-depending on that would forfeit the cherry-pickability this work is sequenced
-for.*
+`parseConfigFile` directly, which does not compile. Note that `install` depends
+on `project`, so refiling cannot break this cycle the way it can elsewhere —
+the extraction is forced.*
 
 ### Issue 6: Validate at `parseConfigFile`
 
@@ -247,41 +263,79 @@ for.*
 - Each key is split with `SplitOrgKey`; **its error is propagated, not
   discarded**, and a key that yields no bare name is refused.
 - The derived bare name is checked with Issue 5's predicate.
-- The org source half is checked too — `ow$(id)ner/repo:jq` is refused despite
-  an impeccable bare name.
-- Each version is checked with `install.ValidateRequested`, which rejects and
-  never normalises. `v1.2.3` is accepted and reaches the resolver unchanged.
-- A version containing a colon is refused.
+- The org source half is checked with Issue 5's **wider** source rule.
+  `ow$(id)ner/repo:jq` is refused despite an impeccable bare name;
+  `BurntSushi/toml` is accepted, because uppercase is legal in a GitHub owner.
+- Org-scoped **accepts** are pinned, not just the refusals:
+  `tsukumogami/koto` resolves to bare `koto`, and
+  `tsukumogami/registry:mytool@2.0.0` to `mytool`. Without these, a validator
+  that rejects every org key passes the whole issue.
+- `jq@2.0.0` is refused, with an error saying the version belongs in the value
+  or in the org-scoped form. This is the deliberate half of a recorded
+  asymmetry, not an oversight.
+- A name containing a null byte is refused. `a:b` is refused with an error
+  naming the colon.
+- Each version is checked with `pinsafe.ValidateRequested` (Issue 10 — not
+  `install`, which `internal/project` cannot import), which rejects and never
+  normalises. Accepts `latest`, an exact pin, a prefix pin, **the empty
+  string**, `1.2.3-rc1` and `@lts`; a version containing a colon is refused;
+  `v1.2.3` reaches the resolver unchanged. The prerelease and channel forms are
+  named because an over-strict version rule loses exactly those and passes
+  every other criterion here.
+- A name that passes validation but whose directory does not exist is skipped
+  without an error, and that outcome is distinguishable from a refusal. This is
+  the criterion that stops an over-rejecting validator hiding behind tsuku's
+  existing silent-skip behaviour.
 - Refusal is **per declaration**: other declarations in the same file are
   honoured, asserted by their bin directories reaching the emitted PATH rather
   than by absence of an error. A file that cannot be parsed as TOML is refused
   whole.
-- The error names the offending key, states the expected shape, says "lowercase"
-  where case is the fault, and **reaches the user on the command's error
-  output** — not a struct field. `ActivationResult.Skipped` is read by no
-  production caller, so appending to it satisfies nothing.
 - Traversal fixtures require the escaped bin directory to exist on disk;
   activation stats before adding to PATH, so without it an unfixed binary also
   produces no entry and the test passes against doing nothing. The assertion is
   anchored at the tools directory, not `$TSUKU_HOME`: with `jq-` consuming a
   segment, `../..` still lands inside the tools tree.
-- Asserted per consumer — activation, install, shim install, auto-apply, and
-  the run fast path.
-
-- The refusal travels on a **diagnostics slice on `ConfigResult`**, not on
-  `parseConfigFile`'s `error` return — that return aborts the whole load and is
-  now reserved for a TOML parse failure. Five consumers print it:
-  `internal/shellenv/activate.go:48`, `cmd/tsuku/install_project.go:55`,
-  `cmd/tsuku/cmd_shim.go:65`, `cmd/tsuku/cmd_run.go:95` and
-  `internal/updates/apply.go`. `cmd_run.go:95` discards the load error today
-  (`projectCfg, _ :=`) and needs the most change.
-- Diagnostics go to **stderr**, asserted per consumer.
-  `cmd/tsuku/hook_env.go:51` prints `FormatExports` to stdout and the shell hook
-  evaluates it, so a diagnostic on stdout would be executed rather than read.
+- `../tools-evil/x` is refused. The PRD asks for this to be caught by a
+  separator-appended containment comparison; the DESIGN declines containment as
+  a control because it does not catch `a:b`. Both hold: the **allowlist**
+  refuses this name, and the criterion asserts the outcome rather than the
+  mechanism, so neither document is contradicted.
 
 **Dependencies**: Issue 5, Issue 10.
 **Type**: feat. **Complexity**: complex.
-**Files**: `internal/project/config.go`, `internal/project/config_test.go`, `internal/project/orgkey.go`, `internal/shellenv/activate.go`, `cmd/tsuku/install_project.go`, `cmd/tsuku/cmd_shim.go`, `cmd/tsuku/cmd_run.go`, `internal/updates/apply.go`.
+**Files**: `internal/project/config.go`, `internal/project/config_test.go`, `internal/project/orgkey.go`.
+
+### Issue 11: Carry refusals to the user
+
+**Goal**: A refused declaration is visible, on stderr, from every command that
+reads the config.
+
+**Acceptance Criteria**:
+- `ConfigResult` gains a diagnostics slice, populated at parse. The refusal
+  cannot travel on `parseConfigFile`'s `error` return: that return aborts the
+  whole load, which Issue 6 reserves for a TOML parse failure.
+- Five consumers print it: `internal/shellenv/activate.go:48`,
+  `cmd/tsuku/install_project.go:55`, `cmd/tsuku/cmd_shim.go:65`,
+  `cmd/tsuku/cmd_run.go:95` and `internal/updates/apply.go`. `cmd_run.go:95`
+  discards the load error today (`projectCfg, _ :=`) and needs the most change.
+- Output goes to **stderr**, asserted per consumer by capturing the two streams
+  separately. `cmd/tsuku/hook_env.go:51` prints activation output to stdout and
+  the shell hook evaluates it, so a diagnostic on stdout would be executed
+  rather than read.
+- The message names the offending key and states the expected shape, and says
+  "lowercase" where case is the fault. Appending to a field no production
+  caller reads does not satisfy this — `ActivationResult.Skipped` is exactly
+  such a field and every silent skip today goes into it.
+
+**Dependencies**: Issue 6.
+**Type**: feat. **Complexity**: testable.
+**Files**: `internal/project/config.go`, `internal/shellenv/activate.go`, `cmd/tsuku/install_project.go`, `cmd/tsuku/cmd_shim.go`, `cmd/tsuku/cmd_run.go`, `internal/updates/apply.go`, plus tests.
+
+*Split from Issue 6 on the validation-versus-diagnostics axis, which is free.
+The axis that must not be cut is name-versus-version: no intermediate commit
+may validate one component and leave the other unvalidated, and this split does
+not. Issue 6 alone regresses nothing — a silently dropped declaration is what a
+missing tool directory already does today.*
 
 ### Issue 7: Delete the dead `effectivePin` fallback
 
@@ -294,7 +348,7 @@ global pin when version validation fails.
   invalid pin would still reach this code and the branch would be doing live
   work.
 
-**Dependencies**: Issue 6.
+**Dependencies**: Issue 11.
 **Type**: refactor. **Complexity**: trivial.
 **Files**: `internal/updates/apply.go`.
 
@@ -316,6 +370,10 @@ Touches a file owned by another open issue; flag the hunk in the PR body.*
 - Documented in code comments as defence in depth beneath the boundary, not as
   the remedy, so nobody later removes the boundary on the grounds the sink is
   guarded.
+- Uses `IsValidRecipeName` unchanged. Issue 5 deliberately leaves that function
+  alone, so this backstop keeps its current substring `..` rejection — stricter
+  than the boundary, which is acceptable for a backstop and is why the two
+  rules are allowed to differ here.
 
 **Dependencies**: None.
 **Type**: feat. **Complexity**: simple.
@@ -336,12 +394,14 @@ code does.
 - `DESIGN-org-scoped-project-config.md`: the three claims at lines 270 and 131.
 - `DESIGN-notification-routing.md`: the claim at line 418.
 - The `TSUKU_CEILING_PATHS` claim states that it is opt-in and unset by
-  default.
+  default. This is an eleventh claim, outside R11's declared closed set of ten
+  — corrected here because it is in the same section and is false in the same
+  way, and named as an addition rather than smuggled in under the count.
 - No claim is added that this PR does not implement. Writing a new false record
   of a control into the document that already carries one is the specific
   failure this issue exists to avoid.
 
-**Dependencies**: Issue 3, Issue 4, Issue 6, Issue 8
+**Dependencies**: Issue 3, Issue 4, Issue 6, Issue 11, Issue 8
 
 *The record can only describe controls that exist, so this lands after the four
 issues that build them.*
@@ -359,14 +419,15 @@ dropped.
 **Batch 2 — the predicates.** Issue 5 and Issue 10, both independent of Batch 1
 and of each other; all three can run in parallel.
 
-**Batch 3 — the boundary.** Issue 6, then Issue 7 in the same change. This is the
+**Batch 3 — the boundary.** Issue 6, then Issue 11, then Issue 7, all in the
+same change. This is the
 critical path item and the largest single review surface.
 
 **Batch 4 — backstop and record.** Issue 8 any time after Issue 5. Issue 9 last, because it
 describes what the others built.
 
 Critical path: Issue 2 → Issue 1 → Issue 3, and separately
-(Issue 5, Issue 10) → Issue 6 → Issue 7 → Issue 9. Issue 4 and Issue 8 are off
+(Issue 5, Issue 10) → Issue 6 → Issue 11 → Issue 7 → Issue 9. Issue 4 and Issue 8 are off
 the path.
 
 ## References

@@ -12,7 +12,7 @@ decision: |
   Validate at `parseConfigFile`, the single point where `.tsuku.toml` becomes
   a `ProjectConfig`, using one strict name predicate extracted into
   `internal/recipe` and shared with the existing dependency-reference
-  consumer, plus the existing pin rule extracted into a leaf `internal/pinsyntax`
+  consumer, plus the existing pin rule extracted into a leaf `internal/pinsafe`
   because `internal/project` cannot import `internal/install` without a cycle.
   Quote with a dependency-free leaf `internal/shellquote` exposing separate
   POSIX and Fish functions, called by both emitters. Carry per-declaration
@@ -170,16 +170,33 @@ The name rule is extracted as one exported predicate in `internal/recipe`,
 layering the strict character rule over `IsValidRecipeName`, and
 `validateRuntimeDependencyNames` is refactored to call it (D2, R9).
 
-That refactor is **not** behaviour-preserving, and an earlier draft of this
-design claimed it was. `IsValidRecipeName` rejects `..` by substring
-(`internal/recipe/name.go:31`), and two fixtures pin the consequence —
-`internal/recipe/name_test.go:24` and
-`internal/recipe/validator_runtime_deps_names_test.go:59` both assert
-`foo..bar` is rejected. R2 requires it accepted, because `..` is a path-segment
-rule rather than a substring one. So adopting R2's semantics changes those two
-fixtures, and the change is deliberate: a name with an internal doubled dot is
-not traversal, and rejecting it was over-broad. Every *other* existing test
-must pass unchanged, which is what still makes the extraction checkable.
+**The predicate does not delegate its `..` check, and that is the whole of the
+layering question.** `IsValidRecipeName` rejects `..` by substring
+(`internal/recipe/name.go:31`), so a predicate that literally layered over it
+would reject `foo..bar` — which R2 requires accepted, because `..` is a
+path-segment rule rather than a substring one. Layering over it *literally* is
+therefore not possible, and an earlier draft of this design said to do exactly
+that.
+
+The resolution: `IsStrictRecipeName` applies the charset allowlist and its own
+segment rule, and does **not** call `IsValidRecipeName`. `IsValidRecipeName` is
+left untouched, so `internal/recipe/name_test.go:24` still passes and the
+Batch 4 backstop that uses it is unaffected. `validateRuntimeDependencyNames`
+calls the strict predicate alone, replacing both its pattern check and its
+belt-and-suspenders call.
+
+**Exactly one existing fixture changes**:
+`internal/recipe/validator_runtime_deps_names_test.go:59`, which pins
+`foo..bar` as rejected for a runtime dependency. That flips to accepted,
+deliberately — an internal doubled dot is not traversal, and rejecting it was
+over-broad. Every other existing test in both files passes unchanged, which is
+what keeps the extraction checkable.
+
+**The predicate returns an error, not a bool**, so per-rule messages survive.
+`validateRuntimeDependencyNames` currently emits distinct text for a pattern
+miss, a traversal, a separator and a leading `-`, and its tests assert those
+substrings; a boolean predicate would collapse them and silently weaken the
+diagnostics this change is otherwise trying to strengthen.
 
 Shell quoting moves to `internal/shellquote`, a leaf importing only the
 standard library, exporting `POSIX` and `Fish`. `FormatExports` and
@@ -203,7 +220,7 @@ parseConfigFile (internal/project/config.go)
     |         +-- source half --> source rule (wider than the name rule)
     |         +-- bare name ----> recipe.IsStrictRecipeName
     |    for each value:
-    |         version ---------> pinsyntax.ValidateRequested
+    |         version ---------> pinsafe.ValidateRequested
     v
 ProjectConfig + per-declaration diagnostics
     |
@@ -217,17 +234,35 @@ sole caller discards it, which is why the traversal reaches a sink at all.
 **The version rule cannot be called where it lives.** `internal/project` cannot
 import `internal/install`: the cycle is `project -> install -> shellenv ->
 project` (`internal/install/precedence.go:7`, `internal/shellenv/activate.go:15`).
-So `install.ValidateRequested` is extracted into a leaf, `internal/pinsyntax`,
+So `install.ValidateRequested` is extracted into a leaf, `internal/pinsafe`,
 importing only `fmt`, `strings` and `unicode` — which is everything the current
 function uses — and `internal/install` re-exports or delegates to it. This is
 the same extraction shape as the name predicate and carries the same proof
 obligation: `install`'s existing tests must pass unchanged.
 
-That edge is fragile in both directions, which is worth naming given D7. The
-sibling change moving `activate.go` out of `shellenv` would break the cycle
-from the other side — but relying on that would couple this fix to a PR that
-lands after it, and the whole point of D7 is that this one stays independently
-cherry-pickable.
+**Only `ValidateRequested` moves.** `pin.go` holds three other symbols and it
+is tempting to take the file, but nothing else needs them here, and a later
+caller that wants one can move it then at the same cost with an actual
+justification.
+
+**The package is named for the question the function answers**, not for its
+subject matter, and that is deliberate. There are two same-named
+`ValidateVersionString`s in this tree answering different questions:
+`internal/version`'s asks "is this a plausible version token" and **accepts
+`../../evil`**, because its charset permits `/` and never treats `..` as
+special; `internal/install`'s asks "is this safe to compose into a path". Neither
+is globally stricter — one is stricter on charset, the other on path safety — so
+"use the stricter one" resolves to whichever axis the reader already had in
+mind, and "charset-stricter, therefore safer" picks the one that passes
+traversals. A package called `pin` or `pinsyntax` holding a path-safety check is
+precisely the shape that invites the wrong import. `pinsafe` says which question
+it answers.
+
+A sibling chain hit the same cycle and did **not** need this extraction: it
+found activation was misfiled in `shellenv`, moved it to its own package, and
+the cycle dissolved. That remedy is unavailable here — `install` depends on
+`project`, so no amount of refiling lets `project` import `install`. The
+extraction stands on its own need, not on a convergence.
 
 **The source half gets a different rule from the bare name**, deliberately.
 GitHub permits uppercase in an owner and a repository; `BurntSushi/toml` parses
@@ -325,13 +360,19 @@ broken output and must be rewritten — that is the fix, not collateral. This
 batch is independently landable and reduces exposure without touching
 validation.
 
-**Batch 2 — the name predicate.** Extract the strict rule in `internal/recipe`,
-refactor `validateRuntimeDependencyNames` through it, keep its tests green.
+**Batch 2 — the predicates.** Extract the strict name rule in `internal/recipe`
+and refactor `validateRuntimeDependencyNames` through it; one fixture changes,
+deliberately (see Decision Outcome). Separately extract the pin rule into
+`internal/pinsafe`, whose tests do stay green because its accept/reject set
+is unchanged. The two extractions are independent of each other.
 
-**Batch 3 — the boundary.** Wire both predicates plus `install.ValidateRequested`
-into `parseConfigFile`, propagate `SplitOrgKey`'s error, and delete the
+**Batch 3 — the boundary.** Wire the name predicate, the source rule and
+`pinsafe.ValidateRequested` into `parseConfigFile`, propagate `SplitOrgKey`'s
+error, add the diagnostics carrier and its five printers, and delete the
 now-dead fallback branch in `effectivePin`. Per-declaration refusal for value
-failures; whole-file only for TOML parse failure.
+failures; whole-file only for TOML parse failure. Note the package: it is
+`pinsafe`, not `install` — `internal/project` cannot import `internal/install`,
+which is why Batch 2 extracts it.
 
 **Batch 4 — backstop and record.** `IsValidRecipeName` at `recipePath` and
 `Registry.cachePath`. Correct the ten enumerated claims across the three design
@@ -368,7 +409,7 @@ gap becomes a claim.
   boundary holds, but an existing one is not retroactively cleaned, and nothing
   validates on load.
 - **The run path escalates to auto mode for project-declared tools.**
-  `internal/autoinstall/run.go:117-121` sets `ModeAuto` because a tool is
+  `internal/autoinstall/run.go` sets `ModeAuto` (the escalation comment opens at 121, the assignment follows) because a tool is
   declared in the project config, so `evil-owner/evil-repo:jq = "1.0"` —
   impeccable under every rule this design adds — installs and executes from an
   attacker-chosen registry with no prompt at all. The PRD files the neighbouring
