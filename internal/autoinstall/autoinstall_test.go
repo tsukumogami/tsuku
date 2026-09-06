@@ -13,6 +13,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/index"
+	"github.com/tsukumogami/tsuku/internal/indexfixture"
 )
 
 // mockProjectVersionResolver is a test double for ProjectVersionResolver.
@@ -322,16 +323,17 @@ func TestRun_VerificationGateFallback(t *testing.T) {
 }
 
 func TestRun_ConflictGateFallback(t *testing.T) {
+	// Multi-provider case, so it comes from the shared fixture rather than a
+	// hand-written match slice: the pair this test used to name has to keep
+	// existing in the published registry for the test to mean anything, and
+	// nothing guarantees that.
+	fx := indexfixture.New(t)
+
 	r, _, _ := newTestRunner(t)
 	installer := &mockInstaller{}
 	execRec := &execRecorder{}
 
-	r.Lookup = func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
-		return []index.BinaryMatch{
-			{Recipe: "jq", Command: "jq"},
-			{Recipe: "jq-alt", Command: "jq"},
-		}, nil
-	}
+	r.Lookup = fx.Lookup
 	r.Installer = installer
 	r.Exec = execRec.exec
 	r.RecipeHasVerification = func(_ string) bool { return true }
@@ -340,13 +342,13 @@ func TestRun_ConflictGateFallback(t *testing.T) {
 	configPath := filepath.Join(r.cfg.HomeDir, "config.toml")
 	_ = os.WriteFile(configPath, []byte(""), 0600)
 
-	err := r.Run(context.Background(), "jq", nil, ModeAuto, nil)
+	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	// Should have fallen back to confirm due to multiple matches.
-	if installer.recipe != "jq" {
-		t.Errorf("should install first match, got %q", installer.recipe)
+	if installer.recipe != indexfixture.RecipeDupFirst {
+		t.Errorf("should install first match %q, got %q", indexfixture.RecipeDupFirst, installer.recipe)
 	}
 }
 

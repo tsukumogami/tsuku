@@ -12,6 +12,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/index"
+	"github.com/tsukumogami/tsuku/internal/indexfixture"
 )
 
 // suggestTestRegistry is a minimal index.Registry for building the test index.
@@ -136,32 +137,30 @@ func TestRunSuggest_SingleMatch(t *testing.T) {
 }
 
 func TestRunSuggest_MultipleMatches(t *testing.T) {
-	cfg := buildSuggestTestConfig(t,
-		map[string][]byte{
-			"vim":    suggestRecipeTOML("bin/vi"),
-			"neovim": suggestRecipeTOML("bin/vi"),
-		},
-		map[string]bool{"vim": true},
-	)
+	// This is a multi-provider case, so the index comes from the shared
+	// fixture. The pair it used to name -- two recipes the registry happens to
+	// ship today -- would stop exercising anything, silently, the day either
+	// one moved.
+	fx := indexfixture.New(t)
+	command := indexfixture.CommandInstalledFirst
 
 	var stdout, stderr bytes.Buffer
-	code := runSuggest(context.Background(), &stdout, &stderr, cfg, "vi", false)
+	code := runSuggest(context.Background(), &stdout, &stderr, fx.Cfg, command, false)
 
 	if code != ExitSuccess {
 		t.Errorf("exit code = %d, want %d", code, ExitSuccess)
 	}
 	out := stdout.String()
-	if !strings.Contains(out, "Command 'vi' not found. Provided by:") {
+	if !strings.Contains(out, "Command '"+command+"' not found. Provided by:") {
 		t.Errorf("output %q missing multi-match header", out)
 	}
-	if !strings.Contains(out, "tsuku install vim") {
-		t.Errorf("output %q missing vim install command", out)
-	}
-	if !strings.Contains(out, "tsuku install neovim") {
-		t.Errorf("output %q missing neovim install command", out)
+	for _, name := range []string{indexfixture.RecipeRankedInstalled, indexfixture.RecipeRankedUninstalled} {
+		if !strings.Contains(out, "tsuku install "+name) {
+			t.Errorf("output %q missing install command for %q", out, name)
+		}
 	}
 	if !strings.Contains(out, "(installed)") {
-		t.Errorf("output %q missing installed marker for vim", out)
+		t.Errorf("output %q missing installed marker for %q", out, indexfixture.RecipeRankedInstalled)
 	}
 }
 

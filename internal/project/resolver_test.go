@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/index"
+	"github.com/tsukumogami/tsuku/internal/indexfixture"
 )
 
 func TestResolver_CommandInIndexAndConfig(t *testing.T) {
@@ -123,30 +124,29 @@ func TestResolver_LookupErrorPropagation(t *testing.T) {
 }
 
 func TestResolver_MultipleMatchesFirstConfigWins(t *testing.T) {
+	// The declaration names the fixture's *second*-ranked provider on purpose.
+	// A declaration that agreed with the index ranking would pass whether the
+	// config was consulted or the first match was simply taken.
+	fx := indexfixture.New(t)
+
 	cfg := &ConfigResult{
 		Config: &ProjectConfig{
 			Tools: map[string]ToolRequirement{
-				"jq-alt": {Version: "2.0.0"},
+				indexfixture.DeclaredRecipe: {Version: indexfixture.SharedVersion},
 			},
 		},
 	}
-	lookup := func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
-		return []index.BinaryMatch{
-			{Recipe: "jq", Command: "jq"},
-			{Recipe: "jq-alt", Command: "jq"},
-		}, nil
-	}
 
-	r := NewResolver(cfg, lookup)
-	version, ok, err := r.ProjectVersionFor(context.Background(), "jq")
+	r := NewResolver(cfg, fx.Lookup)
+	version, ok, err := r.ProjectVersionFor(context.Background(), indexfixture.CommandTwoProviders)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if !ok {
 		t.Fatal("expected ok=true for command matching second recipe in config")
 	}
-	if version != "2.0.0" {
-		t.Errorf("version = %q, want %q", version, "2.0.0")
+	if version != indexfixture.SharedVersion {
+		t.Errorf("version = %q, want %q", version, indexfixture.SharedVersion)
 	}
 }
 
