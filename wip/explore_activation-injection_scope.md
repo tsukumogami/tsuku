@@ -45,11 +45,31 @@ Two specific reasons to doubt the answer is "just these two":
   productive of the two to chase.
 
   It is also weaker than it first appears: `SplitOrgKey` returns at line 17
-  when the key contains no `/`, *before* the `..` check. So the check fires only
-  on org-scoped keys. The traversal feed contains `/` and would be caught; the
-  command-substitution feed (`x$(...)y`) contains none, passes untouched, and
-  gets no charset check anywhere. Folding `SplitOrgKey` into the parse path is
-  necessary and nowhere near sufficient.
+  when the key contains no `/`, *before* the `..` check, so that check fires
+  only on org-scoped keys. Probed against the real function:
+
+  | key | bare | org? | err |
+  |-----|------|------|-----|
+  | `x$(touch /tmp/PWNED)y` | `""` | false | source must be owner/repo format |
+  | `x$(id)y` | `x$(id)y` | false | nil |
+  | `` `id` `` | `` `id` `` | false | nil |
+  | `..x` | `..x` | false | nil |
+  | `../../evil` | `""` | false | path traversal not allowed |
+  | `owner/repo:jq` | `jq` | true | nil |
+
+  The **slash-free** payload is the discriminating case. `x$(id)y` takes the
+  early return, comes back verbatim with no error, and meets no charset check
+  anywhere downstream. A payload that happens to contain a `/` — like
+  `x$(touch /tmp/PWNED)y`, whose slash is incidental, inside the payload — is
+  rejected by the owner/repo format check *by accident*, and reasoning from that
+  example produces the opposite conclusion. (This is the illustrative-versus-
+  discriminating trap from the brief, hit while writing about it.)
+
+  So neither of `SplitOrgKey`'s guards is a security control for the bare-name
+  case. **The allowlist on the bare name is the whole fix**; `SplitOrgKey` runs
+  first for org-key semantics, to yield the string to check, not for protection.
+  And its error is not propagated at parse time anyway — it is consumed only on
+  the run path — so today even the keys it *does* reject reach `ToolBinDir`.
 - **A belief, not a slip.** `%q` was chosen for shell emission by someone who
   believed it quoted for a shell. Wherever else that belief was applied is the
   same defect.
@@ -104,6 +124,27 @@ The file overlap with the sibling chain on tsuku#2543 is resolved (agreed with
   exactly what was closed. This is a design input, not only a criterion on the
   other chain: the quoter should be shaped so that adding an emitted value
   without it is awkward rather than merely discouraged.
+
+### Two fixes, orthogonal — neither subsumes the other
+
+Worth stating because a later reader will be tempted to collapse them. A perfect
+name allowlist does **not** retire the quoter fix: `_TSUKU_PREV_PATH` flows
+through `FormatExports` too and is influenceable by environment manipulation
+(lower severity, same-user) — a value the name validator never sees. Equally, a
+correct quoter does not close the traversal, which needs no shell at all. Any
+plan that treats one as making the other optional is wrong.
+
+### Charset ground truth
+
+Measured, not guessed. Across all 1449 recipe files in `recipes/`, tool names
+use only `[a-z0-9._-]`. Exactly one contains a dot (`llama.cpp`). None contains
+`..`, none has a leading `-`, none has a leading `.`. So an allowlist breaks
+nothing that exists today.
+
+One precedent to avoid: `SplitOrgKey` rejects `..` with `strings.Contains`,
+which would also reject a legitimate name with an internal doubled dot. The
+allowlist should reject `..` as a *path segment* — whole-segment, leading, or
+trailing — not as a substring.
 
 ## In Scope
 
