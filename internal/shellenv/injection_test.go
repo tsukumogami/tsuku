@@ -1,5 +1,12 @@
 package shellenv
 
+// NOTE for whoever rebases #2554 over this: this file is package shellenv and
+// calls ComputeActivation, which that change moves to internal/activation. The
+// build will break here, loudly, which is the intended behaviour -- it means a
+// rebase cannot quietly drop this coverage. Move the file; do not delete it to
+// fix the build. It carries the end-to-end reproduction of both traversal
+// vectors from #2553.
+
 import (
 	"os"
 	"path/filepath"
