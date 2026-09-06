@@ -43,10 +43,13 @@ Grouping rules:
 - One issue per emitter, because the two emitters have different current states
   — one quotes wrongly, the other not at all — and conflating them hides that
   the second exists.
-- The boundary is one issue, not one per validated component. Splitting it
-  would leave an intermediate commit where the name is checked and the version
-  is not, which is a state the PRD explicitly says fails (a name-only fix
-  leaves the identical hole through the other component).
+- The boundary's *validation* is one issue, not one per validated component.
+  Splitting it that way would leave an intermediate commit where the name is
+  checked and the version is not, which is a state the PRD explicitly says
+  fails (a name-only fix leaves the identical hole through the other
+  component). The boundary work is nonetheless two issues, cut on the
+  diagnostics-versus-validation axis instead — that axis is free, and cutting
+  there lets the reporting channel land before the first refusal needs it.
 - Test work is not a separate issue. Each issue carries its own criteria; a
   testing issue at the end is how test strategy becomes negotiable under
   schedule pressure.
@@ -316,11 +319,13 @@ reads the config.
 **Type**: feat. **Complexity**: testable.
 **Files**: `internal/project/config.go`, `internal/shellenv/activate.go`, `cmd/tsuku/install_project.go`, `cmd/tsuku/cmd_shim.go`, `cmd/tsuku/cmd_run.go`, `internal/updates/apply.go`, plus tests.
 
-*Split from Issue 6 on the validation-versus-diagnostics axis, which is free.
-The axis that must not be cut is name-versus-version: no intermediate commit
-may validate one component and leave the other unvalidated, and this split does
-not. Issue 6 alone regresses nothing — a silently dropped declaration is what a
-missing tool directory already does today.*
+*This issue and Issue 11 are a split of one boundary change, on the
+validation-versus-diagnostics axis, which is free. The axis that must not be
+cut is name-versus-version: no intermediate commit may validate one component
+and leave the other unvalidated, and Issue 11 keeps all three validations
+together. This issue lands first so the channel exists before any refusal does,
+and it regresses nothing on its own — it gives today's silent skips a voice and
+adds no new rejection.*
 
 ### Issue 11: Validate at `parseConfigFile`
 
@@ -381,9 +386,9 @@ global pin when version validation fails.
 
 **Acceptance Criteria**:
 - The fallback branch is gone.
-- Lands in the same change as Issue 6, never before it. Ahead of the boundary an
-  invalid pin would still reach this code and the branch would be doing live
-  work.
+- Lands in the same change as Issue 11, never before it. Ahead of the
+  validation an invalid pin would still reach this code and the branch would be
+  doing live work. (Issue 6 is the diagnostics carrier and no pin reaches it.)
 
 **Dependencies**: Issue 11.
 **Type**: refactor. **Complexity**: trivial.
@@ -400,8 +405,8 @@ Touches a file owned by another open issue; flag the hunk in the PR body.*
 **Acceptance Criteria**:
 - `IsValidRecipeName` is called at `recipePath` and at `Registry.cachePath`.
 - A traversing name passed directly to those functions is refused, exercised by
-  calling them directly — no config-driven route reaches them once Issue 6 holds,
-  which is what a backstop is.
+  calling them directly — no config-driven route reaches them once Issue 11
+  holds, which is what a backstop is.
 - Removing either the boundary check or this one leaves a failing test, so the
   backstop is testable *as* a backstop.
 - Documented in code comments as defence in depth beneath the boundary, not as
