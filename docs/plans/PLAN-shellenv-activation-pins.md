@@ -253,23 +253,35 @@ PATH when the stat fails for any reason other than not-exists.
       no-match reason, not the missing-files reason.** This separates
       match-then-files filtering from files-then-match; the latter tells the
       developer to reinstall a version that was never recorded.
-- [ ] **The tool-name check survives this rewrite.** A declared name whose
-      derived bare name is not a single safe path segment activates nothing, and
-      no path outside `$TSUKU_HOME/tools` reaches PATH — asserted against the
-      rewritten resolution, not inherited from the security chain's own tests.
-      A legitimate org-scoped key (`owner/repo` or `owner/repo:tool`) is
-      accepted and resolves to its bare name: `/` is supported syntax, not an
-      attack, and a criterion phrased against the raw key would be satisfied by
-      breaking every org-scoped config. This
-      criterion exists because Issue 4 rewrites the loop that check lives in,
-      deleting branches around it, and Issue 8 then amends the parent design to
-      claim the control exists. A rewrite that quietly drops it would make that
-      amendment false, which is the exact failure this whole chain was opened
-      to fix.
+- [ ] **A declared key whose derived bare name (after `SplitOrgKey`) is not a
+      single safe path segment is rejected, names the offending key, and
+      contributes no PATH entry.**
+- [ ] **A legitimate org-scoped key — `owner/repo` or `owner/repo:tool` — is
+      accepted, resolves to its bare name, and activates the installed version
+      at `$TSUKU_HOME/tools/<bare>-<version>/bin`.** This is false today:
+      activation iterates raw map keys and never calls `SplitOrgKey`, so
+      `"tsukumogami/koto" = "1.0"` looks for `tools/tsukumogami/koto-1.0/bin`
+      while the installer wrote `tools/koto-1.0`. The criterion cannot be
+      satisfied by leaving that in place.
+- [ ] **Every PATH entry activation produces lies within `$TSUKU_HOME/tools`,
+      asserted by containment of the composed path** — separator-appended prefix
+      check, as `internal/install/symlink.go` already does so that
+      `tools-malicious` does not match `tools` — and **not** by inspecting the
+      key for characters. Keying the property on the composed path rather than
+      on "contains `/`" is what lets the previous criterion be true at all, and
+      it does not require anyone to have enumerated every bad character.
 - [ ] A rejected tool name reports the `bad-form` reason once Issue 5 lands, so
       the check is not merely silent.
 - [ ] A state-recorded version that fails `ValidateVersionString` is dropped
-      from the candidate set rather than becoming a path component.
+      from the candidate set rather than becoming a path component. **This does
+      not collapse into the security chain's parse-time check, and the two must
+      both exist.** There are two version values: the *declared* one (`latest`,
+      `26`) which parse-time validation sees, and the *resolved* one (`26.8.1`,
+      chosen from installation state) which is what actually becomes the path
+      component. Parse-time validation never sees the second. Exact pins are
+      covered by theirs, non-exact by this one, and dropping either leaves its
+      half unvalidated. `internal/updates/gc.go` already validates a
+      state-derived version before building a path for the same reason.
 - [ ] With `git-lfs` installed and `git` not, `git = "latest"` puts no `git-lfs`
       directory on PATH.
 - [ ] A directory with no state entry is never activated; a state entry whose

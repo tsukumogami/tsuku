@@ -2,23 +2,23 @@
 schema: prd/v1
 status: Accepted
 problem: |
-  Project activation honors only exact version pins. The "latest", "" and
-  prefix forms documented for `.tsuku.toml` resolve to directory names tsuku
-  never creates, so they put nothing on PATH, and every unhonored declaration
-  is dropped with exit 0 and empty stderr. A developer following tsuku's own
-  guide writes a declaration that does nothing and gets no signal.
+  Documented `.tsuku.toml` forms resolve to directory names tsuku never
+  creates, so they put nothing on PATH: the "latest", "" and prefix version
+  pins, and org-scoped keys, whose bare name is never derived. Every unhonored
+  declaration is dropped with exit 0 and empty stderr. A developer following
+  tsuku's own guide writes a declaration that does nothing and gets no signal.
 goals: |
-  Activation resolves every documented version form against the versions
-  actually installed, picking the newest match by version order rather than
-  string order. Any declaration it cannot honor is reported on stderr, with the
-  reason distinguishable, at a frequency a developer will tolerate on a shell
-  prompt. Nothing about it can stall or break a shell, and the documents that
-  specify it stop contradicting it.
+  Activation resolves every documented form against what is actually
+  installed -- version pins by version order rather than string order, and
+  org-scoped keys by their derived bare name. Any declaration it cannot honor
+  is reported on stderr, with the reason distinguishable, at a frequency a
+  developer will tolerate on a shell prompt. Nothing about it can stall or
+  break a shell, and the documents that specify it stop contradicting it.
 upstream: docs/briefs/BRIEF-shellenv-activation-pins.md
 source_issue: 2543
 ---
 
-# PRD: Project activation for non-exact version pins
+# PRD: Documented `.tsuku.toml` forms that silently do not activate
 
 ## Status
 
@@ -33,15 +33,23 @@ automatically. Both are consumed as `eval "$(...)"`. Four version forms are
 documented: an exact version, a prefix such as `"1.22"`, `"latest"`, and `""`.
 Only the exact form works.
 
-Activation resolves a declaration by interpolating the declared string into
+Activation resolves a declaration by interpolating the declared strings into
 `$TSUKU_HOME/tools/<name>-<version>/bin` and skipping the entry when that
-directory is absent. So `latest` looks for `tools/nodejs-latest/bin` and a
+directory is absent — the name interpolated as raw as the version. So `latest`
+looks for `tools/nodejs-latest/bin` and a
 prefix looks for `tools/nodejs-26/bin`, neither of which tsuku creates. The
 empty form never reaches that lookup at all: an explicit branch above it skips
 the entry, with a comment recording the resolution as deferred. Reproduced
 against a build of `main`: `nodejs = "26.8.1"` puts one entry on PATH, while
 `""`, `"latest"`, `"26"` and `">=26"` each put zero, all four exiting 0 with
 zero bytes on stderr.
+
+The name half fails the same way. An org-scoped key such as
+`"tsukumogami/koto" = "1.0"` is the documented form for a tool from a
+distributed registry, and activation looks for `tools/tsukumogami/koto-1.0/bin`
+while the installer wrote `tools/koto-1.0`. `SplitOrgKey` exists for this and is
+called from `internal/project`'s own resolver; the activation loop iterates raw
+map keys and never calls it.
 
 Every one of those skips is silent in every channel the developer has.
 `ActivationResult.Skipped` is computed correctly and read by no non-test caller,
@@ -70,8 +78,8 @@ it resolves, per R3.
 
 ## Goals
 
-1. Every documented version form activates the tool it names, resolved against
-   the versions installed on the machine.
+1. Every documented form activates the tool it names, resolved against what is
+   installed on the machine — the four version forms, and org-scoped keys.
 2. A developer can tell why a declaration wasn't honored, and can tell the
    possible reasons apart from one another.
 3. Reporting is proportionate enough that nobody removes the prompt hook to
@@ -132,7 +140,7 @@ have no new outcome above them by design.
 - **R4.** `""` resolves identically to `"latest"`, as the guide states the two
   forms are equivalent.
 - **R5.** Candidacy is settled before "newest" is chosen. Activation filters to
-  the candidates R9 defines and picks the newest of those, rather than picking
+  the candidates R10 defines and picks the newest of those, rather than picking
   the newest and then testing it. So with `1.7` recorded but its files gone and
   `1.6` recorded and intact, `jq = "latest"` activates `1.6` silently rather
   than reporting on `1.7`. A developer asked for the newest usable version and
@@ -145,55 +153,61 @@ have no new outcome above them by design.
   `latest` resolves to the newest of them rather than reporting no match.
   Resolution is against what is present, and excluding prereleases would leave
   a tool that is installed unable to activate.
-- **R7.** Activation decides whether an installed version satisfies a
+- **R7.** An org-scoped key resolves to the tool the installer wrote. Activation
+  derives the bare name from the declared key, so `"owner/repo" = "1.0"` and
+  `"owner/repo:tool" = "1.0"` activate `$TSUKU_HOME/tools/<bare>-1.0/bin`, not a
+  path built from the raw key. Today the loop iterates raw map keys and never
+  derives, so a supported form of the file silently activates nothing — the same
+  defect as the version forms, arriving through the name half of the same path.
+- **R8.** Activation decides whether an installed version satisfies a
   declaration, which pin level a declaration expresses, and whether a version
   string is well formed, by calling the same routines `tsuku install` and
   `tsuku outdated` call. It carries no copy of any of the three, so activation
   and installation can't drift apart.
-- **R8.** Activation's notion of what is installed matches what tsuku actually
+- **R9.** Activation's notion of what is installed matches what tsuku actually
   installed. A version is a candidate only when installation state records it,
   so a directory left behind by a partial removal is not a candidate, and a
   declaration of one tool never resolves to a version of a differently-named
   tool. (The mechanism, and why directory names can't answer this, is under
   Decisions.)
-- **R9.** A version is a **candidate** for a declaration when installation state
+- **R10.** A version is a **candidate** for a declaration when installation state
   records it, it satisfies the declaration, and its bin directory exists. The
   file test is directory existence and nothing more: an existing but empty bin
   directory counts as present and activates, because stat-ing every binary on
   every prompt isn't a cost this path can carry. This preserves today's
   guarantee that activation never puts a nonexistent directory on PATH.
-- **R10.** When installation state was read, the declaration is a resolvable
+- **R11.** When installation state was read, the declaration is a resolvable
   form, and it has no candidates, the reason is `missing-files`
   if at least one version *satisfying that declaration* was excluded because its
   directory was absent, and `no-match` otherwise. The quantifier is over
   satisfying versions only: `jq = "2"` on a machine with no jq 2.x installed
   reports `no-match` even if some unrelated jq 1.6 has lost its files, because
   telling the developer that jq 2 is recorded but missing would be false.
-- **R11.** A declaration for a tool with no installed versions at all — nothing
+- **R12.** A declaration for a tool with no installed versions at all — nothing
   recorded in installation state under that name — reports reason `no-match`.
   This is also what a misspelled tool name produces, which follows from name
   validation being out of scope.
-- **R12.** A declaration that can't be honored doesn't prevent any other
+- **R13.** A declaration that can't be honored doesn't prevent any other
   declaration in the same file from activating.
-- **R13.** Activated tools appear on PATH in lexical order by tool name, ahead
+- **R14.** Activated tools appear on PATH in lexical order by tool name, ahead
   of the pre-activation PATH, so `go` precedes `node`. This is the order
   activation produces today. When two declared tools ship a binary of the same
   name the alphabetically earlier tool therefore wins, and that holds for the
   exact pins that activate today and for the forms this work adds alike.
-- **R14.** Moving from one project to another replaces the first project's PATH
+- **R15.** Moving from one project to another replaces the first project's PATH
   entries with the second's rather than stacking them, so walking between
   projects can't grow PATH without bound. The pre-activation PATH carried in
   `_TSUKU_PREV_PATH` is the base each activation composes against.
-- **R15.** An activated version takes precedence over the globally active
+- **R16.** An activated version takes precedence over the globally active
   version of the same tool, which tsuku exposes through symlinks under
   `$TSUKU_HOME/tools/current`. This is the shadowing behavior the guide already
   describes.
 
 ### Reporting
 
-- **R16.** When a declaration can't be honored, activation writes a message to
+- **R17.** When a declaration can't be honored, activation writes a message to
   stderr naming the tool and the reason.
-- **R17.** Five reasons are distinguishable as distinct sentences, not one
+- **R18.** Five reasons are distinguishable as distinct sentences, not one
   sentence with a substituted noun. They're named rather than numbered so the
   names survive renumbering, and each must contain the quoted substring:
   - **no-match** — no installed version satisfies this declaration. Contains
@@ -214,40 +228,40 @@ have no new outcome above them by design.
     missing`. It's separate from no-match because collapsing the two would tell
     a developer to install something tsuku already believes is installed, and
     `tsuku install` would likely no-op; the actionable advice is to reinstall.
-- **R18.** `bad-form` fires when the version string is rejected by the same
+- **R19.** `bad-form` fires when the version string is rejected by the same
   string validation `tsuku install` applies, which rejects on disallowed
   characters, so `">=26"` is `bad-form`. A string of letters, digits, dots and
   hyphens passes that validation and is classified as a prefix, so
   `nodejs = "twenty-six"` is a well-formed prefix that matches nothing and
   reports `no-match`. Activation must not add a second, stricter validator to
-  narrow this gap, because that would violate R7.
-- **R19.** R16 applies to every version form, including an exact pin naming a
+  narrow this gap, because that would violate R8.
+- **R20.** R17 applies to every version form, including an exact pin naming a
   version that isn't installed. No form is exempt from reporting.
-- **R20.** Messages go to stderr only. Standard output carries exclusively the
+- **R21.** Messages go to stderr only. Standard output carries exclusively the
   shell code both entry points are `eval`'d for, so
   `eval "$(tsuku hook-env bash)"` and `eval "$(tsuku shell)"` stay correct in
   the presence of any number of unhonorable declarations.
-- **R21.** Activation exits 0 for all five reasons. A prompt hook that exits
+- **R22.** Activation exits 0 for all five reasons. A prompt hook that exits
   non-zero on entering a directory gets wrapped in `|| true` by users, which
   would discard the reporting this work adds.
-- **R22.** `--quiet` suppresses the five reason messages, and also the R34
+- **R23.** `--quiet` suppresses the five reason messages, and also the R35
   parse diagnostic, on both `tsuku shell` and
   `tsuku hook-env`, leaving PATH behavior unchanged. The flag already exists as
   a persistent root flag and this work adds nothing to it. It is not, however,
   the answer for the prompt-hook path: the shipped hook fragments invoke
   `tsuku hook-env` with no flags, so a developer can only pass `--quiet` there
-  by editing a generated file. R23 is the whole mitigation for hook frequency,
-  and R22 is for a developer invoking either command by hand.
-- **R23.** *Budget.* `tsuku hook-env` emits at most one message per unhonorable
+  by editing a generated file. R24 is the whole mitigation for hook frequency,
+  and R23 is for a developer invoking either command by hand.
+- **R24.** *Budget.* `tsuku hook-env` emits at most one message per unhonorable
   declaration per entry into a given project, so a file with two bad
   declarations produces two messages on entry rather than one. A file that won't
-  parse has no declarations to count, so its R34 diagnostic gets the same
+  parse has no declarations to count, so its R35 diagnostic gets the same
   once-per-entry budget as a single unhonorable declaration. The `unreadable`
   reason is the exception: it reports once per activation, naming the tools it
   couldn't resolve, because the failure is a property of the read rather than of
   any declaration, and ten near-identical lines for one cause is the noise this
   section exists to prevent.
-- **R24.** *Suppression rule.* `tsuku hook-env` reports only when the project
+- **R25.** *Suppression rule.* `tsuku hook-env` reports only when the project
   directory it resolved differs from `_TSUKU_DIR`. The project is the directory
   containing the `.tsuku.toml` activation resolved, parseable or not. So moving
   between subdirectories of an already-activated project produces nothing,
@@ -255,9 +269,9 @@ have no new outcome above them by design.
   first reports again. Where nested project files exist, the project is
   whichever one activation actually resolved, since that's the one whose
   declarations were read.
-- **R25.** *Inheritance.* A shell that doesn't inherit `_TSUKU_DIR` reports
+- **R26.** *Inheritance.* A shell that doesn't inherit `_TSUKU_DIR` reports
   again; one that does, such as a subshell of an activated shell, doesn't.
-- **R26.** *Remediation takes effect.* `tsuku hook-env` re-resolves an
+- **R27.** *Remediation takes effect.* `tsuku hook-env` re-resolves an
   unchanged project when installation state has changed since that project was
   last activated, rather than short-circuiting on the unchanged directory. Once
   a developer runs the `tsuku install` a message told them to run, the tool is
@@ -273,26 +287,26 @@ have no new outcome above them by design.
   sees the tool appear; one who stays put sees it never work. Behavior that
   depends on whether someone incidentally moved is what gets filed as
   intermittent and never reproduced.
-- **R27.** *The re-resolve is silent.* A re-resolve triggered by R26 reports
+- **R28.** *The re-resolve is silent.* A re-resolve triggered by R27 reports
   nothing. Not when it finds the tool now present, which needs no announcement,
   and not when it finds the declaration still unhonorable, which the developer
   was already told about on entry. Reporting there would build a nag keyed on
   "anyone installed anything", firing in one terminal because an unrelated tool
-  was installed in another. The entry-based budget in R23 is unaffected: a
+  was installed in another. The entry-based budget in R24 is unaffected: a
   re-resolve is not an entry.
-- **R28.** *The trigger is deliberately coarse.* Any change to installation
+- **R29.** *The trigger is deliberately coarse.* Any change to installation
   state re-resolves, not only a change touching a declared tool, because
   installing anything rewrites the whole file and a per-tool check would need
   the very read the trigger exists to avoid. This is intentional over-triggering
   and must not be narrowed into a per-tool condition later: doing so
-  reintroduces the trap R26 closes. The cost that makes it affordable is that
+  reintroduces the trap R27 closes. The cost that makes it affordable is that
   detecting the change is a stat rather than a read: roughly 36 microseconds
   against the 5 ms unchanged-directory budget the design already sets, about
   0.7% of it. The argument is deliberately made against that budget rather than
   against today's measured `hook-env` cost. tsukumogami/tsuku#2548 is a defect,
   and a broken performance property is not a licence to spend against it — when
   it's fixed, the 5 ms budget becomes real again and this still fits.
-- **R29.** *Sessions that predate this change.* A shell whose environment
+- **R30.** *Sessions that predate this change.* A shell whose environment
   carries the older tracking variables but nothing recording the last
   activation's installation state must re-resolve once and record, rather than
   reading the absent record as "never re-resolve" or as "always re-resolve". The
@@ -300,7 +314,7 @@ have no new outcome above them by design.
   their shell; the second removes the early exit for those sessions entirely.
   Both failures are silent, so the case is settled here rather than left to an
   implementer.
-- **R30.** *Edits in place, accepted divergence.* Editing `.tsuku.toml` while
+- **R31.** *Edits in place, accepted divergence.* Editing `.tsuku.toml` while
   standing inside an already-activated project produces no report until the
   project is left and re-entered, because neither the directory nor the project
   changed. Whether the edit takes effect before then depends on where the
@@ -310,21 +324,21 @@ have no new outcome above them by design.
   match, so the next prompt re-activates and PATH picks the edit up silently.
   The same applies to repairing a file that wouldn't parse. Both self-correct on
   re-entry.
-- **R31.** `tsuku shell` reports on every invocation. It's one-shot and
+- **R32.** `tsuku shell` reports on every invocation. It's one-shot and
   explicitly asked for, so there's no repetition to suppress.
 
 ### Failure behavior
 
-- **R32.** Activation reads installation state without acquiring a lock, and so
+- **R33.** Activation reads installation state without acquiring a lock, and so
   never waits on another tsuku process. A declaration still resolves correctly
   while an install is writing installation state; reason `unreadable` is
   reserved for a read that fails outright, not for one that finds another
   process writing.
-- **R33.** Activation reads installation state at most once per activation,
+- **R34.** Activation reads installation state at most once per activation,
   regardless of how many tools the file declares.
-- **R34.** A `.tsuku.toml` that can't be parsed produces one diagnostic line on
+- **R35.** A `.tsuku.toml` that can't be parsed produces one diagnostic line on
   stderr, with no command usage block, and exit 0.
-- **R35.** On a parse failure, `tsuku hook-env` treats the directory containing
+- **R36.** On a parse failure, `tsuku hook-env` treats the directory containing
   the unparseable file as the resolved project and records it, exactly as it
   would for a project that parsed. Where that directory differs from
   `_TSUKU_DIR`, stdout carries shell code setting `_TSUKU_DIR` to it and setting
@@ -332,7 +346,7 @@ have no new outcome above them by design.
   activation in which nothing activated — and nothing else. Where it already
   equals `_TSUKU_DIR`, stdout is empty and the `eval` is a no-op.
 
-  Recording it is what makes R23's budget apply: the tracking variable has to
+  Recording it is what makes R24's budget apply: the tracking variable has to
   point at the project the developer is standing in, both so later movement
   compares against the right project and so there is something to suppress the
   repeat diagnostic against. Unsetting it instead would restore PATH correctly
@@ -341,33 +355,33 @@ have no new outcome above them by design.
   outcome Goal 3 forbids.
 
   `tsuku shell` records nothing on a parse failure. It's one-shot and doesn't
-  own the prompt hook's tracking variables, so it prints the R34 diagnostic and
+  own the prompt hook's tracking variables, so it prints the R35 diagnostic and
   exits without emitting shell code.
-- **R36.** Leaving a project, meaning moving to a directory with no
+- **R37.** Leaving a project, meaning moving to a directory with no
   `.tsuku.toml` above it, restores the pre-activation PATH, prints nothing on
   stderr, and exits 0. There's nothing to report on the way out, and no
   reporting state survives the exit. The exit status is stated because leaving
   is the most common transition after entering, and sharing a code path with
   `tsuku shell`'s non-zero no-project exit would make every departure from a
   project return non-zero.
-- **R37.** `tsuku shell` invoked where no `.tsuku.toml` is found anywhere above
+- **R38.** `tsuku shell` invoked where no `.tsuku.toml` is found anywhere above
   the working directory keeps its current behavior: one line on stderr saying no
   project file was found, nothing on stdout, and a non-zero exit. This work
   doesn't change it. The non-zero exit is specific to there being no project at
-  all and doesn't conflict with R21, which governs a project that exists and has
+  all and doesn't conflict with R22, which governs a project that exists and has
   declarations that can't be honored.
-- **R38.** `tsuku hook-env` does not share that behavior. Where no project file
+- **R39.** `tsuku hook-env` does not share that behavior. Where no project file
   is found and none was previously activated, it exits 0 with empty stdout and
   empty stderr. It runs on every prompt, including every prompt outside any
-  project, so a non-zero exit there is the outcome R21 exists to prevent.
+  project, so a non-zero exit there is the outcome R22 exists to prevent.
 
 ### Documentation
 
-- **R39.** `docs/designs/current/DESIGN-shell-env-activation.md` is amended so
+- **R40.** `docs/designs/current/DESIGN-shell-env-activation.md` is amended so
   its specified algorithm, its worked PATH example, and the implementation
   agree, and so it states what activation does when a declaration can't be
   honored, including all five reasons and the non-blocking read.
-- **R40.** `docs/guides/shell-integration.md` states what a developer sees when
+- **R41.** `docs/guides/shell-integration.md` states what a developer sees when
   a declaration can't be honored, and its statement of the four version forms
   becomes true rather than aspirational. It also mentions channel pins, since a
   developer can now receive a message naming one and would otherwise find no
@@ -376,7 +390,7 @@ have no new outcome above them by design.
 ## Acceptance Criteria
 
 Message-content criteria hold for both `tsuku hook-env` and `tsuku shell`; only
-frequency differs, per R23 and R31.
+frequency differs, per R24 and R32.
 
 **Resolution**
 
@@ -398,7 +412,7 @@ frequency differs, per R23 and R31.
       resolves the collision in favour of the alphabetically earlier tool name,
       for exact pins and for the forms this work adds alike.
 
-**Resolution source (R7, R8, R9, R11)**
+**Resolution source (R8, R9, R10, R12)**
 
 - [ ] A change to the shared matching, pin-level or version-validation rule
       that activation doesn't follow in step turns an automated check **of
@@ -436,7 +450,7 @@ frequency differs, per R23 and R31.
       stdout. Checked for `fish` as well as `bash`, because the fish hook pipes
       stdout straight to `source` with no command-substitution boundary, so a
       leak there executes rather than merely printing.
-- [ ] Each reason's message contains the substring R17 quotes for it and the
+- [ ] Each reason's message contains the substring R18 quotes for it and the
       declared tool's name, and that substring is absent from the other four
       reasons' messages.
 - [ ] `nodejs = ">=26"` produces `bad-form`. `nodejs = "@lts"` produces
@@ -453,7 +467,7 @@ frequency differs, per R23 and R31.
 - [ ] `--quiet` suppresses all five messages on both commands while leaving PATH
       behavior unchanged.
 
-**Frequency (R23, R31)**
+**Frequency (R24, R32)**
 
 Tested at the command level rather than against the resolution function, because
 the behavior lives in how the command exports and re-reads `_TSUKU_DIR`.
@@ -557,7 +571,7 @@ the working directory equals `_TSUKU_DIR`, and `_TSUKU_DIR` holds the project
 root. So `cd src/` inside an activated project is a full re-activation, and a
 warning attached naively to activation fires again — once per directory change
 anywhere under the project, in both directions, for as long as someone works
-there. Ten subdirectories, ten warnings about one missing tool. R23 is written
+there. Ten subdirectories, ten warnings about one missing tool. R24 is written
 against the project rather than the directory for that reason, and it needs no
 new state because `_TSUKU_DIR` already carries exactly the fact. The alternative
 considered was a time-based throttle file of the kind tsuku already keeps per
@@ -566,7 +580,7 @@ can pick correctly, to answer a question an existing environment variable
 answers exactly.
 
 **What activation does when it can't read installation state.** It doesn't
-wait, and R32 states the rule rather than only the prohibition, because
+wait, and R33 states the rule rather than only the prohibition, because
 "never blocks" alone admits two implementations that behave oppositely — one
 that attempts a non-blocking lock and activates nothing on contention, and one
 that reads without a lock and activates normally. The second is correct.
@@ -594,7 +608,7 @@ name is safe against a shorter one — and can't be resolved soundly from the
 filesystem, only heuristically, by assuming version strings start with a digit,
 which no validator enforces. Directory scanning is also about a thousand times
 cheaper than reading installation state, so there's real pressure toward it;
-that's why R8 and R9 are stated as requirements and given falsifying criteria
+that's why R9 and R10 are stated as requirements and given falsifying criteria
 rather than left as advice.
 
 **Why there's no millisecond budget.** Reading installation state isn't free:
@@ -603,7 +617,7 @@ it's megabytes and decoding dominates. But the command it would be measured
 against currently costs roughly 1.3 seconds per invocation for an unrelated
 reason described under Known Limitations — two orders of magnitude larger. A
 latency budget written against today's baseline would mostly be measuring that
-defect. R32 and R33 constrain blocking and read counts instead, which is the
+defect. R33 and R34 constrain blocking and read counts instead, which is the
 durable form of the same concern and stays meaningful once #2548 is fixed.
 
 ## Known Limitations
@@ -638,7 +652,7 @@ Measured during discovery and tracked separately as tsukumogami/tsuku#2548:
 with three distributed registries configured, against a design budget of 5 ms.
 That cost is paid on every prompt by every user who follows the guide's
 instruction to install the hook, so it keeps this feature unaffordable even once
-it's correct. It doesn't weaken R23: a slow hook and a noisy hook get deleted
+it's correct. It doesn't weaken R24: a slow hook and a noisy hook get deleted
 for different reasons, and fixing one doesn't excuse the other.
 
 ## Out of Scope

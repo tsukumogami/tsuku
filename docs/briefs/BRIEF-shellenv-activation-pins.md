@@ -2,15 +2,15 @@
 schema: brief/v1
 status: Accepted
 problem: |
-  Project activation honors only exact version pins. The "latest", ""
-  and prefix forms that `.tsuku.toml` documents put nothing on PATH and
-  report nothing, so a developer following tsuku's own guide writes a
-  declaration that silently does nothing.
+  Documented `.tsuku.toml` forms silently do not activate. The "latest",
+  "" and prefix version pins put nothing on PATH, and so do org-scoped
+  keys, because activation builds a directory name from the declared
+  strings rather than resolving them. Nothing is reported either way.
 outcome: |
-  Every version form the guide documents activates the tool it names,
-  resolved against what is installed. Any declaration that cannot be
-  honored says which tool and why, on stderr, without breaking the
-  `eval` contract and without becoming noise on the prompt.
+  Every form the guide documents activates the tool it names, resolved
+  against what is installed -- version pins and org-scoped keys alike.
+  Any declaration that cannot be honored says which tool and why, on
+  stderr, without breaking the `eval` contract or becoming prompt noise.
 motivating_context: |
   Reported as tsukumogami/tsuku#2543 after a workspace `.tsuku.toml`
   pinning a major version was found to have never activated anything.
@@ -19,7 +19,7 @@ motivating_context: |
   and never completed.
 ---
 
-# BRIEF: Project activation for non-exact version pins
+# BRIEF: Documented `.tsuku.toml` forms that silently do not activate
 
 ## Status
 
@@ -28,6 +28,14 @@ Accepted
 The brief frames the problem and the boundary. The requirements contract, the
 reporting shape, and the choice of where the shared version-matching code lives
 are downstream.
+
+Widened once after acceptance, on the maintainer seat's ruling. The original
+framing was the non-exact version pins alone. Org-scoped keys turned out to fail
+the same way through the other half of the same path — activation iterates raw
+`[tools]` keys and never calls `SplitOrgKey`, so `"tsukumogami/koto"` looks for
+`tools/tsukumogami/koto-1.0/bin` while the installer wrote `tools/koto-1.0`. It
+is the same defect, one line apart in the same loop, so the problem statement
+covers both rather than a second chain rewriting the same loop.
 
 ## Problem Statement
 
@@ -42,8 +50,19 @@ no way to find that out from inside the tool. `tsuku install` reads the same fil
 and resolves the same forms correctly, so someone can install every tool their
 project declares and still end up with an empty PATH.
 
-Two different mechanisms produce that one symptom, and keeping them apart
-matters for what gets corrected.
+The same happens to an org-scoped key. `"tsukumogami/koto" = "latest"` is the
+documented form for a tool from a distributed registry, and activation looks for
+`tools/tsukumogami/koto-latest/bin` — wrong in both halves at once, because it
+never derives the bare name and never resolves the version. A real workspace
+config on this machine declares two tools that way and neither has ever
+activated; it goes unnoticed because the tools are installed by a setup script,
+which is exactly the shape of config most likely to hit it.
+
+So the failure is not specific to version strings. It is that activation builds
+a directory name out of whatever the file said, instead of resolving what the
+file said into what is installed — in the name half and the version half alike.
+The version half has two mechanisms behind it and the name half one, and keeping
+all three apart matters for what gets corrected.
 
 `latest` and prefix forms miss by accident. Activation builds a directory path
 by interpolating the declared string into
@@ -55,11 +74,18 @@ interpolation at all. It's caught by an explicit branch above it, carrying a
 comment that says so — `// No version pinned -- skip (would need resolution, out
 of scope for the activation skeleton)`.
 
-So the three broken forms are two kinds of broken. One was knowingly
+So the three broken version forms are two kinds of broken. One was knowingly
 unimplemented, and whoever deferred it left a note saying the user would get
 nothing. Two were believed to work and silently didn't: they fall through to the
 stat-miss below that branch, where nobody intended anything. The deferral has a
 paper trail. The accident has none — and worse, as the documentation shows.
+
+The org-scoped key is a third kind and the plainest: the loop iterates the raw
+`[tools]` map keys and never calls `SplitOrgKey`, which exists for precisely
+this and is called from `internal/project`'s own resolver. Nothing was deferred
+and nothing was contradicted; the derivation was simply never wired in on this
+path. It lands in the same `Skipped` slice as the rest, and so is equally
+invisible.
 
 `docs/designs/current/DESIGN-shell-env-activation.md` specifies activation, and
 it contradicts itself about exactly this. Line 196 states that a project
@@ -82,11 +108,12 @@ reads it. The information exists, is computed, and reaches nobody.
 
 ## User Outcome
 
-A developer writes any version form the guide documents and gets the tool they
-asked for. `latest` and `""` put the newest installed version on PATH. A prefix
-puts the newest installed version inside that boundary on PATH, using the same
+A developer writes any form the guide documents and gets the tool they asked
+for. `latest` and `""` put the newest installed version on PATH. A prefix puts
+the newest installed version inside that boundary on PATH, using the same
 dot-boundary rule that stops `"1"` from matching `10.0.0`. An exact pin resolves
-to the same version it resolves to today.
+to the same version it resolves to today. And an org-scoped key activates the
+tool it names, at the bare name the installer actually wrote it under.
 
 Reporting, unlike resolution, changes for every form including the exact one.
 Any declaration that cannot be honored is reported — `nodejs = "26.9.9"` on a
@@ -161,7 +188,9 @@ was never implemented.
 **In scope**
 
 - Resolving all four documented version forms at activation time — exact,
-  prefix, `""` and `latest` — against the set of versions actually installed.
+  prefix, `""` and `latest` — against the set of versions actually installed,
+  and deriving the bare tool name from an org-scoped key so it resolves to the
+  directory the installer wrote rather than to one built from the raw key.
   The guarantee is that the four forms resolve consistently with each other and
   stay consistent as the code changes; how many code paths deliver that is the
   design's call, not this brief's.
