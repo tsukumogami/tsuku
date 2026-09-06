@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+	"github.com/tsukumogami/tsuku/internal/activation"
 	"github.com/tsukumogami/tsuku/internal/config"
-	"github.com/tsukumogami/tsuku/internal/shellenv"
 )
 
 var shellFlag string
@@ -76,7 +76,7 @@ func detectShell(flagValue string) string {
 // caller to decide how to handle that case.
 func runShell(cwd, prevPath, shell string, cfg *config.Config) (string, error) {
 	// Pass empty curDir to force activation (no early-exit on same directory).
-	result, err := shellenv.ComputeActivation(cwd, prevPath, "", cfg)
+	result, err := activation.ComputeActivation(cwd, prevPath, "", cfg)
 	if err != nil {
 		return "", err
 	}
@@ -85,5 +85,5 @@ func runShell(cwd, prevPath, shell string, cfg *config.Config) (string, error) {
 		return "", nil
 	}
 
-	return shellenv.FormatExports(result, shell), nil
+	return activation.FormatExports(result, shell), nil
 }

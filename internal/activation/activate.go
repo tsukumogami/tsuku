@@ -1,27 +1,42 @@
-// REBASE WARNING for tsukumogami/tsuku#2554, which moves this file into a new
-// internal/activation package and rewrites the emitter around a shared
-// exportLine helper.
+// Package activation computes per-directory PATH activation for tsuku projects.
 //
-// That helper still formats with %q. Taking their side of the conflict compiles
-// cleanly, passes review as a package move, and silently reverts the quoting fix
-// this file carries -- %q is a Go string-literal quoter, so $ and backticks stay
-// live inside the double quotes it produces, and the shell hook evaluates this
-// output. The correct resolution is setVar's body plus their additions, not
-// either side whole.
+// RESOLVED REBASE NOTE, carried from internal/shellenv/activate.go.
 //
-// TestFormatExports_HostileValuesDoNotExecute is what catches the revert
-// (mutation-verified), and internal/shellenv/injection_test.go will fail to
-// compile after the package move -- which is intended. Move that file; do not
-// delete it to fix the build.
+// The security work in #2563 left a warning here for whoever rebased #2554 over
+// it: that PR moves this file into this package and rewrites the emitter around
+// a shared helper, and taking its side of the conflict would have compiled
+// cleanly, passed review as a package move, and silently reverted the quoting
+// fix -- %q is a Go string-literal quoter, so $ and backticks stay live inside
+// the double quotes it produces, and the shell hook evaluates this output.
 //
-// This warning lives here rather than only in the test files because the person
-// resolving that conflict is working in this one.
-
-// Package shellenv computes per-directory PATH activation for tsuku projects.
+// That resolution is done: setVar's body is kept and the pins-side additions
+// are layered on it, which is what the warning asked for.
+//
+// It is kept rather than deleted because the reasoning is not recoverable from
+// the code. TestFormatExports_HostileValuesDoNotExecute is what catches a
+// revert -- mutation-verified -- and injection_test.go and
+// diagnostic_binding_test.go moved into this package with the emitter rather
+// than being deleted to clear the build errors the move caused.
+//
+// The original closed with "this warning lives here because the person
+// resolving that conflict is working in this one." That was true of the file it
+// was written in and stopped being true the moment the move it warned about
+// happened, which is the note's own subject arriving one level up.
 // A project directory with a .tsuku.toml file declares tool requirements;
-// ComputeActivation resolves those to concrete bin directories under
-// $TSUKU_HOME/tools and builds a modified PATH.
-package shellenv
+// ComputeActivation resolves those against the versions installation state
+// records and builds a modified PATH.
+//
+// This lives outside internal/shellenv because internal/install imports that
+// package for its shell.d cache and PATH-precedence helpers, which would make
+// the dependency activation needs -- on the pin-matching routines, the version
+// ordering, and installation state -- a cycle. Activation shares no symbol with
+// the rest of shellenv, so the split costs nothing and tells the truth about
+// the dependency graph.
+//
+// Invariant: internal/install must never import this package, nor must anything
+// in internal/install's dependency graph. That is the cycle this split exists
+// to avoid, and re-creating it elsewhere would re-create the bug.
+package activation
 
 import (
 	"fmt"

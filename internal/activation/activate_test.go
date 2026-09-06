@@ -1,4 +1,4 @@
-package shellenv
+package activation
 
 import (
 	"os"

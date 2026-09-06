@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/tsukumogami/tsuku/internal/activation"
 	"github.com/tsukumogami/tsuku/internal/config"
-	"github.com/tsukumogami/tsuku/internal/shellenv"
 	"github.com/tsukumogami/tsuku/internal/updates"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
@@ -33,7 +33,7 @@ var hookEnvCmd = &cobra.Command{
 		prevPath := os.Getenv("_TSUKU_PREV_PATH")
 		curDir := os.Getenv("_TSUKU_DIR")
 
-		result, err := shellenv.ComputeActivation(cwd, prevPath, curDir, cfg)
+		result, err := activation.ComputeActivation(cwd, prevPath, curDir, cfg)
 		if err != nil {
 			return err
 		}
@@ -48,7 +48,7 @@ var hookEnvCmd = &cobra.Command{
 			return nil
 		}
 
-		fmt.Print(shellenv.FormatExports(result, shell))
+		fmt.Print(activation.FormatExports(result, shell))
 		return nil
 	},
 }
