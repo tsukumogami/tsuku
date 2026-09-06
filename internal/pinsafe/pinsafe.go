@@ -17,10 +17,17 @@
 // of a path; reach for internal/version when you are parsing or transforming a
 // version token.
 //
-// It exists as a leaf because internal/project cannot import internal/install:
-// the cycle is project -> install -> shellenv -> project. That is structural
-// rather than a filing accident -- install depends on project -- so no amount
-// of moving packages around removes it.
+// It is a leaf package rather than a function in either caller. internal/project
+// cannot import internal/install -- install already imports project, so the edge
+// would close a cycle immediately.
+//
+// That constraint alone does not force a third package: the rule could live in
+// internal/project, with install calling it in the direction that is already
+// legal. It is not filed there because internal/install validates pins that never
+// came from a project file at all -- `tsuku install jq@1.7` supplies one on the
+// command line -- and making the CLI path import internal/project to check a CLI
+// argument would assert that pin safety is a project-config concern. It is not.
+// A predicate both callers need and neither owns belongs beside neither.
 package pinsafe
 
 import (
@@ -38,17 +45,25 @@ func ValidateRequested(requested string) error {
 	if requested == "" {
 		return nil
 	}
+	// Separators come before the charset loop, which would otherwise reject them
+	// first and report only "invalid character". The order was the other way when
+	// this moved out of internal/install, which made this branch unreachable: the
+	// loop rejects '/' and '\' because they are neither letters, digits, '.', '@'
+	// nor '-', so nothing downstream of it could ever see one. Reordering makes
+	// the branch live and the message say what is actually wrong, matching
+	// recipe.ValidateStrictName, which orders its checks the same way for the
+	// same reason.
+	if strings.ContainsAny(requested, `/\`) {
+		return fmt.Errorf("path separator in requested version %q", requested)
+	}
+	if strings.Contains(requested, "..") {
+		return fmt.Errorf("path traversal pattern in requested version %q", requested)
+	}
 	for _, r := range requested {
 		if unicode.IsDigit(r) || r == '.' || r == '@' || unicode.IsLetter(r) || r == '-' {
 			continue
 		}
 		return fmt.Errorf("invalid character %q in requested version %q", string(r), requested)
-	}
-	if strings.Contains(requested, "..") {
-		return fmt.Errorf("path traversal pattern in requested version %q", requested)
-	}
-	if strings.ContainsAny(requested, "/\\") {
-		return fmt.Errorf("path separator in requested version %q", requested)
 	}
 	return nil
 }

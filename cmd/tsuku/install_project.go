@@ -52,8 +52,7 @@ func runProjectInstall(cmd *cobra.Command) {
 		exitWithCode(ExitGeneral)
 	}
 
-	result, err := project.LoadProjectConfig(cwd)
-	result.FprintDiagnostics(os.Stderr)
+	result, err := loadProjectConfigReporting(cwd)
 	if err != nil {
 		printError(err)
 		exitWithCode(ExitGeneral)

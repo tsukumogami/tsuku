@@ -1,6 +1,9 @@
 package pinsafe
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestValidateRequested(t *testing.T) {
 	tests := []struct {
@@ -52,16 +55,40 @@ func TestValidateRequested(t *testing.T) {
 	}
 }
 
-// TestValidateRequested_ColonSplitsPath records why the colon case matters,
-// since "invalid character" reads like a style rule rather than a control.
-func TestValidateRequested_ColonSplitsPath(t *testing.T) {
-	// <tools>/jq-1.0:evil/bin is one PATH entry to Go and two to a shell. The
-	// second, "evil/bin", is relative and resolves against the working
-	// directory -- which for a cloned repository is a directory the attacker
-	// wrote. Neither a quoter nor a containment assertion catches it: the
-	// composed path really is inside the tools tree.
-	if err := ValidateRequested("1.0:evil"); err == nil {
-		t.Fatal("a colon in a version must be refused: it is the PATH separator, " +
-			"so the composed entry splits in two and the second half is relative")
+// TestValidateRequestedNamesTheActualProblem pins the order the checks run in.
+//
+// Every rejection above is satisfied by the charset loop alone, so the table
+// passes whether or not the separator and traversal branches are ever reached --
+// and they were not: when this rule moved out of internal/install the loop ran
+// first, and since '/' and '\' are not in the permitted set, nothing downstream
+// could see one. The branch was dead and the table could not tell.
+//
+// What distinguishes the orders is the message. A user who typed a path gets
+// told they typed a path, rather than being told character 4 was invalid and
+// left to work out which character and why it matters.
+func TestValidateRequestedNamesTheActualProblem(t *testing.T) {
+	for _, tc := range []struct{ requested, want string }{
+		{"1.0/evil", "path separator"},
+		{`1.0\evil`, "path separator"},
+		{"../../evil", "path separator"},
+		{"1.0..evil", "path traversal"},
+		// The colon has no dedicated branch and should not get one: it is
+		// refused by the charset loop, and "invalid character" is the honest
+		// message for it. Present so that a future edit adding a colon branch
+		// has to change a test that says why there isn't one.
+		{"1.0:evil", "invalid character"},
+	} {
+		t.Run(tc.requested, func(t *testing.T) {
+			err := ValidateRequested(tc.requested)
+			if err == nil {
+				t.Fatalf("ValidateRequested(%q) = nil, want an error", tc.requested)
+			}
+			if !strings.Contains(err.Error(), tc.want) {
+				t.Errorf("ValidateRequested(%q) said %q, want a message containing %q.\n\n"+
+					"If this is reporting an invalid character where a path was expected, "+
+					"the charset loop has been moved back ahead of the separator check and "+
+					"that branch is unreachable again.", tc.requested, err, tc.want)
+			}
+		})
 	}
 }

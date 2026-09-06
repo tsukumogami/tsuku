@@ -331,23 +331,3 @@ func TestPOSIXQuoterUnderFishFailsOnDivergentValues(t *testing.T) {
 		})
 	}
 }
-
-// TestPOSIXQuoterIsWrongForFish records why two functions exist. It is not a
-// test of our code -- it demonstrates that handing fish POSIX-quoted output
-// corrupts a backslash, which is the mistake a shared quoter would make and
-// which every other fixture in this file would fail to catch.
-func TestPOSIXQuoterIsWrongForFish(t *testing.T) {
-	fish := requireFish(t)
-	// Doubled, not single: POSIX-quoting a single backslash round-trips under
-	// fish, so that fixture would assert nothing.
-	const value = `a\\b`
-	script := "set V " + POSIX(value) + "\nprintf '%s' $V\n"
-	out, err := exec.Command(fish, "-c", script).Output()
-	if err != nil {
-		t.Fatalf("fish rejected the script: %v", err)
-	}
-	if string(out) == value {
-		t.Fatalf("POSIX quoting round-tripped under fish for %q; if this ever passes, "+
-			"the dialects have converged and Fish() may no longer be needed", value)
-	}
-}

@@ -98,8 +98,7 @@ Exit codes:
 		// discarded, though -- a refused declaration has to be visible from
 		// every command that reads the file, and this is the one route that
 		// previously said nothing at all.
-		projectCfg, _ := project.LoadProjectConfig(cwd)
-		projectCfg.FprintDiagnostics(os.Stderr)
+		projectCfg, _ := loadProjectConfigReporting(cwd)
 
 		indexLookup := func(ctx context.Context, cmd string) ([]index.BinaryMatch, error) {
 			return lookupBinaryCommand(ctx, cfg, cmd)
