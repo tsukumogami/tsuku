@@ -8,6 +8,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -795,40 +796,16 @@ func packagesReferencingBinaryMatch() ([]string, error) {
 	return out, nil
 }
 
-// referencesBinaryMatch reports whether src names the type in either form.
-// The token boundary matters: it must not fire on an identifier that merely
-// contains the word, such as binaryMatchCache.
-func referencesBinaryMatch(src string) bool {
-	const name = "BinaryMatch"
-	for i := 0; ; {
-		j := strings.Index(src[i:], name)
-		if j < 0 {
-			return false
-		}
-		start := i + j
-		end := start + len(name)
-		var before byte = ' '
-		if start > 0 {
-			before = src[start-1]
-		}
-		var after byte = ' '
-		if end < len(src) {
-			after = src[end]
-		}
-		// A preceding '.' is the qualified form and is a real reference. Any
-		// other identifier byte on either side means a longer name.
-		if (before == '.' || !isIdentByte(before)) && !isIdentByte(after) {
-			return true
-		}
-		i = end
-	}
-}
+// binaryMatchRE matches the type name on word boundaries, which covers both
+// forms: the qualified "index.BinaryMatch" (the '.' is a boundary) and the
+// unqualified "BinaryMatch" used inside the declaring package. The boundaries
+// are what stop it firing on a longer identifier that merely contains the
+// word, such as binaryMatchCache.
+var binaryMatchRE = regexp.MustCompile(`\bBinaryMatch\b`)
 
-func isIdentByte(b byte) bool {
-	return b == '_' ||
-		(b >= '0' && b <= '9') ||
-		(b >= 'a' && b <= 'z') ||
-		(b >= 'A' && b <= 'Z')
+// referencesBinaryMatch reports whether src names the type in either form.
+func referencesBinaryMatch(src string) bool {
+	return binaryMatchRE.MatchString(src)
 }
 
 // TestMultiProviderCheckHasAKnownGap pins the boundary of the rule's reach.
@@ -891,4 +868,99 @@ func f() index.BinaryMatch { return index.BinaryMatch{Recipe: "jq", Command: "jq
 	if len(singleViolations) != 0 {
 		t.Errorf("a single-element literal was flagged: %v", singleViolations)
 	}
+}
+
+// TestNegativeControlAppendShapeContributesNothing asserts the known gap
+// through the real file-scanning path, not through an inline source string.
+//
+// TestMultiProviderCheckHasAKnownGap pins the same boundary against a source
+// literal, which exercises the two rules but not the walker. This one scans
+// the negative control on disk and asserts that appendBuiltTwoProviders --
+// the forbidden construct, assembled by append instead of written as a
+// literal -- contributes no violation from inside its own line range.
+//
+// It exists because the comment on that function used to claim the gap test
+// covered it, and the gap test never reads that file. A function that
+// contributes zero violations to a test which only checks that violations
+// fired is invisible: nothing would have noticed if it started firing, and
+// nothing would have noticed if it were deleted. The claim is now checked
+// where it is made.
+//
+// If the rule is widened to reach append construction, this fails, and it
+// should: the fix is to move appendBuiltTwoProviders into the counted
+// violations rather than to relax this assertion.
+func TestNegativeControlAppendShapeContributesNothing(t *testing.T) {
+	const controlPath = "internal/indexfixture/testdata/fixturecheck/nonconforming_test.go"
+
+	src, err := os.ReadFile(controlPath)
+	if err != nil {
+		t.Fatalf("reading the negative control: %v", err)
+	}
+
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, controlPath, src, parser.ParseComments)
+	if err != nil {
+		t.Fatalf("parsing the negative control: %v", err)
+	}
+
+	var lo, hi int
+	for _, decl := range file.Decls {
+		fn, ok := decl.(*ast.FuncDecl)
+		if !ok || fn.Name.Name != "appendBuiltTwoProviders" {
+			continue
+		}
+		lo = fset.Position(fn.Pos()).Line
+		hi = fset.Position(fn.End()).Line
+	}
+	if lo == 0 {
+		t.Fatalf("appendBuiltTwoProviders is gone from %s. It is the executable "+
+			"record of what the rule does not reach; if it was removed on purpose, "+
+			"remove this test in the same change and say so in the package comment "+
+			"on internal/indexfixture.", controlPath)
+	}
+
+	violations, err := checkMultiProviderSource(controlPath, string(src))
+	if err != nil {
+		t.Fatalf("scanning the negative control: %v", err)
+	}
+
+	// The control as a whole must still be a control: if nothing fires at all,
+	// this test would pass for the wrong reason.
+	if len(violations) == 0 {
+		t.Fatal("the negative control produced no violations at all; the check " +
+			"is broken, and this test's zero-in-range result means nothing")
+	}
+
+	for _, v := range violations {
+		line := lineOfPos(v.Pos)
+		if line >= lo && line <= hi {
+			t.Errorf("append-built construction at %s is now reported (%s: %s). "+
+				"If the rule was widened deliberately, move this function into the "+
+				"counted violations and update the package comment on "+
+				"internal/indexfixture, which documents the shape as out of reach.",
+				v.Pos, v.Rule, v.What)
+		}
+	}
+}
+
+// lineOfPos pulls the line number out of a violation position.
+//
+// token.Position.String() renders "file:line:column", so the line is the
+// second-to-last colon-separated field, not the last. Reading the last field
+// yields the column, which is a small number that falls inside no realistic
+// line range -- an in-range test built on it would pass unconditionally. It
+// did, until a mutation caught it.
+//
+// A path containing colons is why this counts from the right rather than
+// splitting on the first.
+func lineOfPos(pos string) int {
+	parts := strings.Split(pos, ":")
+	if len(parts) < 3 {
+		return 0
+	}
+	n, err := strconv.Atoi(parts[len(parts)-2])
+	if err != nil {
+		return 0
+	}
+	return n
 }

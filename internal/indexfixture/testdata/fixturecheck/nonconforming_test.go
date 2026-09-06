@@ -53,9 +53,13 @@ func recipeTOML(binaryPath string) []byte {
 // providers of one command, named out of the published registry -- assembled
 // by append instead of written as a composite literal.
 //
-// TestMultiProviderCheckHasAKnownGap asserts that the check reports ZERO
-// violations here. That is the documented behavior, not a bug to fix in
-// passing: the rule reads composite literals, and a slice built by append, in
+// TestNegativeControlAppendShapeContributesNothing asserts that the check
+// reports zero violations from inside this function, scanning this file on
+// disk. (TestMultiProviderCheckHasAKnownGap pins the same boundary against an
+// inline source string; that one does not read this file.)
+//
+// The zero is documented behavior, not a bug to fix in passing: the rule reads
+// composite literals, and a slice built by append, in
 // a loop, through a named slice type, or elided two levels down is invisible
 // to it. The package comment on internal/indexfixture says so.
 //
