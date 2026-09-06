@@ -91,6 +91,22 @@ from a wrong one. They are not the same set, and the overlap is not reliable.
 When writing criteria, ask of each fixture which of the two jobs it is doing —
 and if every fixture in a set is doing the first, the set proves nothing.
 
+**And do not settle it by inspection.** Asking of each fixture whether it
+discriminates is the same act of judgment that produced the bad set, so it
+reaches the same answer. Issue 4's suite was written under this very heading,
+by an author who had just written it, and still shipped two criteria nothing
+pinned: the containment guard, whose call site could be deleted with the suite
+staying green, and `ValidateRequested`, likewise. Ten deliberate mutations —
+each the plausible wrong implementation of one documented rule — found both in
+about a minute. Eight went red as intended, which is the part that makes the
+two silences mean something.
+
+So: break the code on purpose, one rule at a time, and watch which criterion
+goes red. A criterion no mutation can break is either untested or unreachable,
+and those are different problems with different fixes. Untested wants a test.
+Unreachable wants the honest note saying so, and a test at the level where the
+thing can still fail.
+
 ### On approvals whose premises move
 
 A second finding generalises past this feature, and like the one above it is
@@ -245,8 +261,16 @@ PATH when the stat fails for any reason other than not-exists.
 - [ ] With `1.0.0` and `1.0.0-rc.1` installed, `latest` selects `1.0.0`; with
       only `1.0.0-rc.1`, it selects that.
 - [ ] Two versions that `CompareVersions` reports equal — `1.0` against `1.0.0`,
-      or `1.0.0+a` against `1.0.0+b` — select the same one across repeated
-      invocations in separate processes against identical state.
+      or `1.0.0+a` against `1.0.0+b` — select the same one **for every ordering
+      of the tied group**.
+
+      This was first written as repeated invocations in separate processes.
+      Enumerating the permutations is strictly stronger and is what the test
+      does: a separate process samples one of the orderings map iteration might
+      produce, and enumeration covers all of them, including the ones a sample
+      would be lucky to miss. Ordering is the right axis because it is the
+      whole cause — `sort.Slice` is not stable and the candidate slice is built
+      by ranging a map.
 - [ ] With `2.0.0` recorded but its directory removed and `1.0.0` intact,
       `latest` activates `1.0.0` and prints nothing.
 - [ ] **`jq = "2"` with only `1.6` recorded and its files gone selects the
@@ -270,8 +294,30 @@ PATH when the stat fails for any reason other than not-exists.
       key for characters. Keying the property on the composed path rather than
       on "contains `/`" is what lets the previous criterion be true at all, and
       it does not require anyone to have enumerated every bad character.
+- [ ] **The containment guard is pinned by a direct test of the guard, because
+      the end-to-end assertion above cannot fail.** Found by mutation: deleting
+      the guard's call site leaves the whole suite green. With the tool-name and
+      version checks in place, no `.tsuku.toml` can produce an input that
+      reaches it — the guard is unreachable defense in depth, and an end-to-end
+      test of an unreachable guard passes whether the guard is there or not.
+      That is the fixture/oracle collapse this plan warns about twice already,
+      arriving in the plan's own acceptance criteria.
+
+      Both stay, with the split made explicit in the test names and comments:
+      the guard keeps the property true if a later change adds a candidate
+      source or relaxes one of the two checks above it, and the end-to-end
+      assertion catches an escaping entry arriving by some route neither check
+      covers. Neither is redundant; only the claim that the end-to-end test
+      verified the guard was wrong.
 - [ ] A rejected tool name reports the `bad-form` reason once Issue 5 lands, so
       the check is not merely silent.
+- [ ] **A malformed declared version — `../evil`, `1.0 0` — reports `bad-form`,
+      not `no-match`.** Also found by mutation: dropping `ValidateRequested`
+      entirely left the suite green, because a malformed declaration matches no
+      recorded version anyway and the PATH result is identical. The reason is
+      the only observable difference, and it is the one that matters —
+      `no-match` sends the developer to look at what is installed when the
+      problem is the line they wrote.
 - [ ] A state-recorded version that fails `ValidateVersionString` is dropped
       from the candidate set rather than becoming a path component. **This does
       not collapse into the security chain's parse-time check, and the two must

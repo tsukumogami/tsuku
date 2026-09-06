@@ -41,7 +41,6 @@ package activation
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 
@@ -50,20 +49,36 @@ import (
 	"github.com/tsukumogami/tsuku/internal/shellquote"
 )
 
+// InstalledSet reads what installation state records. It is declared here, by
+// the consumer, and is one method wide, so activation reaches internal/install
+// for the pin routines and nothing else.
+type InstalledSet interface {
+	// InstalledVersionsFor returns the recorded versions for each requested
+	// name. Names with no entry are absent from the map rather than present
+	// and empty. The returned slices are in no particular order.
+	InstalledVersionsFor(names []string) (map[string][]string, error)
+}
+
 // ActivationResult holds the computed environment changes for a project
 // directory activation.
 type ActivationResult struct {
-	PATH     string   // new PATH value with project tool bin dirs prepended
-	Dir      string   // project directory (set as _TSUKU_DIR)
-	PrevPath string   // original PATH before activation (set as _TSUKU_PREV_PATH)
-	Active   bool     // true when activating, false when deactivating
-	Skipped  []string // tools skipped because their version is not installed
+	PATH     string // new PATH value with project tool bin dirs prepended
+	Dir      string // project directory (set as _TSUKU_DIR)
+	PrevPath string // original PATH before activation (set as _TSUKU_PREV_PATH)
+	Active   bool   // true when activating, false when deactivating
+
+	// Unhonorable holds the declarations that put nothing on PATH, in PATH
+	// order, each with the reason it was not honored.
+	Unhonorable []Unhonorable
+	// Unreadable is non-nil when installation state could not be read at all,
+	// in which case no declaration needing that read was classified.
+	Unreadable *StateUnreadable
 }
 
 // ComputeActivation determines the PATH changes needed for the current
 // working directory. It reads .tsuku.toml via project.LoadProjectConfig,
-// resolves tool bin directories via cfg.ToolBinDir, and builds a prepended
-// PATH.
+// resolves each declaration against the versions installation state records,
+// and builds a prepended PATH.
 //
 // Returns nil (no-op) when:
 //   - cwd equals curDir (directory has not changed)
@@ -74,7 +89,8 @@ type ActivationResult struct {
 //
 // prevPath is the original PATH saved before any prior activation
 // (_TSUKU_PREV_PATH). curDir is the last activated directory (_TSUKU_DIR).
-func ComputeActivation(cwd, prevPath, curDir string, cfg *config.Config) (*ActivationResult, error) {
+// installed supplies the recorded versions and is read at most once per call.
+func ComputeActivation(cwd, prevPath, curDir string, cfg *config.Config, installed InstalledSet) (*ActivationResult, error) {
 	// Early exit: no directory change.
 	if cwd != "" && curDir != "" && cwd == curDir {
 		return nil, nil
@@ -112,52 +128,59 @@ func ComputeActivation(cwd, prevPath, curDir string, cfg *config.Config) (*Activ
 		basePath = os.Getenv("PATH")
 	}
 
-	// Collect tool bin directories. Sort tool names for deterministic output.
+	// Sort the declared keys so PATH order does not depend on map iteration.
+	// This lexical ordering is the one the previous loop established and it
+	// survives the rewrite unchanged; the resolution below is the body of this
+	// loop, not a replacement for it.
 	toolNames := make([]string, 0, len(result.Config.Tools))
 	for name := range result.Config.Tools {
 		toolNames = append(toolNames, name)
 	}
 	sort.Strings(toolNames)
 
-	var binDirs []string
-	var skipped []string
+	var unhonorable []Unhonorable
 
+	// First pass: everything decidable without installation state. Keeping it
+	// separate is what lets an unreadable state file name only the
+	// declarations that actually needed the read.
+	pending := make([]declaration, 0, len(toolNames))
 	for _, name := range toolNames {
-		req := result.Config.Tools[name]
-		if req.Version == "" {
-			// No version pinned -- skip (would need resolution, out of scope
-			// for the activation skeleton).
-			skipped = append(skipped, name)
+		d, u := classifyForm(name, result.Config.Tools[name].Version)
+		if u != nil {
+			unhonorable = append(unhonorable, *u)
 			continue
 		}
+		pending = append(pending, d)
+	}
 
-		// Compose the path from the bare name, not the declaration key. For an
-		// org-scoped entry the key is "owner/repo:tool", which the boundary
-		// validated as three separate components -- and it validated them
-		// separately precisely because the whole key is not a path component.
-		// Passing the key here would compose <tools>/owner/repo:tool-1.0/bin
-		// and put a colon inside one PATH entry, which the join below then
-		// splits in two: the same PATH-separator failure the name rule exists
-		// to prevent, arriving through a value the boundary approved. The
-		// resolver already splits; this is the sink that did not.
-		_, bare, _, err := project.SplitOrgKey(name)
+	// One read for every remaining declaration.
+	var recorded map[string][]string
+	var unreadable *StateUnreadable
+	if len(pending) > 0 {
+		names := make([]string, 0, len(pending))
+		for _, d := range pending {
+			names = append(names, d.bare)
+		}
+		var err error
+		recorded, err = installed.InstalledVersionsFor(names)
 		if err != nil {
-			skipped = append(skipped, name)
-			continue
+			tools := make([]string, 0, len(pending))
+			for _, d := range pending {
+				tools = append(tools, d.key)
+			}
+			unreadable = &StateUnreadable{Tools: tools, Err: err}
+			pending = nil
 		}
+	}
 
-		binDir := cfg.ToolBinDir(bare, req.Version)
-		if _, err := os.Stat(binDir); os.IsNotExist(err) {
-			skipped = append(skipped, name)
+	var binDirs []string
+	for _, d := range pending {
+		binDir, u := selectVersion(d, recorded[d.bare], cfg)
+		if u != nil {
+			unhonorable = append(unhonorable, *u)
 			continue
 		}
-
-		abs, err := filepath.Abs(binDir)
-		if err != nil {
-			skipped = append(skipped, name)
-			continue
-		}
-		binDirs = append(binDirs, abs)
+		binDirs = append(binDirs, binDir)
 	}
 
 	// Build new PATH: tool bin dirs prepended to base PATH.
@@ -169,11 +192,12 @@ func ComputeActivation(cwd, prevPath, curDir string, cfg *config.Config) (*Activ
 	}
 
 	return &ActivationResult{
-		PATH:     newPath,
-		Dir:      result.Dir,
-		PrevPath: basePath,
-		Active:   true,
-		Skipped:  skipped,
+		PATH:        newPath,
+		Dir:         result.Dir,
+		PrevPath:    basePath,
+		Active:      true,
+		Unhonorable: unhonorable,
+		Unreadable:  unreadable,
 	}, nil
 }
 
