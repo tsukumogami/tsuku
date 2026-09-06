@@ -381,7 +381,7 @@ forever.
 
 ```
 1. User runs: eval $(tsuku shell)
-2. shell command calls ComputeActivation(cwd, prevPath, "", "")
+2. shell command calls ComputeActivation(cwd, prevPath, "", "", cfg, installed)
 3. Same resolution as above but always runs: passing an empty curDir and an
    empty stamp defeats the early exit, so an explicit invocation always
    resolves and always emits

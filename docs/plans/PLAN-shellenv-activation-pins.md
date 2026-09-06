@@ -676,8 +676,21 @@ than an unbounded search for anything still false.
       `ComputeActivation` doc comment. Issue 6's always-emit rule falsifies all
       of them, and this criterion exists because the previous draft named two
       locations and left three.
-- [x] The stale `ComputeActivation` call signatures in both flow descriptions
-      and the document's frontmatter are updated.
+- [x] The stale `ComputeActivation` call signatures are updated **everywhere the
+      document renders one** — the component diagram, the interfaces block and
+      both flow descriptions — and the frontmatter's `decision` summary names the
+      three tracking variables and the stamp comparison.
+
+      Reworded after review, having been unfalsifiable as first written. It said
+      the signatures "in both flow descriptions and the document's frontmatter"
+      were updated; the frontmatter contains no signature and never did, so that
+      half asserted a correction to something that does not exist and could be
+      ticked without meaning anything. The frontmatter *was* corrected — its
+      `decision` block — but for the variables, not a signature. Naming the
+      renders instead makes the criterion checkable by grep, which is how the
+      one remaining 4-argument render in Flow 2 was found: enumerating "both
+      flow descriptions" invited checking the two places named rather than every
+      place the claim applies.
 - [x] **This chain's own design is amended too.** `DESIGN-shellenv-activation-pins.md`
       no longer claims to close the two security defects, and its implementation
       steps do not list work the security chain owns. A design that overstates
