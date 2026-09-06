@@ -31,13 +31,17 @@ type ApplyResult struct {
 
 // effectivePin returns the version constraint to use for auto-apply filtering.
 // Project config takes precedence over the cached global pin when the tool is declared.
+//
+// There is no validation here any more. A version reaching this function came
+// out of a ProjectConfig, and project.parseConfigFile refuses a declaration
+// whose version is not safe to compose into a path, so the check that used to
+// sit here could not fail. Its fallback branch -- log at debug, silently use
+// the cached global pin instead -- was a second, quieter opinion about what an
+// invalid pin means, and the boundary now gives one answer: the declaration is
+// refused and the user is told.
 func effectivePin(tool string, entry UpdateCheckEntry, projectCfg *project.ConfigResult) string {
 	if projectCfg != nil && projectCfg.Config != nil {
 		if req, ok := projectCfg.Config.Tools[tool]; ok {
-			if err := install.ValidateRequested(req.Version); err != nil {
-				log.Default().Debug("auto-apply: invalid project pin", "tool", tool, "version", req.Version, "error", err)
-				return entry.Requested
-			}
 			return req.Version
 		}
 	}
