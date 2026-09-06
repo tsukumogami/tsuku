@@ -1,6 +1,6 @@
 ---
 schema: design/v1
-status: Proposed
+status: Planned
 upstream: docs/prds/PRD-autoinstall-mode-resolution.md
 problem: |
   `tsuku run` is keyed by command while `.tsuku.toml` declares recipes, so it
@@ -38,7 +38,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Planned
 
 ## Context and Problem Statement
 
