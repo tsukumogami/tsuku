@@ -172,8 +172,8 @@ func TestDeclarationsFor_BareKeyDoesNotBreakTheTieBetweenTwoOrgSources(t *testin
 // SplitOrgKey strips an org-scoped key's version suffix -- only that branch
 // does -- so these two reduce to the same org-scoped recipe rather than to two.
 //
-// Which of the two versions survives is settled by a sort and nothing is
-// reported, which is the shape R2a rejects for *differing* sources. It is
+// Which of the two versions survives is settled by string order on the key,
+// with nothing reported -- the shape R2a rejects for *differing* sources. It is
 // tolerated here because there is one recipe to install either way, so the
 // choice cannot run the wrong tool -- it can only pin the wrong version of the
 // right one. Pinned so a later change to that judgment is a visible one.

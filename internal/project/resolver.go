@@ -71,7 +71,8 @@ func (r *Resolver) DeclarationsFor(_ context.Context, matches []index.BinaryMatc
 // It is kept here only so the tree still builds: it is the single method of
 // autoinstall.ProjectVersionResolver, which NewResolver returns, and the one
 // production call is internal/autoinstall/run.go through that interface.
-// cmd/tsuku only constructs the resolver -- start at the run path, not there.
+// cmd/tsuku builds the resolver and hands it to Run without ever calling the
+// method, so start at the run path rather than there.
 // Deleting it is a separate unit's work, together with the lookup field and
 // NewResolver's second parameter and return type, because those are what make
 // this package import internal/autoinstall at all.

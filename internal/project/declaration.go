@@ -41,12 +41,14 @@ type ProjectDeclaration struct {
 //
 //	"koto"                 -> koto, from no source
 //	"org-a/koto"           -> koto, from org-a/koto
-//	"org-a/registry:koto"  -> koto, from org-a/registry
 //	"org-a/koto@2.0.0"     -> koto, from org-a/koto
+//	"org-a/registry:koto"  -> koto, from org-a/registry
 //
-// The last line is not a typo: SplitOrgKey strips an `@version` suffix, but
-// only on the org-scoped branch, so it and the line above it denote one recipe
-// while a bare "koto@2.0.0" would denote a recipe of that whole name.
+// Rows two and three denote one recipe, because SplitOrgKey strips an
+// `@version` suffix -- but only on the org-scoped branch, so a bare
+// "koto@2.0.0" would denote a recipe of that whole name instead. Row four is a
+// different recipe from rows two and three despite the matching bare name,
+// because its source differs; that is the case the rule below turns on.
 //
 // Grouping on the denoted recipe rather than on the bare name is the whole
 // point of the rule below. Two org-scoped keys whose sources differ denote
@@ -106,10 +108,10 @@ func buildDeclarations(tools map[string]ToolRequirement, configPath string) map[
 
 	declarations := make(map[string][]ProjectDeclaration, len(byRecipe))
 	for bare, bySource := range byRecipe {
-		// Every entry in byRecipe was created by the loop above on the same
-		// statement that recorded a key, so bySource is never empty. That is
-		// what makes the fallback in the one-source branch safe; keep it true
-		// if you ever filter this loop.
+		// Every entry in byRecipe is created and written in the same iteration
+		// of the loop above, with nothing between the two that can skip the
+		// write, so bySource is never empty. That is what makes the fallback in
+		// the one-source branch safe; keep it true if you ever filter here.
 		orgSources := make([]string, 0, len(bySource))
 		for source := range bySource {
 			if source != "" {
