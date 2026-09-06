@@ -645,7 +645,7 @@ than an unbounded search for anything still false.
 - [x] The algorithm step, the worked PATH example, the trade-off entry about
       uninstalled versions, the Negative bullet and the never-built stderr
       mitigation all describe what the code does.
-- [x] **All three statements of the name-validation control are corrected**,
+- [ ] **All three statements of the name-validation control are corrected**,
       not one: the prose claiming path traversal in tool names is already
       guarded, the risk row's mitigation cell, and the security mitigation
       stating uninstalled tools are silently skipped. Each is corrected to
@@ -653,6 +653,18 @@ than an unbounded search for anything still false.
       single-path-segment check on the declared name — rather than being deleted
       or softened. The risk row's residual-risk cell no longer contradicts its
       own mitigation cell.
+
+      **Unticked after review, having been ticked in error.** All three
+      statements *are* corrected, so the work reads as done — but they are
+      corrected to describe **this branch's** control, a check on the *derived
+      bare name* at the resolution sink, and this criterion names the security
+      chain's: a check on the *declared name* at parse time. Those are different
+      strings at different layers, and only one of them exists today. The
+      correction becomes true when that chain lands and the prose is extended to
+      name both, which is the same rebase step that removes the `bad-form`
+      version path. It is the second criterion here resting on another branch,
+      alongside Issue 1's, and it was ticked because the edit was made rather
+      than because the criterion was met.
 - [x] The two-variable statements and the variable table become three.
 - [x] **The fast-path claims are corrected in both places.** The parent design
       states the unchanged-directory path does no filesystem I/O; the stamp adds
