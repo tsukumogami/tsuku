@@ -182,14 +182,13 @@ const recipeVersionHost = "https://tsuku-fixture.invalid"
 // constraint passes through verbatim. Closing that gap needs a fixture version
 // provider, which is deliberately not built here.
 //
-// A unit reaching for a prefix should read R20 first. R20 says resolution of a
-// non-exact version stays the installer's job, unchanged, and that what a
-// declaration carries is the recipe identity -- which reads as though a
-// criterion about a prefix declaration can be met at the declaration layer,
-// where the string is carried verbatim and never resolved. The PLAN says
-// instead that AC18's prefix half needs a fixture provider or is cut. The two
-// have not been reconciled; whoever picks up that criterion has to, and should
-// not assume this fixture settled it.
+// AC18 does not need one. R20 puts resolution of a non-exact version outside
+// this work -- it stays the installer's job, unchanged -- and asks only that
+// carrying the recipe identity does not change what is carried alongside it.
+// So AC18's subject is which recipe was chosen, and both halves are observable
+// at the declaration layer, where the string is carried verbatim and never
+// resolved. A test that instead drives a prefix through resolution is testing
+// the installer, and the fixture cannot serve it.
 const LatestVersionKeyword = "latest"
 
 // Fixture is a throwaway $TSUKU_HOME holding the fixture recipes, a rebuilt

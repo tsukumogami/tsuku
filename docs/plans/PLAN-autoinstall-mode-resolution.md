@@ -79,10 +79,21 @@ single-element literals are untouched, which is why the rule keys on element
 count rather than on names.
 
 **AC49 is partially deferred and cannot be closed in full here.** One of its
-eight properties is not buildable: a prefix version cannot resolve offline, so
-AC18's prefix half needs a fixture provider or is cut. `latest` does resolve
-offline against a local `httptest` server, where offline means no external
-network rather than no sockets.
+eight properties is not buildable: a prefix version cannot resolve offline
+against this fixture, because `ResolveWithinBoundary` narrows a prefix only for
+providers implementing `VersionLister` and `HTTPJSONProvider` implements none.
+`latest` does resolve offline against a local `httptest` server, where offline
+means no external network rather than no sockets.
+
+**That does not hold AC18 back, and Issue 2 settled why.** An earlier reading
+of this paragraph had AC18's prefix half needing a fixture version provider or
+being cut, which contradicted R20. R20 wins: it puts resolution of a non-exact
+version outside this work — it stays the installer's job, unchanged — and asks
+only that carrying the recipe identity does not change what is carried
+alongside it. AC18's subject is therefore which recipe was chosen, and both
+halves are observable at the declaration layer, where the string is carried
+verbatim and never resolved. No fixture version provider is needed, and none is
+built.
 
 The verification-pair property is **not** required. AC19 was restated to assert
 which recipe the gate is invoked with rather than what it answers, so no recipe
@@ -118,10 +129,11 @@ whether the rule catches what you are about to write, build it in the fixture.
 for a command, and at what versions.
 
 `ProjectDeclaration{Recipe, Version, ConfigKey, ConfigPath}` and
-`DeclarationsFor(ctx, matches)`. Dedup on bare recipe name, with the org-key
-precedence stated per recipe rather than falling out of iteration order — for
-each distinct bare name the config declares, the bare key's version if present,
-else the first org key's.
+`DeclarationsFor(ctx, matches)`. Dedup on the recipe a configuration key
+denotes — its org-scoped source, which `SplitOrgKey` already computes — and not
+on the bare name, with the org-key precedence stated per recipe rather than
+falling out of iteration order: for each distinct bare name the config
+declares, the bare key's version if present, else the first org key's.
 
 **Two org keys whose org components differ are two declarations, not one**
 (R2a). They reach the refusal rather than collapsing, so `bareToOrg`'s stderr
@@ -129,6 +141,13 @@ warning is deleted rather than kept — the condition it announced is now
 refused, and keeping both invites a later reader to remove whichever one they
 meet first. AC11a is the criterion: the cheapest wrong implementation dedups on
 the bare name, collapses the pair, and still passes AC11, AC12 and AC13.
+
+**A bare key alongside two org sources is a third declaration, not a
+tiebreaker.** R2's collapse presupposes a single recipe, and with two sources
+that presupposition fails, so every key the user wrote stands on its own and
+the refusal names all three. Collapsing the bare key into one of the org keys
+would have to choose which, and there is no basis for the choice — which is the
+behavior this requirement set exists to remove.
 
 `ProjectVersionFor` is retained in this unit so the package still compiles
 against its existing caller. Its deletion, with `Tools()`, the `lookup` field
