@@ -159,8 +159,11 @@ dialect-correct quoting, and shape emission so a future value cannot bypass it.
   they round-trip and `$PATH` survives *even if the line is left completely
   untouched* — the criterion would pass against doing nothing. Same missing
   precondition as the escaped-bin-directory one, in a different place.
-- Line 47's `. "<cachePath>"` gets its own round-trip assertion. It is a
-  separate emission and a fix to line 40 does not cover it.
+- Line 47's `. "<cachePath>"` gets its own round-trip assertion, **with the
+  cache file present**: that emission sits behind an `os.Stat`
+  (`cmd/tsuku/shellenv.go:45`), so without the file the line never runs and the
+  assertion passes vacuously. It is a separate emission and a fix to line 40
+  does not cover it.
 - Behaviour is otherwise unchanged: this issue fixes quoting only and does not
   give the command a fish dialect. That is #2556 and stays out.
 
@@ -171,8 +174,9 @@ dialect-correct quoting, and shape emission so a future value cannot bypass it.
 ### Issue 5: Extract one strict name predicate
 
 **Goal**: One exported definition of a well-formed recipe name in
-`internal/recipe`, layering the strict character rule over
-`IsValidRecipeName`, with the existing consumer routed through it.
+`internal/recipe` — the strict character rule plus a path-segment `..` rule,
+standing alone rather than layered over `IsValidRecipeName` — with the existing
+consumer routed through it.
 
 **Acceptance Criteria**:
 - An exported predicate accepts only lowercase letters, digits, `.`, `_` and
@@ -257,7 +261,7 @@ reach it. Only an allowlist stops it.*
 
 **Dependencies**: None.
 **Type**: refactor. **Complexity**: simple.
-**Files**: `internal/pinsafe/pinsyntax.go`, `internal/pinsafe/pinsyntax_test.go`, `internal/install/pin.go`.
+**Files**: `internal/pinsafe/pinsafe.go`, `internal/pinsafe/pinsafe_test.go`, `internal/install/pin.go`.
 
 *Why this issue exists: `internal/project` **cannot** import `internal/install`.
 The cycle is `project -> install -> shellenv -> project`
