@@ -273,7 +273,7 @@ func (p *RegistryProvider) Store() BackingStore {
 }
 
 // recipePath computes the store path for a recipe name based on the manifest
-// layout. It returns "" for a name that may not be composed into a path.
+// layout. It returns "" for a name that would traverse out of the store.
 //
 // The returned string is used as both an HTTP path and a disk-cache write key,
 // so a traversing name here redirects where a recipe is fetched from *and*
@@ -284,21 +284,17 @@ func (p *RegistryProvider) Store() BackingStore {
 // closes the drive-by vector; this covers a caller that reaches the sink
 // without passing through config load. Do not delete the boundary check on the
 // grounds that this exists: a guard at each sink covering one consumer each is
-// the shape that produced the defect both are fixing.
+// the shape that produced the defect both are fixing. The unit test for this
+// function is what holds the check up -- deleting it must turn that test red --
+// because with the boundary in place there may be no config-driven route left
+// that reaches here with a bad name for an end-to-end test to exercise.
 //
-// Reachability is honestly uncertain, and that matters for how it is tested.
-// With the boundary in place there may be no config-driven route that reaches
-// this with a bad name, in which case an end-to-end test proves nothing about
-// it and the guard is green whether or not it exists. The unit test for this
-// function is what holds it up: deleting the check below must turn that test
-// red.
-// It uses IsValidRecipeName rather than ValidateStrictName, and the difference
-// is worth knowing before relying on it: IsValidRecipeName is a denylist and
-// accepts names ValidateStrictName refuses, "a:b" and "x$(id)y" among them. It
-// catches traversal, which is what actually matters for this sink -- the value
-// becomes an HTTP path segment and a cache filename, neither of which evaluates
-// a substitution, and the colon that splits a PATH entry is inert in both. It
-// is not the boundary's rule and must not be mistaken for it.
+// It checks with IsValidRecipeName, which is weaker than the boundary's rule
+// and deliberately so: it is a denylist, and it accepts names ValidateStrictName
+// refuses, "a:b" and "x$(id)y" among them. Traversal is what matters for this
+// sink -- the value becomes an HTTP path segment and a cache filename, neither
+// of which evaluates a substitution, and a colon splits a PATH entry but is
+// inert in both of these. Do not read this check as the boundary's.
 func (p *RegistryProvider) recipePath(name string) string {
 	if !IsValidRecipeName(name) {
 		return ""

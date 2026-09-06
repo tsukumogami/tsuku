@@ -73,20 +73,18 @@ type ConfigResult struct {
 	// carried here rather than returned as an error because an error aborts
 	// the whole load, and most of these concern one entry.
 	//
-	// Consumers MUST render these to stderr. Not stdout: tsuku hook-env writes
-	// activation output to stdout and the shell hook evaluates it, so a
-	// diagnostic there would be executed rather than read -- and these messages
-	// quote the offending key, which is attacker-controlled. Use
-	// FprintDiagnostics rather than printing them ad hoc.
+	// Render them with FprintDiagnostics, which owns the stderr rule.
 	Diagnostics []string
 }
 
 // FprintDiagnostics writes each diagnostic to w, one per line, prefixed with
 // the config's path so the reader knows which file to edit.
 //
-// It exists so the stderr rule has one implementation rather than five, and so
-// that a consumer added later inherits it. Passing os.Stdout here would defeat
-// the point; callers pass os.Stderr.
+// Callers pass os.Stderr, and never os.Stdout: `tsuku hook-env` writes
+// activation output to stdout for the shell hook to evaluate, so a diagnostic
+// sent there would be executed rather than read -- and these messages quote a
+// key that came from the config file. The rule lives here, in one place, so a
+// consumer added later inherits it instead of rediscovering it.
 func (r *ConfigResult) FprintDiagnostics(w io.Writer) {
 	if r == nil {
 		return
