@@ -253,10 +253,14 @@ PATH when the stat fails for any reason other than not-exists.
       no-match reason, not the missing-files reason.** This separates
       match-then-files filtering from files-then-match; the latter tells the
       developer to reinstall a version that was never recorded.
-- [ ] **The tool-name check survives this rewrite.** A declared name containing
-      `..`, `/` or `\` still activates nothing, and no path outside
-      `$TSUKU_HOME/tools` reaches PATH — asserted against the rewritten
-      resolution, not inherited from the security chain's own tests. This
+- [ ] **The tool-name check survives this rewrite.** A declared name whose
+      derived bare name is not a single safe path segment activates nothing, and
+      no path outside `$TSUKU_HOME/tools` reaches PATH — asserted against the
+      rewritten resolution, not inherited from the security chain's own tests.
+      A legitimate org-scoped key (`owner/repo` or `owner/repo:tool`) is
+      accepted and resolves to its bare name: `/` is supported syntax, not an
+      attack, and a criterion phrased against the raw key would be satisfied by
+      breaking every org-scoped config. This
       criterion exists because Issue 4 rewrites the loop that check lives in,
       deleting branches around it, and Issue 8 then amends the parent design to
       claim the control exists. A rewrite that quietly drops it would make that
@@ -278,6 +282,15 @@ PATH when the stat fails for any reason other than not-exists.
       activation rather than only the shared routine's own tests.
 - [ ] Resolving a ten-tool file decodes installation state exactly once.
 - [ ] PATH ordering among activated tools is lexical by tool name, unchanged.
+- [ ] **Every PATH assertion compares against a literal expected path, never
+      against a value computed by calling `cfg.ToolBinDir`, and fixtures create
+      their directories from literals too.** The existing tests do both — the
+      oracle at `activate_test.go:74` and the fixture at `:29` are the same call
+      as the code under test — so a `ToolBinDir` that traversed out of
+      `$TSUKU_HOME/tools` would have its escape created by the fixture and
+      matched by the assertion, and every one of them would pass. A test whose
+      expectation is derived from the function it is testing cannot fail for the
+      reason it exists.
 - [ ] **Moving between projects replaces PATH entries rather than stacking
       them.** Walking A → B → A → B leaves PATH the same length it was after the
       first activation. Each activation composes against the pre-activation base
