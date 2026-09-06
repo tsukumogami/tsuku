@@ -168,7 +168,7 @@ func validateRuntimeDependencyNames(result *ValidationResult, r *Recipe) {
 			// end; a second near-identical copy is the defect this codebase is
 			// being corrected for.
 			//
-			// One behaviour change comes with the consolidation: ".." is now
+			// One behavior change comes with the consolidation: ".." is now
 			// rejected as a whole path segment rather than as a substring, so
 			// "foo..bar" is accepted. An internal doubled dot is not traversal
 			// and refusing it was over-broad.

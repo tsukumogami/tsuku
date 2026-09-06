@@ -89,7 +89,7 @@ func validateKey(key string) error {
 // validateOrgSource checks an owner/repo coordinate.
 //
 // Deliberately wider than the bare-name rule: GitHub permits uppercase in both
-// halves, so this must not be harmonised with ValidateStrictName however much
+// halves, so this must not be harmonized with ValidateStrictName however much
 // the one-definition principle invites it. That principle governs the *name*
 // rule; an owner is a different namespace with different legal characters, and
 // collapsing the two would reject real repositories.

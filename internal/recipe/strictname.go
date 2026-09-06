@@ -34,7 +34,7 @@ var strictNamePattern = regexp.MustCompile(`^[a-z0-9._-]+$`)
 // substring, which would refuse a name like "foo..bar" -- an internal doubled
 // dot is not traversal, and rejecting it is over-broad. The rule here treats
 // ".." as a whole path segment instead. IsValidRecipeName is left untouched so
-// the sink-level backstops that use it keep their stricter behaviour, which is
+// the sink-level backstops that use it keep their stricter behavior, which is
 // acceptable for a backstop.
 func ValidateStrictName(name string) error {
 	if name == "" {

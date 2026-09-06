@@ -86,6 +86,11 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Turns "fish is missing" from a green skip into a red test. Installing
+          # the package above prevents today's skip; this prevents tomorrow's,
+          # when a package rename or a base-image change quietly removes it and
+          # the fish tests go back to passing without running.
+          TSUKU_REQUIRE_FISH: "1"
 
       - name: Check for test artifacts
         run: |

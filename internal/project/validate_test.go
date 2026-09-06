@@ -107,7 +107,7 @@ func TestValidateDeclarations_VersionIsCheckedToo(t *testing.T) {
 func TestValidateDeclarations_VersionAccepts(t *testing.T) {
 	// The documented pin forms all have to keep working. The prerelease and
 	// channel forms are named because an over-strict version rule loses
-	// exactly those, and because harmonising this rule with the lowercase
+	// exactly those, and because harmonizing this rule with the lowercase
 	// name rule is a plausible mistake in a change about sharing definitions.
 	for _, v := range []string{"", "latest", "1.2.3", "1.2", "1.2.3-rc1", "1.2.3-RC1", "@lts", "v1.2.3"} {
 		tools := map[string]ToolRequirement{"jq": {Version: v}}

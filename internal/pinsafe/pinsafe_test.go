@@ -17,7 +17,7 @@ func TestValidateRequested(t *testing.T) {
 		{"channel", "@lts", false},
 		{"formula channel", "shellcheck@0.9", false},
 		// Named because an over-strict rule loses exactly these, and because
-		// harmonising this rule with the lowercase tool-name rule would be a
+		// harmonizing this rule with the lowercase tool-name rule would be a
 		// plausible mistake in a change whose theme is one definition reused.
 		{"prerelease lowercase", "1.2.3-rc1", false},
 		{"prerelease uppercase", "1.2.3-RC1", false},

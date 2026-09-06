@@ -18,7 +18,7 @@ import (
 //
 // This test is therefore the thing holding the guard up. Deleting the check in
 // recipePath must turn it red. If it ever stops doing so, the guard is
-// unreachable-in-production defence in depth and should be labelled as such,
+// unreachable-in-production defense in depth and should be labeled as such,
 // not quietly kept.
 func TestRecipePath_RefusesUnsafeNames(t *testing.T) {
 	for _, layout := range []string{"grouped", "flat"} {

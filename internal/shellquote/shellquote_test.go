@@ -1,6 +1,7 @@
 package shellquote
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,6 +18,9 @@ var hostile = []struct {
 }{
 	// Command substitution and expansion: the two %q leaves live.
 	{"command_substitution", `x$(echo INJECTED)y`},
+	// Live under bash and zsh. INERT under fish, which removed backtick
+	// substitution -- so its side-effect half proves nothing there, and the
+	// fish corpus below uses fish's own forms instead.
 	{"backtick", "a`echo INJECTED`b"},
 	{"parameter_expansion", `$HOME/x`},
 	// The failure the obvious single-quote fix introduces.
@@ -108,16 +112,97 @@ func TestRoundTripUnderBash(t *testing.T) {
 	}
 }
 
-// TestRoundTripUnderFish is the same contract for fish. Fish is provisioned in
-// CI deliberately: a LookPath-guarded test that skips everywhere would be
-// permanently green and read as coverage, and the POSIX/fish divergence is
-// precisely what a skipped test would miss.
-func TestRoundTripUnderFish(t *testing.T) {
+// requireFish returns the fish binary, or ends the test.
+//
+// It skips when fish is absent locally and **fails** when it is absent under
+// TSUKU_REQUIRE_FISH, which CI sets. Provisioning fish in the workflow prevents
+// today's skip; it does nothing about tomorrow's. A package rename, a base-image
+// change, an apt mirror hiccup, or someone deleting the install step all revert
+// these tests to skip-and-green, with nothing failing to say so.
+//
+// That is precisely the defect this whole change is about -- a control that is
+// valid for the state it was written against and silently absent afterwards --
+// so leaving it in this PR's own CI would be poor form. Fail closed: "CI ran
+// without exercising fish" is a red test, not a green skip.
+func requireFish(t *testing.T) string {
+	t.Helper()
 	fish, err := exec.LookPath("fish")
-	if err != nil {
-		t.Skip("fish not available -- CI provisions it; a local skip is expected")
+	if err == nil {
+		return fish
 	}
-	for _, tc := range hostile {
+	if os.Getenv("TSUKU_REQUIRE_FISH") != "" {
+		t.Fatal("fish is required here (TSUKU_REQUIRE_FISH is set) but was not found. " +
+			"The workflow installs it; if that step changed, these tests were about to " +
+			"pass without testing anything.")
+	}
+	t.Skip("fish not available -- CI provisions it and requires it; a local skip is expected")
+	return ""
+}
+
+// fishLive holds payloads that actually execute under fish when unquoted.
+//
+// Re-running the bash corpus under fish is not the same test, and measuring
+// which payloads are live there showed why. Against fish 4.0.2, run unquoted to
+// simulate a broken quoter:
+//
+//	$(cmd)   LIVE, but only because fish 3.4 added it
+//	(cmd)    LIVE -- fish's own canonical form, and absent from the bash corpus
+//	{a,b}    expands, but executes nothing, so its safety half is vacuous;
+//	         kept as a round-trip fixture only. (A reviewer reported this as
+//	         live; measuring it, brace expansion produces words rather than
+//	         running a command, and no marker appears. Recorded because the
+//	         difference is exactly the kind a fixture list hides.)
+//	`cmd`    INERT -- fish removed backtick substitution
+//
+// So the shared corpus carried a fixture that cannot fire under fish (the
+// backtick, whose side-effect half is vacuous there) and omitted the form a
+// fish-specific attacker would reach for. Worse, the one payload it did have
+// was live only on new enough fish, which is why assertFishAtLeast34 below
+// exists: without it a test on fish 3.3 degrades to a byte-identity check with
+// no safety half, and reports success identically.
+var fishLive = []struct {
+	name  string
+	value string
+}{
+	{"dollar_paren", "x$(touch INJECTED)y"},
+	{"bare_paren", "x(touch INJECTED)y"},
+	{"brace_expansion", "x{a,b}y"},
+	{"embedded_single_quote", `it's a path`},
+	{"double_backslash", `a\b`},
+	{"newline", "line1\nline2"},
+	{"plain", "/usr/bin:/bin"},
+}
+
+// assertFishAtLeast34 pins the property the corpus depends on. $(cmd) is live
+// only from fish 3.4, so on an older fish the safety assertions would pass
+// without having exercised anything -- and would look identical to success.
+func assertFishAtLeast34(t *testing.T, fish string) {
+	t.Helper()
+	out, err := exec.Command(fish, "--version").Output()
+	if err != nil {
+		t.Fatalf("could not read fish version: %v", err)
+	}
+	v := string(out)
+	fields := strings.Fields(v)
+	ver := fields[len(fields)-1]
+	major, minor := 0, 0
+	if _, err := fmt.Sscanf(ver, "%d.%d", &major, &minor); err != nil {
+		t.Fatalf("could not parse fish version from %q", v)
+	}
+	if major < 3 || (major == 3 && minor < 4) {
+		t.Fatalf("fish %s is older than 3.4, where $(cmd) became live. The safety "+
+			"half of this corpus would pass without exercising anything.", ver)
+	}
+}
+
+// TestRoundTripUnderFish is the same contract for fish, against a fish-derived
+// payload set. Fish is provisioned in CI and required there: a LookPath-guarded
+// test that skips everywhere would be permanently green and read as coverage,
+// and the POSIX/fish divergence is precisely what a skipped test would miss.
+func TestRoundTripUnderFish(t *testing.T) {
+	fish := requireFish(t)
+	assertFishAtLeast34(t, fish)
+	for _, tc := range fishLive {
 		t.Run(tc.name, func(t *testing.T) {
 			dir := t.TempDir()
 			marker := filepath.Join(dir, "marker")
@@ -138,15 +223,71 @@ func TestRoundTripUnderFish(t *testing.T) {
 	}
 }
 
+// fishDivergent holds the values where POSIX quoting and fish quoting actually
+// differ in *effect*, as opposed to differing in output.
+//
+// This corpus is derived from fish rather than inherited from the bash one, and
+// the distinction matters: re-running the bash fixtures under fish proves less
+// than it looks like, because seven of the eleven round-trip identically under
+// both quoters and so cannot detect a shared-quoter mistake.
+//
+// Established by probing fish 3.7.1 directly. Of nine candidates, exactly these
+// four fail when POSIX-quoted output is handed to fish. Three that look like
+// they should diverge and do not, recorded so nobody adds them expecting
+// signal: a *single* backslash (`a\b`), a literal backslash-n (`a\nb`), and a
+// single quote followed by a backslash (`a'\b`).
+var fishDivergent = []struct {
+	name  string
+	value string
+}{
+	{"two_backslashes", `a\b`},
+	{"three_backslashes", `a\`},
+	{"backslash_then_quote", `a'b`},
+	{"trailing_backslash", `ab\`},
+}
+
+// TestFish_DivergentValuesRoundTrip holds Fish() to the cases that separate the
+// dialects. Without these, "we fixed the quoter" means "we fixed bash".
+func TestFish_DivergentValuesRoundTrip(t *testing.T) {
+	fish := requireFish(t)
+	for _, tc := range fishDivergent {
+		t.Run(tc.name, func(t *testing.T) {
+			script := "set V " + Fish(tc.value) + "\nprintf '%s' $V\n"
+			out, err := exec.Command(fish, "-c", script).Output()
+			if err != nil {
+				t.Fatalf("fish rejected the emitted script: %v\nscript: %s", err, script)
+			}
+			if string(out) != tc.value {
+				t.Errorf("round trip changed the value\n got: %q\nwant: %q", string(out), tc.value)
+			}
+		})
+	}
+}
+
+// TestPOSIXQuoterUnderFishFailsOnDivergentValues is the negative control. Each
+// of these must fail when POSIX-quoted and read by fish -- if one ever stops
+// failing, it has lost its discriminating power and the corpus above is weaker
+// than it looks.
+func TestPOSIXQuoterUnderFishFailsOnDivergentValues(t *testing.T) {
+	fish := requireFish(t)
+	for _, tc := range fishDivergent {
+		t.Run(tc.name, func(t *testing.T) {
+			script := "set V " + POSIX(tc.value) + "\nprintf '%s' $V\n"
+			out, err := exec.Command(fish, "-c", script).Output()
+			if err == nil && string(out) == tc.value {
+				t.Errorf("POSIX quoting round-tripped %q under fish; this fixture no "+
+					"longer discriminates between the dialects", tc.value)
+			}
+		})
+	}
+}
+
 // TestPOSIXQuoterIsWrongForFish records why two functions exist. It is not a
 // test of our code -- it demonstrates that handing fish POSIX-quoted output
 // corrupts a backslash, which is the mistake a shared quoter would make and
 // which every other fixture in this file would fail to catch.
 func TestPOSIXQuoterIsWrongForFish(t *testing.T) {
-	fish, err := exec.LookPath("fish")
-	if err != nil {
-		t.Skip("fish not available")
-	}
+	fish := requireFish(t)
 	// Doubled, not single: POSIX-quoting a single backslash round-trips under
 	// fish, so that fixture would assert nothing.
 	const value = `a\\b`
