@@ -21,7 +21,7 @@ import (
 // This exists because the mutation was run and all three of these stayed green
 // when the call was deleted: nothing bound them. Delete a call now and this
 // fails, which is the whole point. Activation is bound differently, by a real
-// behavioural test in internal/shellenv that captures stderr; that is the
+// behavioral test in internal/shellenv that captures stderr; that is the
 // better shape and is used wherever the path is cheap enough to drive.
 var diagnosticCallSites = []string{
 	"install_project.go",

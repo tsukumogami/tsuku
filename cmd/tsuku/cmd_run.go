@@ -94,7 +94,7 @@ Exit codes:
 		cwd, _ := os.Getwd()
 		// The load error stays discarded here: this path falls back to a
 		// non-project install when there is no usable config, and that
-		// behaviour is not this change's to alter. The diagnostics are not
+		// behavior is not this change's to alter. The diagnostics are not
 		// discarded, though -- a refused declaration has to be visible from
 		// every command that reads the file, and this is the one route that
 		// previously said nothing at all.
