@@ -163,21 +163,18 @@ map they read (D1, R13).
 
 The **diagnostic** is a different matter and all five do change, because a
 per-declaration refusal cannot travel on the error return that aborts the whole
-load. See "How a refusal reaches the user" below. An earlier draft of this
-section claimed no consumer changes at all, which was true of the security
-property and false of the requirement that a refusal be visible.
+load. See "How a refusal reaches the user" below.
 
 The name rule is extracted as one exported predicate in `internal/recipe`,
-layering the strict character rule over `IsValidRecipeName`, and
-`validateRuntimeDependencyNames` is refactored to call it (D2, R9).
+applying a strict character allowlist alongside its own path-segment checks,
+and `validateRuntimeDependencyNames` is refactored to call it (D2, R9).
 
 **The predicate does not delegate its `..` check, and that is the whole of the
 layering question.** `IsValidRecipeName` rejects `..` by substring
 (`internal/recipe/name.go:31`), so a predicate that literally layered over it
 would reject `foo..bar` — which R2 requires accepted, because `..` is a
 path-segment rule rather than a substring one. Layering over it *literally* is
-therefore not possible, and an earlier draft of this design said to do exactly
-that.
+therefore not possible.
 
 The resolution: `ValidateStrictName` applies the charset allowlist and its own
 segment rule, and does **not** call `IsValidRecipeName`. `IsValidRecipeName` is
@@ -329,15 +326,25 @@ consumer.
 This is the one place the "no consumer changes" claim does not hold, and the
 distinction matters: **the security property is inherited without any consumer
 changing, because a refused declaration is already absent from the map they
-read. The diagnostic is not.** Four call sites have to print it: `internal/shellenv/activate.go`,
-`cmd/tsuku/install_project.go`, `cmd/tsuku/cmd_shim.go` and
-`cmd/tsuku/cmd_run.go`, the last of which discards the load error entirely
-today (`projectCfg, _ :=`) and needs the most work.
+read. The diagnostic is not.** Four call sites have to print it:
+`internal/shellenv/activate.go`, and the three `cmd/tsuku` commands that load a
+config — `install_project.go`, `cmd_shim.go` and `cmd_run.go`, the last of which
+discards the load error entirely today (`projectCfg, _ :=`).
 
-An earlier draft counted `internal/updates/apply.go` as a fifth. It is not: it
-receives a `*project.ConfigResult` rather than loading one, and its only
-production caller passes `nil`, so it has nothing to print. That is the same
-fact that makes the `effectivePin` fallback dead code.
+The three `cmd` sites do not each carry the call. They go through one
+`loadProjectConfigReporting`, which loads and reports together so the two cannot
+come apart, with a test asserting nothing else in the package calls
+`project.LoadProjectConfig` directly. Naming the sites individually was the
+first shape and it had the defect this design is about: a list of three cannot
+cover the fourth consumer somebody adds later, which is the case most likely to
+occur.
+
+`internal/updates/apply.go` is not a fifth. It receives a
+`*project.ConfigResult` rather than loading one, and its only production caller
+passes `nil`, so it has nothing to print. That second fact is also what makes
+the `effectivePin` fallback dead code, and it is worth carrying in both places
+because it is the reason that removal is safe independently of whether the
+config boundary holds.
 
 Diagnostics go to **stderr**, without exception, and this is load-bearing
 rather than conventional. `cmd/tsuku/hook_env.go:51` prints `FormatExports` to

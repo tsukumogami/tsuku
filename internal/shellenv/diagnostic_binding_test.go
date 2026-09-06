@@ -2,6 +2,7 @@ package shellenv
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -79,17 +80,28 @@ func TestComputeActivation_ReportsRefusalOnStderr(t *testing.T) {
 // error path becoming a delivery mechanism, firing precisely when the validator
 // works.
 func TestFormatExports_StdoutCarriesNoDiagnostic(t *testing.T) {
+	bash, err := exec.LookPath("bash")
+	if err != nil {
+		t.Skip("bash not available")
+	}
+
 	home := t.TempDir()
 	cfg := &config.Config{HomeDir: home, ToolsDir: filepath.Join(home, "tools")}
 
+	scratch := t.TempDir()
+	marker := filepath.Join(scratch, "pwned")
+
 	projDir := t.TempDir()
-	body := "[tools]\n\"x$(id)y\" = \"1.0\"\n"
+	// A payload that leaves evidence. "x$(id)y" only differs when evaluated;
+	// this one creates a file, which is the difference between "the text does
+	// not look dangerous" and "nothing happened".
+	body := "[tools]\n\"x$(touch " + marker + ")y\" = \"1.0\"\n"
 	if err := os.WriteFile(filepath.Join(projDir, project.ConfigFileName), []byte(body), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
 	var result *ActivationResult
-	_ = captureStderr(t, func() {
+	stderr := captureStderr(t, func() {
 		r, err := ComputeActivation(projDir, "/usr/bin", "", cfg)
 		if err != nil {
 			t.Errorf("ComputeActivation: %v", err)
@@ -97,11 +109,32 @@ func TestFormatExports_StdoutCarriesNoDiagnostic(t *testing.T) {
 		result = r
 	})
 
-	stdout := FormatExports(result, "bash")
-	if strings.Contains(stdout, "x$(id)y") {
-		t.Errorf("the refused key reached the evaluated stream:\n%s", stdout)
+	// Precondition. If the declaration was not refused, this test is asserting
+	// nothing about what a refusal puts on stdout.
+	if !strings.Contains(stderr, "ignoring") {
+		t.Fatalf("the hostile declaration was not refused, so there is no refusal "+
+			"to check the stdout of.\nstderr: %s", stderr)
 	}
-	if strings.Contains(stdout, "ignoring") {
-		t.Errorf("a diagnostic reached the evaluated stream:\n%s", stdout)
+
+	stdout := FormatExports(result, "bash")
+
+	// The criterion is evaluability, not absence of a substring, and the
+	// distinction is the point: a diagnostic reworded to say "skipped" rather
+	// than "ignoring" would pass a substring check and still be evaluated by
+	// the shell hook, because hook-env's stdout is what the hook evaluates.
+	// So evaluate it.
+	script := stdout + "\ntrue\n"
+	if err := exec.Command(bash, "--norc", "--noprofile", "-c", script).Run(); err != nil {
+		t.Fatalf("what hook-env would write to stdout is not valid shell: %v\n%s", err, stdout)
+	}
+	if _, err := os.Stat(marker); !os.IsNotExist(err) {
+		t.Errorf("evaluating hook-env's stdout after a refusal ran the payload.\n\n"+
+			"stdout:\n%s", stdout)
+	}
+
+	// And the refused key must not be there at all, evaluated or not -- a shell
+	// hook is not the only thing that reads this stream.
+	if strings.Contains(stdout, "touch "+marker) {
+		t.Errorf("the refused key reached the evaluated stream:\n%s", stdout)
 	}
 }
