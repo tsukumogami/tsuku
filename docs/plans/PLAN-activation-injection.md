@@ -293,9 +293,16 @@ reach it. Only an allowlist stops it.*
 The cycle is `project -> install -> shellenv -> project`
 (`internal/install/precedence.go:7`, `internal/shellenv/activate.go:15`), and an
 earlier draft of this plan wired `install.ValidateRequested` into
-`parseConfigFile` directly, which does not compile. Note that `install` depends
-on `project`, so refiling cannot break this cycle the way it can elsewhere —
-the extraction is forced.*
+`parseConfigFile` directly, which does not compile.
+
+Note that this does not by itself force a third package, and an earlier version
+of this paragraph claimed it did. `install` already imports `project`, so the
+rule could live in `project` with `install` calling it in the direction that is
+already legal. The reason it is filed as a leaf instead is that `install`
+validates pins that never came from a project file — `tsuku install jq@1.7`
+supplies one on the command line — so putting the rule in `project` would assert
+that pin safety is a project-config concern. A predicate both callers need and
+neither owns belongs beside neither.*
 
 ### Issue 6: Add the diagnostics carrier
 

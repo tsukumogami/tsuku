@@ -237,7 +237,15 @@ import `internal/install`: the cycle is `project -> install -> shellenv ->
 project` (`internal/install/precedence.go:7`, `internal/shellenv/activate.go:15`).
 So `install.ValidateRequested` is extracted into a leaf, `internal/pinsafe`,
 importing only `fmt`, `strings` and `unicode` — which is everything the current
-function uses — and `internal/install` re-exports or delegates to it. This is
+function uses — and `internal/install` re-exports or delegates to it.
+
+The cycle alone does not force the leaf, and it is worth saying so rather than
+letting the reasoning look tighter than it is: `install` already imports
+`project`, so the rule could equally live in `project` with `install` calling it
+in the direction that is already legal. What settles it is that `install`
+validates pins that never came from a project file — `tsuku install jq@1.7`
+supplies one on the command line — so filing the rule in `project` would assert
+that pin safety is a project-config concern. It is not. This is
 the same extraction shape as the name predicate and carries the same proof
 obligation: `install`'s existing tests must pass unchanged.
 
