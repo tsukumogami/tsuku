@@ -91,6 +91,31 @@ from a wrong one. They are not the same set, and the overlap is not reliable.
 When writing criteria, ask of each fixture which of the two jobs it is doing —
 and if every fixture in a set is doing the first, the set proves nothing.
 
+### On approvals whose premises move
+
+A second finding generalises past this feature, and like the one above it is
+recorded because no single fixed criterion carries it.
+
+The reviewers approved this design's security section at class-and-fix detail,
+with no reproduction. That was right — **on the premise that the fix landed in
+the same pull request.** The premise held when they said it. It stopped holding
+when the security work moved to its own chain, at which point the same document
+became a public description of a defect with no fix anywhere, which nobody had
+approved. The approval never changed; the world under it did.
+
+The same mechanism nearly cost this plan its tool-name criterion: the check was
+guarded by an acceptance criterion that lived in the security issue, so when
+that issue left, the criterion left with it and the control it guarded was
+orphaned inside an issue that rewrites the loop it sits in.
+
+**The general rule: an approval carries premises, and a scope change can
+invalidate an approval without anyone revisiting it.** The decision stays on the
+page looking settled while the thing it depended on moves. Nobody re-checks it,
+because re-checking settled decisions is not what a scope change prompts anyone
+to do. When work moves between chains, the question to ask is not only "who owns
+this now" but "which decisions were made on the assumption it lived here", and
+the criteria that guarded it are the first place to look.
+
 ## Issue Outlines
 
 ### Issue 1: Move activation out of `internal/shellenv` into `internal/activation`
