@@ -219,7 +219,7 @@ consumer routed through it.
   and an underscore respectively.
 - **The predicate does not call `IsValidRecipeName`.** That function rejects
   `..` by substring, so delegating to it would reject `foo..bar`, which R2
-  requires accepted. `IsStrictRecipeName` applies the charset allowlist and its
+  requires accepted. `ValidateStrictName` applies the charset allowlist and its
   own segment rule instead. `IsValidRecipeName` is left untouched, so
   `internal/recipe/name_test.go:24` still passes and Issue 8's backstop is
   unaffected.

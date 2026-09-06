@@ -148,3 +148,90 @@ func TestActivation_ValidToolsStillActivate(t *testing.T) {
 		t.Errorf("the valid tool did not activate: %s", result.PATH)
 	}
 }
+
+// TestActivation_OrgScopedKeyIsNotAPathComponent pins that activation composes
+// the tool directory from the bare name rather than the declaration key.
+//
+// An org-scoped declaration is keyed "owner/repo:tool". The config boundary
+// accepts it, and accepts it correctly -- it validates owner, repo and the bare
+// name as three separate components, because the whole key is a coordinate
+// rather than a path segment. Handing that key to ToolBinDir composes
+// <tools>/owner/repo:tool-1.0/bin, and joining PATH entries with ":" then
+// splits that one entry in two, the second of them relative. It is the exact
+// failure the name rule's colon case exists to prevent, arriving through a
+// value the boundary approved rather than one it missed.
+//
+// The os.Stat gate meant this was not reachable in practice -- the attacker
+// cannot create the directory under $TSUKU_HOME -- so the fixture below builds
+// it, exactly as the traversal fixtures above do, for the same reason: without
+// it, unfixed code produces no entry and reports a false negative.
+func TestActivation_OrgScopedKeyIsNotAPathComponent(t *testing.T) {
+	const (
+		key     = "tsukumogami/registry:mytool"
+		bare    = "mytool"
+		version = "1.0.0"
+	)
+
+	home := t.TempDir()
+	toolsDir := filepath.Join(home, "tools")
+	cfg := &config.Config{HomeDir: home, ToolsDir: toolsDir}
+
+	// Precondition. Activation stats the composed directory, so the bare-name
+	// location has to exist or nothing is added to PATH and a broken
+	// implementation passes for the wrong reason.
+	if err := os.MkdirAll(cfg.ToolBinDir(bare, version), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	// And the key-shaped location must NOT exist, or the assertion below could
+	// be satisfied by whichever directory happened to be there.
+	if _, err := os.Stat(cfg.ToolBinDir(key, version)); err == nil {
+		t.Fatal("the key-shaped directory exists; this fixture cannot distinguish the two")
+	}
+
+	projDir := t.TempDir()
+	body := "[tools]\n\"" + key + "\" = \"" + version + "\"\n"
+	if err := os.WriteFile(filepath.Join(projDir, project.ConfigFileName), []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := ComputeActivation(projDir, "/usr/bin", "", cfg)
+	if err != nil {
+		t.Fatalf("ComputeActivation: %v", err)
+	}
+	if result == nil {
+		t.Fatal("no activation result")
+	}
+	// Active alone is not the precondition, and assuming it was made this test
+	// vacuous on the first attempt -- caught by mutation, not by reading. Active
+	// reports that a config was found, not that any tool reached PATH, so the
+	// unfixed composition (which stats a directory that does not exist, skips
+	// the tool, and adds nothing) satisfied every assertion below. The bin
+	// directory has to actually be on PATH before its shape means anything.
+	wantEntry := filepath.Clean(cfg.ToolBinDir(bare, version))
+	var onPath bool
+	for _, entry := range strings.Split(result.PATH, ":") {
+		if filepath.Clean(entry) == wantEntry {
+			onPath = true
+		}
+	}
+	if !onPath {
+		t.Fatalf("the org-scoped tool never reached PATH, so nothing below is being "+
+			"tested. want %q in\nPATH = %s", wantEntry, result.PATH)
+	}
+
+	for _, entry := range strings.Split(result.PATH, ":") {
+		if entry == "" || entry == "/usr/bin" {
+			continue
+		}
+		if !strings.HasPrefix(filepath.Clean(entry), filepath.Clean(toolsDir)+string(filepath.Separator)) {
+			t.Errorf("PATH entry %q is outside the tools tree.\n\nPATH = %s", entry, result.PATH)
+		}
+	}
+	// The direct statement of the defect: the colon in the key must not have
+	// reached PATH at all. Splitting on ":" above cannot see it -- a colon in an
+	// entry is exactly what makes the split produce two plausible-looking halves.
+	if strings.Contains(result.PATH, ":mytool-") {
+		t.Errorf("the declaration key reached PATH as a path component, so its colon "+
+			"now splits one entry into two.\n\nPATH = %s", result.PATH)
+	}
+}

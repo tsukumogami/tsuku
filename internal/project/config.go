@@ -92,7 +92,10 @@ func (r *ConfigResult) FprintDiagnostics(w io.Writer) {
 		return
 	}
 	for _, d := range r.Diagnostics {
-		fmt.Fprintf(w, "%s: %s\n", r.Path, d)
+		// %q on the path for the same reason the diagnostics themselves quote
+		// the offending key: this is a path from a cloned repository, and a
+		// control character in it would otherwise reach the terminal raw.
+		fmt.Fprintf(w, "%q: %s\n", r.Path, d)
 	}
 }
 
@@ -225,5 +228,32 @@ func parseConfigFile(path string) (*ProjectConfig, []string, error) {
 		diags = append(diags, "no tools declared (a [tools] table is expected)")
 	}
 
-	return &cfg, diags, nil
+	return &cfg, capDiagnostics(diags), nil
+}
+
+// maxDiagnostics bounds how much one config file can print.
+//
+// MaxTools bounds the refusals, but nothing bounded the undecoded keys, and
+// those are the unbounded half: a file declaring fifty thousand unrecognized
+// keys is cheap to write and costs nothing to parse. Without a cap it produced
+// fifty thousand stderr lines -- and because `tsuku hook-env` runs from the
+// shell prompt, that is fifty thousand lines on every prompt, in any directory
+// at or below the one holding the file.
+//
+// This is worth stating plainly because the diagnostics are new here and the
+// flood came with them. Before, an unrecognized key was dropped in silence;
+// reporting it is the improvement, and reporting all of them turned a silent
+// drop into a denial of service against exactly the untrusted surface the rest
+// of this change hardens. A cap is what makes the improvement safe to keep.
+const maxDiagnostics = 20
+
+func capDiagnostics(diags []string) []string {
+	if len(diags) <= maxDiagnostics {
+		return diags
+	}
+	// Full slice expression: appending to a truncated slice would otherwise
+	// overwrite the first dropped entry in the backing array.
+	capped := diags[:maxDiagnostics:maxDiagnostics]
+	return append(capped, fmt.Sprintf("and %d more (further diagnostics from this file suppressed)",
+		len(diags)-maxDiagnostics))
 }

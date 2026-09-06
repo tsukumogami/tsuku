@@ -465,27 +465,50 @@ func evalAndRead(t *testing.T, shell, output, varName string) string {
 		}
 		t.Skipf("%s not available", shell)
 	}
+	// Only fish's *path* variables are lists, and only they need the env
+	// read-back. Using env for everything would be wrong in the other
+	// direction: env output is line-oriented, so a value containing a newline
+	// -- which is a fixture here, because it is a value %q corrupts -- would
+	// come back truncated at the newline and look like a quoting failure.
+	fishPathVar := shell == "fish" && (varName == "PATH" || varName == "CDPATH" || varName == "MANPATH")
+
 	var script string
-	if shell == "fish" {
-		// env, not an expansion: see the note above about PATH being a list.
-		script = output + "\nenv\n"
-	} else {
+	switch {
+	case fishPathVar:
+		// `string join` is a builtin, which matters more than it looks: these
+		// tests deliberately set PATH to hostile values, and an external
+		// command -- `env`, the obvious choice -- cannot be found once PATH
+		// points somewhere meaningless. It also writes straight to stdout
+		// rather than through a command substitution, so a newline inside a
+		// value survives instead of being split on.
+		//
+		// No `--` before the separator: fish rejects `string join -- : $PATH`
+		// outright. The cost is that a value beginning with `-` would be read
+		// as an option and fail here -- loudly, as a test error, not as a
+		// silent wrong answer -- and no fixture has that shape.
+		//
+		// The trailing `true` is load-bearing: `string join` exits 1 when it
+		// had nothing to join, which is the single-element case -- so a
+		// perfectly correct read-back of a one-entry PATH would otherwise be
+		// reported as fish rejecting the script. Measured, not guessed; the
+		// first probe of this piped to `od` and never saw the status.
+		script = output + "\nstring join : $" + varName + "\ntrue\n"
+	case shell == "fish":
+		script = output + "\nprintf '%s' $" + varName + "\n"
+	default:
 		script = output + "\nprintf '%s' \"$" + varName + "\"\n"
 	}
 	out, err := exec.Command(bin, "-c", script).Output()
 	if err != nil {
 		t.Fatalf("%s rejected the emitted output: %v\nscript:\n%s", shell, err, script)
 	}
-	if shell != "fish" {
+	if !fishPathVar {
 		return string(out)
 	}
-	for _, line := range strings.Split(string(out), "\n") {
-		if v, ok := strings.CutPrefix(line, varName+"="); ok {
-			return v
-		}
-	}
-	t.Fatalf("fish did not export %s at all.\nscript:\n%s\nenv:\n%s", varName, script, out)
-	return ""
+	// `string join` terminates its output with exactly one newline. Trim that
+	// one and nothing else, so a value that itself contains a newline -- which
+	// is one of the fixtures -- comes back whole.
+	return strings.TrimSuffix(string(out), "\n")
 }
 
 // TestFormatExports_HostileValuesDoNotExecute is the assertion the old tests
@@ -507,6 +530,12 @@ func TestFormatExports_HostileValuesDoNotExecute(t *testing.T) {
 		t.Run(shell, func(t *testing.T) {
 			bin, err := exec.LookPath(shell)
 			if err != nil {
+				// Fail closed for fish under the CI gate. A skip on this surface
+				// is indistinguishable from a pass, which is the whole reason the
+				// variable exists; it was honoured in evalAndRead and not here.
+				if shell == "fish" && os.Getenv("TSUKU_REQUIRE_FISH") != "" {
+					t.Fatal("fish is required here (TSUKU_REQUIRE_FISH is set) but was not found")
+				}
 				t.Skipf("%s not available", shell)
 			}
 			dir := t.TempDir()
@@ -518,19 +547,53 @@ func TestFormatExports_HostileValuesDoNotExecute(t *testing.T) {
 				"/tmp/proj/$HOME",
 				"/tmp/pro'j",
 				"/tmp/pro\\\\j",
+				// A newline is here because %q both corrupts it and, in doing so,
+				// ends the emitted line early -- everything after it is read by the
+				// shell as a fresh command. It is the fixture that fails loudest
+				// against the defect and was missing from this loop.
+				"/tmp/pro\nj",
+				"/tmp/proj",
 			} {
 				for _, active := range []bool{true, false} {
+					// Which variable carries the payload has to follow what the
+					// branch actually emits. Deactivation emits PATH and nothing
+					// else, so putting the value in Dir and PrevPath -- as this
+					// loop used to -- meant every active=false iteration evaluated
+					// a benign `export PATH='/usr/bin'` and proved nothing. Half
+					// the runs were decoration.
 					result := &ActivationResult{
 						PATH: "/usr/bin", Dir: hostile, PrevPath: hostile, Active: active,
 					}
+					readBack := "_TSUKU_DIR"
+					if !active {
+						result.PATH = hostile
+						readBack = "PATH"
+					}
+
 					output := FormatExports(result, shell)
-					script := output + "\ntrue\n"
-					if err := exec.Command(bin, "-c", script).Run(); err != nil {
+
+					args := []string{"-c", output + "\ntrue\n"}
+					if shell == "bash" {
+						// The user's rc files are not part of what is under test,
+						// and one of them exporting PATH would make a failure here
+						// unreproducible on another machine.
+						args = append([]string{"--norc", "--noprofile"}, args...)
+					}
+					if err := exec.Command(bin, args...).Run(); err != nil {
 						t.Fatalf("%s rejected output for %q: %v\n%s", shell, hostile, err, output)
 					}
 					if _, err := os.Stat(marker); !os.IsNotExist(err) {
 						t.Fatalf("value %q executed under %s (active=%v):\n%s",
 							hostile, shell, active, output)
+					}
+
+					// Not executing is half the property. A quoter that dropped the
+					// value, or mangled it into something else harmless, passes the
+					// check above and is still wrong -- the variable has to come
+					// back byte for byte.
+					if got := evalAndRead(t, shell, output, readBack); got != hostile {
+						t.Errorf("%s = %q after eval under %s (active=%v), want %q\n%s",
+							readBack, got, shell, active, hostile, output)
 					}
 				}
 			}

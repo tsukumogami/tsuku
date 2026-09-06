@@ -90,7 +90,22 @@ func ComputeActivation(cwd, prevPath, curDir string, cfg *config.Config) (*Activ
 			continue
 		}
 
-		binDir := cfg.ToolBinDir(name, req.Version)
+		// Compose the path from the bare name, not the declaration key. For an
+		// org-scoped entry the key is "owner/repo:tool", which the boundary
+		// validated as three separate components -- and it validated them
+		// separately precisely because the whole key is not a path component.
+		// Passing the key here would compose <tools>/owner/repo:tool-1.0/bin
+		// and put a colon inside one PATH entry, which the join below then
+		// splits in two: the same PATH-separator failure the name rule exists
+		// to prevent, arriving through a value the boundary approved. The
+		// resolver already splits; this is the sink that did not.
+		_, bare, _, err := project.SplitOrgKey(name)
+		if err != nil {
+			skipped = append(skipped, name)
+			continue
+		}
+
+		binDir := cfg.ToolBinDir(bare, req.Version)
 		if _, err := os.Stat(binDir); os.IsNotExist(err) {
 			skipped = append(skipped, name)
 			continue

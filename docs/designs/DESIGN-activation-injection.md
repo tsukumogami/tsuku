@@ -56,9 +56,10 @@ version strings reach:
 - `RegistryProvider.recipePath`, which becomes both an HTTP path and a
   disk-cache write key.
 
-The technical problem is placement, not detection. The tree already contains
-`recipe.IsValidRecipeName`, the strict pattern beside
-`runtimeDepNamePattern`, `install.ValidateRequested`,
+The technical problem is placement, not detection. At the time of writing the
+tree already contained `recipe.IsValidRecipeName`, the strict pattern beside
+`runtimeDepNamePattern` (which this change folds into
+`recipe.ValidateStrictName`, leaving no copy), `install.ValidateRequested`,
 `install.ValidateVersionString`, `ValidateSymlinkTarget`, and a correct POSIX
 `shellQuote` in `internal/actions/set_env.go:252`. Each is called by one or two
 consumers. A design that adds a seventh guard at a seventh site reproduces the
@@ -178,7 +179,7 @@ path-segment rule rather than a substring one. Layering over it *literally* is
 therefore not possible, and an earlier draft of this design said to do exactly
 that.
 
-The resolution: `IsStrictRecipeName` applies the charset allowlist and its own
+The resolution: `ValidateStrictName` applies the charset allowlist and its own
 segment rule, and does **not** call `IsValidRecipeName`. `IsValidRecipeName` is
 left untouched, so `internal/recipe/name_test.go:24` still passes and the
 Batch 4 backstop that uses it is unaffected. `validateRuntimeDependencyNames`
@@ -218,7 +219,7 @@ parseConfigFile (internal/project/config.go)
     |    SplitOrgKey(key) ---- err ----> refuse, naming the key
     |         |
     |         +-- source half --> source rule (wider than the name rule)
-    |         +-- bare name ----> recipe.IsStrictRecipeName
+    |         +-- bare name ----> recipe.ValidateStrictName
     |    for each value:
     |         version ---------> pinsafe.ValidateRequested
     v

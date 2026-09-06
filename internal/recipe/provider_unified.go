@@ -292,6 +292,13 @@ func (p *RegistryProvider) Store() BackingStore {
 // it and the guard is green whether or not it exists. The unit test for this
 // function is what holds it up: deleting the check below must turn that test
 // red.
+// It uses IsValidRecipeName rather than ValidateStrictName, and the difference
+// is worth knowing before relying on it: IsValidRecipeName is a denylist and
+// accepts names ValidateStrictName refuses, "a:b" and "x$(id)y" among them. It
+// catches traversal, which is what actually matters for this sink -- the value
+// becomes an HTTP path segment and a cache filename, neither of which evaluates
+// a substitution, and the colon that splits a PATH entry is inert in both. It
+// is not the boundary's rule and must not be mistaken for it.
 func (p *RegistryProvider) recipePath(name string) string {
 	if !IsValidRecipeName(name) {
 		return ""

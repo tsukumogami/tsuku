@@ -1,30 +1,13 @@
 package main
 
 import (
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/tsukumogami/tsuku/internal/shellquote"
 )
-
-// emitShellenv reproduces what the shellenv command writes to stdout, for a
-// given home directory. It mirrors the command body rather than invoking the
-// binary so the test can run without a build step; the two must be kept in
-// step, which the round-trip assertions below would catch if they drifted.
-func emitShellenv(homeDir string, cachePath string) string {
-	var b strings.Builder
-	binDir := filepath.Join(homeDir, "bin")
-	currentDir := filepath.Join(homeDir, "tools", "current")
-	b.WriteString("export PATH=" + shellquote.POSIX(binDir) + ":" +
-		shellquote.POSIX(currentDir) + ":\"$PATH\"\n")
-	if cachePath != "" {
-		b.WriteString(". " + shellquote.POSIX(cachePath) + "\n")
-	}
-	return b.String()
-}
 
 // TestShellenv_HostileHomeDoesNotExecute covers the emitter that quoted
 // nothing at all: it interpolated into hand-written double quotes under a
@@ -52,7 +35,7 @@ func TestShellenv_HostileHomeDoesNotExecute(t *testing.T) {
 	} {
 		t.Run(hostile, func(t *testing.T) {
 			home := filepath.Join(scratch, hostile)
-			output := emitShellenv(home, "")
+			output := shellenvScript(home, "")
 
 			// PATH must survive: the trailing $PATH is the one expansion in
 			// this emission that has to stay live. An implementation that
@@ -102,7 +85,7 @@ func TestShellenv_CacheSourceLineIsQuoted(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	output := emitShellenv(filepath.Dir(filepath.Dir(shellDir)), cachePath)
+	output := shellenvScript(filepath.Dir(filepath.Dir(shellDir)), cachePath)
 	script := output + "\nprintf '%s' \"$SOURCED\"\n"
 	out, err := exec.Command(bash, "--norc", "--noprofile", "-c", script).Output()
 	if err != nil {
@@ -113,5 +96,66 @@ func TestShellenv_CacheSourceLineIsQuoted(t *testing.T) {
 	}
 	if string(out) != "1" {
 		t.Errorf("cache file was not sourced: SOURCED=%q\noutput:\n%s", string(out), output)
+	}
+}
+
+// TestShellenvCmd_HostileTsukuHome drives the actual cobra command with
+// TSUKU_HOME set to a path containing a command substitution, and evaluates
+// what it wrote to stdout.
+//
+// The test above covers the emitter; this one covers the wiring to it. Between
+// the environment variable and the quoted output sit config.DefaultConfig and
+// filepath.Abs, and a RunE that stopped calling shellenvScript -- or quoted
+// something itself on the way past -- would leave the emitter's own test green.
+// The acceptance criterion asks for TSUKU_HOME specifically, and the reason is
+// that both interpolated components derive from it: with a benign home they
+// round-trip untouched and every assertion here passes against unmodified,
+// vulnerable code.
+func TestShellenvCmd_HostileTsukuHome(t *testing.T) {
+	bash, err := exec.LookPath("bash")
+	if err != nil {
+		t.Skip("bash not available")
+	}
+
+	scratch := t.TempDir()
+	marker := filepath.Join(scratch, "pwned-by-cmd")
+	t.Setenv("TSUKU_HOME", filepath.Join(scratch, "$(touch "+marker+")"))
+
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("pipe: %v", err)
+	}
+	orig := os.Stdout
+	os.Stdout = w
+	runErr := shellenvCmd.RunE(shellenvCmd, nil)
+	os.Stdout = orig
+	w.Close()
+	out, _ := io.ReadAll(r)
+	if runErr != nil {
+		t.Fatalf("shellenv returned %v", runErr)
+	}
+
+	script := string(out)
+	if script == "" {
+		t.Fatal("shellenv wrote nothing to stdout")
+	}
+
+	evaluated, err := exec.Command(bash, "--norc", "--noprofile", "-c",
+		script+"\nprintf '%s' \"$PATH\"").Output()
+	if err != nil {
+		t.Fatalf("bash rejected the emitted script: %v\nscript:\n%s", err, script)
+	}
+
+	if _, err := os.Stat(marker); err == nil {
+		t.Errorf("evaluating shellenv output ran the substitution in TSUKU_HOME.\n\nscript:\n%s", script)
+	}
+	if !strings.Contains(string(evaluated), "$(touch") {
+		t.Errorf("the hostile home did not survive into PATH literally, so this "+
+			"fixture is not exercising the quoting.\nPATH = %s", evaluated)
+	}
+	// The trailing $PATH must still expand: over-quoting passes every
+	// "nothing executed" assertion while discarding the user's PATH.
+	if !strings.Contains(script, `:"$PATH"`) {
+		t.Errorf("emitted script does not leave the trailing $PATH live:\n%s", script)
 	}
 }
