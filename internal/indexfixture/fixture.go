@@ -9,25 +9,27 @@
 // internal/autoinstall, internal/project, internal/index or cmd/tsuku that
 // builds a multi-provider case some other way.
 //
-// What that check actually catches is worth stating, because it is narrower
-// than "any other way" and reading it as total is how a gap goes unnoticed.
+// What that check catches is worth stating, because it is narrower than "any
+// other way" and reading it as total is how a gap goes unnoticed.
 //
 // It catches composite literals, and only composite literals:
 //
 //   - a `[]index.BinaryMatch` or `[N]index.BinaryMatch` with two or more
-//     elements, including one whose type is elided inside a container --
-//     `map[string][]index.BinaryMatch{"vi": {{...}, {...}}}`, the usual shape
-//     for a command-keyed LookupFunc stub;
+//     elements, including one whose type is elided one level inside a
+//     container -- `map[string][]index.BinaryMatch{"vi": {{...}, {...}}}`,
+//     the usual shape for a command-keyed LookupFunc stub;
 //   - a `map[string][]byte` whose keys yield one command twice, where a value
-//     is read as inline TOML, as a helper's binary-path argument, or as a
-//     variable two keys share.
+//     is read as inline TOML, as a single-argument helper's string, or -- when
+//     it can be read as neither -- as a body two keys hold the same
+//     expression for.
 //
-// It misses a slice built by append or in a loop, a named slice type, a recipe
-// map assembled by assignment, and a recipe map whose two values are different
-// variables or multi-argument calls. Nothing in the tree is written that way
-// today -- the rule found five real violations where the design predicted
-// three -- but a case built that way passes, and the fixture is still the
-// right place to build it.
+// Everything else passes. A slice built by append or in a loop, a named slice
+// type, an elided literal two levels down, a recipe map assembled by
+// statement rather than written as a literal: all invisible to it. That list
+// is the shapes worth knowing about rather than a closed set, and a construct
+// missing from it is not thereby sanctioned -- if you find yourself checking
+// whether the rule will catch what you are about to write, that is the
+// question answering itself. Build it here.
 //
 // The whole fixture is offline. "Offline" means no external network rather
 // than no sockets: installation runs a run_command step that writes a shell
@@ -112,12 +114,18 @@ const (
 	// files exist under $TSUKU_HOME/tools for it and state.json does not know
 	// it, so install.Manager.GetToolState returns nil for it.
 	//
-	// Do not hand CommandInstalledFirst to autoinstall.Runner.Run. Run's
-	// already-installed fast path reads matches[0].Installed straight off the
-	// index, so it fires for this recipe and execs a binary that was never
-	// laid down. This pair exists to exercise Lookup's ordering, not to stand
-	// in for a completed install; a unit that needs a real one has to write
-	// the tool tree itself.
+	// So handing CommandInstalledFirst to autoinstall.Runner.Run needs care.
+	// Run's already-installed fast path reads matches[0].Installed straight
+	// off the index, so for an *undeclared* command it fires here and execs a
+	// binary that was never laid down. The branch is an else-if under the
+	// project-declared case, so a declared command takes the other path and
+	// stats a real file instead -- which is why this only bites the undeclared
+	// case.
+	//
+	// This pair exists to exercise Lookup's ordering, not to stand in for a
+	// completed install. A unit that needs a real one writes the tool tree
+	// itself, at Cfg.ToolBinDir(recipe, version) for the declared path and
+	// Cfg.CurrentDir for the globally-active one.
 	RecipeRankedInstalled = "fixture-ranked-zulu"
 
 	// RecipeRankedUninstalled provides CommandInstalledFirst and is not
@@ -170,11 +178,14 @@ const recipeVersionHost = "https://tsuku-fixture.invalid"
 // constraint passes through verbatim. Closing that gap needs a fixture version
 // provider, which is deliberately not built here.
 //
-// A unit reaching for a prefix should read R20 before building one. R20 says
-// resolution of a non-exact version stays the installer's job, unchanged, and
-// that what the declaration carries is the recipe identity -- so a criterion
-// about a prefix declaration can be satisfied at the declaration layer, where
-// the string is carried verbatim and never resolved.
+// A unit reaching for a prefix should read R20 first. R20 says resolution of a
+// non-exact version stays the installer's job, unchanged, and that what a
+// declaration carries is the recipe identity -- which reads as though a
+// criterion about a prefix declaration can be met at the declaration layer,
+// where the string is carried verbatim and never resolved. The PLAN says
+// instead that AC18's prefix half needs a fixture provider or is cut. The two
+// have not been reconciled; whoever picks up that criterion has to, and should
+// not assume this fixture settled it.
 const LatestVersionKeyword = "latest"
 
 // Fixture is a throwaway $TSUKU_HOME holding the fixture recipes, a rebuilt

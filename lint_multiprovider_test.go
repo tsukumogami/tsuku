@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/parser"
+	"go/printer"
 	"go/token"
 	"os"
 	"path"
@@ -264,38 +265,71 @@ var fixed = [2]index.BinaryMatch{
 	}
 }
 
-// TestMultiProviderCheckCatchesSharedRecipeVariable covers the recipe-map form
-// whose values are identifiers. What the variable holds is unknowable here,
-// but two keys bound to the same one hold the same recipe, so the pair is a
-// multi-provider case whatever that recipe turns out to declare.
-func TestMultiProviderCheckCatchesSharedRecipeVariable(t *testing.T) {
+// TestMultiProviderCheckCatchesSharedRecipeBody covers recipe-map values whose
+// contents cannot be read here. Two keys holding the textually identical
+// expression hold the same recipe bytes, so if that recipe declares a binary
+// the pair is a multi-provider case -- which is a thing the syntax cannot
+// settle, so the rule reports the pair and says so.
+//
+// A shared field counts as much as a shared variable: it was the form the
+// first version of this rule missed while advertising that it caught the
+// other.
+func TestMultiProviderCheckCatchesSharedRecipeBody(t *testing.T) {
 	src := `package p
 
-func g(toml, other []byte) map[string][]byte {
+type fixtures struct{ toml []byte }
+
+func shared(toml, other []byte) map[string][]byte {
 	return map[string][]byte{"neovim": toml, "vim": toml}
 }
 
-func h(toml, other []byte) map[string][]byte {
+func sharedField(f fixtures) map[string][]byte {
+	return map[string][]byte{"neovim": f.toml, "vim": f.toml}
+}
+
+func distinct(toml, other []byte) map[string][]byte {
 	return map[string][]byte{"neovim": toml, "vim": other}
 }
 
-func i(toml []byte) map[string][]byte {
+func single(toml []byte) map[string][]byte {
 	return map[string][]byte{"multi": toml}
 }
 `
-	violations, err := checkMultiProviderSource("sharedvar_test.go", src)
+	violations, err := checkMultiProviderSource("sharedbody_test.go", src)
 	if err != nil {
 		t.Fatalf("parsing source: %v", err)
 	}
-	if len(violations) != 1 {
-		t.Fatalf("got %d violations, want 1 (only the pair sharing one variable): %v",
+	if len(violations) != 2 {
+		t.Fatalf("got %d violations, want 2 (the shared variable and the shared field): %v",
 			len(violations), violations)
 	}
-	if !strings.Contains(violations[0].What, "toml") {
-		t.Errorf("violation does not name the shared variable: %s", violations[0].What)
+	for _, v := range violations {
+		if strings.Contains(v.What, identPrefix) {
+			t.Errorf("internal marker leaked into the message: %s", v.What)
+		}
 	}
-	if strings.Contains(violations[0].What, identPrefix) {
-		t.Errorf("internal marker leaked into the message: %s", violations[0].What)
+	if !strings.Contains(violations[0].What, "toml") || !strings.Contains(violations[1].What, "f.toml") {
+		t.Errorf("violations do not name the shared expressions: %v", violations)
+	}
+}
+
+// TestMultiProviderCheckIgnoresNilRecipeValues is the one shape excluded from
+// the shared-body rule. Two keys holding nil hold no recipe at all, so
+// reporting them would produce a message that is not true of anything -- and a
+// rule with no exemption hatch has to be right about what it reports.
+func TestMultiProviderCheckIgnoresNilRecipeValues(t *testing.T) {
+	src := `package p
+
+func g() map[string][]byte {
+	return map[string][]byte{"broken": nil, "alsobroken": nil}
+}
+`
+	violations, err := checkMultiProviderSource("nil_test.go", src)
+	if err != nil {
+		t.Fatalf("parsing source: %v", err)
+	}
+	if len(violations) != 0 {
+		t.Errorf("nil recipe values were flagged: %v", violations)
 	}
 }
 
@@ -303,9 +337,11 @@ const (
 	ruleMatchLiteral = "multi-element BinaryMatch literal"
 	ruleRecipeMap    = "recipe map with two keys yielding the same command"
 
-	// identPrefix marks a command name that stands for "whatever this variable
-	// holds" rather than for a real command, so the two cannot collide.
-	identPrefix = "ident:"
+	// identPrefix marks a key that stands for "whatever this expression
+	// evaluates to" rather than for a real command, so the two namespaces
+	// share one counting map without colliding. A Go expression cannot
+	// contain a colon outside a string, and a command name never does.
+	identPrefix = "expr:"
 )
 
 // scanMultiProviderConstruction parses every _test.go file under root,
@@ -404,8 +440,9 @@ func checkMultiProviderSource(name, src string) ([]multiProviderViolation, error
 		if isRecipeMap(lit.Type) {
 			if cmd, n := duplicateCommandInRecipeMap(lit); n >= 2 {
 				what := fmt.Sprintf("%d keys yield command %q", n, cmd)
-				if name, ok := strings.CutPrefix(cmd, identPrefix); ok {
-					what = fmt.Sprintf("%d keys are bound to %s, so they hold the same recipe", n, name)
+				if text, ok := strings.CutPrefix(cmd, identPrefix); ok {
+					what = fmt.Sprintf("%d keys hold the same recipe bytes (%s); "+
+						"if that recipe declares a binary, they are two providers of one command", n, text)
 				}
 				violations = append(violations, multiProviderViolation{
 					Pos:  pos,
@@ -419,9 +456,12 @@ func checkMultiProviderSource(name, src string) ([]multiProviderViolation, error
 	return violations, nil
 }
 
-// isBinaryMatchSlice reports whether expr is []index.BinaryMatch or, inside
-// the index package itself, []BinaryMatch. Fixed-size arrays count: an
-// [2]index.BinaryMatch literal is the same construct with a length on it.
+// isBinaryMatchSlice reports whether expr is a slice or array of BinaryMatch,
+// qualified or not: the unqualified form is how internal/index's own tests
+// write it. The type name alone is the test -- no import resolution happens
+// here, so a BinaryMatch from some other package would match too, which has
+// not come up and would be a strange thing to write. Fixed-size arrays count:
+// an [2]index.BinaryMatch literal is the same construct with a length on it.
 func isBinaryMatchSlice(expr ast.Expr) bool {
 	arr, ok := expr.(*ast.ArrayType)
 	if !ok {
@@ -489,65 +529,83 @@ func isRecipeMap(expr ast.Expr) bool {
 // taken.
 func duplicateCommandInRecipeMap(lit *ast.CompositeLit) (string, int) {
 	counts := map[string]int{}
+	var order []string
 	for _, elt := range lit.Elts {
 		kv, ok := elt.(*ast.KeyValueExpr)
 		if !ok {
 			continue
 		}
 		for _, cmd := range commandsYieldedBy(kv.Value) {
+			if counts[cmd] == 0 {
+				order = append(order, cmd)
+			}
 			counts[cmd]++
 		}
 	}
-	for cmd, n := range counts {
-		if n >= 2 {
-			return cmd, n
+	// Source order, not map order: which duplicate gets reported should not
+	// change between runs of the same check on the same file.
+	for _, cmd := range order {
+		if counts[cmd] >= 2 {
+			return cmd, counts[cmd]
 		}
 	}
 	return "", 0
 }
 
-// commandsYieldedBy extracts the command names a recipe map value declares.
+// commandsYieldedBy extracts what a recipe map value contributes to the
+// duplicate count.
 //
 // A map[string][]byte entry cannot be a bare string literal -- an untyped
 // string constant is not assignable to []byte -- so there is no literal form
-// to read. Three forms are:
+// to read. Two forms can be read for their contents:
 //
 //   - a []byte conversion wrapping inline TOML, []byte("[metadata]\n..."),
-//     read by scanning the TOML for the binaries it declares;
-//   - a helper carrying the binary path as its only string argument,
-//     minimalRecipeTOML("bin/vi"), read as that path;
-//   - an identifier, map[string][]byte{"neovim": toml, "vim": toml}. Its
-//     contents are not known here, but two keys bound to the *same* variable
-//     hold the same TOML and so yield the same command, whatever it is. The
-//     identifier's own name stands in for that command.
+//     scanned for the binaries it declares;
+//   - a single-argument helper carrying a string literal,
+//     minimalRecipeTOML("bin/vi"), read as the binary path it names.
 //
-// Only single-argument calls are read, so an unrelated two-argument helper
-// cannot collide by accident. Two keys bound to two *different* variables that
-// happen to declare the same command are not caught; see the package comment
-// on internal/indexfixture for the full list of what this rule misses.
+// Anything else is opaque, and is keyed on the source text of the expression
+// instead. Two keys holding the textually identical expression -- one shared
+// variable, one shared field, the same helper called with the same arguments
+// -- hold the same recipe bytes, so if that recipe declares a binary the pair
+// is a multi-provider case.
+//
+// The "if" is real and is not proved here: a shared value declaring no binary
+// produces no index rows and is not a multi-provider case, but which it is
+// cannot be known from the syntax. The rule reports the pair and leaves the
+// author to say which. nil is the one shape excluded outright, because it
+// never carries a recipe and reporting it would only ever be noise.
+//
+// See the package comment on internal/indexfixture for what this rule misses.
+// That list names the cases worth knowing about; it is not exhaustive, and a
+// construct absent from it is not thereby sanctioned.
 func commandsYieldedBy(expr ast.Expr) []string {
-	switch v := expr.(type) {
-	case *ast.Ident:
-		// Prefixed so an identifier named "vi" cannot collide with a binary
-		// path that yields the command "vi".
-		return []string{identPrefix + v.Name}
-	case *ast.CallExpr:
-		if len(v.Args) != 1 {
-			return nil
+	if call, ok := expr.(*ast.CallExpr); ok && len(call.Args) == 1 {
+		if s, ok := stringLiteral(call.Args[0]); ok {
+			if isByteSliceConversion(call.Fun) {
+				return commandsInRecipeTOML(s)
+			}
+			return []string{commandFromBinaryPath(s)}
 		}
-		s, ok := stringLiteral(v.Args[0])
-		if !ok {
-			return nil
-		}
-		if isByteSliceConversion(v.Fun) {
-			return commandsInRecipeTOML(s)
-		}
-		if !strings.Contains(s, "/") {
-			return nil
-		}
-		return []string{commandFromBinaryPath(s)}
 	}
-	return nil
+	if ident, ok := expr.(*ast.Ident); ok && ident.Name == "nil" {
+		return nil
+	}
+	// Prefixed so the text of an expression cannot collide with a command
+	// name derived from a binary path.
+	return []string{identPrefix + exprText(expr)}
+}
+
+// exprText renders an expression back to source, so two values can be compared
+// for textual identity.
+func exprText(expr ast.Expr) string {
+	var b strings.Builder
+	if err := printer.Fprint(&b, token.NewFileSet(), expr); err != nil {
+		// Unprintable expressions are not comparable, and a unique string
+		// keeps them from being counted as duplicates of anything.
+		return fmt.Sprintf("<unprintable %T %p>", expr, expr)
+	}
+	return b.String()
 }
 
 // isByteSliceConversion reports whether fun is the []byte in []byte("...").
