@@ -466,7 +466,7 @@ against the criterion's text.** Read the criterion, then ask whether the unit it
 is assigned to is *able* to satisfy it. This is a different question from whether
 the criterion is correct, and it is the only one that finds this failure.
 
-It has fired twice here, and neither instance would have failed any test:
+It has fired three times here, and no instance would have failed any test:
 
 - **AC33**, the consent floor — an explicitly set `suggest` being honored, which
   is what the whole bounded-elevation decision rests on — was filed among the
@@ -478,7 +478,22 @@ It has fired twice here, and neither instance would have failed any test:
   two units later. It would have been marked closed by a unit that had delivered
   half of it, and the missing half is the half a user would notice.
 
-Both criteria were correct as written. What neither carried was which unit could
+- **AC17** asked that an unknown-recipe config leave every command "resolved and
+  consented to" as with no file present, and was assigned to the unit that builds
+  the declaration set. That unit can make the set empty; it cannot reach consent,
+  because the predicate that breaks consent lives in `cmd_run.go`. Split into
+  AC17 (the set) and AC17a (the consent behavior, on the unit where the predicate
+  changes).
+
+**The third one was found from the inside, and that is the more reliable seat.**
+AC33 and AC11a were caught by review. AC17 was caught by the unit implementing
+it, which discovered mid-build that it could not satisfy what it had been handed.
+An implementer is the only reader who learns a criterion is unsatisfiable by
+*trying* rather than by judging, so a unit reporting "I cannot close this one"
+should be treated as a finding about the plan before it is treated as a problem
+with the unit.
+
+All three criteria were correct as written. What none carried was which unit could
 satisfy it — that property lives in the assignment, not the text — so reading the
 criterion, however carefully, says nothing about whether its assignment is
 possible. This is the plan-level form of the defect family the work itself is
