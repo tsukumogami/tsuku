@@ -24,12 +24,32 @@ From tsukumogami/tsuku#2553 and the dispatch brief.
 
 Two specific reasons to doubt the answer is "just these two":
 
-- **A validated half next to an unvalidated half.** `ValidateRequested` and
-  `ValidateVersionString` guard the *version* component of the `ToolBinDir`
-  interpolation; the *name* component is guarded nowhere. The codebase already
-  validates one component of a composed path and not the other. That asymmetry
-  suggests the guard was written against the input someone was thinking about
-  rather than against the composition, which is a pattern that repeats.
+- **A validated half next to an unvalidated half.** `ValidateRequested`
+  (`internal/install/pin.go`) and `ValidateVersionString`
+  (`internal/version/transform.go`) guard the *version* component of the
+  `ToolBinDir` interpolation; the *name* component is guarded nowhere. The
+  codebase already validates one component of a composed path and not the
+  other. That asymmetry suggests the guard was written against the input
+  someone was thinking about rather than against the composition, which is a
+  pattern that repeats. (Neither validator is in `internal/validate`, which is
+  the container-based recipe *plan* validator and unrelated. An earlier draft of
+  this scope file said otherwise and was wrong.)
+
+- **A control that exists one consumer deep instead of at the choke point.**
+  `SplitOrgKey` (`internal/project/orgkey.go:22`) already rejects `..` — but
+  only the run-path resolver calls it. Parse, `tsuku install` and activation all
+  bypass it, so a `.tsuku.toml` declaring `"../../evil" = "1.0.0"` survives
+  `tsuku install --dry-run`. The activation traversal is reachable *precisely
+  because* activation never calls the guard that would have caught it. This is a
+  second failure shape, distinct from the one above, and it may be the more
+  productive of the two to chase.
+
+  It is also weaker than it first appears: `SplitOrgKey` returns at line 17
+  when the key contains no `/`, *before* the `..` check. So the check fires only
+  on org-scoped keys. The traversal feed contains `/` and would be caught; the
+  command-substitution feed (`x$(...)y`) contains none, passes untouched, and
+  gets no charset check anywhere. Folding `SplitOrgKey` into the parse path is
+  necessary and nowhere near sufficient.
 - **A belief, not a slip.** `%q` was chosen for shell emission by someone who
   believed it quoted for a shell. Wherever else that belief was applied is the
   same defect.
@@ -65,6 +85,18 @@ The file overlap with the sibling chain on tsuku#2543 is resolved (agreed with
 - The tool-name check goes at the head of the `ComputeActivation` tool loop and
   that chain keeps it as the first step of its resolution sequence rather than
   reimplementing it.
+- **Placement of the name check moved during scoping.** `tsuku_project_consent`
+  ruled it belongs at parse time in `internal/project`, not at the head of the
+  activation tool loop, because `parseConfigFile`
+  (`internal/project/config.go:156-172`) is the single point where
+  `.tsuku.toml` becomes a `ProjectConfig` and it currently enforces `MaxTools`
+  and nothing else. Validating there means install, run and activation all
+  inherit the rejection and no consumer can bypass it — which is the fix for the
+  `SplitOrgKey` shape, not just for this instance. It also takes the name half
+  out of `activate.go` entirely, reducing the overlap with the sibling chain to
+  `FormatExports` alone. Implementation trap recorded by the same seat: validate
+  the *derived bare name* (run `SplitOrgKey` first), not the raw config key, or
+  legitimate `owner/repo:tool` org-scoped keys break on their `/`.
 - The one genuine contact point is `FormatExports`: that chain adds a
   `_TSUKU_STATE_STAMP` emission in both the bash/zsh and fish branches plus the
   deactivation `unset`. **That new value must go through the quoter this work
