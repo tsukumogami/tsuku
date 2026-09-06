@@ -282,6 +282,21 @@ PATH when the stat fails for any reason other than not-exists.
       covered by theirs, non-exact by this one, and dropping either leaves its
       half unvalidated. `internal/updates/gc.go` already validates a
       state-derived version before building a path for the same reason.
+- [ ] **The sink uses `install.ValidateVersionString`, not
+      `internal/version`'s function of the same name.** Two functions share that
+      name and they are not the same rule, so this is a choice rather than an
+      import detail. `internal/version`'s **accepts `../../evil`** — its charset
+      permits `/` for scoped npm names such as `@biomejs/biome@2.3.8` and it
+      never checks for `..` — so wiring it in at a path sink would validate
+      nothing that matters here. It is also stricter in the other direction,
+      rejecting `1.0.0 beta` and `1.0.0~rc`, which `install`'s accepts and which
+      tsuku may therefore have installed; using it would refuse to activate
+      versions tsuku itself created, which is the silent-skip disease reappearing
+      inside its own fix. `install`'s is the gate that let the directory exist,
+      so it is the correct oracle for "could tsuku have made this path".
+- [ ] A version tsuku installed — one `install.ValidateVersionString` accepts,
+      with a directory present — always activates. The validation at the sink is
+      never stricter than the one that created the directory.
 - [ ] With `git-lfs` installed and `git` not, `git = "latest"` puts no `git-lfs`
       directory on PATH.
 - [ ] A directory with no state entry is never activated; a state entry whose

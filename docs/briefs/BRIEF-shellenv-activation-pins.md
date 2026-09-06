@@ -29,13 +29,22 @@ The brief frames the problem and the boundary. The requirements contract, the
 reporting shape, and the choice of where the shared version-matching code lives
 are downstream.
 
-Widened once after acceptance, on the maintainer seat's ruling. The original
-framing was the non-exact version pins alone. Org-scoped keys turned out to fail
-the same way through the other half of the same path — activation iterates raw
-`[tools]` keys and never calls `SplitOrgKey`, so `"tsukumogami/koto"` looks for
-`tools/tsukumogami/koto-1.0/bin` while the installer wrote `tools/koto-1.0`. It
-is the same defect, one line apart in the same loop, so the problem statement
-covers both rather than a second chain rewriting the same loop.
+**Amended after acceptance, 2026-09-06.**
+
+*What was accepted:* the problem framed as the non-exact version pins alone —
+`"latest"`, `""` and prefix forms silently not activating.
+
+*What changed:* org-scoped keys were added to the problem statement, the outcome
+and the scope boundary.
+
+*Why:* org-scoped keys fail the same way through the other half of the same
+path. Activation iterates raw `[tools]` keys and never calls `SplitOrgKey`, so
+`"tsukumogami/koto" = "1.0"` looks for `tools/tsukumogami/koto-1.0/bin` while
+the installer wrote `tools/koto-1.0`. It is the same defect one derivation away
+in the same loop, so widening the problem statement was preferred to a second
+chain rewriting that loop. Ruled by the maintainer seat after the defect was
+reproduced against the shipped binary and a first-party config was found
+affected.
 
 ## Problem Statement
 
