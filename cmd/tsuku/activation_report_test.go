@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/activation"
+	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/install"
 )
 
 // The substring PRD R18 pins for each reason, and the reason that must produce
@@ -403,6 +405,58 @@ func TestHookEnv_ReasonsAreReportedOncePerEntry(t *testing.T) {
 	} else if errOut != "" {
 		t.Errorf("moving within the project reported again:\n%s", errOut)
 	}
+
+	// Liveness. Every assertion above this point is an *absence* — empty
+	// stderr — and absence is produced just as well by activation having
+	// stopped working as by the budget suppressing a repeat. Verified: an
+	// over-eager short-circuit that never re-resolves once a directory is
+	// recorded leaves every assertion above green.
+	//
+	// So the test has to show the machinery was alive the whole time, not
+	// merely quiet. Making the declaration satisfiable must produce a PATH
+	// entry at the next prompt; if activation had died, this is where it
+	// shows.
+	chdir(t, projectDir)
+	installVersion(t, cfg, "jq", "9.1.0")
+
+	stdout, _, err = runHookEnv(t, "bash")
+	if err != nil {
+		t.Fatalf("unexpected error after installing a matching version: %v", err)
+	}
+	want := filepath.Join(cfg.ToolsDir, "jq-9.1.0", "bin")
+	if !strings.Contains(stdout, want) {
+		t.Errorf("activation stopped re-resolving: installing a matching version "+
+			"produced no PATH entry for %q\nstdout:\n%s", want, stdout)
+	}
+}
+
+// installVersion adds a version to installation state and creates its bin
+// directory, the way an install would, so a test can change what is installed
+// partway through.
+func installVersion(t *testing.T, cfg *config.Config, name, version string) {
+	t.Helper()
+
+	sm := install.NewStateManager(cfg)
+	state, err := sm.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	tool, ok := state.Installed[name]
+	if !ok {
+		tool = install.ToolState{Versions: map[string]install.VersionState{}}
+	}
+	if tool.Versions == nil {
+		tool.Versions = map[string]install.VersionState{}
+	}
+	tool.Versions[version] = install.VersionState{Requested: version}
+	tool.ActiveVersion = version
+	state.Installed[name] = tool
+	if err := sm.Save(state); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(cfg.ToolBinDir(name, version), 0755); err != nil {
+		t.Fatal(err)
+	}
 }
 
 // applyExports feeds an emitted block back into the environment, the way the
@@ -466,6 +520,13 @@ func TestHookEnv_ReasonsReportAgainOnReEntry(t *testing.T) {
 
 // The once-per-entry budget is gated on the flag activation computed, so a
 // prompt hook firing again in the same directory says nothing more.
+//
+// This asserts an absence and nothing else, so on its own it would also pass
+// against a reportActivation that never printed at all. That is acceptable
+// here only because the emission side is proved elsewhere on the same code
+// path -- TestReportActivation_QuietSuppressesEveryReason renders five lines
+// from a comparable result immediately before asserting --quiet removes them.
+// If that test is ever narrowed, this one stops meaning what it says.
 func TestReportActivation_SilentWhenNotEntering(t *testing.T) {
 	result := &activation.ActivationResult{
 		Entered:     false,
