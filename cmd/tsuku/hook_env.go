@@ -37,6 +37,16 @@ var hookEnvCmd = &cobra.Command{
 
 		result, err := activation.ComputeActivation(cwd, prevPath, curDir, stamp, cfg, install.NewStateManager(cfg))
 		if err != nil {
+			// A parse failure comes back with a usable result alongside the
+			// error. Returning the error instead would make cobra print it a
+			// second time with a full usage block, and main would exit
+			// non-zero -- on every prompt, in a directory the developer cannot
+			// leave without fixing the file.
+			if line := parseDiagnostic(err); line != "" {
+				reportParseFailure(result, err)
+				fmt.Print(activation.FormatExports(result, shell))
+				return nil
+			}
 			return err
 		}
 

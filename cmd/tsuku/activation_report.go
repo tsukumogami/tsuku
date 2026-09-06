@@ -1,10 +1,12 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/tsukumogami/tsuku/internal/activation"
+	"github.com/tsukumogami/tsuku/internal/project"
 )
 
 // activationMessages renders the reasons a .tsuku.toml could not be fully
@@ -70,6 +72,38 @@ func activationMessages(result *activation.ActivationResult) []string {
 	}
 
 	return lines
+}
+
+// parseDiagnostic renders the one line an unparseable .tsuku.toml produces, or
+// returns "" when err is not a parse failure.
+//
+// It names the file rather than the directory, because that is what the
+// developer opens, and it carries the underlying cause, which is where the line
+// number lives.
+func parseDiagnostic(err error) string {
+	var parseErr *project.ParseError
+	if !errors.As(err, &parseErr) {
+		return ""
+	}
+	return fmt.Sprintf("tsuku: %s could not be parsed, so no tools were activated: %v",
+		parseErr.Path, parseErr.Err)
+}
+
+// reportParseFailure writes the parse diagnostic through printWarning, so
+// --quiet suppresses it exactly as it suppresses the five reasons.
+//
+// Like those, it is gated on Entered: a prompt hook in a project whose file will
+// not parse says its piece on arrival, not on every prompt for as long as the
+// developer stays there.
+func reportParseFailure(result *activation.ActivationResult, err error) {
+	line := parseDiagnostic(err)
+	if line == "" {
+		return
+	}
+	if result != nil && !result.Entered {
+		return
+	}
+	printWarning(line)
 }
 
 func plural(n int, one, many string) string {

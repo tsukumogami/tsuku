@@ -39,6 +39,7 @@
 package activation
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -87,6 +88,16 @@ type ActivationResult struct {
 	Entered bool
 }
 
+// basePathFrom returns the PATH an activation builds on: the pre-activation
+// value a prior activation saved, or the current environment's PATH when there
+// is none.
+func basePathFrom(prevPath string) string {
+	if prevPath != "" {
+		return prevPath
+	}
+	return os.Getenv("PATH")
+}
+
 // ComputeActivation determines the PATH changes needed for the current
 // working directory. It reads .tsuku.toml via project.LoadProjectConfig,
 // resolves each declaration against the versions installation state records,
@@ -127,6 +138,28 @@ func ComputeActivation(cwd, prevPath, curDir, stamp string, cfg *config.Config, 
 
 	result, err := project.LoadProjectConfig(cwd)
 	if err != nil {
+		var parseErr *project.ParseError
+		if errors.As(err, &parseErr) {
+			// A non-nil result AND a non-nil error. This is unusual enough in
+			// Go to be worth stating: the caller needs both, because the file
+			// that would not parse still identifies a project the developer is
+			// standing in, and that project has to be recorded or the prompt
+			// hook re-reports the same failure on every prompt with no way to
+			// silence it.
+			//
+			// Returning nil here and synthesizing the exports in cmd/tsuku
+			// would duplicate FormatExports. Active with zero bin directories
+			// already emits exactly the right shape -- PATH unchanged, _TSUKU_DIR
+			// set, _TSUKU_PREV_PATH set, the stamp recorded.
+			return &ActivationResult{
+				PATH:     basePathFrom(prevPath),
+				Dir:      parseErr.Dir,
+				PrevPath: basePathFrom(prevPath),
+				Active:   true,
+				Stamp:    currentStamp,
+				Entered:  parseErr.Dir != curDir,
+			}, err
+		}
 		return nil, fmt.Errorf("loading project config: %w", err)
 	}
 	if result == nil {
@@ -152,10 +185,7 @@ func ComputeActivation(cwd, prevPath, curDir, stamp string, cfg *config.Config, 
 
 	// Determine the base PATH: use prevPath if we already have an activation,
 	// otherwise use the current PATH from the environment.
-	basePath := prevPath
-	if basePath == "" {
-		basePath = os.Getenv("PATH")
-	}
+	basePath := basePathFrom(prevPath)
 
 	// Sort the declared keys so PATH order does not depend on map iteration.
 	// This lexical ordering is the one the previous loop established and it
