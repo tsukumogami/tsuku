@@ -1,6 +1,6 @@
 ---
 schema: design/v1
-status: Accepted
+status: Planned
 upstream: docs/prds/PRD-shellenv-activation-pins.md
 problem: |
   Project activation resolves a declared version by interpolating the declared
@@ -34,7 +34,7 @@ rationale: |
 
 ## Status
 
-Accepted
+Planned
 
 ## Upstream Design Reference
 
