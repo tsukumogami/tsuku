@@ -261,6 +261,11 @@ reach it. Only an allowlist stops it.*
   `ValidateVersionString`s exist in this tree — `internal/version`'s accepts
   `../../evil`, `internal/install`'s rejects it — so a package called `pin`
   holding a path-safety check is the shape that invites the wrong import.
+- The package doc-comment states the question rather than the subject:
+  "validates that a version or pin string is safe to compose into a filesystem
+  path". The name signals; the doc-comment locks it, so the next importer picks
+  this one for the right reason instead of reaching past it to `internal/version`'s
+  by proximity.
 
 **Dependencies**: None.
 **Type**: refactor. **Complexity**: simple.

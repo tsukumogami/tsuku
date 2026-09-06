@@ -297,6 +297,18 @@ resolved), for the same reason.
 Anyone proposing to delete either on the grounds that the other covers it should
 read this paragraph first.
 
+**And the sink-side check must declare its reachability.** Given a working
+boundary, no valid config may be able to reach it — in which case it is green
+whether or not it exists, and an end-to-end test proves nothing about it. The
+obligation is therefore a unit test at the sink's own level, mutation-confirmed:
+deleting the check must turn that test red. If it cannot, the check is
+unreachable-in-production defence in depth, which is worth keeping and must be
+labelled as such rather than left to look like live coverage. A sibling chain
+found exactly this in its own containment guard — deleting the call site left
+its whole suite green, because upstream checks meant no input reached it.
+"Keep both", plus an unreachable second check, plus only an end-to-end test, is
+how a guard rots into a line a future cleanup deletes looking correct.
+
 ### How a refusal reaches the user
 
 R4 forbids the write-only-field answer and R5 makes refusal per-declaration, so
