@@ -162,33 +162,18 @@ func validateRuntimeDependencyNames(result *ValidationResult, r *Recipe) {
 				result.addError(entryField, "entry must not be empty")
 				continue
 			}
-			if strings.Contains(dep, "\x00") {
-				result.addError(entryField, fmt.Sprintf("entry %q contains a null byte", dep))
-				continue
-			}
-			if strings.Contains(dep, "..") {
-				result.addError(entryField, fmt.Sprintf("entry %q must not contain '..' (path traversal)", dep))
-				continue
-			}
-			if strings.Contains(dep, "/") {
-				result.addError(entryField, fmt.Sprintf("entry %q must not contain '/'", dep))
-				continue
-			}
-			if strings.Contains(dep, "\\") {
-				result.addError(entryField, fmt.Sprintf("entry %q must not contain '\\'", dep))
-				continue
-			}
-			if strings.HasPrefix(dep, "-") {
-				result.addError(entryField, fmt.Sprintf("entry %q must not start with '-' (looks like a CLI flag)", dep))
-				continue
-			}
-			if !runtimeDepNamePattern.MatchString(dep) {
-				result.addError(entryField, fmt.Sprintf("entry %q must match %s (lowercase letters, digits, '.', '_', '-')", dep, runtimeDepNamePattern.String()))
-				continue
-			}
-			// Belt-and-suspenders: also pass through the shared name helper.
-			if !IsValidRecipeName(dep) {
-				result.addError(entryField, fmt.Sprintf("entry %q is not a valid recipe name", dep))
+			// One definition of a well-formed recipe identifier, shared with
+			// the config boundary rather than restated here. The rule used to
+			// live inline as a denylist chain with the pattern bolted on the
+			// end; a second near-identical copy is the defect this codebase is
+			// being corrected for.
+			//
+			// One behaviour change comes with the consolidation: ".." is now
+			// rejected as a whole path segment rather than as a substring, so
+			// "foo..bar" is accepted. An internal doubled dot is not traversal
+			// and refusing it was over-broad.
+			if err := ValidateStrictName(dep); err != nil {
+				result.addError(entryField, strings.Replace(err.Error(), "name ", "entry ", 1))
 				continue
 			}
 			if firstIdx, dup := seen[dep]; dup {
