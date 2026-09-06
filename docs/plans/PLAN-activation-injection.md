@@ -154,6 +154,13 @@ dialect-correct quoting, and shape emission so a future value cannot bypass it.
   `export PATH='<binDir>':'<currentDir>':"$PATH"`. Asserted by evaluating the
   output and checking the pre-existing `PATH` is still present — the only
   criterion in this plan that catches over-quoting.
+- **That fixture must set `TSUKU_HOME` to a path containing a metacharacter.**
+  Both interpolated components derive from `cfg.HomeDir`, so with a benign home
+  they round-trip and `$PATH` survives *even if the line is left completely
+  untouched* — the criterion would pass against doing nothing. Same missing
+  precondition as the escaped-bin-directory one, in a different place.
+- Line 47's `. "<cachePath>"` gets its own round-trip assertion. It is a
+  separate emission and a fix to line 40 does not cover it.
 - Behaviour is otherwise unchanged: this issue fixes quoting only and does not
   give the command a fish dialect. That is #2556 and stays out.
 
@@ -210,7 +217,9 @@ dialect-correct quoting, and shape emission so a future value cannot bypass it.
 
 - A **separate, wider** rule for an org source half: each of the two segments
   non-empty, not `.` or `..`, no separator, **case unrestricted**. Accepts
-  `BurntSushi/toml`, which parses `.tsuku.toml` in this repository. Reusing the
+  `BurntSushi/toml`, the TOML library this repository depends on — there is no
+  `.tsuku.toml` checked in here, so it is named as a real uppercase owner
+  rather than as a local config parser. Reusing the
   bare-name rule here would refuse it, and R9's one-definition principle
   actively encourages that reuse, so this is called out rather than left to
   judgement.
@@ -234,8 +243,11 @@ reach it. Only an allowlist stops it.*
   symbol, importing only `fmt`, `strings` and `unicode` — everything the
   current function uses. `pin.go`'s other three symbols stay where they are;
   moving them costs the same later and would have a caller to justify it.
-- `internal/install.ValidateRequested` delegates to it, and `internal/install`'s
-  existing tests pass unchanged.
+- `internal/install.ValidateRequested` **delegates**; `internal/install/pin.go`
+  retains no copy of the rule body. A wrong implementation copies rather than
+  delegates, passes every other criterion here, and creates exactly the second
+  definition R9 forbids.
+- `internal/install`'s existing tests pass unchanged.
 - No new rule: the accept/reject set is identical to today's. `1.0:evil` is
   refused (verified: `invalid character ":"`), `1.2.3-RC1` and `@lts` accepted.
 - The package name says which question the function answers. Two same-named
@@ -255,11 +267,64 @@ earlier draft of this plan wired `install.ValidateRequested` into
 on `project`, so refiling cannot break this cycle the way it can elsewhere —
 the extraction is forced.*
 
-### Issue 6: Validate at `parseConfigFile`
+### Issue 6: Add the diagnostics carrier
+
+**Goal**: A refused declaration is visible, on stderr, from every command that
+reads the config.
+
+**Acceptance Criteria**:
+- `ConfigResult` gains a diagnostics slice. The refusal cannot travel on
+  `parseConfigFile`'s `error` return: that return aborts the whole load, which
+  Issue 11 reserves for a TOML parse failure.
+- The slice is populated from the silent-skip sites that exist **today**, so
+  this issue has a testable property of its own and is not dead plumbing: a
+  declaration that is currently dropped without a word now says so.
+- Five consumers print it: `internal/shellenv/activate.go:48`,
+  `cmd/tsuku/install_project.go:55`, `cmd/tsuku/cmd_shim.go:65`,
+  `cmd/tsuku/cmd_run.go:95` and `internal/updates/apply.go`. `cmd_run.go:95`
+  discards the load error today (`projectCfg, _ :=`) and needs the most change.
+- **Asserted per consumer, concretely**: given a config with one bad key and
+  one good one, each of the five commands prints a message naming the bad key
+  on **stderr**, prints **nothing about it on stdout**, and still honours the
+  good declaration.
+- The stdout half is asserted as *evaluability*, not as absence of a substring:
+  on a refusal, `hook-env`'s stdout is either empty or is shell text that
+  produces no side effect when evaluated. A substring check misses a
+  paraphrase, and evaluating it is what the hook actually does.
+- **Writing to both streams fails this issue.** That is not a contrived
+  implementation — a tee'd logger, or a stray `fmt.Println` left beside the
+  `Fprintln(os.Stderr, ...)`, produces it. Under this threat model both is
+  exactly as dangerous as stdout alone, because the hook evaluates stdout
+  either way.
+- The reason stderr is a boundary rather than a convention: R4 requires the
+  message to **name the offending key**, and the key is attacker-controlled. A
+  refusal on stdout therefore carries `x$(id)y` verbatim into text the shell
+  hook evaluates — the fix's own error path becoming the delivery mechanism for
+  the exact value the fix exists to stop, firing precisely when the validator
+  is working. Confining refusals to stderr is also what keeps R6's quoting
+  obligation from extending to diagnostics.
+- The message names the offending key and states the expected shape, and says
+  "lowercase" where case is the fault. Appending to a field no production
+  caller reads does not satisfy this — `ActivationResult.Skipped` is exactly
+  such a field and every silent skip today goes into it.
+
+**Dependencies**: None.
+**Type**: feat. **Complexity**: testable.
+**Files**: `internal/project/config.go`, `internal/shellenv/activate.go`, `cmd/tsuku/install_project.go`, `cmd/tsuku/cmd_shim.go`, `cmd/tsuku/cmd_run.go`, `internal/updates/apply.go`, plus tests.
+
+*Split from Issue 6 on the validation-versus-diagnostics axis, which is free.
+The axis that must not be cut is name-versus-version: no intermediate commit
+may validate one component and leave the other unvalidated, and this split does
+not. Issue 6 alone regresses nothing — a silently dropped declaration is what a
+missing tool directory already does today.*
+
+### Issue 11: Validate at `parseConfigFile`
 
 **Goal**: Every declaration checked once, where the file becomes a config.
 
 **Acceptance Criteria**:
+- Refusals are emitted into the diagnostics slice Issue 6 added, so no
+  commit in this batch refuses a declaration with nowhere to report it.
 - Each key is split with `SplitOrgKey`; **its error is propagated, not
   discarded**, and a key that yields no bare name is refused.
 - The derived bare name is checked with Issue 5's predicate.
@@ -301,41 +366,9 @@ the extraction is forced.*
   refuses this name, and the criterion asserts the outcome rather than the
   mechanism, so neither document is contradicted.
 
-**Dependencies**: Issue 5, Issue 10.
+**Dependencies**: Issue 5, Issue 6, Issue 10.
 **Type**: feat. **Complexity**: complex.
 **Files**: `internal/project/config.go`, `internal/project/config_test.go`, `internal/project/orgkey.go`.
-
-### Issue 11: Carry refusals to the user
-
-**Goal**: A refused declaration is visible, on stderr, from every command that
-reads the config.
-
-**Acceptance Criteria**:
-- `ConfigResult` gains a diagnostics slice, populated at parse. The refusal
-  cannot travel on `parseConfigFile`'s `error` return: that return aborts the
-  whole load, which Issue 6 reserves for a TOML parse failure.
-- Five consumers print it: `internal/shellenv/activate.go:48`,
-  `cmd/tsuku/install_project.go:55`, `cmd/tsuku/cmd_shim.go:65`,
-  `cmd/tsuku/cmd_run.go:95` and `internal/updates/apply.go`. `cmd_run.go:95`
-  discards the load error today (`projectCfg, _ :=`) and needs the most change.
-- Output goes to **stderr**, asserted per consumer by capturing the two streams
-  separately. `cmd/tsuku/hook_env.go:51` prints activation output to stdout and
-  the shell hook evaluates it, so a diagnostic on stdout would be executed
-  rather than read.
-- The message names the offending key and states the expected shape, and says
-  "lowercase" where case is the fault. Appending to a field no production
-  caller reads does not satisfy this — `ActivationResult.Skipped` is exactly
-  such a field and every silent skip today goes into it.
-
-**Dependencies**: Issue 6.
-**Type**: feat. **Complexity**: testable.
-**Files**: `internal/project/config.go`, `internal/shellenv/activate.go`, `cmd/tsuku/install_project.go`, `cmd/tsuku/cmd_shim.go`, `cmd/tsuku/cmd_run.go`, `internal/updates/apply.go`, plus tests.
-
-*Split from Issue 6 on the validation-versus-diagnostics axis, which is free.
-The axis that must not be cut is name-versus-version: no intermediate commit
-may validate one component and leave the other unvalidated, and this split does
-not. Issue 6 alone regresses nothing — a silently dropped declaration is what a
-missing tool directory already does today.*
 
 ### Issue 7: Delete the dead `effectivePin` fallback
 
@@ -419,15 +452,16 @@ dropped.
 **Batch 2 — the predicates.** Issue 5 and Issue 10, both independent of Batch 1
 and of each other; all three can run in parallel.
 
-**Batch 3 — the boundary.** Issue 6, then Issue 11, then Issue 7, all in the
-same change. This is the
+**Batch 3 — the boundary.** Issue 6 (the carrier) first, so no later commit
+refuses a declaration with nowhere to report it; then Issue 11 (validation),
+then Issue 7. All in the same change. This is the
 critical path item and the largest single review surface.
 
 **Batch 4 — backstop and record.** Issue 8 any time after Issue 5. Issue 9 last, because it
 describes what the others built.
 
 Critical path: Issue 2 → Issue 1 → Issue 3, and separately
-(Issue 5, Issue 10) → Issue 6 → Issue 11 → Issue 7 → Issue 9. Issue 4 and Issue 8 are off
+Issue 6 → (Issue 5, Issue 10) → Issue 11 → Issue 7 → Issue 9. Issue 4 and Issue 8 are off
 the path.
 
 ## References
