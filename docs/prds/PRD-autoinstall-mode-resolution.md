@@ -338,6 +338,14 @@ command is no longer ambiguous, so the gate's precondition has gone. Nothing
 about the gate's own rule changes, and it still fires in the case R6
 describes.
 
+The implementation this excludes is the conservative one, which is why it is
+stated rather than left as a consequence of R3. An engineer nervous about
+touching a security gate fixes the identity defect and leaves the gate reading
+the full candidate list "to be safe" — good judgement, badly applied here,
+because the gate exists to catch ambiguity that the declaration has already
+resolved. Reading the un-narrowed list keeps the prompt the documentation
+denies, and it does so while looking like caution.
+
 **R4.** Where the set contains exactly one recipe and that recipe is already
 installed at the declared version, `tsuku run` shall execute it from that
 recipe's version-specific directory. Where a *different* provider of the
