@@ -780,7 +780,7 @@ mechanical check over this table is sufficient.
 | R3a | AC19, AC47 |
 | R3b | AC1, AC2 |
 | R4 | AC5, AC6, AC7, AC8 |
-| R5 | AC10, AC17 |
+| R5 | AC10, AC17, AC17a |
 | R6 | AC9, AC13, AC14 |
 | R7 | AC15 |
 | R8 | AC16 |
@@ -912,9 +912,20 @@ because auto or suggest remains reachable under every outcome.
 - [ ] **AC16** `tsuku install` with the same two-provider configuration installs both
       recipes and does not error, and activation over the same configuration
       does not error either. Both read the file R8 requires to stay valid.
-- [ ] **AC17** A `.tsuku.toml` naming a recipe that is in no index leaves every command
-      resolved and consented to as it would be with no `.tsuku.toml` present,
-      including the command whose name resembles the unknown recipe.
+- [ ] **AC17** A `.tsuku.toml` naming a recipe that is in no index declares nothing for
+      any command, including the command whose name resembles the unknown
+      recipe: the set is empty, and identical to the set produced with no
+      `.tsuku.toml` present.
+- [ ] **AC17a** With that same configuration, every command is resolved *and consented
+      to* as it would be with no `.tsuku.toml` present.
+
+      AC17 and AC17a are split for the reason AC11a and AC11b are. The consent
+      half is not satisfiable while the terminal check reads `len(Tools) > 0`
+      rather than asking whether this command is declared — R5 names that as the
+      defect R9 removes, so an unknown-recipe config still skips the gate that an
+      empty root does not, and no correct declaration set can change it. The unit
+      that produces the set would otherwise report the whole criterion met while
+      the exit codes still differ.
 - [ ] **AC18** A declaration whose version is `latest` or a prefix resolves as it does
       today; the recipe chosen is still the declared one.
 - [ ] **AC19** With the effective consent mode resolved to auto and a project

@@ -210,7 +210,12 @@ func TestDeclarationsFor_SameSourceTwiceIsOneDeclaration(t *testing.T) {
 // AC17. A config naming a recipe that is in no index declares nothing, for the
 // command whose name resembles that recipe and for every other command. The
 // comparison is against a resolver with no config at all, which is the state
-// AC17 requires the run to be indistinguishable from.
+// AC17 requires the set to be indistinguishable from.
+//
+// The consent half is AC17a and is not observable here: the terminal check
+// reads len(Tools) > 0 rather than asking whether this command is declared, so
+// an unknown-recipe config still skips a gate an empty root does not. Nothing
+// this package returns can change that, which is why the criterion is split.
 func TestDeclarationsFor_RecipeInNoIndexDeclaresNothing(t *testing.T) {
 	fx := indexfixture.New(t)
 	const unknownRecipe = "fixture-absent-from-every-index"

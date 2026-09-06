@@ -132,31 +132,52 @@ for a command, and at what versions.
 `DeclarationsFor(ctx, matches)`. Dedup on the recipe a configuration key
 denotes — its org-scoped source, which `SplitOrgKey` already computes — and not
 on the bare name, with the org-key precedence stated per recipe rather than
-falling out of iteration order: for each distinct bare name the config
-declares, the bare key's version if present, else the first org key's.
+falling out of iteration order. That precedence has a carve-out and the
+sentence has to carry it: for a bare name the config declares with **at most
+one** org-scoped source, the bare key's version if present, else the first org
+key's. Written without the carve-out it is the rule AC11a names as the
+dangerous wrong one.
 
 **Two org keys whose org components differ are two declarations, not one**
 (R2a). They reach the refusal rather than collapsing, so `bareToOrg`'s stderr
-warning is deleted rather than kept — the condition it announced is now
-refused, and keeping both invites a later reader to remove whichever one they
-meet first. AC11a is the criterion: the cheapest wrong implementation dedups on
-the bare name, collapses the pair, and still passes AC11, AC12 and AC13.
+warning is deleted rather than kept — keeping both invites a later reader to
+remove whichever one they meet first. AC11a is the criterion: the cheapest
+wrong implementation dedups on the bare name, collapses the pair, and still
+passes AC11, AC12 and AC13.
+
+The warning covered slightly more than what now refuses. Its condition was two
+or more org-scoped keys reducing to one bare name, which includes two naming
+the *same* source — `org-a/koto` and `org-a/koto@2.0.0`, which `SplitOrgKey`
+reduces alike. Those denote one recipe, stay one declaration, and are still
+settled by a sort with nothing printed. Accepted, because there is one recipe
+to install either way, so the pick can only choose a version of the right tool.
 
 **A bare key alongside two org sources contributes no declaration.** AC11a says
 the set is still two, so the bare key neither breaks the tie nor stands as a
-third candidate. R2's collapse presupposes a single recipe, and with two
-sources that presupposition fails, so the bare key has no recipe to collapse
-into and the ambiguity to report is the one between the two registries. The
-version it declares does not reach the set, which is what a test can see: "the
-bare key wins the tie" returns one declaration carrying that version.
+third candidate. The reason is the collapse rule, not installability — a bare
+key installs perfectly well, from the default loader chain. R2 identifies a
+bare key with an org key reducing to it, and with two org sources that holds
+against each of them separately, so the bare key adds no recipe the set does
+not already carry and only fails to say which of the two it meant. The version
+it declares does not reach the set, which is what a test can see: "the bare key
+wins the tie" returns one declaration carrying that version.
 
 `ProjectVersionFor` is retained in this unit so the package still compiles
 against its existing caller. Its deletion, with `Tools()`, the `lookup` field
-and `NewResolver`'s second parameter, belongs to Issue 3.
+and `NewResolver`'s second parameter *and return type*, belongs to Issue 3 —
+`internal/project` imports `internal/autoinstall` for exactly those, and until
+they go, `autoinstall` cannot name `project.ProjectDeclaration` without a
+cycle.
 
 **Acceptance Criteria**: AC11, AC11a, AC12, AC17, AC18. Testable in
 `internal/project` without a `Runner`, which is why this is the seam the split
 uses.
+
+AC17 is the declaration half only; AC17a carries the consent half and belongs
+to Issue 5. The split was made during this unit, for the reason AC11a's was:
+the terminal check reads `len(Tools) > 0` until Issue 5 replaces it, so an
+unknown-recipe config still skips a gate an empty root does not, and no correct
+declaration set can change that.
 
 **Complexity**: testable
 
@@ -238,7 +259,12 @@ exists and `cmd_run.go:108` exits with it directly today; what it lacks is a
 case in the switch, which is the precise claim, and AC54 turns on the code not
 changing.
 
-**Acceptance Criteria**: AC2, AC20, AC25, AC27, AC54, AC55, and one more.
+**Acceptance Criteria**: AC2, AC17a, AC20, AC25, AC27, AC54, AC55, and one more.
+
+AC17a lands here because it is the consent half of AC17, and consent is what
+this unit changes. Issue 2 produced the empty declaration set AC17 asks for,
+but an unknown-recipe config still skips the terminal check that an empty root
+does not — the predicate reads `len(Tools) > 0` until this issue replaces it.
 
 **The criterion that catches the wrong predicate**: a *declared* command, mode
 raised to auto, the configuration-permission gate lowering it back to confirm,
