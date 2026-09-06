@@ -532,7 +532,7 @@ func TestFormatExports_HostileValuesDoNotExecute(t *testing.T) {
 			if err != nil {
 				// Fail closed for fish under the CI gate. A skip on this surface
 				// is indistinguishable from a pass, which is the whole reason the
-				// variable exists; it was honoured in evalAndRead and not here.
+				// variable exists; it was honored in evalAndRead and not here.
 				if shell == "fish" && os.Getenv("TSUKU_REQUIRE_FISH") != "" {
 					t.Fatal("fish is required here (TSUKU_REQUIRE_FISH is set) but was not found")
 				}

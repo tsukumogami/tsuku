@@ -44,8 +44,8 @@ Usage for one-off sessions:
 			cachePath = ""
 		}
 
-		fmt.Fprint(os.Stdout, shellenvScript(homeDir, cachePath))
-		return nil
+		_, err = fmt.Fprint(os.Stdout, shellenvScript(homeDir, cachePath))
+		return err
 	},
 }
 
