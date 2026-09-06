@@ -874,12 +874,11 @@ because auto or suggest remains reachable under every outcome.
 
       This asserts which recipe the gate is *asked about* rather than what it
       answers, and that is deliberate. An earlier form required a recipe with no
-      checksum verification alongside a sibling that has one — which cannot be
-      constructed, because every branch of `GetChecksumVerification` returns a
-      level at or above `ChecksumDynamic` and `ChecksumNone` is assigned nowhere
-      in the tree. That form made this criterion unsatisfiable until a defect
-      outside this work was fixed, which would have shipped a criterion nobody
-      could meet.
+      checksum verification alongside a sibling that has one, and such a recipe
+      cannot be constructed — for a reason reported through the project's
+      security policy and tracked there. That form made this criterion
+      unsatisfiable until a defect outside this work was fixed, which would have
+      shipped a criterion nobody could meet.
 
       The restatement is also the better test of R3a. R3a's claim is that a
       recipe-reading gate evaluates the recipe that will actually be installed;

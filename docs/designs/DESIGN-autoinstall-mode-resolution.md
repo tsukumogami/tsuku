@@ -501,32 +501,30 @@ is exactly what AC48's check must reject.
 **Two of R19's eight properties do not survive contact, and both are recorded
 rather than assumed.**
 
-**A recipe with no checksum verification cannot be constructed.** Every branch
-of `GetChecksumVerification` (`internal/recipe/types.go:1063-1102`) returns a
-level at or above `ChecksumDynamic`; `ChecksumNone` is declared as the iota
-zero value, appears in two comments, and is assigned nowhere in the tree. So
-`HasChecksumVerification()` is true for every recipe that loads, and the
-verification gate fires only when `loader.Get` itself fails. The doc comment
-above the function states the opposite of what it does.
+**A recipe with no checksum verification cannot be constructed.** The reason
+is a defect in a control outside this work's scope, reported through the
+project's security policy and tracked there rather than described here.
 
-**AC19 has been restated so that it does not depend on this defect.** It now
+**AC19 has been restated so that it does not depend on that defect.** It now
 asserts which recipe the gate is *invoked with* rather than what the gate
 answers — which is R3a's actual claim, and is observable today through the
 injectable `RecipeHasVerification` field. The fixture property the original
 form would have needed is therefore not required either.
 
-The underlying defect is still real, and fixing it is a prerequisite with a
-blast radius outside this PRD: it turns the auto-mode verification gate on for
-the first time, for every recipe without a static checksum. It is tracked
-separately and not folded in here. What this work owes it is documentary — the
-consent model ships while one of the three controls it describes does nothing,
-so the documentation has to say so.
+The defect is real and its fix has a blast radius outside this PRD, so it is
+tracked separately and not folded in here. What this work owes it is
+documentary, and the obligation is discharged by *removing* the affected
+control from the mitigations `DESIGN-project-aware-exec.md` offers against the
+untrusted-repository threat, rather than by describing what is wrong with it.
+A document must not offer a mitigation that does not hold; it is under no
+obligation to explain a defect that is being handled elsewhere.
 
-A consequence worth stating plainly: **R3a's fail-open hazard is currently
-moot** — narrowing the installer without narrowing the gate cannot fail open
-while the gate approves everything. That is not a reason to relax R3a. It is a
-reason to say that R3a's protection is forward-looking and becomes live the
-moment the gate works.
+A consequence worth stating plainly: **R3a's protection is forward-looking.**
+The hazard it guards against — narrowing the installer without narrowing the
+gate, so that a control reports success about an artefact it did not examine —
+is not reachable while the gate is unavailable as a control. That is not a
+reason to relax R3a. It is a reason to build it now, so that the protection is
+already in place when the gate becomes live rather than being remembered then.
 
 **`latest` resolves offline; a prefix does not.** `http_json` takes its
 endpoint from the recipe and does not enforce HTTPS at runtime, so a fixture
@@ -795,26 +793,27 @@ already carry, and cannot introduce one. That is the whole of it on the run
 path.
 
 Two things that sound like they bound it and do not. Checksum verification is
-**not** a live control — see below — so no part of this decision may lean on
+not available to lean on — see below — so no part of this decision rests on
 it. And "the declaration is reviewable" is a property of an artifact rather
 than an act anyone performed; it is not cited here for the same reason
 `suggest` is not cited as a working mitigation.
 
-**The verification gate does not currently work** (D7). Any reasoning that
-treats it as an active control — including this document's own R3a hazard — is
-reasoning about a gate that approves everything. That is recorded rather than
-quietly relied upon, and it is the second of the two gates that could have
-demoted an elevated install.
+**The verification gate is not available as a control here** (D7), for a
+reason reported through the project's security policy and tracked there. Any
+reasoning that treats it as active — including this document's own R3a hazard
+— is unsound, so none is used. That is recorded rather than quietly relied
+upon, and it is the second of the two gates that could have demoted an
+elevated install.
 
 Two consequences for sequencing rather than for the decision. Bounded elevation
 moves into `auto` exactly the population that never opted into it, and one of
-the controls the documentation under R14 will describe to them does nothing —
-so either the elevation waits on the gate fix, or the documentation says the
-gate is currently inert. And once the gate works it will lower most declared
-installs back to `confirm` for any recipe without a static checksum, returning
-the friction D1's product-value case was built on removing. The value of the
-choice therefore depends on the disposition of a defect this design defers,
-which is on the page rather than discovered later.
+the controls the R14 documentation would otherwise describe to them cannot be
+offered — so that documentation stops listing it, which is what R14 requires of
+any mitigation that does not hold. And when the control does become available
+it will lower most declared installs back to `confirm` for any recipe without a
+static checksum, returning the friction D1's product-value case was built on
+removing. The value of the choice therefore depends on the disposition of a
+defect this design defers, which is on the page rather than discovered later.
 
 ## Consequences
 

@@ -324,14 +324,17 @@ wrong today under every outcome and waits on nothing. Closes #2550. The
 `docs/guides/shell-integration.md` and `tsuku run --help` — wait on Issue 7,
 because the disclosure form is what they describe.
 
-`DESIGN-project-aware-exec.md` loses two mitigations that do not work and gains
-an accurate account of what remains. It must also **state that the verification
-gate is currently inert**, which is the disposition the design forces: the
-elevation ships while one of the three controls the documentation describes
-does nothing, so either the elevation waits on the gate fix or the
-documentation says so. This plan ships the elevation, so the documentation says
-so — and that interacts with AC42, which requires any document offering a
-setting as a mitigation to name a case it does not cover.
+`DESIGN-project-aware-exec.md` loses the mitigations that do not work and gains
+an accurate account of what remains. **Removal is the whole of the obligation.**
+AC43 requires every mitigation the document *lists* to be demonstrated against
+the threat; it never requires naming one that fails. So a control that does not
+hold is dropped from the list without comment, leaving only mitigations that
+have been followed and shown to intercept. The reasons live where the defects
+are tracked, not in this diff.
+
+This interacts with AC42, which is a separate obligation and still applies: any
+document offering a *setting* as a mitigation must name at least one case that
+setting does not cover.
 
 **Acceptance Criteria**: AC28, AC29, AC41, AC42, AC43, AC51, AC53.
 
@@ -366,11 +369,11 @@ narrowing inside `Run` is empty by construction. That is AC47, carried as one
 of Issue 3's criteria rather than as a note, because a criterion in a sequencing
 paragraph gates nothing.
 
-**Recorded in the design and not planned here:** the unvalidated declared
-version that reaches `ToolBinDir` and lets a cloned repository's config name an
-arbitrary path for the fast path to exec, and the verification gate that never
-fires. Both are prerequisite defects with blast radius outside this work, both
-are held pending a disclosure decision, and neither is a prerequisite for any
-criterion here — AC19 was restated so it is not. Issue 10 still carries the
-obligation to say the verification gate is inert, rather than let the
-documentation imply a control that does not run.
+**Recorded in the design and not planned here:** two defects outside this
+work's scope, both reported through the project's security policy and tracked
+there, neither described here. Neither is a prerequisite for any criterion in
+this plan — AC19 was restated so that it is not. Issue 10 discharges what this
+work owes them by *removing* the affected control from the mitigations
+`DESIGN-project-aware-exec.md` offers, rather than by describing it: a document
+must not offer a mitigation that does not hold, and is under no obligation to
+explain a defect being handled elsewhere.
