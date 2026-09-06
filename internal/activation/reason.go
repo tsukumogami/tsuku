@@ -38,6 +38,14 @@ type Unhonorable struct {
 	// Version is set for ReasonMissingFiles only: the version whose files are
 	// gone, which is the one to reinstall.
 	Version string
+	// BadName is set for ReasonBadForm when it was the tool name that was
+	// malformed rather than the version string.
+	//
+	// The two need different sentences because they send the developer to
+	// different halves of the same line, and the version half is usually fine
+	// when the name is not: a key of "../../../etc" with a version of "latest"
+	// is a malformed name and a perfectly good version.
+	BadName bool
 }
 
 // StateUnreadable reports that installation state could not be read at all.

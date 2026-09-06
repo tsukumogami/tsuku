@@ -45,6 +45,18 @@ func activationMessages(result *activation.ActivationResult) []string {
 				u.Tool, u.Tool))
 
 		case activation.ReasonBadForm:
+			// Two sentences, because the two malformed halves send the
+			// developer to different parts of the same line. Blaming the
+			// version for a bad name is actively misleading: a key of
+			// "../../../etc" with a version of "latest" has a perfectly good
+			// version, and telling someone to fix it wastes their time on the
+			// half that is already correct.
+			if u.BadName {
+				lines = append(lines, fmt.Sprintf(
+					"tsuku: %q in .tsuku.toml is not a usable tool name. A name must be a single path segment, without '/', '\\' or '..'.",
+					u.Tool))
+				break
+			}
 			lines = append(lines, fmt.Sprintf(
 				"tsuku: %s is declared in .tsuku.toml as %q, which is not a valid version string. Fix the declaration to activate it.",
 				u.Tool, u.Declared))

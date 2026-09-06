@@ -394,6 +394,11 @@ func TestResolve_MalformedDeclaredVersionIsBadForm(t *testing.T) {
 			if got := result.Unhonorable[0].Reason; got != ReasonBadForm {
 				t.Errorf("Reason = %v, want ReasonBadForm", got)
 			}
+			// Here it really is the version, so the version sentence is right.
+			if result.Unhonorable[0].BadName {
+				t.Errorf("BadName = true for a malformed version %q; the message "+
+					"would blame the name, which is fine", declared)
+			}
 			if result.Unhonorable[0].Declared != declared {
 				t.Errorf("Declared = %q, want %q", result.Unhonorable[0].Declared, declared)
 			}
@@ -512,6 +517,13 @@ func TestResolve_UnsafeDerivedNameIsRejected(t *testing.T) {
 			u := result.Unhonorable[0]
 			if u.Reason != ReasonBadForm {
 				t.Errorf("Reason = %v, want ReasonBadForm", u.Reason)
+			}
+			// The name is what is malformed, not the version, and the renderer
+			// needs to know which so it does not tell the developer to fix a
+			// version string that is already correct.
+			if !u.BadName {
+				t.Errorf("BadName = false for the malformed key %q; the message "+
+					"would blame the version %q, which is valid", key, u.Declared)
 			}
 			// The message has to name the line the developer will go and edit,
 			// which is the key as written, not the derived name.

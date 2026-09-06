@@ -26,8 +26,10 @@ type declaration struct {
 // Splitting this out from the resolution below is what lets an unreadable
 // state file name only the declarations that actually needed the read.
 func classifyForm(key, declared string) (declaration, *Unhonorable) {
-	badForm := func() *Unhonorable {
-		return &Unhonorable{Tool: key, Declared: declared, Reason: ReasonBadForm}
+	badForm := func(badName bool) *Unhonorable {
+		return &Unhonorable{
+			Tool: key, Declared: declared, Reason: ReasonBadForm, BadName: badName,
+		}
 	}
 
 	// An org-scoped key names its source and its recipe separately:
@@ -45,7 +47,7 @@ func classifyForm(key, declared string) (declaration, *Unhonorable) {
 	// reasoning is not recoverable from the code that survived.)
 	_, bare, _, err := project.SplitOrgKey(key)
 	if err != nil {
-		return declaration{}, badForm()
+		return declaration{}, badForm(true)
 	}
 
 	// The name is checked before the version because it reaches filepath.Join
@@ -54,11 +56,11 @@ func classifyForm(key, declared string) (declaration, *Unhonorable) {
 	// comment states the question it answers -- safe to pass to path
 	// construction -- which is the question this sink asks.
 	if !recipe.IsValidRecipeName(bare) {
-		return declaration{}, badForm()
+		return declaration{}, badForm(true)
 	}
 
 	if err := install.ValidateRequested(declared); err != nil {
-		return declaration{}, badForm()
+		return declaration{}, badForm(false)
 	}
 
 	// A channel pin cannot be evaluated by matching strings against recorded

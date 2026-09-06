@@ -120,6 +120,62 @@ func TestActivationMessages_PayloadsReachTheOutput(t *testing.T) {
 	}
 }
 
+// A malformed tool name gets its own sentence, and that sentence does not blame
+// the version.
+//
+// Found by running the real binary, not by a unit test: the reason and the tool
+// name were both correct, and every assertion about them passed, while the
+// message told the developer to fix a version string that was perfectly good.
+// Asserting the classification is not the same as reading the sentence.
+func TestActivationMessages_BadNameDoesNotBlameTheVersion(t *testing.T) {
+	lines := activationMessages(&activation.ActivationResult{
+		Entered: true,
+		Unhonorable: []activation.Unhonorable{{
+			Tool:     "../../../etc",
+			Declared: "latest",
+			Reason:   activation.ReasonBadForm,
+			BadName:  true,
+		}},
+	})
+
+	if len(lines) != 1 {
+		t.Fatalf("got %d messages, want 1: %v", len(lines), lines)
+	}
+	msg := lines[0]
+
+	if strings.Contains(msg, "not a valid version string") {
+		t.Errorf("message blames the version, which is fine here: %q", msg)
+	}
+	if !strings.Contains(msg, "tool name") {
+		t.Errorf("message should say the name is the problem: %q", msg)
+	}
+	if !strings.Contains(msg, "../../../etc") {
+		t.Errorf("message should quote the offending key: %q", msg)
+	}
+	// "latest" is the version, and it is not what is wrong. It must not be
+	// presented as the thing to fix.
+	if strings.Contains(msg, `as "latest"`) {
+		t.Errorf("message presents a good version as the fault: %q", msg)
+	}
+}
+
+// And a malformed version still gets the version sentence.
+func TestActivationMessages_BadVersionStillBlamesTheVersion(t *testing.T) {
+	lines := activationMessages(&activation.ActivationResult{
+		Entered: true,
+		Unhonorable: []activation.Unhonorable{{
+			Tool: "nodejs", Declared: ">=26", Reason: activation.ReasonBadForm,
+		}},
+	})
+
+	if !strings.Contains(lines[0], "not a valid version string") {
+		t.Errorf("message = %q, want the version phrasing", lines[0])
+	}
+	if !strings.Contains(lines[0], ">=26") {
+		t.Errorf("message = %q, want the declared string", lines[0])
+	}
+}
+
 // Undecodable state produces exactly one message however many tools needed the
 // read, because the failure is a property of the read rather than of any
 // declaration.

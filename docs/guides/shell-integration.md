@@ -202,7 +202,8 @@ There are five reasons you might see:
 |--------------|---------------|------------|
 | `nothing installed matches` | No installed version satisfies the declaration | `tsuku install <tool>` |
 | `recorded as installed but its files are missing` | Tsuku thinks it's installed, but the files are gone | Reinstall the version it names |
-| `not a valid version string` | The version in `.tsuku.toml` is malformed, e.g. `">=26"` | Fix the declaration — see the version forms above |
+| `not a valid version string` | The version in `.tsuku.toml` is malformed, e.g. `">=26"` | Fix the version — see the version forms above |
+| `is not a usable tool name` | The key is malformed, e.g. it contains `/` where an org-scoped name isn't intended | Fix the key; the version on that line is not the problem |
 | `channel pin` | The declaration names a channel, e.g. `"@lts"` | Declare a version instead; activation selects among what's installed and doesn't resolve channels |
 | `could not read` | Tsuku's installation state couldn't be read | Check `$TSUKU_HOME/state.json` |
 

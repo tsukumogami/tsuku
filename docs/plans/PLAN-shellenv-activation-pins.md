@@ -427,6 +427,27 @@ these, five correct sentences can be wired
       to the wrong conditions and every other criterion still passes.
 - [ ] The reasons carry different payloads, and the renderer is a switch with no
       generic `default` arm that formats an unrecognised reason.
+- [ ] **`bad-form` renders two sentences, one for a malformed name and one for a
+      malformed version, and the name sentence does not blame the version.**
+
+      PRD R18 gives `bad-form` a single pinned substring, `not a valid version
+      string`, because when it was written `bad-form` could only mean a bad
+      version. The tool-name check added later reports through the same reason,
+      so a key of `"../../../etc"` with a version of `"latest"` produced
+      "declared in .tsuku.toml as \"latest\", which is not a valid version
+      string" — naming a valid version as the fault and sending the developer to
+      the half of the line that was already correct.
+
+      Found by running the real binary. Every unit assertion passed: the reason
+      was `bad-form`, the tool was the offending key, the PATH entry was absent.
+      None of them read the sentence. **Asserting a classification is not the
+      same as reading the output**, and a suite can be complete on the first and
+      silent on the second.
+
+      The reason stays one of five, so R18's count holds; the version sentence
+      keeps its pinned substring; and `Unhonorable` carries which half was
+      malformed so the renderer can say so. R18's wording should be read as
+      specifying the version case, which is all it knew about.
 - [ ] The five messages are not one format string with a substituted phrase.
       Five phrase constants reached through a switch and interpolated into a
       shared template satisfies every substring assertion while being exactly
