@@ -90,6 +90,24 @@ without verification has to exist for it — which also removes the only criteri
 in this plan that depended on a defect outside it. No acceptance criterion here
 is unsatisfiable at merge.
 
+**AC48 is closed by a filter over common shapes, not by total enforcement, and
+the acceptance record has to say so.** `TestMultiProviderCasesUseTheFixture`
+reads composite literals. A two-element match slice built by `append`, in a
+loop, through a named slice type, or elided two levels down is invisible to it,
+and a consumer that builds one of those could assert against its own
+construction and reintroduce exactly the collapse the fixture exists to
+prevent. The package comment states this for a future reader of the code; it is
+restated here so that nobody reading *this* plan takes "AC48 closed" for
+"enforcement is total".
+
+That distinction is the subject of this work rather than an aside: a control
+whose reported scope exceeds what it examined is one of the three defect
+families the whole chain is about, and an acceptance record that let a partial
+filter read as complete would be an instance of it. The residual is bounded
+deliberately — reaching it takes two steps, not a slip — and the package
+comment's standing instruction covers what a parser cannot: if you are checking
+whether the rule catches what you are about to write, build it in the fixture.
+
 **Complexity**: testable
 
 **Dependencies**: None
