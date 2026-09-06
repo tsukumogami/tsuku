@@ -271,6 +271,32 @@ GitHub permits uppercase in an owner and a repository; `BurntSushi/toml` parses
 one-definition principle governs the name rule and stops there — extending it
 to the source is the mistake this paragraph exists to prevent.
 
+### Two name checks, and which layer owns what
+
+A sibling PR landing after this one carries a **sink-side** tool-name check: the
+loop it rewrites is the code that joins a name into a path, so shipping that
+rewrite without one would re-land this defect in a new file. Two checks on the
+same class of value, in two PRs, with no stated relationship, is precisely the
+"one consumer deep" collapse this design exists to correct — so the relationship
+is stated here.
+
+**They see different values.** This design's check sees the **declared key**,
+before anything derives from it, and can therefore refuse the declaration and
+name it in a diagnostic. The sink-side check sees **what that key derives to**,
+which is what actually becomes a path component. For a plain key those coincide;
+for `owner/repo:tool` they do not, and the derived value is the one that reaches
+`filepath.Join`.
+
+**Neither subsumes the other.** Remove the boundary and a value constructed
+without passing through config load reaches the sink unchecked. Remove the sink
+check and a derivation that goes wrong between the two — or a future caller that
+composes a path from something other than a declared key — is unguarded. This is
+the same non-collapsing pair as the two version checks (declared versus
+resolved), for the same reason.
+
+Anyone proposing to delete either on the grounds that the other covers it should
+read this paragraph first.
+
 ### How a refusal reaches the user
 
 R4 forbids the write-only-field answer and R5 makes refusal per-declaration, so
