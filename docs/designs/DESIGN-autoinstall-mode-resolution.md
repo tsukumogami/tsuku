@@ -183,6 +183,33 @@ conditions are written down, and in particular that disclosure is required:
 bounded elevation without disclosure is the status quo with better
 documentation.
 
+**The criteria this decision is tested against**, which AC28 requires the record
+to carry rather than leave to the PRD, because the PRD could not enumerate them
+without making the choice:
+
+- **D1-1.** With no consent mode configured anywhere and a declared command,
+  the tool installs without prompting. The elevation happened.
+- **D1-2.** With no consent mode configured anywhere and an *undeclared*
+  command in the same project, the behaviour is unchanged from a directory with
+  no `.tsuku.toml`. The elevation did not leak.
+- **D1-3.** With `suggest` set by the flag, by the environment variable, and by
+  the configuration key in turn, a declared command prints an install
+  instruction and installs nothing. The floor holds through all three routes.
+- **D1-4.** With `confirm` set explicitly by any of those three routes, a
+  declared command prompts. An explicitly set mode is not raised, which is
+  condition 3 and the half of R15a the earlier draft left unanswered.
+- **D1-5.** With `TSUKU_AUTO_INSTALL_MODE=auto` set and no corroborating
+  config — the state where the escalation restriction downgrades to `confirm` —
+  a declared command prompts. The declaration does not re-raise the output of
+  that control.
+- **D1-6.** Every install reached through D1-1 discloses the recipe, the
+  version, the authorizing file's path and the recipe's source, before the
+  install begins.
+
+D1-5 is the criterion that distinguishes this decision from the one it was
+nearly confused with, and D1-2 is the one that distinguishes bounded elevation
+from unbounded.
+
 **A precondition that has already partly failed, recorded so it can be
 rechecked.** (c) depends on a declaration being unable to influence *which
 registry* a recipe comes from. On the run path that holds, three ways:
@@ -417,8 +444,13 @@ no new state, and rides on output the user already receives.
 
 **The rule R13a requires, written before the control exists:** *an install
 whose recipe or whose consent mode was determined by a project declaration
-shall state, before the install begins, the recipe, the version, and the path
-of the file that authorized it.*
+shall state, before the install begins, the recipe, the version, the path of
+the file that authorized it, and the recipe's source.*
+
+The source is there because the security section concludes it must be: the run
+path inherits #2552's registration exposure, so a recipe can be reached from a
+source the user never approved, and a disclosure naming only the file would not
+say so.
 
 "Determined the recipe or the mode" rather than "raised the mode", and the
 widening is not cosmetic. R3b removes the multiple-provider gate's precondition

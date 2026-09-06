@@ -3,7 +3,7 @@ schema: plan/v1
 status: Active
 execution_mode: single-pr
 milestone: autoinstall-mode-resolution
-issue_count: 8
+issue_count: 10
 upstream: docs/designs/DESIGN-autoinstall-mode-resolution.md
 ---
 
@@ -46,236 +46,318 @@ departure was taken.
 
 ### Issue 1: Fixture index and the multi-provider construction check
 
-**Goal**: Build the test seam every later unit depends on, and the static check
-that keeps it the only route in.
+**Goal**: Build the test seam every later unit depends on, and the check that
+keeps it the only route in.
 
 Lift `newReinstallHarness` (`cmd/tsuku/install_reinstall_test.go:108-137`) and
 the stubs in `internal/index/rebuild_test.go:14-131` into a shared fixture
-helper rather than writing a third mechanism. Add the AST check: a `go/parser`
-pass over `_test.go` files in `internal/autoinstall`, `internal/project`,
-`internal/index` and `cmd/tsuku`, failing on a composite literal of two or more
-`BinaryMatch` elements, or a recipe map reaching `Rebuild` with two keys
-yielding the same command. Copy the matched-nothing guard from
-`cmd/tsuku/install_reinstall_test.go:644-684` so it cannot pass by scanning
-zero files.
+helper rather than writing a third mechanism. The fixture must also be
+reachable from the `tsuku install` path, which Issue 3's `tsuku install`
+criterion needs.
 
-**Acceptance Criteria**: AC48, AC49. The three existing violations migrate —
-`internal/index/lookup_test.go:43-46`, `internal/autoinstall/autoinstall_test.go:330-333`,
-`internal/project/resolver_test.go:134-137`. The roughly twenty-five
+**One fixture property is load-bearing and easy to miss: the declared recipe
+must rank second or later in the index's own ordering** for the command under
+test. If it ranks first, a narrowing that never matches anything is
+indistinguishable from a narrowing that works, because index ranking and
+declaration agree — and a no-op narrowing is the most plausible wrong
+implementation of Issue 3.
+
+Add the construction check: a `go/parser` pass failing on a composite literal
+of two or more `BinaryMatch` elements, or a recipe map reaching `Rebuild` with
+two keys yielding the same command. It must assert a **nonzero file count per
+named package** — `internal/autoinstall`, `internal/project`, `internal/index`,
+`cmd/tsuku` — rather than a single whole-scan matched-nothing guard, which a
+check that silently walks one package of four would satisfy. The existing AST
+walker skips `testdata/`; this check must opt back in, and that opt-in needs
+its own assertion, because the negative control lives there.
+
+**Acceptance Criteria**: AC48, and AC49 minus the two properties recorded below.
+The three existing violations migrate — `internal/index/lookup_test.go:43-46`,
+`internal/autoinstall/autoinstall_test.go:330-333`,
+`internal/project/resolver_test.go:134-137` — and the roughly twenty-five
 single-element literals are untouched, which is why the rule keys on element
-count rather than on recipe names. A deliberately non-conforming fixture under
-`testdata/` is reported by the check.
+count rather than on names.
 
-**Not deliverable here, and recorded rather than attempted.** Two of R19's
-eight properties: a recipe with no checksum verification cannot be constructed
-at all, and a prefix version cannot resolve offline. AC19 depends on a
-prerequisite fix outside this plan; AC18's prefix half needs a fixture provider
-or is cut. `latest` does resolve offline, against a local `httptest` server —
-"offline" meaning no external network rather than no sockets, which AC49 says.
+**AC49 is partially deferred and cannot be closed in full here.** Two of its
+eight properties are not buildable: a recipe with no checksum verification
+cannot be constructed at all, and a prefix version cannot resolve offline. The
+first blocks AC19 behind the verification-gate prerequisite; the second means
+AC18's prefix half needs a fixture provider or is cut. `latest` does resolve
+offline against a local `httptest` server, where offline means no external
+network rather than no sockets.
 
 **Complexity**: testable
 
-**Dependencies**: none
+**Dependencies**: None
 
-### Issue 2: The declaration-set resolver and Runner.candidates
+### Issue 2: The declaration-set resolver
 
-**Goal**: Replace the version-only lookup and consume it where the un-narrowed
-list cannot reach the consumers.
+**Goal**: Make `internal/project` able to say which recipes a project declared
+for a command, and at what versions.
 
 `ProjectDeclaration{Recipe, Version, ConfigKey, ConfigPath}` and
-`DeclarationsFor(ctx, matches)`. Dedup on bare recipe name with the org-key
-precedence stated per recipe rather than falling out of iteration order. Drop
-`Resolver.Tools()`, the `lookup` field and `NewResolver`'s second parameter,
-which die together once `command` leaves the signature. Keep `bareToOrg`'s
-stderr warning: it is the only signal for two org keys reducing to one bare
-name, which R6's refusal does not cover.
+`DeclarationsFor(ctx, matches)`. Dedup on bare recipe name, with the org-key
+precedence stated per recipe rather than falling out of iteration order — for
+each distinct bare name the config declares, the bare key's version if present,
+else the first org key's. Keep `bareToOrg`'s stderr warning: two org keys
+reducing to one bare name collapse to a single declaration under R2, so R6's
+refusal never fires and that warning is the user's only signal.
 
-Then `Runner.candidates`, with the three-way branch below the `ErrNoMatch`
-check, and `AmbiguousDeclarationError` for the many case.
+`ProjectVersionFor` is retained in this unit so the package still compiles
+against its existing caller. Its deletion, with `Tools()`, the `lookup` field
+and `NewResolver`'s second parameter, belongs to Issue 3.
 
-**These land together.** `run.go` and `cmd_run.go` call the old surface, so the
-resolver cannot land alone. The only sanctioned split is additive — add
-`DeclarationsFor` beside `ProjectVersionFor` and delete the old one in a later
-commit — and it is available if the combined change proves too large to review.
+**Acceptance Criteria**: AC11, AC12, AC17, AC18. Testable in `internal/project`
+without a `Runner`, which is why this is the seam the split uses.
 
-**Acceptance Criteria**: AC1 through AC12, AC17, AC18, AC44. Closes #2542's
-identity half and #2547. AC44 is the regression bar for single-provider
-commands and belongs here rather than at the end: this is the unit that could
-break it, and the existing single-provider tests passing unmodified is the
-cheapest signal that it did not.
-
-**Complexity**: critical
+**Complexity**: testable
 
 **Dependencies**: Issue 1
 
-### Issue 3: The refusal
+### Issue 3: Runner.candidates and the three-way narrowing
 
-**Goal**: Make the two-declared case refuse usefully rather than pick.
+**Goal**: Consume the declaration set where the un-narrowed list cannot reach
+the five consumers.
 
-Exit 10, matching the install path's `ExitAmbiguous`, with a new case in
-`cmd_run.go`'s switch. The message carries each declared recipe, its version
-and its config key, and one invocation that works: `tsuku install <recipe>`
-then the version-specific path. No new CLI surface — a `.tsuku.toml`
-disambiguation key is out of scope, and AC26 requires the named invocation to
-complete rather than to be a single token.
+Extract `Runner.candidates`, moving the lookup with its `ErrIndexNotBuilt` and
+`StaleIndexWarning` handling and the `ErrNoMatch` check into it. The three-way
+branch sits below `ErrNoMatch`: zero declarations pass the full list through
+unchanged, one narrows, more than one returns `AmbiguousDeclarationError`.
+Delete `ProjectVersionFor`, `Tools()`, the `lookup` field and `NewResolver`'s
+second parameter, which die together once `command` leaves the signature.
 
-Identical with and without a terminal. No picker in either, because a file that
-was supposed to settle the question should not be answered per invocation.
+Add the package var at the lookup boundary in `cmd/tsuku` so the wiring in
+`cmd_run.go` is testable for the first time. It is a wiring seam, not a fixture
+source: a hand-written match slice is what Issue 1's check rejects.
 
-**Acceptance Criteria**: AC13, AC14, AC15, AC16, AC26.
+**Acceptance Criteria**: AC1, AC3 through AC10, AC44, AC47. AC1, AC3 and AC4
+are run against the command whose declared recipe ranks second or later, per
+Issue 1 — otherwise a narrowing that never matches passes them. AC44 is the
+single-provider regression bar and belongs here because this is the unit that
+could break it. **AC47 is a sign-off, not a test**: the candidate list is
+narrowed at exactly one site, no positional read occurs above it, and the
+region above the narrowing inside `Run` is empty by construction. Behaviour
+cannot show it, which is why it is named as a criterion rather than left in a
+sequencing note.
 
-**Complexity**: testable
+Closes #2542's identity half and #2547.
+
+**Complexity**: critical
 
 **Dependencies**: Issue 2
 
-### Issue 4: The terminal check, moved
+### Issue 4: The refusal
+
+**Goal**: Make the two-declared case refuse usefully rather than pick.
+
+`AmbiguousDeclarationError` and its formatting: each declared recipe, its
+version, its config key, and one invocation that works — `tsuku install
+<recipe>` then the version-specific path. Exit 10, matching the install path's
+`ExitAmbiguous`, with a new case in `cmd_run.go`'s switch. Identical with and
+without a terminal; no picker in either.
+
+**Acceptance Criteria**: AC13, AC14, AC15, AC16, AC26. AC16 exercises `tsuku
+install` against the same two-provider fixture, which is why Issue 1 must make
+the substitution reachable from that path.
+
+**Complexity**: testable
+
+**Dependencies**: Issue 3
+
+### Issue 5: The terminal check, moved
 
 **Goal**: Ask whether *this command* is declared, at a point where the answer
 exists.
 
 Move it inside `Runner.Run`, after all four gates, immediately before the
 dispatch. The predicate is `effectiveMode == ModeConfirm && !r.IsTerminal()`
-with **no declaration term** — by that point the mode already encodes
-declaredness, and a literal reading of R9 that adds one reintroduces the
-exit-13 defect the move exists to fix. `IsTerminal func() bool` goes on
+with **no declaration term**. `IsTerminal func() bool` goes on
 `autoinstall.Runner` beside `Lookup` and `Exec`, nil meaning not-a-terminal.
 
-Add `ErrNotInteractive` and its switch case; `ExitNotInteractive` exists but is
-mapped nowhere. Fix the message's escape hatches: it currently names
-`TSUKU_AUTO_INSTALL_MODE=auto`, which the escalation restriction refuses
-without config corroboration, so following it verbatim reproduces the failure.
-Give the `ErrNoMatch` path a message, since moving the check makes that path
-reachable where the guard used to speak.
+Add `ErrNotInteractive` and a case for it in the error switch. `ExitNotInteractive`
+exists and `cmd_run.go:108` exits with it directly today; what it lacks is a
+case in the switch, which is the precise claim, and AC54 turns on the code not
+changing.
 
-**Acceptance Criteria**: AC20, AC25, AC27, AC54, AC55. Closes #2545.
+**Acceptance Criteria**: AC2, AC20, AC25, AC27, AC54, AC55, and one more.
+
+**The criterion that catches the wrong predicate**: a *declared* command, mode
+raised to auto, the configuration-permission gate lowering it back to confirm,
+no terminal — expect the not-interactive message and exit 12, not a prompt into
+a closed stdin. AC20 does not catch a declaredness term in the predicate,
+because its command is undeclared and the check fires either way; AC2 does not,
+because it pins auto with no gate firing. Only this one exercises the failure
+the move exists to fix. The configuration-permission gate is named because its
+precondition is filesystem state, so it fires without needing a recipe
+property.
+
+**The escape-hatch enumeration the PRD obliges this plan to produce**, one list
+per message that changes or appears:
+
+- *The moved terminal-check message*: `--mode=auto` only. The environment
+  variable is dropped, because `resolveMode` refuses an env-supplied `auto`
+  without config corroboration, so following it verbatim reproduces the
+  failure. If it is kept it must name the corroboration it requires.
+- *The new `ErrNoMatch` message*: no hatch. It reports that no recipe provides
+  the command; there is nothing to escape to, and naming one would be the
+  defect this enumeration exists to prevent.
+- *The refusal (Issue 4)*: `tsuku install <recipe>` then the version-specific
+  path. Held to AC26's bar — run one of the declared recipes to completion —
+  rather than AC27's exactness, which R10 reserves for the terminal check.
+
+Closes #2545.
 
 **Complexity**: testable
 
-**Dependencies**: Issue 2
+**Dependencies**: Issue 3
 
-### Issue 5: Gate announcements and the elevation disclosure
+### Issue 6: Bounded elevation
+
+**Goal**: Implement the decision. This is the unit the design exists to
+produce, and the earlier draft of this plan had none.
+
+`internal/autoinstall/run.go:120-124` currently reads `if projectDeclared {
+effectiveMode = ModeAuto }`, unconditionally. It becomes: raise only where the
+mode's origin is `default`, and only for the declared command. An explicitly
+set mode — `suggest`, `confirm` or `auto`, by flag, environment or config — is
+honoured as given.
+
+That needs an origin, which nothing carries today: `resolveMode` returns a bare
+`Mode`. It returns an origin alongside it here, and `Run` takes both. Issue 6
+consumes that plumbing rather than introducing it.
+
+**Acceptance Criteria**: AC31, AC36, AC37, AC38, AC39, AC40, and the design's
+D1-1 through D1-5. D1-5 is the one that distinguishes this decision from the
+one it was nearly confused with: with `TSUKU_AUTO_INSTALL_MODE=auto` and no
+corroborating config, the declaration must not re-raise the output of the
+escalation restriction.
+
+Closes #2544.
+
+**Complexity**: critical
+
+**Dependencies**: Issue 3
+
+### Issue 7: Gate announcements and the elevation disclosure
 
 **Goal**: Stop the mode changing silently, in either direction.
 
 Each of the three mode-lowering gates writes one line naming itself with a
 stable distinct identifier and the condition that fired it. The identifiers are
-the test seam for every "no gate intervened" assertion in the criteria — a
-later simplification that collapses them into one generic line removes that
-seam, and should not.
+the test seam for every "no gate intervened" assertion in the criteria; a later
+simplification that collapses them into one generic line removes that seam.
 
-The elevation is disclosed once per install it enables, naming the recipe, the
-version and the path of the authorizing file. Not per invocation, where most
-runs install nothing; not per project, where the second declared tool goes
-silent. Also disclosed where a declaration determined the *recipe* without
-raising the mode, since R3b removes a prompt that used to appear.
+The disclosure fires once per install that a declaration determined — the mode
+*or* the recipe, not only the mode, because R3b removes a prompt that used to
+appear and no elevation occurs in that case. It names the recipe, the version,
+the authorizing file's path and the recipe's source. The source is required
+because the run path inherits #2552's registration exposure, so a recipe can
+come from a source the user never approved and a disclosure naming only the
+file would not say so.
 
-**Acceptance Criteria**: AC21, AC35, AC40. Elevation raises only an unset
-default, so a flag-, environment- or config-set mode is a floor exactly as
-`suggest` is.
+**Acceptance Criteria**: AC21, AC30, AC35, and the design's D1-6. AC30 is the
+guard on every `suggest` demonstration and applies to AC4, AC33 and AC37
+wherever they are exercised.
 
 **Complexity**: testable
 
-**Dependencies**: Issue 2
+**Dependencies**: Issue 6
 
-### Issue 6: The audit record
+### Issue 8: The audit record
 
 **Goal**: Make the durable record cover the installs that did something
 unexpected.
 
-`auditEntry` gains the mode's origin from the closed set `default`, `flag`,
-`environment`, `config`, `project`, and the gate that lowered the mode where
-one did. `resolveMode` returns the origin alongside the mode, which it does not
-today. Written on every install rather than only the auto path — the current
-condition means a gate-diverted install leaves no trace at all.
+`auditEntry` gains the origin — `default`, `flag`, `environment`, `config`,
+`project` — and the gate that lowered the mode where one did. Written on every
+install rather than only the auto path, which is why a gate-diverted install
+leaves no trace today. Consumes Issue 6's origin plumbing.
 
 **Acceptance Criteria**: AC22, AC23, AC24.
 
 **Complexity**: testable
 
-**Dependencies**: Issue 5
+**Dependencies**: Issue 6
 
-### Issue 7: Documentation
+### Issue 9: The gates-table derivation and its checks
 
-**Goal**: Make every document that describes this path describe what it does.
+**Goal**: Produce the record R21 obliges, and the checks that keep it honest.
 
-Two halves that do not share a dependency. The **hook documentation** —
-`docs/guides/GUIDE-command-not-found.md` and the `tsuku hook` long help — is
-wrong today under every possible outcome and waits on nothing; it can land
-first. Closes #2550. The **consent-model documents** —
-`DESIGN-project-aware-exec.md`, `docs/guides/shell-integration.md` and
-`tsuku run --help` — wait on unit 5, because the disclosure form is what they
-describe.
-
-`DESIGN-project-aware-exec.md` also loses two mitigations that do not work and
-gains an accurate account of what remains: not installing the hook works but is
-undiscoverable until #2550 lands; `TSUKU_CEILING_PATHS` protects only if each
-untrusted repository is named before it is cloned.
-
-**Acceptance Criteria**: AC28, AC29, AC30, AC31 through AC34, AC36 through
-AC43, AC51, AC53. Closes #2544 and #2550. AC30 is the guard on any
-demonstration that `suggest` is honoured: assert the install instruction was
-printed, that no elevation disclosure appeared, that none of the three gate
-identifiers appeared, and that the declared recipe was not already installed —
-without all four the demonstration can pass while measuring something else.
-
-**Complexity**: simple
-
-**Dependencies**: Issue 5
-
-The hook half of this outline depends on nothing and can land first; the
-consent-model half is what waits on Issue 5. The declaration names the
-stricter of the two so nothing is sequenced too early.
-
-### Issue 8: The gates-table derivation and its checks
-
-**Goal**: Produce the record R21 obliges the design to leave behind, and the
-two mechanical checks that keep it honest.
-
-The design's derivation section describes the post-change table. This unit
-produces it against the code as it then stands, and wires the checks. The span
-is now bounded by two *functions* rather than two line markers — the `r.Lookup`
-call inside `Runner.candidates` and the mode dispatch in `Runner.Run` — because
-the extraction in Issue 2 moved the lookup out of `Run`. The derivation rule
-changes with it, and a rule left in its old form makes the comparison fail on
-correct code.
+The span is now bounded by two *functions* — the `r.Lookup` call inside
+`Runner.candidates` and the mode dispatch in `Runner.Run` — because Issue 3
+moved the lookup out of `Run`. The rule changes with it; left in its old form
+the comparison fails on correct code.
 
 Two searches over that span, in both directions: no site absent from the
-recorded list, and no listed site absent from the code. The check reads its
-expected list out of the recorded derivation rather than out of the table, so a
-record that stops matching the code fails rather than waiting for a reader.
+recorded list, no listed site absent from the code. The check reads its expected
+list out of the recorded derivation rather than out of the table, so a record
+that stops matching the code fails rather than waiting for a reader.
 
 **Acceptance Criteria**: AC45, AC46, AC50, AC52.
 
 **Complexity**: testable
 
-**Dependencies**: Issue 5
+**Dependencies**: Issue 7
 
-It waits on Issue 5 rather than Issue 2 because the span is not settled until
-the terminal check has moved and the gate announcements exist. Deriving it
-earlier would record a table that the next unit invalidates.
+It waits on Issue 6 because the span is not settled until the terminal check
+has moved and the announcements exist.
+
+### Issue 10: Documentation
+
+**Goal**: Make every document describing this path describe what it does.
+
+Two halves with different dependencies. The **hook documentation** —
+`docs/guides/GUIDE-command-not-found.md` and the `tsuku hook` long help — is
+wrong today under every outcome and waits on nothing. Closes #2550. The
+**consent-model documents** — `DESIGN-project-aware-exec.md`,
+`docs/guides/shell-integration.md` and `tsuku run --help` — wait on Issue 7,
+because the disclosure form is what they describe.
+
+`DESIGN-project-aware-exec.md` loses two mitigations that do not work and gains
+an accurate account of what remains. It must also **state that the verification
+gate is currently inert**, which is the disposition the design forces: the
+elevation ships while one of the three controls the documentation describes
+does nothing, so either the elevation waits on the gate fix or the
+documentation says so. This plan ships the elevation, so the documentation says
+so — and that interacts with AC42, which requires any document offering a
+setting as a mitigation to name a case it does not cover.
+
+**Acceptance Criteria**: AC28, AC29, AC41, AC42, AC43, AC51, AC53.
+
+AC32, AC33 and AC34 are **not** criteria of this issue and are not satisfiable
+under the chosen alternative: they belong to the never-raise branch, and AC32
+is the direct negation of AC36, which Issue 6 carries. The PRD's note [c]
+records AC34 as reachable only under never-raise.
+
+**Complexity**: simple
+
+**Dependencies**: Issue 7
 
 ## Implementation Sequence
 
-**Critical path:** Issue 1 → 2 → 5 → 6, four units deep, with Issue 8
-branching off 5 alongside 6. Issue 2 is the bulk of
-the work and the only one classified critical.
+**Critical path:** Issue 1 → 2 → 3 → 6 → 7, five units deep. Two units are
+classified critical: Issue 3, where the identity fix lands, and Issue 6, where
+the consent decision does.
 
-**Parallelisable:** Issues 3, 4 and 5 are independent of one another once 2
-lands. The hook half of Issue 7 can be done at any point, including first,
-since it is wrong today under every outcome.
+**Parallelisable once Issue 3 lands:** Issues 4, 5 and 6 are independent of one
+another. Issues 8, 9 and the consent half of 10 all wait on Issue 7. The hook
+half of Issue 10 depends on nothing and can land first, since it is wrong today
+under every outcome.
 
-No dependency graph is drawn: this is a single-pr plan, the sequence is four
-units deep with one fan-out, and a diagram of it would restate this paragraph.
+No dependency graph is drawn: this is a single-pr plan, the sequence is five
+deep with one fan-out, and a diagram would restate this paragraph.
 
-**What must be true before unit 2 is considered done**, because it is where
-every requirement about identity lands and the review instrument it creates is
-worth as much as the fix: the candidate list is narrowed at exactly one site,
-no positional read occurs above it, and the region above the narrowing inside
-`Run` is empty by construction. That is AC47, and it is a sign-off rather than
-a test because behaviour cannot show it.
+**What must be true before Issue 3 is considered done**, because it creates a
+review instrument worth as much as the fix: the candidate list is narrowed at
+exactly one site, no positional read occurs above it, and the region above the
+narrowing inside `Run` is empty by construction. That is AC47, carried as one
+of Issue 3's criteria rather than as a note, because a criterion in a sequencing
+paragraph gates nothing.
 
 **Recorded in the design and not planned here:** the unvalidated declared
 version that reaches `ToolBinDir` and lets a cloned repository's config name an
 arbitrary path for the fast path to exec, and the verification gate that never
 fires. Both are prerequisite defects with blast radius outside this work, both
-are held pending a disclosure decision, and AC19 depends on the second.
+are held pending a disclosure decision, and AC19 depends on the second. Issue 10
+carries the obligation to say the gate is inert rather than let the
+documentation imply a control that does not run.
