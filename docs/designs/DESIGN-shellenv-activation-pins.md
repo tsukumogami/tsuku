@@ -642,18 +642,37 @@ is a pure move that should not be reviewed alongside behavior changes.
 The review found two serious defects in the code this design rewrites. Both are
 inherited rather than introduced.
 
-**Neither is closed by this design.** They were folded in when the review found
-them, on the argument that they are cheap and sit in the functions this work
-already rewrites. A separate chain now owns both, with its own analysis and its
-own PR, so that argument no longer applies: the fixes have an owner, and
-carrying work another chain is scoping in parallel would leave this document
-overstating what it delivers.
+**A separate chain owns both**, with its own analysis and its own PR. This
+document originally said neither was closed here. That was written before the
+resolution rewrite existed, and implementation showed it was not quite right, so
+it is corrected rather than left to be discovered in review.
 
-The analysis stays here because it is where the defects were found and because
-this design's own resolution sequence consumes one of the controls. What
-follows describes the defect class and the fix the other chain implements, and
-the "This design" paragraphs below should be read as "the fix", not as a
-commitment by this document.
+**What this chain does deliver, for the tool-name defect: a check at the sink.**
+The rewritten resolution derives the bare recipe name from the declared key and
+requires it to be a well-formed recipe identifier before composing a path from
+it, then asserts the composed path lies under `$TSUKU_HOME/tools`. That was not
+optional: the loop being rewritten is the code that joins the name into a path,
+so shipping the rewrite without it would have meant re-landing the defect in a
+new file.
+
+**That does not make the other chain's check redundant**, and the reason is the
+one that recurs throughout this design. The two checks see different strings.
+Parse time sees the *declared* key, and can reject a bad `.tsuku.toml` outright.
+The sink sees what the key *derives to* after `SplitOrgKey`, which is what
+actually becomes a path component. Neither substitutes for the other, exactly as
+parse-time version validation does not substitute for validating the resolved
+version at the same sink.
+
+**The `%q` defect is entirely the other chain's**, and untouched here. This
+chain adds a third emitted value, and routes all four through a single
+`exportLine` helper so there is one quoting site per shell rather than one per
+variable — which makes that fix a one-function change instead of a hunt for
+every `Fprintf` that emits a value.
+
+The analysis stays here because it is where the defects were found. What follows
+describes the defect class and the fix; read the "This design" paragraphs below
+as "the fix", not as a commitment by this document beyond the sink-side check
+just described.
 
 The two chains land in a fixed order: the security fixes go first, against
 `internal/shellenv/activate.go` in its current location, and this chain's

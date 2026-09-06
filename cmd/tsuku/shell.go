@@ -21,11 +21,14 @@ nearest .tsuku.toml. Intended for use with eval:
 
   eval $(tsuku shell)
 
-This sets PATH, _TSUKU_DIR, and _TSUKU_PREV_PATH so that project-specific
-tool versions are available in the current shell.
+This sets PATH, _TSUKU_DIR, _TSUKU_PREV_PATH and _TSUKU_STATE_STAMP so that
+project-specific tool versions are available in the current shell.
 
 Re-running in the same shell reuses _TSUKU_PREV_PATH as the base PATH,
-so activations don't stack.`,
+so activations don't stack.
+
+A declaration that cannot be honored is reported on stderr with the reason;
+stdout carries only the shell code. Use --quiet to suppress the reasons.`,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cwd, err := os.Getwd()

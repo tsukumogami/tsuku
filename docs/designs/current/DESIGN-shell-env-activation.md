@@ -14,11 +14,15 @@ problem: |
 decision: |
   Add prompt hooks (PROMPT_COMMAND/precmd/fish_prompt) that call a new tsuku
   hook-env subcommand on each prompt. hook-env compares PWD against a cached
-  directory, exits immediately if unchanged (<5ms), and on directory change
-  reads .tsuku.toml to prepend project-specific tool bin paths to PATH. State
-  is tracked in shell env vars (_TSUKU_DIR, _TSUKU_PREV_PATH) for clean
-  deactivation. A new tsuku shell command provides explicit activation without
-  hooks. Existing shellenv and activate commands are unchanged.
+  directory and installation state's stat against a cached stamp, exits
+  immediately if both are unchanged (<5ms), and otherwise reads .tsuku.toml and
+  resolves each declaration against the installed versions to prepend
+  project-specific tool bin paths to PATH. A declaration that cannot be honored
+  is reported on stderr with the reason. State is tracked in shell env vars
+  (_TSUKU_DIR, _TSUKU_PREV_PATH, _TSUKU_STATE_STAMP) for clean deactivation and
+  so an install performed without leaving the directory takes effect at the next
+  prompt. A new tsuku shell command provides explicit activation without hooks.
+  Existing shellenv and activate commands are unchanged.
 rationale: |
   Prompt hooks with early-exit are the proven pattern (mise, direnv). The
   fork+exec cost is under 5ms when the directory hasn't changed, well within
@@ -130,11 +134,19 @@ When `hook-env` detects a directory change:
 
 1. **Save the clean PATH.** If `_TSUKU_PREV_PATH` is unset (first activation), store current `PATH`. If already set (switching projects), use the stored value as base.
 2. **Read `.tsuku.toml`.** Call `LoadProjectConfig($PWD)`.
-3. **Resolve tool bin directories.** For each tool in config, compute `$TSUKU_HOME/tools/{name}-{version}/bin`. Skip tools whose version isn't installed.
+3. **Resolve tool bin directories.** For each declaration, derive the bare recipe
+   name (an org-scoped key such as `owner/repo:tool` installs to
+   `tools/tool-{version}`, not `tools/owner/repo/tool-{version}`), then choose
+   among the versions installation state records: filter to those satisfying the
+   declaration, then to those whose directory is present, and take the newest by
+   version comparison. This resolves all four documented forms -- `latest`, an
+   omitted version, a major-only prefix and a major-minor prefix -- not only an
+   exact match. A declaration that yields nothing is reported on stderr with the
+   reason; see "Reporting" below.
 4. **Build new PATH.** `{project-tool-bins}:{_TSUKU_PREV_PATH}`. Project bins go before everything, including `$TSUKU_HOME/bin` and `tools/current/`.
-5. **Output shell commands.** `export PATH="..."`, `export _TSUKU_DIR="..."`, and on first activation `export _TSUKU_PREV_PATH="..."`.
+5. **Output shell commands.** `export PATH="..."`, `export _TSUKU_DIR="..."`, `export _TSUKU_PREV_PATH="..."` and `export _TSUKU_STATE_STAMP="..."`. The full block is emitted on every re-resolve, including when the computed PATH is byte-identical to the current one, because the stamp has to be recorded even when nothing else changed.
 
-On **deactivation** (no `.tsuku.toml` found): restore `PATH` from `_TSUKU_PREV_PATH`, unset both tracking variables.
+On **deactivation** (no `.tsuku.toml` found): restore `PATH` from `_TSUKU_PREV_PATH`, unset all three tracking variables.
 
 On **project-to-project transition**: use `_TSUKU_PREV_PATH` as base (not current PATH), prepend new project's bins.
 
@@ -144,6 +156,7 @@ State variables:
 |----------|---------|----------|
 | `_TSUKU_DIR` | Last-seen directory for early-exit guard | Set on activation, unset on deactivation |
 | `_TSUKU_PREV_PATH` | Complete PATH before any project activation | Set on first activation, unset on deactivation |
+| `_TSUKU_STATE_STAMP` | mtime and size of installation state, so an install performed without leaving the directory takes effect at the next prompt | Set on activation, unset on deactivation |
 
 #### Alternatives Considered
 
@@ -195,9 +208,9 @@ Shell environment activation adds three new commands: `tsuku shell` (explicit ac
 
 When a user enters a project directory with `.tsuku.toml`, `hook-env` reads the config and prepends per-project tool bin paths to PATH. For a project declaring `go = "1.22"` and `node = "20.16.0"`, PATH becomes `$TSUKU_HOME/tools/go-1.22.5/bin:$TSUKU_HOME/tools/nodejs-20.16.0/bin:{original PATH}`. Tools declared in the project shadow their global counterparts; undeclared tools fall through to `tools/current/` as before.
 
-State lives in two shell env vars: `_TSUKU_DIR` (last-seen directory, for early-exit) and `_TSUKU_PREV_PATH` (original PATH before activation, for clean deactivation). On deactivation (leaving a project directory), PATH restores exactly. On project-to-project transition, `_TSUKU_PREV_PATH` stays as the base while the new project's paths replace the old.
+State lives in three shell env vars: `_TSUKU_DIR` (last-seen directory, for early-exit), `_TSUKU_PREV_PATH` (original PATH before activation, for clean deactivation) and `_TSUKU_STATE_STAMP` (mtime and size of installation state, so an install performed without leaving the directory takes effect). On deactivation (leaving a project directory), PATH restores exactly. On project-to-project transition, `_TSUKU_PREV_PATH` stays as the base while the new project's paths replace the old.
 
-The prompt hook fires on every prompt but exits in under 5ms when the directory hasn't changed (fork+exec + string comparison, no filesystem I/O). On directory change, the full path costs ~10-15ms (config lookup + PATH construction). Both are well within the 50ms budget.
+The prompt hook fires on every prompt. When neither the directory nor installation state has changed it exits in under 5ms: fork+exec, two string comparisons, and a single `os.Stat` of `state.json` -- measured at 2.6 µs, or 0.05% of that budget. The claim that this path does no filesystem I/O was true before the stamp existed and is not now. On a change, the full path costs ~10-15ms (config lookup + PATH construction). Both are well within the 50ms budget.
 
 ### Rationale
 
@@ -209,13 +222,13 @@ Prompt hooks over cd-wrappers because they catch all directory changes. Prepend 
 
 - **Fork+exec on every prompt**: Even with early-exit, each prompt pays ~2-4ms for spawning `tsuku hook-env`. This is acceptable (mise and direnv do the same) but not free.
 - **PATH changes by other tools lost on deactivation**: If another tool modifies PATH while a project is active, deactivation restores the pre-activation PATH, losing those changes. Uncommon in practice.
-- **Version must be installed**: Activation only works for already-installed versions. If `.tsuku.toml` declares `go = "1.22"` but Go 1.22 isn't installed, that tool is silently skipped. Block 6 (#2168) handles install-on-demand.
+- **Version must be installed**: Activation only works for already-installed versions. If `.tsuku.toml` declares `go = "1.22"` and nothing matching is installed, that tool is not activated and the reason is written to stderr -- it is no longer silently skipped. Block 6 (#2168) handles install-on-demand.
 
 ## Solution Architecture
 
 ### Overview
 
-Shell environment activation adds a new `internal/shellenv` package that computes per-project PATH modifications, a `tsuku hook-env` subcommand for prompt hooks, a `tsuku shell` command for explicit activation, and updated hook scripts in `internal/hooks/`.
+Shell environment activation adds a new `internal/activation` package that computes per-project PATH modifications, a `tsuku hook-env` subcommand for prompt hooks, a `tsuku shell` command for explicit activation, and updated hook scripts in `internal/hooks/`.
 
 ### Components
 
@@ -236,48 +249,77 @@ Shell environment activation adds a new `internal/shellenv` package that compute
             │                          │
             ▼                          ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                 internal/shellenv/activate.go                    │
+│                internal/activation/activate.go                   │
 │                                                                  │
-│  ComputeActivation(cwd, prevPath, curDir)                       │
+│  ComputeActivation(cwd, prevPath, curDir, stamp, cfg, installed) │
 │    -> reads .tsuku.toml via project.LoadProjectConfig            │
-│    -> resolves tool bin dirs via config.ToolDir                  │
-│    -> returns ActivationResult{PATH, Dir, PrevPath, Exports}    │
+│    -> reads recorded versions once via InstalledSet              │
+│    -> resolves tool bin dirs via config.ToolBinDir               │
+│    -> returns ActivationResult{PATH, Dir, PrevPath, Stamp,       │
+│                                Unhonorable, Unreadable, Entered} │
 │                                                                  │
-│  FormatShellExports(result, shell)                              │
+│  FormatExports(result, shell)                                   │
 │    -> formats export/set statements for bash/zsh/fish            │
 └─────────────────────────────────────────────────────────────────┘
-            │                          │
-            ▼                          ▼
-┌──────────────────────┐    ┌──────────────────────┐
-│ internal/project     │    │ internal/config      │
-│ LoadProjectConfig    │    │ Config.ToolDir       │
-│ (existing)           │    │ (existing)           │
-└──────────────────────┘    └──────────────────────┘
+            │              │                    │
+            ▼              ▼                    ▼
+┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐
+│ internal/project │ │ internal/config  │ │ internal/install │
+│ LoadProjectConfig│ │ Config.ToolBinDir│ │ pin matching,    │
+│ SplitOrgKey      │ │                  │ │ installed set    │
+└──────────────────┘ └──────────────────┘ └──────────────────┘
 ```
+
+Activation lives in `internal/activation` rather than `internal/shellenv`.
+`internal/install` imports `internal/shellenv` for its shell.d cache and
+PATH-precedence helpers, so activation's dependency on the pin-matching
+routines and installation state would have been a cycle. Activation shared no
+symbol with the rest of `shellenv`, so the split cost nothing and tells the
+truth about the dependency graph. The invariant is recorded in the package
+doc: `internal/install` must never import `internal/activation`, nor must
+anything in `internal/install`'s dependency graph.
 
 ### Key Interfaces
 
 ```go
-package shellenv
+package activation
 
 // ActivationResult holds the computed PATH and state for shell export.
 type ActivationResult struct {
-    PATH     string   // new PATH value
-    Dir      string   // project directory (for _TSUKU_DIR)
-    PrevPath string   // original PATH to save (for _TSUKU_PREV_PATH)
-    Active   bool     // true if a project is active, false if deactivating
-    Skipped  []string // tools skipped (version not installed)
+    PATH        string           // new PATH value
+    Dir         string           // project directory (for _TSUKU_DIR)
+    PrevPath    string           // original PATH to save (for _TSUKU_PREV_PATH)
+    Active      bool             // true if a project is active, false if deactivating
+    Stamp       string           // installation-state stamp (for _TSUKU_STATE_STAMP)
+    Unhonorable []Unhonorable    // declarations that put nothing on PATH, with reasons
+    Unreadable  *StateUnreadable // non-nil when installation state could not be read at all
+    Entered     bool             // true when this activation entered a project not already recorded
 }
 
-// ComputeActivation determines what PATH should be based on the
-// current directory and previous activation state.
+// InstalledSet reads what installation state records. Consumer-declared and one
+// method wide, and read at most once per activation.
+type InstalledSet interface {
+    InstalledVersionsFor(names []string) (map[string][]string, error)
+}
+
+// ComputeActivation determines what PATH should be based on the current
+// directory, previous activation state, and the versions installation state
+// records.
 //
 // cwd: current working directory
 // prevPath: value of _TSUKU_PREV_PATH (empty if no prior activation)
 // curDir: value of _TSUKU_DIR (empty if no prior activation)
+// stamp: value of _TSUKU_STATE_STAMP (empty if no prior activation)
 //
-// Returns nil if no change is needed (same directory).
-func ComputeActivation(cwd, prevPath, curDir string) (*ActivationResult, error)
+// Returns nil when no change is needed: the same directory AND unchanged
+// installation state. On a parse failure it returns a non-nil result AND a
+// non-nil error, so the caller can record the project whose file would not
+// parse and thereby report only once per entry.
+func ComputeActivation(
+    cwd, prevPath, curDir, stamp string,
+    cfg *config.Config,
+    installed InstalledSet,
+) (*ActivationResult, error)
 
 // FormatExports renders the ActivationResult as shell-specific
 // export/unset statements.
@@ -312,22 +354,36 @@ internal/hooks/tsuku-activate.fish  -- prompt hook for fish
 1. User cds into project directory
 2. Next prompt triggers _tsuku_hook
 3. Hook calls: tsuku hook-env bash
-4. hook-env reads $_TSUKU_DIR, compares with $PWD
-5. If same: exit (no output, <5ms)
-6. If different: call ComputeActivation(cwd, prevPath, curDir)
-7. ComputeActivation calls LoadProjectConfig(cwd)
-8. If .tsuku.toml found: resolve tool dirs, build PATH, return result
-9. If no .tsuku.toml and was active: return deactivation result
-10. hook-env calls FormatExports(result, "bash")
-11. Hook evals the output: export PATH="...", export _TSUKU_DIR="..."
+4. hook-env reads $_TSUKU_DIR, $_TSUKU_PREV_PATH and $_TSUKU_STATE_STAMP
+5. ComputeActivation stats installation state and compares both the
+   directory and the stamp
+6. If both unchanged: exit (no output, <5ms)
+7. If either changed: call LoadProjectConfig(cwd)
+8. If .tsuku.toml found: read the recorded versions once, resolve each
+   declaration, build PATH, collect the reasons for any that could not be
+   honored, and return the result
+9. If .tsuku.toml found but unparseable: return a result recording the
+   directory alongside the error
+10. If no .tsuku.toml and was active: return deactivation result
+11. hook-env writes any reasons to stderr, then calls FormatExports(result, "bash")
+12. Hook evals the output: export PATH="...", export _TSUKU_DIR="...",
+    export _TSUKU_PREV_PATH="...", export _TSUKU_STATE_STAMP="..."
 ```
+
+The full export block is emitted on every re-resolve, including when the
+computed PATH is byte-identical to the current one. Emitting only when PATH
+needs to change looks like an obvious saving and is not one: the stamp would
+never be recorded, so a shell already running would re-resolve on every prompt,
+forever.
 
 **Flow 2: Explicit activation (tsuku shell)**
 
 ```
 1. User runs: eval $(tsuku shell)
-2. shell command calls ComputeActivation(cwd, "", "")
-3. Same resolution as above but always runs (no early-exit)
+2. shell command calls ComputeActivation(cwd, prevPath, "", "")
+3. Same resolution as above but always runs: passing an empty curDir and an
+   empty stamp defeats the early exit, so an explicit invocation always
+   resolves and always emits
 4. Outputs shell code to stdout
 5. Shell evals it
 ```
@@ -339,18 +395,21 @@ internal/hooks/tsuku-activate.fish  -- prompt hook for fish
 2. Prompt hook fires, hook-env detects directory change
 3. ComputeActivation finds no config, sees _TSUKU_PREV_PATH is set
 4. Returns: PATH=_TSUKU_PREV_PATH, Active=false
-5. Output: export PATH="$original"; unset _TSUKU_DIR _TSUKU_PREV_PATH
+5. Output: export PATH="$original"; unset _TSUKU_DIR _TSUKU_PREV_PATH _TSUKU_STATE_STAMP
 ```
 
 ## Implementation Approach
 
-### Phase 1: Core Activation Logic (`internal/shellenv`)
+### Phase 1: Core Activation Logic (`internal/activation`)
 
 Build `ComputeActivation` and `FormatExports`. Pure logic, no CLI integration.
 
 Deliverables:
-- `internal/shellenv/activate.go`: `ComputeActivation`, `FormatExports`, `ActivationResult`
-- `internal/shellenv/activate_test.go`: Tests for activation, deactivation, project-to-project, skipped tools, early-exit
+- `internal/activation/activate.go`: `ComputeActivation`, `FormatExports`, `ActivationResult`
+- `internal/activation/resolve.go`: per-declaration resolution and classification
+- `internal/activation/reason.go`: `Reason`, `Unhonorable`, `StateUnreadable`
+- `internal/activation/stamp.go`: `StateStamp`
+- Tests for activation, deactivation, project-to-project, each reason, and the early exit
 
 ### Phase 2: CLI Commands
 
@@ -381,6 +440,45 @@ Deliverables:
 - Help text for `tsuku shell`, `tsuku hook-env`, updated `tsuku hook install`
 - Getting started guide updates
 
+### Reporting
+
+A declaration that puts nothing on PATH produces one message on stderr naming
+the tool and one of five reasons. They are distinct sentences rather than one
+templated message, because they carry different information and lead to
+different actions:
+
+| Reason | Means | Carries |
+|--------|-------|---------|
+| `no-match` | Nothing installed satisfies the declaration | The tool name |
+| `bad-form` | The key or version string is malformed | The declared string to edit |
+| `channel` | The declaration is a channel pin (`@lts`), which activation does not resolve | The declared string |
+| `missing-files` | A recorded version satisfies it, but its directory is gone | The version to reinstall |
+| `unreadable` | Installation state could not be read at all | The tools it would have resolved |
+
+An *absent* state file is `no-match`, not `unreadable`. The loader returns an
+empty state and no error for a missing file, so a machine whose state was
+deleted is indistinguishable from one that has never installed anything;
+`unreadable` would be the different and false claim that a read failed.
+
+`unreadable` is reported once per activation rather than once per declaration,
+because it is a property of the read that would have classified all of them.
+Messages go to stderr only -- stdout carries exclusively the shell code both
+entry points are `eval`'d for -- and both commands exit 0 for all five, because
+a prompt hook that exits non-zero gets wrapped in `|| true`, which would discard
+the reporting entirely. `--quiet` suppresses all of them.
+
+### Reading installation state
+
+Activation reads the recorded versions once per invocation, through a
+consumer-declared one-method interface, and **without taking the state file
+lock**. Two constraints drive this. Decoding the whole state file per tool would
+make a project declaring N tools pay N decodes on the hot path. And the shared
+lock has no non-blocking variant here, so a prompt firing while an install held
+the exclusive lock would block the shell.
+
+The lock-free read is safe because `Save` publishes by atomic rename: a reader
+either sees the whole previous file or the whole new one, never a torn write.
+
 ## Security Considerations
 
 ### PATH Manipulation Safety
@@ -395,6 +493,15 @@ This section previously claimed the resolution "only produces paths within `$TSU
 - An org-scoped key's `owner/repo` half is validated separately and more permissively, since GitHub allows uppercase there.
 - A declaration that fails is refused individually and reported on stderr naming the offending key; its siblings still activate.
 - Activation only references already-installed tools; it doesn't trigger downloads.
+The primary security surface is PATH modification. A malicious `.tsuku.toml` could reference tool names that, when resolved to `$TSUKU_HOME/tools/{name}-{version}/bin`, prepend unexpected directories to PATH. The resolution produces paths within `$TSUKU_HOME/tools/` because activation checks that it does.
+
+This paragraph previously said the install pipeline's name validation already guarded this. It did not: that validation runs on names `tsuku install` is given, and a `.tsuku.toml` key never passes through it. Naming a control that does not cover the path in question is worse than naming none, because it ends the reader's inquiry. The control now exists and is described below.
+
+**Mitigations:**
+- Tool bin directories are always under `$TSUKU_HOME/tools/`, asserted on the composed path with a separator-appended prefix check so a sibling such as `tools-x` cannot match `tools`
+- A declared key is split into its distributed source and bare recipe name, and the bare name -- which is what becomes a path component -- must be a well-formed recipe identifier: a single path segment, rejecting `/`, `\`, `..` and NUL
+- A version read from installation state is validated at the same sink before it becomes a path component, because the declared string (`latest`) is not the string that ends up in the path (`26.8.1`)
+- Activation only references already-installed tools; it doesn't trigger downloads
 
 ### Prompt Hook Safety
 
@@ -418,6 +525,10 @@ Same concern as Block 4: cloning a repo with `.tsuku.toml` and running `tsuku ho
 - Activation only references installed tools -- it can't install new ones.
 - `TSUKU_CEILING_PATHS` adds ceilings to the discovery walk, but it is **opt-in and unset by default**, and the walk's only unconditional ceiling is `$HOME`. A repository checked out elsewhere walks to `/`, so a config in a world-writable directory applies beneath it. Tracked separately as tsukumogami/tsuku#2555.
 - Tools that aren't installed are silently skipped, not fetched.
+- Prompt hooks are opt-in (`tsuku hook install --activate`), not default
+- Activation only references installed tools -- it can't install new ones
+- `TSUKU_CEILING_PATHS` prevents traversal into untrusted parent directories
+- A declaration with nothing installed to satisfy it is not fetched; it is reported on stderr with the reason, so the developer knows the repo asked for something they do not have
 
 ### Mitigations Summary
 
@@ -438,6 +549,10 @@ the control, when the structure was never in question and the values inside it
 were unquoted. Both were reported as tsukumogami/tsuku#2553 and are fixed above;
 the severities here now describe the state after that fix, with the pre-fix
 rating shown so the correction is visible rather than silent.
+| PATH injection via malicious .tsuku.toml | Low | Derived bare name must be a single safe path segment; state-derived version validated at the same sink; composed path checked to lie under $TSUKU_HOME/tools/ | A key rejected by those checks contributes no PATH entry and is reported as `bad-form`, so an unusual name cannot construct an unexpected path |
+| Auto-activation in cloned repos | Medium | Hooks are opt-in, only installed tools activate | User may not realize activation affects their PATH in untrusted repos |
+| Prompt hook eval of hook-env output | Low | Structured output (export/unset only), subprocess invocation | If tsuku binary is compromised, hook-env output is arbitrary |
+| _TSUKU_PREV_PATH tampering | Low | Graceful handling when variable is missing | User could inject malicious PATH via env var manipulation |
 
 ## Consequences
 
@@ -450,12 +565,12 @@ rating shown so the correction is visible rather than silent.
 
 ### Negative
 
-- **Per-prompt fork+exec cost**: ~2-4ms on every prompt for hook-env invocation, even when the directory hasn't changed.
+- **Per-prompt fork+exec cost**: ~2-4ms on every prompt for hook-env invocation, even when nothing has changed.
 - **PATH changes lost on deactivation**: Other tools' PATH modifications during a project session are lost when deactivating.
-- **Uninstalled versions silently skipped**: If `.tsuku.toml` declares a version that isn't installed, activation silently skips it rather than warning.
+- **A declaration can go unhonored**: If `.tsuku.toml` declares something no installed version satisfies, that tool is not activated. It is reported rather than skipped silently, but the project still does not get the tool it asked for.
 
 ### Mitigations
 
 - **Per-prompt cost**: The 2-4ms cost is consistent with mise and direnv. Benchmarking should confirm this during implementation.
 - **PATH changes lost**: Document this behavior. If demand arises, the surgical-removal approach can be added later.
-- **Silent skipping**: Print a warning to stderr when skipping uninstalled tools. This doesn't affect the fast path (no skips = no warning).
+- **Unhonored declarations**: A message on stderr naming the tool and the reason, once per entry into the project. This was written here as a planned mitigation and was not built for a long time, which is how the silent-skip behavior survived; it now exists. It does not affect the fast path, since a file whose declarations are all honored produces no messages.

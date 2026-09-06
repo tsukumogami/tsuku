@@ -18,7 +18,12 @@ import (
 const ConfigFileName = ".tsuku.toml"
 
 // MaxTools is the upper bound on tools in a single config file.
-// Prevents resource exhaustion from maliciously large configs.
+//
+// It is a post-decode count, not an input bound: the check runs after
+// toml.Decode has already parsed the whole file into memory, so it caps what
+// downstream code will iterate, not what the decoder will allocate. It is not a
+// defense against a maliciously large config -- bounding that would mean
+// limiting the input before decoding it.
 const MaxTools = 256
 
 // EnvCeilingPaths is the environment variable for additional ceiling directories.
