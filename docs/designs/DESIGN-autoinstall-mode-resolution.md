@@ -141,7 +141,38 @@ the three. One workspace is not a survey, but it is the only usage evidence
 anyone produced, and it is evidence that (b)'s convenience is worth less than
 assumed.
 
-**Chosen: (c).** Bounded elevation, with four conditions as requirements. The
+**Chosen: (c).** Bounded elevation, with four conditions as requirements:
+
+1. **The elevation is bounded to declared commands.** A declaration raises the
+   mode for the commands it names and for no other. This is #2542's fix and
+   #2545's, and it comes free with them.
+2. **The elevation cannot reach an unregistered source.** Verified for the run
+   path three ways below; false on the install path, and the claim is scoped
+   accordingly.
+3. **An explicitly set mode is honoured as given.** Only the *unset default* is
+   raised. This follows from the argument rather than being added to it: the
+   case for raising `confirm` is precisely that `confirm` is a default nobody
+   chose, and that reasoning does not survive someone choosing it. So `suggest`
+   is a floor, and so is an explicitly set `confirm`, and an explicitly set
+   `auto` is already what it is. AC38 asked what an explicitly set `confirm`
+   does and this is the answer: the same as an explicitly set anything.
+4. **Every elevation that results in an install is disclosed**, on the terms
+   D5 sets.
+
+One case makes condition 3 load-bearing rather than tidy. `resolveMode`
+downgrades an environment-supplied `auto` to `confirm` when the persistent
+config does not corroborate it — that is the anti-`.envrc` control this
+decision spends a page comparing itself to. Its output is a `confirm` whose
+origin is `environment`, not `default`. Raising every `confirm` would take that
+control's output and put it straight back to `auto`, which would not merely
+decline parity but reverse it. Condition 3 forbids that, because the origin is
+not `default`.
+
+Condition 3 also fixes `project`'s rank in R12's origin order, which R12 left
+to this decision. A declaration outranks `default` and nothing else, so the
+recorded origin is `project` only where the mode would otherwise have been
+`default`. Where a flag, the environment or the config supplied a value, that
+source is both honoured and recorded. The
 honest statement of why is that the security case for (b) over (a) is one leg,
 and the remainder is product value — `confirm` is a default nobody chose and
 prompting for every declared tool is friction without value in the common case
@@ -186,9 +217,10 @@ the narrowing across a package boundary.
 
 ```go
 type ProjectDeclaration struct {
-    Recipe    string // bare recipe name
-    Version   string // as declared, verbatim (R20)
-    ConfigKey string // the .tsuku.toml key (R6, AC14)
+    Recipe     string // bare recipe name
+    Version    string // as declared, verbatim (R20)
+    ConfigKey  string // the .tsuku.toml key (R6, AC14)
+    ConfigPath string // the file that declared it (R13a, D5)
 }
 
 type ProjectDeclarationResolver interface {
@@ -197,7 +229,13 @@ type ProjectDeclarationResolver interface {
 ```
 
 `ConfigKey` is load-bearing rather than decorative: AC14 requires the refusal to
-name the key each recipe was declared under. The `ok` bool disappears into
+name the key each recipe was declared under. `ConfigPath` is there for the same
+kind of reason and would otherwise be discovered missing at implementation:
+D5's disclosure rule requires the authorizing file's path, the disclosure is
+emitted inside `internal/autoinstall`, and that package has no route to
+`project.ConfigResult.Path` except through this struct. It is identical for
+every element; carrying it per-declaration is the cost of not adding a second
+method to the interface. The `ok` bool disappears into
 `len(set) == 0`, which is how R1 defines the empty case — the current
 signature's defect is returning two values that can disagree about what was
 found, and a `Len()`-plus-`ok` pair would reintroduce that class.
@@ -235,9 +273,10 @@ proposed again.** `type declaredCandidates []index.BinaryMatch` and
 `[]index.BinaryMatch` are assignable in both directions without conversion,
 because assignability holds when the underlying types are identical and at
 least one side is unnamed — and the slice literal type is unnamed. So the wrong
-edit compiles. It bites only if the five consumers are extracted into functions
-taking the named type, and even then the wrong edit compiles as an explicit
-conversion: a reviewable artefact, not an error. R3a's "checkable by position"
+edit compiles. And it leaves nothing behind: passing a plain
+`[]index.BinaryMatch` to a parameter of the named type compiles with **no
+conversion at all**, so extracting the consumers into functions taking the
+named type does not even produce a reviewable artefact. R3a's "checkable by position"
 is the ceiling, not a waypoint toward compiler enforcement.
 
 **Plain reassignment** leaves the wrong edit — a shadowed `matches :=` inside a
@@ -291,6 +330,14 @@ So **"correct by inheritance" holds for the declared case and is not a general
 property of the consumers.** The PRD's R3a said otherwise and has been
 corrected.
 
+One bookkeeping consequence: R3a counts five consumers, and after this change
+four of them read the narrowed list. The `len(matches) == 0` test stays above
+the narrowing, on the raw list, because an empty index result is a lookup
+failure rather than a declaration outcome. AC47 is still discharged — that read
+is a cardinality test rather than a positional selection, and AC47's question is
+about positional reads — but a reviewer counting five and finding four should
+find this sentence rather than a discrepancy.
+
 ### D4. The refusal's shape
 
 Exit 10 is settled by R7, and `ExitAmbiguous = 10` exists — but `tsuku run`
@@ -329,6 +376,17 @@ out-of-scope list, as retaining "existing first-match-or-error semantics" —
 a deliberate exclusion, and not an endorsement, since it was not considering
 project configuration.
 
+**The invocation the refusal offers is `tsuku install <recipe>` followed by the
+version-specific path.** `tsuku run` has no per-recipe disambiguator, and a
+`.tsuku.toml` disambiguation key is explicitly out of scope, so there is no
+one-command answer and inventing CLI surface here would exceed the requirement.
+What exists and works is: install the declared recipe by name, then invoke it at
+`$TSUKU_HOME/tools/<recipe>-<version>/bin/<command>`. AC26 requires the named
+invocation to run one of the declared recipes to completion rather than to be a
+single token, so this satisfies it. `AmbiguousDeclarationError` needs no extra
+field: the message is composed from the `Recipe` and `Version` it already
+carries, and the tools directory is the runner's own configuration.
+
 **What the refusal knows that the install path does not:** the config has
 already narrowed the field. Reporting all five providers of `java` when the
 project declared two would discard that, so R6 requires the declared names,
@@ -358,9 +416,19 @@ Per-install lands once per tool per version per project by construction, needs
 no new state, and rides on output the user already receives.
 
 **The rule R13a requires, written before the control exists:** *an install
-performed under a consent mode raised by a project declaration shall state,
-before the install begins, the recipe, the version, and the path of the file
-that authorized it.*
+whose recipe or whose consent mode was determined by a project declaration
+shall state, before the install begins, the recipe, the version, and the path
+of the file that authorized it.*
+
+"Determined the recipe or the mode" rather than "raised the mode", and the
+widening is not cosmetic. R3b removes the multiple-provider gate's precondition
+for a declared command, so a user in an explicitly configured `auto` who runs
+an ambiguous command in a repository that declares one provider gets a silent
+install where they previously got a prompt. No elevation occurred, so the
+narrow rule says nothing; no gate changed the mode, so R11 says nothing. A
+repository-supplied file would have converted a prompt into a silent install
+with nothing reporting it — which is this document's own driver inverted, and
+it ships in Group A whatever D1 decided.
 
 The file path is the part not to drop. "This was authorized by
 `/home/you/src/theirrepo/.tsuku.toml`" is a sentence someone can act on;
@@ -504,24 +572,114 @@ narrowed list, the declaration where there was exactly one, and an error.
 field, `NewResolver`'s second parameter and `Tools()`, all of which become dead
 together once `command` leaves the signature.
 
+`autoinstall.Runner` gains an `IsTerminal func() bool` field beside `Lookup`,
+`Installer` and `Exec`, following that package's existing function-field
+convention rather than `cmd/tsuku/config.go`'s package-level var, which is a
+different seam in a different package. A nil field is treated as
+not-a-terminal, so a caller that forgets to wire it gets the safe answer.
+
 `cmd/tsuku` gains `ErrNotInteractive` and `AmbiguousDeclarationError` cases in
-the switch, an injectable `IsTerminal` on `Runner` following the pattern at
-`cmd/tsuku/config.go:124-126`, and loses `hasProjectTools`.
+the switch, wires `IsTerminal`, and loses `hasProjectTools`.
+
+**One hatch in the message it carries is broken today and must not survive the
+move.** The message offers "set `TSUKU_AUTO_INSTALL_MODE=auto` or use
+`--mode=auto`". `resolveMode` downgrades an environment-supplied `auto` to
+`confirm` unless the persistent config corroborates it — the escalation
+restriction working as designed — so a reader who follows the first hatch
+verbatim reproduces the failure they were escaping. R10 requires every named
+hatch to complete the command and AC27 requires the message to name exactly the
+working set, so the message names `--mode=auto` alone, or names the environment
+variable together with the corroboration it requires. Moving the message behind
+`ErrNotInteractive` without fixing it would carry a known-wrong instruction
+across a change that touches the line.
+
+**The moved check's predicate is `effectiveMode == ModeConfirm &&
+!r.IsTerminal()`, with no declaration term**, and that is not an oversight. R9
+says the check must test whether the executed command is project-declared, and
+an implementer reading it literally will write a declaredness term — which
+reintroduces the exact defect the move exists to fix: a declared command
+elevated to `auto` and then lowered to `confirm` by the configuration-permission
+gate would skip the check and prompt at a closed stdin. By the time the check
+runs, `effectiveMode` already encodes declaredness, because the elevation and
+every gate that could undo it have already run. Testing the mode is testing the
+declaration, one step later and correctly.
+
+## The Gates Table, Re-derived
+
+R21 obliges this document to record the derivation, and AC45, AC46, AC50 and
+AC52 are all unfalsifiable without it. What follows is that record.
+
+**The rule has to change, not just the derivation.** The PRD states it as
+"every point in `Runner.Run` between the index lookup and the mode dispatch".
+After the extraction in D3 the index lookup is not in `Runner.Run` at all, so
+the rule applied literally no longer spans the sites that moved, and AC52's
+two-way comparison would fail on correct code. The rule becomes:
+
+> Every point in `Runner.candidates` or `Runner.Run` that reads or writes the
+> effective mode, or returns before the mode dispatch is reached without having
+> reached an install or an exec.
+
+**The span's two boundaries, by identifier:** the `r.Lookup` call inside
+`Runner.candidates`, and the mode dispatch switch in `Runner.Run`.
+
+**The derived rows after this work**, each cited by file, function and role:
+
+| Row | File | Function | Role |
+|---|---|---|---|
+| Project declaration | `internal/autoinstall/run.go` | `Run` | Raises the mode where it was `default` and the command is declared |
+| Configuration-permission gate | `internal/autoinstall/run.go` | `Run` | Lowers out of auto on permissive config file |
+| Verification gate | `internal/autoinstall/run.go` | `Run` | Lowers out of auto on a recipe without verification |
+| Multiple-provider gate | `internal/autoinstall/run.go` | `Run` | Lowers out of auto when the candidate list holds more than one |
+| Already-installed fast path | `internal/autoinstall/run.go` | `Run` | Returns before the dispatch, having reached an exec |
+
+**Informational, and not derived:** the root guard in `Run`, which ends the run
+without reaching an install or an exec; and the `ErrNoMatch` and
+`AmbiguousDeclarationError` returns in `candidates`, which do the same. The rule
+excludes all three by the same clause, which is why that clause is phrased
+around reaching an install or an exec rather than around returning early.
+
+**What changed from the pre-change table.** The fast path and the four
+mode-affecting rows are unmoved. The multiple-provider gate's row is unchanged
+in text but its behaviour narrows, because the list it counts is now narrowed
+where a declaration applies — which is D3's point and not a table change. What
+is new is the span: two functions rather than one.
+
+**AC46 searches this rule over that span in both directions; AC50 requires the
+check to read its expected site list out of this section rather than out of the
+table above; AC52 compares the two.** The list is here, in one place, so those
+three point at the same artefact.
 
 ## Implementation Approach
 
-1. The resolver's new shape and its dedup rule, with the org-key precedence
-   stated per recipe. Testable in `internal/project` without a `Runner`.
-2. `candidates()` and the three-way narrowing, consuming it.
-3. The refusal, its sentinel and its exit code.
-4. The terminal check's move, its sentinel, and the `ErrNoMatch` message that
-   stops that path being silent.
-5. Gate announcements and the audit record.
-6. The fixture index and the static check.
-7. Documentation, which depends only on D1 having landed.
+The ordering below is by dependency. An earlier draft put the fixture work last
+and the resolver first; both were wrong, and the reasons are worth keeping
+because they are not obvious.
 
-Steps 1 through 5 are Group A and do not wait on D1. Step 7 splits: the hook
-documentation is Group C and waits on nothing.
+1. **The fixture index and the R17 check.** First, not last: R17 forbids
+   constructing a multi-provider case any other way, so every multi-provider
+   test in steps 2 through 4 depends on it. Testable at this point: the three
+   existing violations migrate and the check catches its own negative control.
+2. **The resolver and `candidates()` together**, including the
+   `AmbiguousDeclarationError` sentinel. These cannot land separately: the
+   design has `internal/project` lose `NewResolver`'s second parameter and
+   `Tools()` once `command` leaves the signature, but `run.go` and `cmd_run.go`
+   call the old surface, and the three-way narrowing includes the branch that
+   returns the sentinel. The alternative — add `DeclarationsFor` alongside
+   `ProjectVersionFor` and delete the old one in a later step — is available if
+   the combined change proves too large to review, and is the only sanctioned
+   way to split it. Testable: R1 through R6 and the identity defects.
+3. **The refusal's output and exit code.** Testable: R7, R10, AC13, AC14.
+4. **The terminal check's move**, its sentinel, the `IsTerminal` field, and the
+   `ErrNoMatch` message that stops that path being silent. Testable: R5, R9,
+   R18a.
+5. **Gate announcements and the elevation disclosure.** Testable: R11, R11a.
+6. **The audit record**, which consumes the origin plumbing and the gate
+   identifiers from step 5. Testable: R12, R12a.
+7. **Documentation.** Splits: the hook documentation is Group C and waits on
+   nothing, so it can land at any point; the consent-model documents wait on
+   step 5, since the disclosure form is what they describe.
+
+Steps 1 through 6 are Group A and do not wait on D1.
 
 ## Security Considerations
 
@@ -542,10 +700,62 @@ Three properties the decision depends on, each checkable:
   authorizing file. Without this, bounded elevation is the status quo with
   better documentation.
 
+**A prerequisite defect that no control here reaches, and that is more urgent
+than anything this design adds.** A declared version string is unvalidated —
+`parseConfigFile` checks the tool count and nothing else — and it reaches
+`ToolBinDir`, which joins it into a directory name. `filepath.Join` cleans, so
+`..` segments escape: a version of `../../../../../../../tmp/evil` yields
+`/tmp/evil/bin`, which the fast path stats and execs. That happens before the
+mode dispatch and before all four gates, so every control in this design misses
+it, and R4 does not touch it because R4 governs which recipe the fast path
+selects rather than whether the path stays inside the tools directory.
+
+The fix belongs at `parseConfigFile`, where the untrusted input enters — not at
+the resolver, which R20 requires to pass versions through verbatim.
+`SplitOrgKey` already rejects `..` in configuration *keys* with a comment saying
+so; the same discipline was never applied to values. It is tracked separately
+and is a prerequisite of this work rather than part of it, and **R16a's
+statement of what the fast path admits is corrected accordingly**: the boundary
+a reader must be told is not "an already-installed sibling may run" but "a path
+the configuration named may run".
+
+**The install path's registration composes with run-path elevation.** The
+run-path claim above proves a declaration cannot *register* a source. It does
+not prove the run path cannot *reach* an unapproved one, and those differ: once
+tsukumogami/tsuku#2552's non-interactive registration installs a distributed
+tool, the index carries it under a bare name, and a bare declaration matches it
+on the run path with no source component anywhere in sight. So (c) does not
+create that exposure but it does inherit it, silently and under `auto`, on
+every subsequent run. Either the run path checks that a resolved recipe's
+source is registered, or R13a's disclosure names the recipe's source alongside
+the authorizing file. The second is cheaper and is what the disclosure is for.
+
+**What actually bounds the blast radius, stated positively.** Registry curation
+alone: a declaration selects among recipes the user's own configured registries
+already carry, and cannot introduce one. That is the whole of it on the run
+path.
+
+Two things that sound like they bound it and do not. Checksum verification is
+**not** a live control — see below — so no part of this decision may lean on
+it. And "the declaration is reviewable" is a property of an artifact rather
+than an act anyone performed; it is not cited here for the same reason
+`suggest` is not cited as a working mitigation.
+
 **The verification gate does not currently work** (D7). Any reasoning that
 treats it as an active control — including this document's own R3a hazard — is
 reasoning about a gate that approves everything. That is recorded rather than
-quietly relied upon.
+quietly relied upon, and it is the second of the two gates that could have
+demoted an elevated install.
+
+Two consequences for sequencing rather than for the decision. Bounded elevation
+moves into `auto` exactly the population that never opted into it, and one of
+the controls the documentation under R14 will describe to them does nothing —
+so either the elevation waits on the gate fix, or the documentation says the
+gate is currently inert. And once the gate works it will lower most declared
+installs back to `confirm` for any recipe without a static checksum, returning
+the friction D1's product-value case was built on removing. The value of the
+choice therefore depends on the disposition of a defect this design defers,
+which is on the page rather than discovered later.
 
 ## Consequences
 
