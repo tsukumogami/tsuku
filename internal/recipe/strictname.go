@@ -71,6 +71,17 @@ func ValidateStrictName(name string) error {
 	if strings.HasPrefix(name, "-") {
 		return fmt.Errorf("name %q must not start with '-' (looks like a CLI flag)", name)
 	}
+	// '@' gets its own message because the charset error is actively unhelpful
+	// here: someone who wrote a version into a name has made a specific,
+	// guessable mistake, and "must match ^[a-z0-9._-]+$" does not name it.
+	//
+	// Deliberately generic. This predicate serves recipe dependency lists as
+	// well as the config boundary, so the advice about where a version *should*
+	// go differs by caller and is added by the caller -- see
+	// project.validateKey, which knows the .tsuku.toml forms.
+	if strings.Contains(name, "@") {
+		return fmt.Errorf("name %q must not contain '@' (a version does not belong in a name)", name)
+	}
 	if strings.HasPrefix(name, ".") {
 		return fmt.Errorf("name %q must not start with '.'", name)
 	}

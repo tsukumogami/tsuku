@@ -62,3 +62,33 @@ func TestValidateKey_VersionInsideOrgScopedKey(t *testing.T) {
 		})
 	}
 }
+
+// TestValidateKey_BareVersionSaysWhereItGoes pins the guidance, not just the
+// refusal.
+//
+// "jq@2.0.0" is refused either way; what the criterion asked for is that the
+// user be told what to write instead. The asymmetry that produces this mistake
+// is real rather than hypothetical: SplitOrgKey strips an @version suffix for
+// org-scoped keys and nothing strips it for bare ones, so someone who has seen
+// "owner/repo:jq@2.0.0" work will reasonably try "jq@2.0.0".
+//
+// A message with no test is the kind that gets reworded into uselessness by an
+// unrelated change, which is most of this branch's subject matter.
+func TestValidateKey_BareVersionSaysWhereItGoes(t *testing.T) {
+	err := validateKey("jq@2.0.0")
+	if err == nil {
+		t.Fatal("a version in a bare key must be refused")
+	}
+	for _, want := range []string{`jq = "2.0.0"`, "org-scoped"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("the refusal does not tell the user what to write instead.\n"+
+				"want a message containing %q\n got: %v", want, err)
+		}
+	}
+
+	// The org-scoped form it points at has to actually work, or the advice
+	// sends the user to a second error.
+	if err := validateKey("owner/repo:jq@2.0.0"); err != nil {
+		t.Errorf("the form the message recommends is itself refused: %v", err)
+	}
+}

@@ -109,7 +109,22 @@ func validateKey(key string) error {
 		}
 	}
 
-	return recipe.ValidateStrictName(bare)
+	if nerr := recipe.ValidateStrictName(bare); nerr != nil {
+		// The bare-name rule is shared, so it states the rule and not where the
+		// value should have gone. Here we know: a version in a bare key is the
+		// one wrong shape with an obvious right one, and the asymmetry that
+		// produces it is real -- "owner/repo:jq@2.0.0" works because SplitOrgKey
+		// strips the suffix for org-scoped keys, and "jq@2.0.0" does not because
+		// nothing strips it for bare ones. Someone who has seen the first form
+		// will reasonably try the second.
+		if !isOrgScoped && strings.Contains(bare, "@") {
+			return fmt.Errorf("%w -- write the version in the value instead, as "+
+				"jq = \"2.0.0\"; the name@version form works only for org-scoped "+
+				"keys such as owner/repo:jq@2.0.0", nerr)
+		}
+		return nerr
+	}
+	return nil
 }
 
 // validateOrgSource checks an owner/repo coordinate.
