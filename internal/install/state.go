@@ -340,13 +340,17 @@ func (sm *StateManager) saveWithLock(state *State) error {
 }
 
 // loadWithoutLock reads the state from disk without acquiring the file lock.
-// Caller must already hold both sm.mu and the file lock.
-// LoadWithoutLock reads state without acquiring the file lock.
-// The caller must already hold the file lock.
-func (sm *StateManager) LoadWithoutLock() (*State, error) {
-	return sm.loadWithoutLock()
-}
-
+//
+// Callers that mutate must hold both sm.mu and the file lock. Readers need
+// neither: Save publishes by writing a temp file and renaming it over the
+// target, and rename is atomic, so a reader without the lock sees either the
+// old complete file or the new one -- never a torn one. The worst it can get is
+// data one write stale.
+//
+// That is why InstalledVersionsFor can call this from a shell prompt hook. The
+// shared lock has no non-blocking variant in this package, so taking it would
+// let an install in another process stall the user's prompt for as long as it
+// held the lock.
 func (sm *StateManager) loadWithoutLock() (*State, error) {
 	path := sm.statePath()
 	if _, err := os.Stat(path); os.IsNotExist(err) {
