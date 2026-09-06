@@ -209,10 +209,12 @@ type Fixture struct {
 	// calling this directly.
 	//
 	// It is exported so a unit that changes installed state can rebuild. If
-	// you do, re-check what New asserts: rebuilding with a different installed
-	// set can move DeclaredRecipe to the top of CommandTwoProviders, which
-	// silently turns every criterion resting on the ranking property into one
-	// that passes either way.
+	// you do, call AssertDeclaredRecipeRanksSecond afterwards: rebuilding with
+	// a different installed set can move DeclaredRecipe to the top of
+	// CommandTwoProviders, which silently turns every criterion resting on the
+	// ranking property into one that passes either way. New asserts it once,
+	// at construction, and a rebuild is the one operation that can invalidate
+	// it without anything noticing.
 	Index index.BinaryIndex
 
 	// VersionBaseURL is the root of the local endpoint serving version JSON.
@@ -492,6 +494,26 @@ func (f *Fixture) rebuild(t *testing.T) {
 // package comment describes has stopped holding. It runs on every New rather
 // than in one test because every consumer depends on it and none of them
 // restate it.
+// AssertDeclaredRecipeRanksSecond re-checks the fixture's load-bearing
+// ordering property. New calls it on every construction, so a consumer that
+// does not touch the index never needs it.
+//
+// It is exported for the one case that does. Fixture.Index is exported so a
+// unit that changes installed state can rebuild, and a rebuild with a
+// different installed set can move DeclaredRecipe to the top of
+// CommandTwoProviders -- at which point every criterion built on this fixture
+// passes against a narrowing that never matches anything, because index
+// ranking and declaration agree. The guard New established is gone and nothing
+// says so.
+//
+// Call this after any rebuild. Before it was exported, the doc on Fixture.Index
+// told consumers to "re-check what New asserts" while the only thing that could
+// was unexported.
+func (f *Fixture) AssertDeclaredRecipeRanksSecond(t *testing.T) {
+	t.Helper()
+	f.assertDeclaredRecipeRanksSecond(t)
+}
+
 func (f *Fixture) assertDeclaredRecipeRanksSecond(t *testing.T) {
 	t.Helper()
 

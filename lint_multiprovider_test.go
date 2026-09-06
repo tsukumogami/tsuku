@@ -129,6 +129,25 @@ func TestMultiProviderCheckFiresOnNonConformingFixture(t *testing.T) {
 			t.Errorf("negative control did not trigger %q; found: %v", rule, violations)
 		}
 	}
+
+	// The count, not just the rules. Without it the control's two deliberately
+	// clean functions -- oneRecipe and appendBuiltTwoProviders -- are
+	// unmeasured: each claims in its comment to be a case the check must not
+	// flag, and nothing here would notice if either started firing. A check
+	// that reports "both rules fired" is satisfied whether the file yields two
+	// violations or twenty.
+	//
+	// If you add a violating construct to the control, raise this number in
+	// the same change. If you add a *clean* one, the number stays and that is
+	// the assertion earning its keep.
+	const wantViolations = 2
+	if len(violations) != wantViolations {
+		t.Errorf("negative control produced %d violations, want %d: %v.\n"+
+			"More than expected means a function meant to be clean is now "+
+			"flagged -- check oneRecipe and appendBuiltTwoProviders, which "+
+			"document themselves as cases the rule does not reach.",
+			len(violations), wantViolations, violations)
+	}
 }
 
 // TestMultiProviderCheckAllowsSingleProviderCases pins the other half of the
@@ -768,7 +787,19 @@ func packagesReferencingBinaryMatch() ([]string, error) {
 			return err
 		}
 		if info.IsDir() {
-			if name := info.Name(); name == ".git" || name == "vendor" {
+			name := info.Name()
+			// Skip every dot-directory, not just .git. This repository's
+			// worktree flow puts complete copies of the tree under
+			// .claude/worktrees/<name>/, and filepath.Walk does not honor
+			// .gitignore. Walking into one yields a second copy of every
+			// scanned package under a path that is in neither the list nor
+			// the exempt map, so the test fails -- and fails only for
+			// developers with a worktree open, never in CI, which checks out
+			// clean. The failure message would then invite pasting worktree
+			// paths into multiProviderPackages, which is the wrong repair.
+			//
+			// "." itself has Name() == "." and must not be skipped.
+			if name == "vendor" || (name != "." && strings.HasPrefix(name, ".")) {
 				return filepath.SkipDir
 			}
 			return nil
