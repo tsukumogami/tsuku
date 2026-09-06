@@ -62,6 +62,19 @@ func TestHookEnv_ParseFailure(t *testing.T) {
 	if !strings.Contains(stderr, ".tsuku.toml") {
 		t.Errorf("stderr should name the file, got:\n%s", stderr)
 	}
+	// Exactly once, not merely present. parseConfigFile returns unwrapped
+	// causes precisely so LoadProjectConfig can wrap them in a ParseError that
+	// supplies the path; a cause that also embeds the path renders it twice,
+	// which is the duplicated-error half of the defect this path fixes.
+	//
+	// Asserting presence rather than count is what lets that regress silently:
+	// the message is still one line and still names the file. Found while
+	// dry-running the rebase onto the security branch, where the two versions
+	// of parseConfigFile disagree about exactly this and the tempting
+	// resolution reintroduces it.
+	if n := strings.Count(stderr, projectDir); n != 1 {
+		t.Errorf("the project path appears %d times in the diagnostic, want 1:\n%s", n, stderr)
+	}
 
 	// The broken project is recorded, or the hook re-reports on every prompt.
 	if !strings.Contains(stdout, "_TSUKU_DIR=") || !strings.Contains(stdout, projectDir) {
