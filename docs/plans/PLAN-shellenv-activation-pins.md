@@ -64,6 +64,33 @@ Issue 4 depends on the tool-name check existing but does not implement it. Issue
 8 amends the parent design's claim about that control, which becomes true once
 the other chain lands.
 
+### On choosing acceptance-criteria fixtures
+
+One finding from this plan's review generalises past this feature, and it is
+recorded here because the fixed criterion alone does not carry it.
+
+Five criteria were written to prove `latest` selects by version order rather
+than string order: `9.0.0` against `10.0.0`, `0.9.0` against `0.10.0`, the
+stable-versus-prerelease pair, and two more. The obvious wrong implementation —
+`sort.Strings` ascending, take the first — passes every one of them. The reason
+is that those cases were chosen *because* string comparison is known to be wrong
+there, which is what made them illustrative; but ascending string order puts
+`"10.0.0"` before `"9.0.0"`, so take-first yields `10.0.0`, which is the right
+answer. The wrongness cancels. Every case selected for being interesting was
+selected for the property that makes the bug invisible.
+
+The only fixture that discriminates is `1.0.0` against `2.0.0`, where ascending
+string order yields `1.0.0` and the requirement wants `2.0.0`. The dullest
+available pair is the only one that tests the requirement rather than the
+anecdote.
+
+**The general rule: a case chosen for being interesting is chosen for a property
+that may interact with the wrong implementation.** Illustrative cases demonstrate
+a mechanism to a reader. Discriminating cases separate a right implementation
+from a wrong one. They are not the same set, and the overlap is not reliable.
+When writing criteria, ask of each fixture which of the two jobs it is doing —
+and if every fixture in a set is doing the first, the set proves nothing.
+
 ## Issue Outlines
 
 ### Issue 1: Move activation out of `internal/shellenv` into `internal/activation`
@@ -161,6 +188,9 @@ resolved against what is installed and chosen by version order.
 **Complexity**: critical
 
 **Dependencies**: Issue 1, Issue 2
+
+Also consumes the security chain's tool-name check, which this issue must carry
+through the rewrite rather than reimplement.
 
 Replace the string interpolation with the design's resolution sequence: the
 tool-name check the security chain adds, `ValidateRequested`,
@@ -268,6 +298,11 @@ these, five correct sentences can be wired
       version to reinstall, `bad-form` and `channel` name the declared string,
       `no-match` names neither. A single template cannot carry all three
       without dead fields.
+- [ ] Each payload is **used in the message**, not merely carried on the struct.
+      The `missing-files` message contains the version whose files are gone, and
+      the `bad-form` and `channel` messages contain the declared string. A
+      write-only field that no message reads satisfies "different payloads" on
+      inspection while the output is still one template.
 - [ ] `unreadable` is a separate field, not an entry in the per-declaration
       slice: a ten-tool file with undecodable state produces exactly one message
       naming the tools it could not resolve. A design where the slice holds N
@@ -429,6 +464,8 @@ the next reader is not misled the way this one was.
 
 **Dependencies**: Issue 4, Issue 5, Issue 6, Issue 7
 
+The name-validation correction below is only true once the security chain lands.
+
 `DESIGN-shell-env-activation.md` specifies the algorithm being replaced,
 contradicts itself about prefix pins, records a mitigation that was never built,
 and claims a path-constraint control that did not exist until the security
@@ -442,16 +479,32 @@ than an unbounded search for anything still false.
 - [ ] The algorithm step, the worked PATH example, the trade-off entry about
       uninstalled versions, the Negative bullet and the never-built stderr
       mitigation all describe what the code does.
-- [ ] **All three statements of the absent name-validation control are
-      corrected**, not one: the prose claiming path traversal in tool names is
-      already guarded, the risk row's mitigation cell, and the security
-      mitigation stating uninstalled tools are silently skipped. The risk row's
-      residual-risk cell no longer contradicts its own mitigation cell.
+- [ ] **All three statements of the name-validation control are corrected**,
+      not one: the prose claiming path traversal in tool names is already
+      guarded, the risk row's mitigation cell, and the security mitigation
+      stating uninstalled tools are silently skipped. Each is corrected to
+      describe the control the security chain actually added — a syntactic
+      single-path-segment check on the declared name — rather than being deleted
+      or softened. The risk row's residual-risk cell no longer contradicts its
+      own mitigation cell.
 - [ ] The two-variable statements and the variable table become three.
 - [ ] **The fast-path claims are corrected in both places.** The parent design
       states the unchanged-directory path does no filesystem I/O; the stamp adds
       one stat, and Issue 6's always-emit rule means that path can now also
       write output. Both are performance claims a reader would rely on.
+- [ ] **The emission claim is corrected everywhere it appears**, not only in the
+      fast-path sentences: the statement that output is emitted only when PATH
+      needs to change, the corresponding step in the first flow, and the
+      `ComputeActivation` doc comment. Issue 6's always-emit rule falsifies all
+      of them, and this criterion exists because the previous draft named two
+      locations and left three.
+- [ ] The stale `ComputeActivation` call signatures in both flow descriptions
+      and the document's frontmatter are updated.
+- [ ] **This chain's own design is amended too.** `DESIGN-shellenv-activation-pins.md`
+      no longer claims to close the two security defects, and its implementation
+      steps do not list work the security chain owns. A design that overstates
+      what its PR delivers is the same defect as a parent design claiming a
+      control it lacks.
 - [ ] Every package and file name that moved is updated, along with the
       `Skipped` field and the stale `ComputeActivation` signature in the Key
       Interfaces block.
@@ -472,7 +525,10 @@ and 2; issue 5 needs 1 and 4; issue 6 needs 1, 4 and 5; issue 7 needs 3, 5 and
 6; issue 8 needs 4, 5, 6 and 7.
 
 **Cross-chain.** Issue 1 rebases onto the security chain's PR, which lands
-first. Nothing else here waits on it.
+first. Two issues here consume what that chain delivers and are recorded on
+their own Dependencies lines: Issue 4 carries the tool-name check through its
+rewrite, and Issue 8 amends the parent design's claim about that control, which
+only becomes true once the other chain lands.
 
 **Critical path:** 1 → 4 → 5 → 6 → 7 → 8. Six of the eight issues.
 

@@ -578,13 +578,14 @@ Two fall out of the restructure and should be in release notes:
 2. **Add `InstalledVersionsFor`** and delete `LoadWithoutLock`.
 3. **Add `project.ParseError`** carrying the directory, path and cause.
 4. **Replace `Skipped`** with the typed reasons and `StateUnreadable`; implement
-   resolution; fix the stat branch; drop the dead `Abs` branch. Add the
-   tool-name segment check, reporting `bad-form`, and validate state-derived
-   versions before they become path components.
-4a. **Replace `%q` in `FormatExports` with per-dialect single-quoting.** Small,
-   local, and independently landable ahead of everything else — it is the one
-   step that reduces exposure rather than adding behavior, so it should go
-   first if these land separately.
+   resolution; fix the stat branch; drop the dead `Abs` branch. Carry the
+   security chain's tool-name check through the rewrite, reclassifying it as
+   `bad-form`, and validate state-derived versions before they become path
+   components.
+4a. *(Moved.)* The `%q` quoter swap and the tool-name check belong to the
+   security chain and are not steps of this design. This chain's resolution
+   sequence consumes the tool-name check and must not drop it while rewriting
+   the loop it sits in.
 5. **Add the stamp** through `ComputeActivation`, `FormatExports` and both
    callers, including the deactivation unset and the parse-failure recording.
 6. **Render in `cmd/tsuku`**, set `SilenceUsage`/`SilenceErrors` on `hook-env`,
@@ -626,8 +627,24 @@ is a pure move that should not be reviewed alongside behavior changes.
 ## Security Considerations
 
 The review found two serious defects in the code this design rewrites. Both are
-inherited rather than introduced, and both are cheap to close from inside this
-change, so this design closes them.
+inherited rather than introduced.
+
+**Neither is closed by this design.** They were folded in when the review found
+them, on the argument that they are cheap and sit in the functions this work
+already rewrites. A separate chain now owns both, with its own analysis and its
+own PR, so that argument no longer applies: the fixes have an owner, and
+carrying work another chain is scoping in parallel would leave this document
+overstating what it delivers.
+
+The analysis stays here because it is where the defects were found and because
+this design's own resolution sequence consumes one of the controls. What
+follows describes the defect class and the fix the other chain implements, and
+the "This design" paragraphs below should be read as "the fix", not as a
+commitment by this document.
+
+The two chains land in a fixed order: the security fixes go first, against
+`internal/shellenv/activate.go` in its current location, and this chain's
+package move rebases and carries them through the rename.
 
 ### Tool names from `.tsuku.toml` are never validated
 
@@ -655,7 +672,7 @@ paths". The document claims the control and records its absence side by side,
 and rates the row Low. Whoever wrote it saw the gap and filed it as residual
 rather than as missing.
 
-**This design:** activation rejects a declared tool name that is not a safe
+**The fix:** activation rejects a declared tool name that is not a safe
 single path segment — a charset check plus rejection of `..`, `/` and `\` — and
 reports it as `bad-form`.
 
@@ -683,7 +700,7 @@ finding above, it is code execution from cloning a repo — high. Fed by
 `_TSUKU_PREV_PATH` alone it is same-user with no privilege boundary crossed —
 low. Validating tool names removes the repo-content feed but not the defect.
 
-**This design:** replace `%q` with per-dialect single-quoting. POSIX shells wrap
+**The fix:** replace `%q` with per-dialect single-quoting. POSIX shells wrap
 in `'…'` with each `'` rewritten as `'\''`; fish wraps in `'…'` and
 backslash-escapes `\` and `'`. Single quotes suppress expansion in all three.
 No future emitted value may be interpolated into shell text without going
@@ -744,10 +761,7 @@ plausible-sounding version of it.
 
 ## Consequences
 
-**Positive.** Two inherited security defects in the rewritten code are closed: a
-`.tsuku.toml` tool name can no longer traverse out of `$TSUKU_HOME/tools` onto
-PATH, and the emitted shell text is quoted with a real shell quoter rather than
-a Go string literal. All four documented version forms work. Every unhonorable
+**Positive.** All four documented version forms work. Every unhonorable
 declaration is reported with a distinguishable reason. Activation can't hang a
 prompt. Activation and installation share one rule with no second copy to drift.
 `internal/shellenv`'s doc comment stops misdescribing the package. A permissions
