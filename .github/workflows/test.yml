@@ -62,6 +62,19 @@ jobs:
             exit 1
           fi
 
+      - name: Install fish
+        # internal/shellquote evaluates its emitted output in a real fish to
+        # prove the fish dialect round-trips. Fish's single quotes recognise an
+        # escaped quote and an escaped backslash where POSIX's recognise
+        # nothing, so a shared POSIX quoter corrupts a backslash under fish --
+        # and every other fixture in that suite round-trips identically under
+        # both dialects, so nothing else catches it.
+        #
+        # Guarding those tests on LookPath alone would leave them skipped on
+        # every run: green, and reading as coverage while testing nothing.
+        # bash needs no step; ubuntu-latest already has it.
+        run: sudo apt-get install -y --no-install-recommends fish
+
       - name: Run tests
         # PRs: fast feedback without race detector or coverage
         # Push to main: full validation with race detector and coverage

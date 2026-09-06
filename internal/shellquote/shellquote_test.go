@@ -23,7 +23,9 @@ var hostile = []struct {
 	{"embedded_single_quote", `it's a path`},
 	// %q renders this as the two characters \n, so it corrupts as well as exposes.
 	{"newline", "line1\nline2"},
-	// The only fixture that separates POSIX from fish.
+	// The only fixture that separates POSIX from fish. A *single* backslash
+	// round-trips under either quoter -- verified against fish 3.7.1 -- so a
+	// fixture using one would report the dialects as interchangeable.
 	{"double_backslash", `a\\b`},
 	{"single_backslash", `a\b`},
 	// Round-trip must be asserted on plain values too, or an assertion on the
@@ -145,6 +147,8 @@ func TestPOSIXQuoterIsWrongForFish(t *testing.T) {
 	if err != nil {
 		t.Skip("fish not available")
 	}
+	// Doubled, not single: POSIX-quoting a single backslash round-trips under
+	// fish, so that fixture would assert nothing.
 	const value = `a\\b`
 	script := "set V " + POSIX(value) + "\nprintf '%s' $V\n"
 	out, err := exec.Command(fish, "-c", script).Output()

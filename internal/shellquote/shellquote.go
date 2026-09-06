@@ -10,8 +10,12 @@
 // would be wrong for one of them. POSIX single quotes are fully literal --
 // nothing inside them is special, and a single quote cannot appear at all.
 // Fish's single quotes recognise two escapes, \' and \\, and treat everything
-// else literally. So a value containing a backslash, quoted the POSIX way and
-// handed to fish, comes back with that backslash consumed.
+// else literally. So a value containing *consecutive* backslashes, quoted the
+// POSIX way and handed to fish, comes back with one of them consumed --
+// verified against fish 3.7.1: POSIX-quoting `a\\b` yields `'a\\b'`, which fish
+// reads as `a\b`. A single backslash round-trips under either quoter, which is
+// why a fixture using one would show no divergence and report the dialects as
+// interchangeable.
 package shellquote
 
 import "strings"
