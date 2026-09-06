@@ -19,10 +19,12 @@ import (
 // reach the installer unchanged, because resolving them stays the installer's
 // job (R20).
 //
-// ConfigKey and ConfigPath are not decoration. A refusal naming two declared
-// providers has to name the key each came from, and the disclosure emitted in
-// internal/autoinstall needs the authorizing file's path, which that package
-// has no other route to.
+// ConfigKey and ConfigPath are not decoration, though nothing outside this
+// package reads them yet. A refusal naming two declared providers will have to
+// name the key each came from, and the disclosure internal/autoinstall will
+// emit needs the authorizing file's path, which that package has no other
+// route to. Both consumers are later units; the fields are here because the
+// set is what carries the association to them.
 type ProjectDeclaration struct {
 	Recipe     string
 	Version    string
@@ -50,8 +52,6 @@ type ProjectDeclaration struct {
 // different recipe from rows two and three despite the matching bare name,
 // because its source differs; that is the case the rule below turns on, and it
 // is why the grouping keys on the denoted recipe rather than on the bare name.
-// Rows two and four are different recipes from different registries, and only
-// the index's bare-name representation makes them look alike.
 //
 // # The rule
 //
@@ -98,10 +98,11 @@ func buildDeclarations(tools map[string]ToolRequirement, configPath string) map[
 		if !isOrg {
 			source = ""
 		}
-		// Creating an entry and writing to it stay in one iteration with no
-		// condition between them, so no entry is ever left empty. The second
-		// loop relies on that; putting a `continue` or an `if` between these
-		// two statements is what would break it.
+		// These two statements together are why no byRecipe entry is ever
+		// empty, which the second loop relies on and indexes a slice on. Any
+		// edit that lets the first run without the second breaks it -- a
+		// condition placed between them, or a narrowing of the write guard
+		// below, which is what someone tuning within-source precedence touches.
 		if byRecipe[bare] == nil {
 			byRecipe[bare] = make(map[string]string)
 		}

@@ -315,11 +315,18 @@ func TestDeclarationsFor_MalformedKeyDeclaresNothing(t *testing.T) {
 // but matches is a parameter, and a duplicated declaration would read to the
 // caller as an ambiguity, refusing a command that is not ambiguous at all.
 //
-// The repeated match is taken from the fixture's own single-provider lookup
-// rather than written out, which is what the multi-provider rule is for: the
-// recipe name here is whatever the index says provides the command. Doubling
-// it afterwards is not a second provider, and the fixture has no construct for
-// one provider listed twice because no index produces one.
+// The doubled slice is built by appending the fixture's own single-provider
+// lookup to itself. Read the reason, because the shortcut it resembles is a
+// real one: TestMultiProviderCasesUseTheFixture counts elements in a
+// []index.BinaryMatch literal, so a hand-written two-element one is rejected
+// here even though one provider listed twice is not a multi-provider case and
+// the fixture has no construct for it -- no index emits one. Taking the match
+// from the fixture is what keeps the recipe name the index's rather than mine.
+//
+// Append is NOT a sanctioned route around that check. It is a documented gap
+// in it (see lint_multiprovider_test.go), and a genuine two-provider case
+// assembled this way would be exactly the evasion the check exists to stop.
+// Build one of those in internal/indexfixture.
 func TestDeclarationsFor_DuplicateMatchDeclaresOnce(t *testing.T) {
 	fx := indexfixture.New(t)
 	ctx := context.Background()
