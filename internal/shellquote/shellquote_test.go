@@ -231,19 +231,69 @@ func TestRoundTripUnderFish(t *testing.T) {
 // than it looks like, because seven of the eleven round-trip identically under
 // both quoters and so cannot detect a shared-quoter mistake.
 //
-// Established by probing fish 3.7.1 directly. Of nine candidates, exactly these
-// four fail when POSIX-quoted output is handed to fish. Three that look like
-// they should diverge and do not, recorded so nobody adds them expecting
-// signal: a *single* backslash (`a\b`), a literal backslash-n (`a\nb`), and a
-// single quote followed by a backslash (`a'\b`).
+// Measured by handing the real POSIX and Fish functions to a real fish, on 3.6.0
+// and confirmed against the 3.7.0 CI provisions. Of nine candidates, exactly
+// these four fail when POSIX-quoted output is handed to fish. Three that look
+// like they should diverge and do not are recorded so nobody adds them
+// expecting signal: a *single* backslash (`a\b`), a literal backslash-n
+// (`a\nb`), and a single quote followed by a backslash (`a'\b`).
+//
+// The earlier note here credited a probe of 3.7.1 that emulated the quoting in
+// sed instead of calling these functions. It is named rather than deleted
+// because it is what produced the corrupted fixtures described below: an
+// emulation can agree with the real thing about which values diverge and still
+// be measuring something else.
+
+// backslashes states how many backslashes the value is supposed to contain.
+// It is not decoration: these four fixtures were once written through a shell
+// that interpreted the escapes, and three of them arrived holding something
+// else entirely -- still valid Go, still compiling, still green everywhere
+// except a real fish. Declaring the count beside the value lets a test hold the
+// fixture to its own intent. See TestFishDivergentCorpusIsIntact.
 var fishDivergent = []struct {
-	name  string
-	value string
+	name        string
+	value       string
+	backslashes int
 }{
-	{"two_backslashes", `a\b`},
-	{"three_backslashes", `a\`},
-	{"backslash_then_quote", `a'b`},
-	{"trailing_backslash", `ab\`},
+	{"two_backslashes", `a\\b`, 2},
+	{"three_backslashes", `a\\\b`, 3},
+	{"backslash_then_quote", `a\'b`, 1},
+	{"trailing_backslash", `ab\`, 1},
+}
+
+// TestFishDivergentCorpusIsIntact holds the fixtures to what they claim to be,
+// because the alternative is a corpus that reports success while testing
+// nothing.
+//
+// This is not hypothetical. The corpus was authored through a shell that
+// consumed the escapes, so `a\\b` landed as `a\b`, `a\\\b` landed as a
+// backslash followed by a literal backspace byte, and `a\'b` lost its backslash
+// and landed as plain `a'b`. All three still compile. Worse, `a\b` is a value
+// the comment above lists as a known *non*-discriminator, so the corpus had
+// quietly degenerated into the exact values it warns against. Nothing noticed
+// until the negative control below met a real fish in CI.
+//
+// Both halves are load-bearing. The count catches an escape the shell ate; the
+// control-byte scan catches an escape the shell turned into the byte it names,
+// which no count would see.
+func TestFishDivergentCorpusIsIntact(t *testing.T) {
+	for _, tc := range fishDivergent {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := strings.Count(tc.value, `\`); got != tc.backslashes {
+				t.Errorf("fixture holds %d backslashes but claims %d (value %q).\n\n"+
+					"A fixture that lost a backslash still compiles and still round-trips, "+
+					"so nothing else in this file will tell you. Check how it was written: "+
+					"a shell heredoc eats these.", got, tc.backslashes, tc.value)
+			}
+			for i, r := range tc.value {
+				if r < 0x20 || r == 0x7f {
+					t.Errorf("fixture holds control byte %#x at index %d (value %q).\n\n"+
+						"That is escape interpretation rather than an intended fixture: "+
+						"a shell turned an escape into the byte it names.", r, i, tc.value)
+				}
+			}
+		})
+	}
 }
 
 // TestFish_DivergentValuesRoundTrip holds Fish() to the cases that separate the

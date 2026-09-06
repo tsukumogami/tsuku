@@ -262,6 +262,21 @@ func TestFormatExports_Fish(t *testing.T) {
 
 	output := FormatExports(result, "fish")
 
+	// Read back, not just substring-matched. A `set -gx PATH` line can be
+	// present and still hand fish something other than these two entries, and
+	// the substring checks below cannot tell the difference -- which is why
+	// this test could not have caught the read-back defect that the
+	// deactivation case did.
+	for _, tc := range []struct{ name, want string }{
+		{"PATH", "/tools/go-1.22/bin:/usr/bin"},
+		{"_TSUKU_DIR", "/home/user/project"},
+		{"_TSUKU_PREV_PATH", "/usr/bin"},
+	} {
+		if got := evalAndRead(t, "fish", output, tc.name); got != tc.want {
+			t.Errorf("%s = %q after eval, want %q", tc.name, got, tc.want)
+		}
+	}
+
 	if !strings.Contains(output, "set -gx PATH") {
 		t.Errorf("missing fish PATH in:\n%s", output)
 	}
@@ -424,18 +439,36 @@ func TestFormatExports_DeactivationFish(t *testing.T) {
 }
 
 // evalAndRead evaluates emitted output in a real shell and returns what the
-// named variable ends up holding. A skip when the shell is absent is fine for
-// bash, which is everywhere; fish is provisioned in CI precisely so its cases
-// do not skip on every run and read as coverage.
+// named variable ends up holding.
+//
+// The fish branch reads the variable back out of the *exported environment*
+// rather than expanding it, and the reason is a false alarm this helper raised
+// once already. Fish treats PATH as a list, splitting it on colons when it is
+// set: `printf '%s' $PATH` then prints the elements with nothing between them,
+// so a correctly emitted `set -gx PATH '/a:/b'` reads back as `/a/b` and looks
+// like a lost separator. It is not one -- a child process receives
+// `PATH=/a:/b` -- and the environment is both what actually matters to a
+// consumer and immune to the list semantics. Do not "simplify" this back to an
+// expansion.
+//
+// A skip when the shell is absent is fine for bash, which is everywhere. Fish
+// is provisioned in CI precisely so its cases do not skip on every run and read
+// as coverage, so TSUKU_REQUIRE_FISH turns a missing fish into a failure there
+// -- the same guard internal/shellquote applies, for the same reason.
 func evalAndRead(t *testing.T, shell, output, varName string) string {
 	t.Helper()
 	bin, err := exec.LookPath(shell)
 	if err != nil {
+		if shell == "fish" && os.Getenv("TSUKU_REQUIRE_FISH") != "" {
+			t.Fatal("fish is required here (TSUKU_REQUIRE_FISH is set) but was not found. " +
+				"CI provisions it; a skip on this surface would be indistinguishable from a pass.")
+		}
 		t.Skipf("%s not available", shell)
 	}
 	var script string
 	if shell == "fish" {
-		script = output + "\nprintf '%s' $" + varName + "\n"
+		// env, not an expansion: see the note above about PATH being a list.
+		script = output + "\nenv\n"
 	} else {
 		script = output + "\nprintf '%s' \"$" + varName + "\"\n"
 	}
@@ -443,7 +476,16 @@ func evalAndRead(t *testing.T, shell, output, varName string) string {
 	if err != nil {
 		t.Fatalf("%s rejected the emitted output: %v\nscript:\n%s", shell, err, script)
 	}
-	return string(out)
+	if shell != "fish" {
+		return string(out)
+	}
+	for _, line := range strings.Split(string(out), "\n") {
+		if v, ok := strings.CutPrefix(line, varName+"="); ok {
+			return v
+		}
+	}
+	t.Fatalf("fish did not export %s at all.\nscript:\n%s\nenv:\n%s", varName, script, out)
+	return ""
 }
 
 // TestFormatExports_HostileValuesDoNotExecute is the assertion the old tests
