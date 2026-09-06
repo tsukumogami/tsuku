@@ -76,8 +76,16 @@ func detectShell(flagValue string) string {
 // statements. Returns ("", nil) when no .tsuku.toml is found, allowing the
 // caller to decide how to handle that case.
 func runShell(cwd, prevPath, shell string, cfg *config.Config) (string, error) {
-	// Pass empty curDir to force activation (no early-exit on same directory).
-	result, err := activation.ComputeActivation(cwd, prevPath, "", cfg, install.NewStateManager(cfg))
+	// Pass an empty curDir to force activation: tsuku shell is an explicit
+	// invocation and must resolve and emit whatever the environment holds.
+	//
+	// The stamp is passed empty for the same reason, and reading
+	// _TSUKU_STATE_STAMP here the way hook-env does would be a bug rather than
+	// symmetry: with _TSUKU_DIR already at the current directory and a matching
+	// stamp, ComputeActivation would return nil, runShell would turn that into
+	// an empty string, and the command would report no .tsuku.toml found and
+	// exit non-zero for a project that exists and is perfectly valid.
+	result, err := activation.ComputeActivation(cwd, prevPath, "", "", cfg, install.NewStateManager(cfg))
 	if err != nil {
 		return "", err
 	}

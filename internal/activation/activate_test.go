@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/install"
 )
 
 // fakeInstalledSet stands in for installation state. Tests that need recorded
@@ -69,6 +70,28 @@ func setupProject(t *testing.T, tomlContent string, installedTools map[string][]
 	return projectDir, cfg, installed
 }
 
+// writeState writes a real state.json, for the tests whose subject is the stamp
+// rather than resolution. The stamp is built from a stat of that file, so these
+// cases need a file that actually exists and can actually move.
+func writeState(t *testing.T, cfg *config.Config, tools map[string][]string) {
+	t.Helper()
+
+	state := &install.State{Installed: map[string]install.ToolState{}}
+	for name, versions := range tools {
+		tool := install.ToolState{
+			ActiveVersion: versions[0],
+			Versions:      map[string]install.VersionState{},
+		}
+		for _, v := range versions {
+			tool.Versions[v] = install.VersionState{Requested: v}
+		}
+		state.Installed[name] = tool
+	}
+	if err := install.NewStateManager(cfg).Save(state); err != nil {
+		t.Fatal(err)
+	}
+}
+
 // emptyConfig builds a config over an empty fake $TSUKU_HOME, for the cases
 // that never reach resolution.
 func emptyConfig(t *testing.T) (*config.Config, *fakeInstalledSet) {
@@ -97,7 +120,7 @@ node = "20.16.0"
 	// Prevent LoadProjectConfig from stopping at $HOME ceiling.
 	t.Setenv("HOME", filepath.Dir(projectDir))
 
-	result, err := ComputeActivation(projectDir, "", "", cfg, installed)
+	result, err := ComputeActivation(projectDir, "", "", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -137,13 +160,79 @@ go = "1.22"
 `
 	projectDir, cfg, installed := setupProject(t, toml, map[string][]string{"go": {"1.22"}})
 
-	// When cwd == curDir, should return nil (no-op).
-	result, err := ComputeActivation(projectDir, "/usr/bin", projectDir, cfg, installed)
+	// The same directory is not enough on its own: an environment from before
+	// the stamp existed carries no stamp, and must re-resolve once and record
+	// one. Short-circuiting here would leave such a shell never re-resolving.
+	first, err := ComputeActivation(projectDir, "/usr/bin", projectDir, "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if result != nil {
-		t.Errorf("expected nil for same directory, got %+v", result)
+	if first == nil {
+		t.Fatal("an environment with no stamp should re-resolve, got nil")
+	}
+	if first.Stamp == "" {
+		t.Fatal("the re-resolve must record a stamp, got empty")
+	}
+
+	// Feeding back only what the first call produced -- never a hand-built
+	// value, which would manufacture the state a broken implementation failed
+	// to emit -- the second call short-circuits.
+	second, err := ComputeActivation(projectDir, "/usr/bin", projectDir, first.Stamp, cfg, installed)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if second != nil {
+		t.Errorf("expected nil for same directory and unchanged state, got %+v", second)
+	}
+}
+
+// A remediation the developer performs takes effect at the next prompt: once
+// installation state moves, the stamp differs and activation re-resolves even
+// though the directory has not changed.
+func TestComputeActivation_StateChangeDefeatsTheShortCircuit(t *testing.T) {
+	toml := `
+[tools]
+jq = "latest"
+`
+	projectDir, cfg, installed := setupProject(t, toml, map[string][]string{"jq": {"1.6"}})
+	t.Setenv("PATH", "/usr/bin")
+	t.Setenv("HOME", filepath.Dir(projectDir))
+
+	// A real state file, so the stamp describes something that can move.
+	writeState(t, cfg, map[string][]string{"jq": {"1.6"}})
+
+	first, err := ComputeActivation(projectDir, "", "", "", cfg, installed)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Standing still with state unchanged: short-circuit.
+	if got, err := ComputeActivation(projectDir, first.PrevPath, first.Dir, first.Stamp, cfg, installed); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	} else if got != nil {
+		t.Fatalf("expected a short-circuit with state unchanged, got %+v", got)
+	}
+
+	// The developer installs 1.7 without leaving the directory.
+	writeState(t, cfg, map[string][]string{"jq": {"1.6", "1.7"}})
+	installed.versions["jq"] = []string{"1.6", "1.7"}
+	if err := os.MkdirAll(cfg.ToolBinDir("jq", "1.7"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	after, err := ComputeActivation(projectDir, first.PrevPath, first.Dir, first.Stamp, cfg, installed)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if after == nil {
+		t.Fatal("installing a matching version should re-resolve at the next prompt, got nil")
+	}
+	want := filepath.Join(cfg.ToolsDir, "jq-1.7", "bin")
+	if !strings.HasPrefix(after.PATH, want+":") {
+		t.Errorf("PATH = %q, want it to start with %q", after.PATH, want)
+	}
+	if after.Stamp == first.Stamp {
+		t.Error("the recorded stamp should have moved with installation state")
 	}
 }
 
@@ -155,7 +244,7 @@ func TestComputeActivation_NoConfig(t *testing.T) {
 	// Prevent walking up to find a real config.
 	t.Setenv("HOME", dir)
 
-	result, err := ComputeActivation(dir, "", "", cfg, installed)
+	result, err := ComputeActivation(dir, "", "", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -179,7 +268,7 @@ python = "3.12"
 	t.Setenv("PATH", "/usr/bin")
 	t.Setenv("HOME", filepath.Dir(projectDir))
 
-	result, err := ComputeActivation(projectDir, "", "", cfg, installed)
+	result, err := ComputeActivation(projectDir, "", "", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -223,7 +312,7 @@ jq = ""
 	t.Setenv("PATH", "/usr/bin")
 	t.Setenv("HOME", filepath.Dir(projectDir))
 
-	result, err := ComputeActivation(projectDir, "", "", cfg, installed)
+	result, err := ComputeActivation(projectDir, "", "", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -251,7 +340,7 @@ go = "1.22"
 	t.Setenv("HOME", filepath.Dir(projectDir))
 
 	// When prevPath is provided, it should be used as the base instead of $PATH.
-	result, err := ComputeActivation(projectDir, "/original/bin:/usr/bin", "", cfg, installed)
+	result, err := ComputeActivation(projectDir, "/original/bin:/usr/bin", "", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -363,7 +452,7 @@ func TestComputeActivation_Deactivation(t *testing.T) {
 
 	t.Setenv("HOME", dir)
 
-	result, err := ComputeActivation(dir, "/original/bin:/usr/bin", "/some/project", cfg, installed)
+	result, err := ComputeActivation(dir, "/original/bin:/usr/bin", "/some/project", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -391,7 +480,7 @@ func TestComputeActivation_NoOpWithoutPriorActivation(t *testing.T) {
 
 	t.Setenv("HOME", dir)
 
-	result, err := ComputeActivation(dir, "", "", cfg, installed)
+	result, err := ComputeActivation(dir, "", "", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -416,7 +505,7 @@ node = "20.16.0"
 
 	// prevPath represents the original PATH before project A was activated.
 	originalPath := "/original/bin:/usr/bin"
-	result, err := ComputeActivation(projectB, originalPath, "/some/project-a", cfg, installed)
+	result, err := ComputeActivation(projectB, originalPath, "/some/project-a", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

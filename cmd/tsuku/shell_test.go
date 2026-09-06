@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/tsukumogami/tsuku/internal/activation"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
 )
@@ -119,6 +120,48 @@ func TestRunShell_ResolvesEveryDocumentedForm(t *testing.T) {
 				t.Errorf("output should contain %s, got:\n%s", want, output)
 			}
 		})
+	}
+}
+
+// tsuku shell never short-circuits, whatever the environment holds.
+//
+// It defeats the early exit by passing an empty curDir, and it must not read
+// _TSUKU_STATE_STAMP from the environment the way hook-env does. If it did,
+// then with _TSUKU_DIR already at the current directory and a matching stamp,
+// ComputeActivation would return nil, runShell would turn that into an empty
+// string, and the command would report no .tsuku.toml found and exit non-zero
+// for a project that exists and is perfectly valid.
+func TestRunShell_NeverShortCircuits(t *testing.T) {
+	toml := `
+[tools]
+jq = "latest"
+`
+	projectDir, cfg := shellSetupProject(t, toml, map[string][]string{"jq": {"1.7.1"}})
+	t.Setenv("PATH", "/usr/bin")
+	t.Setenv("HOME", filepath.Dir(projectDir))
+
+	// The environment a shell would hold while standing in this very project,
+	// with a stamp that matches installation state exactly.
+	t.Setenv("_TSUKU_DIR", projectDir)
+	t.Setenv("_TSUKU_PREV_PATH", "/usr/bin")
+	t.Setenv("_TSUKU_STATE_STAMP", activation.StateStamp(cfg))
+
+	output, err := runShell(projectDir, "/usr/bin", "bash", cfg)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if output == "" {
+		t.Fatal("tsuku shell produced nothing for a valid project; it short-circuited")
+	}
+
+	want := filepath.Join(cfg.ToolsDir, "jq-1.7.1", "bin")
+	if !strings.Contains(output, want) {
+		t.Errorf("output should activate jq, got:\n%s", output)
+	}
+	for _, name := range []string{"_TSUKU_DIR", "_TSUKU_PREV_PATH", "_TSUKU_STATE_STAMP"} {
+		if !strings.Contains(output, name) {
+			t.Errorf("tsuku shell should emit %s on its success path, got:\n%s", name, output)
+		}
 	}
 }
 

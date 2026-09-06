@@ -489,10 +489,18 @@ repeated.
       implementation returning nil, or a result with an empty `Dir`, when
       nothing activated makes every once-per-entry guarantee unenforceable.
 - [ ] The stamp is composed from a single `os.Stat` of installation state and
-      carries both mtime and size. A stamp built from mtime alone fails: on a
-      filesystem with one-second granularity, activate at T and install at T
-      then leaves the stamp unchanged, which is the exact case this exists to
-      prevent.
+      carries both mtime and size. **The size test holds the mtime equal and
+      changes only the length**, so an mtime-only implementation cannot pass it.
+
+      Measured while implementing: two back-to-back writes on ordinary Linux
+      ext4 carry the identical nanosecond mtime 185 times out of 200, because
+      the kernel caches the timestamp per timer tick rather than reading the
+      clock per write. The design originally framed this as a coarse-filesystem
+      edge case; it is the common case at the speed a prompt hook and an install
+      actually run, and the design has been corrected. The distinction matters
+      for whoever later considers simplifying the stamp: on the old reading,
+      dropping size costs correctness on unusual filesystems, and on the
+      measurement it breaks the feature everywhere.
 - [ ] Entering a project with an unsatisfiable declaration reports; installing a
       matching version without leaving the directory puts it on PATH at the next
       invocation, with empty stderr.

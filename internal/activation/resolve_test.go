@@ -19,7 +19,7 @@ func activate(t *testing.T, toml string, installedTools map[string][]string) (*A
 	t.Setenv("PATH", "/usr/bin")
 	t.Setenv("HOME", filepath.Dir(projectDir))
 
-	result, err := ComputeActivation(projectDir, "", "", cfg, installed)
+	result, err := ComputeActivation(projectDir, "", "", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -216,7 +216,7 @@ func TestResolve_FallsBackToOlderIntactVersion(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	result, err := ComputeActivation(projectDir, "", "", cfg, installed)
+	result, err := ComputeActivation(projectDir, "", "", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -240,7 +240,7 @@ func TestResolve_UnsatisfiedPinIsNoMatchNotMissingFiles(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	result, err := ComputeActivation(projectDir, "", "", cfg, installed)
+	result, err := ComputeActivation(projectDir, "", "", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -266,7 +266,7 @@ func TestResolve_MissingFilesNamesTheVersion(t *testing.T) {
 		}
 	}
 
-	result, err := ComputeActivation(projectDir, "", "", cfg, installed)
+	result, err := ComputeActivation(projectDir, "", "", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -295,7 +295,7 @@ func TestResolve_DirectoryWithoutStateEntryIsNeverActivated(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	result, err := ComputeActivation(projectDir, "", "", cfg, installed)
+	result, err := ComputeActivation(projectDir, "", "", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -326,7 +326,7 @@ func TestResolve_UnreadableDirectoryIsNeverActivated(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(toolDir, 0o755) })
 
-	result, err := ComputeActivation(projectDir, "", "", cfg, installed)
+	result, err := ComputeActivation(projectDir, "", "", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -539,7 +539,7 @@ func TestResolve_StateDerivedVersionIsValidated(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	result, err := ComputeActivation(projectDir, "", "", cfg, installed)
+	result, err := ComputeActivation(projectDir, "", "", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -586,7 +586,7 @@ func TestResolve_AbsentStateFileIsNoMatchNotUnreadable(t *testing.T) {
 	t.Setenv("HOME", filepath.Dir(projectDir))
 
 	// No state.json is ever written.
-	result, err := ComputeActivation(projectDir, "", "", cfg, install.NewStateManager(cfg))
+	result, err := ComputeActivation(projectDir, "", "", "", cfg, install.NewStateManager(cfg))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -641,7 +641,7 @@ func TestResolve_EnteredTracksTheDirectoryChange(t *testing.T) {
 	t.Setenv("HOME", filepath.Dir(projectDir))
 
 	// Arriving from elsewhere.
-	entering, err := ComputeActivation(projectDir, "", "/somewhere/else", cfg, installed)
+	entering, err := ComputeActivation(projectDir, "", "/somewhere/else", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -655,7 +655,7 @@ func TestResolve_EnteredTracksTheDirectoryChange(t *testing.T) {
 	if err := os.MkdirAll(sub, 0755); err != nil {
 		t.Fatal(err)
 	}
-	staying, err := ComputeActivation(sub, "/usr/bin", projectDir, cfg, installed)
+	staying, err := ComputeActivation(sub, "/usr/bin", projectDir, "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -693,7 +693,7 @@ go = "latest"
 	t.Setenv("PATH", "/usr/bin")
 	t.Setenv("HOME", filepath.Dir(projectDir))
 
-	if _, err := ComputeActivation(projectDir, "", "", cfg, installed); err != nil {
+	if _, err := ComputeActivation(projectDir, "", "", "", cfg, installed); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if installed.calls != 1 {
@@ -718,7 +718,7 @@ node = "@lts"
 
 	installed.err = errors.New("state.json is not valid JSON")
 
-	result, err := ComputeActivation(projectDir, "", "", cfg, installed)
+	result, err := ComputeActivation(projectDir, "", "", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

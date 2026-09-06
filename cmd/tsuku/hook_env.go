@@ -33,8 +33,9 @@ var hookEnvCmd = &cobra.Command{
 
 		prevPath := os.Getenv("_TSUKU_PREV_PATH")
 		curDir := os.Getenv("_TSUKU_DIR")
+		stamp := os.Getenv("_TSUKU_STATE_STAMP")
 
-		result, err := activation.ComputeActivation(cwd, prevPath, curDir, cfg, install.NewStateManager(cfg))
+		result, err := activation.ComputeActivation(cwd, prevPath, curDir, stamp, cfg, install.NewStateManager(cfg))
 		if err != nil {
 			return err
 		}

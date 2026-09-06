@@ -500,11 +500,24 @@ Five rules, each closing a specific silent failure:
 - **Stat, never hash.** A content hash is the 37 ms read the stamp exists to
   avoid. Measured: `os.Stat` on the real file is **2.6 µs**, 0.05% of the 5 ms
   budget.
-- **mtime and size, from the one stat.** mtime alone loses on filesystems with
-  1-second granularity — activate at T, install at T, next prompt at T+0.1, same
-  mtime, no re-resolve, which is precisely the case this exists to prevent. Size
-  closes it free, since a new version always adds a `VersionState`. Not the
-  inode: tsuku builds for Windows and there's no portable equivalent.
+- **mtime and size, from the one stat.** Size is load-bearing, not
+  belt-and-braces, and the original justification for it understated the case.
+
+  It was written as a coarse-filesystem edge case: mtime alone loses where
+  granularity is one second, so activate at T, install at T, next prompt at
+  T+0.1 leaves the mtime unchanged. Measured on ordinary Linux ext4, **two
+  back-to-back writes carry the identical nanosecond mtime 185 times out of
+  200**. This is not a coarse-filesystem problem. Linux caches the timestamp
+  per timer tick rather than reading the clock per write, so at the speed a
+  prompt hook and an install actually run, matching mtimes are the common case
+  rather than the exception.
+
+  That reframes the choice. On the original reading, dropping size costs
+  correctness on unusual filesystems, which a future reader might accept. On the
+  measurement, dropping it breaks the feature on the machine it was developed
+  on. Size closes it free, since installing a version always adds a
+  `VersionState` and so changes the length. Not the inode: tsuku builds for
+  Windows and there's no portable equivalent.
 - **Stat before reading state, and record that same value.** The wrong order is
   stable-looking and broken: read at T1, install commits at T2, stat at T3, and
   the shell resolved against old state while recording the new stamp, so it never

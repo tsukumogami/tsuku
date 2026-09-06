@@ -74,6 +74,12 @@ type ActivationResult struct {
 	// in which case no declaration needing that read was classified.
 	Unreadable *StateUnreadable
 
+	// Stamp is the installation-state stamp this activation resolved against,
+	// exported as _TSUKU_STATE_STAMP so the next prompt can tell whether state
+	// moved. It is always freshly computed here, never echoed back from the
+	// environment.
+	Stamp string
+
 	// Entered is true when this activation entered a project directory that was
 	// not already the recorded one. Callers gate the once-per-entry reporting
 	// budget on it rather than re-deriving it from curDir, so the rule lives in
@@ -96,9 +102,26 @@ type ActivationResult struct {
 // prevPath is the original PATH saved before any prior activation
 // (_TSUKU_PREV_PATH). curDir is the last activated directory (_TSUKU_DIR).
 // installed supplies the recorded versions and is read at most once per call.
-func ComputeActivation(cwd, prevPath, curDir string, cfg *config.Config, installed InstalledSet) (*ActivationResult, error) {
-	// Early exit: no directory change.
-	if cwd != "" && curDir != "" && cwd == curDir {
+// stamp is the caller's _TSUKU_STATE_STAMP, empty when there is none.
+func ComputeActivation(cwd, prevPath, curDir, stamp string, cfg *config.Config, installed InstalledSet) (*ActivationResult, error) {
+	// The stat is taken before installation state is read, and this same value
+	// is what the result records. Stating afterwards is stable-looking and
+	// broken: read at T1, an install commits at T2, stat at T3, and the shell
+	// has resolved against old state while recording the new stamp -- so it
+	// never re-resolves. This order fails safe.
+	currentStamp := StateStamp(cfg)
+
+	// Early exit: same directory and installation state has not moved.
+	//
+	// The comparison is inequality only, never ordering. An ordering test gets
+	// a state file restored from backup exactly backwards -- the file is older
+	// than the stamp, so "not newer" holds, so the shell never re-resolves.
+	// Clock steps and TSUKU_HOME switches fall out for free.
+	//
+	// The curDir != "" conjunct must stay ahead of the stamp comparison:
+	// tsuku shell defeats this early exit by passing an empty curDir, and
+	// moving the stamp test in front would take that mechanism away.
+	if cwd != "" && curDir != "" && cwd == curDir && stamp != "" && stamp == currentStamp {
 		return nil, nil
 	}
 
@@ -204,6 +227,7 @@ func ComputeActivation(cwd, prevPath, curDir string, cfg *config.Config, install
 		Active:      true,
 		Unhonorable: unhonorable,
 		Unreadable:  unreadable,
+		Stamp:       currentStamp,
 		Entered:     result.Dir != curDir,
 	}, nil
 }
@@ -225,6 +249,23 @@ func setVar(b *strings.Builder, shell, name, value string) {
 	}
 }
 
+// unsetLines renders the statements that clear the tracking variables.
+func unsetLines(shell string, names ...string) string {
+	if shell == "fish" {
+		var b strings.Builder
+		for _, n := range names {
+			fmt.Fprintf(&b, "set -e %s\n", n)
+		}
+		return b.String()
+	}
+	return "unset " + strings.Join(names, " ") + "\n"
+}
+
+// trackedVars are the variables activation owns. Deactivation unsets exactly
+// this set, so a variable added to the activation path cannot be left behind on
+// the way out.
+var trackedVars = []string{"_TSUKU_DIR", "_TSUKU_PREV_PATH", "_TSUKU_STATE_STAMP"}
+
 // FormatExports renders the activation result as shell export statements for
 // the given shell. Supported shells: "bash", "zsh", "fish".
 //
@@ -241,21 +282,21 @@ func FormatExports(result *ActivationResult, shell string) string {
 	var b strings.Builder
 
 	if !result.Active {
-		// Deactivation: restore PATH and unset tracking variables.
+		// Deactivation: restore PATH and unset the tracking variables.
 		setVar(&b, shell, "PATH", result.PATH)
-		switch shell {
-		case "fish":
-			fmt.Fprintf(&b, "set -e _TSUKU_DIR\n")
-			fmt.Fprintf(&b, "set -e _TSUKU_PREV_PATH\n")
-		default: // bash, zsh
-			fmt.Fprintf(&b, "unset _TSUKU_DIR _TSUKU_PREV_PATH\n")
-		}
+		b.WriteString(unsetLines(shell, trackedVars...))
 		return b.String()
 	}
 
+	// The full block is emitted on every re-resolve, even when the computed
+	// PATH is byte-identical to the current one. Skipping the emission when
+	// nothing changed looks like a sensible optimization and is the likeliest
+	// way to break this: the stamp would never be recorded, so a shell already
+	// running would re-resolve on every prompt, forever.
 	setVar(&b, shell, "PATH", result.PATH)
 	setVar(&b, shell, "_TSUKU_DIR", result.Dir)
 	setVar(&b, shell, "_TSUKU_PREV_PATH", result.PrevPath)
+	setVar(&b, shell, "_TSUKU_STATE_STAMP", result.Stamp)
 
 	return b.String()
 }
