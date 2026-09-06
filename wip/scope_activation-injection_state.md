@@ -15,6 +15,10 @@ chain_ran:
   - name: brief
     started_at: 2026-09-06T18:12:00Z
 chain_skipped: []
+parent_orchestration:
+  invoking_child: prd
+  suppress_status_aware_prompt: true
+  rationale: fresh-chain
 child_snapshots:
   brief:
     path: docs/briefs/BRIEF-activation-injection.md
