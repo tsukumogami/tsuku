@@ -47,3 +47,31 @@ func oneRecipe() []index.BinaryMatch {
 func recipeTOML(binaryPath string) []byte {
 	return []byte("[metadata]\nname = \"test\"\nbinaries = [\"" + binaryPath + "\"]\n")
 }
+
+// appendBuiltTwoProviders is the boundary of the check's reach, not a case it
+// catches. It is the same forbidden construct as twoRealRecipes above -- two
+// providers of one command, named out of the published registry -- assembled
+// by append instead of written as a composite literal.
+//
+// TestMultiProviderCheckHasAKnownGap asserts that the check reports ZERO
+// violations here. That is the documented behavior, not a bug to fix in
+// passing: the rule reads composite literals, and a slice built by append, in
+// a loop, through a named slice type, or elided two levels down is invisible
+// to it. The package comment on internal/indexfixture says so.
+//
+// It is written down here, executably, for three reasons. A reader meets the
+// boundary instead of inferring it from silence. A later extension that widens
+// the rule gets a test that flips from zero to one, which is the cheapest
+// possible signal that the widening worked. And anyone who does build a
+// multi-provider case by append lands on a file that already explains why
+// nothing fired.
+//
+// Do not widen the check to catch this. If the gap is closed one day, this
+// function moves into the counted violations and the zero above becomes a one.
+func appendBuiltTwoProviders() []index.BinaryMatch {
+	var matches []index.BinaryMatch
+	for _, r := range []string{"neovim", "vim"} {
+		matches = append(matches, index.BinaryMatch{Recipe: r, Command: "vi"})
+	}
+	return matches
+}

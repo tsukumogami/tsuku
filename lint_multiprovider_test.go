@@ -676,3 +676,219 @@ func commandsInRecipeTOML(toml string) []string {
 		}
 	}
 }
+
+// TestMultiProviderPackagesIsDerivedNotRemembered keeps multiProviderPackages
+// honest.
+//
+// The list above is a hand-maintained enumeration of scan targets, and a
+// hand-maintained list of what a check examines is the failure this repository
+// keeps meeting: the check goes on passing while its subject stops matching
+// its rule. The per-package file count in TestMultiProviderCasesUseTheFixture
+// closes the neighboring failure -- a scan that silently walked one package
+// of four -- but it cannot see a package that was never in the list to begin
+// with. A fifth package acquiring BinaryMatch construction is uncovered, and
+// nothing says so.
+//
+// So the truth set is derived from the tree and compared against the list.
+//
+// The type is matched in BOTH its qualified and unqualified forms, and that is
+// the part to read before editing. Inside internal/index -- the package that
+// declares the type -- it is referenced bare: "[]BinaryMatch", "var m
+// BinaryMatch". A derivation written against "index.BinaryMatch" alone finds
+// six packages and misses internal/index, so it fails against a list that is
+// correct, and the obvious repair is to delete a real scan target. That would
+// leave a green suite covering one package fewer than before, which is worse
+// than the gap this test closes.
+func TestMultiProviderPackagesIsDerivedNotRemembered(t *testing.T) {
+	// Packages that reference the type but sit outside the enumeration, each
+	// for a stated reason rather than by omission.
+	exempt := map[string]string{
+		// The sanctioned constructor. Building multi-provider cases is its
+		// purpose, so it cannot violate the rule it exists to serve.
+		"internal/indexfixture": "sanctioned constructor",
+		// The negative control: a file that must break both rules.
+		"internal/indexfixture/testdata/fixturecheck": "negative control",
+		// The check's own source, which names the type to describe it.
+		".": "the check itself",
+	}
+
+	found, err := packagesReferencingBinaryMatch()
+	if err != nil {
+		t.Fatalf("deriving the truth set: %v", err)
+	}
+	if len(found) == 0 {
+		t.Fatal("derivation found no package referencing BinaryMatch at all; " +
+			"the walk is broken, not the tree")
+	}
+
+	derived := map[string]bool{}
+	for _, pkg := range found {
+		if _, ok := exempt[pkg]; ok {
+			continue
+		}
+		derived[pkg] = true
+	}
+
+	listed := map[string]bool{}
+	for _, pkg := range multiProviderPackages {
+		listed[pkg] = true
+	}
+
+	for pkg := range derived {
+		if !listed[pkg] {
+			t.Errorf("package %q references BinaryMatch but is not in "+
+				"multiProviderPackages, so R17's check never examines it. "+
+				"Add it to the list, or add it to this test's exempt map "+
+				"with a reason.", pkg)
+		}
+	}
+	for pkg := range listed {
+		if !derived[pkg] {
+			t.Errorf("package %q is in multiProviderPackages but no longer "+
+				"references BinaryMatch. Remove it, or find out why the "+
+				"derivation cannot see it -- note that internal/index names "+
+				"the type unqualified.", pkg)
+		}
+	}
+}
+
+// packagesReferencingBinaryMatch walks the module and returns every directory
+// holding a .go file that names the BinaryMatch type, qualified or not.
+//
+// It is deliberately textual rather than type-checked. A type-checked
+// derivation cannot see internal/indexfixture/testdata/fixturecheck, which
+// does not compile by design, and a derivation blind to the negative control
+// could not assert that the control is exempt on purpose rather than by
+// accident.
+func packagesReferencingBinaryMatch() ([]string, error) {
+	seen := map[string]bool{}
+	err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			if name := info.Name(); name == ".git" || name == "vendor" {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if !strings.HasSuffix(path, ".go") {
+			return nil
+		}
+		src, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		if !referencesBinaryMatch(string(src)) {
+			return nil
+		}
+		seen[filepath.ToSlash(filepath.Dir(path))] = true
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	out := make([]string, 0, len(seen))
+	for dir := range seen {
+		out = append(out, dir)
+	}
+	return out, nil
+}
+
+// referencesBinaryMatch reports whether src names the type in either form.
+// The token boundary matters: it must not fire on an identifier that merely
+// contains the word, such as binaryMatchCache.
+func referencesBinaryMatch(src string) bool {
+	const name = "BinaryMatch"
+	for i := 0; ; {
+		j := strings.Index(src[i:], name)
+		if j < 0 {
+			return false
+		}
+		start := i + j
+		end := start + len(name)
+		var before byte = ' '
+		if start > 0 {
+			before = src[start-1]
+		}
+		var after byte = ' '
+		if end < len(src) {
+			after = src[end]
+		}
+		// A preceding '.' is the qualified form and is a real reference. Any
+		// other identifier byte on either side means a longer name.
+		if (before == '.' || !isIdentByte(before)) && !isIdentByte(after) {
+			return true
+		}
+		i = end
+	}
+}
+
+func isIdentByte(b byte) bool {
+	return b == '_' ||
+		(b >= '0' && b <= '9') ||
+		(b >= 'a' && b <= 'z') ||
+		(b >= 'A' && b <= 'Z')
+}
+
+// TestMultiProviderCheckHasAKnownGap pins the boundary of the rule's reach.
+//
+// Everything else in this file asserts what the check catches. This asserts
+// what it does not, and that asymmetry is the point: the negative control
+// breaks two rules and both of them are composite-literal rules, so until now
+// the gap existed only in prose. A limit stated only in a comment is a limit
+// nobody can test against, and the whole batch this work belongs to keeps
+// finding controls whose reported scope exceeded what they examined.
+//
+// The construct below is the forbidden one -- two providers of one command,
+// out of the published registry -- built by append rather than written as a
+// literal. The check reports nothing, deliberately.
+//
+// This is not a bug to fix while passing through. If the rule is ever widened
+// to reach append and loop construction, this test is where that shows up: the
+// expected count changes from zero to one, and a widening that did not
+// actually work fails here rather than passing quietly.
+func TestMultiProviderCheckHasAKnownGap(t *testing.T) {
+	src := `package p
+
+import "github.com/tsukumogami/tsuku/internal/index"
+
+func f() []index.BinaryMatch {
+	var matches []index.BinaryMatch
+	for _, r := range []string{"neovim", "vim"} {
+		matches = append(matches, index.BinaryMatch{Recipe: r, Command: "vi"})
+	}
+	return matches
+}
+`
+	violations, err := checkMultiProviderSource("gap_test.go", src)
+	if err != nil {
+		t.Fatalf("parsing source: %v", err)
+	}
+	if len(violations) != 0 {
+		t.Errorf("the append-built gap now reports %d violation(s): %v.\n"+
+			"If the rule was widened on purpose, change the expectation here "+
+			"to match and update the package comment on internal/indexfixture, "+
+			"which still documents this shape as out of reach.",
+			len(violations), violations)
+	}
+
+	// The single-element literal inside the loop must not be what saves it:
+	// the rule keys on element count, and a one-element literal is legitimate
+	// everywhere. Without this, a future rule that flagged every BinaryMatch
+	// literal regardless of count would make the assertion above fail for a
+	// reason unrelated to the gap.
+	single := `package p
+
+import "github.com/tsukumogami/tsuku/internal/index"
+
+func f() index.BinaryMatch { return index.BinaryMatch{Recipe: "jq", Command: "jq"} }
+`
+	singleViolations, err := checkMultiProviderSource("single_gap_test.go", single)
+	if err != nil {
+		t.Fatalf("parsing source: %v", err)
+	}
+	if len(singleViolations) != 0 {
+		t.Errorf("a single-element literal was flagged: %v", singleViolations)
+	}
+}
