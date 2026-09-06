@@ -284,11 +284,26 @@ else the first org key's, which is well-defined because `buildBareToOrgMap`
 sorts.
 
 `Resolver.Tools()` is removed: zero production callers, and its documented
-purpose is what `hasProjectTools` did, which R9 deletes. `bareToOrg`'s stderr
-warning stays unchanged — it fires when two org-scoped keys reduce to one bare
-name, which R6's refusal does not cover, since under R2 those collapse to a
-single declaration with a sorted-first winner. It is the user's only signal
-that it happened.
+purpose is what `hasProjectTools` did, which R9 deletes.
+
+**`bareToOrg`'s stderr warning is replaced by a refusal, not kept alongside
+one.** It fires when two org-scoped keys reduce to one bare name, and an
+earlier draft of this design kept it because R2 collapsed that case to a single
+declaration with a sorted-first winner, leaving the warning as the user's only
+signal. R2a reverses that: two org keys with differing org components are two
+declarations, so the case reaches R6 and refuses.
+
+The reason the earlier answer was wrong is that a warning does not stop the
+wrong tool from running, and the winner was chosen by `buildBareToOrgMap`'s
+sort — an ordering the user never expressed. That is precisely the behaviour
+tsukumogami/tsuku#2542 is about, surviving inside the fix for it. The same
+shape was independently observed as a live defect in the activation resolver,
+where two colliding org keys put one tool on `PATH` twice and reported nothing;
+seeing it happen rather than reasoning about it is what settled this.
+
+Keeping both would be worse than either. A refusal that also prints a warning
+about the condition it just refused invites a later reader to delete one of
+them, and there is no way to tell from the code which.
 
 ### D3. How the single-production-site property is enforced
 

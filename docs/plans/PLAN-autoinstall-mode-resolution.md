@@ -121,16 +121,22 @@ for a command, and at what versions.
 `DeclarationsFor(ctx, matches)`. Dedup on bare recipe name, with the org-key
 precedence stated per recipe rather than falling out of iteration order — for
 each distinct bare name the config declares, the bare key's version if present,
-else the first org key's. Keep `bareToOrg`'s stderr warning: two org keys
-reducing to one bare name collapse to a single declaration under R2, so R6's
-refusal never fires and that warning is the user's only signal.
+else the first org key's.
+
+**Two org keys whose org components differ are two declarations, not one**
+(R2a). They reach the refusal rather than collapsing, so `bareToOrg`'s stderr
+warning is deleted rather than kept — the condition it announced is now
+refused, and keeping both invites a later reader to remove whichever one they
+meet first. AC11a is the criterion: the cheapest wrong implementation dedups on
+the bare name, collapses the pair, and still passes AC11, AC12 and AC13.
 
 `ProjectVersionFor` is retained in this unit so the package still compiles
 against its existing caller. Its deletion, with `Tools()`, the `lookup` field
 and `NewResolver`'s second parameter, belongs to Issue 3.
 
-**Acceptance Criteria**: AC11, AC12, AC17, AC18. Testable in `internal/project`
-without a `Runner`, which is why this is the seam the split uses.
+**Acceptance Criteria**: AC11, AC11a, AC12, AC17, AC18. Testable in
+`internal/project` without a `Runner`, which is why this is the seam the split
+uses.
 
 **Complexity**: testable
 

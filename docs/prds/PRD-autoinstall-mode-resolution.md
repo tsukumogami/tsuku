@@ -342,11 +342,31 @@ set of declared recipes that provide it — each with the version the project
 declared for it — rather than a version alone. The set is empty when the
 project declares no provider of the command.
 
-**R2.** That set shall be deduplicated by recipe name, not by configuration
-key. A single recipe declared under both a bare key and an org-scoped key that
-reduces to the same bare name is one declaration, not two. The surviving entry
-carries the version from the bare key, which is the precedence that holds today
-and is not changed here.
+**R2.** That set shall be deduplicated where two configuration keys denote the
+same recipe, not merely where they reduce to the same bare name. A single
+recipe declared under both a bare key and an org-scoped key that reduces to
+that bare name is one declaration, not two; the surviving entry carries the
+version from the bare key, which is the precedence that holds today and is not
+changed here.
+
+**R2a.** Two org-scoped keys whose org components differ shall be two
+declarations, even though both reduce to one bare name, and shall therefore
+reach R6's refusal rather than being collapsed.
+
+They denote different recipes from different registries; only the index's
+bare-name representation makes them look alike. Collapsing them selects one on
+an ordering the user never expressed, which is the behaviour this requirement
+set exists to remove — it would be inconsistent to refuse when two *different
+names* provide a command and silently pick when two *different sources* do. An
+earlier draft of this PRD collapsed them and left a warning on stderr as the
+user's only signal. That was the weaker answer: a warning does not stop the
+wrong tool from running, and the same shape has since been observed as a live
+defect in a neighbouring resolver, where two colliding org keys produced one
+tool listed twice and reported nothing.
+
+The bare key does not break the tie. A configuration carrying `koto`,
+`org-a/koto` and `org-b/koto` is still ambiguous between the two org-scoped
+recipes, and R6 refuses.
 
 **R3.** Where the set contains exactly one recipe, `tsuku run` shall use that
 recipe and its declared version at every point that decides: selecting the
@@ -754,6 +774,7 @@ mechanical check over this table is sufficient.
 |---|---|
 | R1 | AC1, AC3, AC4, AC18 |
 | R2 | AC11, AC12 |
+| R2a | AC11a |
 | R3 | AC1, AC2, AC3, AC4 |
 | R3a | AC19, AC47 |
 | R3b | AC1, AC2 |
@@ -847,6 +868,13 @@ because auto or suggest remains reachable under every outcome.
 - [ ] **AC11** A recipe declared under both a bare key and an org-scoped key reducing to
       the same bare name is treated as one declaration, and resolves to that
       recipe rather than being refused as ambiguous.
+- [ ] **AC11a** A project declaring two org-scoped keys whose org components differ but
+      whose bare names agree — `org-a/koto` and `org-b/koto`, with no bare `koto`
+      key — refuses under R6 rather than resolving, and the refusal names both
+      configuration keys. Adding a bare `koto` key alongside them does not resolve
+      it. This is the criterion that catches a dedup keyed on the bare name rather
+      than on the recipe a key denotes: the cheapest wrong implementation collapses
+      the two and still passes AC11, AC12 and AC13 unchanged.
 - [ ] **AC12** In that case the version used is the one the bare key declares, matching
       the precedence that holds today.
 - [ ] **AC13** With a project declaring two providers of one command, `tsuku run
