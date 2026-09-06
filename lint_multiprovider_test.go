@@ -155,6 +155,44 @@ func g() map[string][]byte {
 	}
 }
 
+// TestMultiProviderCheckReadsInlineRecipeTOML covers the second of the two
+// shapes a recipe map value can take. Nothing in the repository writes a
+// recipe map this way today, which is exactly why it has a test: without one
+// the TOML scanner is a branch nobody ever runs, and a branch nobody runs is
+// indistinguishable from a branch that does not work.
+func TestMultiProviderCheckReadsInlineRecipeTOML(t *testing.T) {
+	const toml = "[metadata]\\nname = \\\"x\\\"\\nbinaries = [\\\"bin/vi\\\"]\\n"
+	src := `package p
+
+func g() map[string][]byte {
+	return map[string][]byte{
+		"neovim": []byte("` + toml + `"),
+		"vim":    []byte("` + toml + `"),
+	}
+}
+
+func h() map[string][]byte {
+	return map[string][]byte{
+		"jq":   []byte("[metadata]\nbinaries = [\"bin/jq\"]\n"),
+		"ripgrep": []byte("[metadata]\nbinaries = [\"bin/rg\"]\n"),
+	}
+}
+`
+	violations, err := checkMultiProviderSource("inline_test.go", src)
+	if err != nil {
+		t.Fatalf("parsing source: %v", err)
+	}
+	if len(violations) != 1 {
+		t.Fatalf("got %d violations, want 1 (the pair yielding \"vi\"): %v", len(violations), violations)
+	}
+	if violations[0].Rule != ruleRecipeMap {
+		t.Errorf("rule = %q, want %q", violations[0].Rule, ruleRecipeMap)
+	}
+	if !strings.Contains(violations[0].What, `"vi"`) {
+		t.Errorf("violation does not name the duplicated command: %s", violations[0].What)
+	}
+}
+
 const (
 	ruleMatchLiteral = "multi-element BinaryMatch literal"
 	ruleRecipeMap    = "recipe map with two keys yielding the same command"
@@ -259,6 +297,18 @@ func isBinaryMatchSlice(expr ast.Expr) bool {
 
 // isRecipeMap reports whether expr is map[string][]byte, which is the shape
 // every recipe map handed to Rebuild has: recipe name to raw TOML.
+//
+// The type is generic, so this rule is scoped to multiProviderPackages rather
+// than run repository-wide: internal/recipe/loader_test.go alone has fifteen
+// map[string][]byte literals that have nothing to do with the index. Within
+// the four scanned packages every such map is a Rebuild input, but that is a
+// fact about those packages, not about the type.
+//
+// If this ever produces a false positive -- a map[string][]byte in one of the
+// four that is not a recipe map, whose values happen to yield one name twice
+// -- the fix is to narrow duplicateCommandInRecipeMap, not to add a suppression
+// comment. There is deliberately no exemption mechanism: an escape hatch on
+// this rule is an escape hatch on R17.
 func isRecipeMap(expr ast.Expr) bool {
 	m, ok := expr.(*ast.MapType)
 	if !ok {
@@ -304,28 +354,45 @@ func duplicateCommandInRecipeMap(lit *ast.CompositeLit) (string, int) {
 }
 
 // commandsYieldedBy extracts the command names a recipe map value declares.
+//
+// A recipe map value is always a call, because a map[string][]byte entry
+// cannot be a bare string literal -- an untyped string constant is not
+// assignable to []byte. So there are exactly two forms to read, and both are
+// calls:
+//
+//   - a []byte conversion wrapping inline TOML, []byte("[metadata]\n..."),
+//     read by scanning the TOML for the binaries it declares;
+//   - a helper carrying the binary path as its only string argument,
+//     minimalRecipeTOML("bin/vi"), read as that path.
+//
+// Only single-argument calls are read either way, so an unrelated two-argument
+// helper cannot collide by accident.
 func commandsYieldedBy(expr ast.Expr) []string {
-	switch v := expr.(type) {
-	case *ast.CallExpr:
-		// A helper that turns a binary path into recipe TOML. Only calls with
-		// exactly one string-literal argument are read, so an unrelated
-		// two-argument helper cannot collide by accident.
-		if len(v.Args) != 1 {
-			return nil
-		}
-		s, ok := stringLiteral(v.Args[0])
-		if !ok || !strings.Contains(s, "/") {
-			return nil
-		}
-		return []string{commandFromBinaryPath(s)}
-	case *ast.BasicLit:
-		s, ok := stringLiteral(v)
-		if !ok {
-			return nil
-		}
+	call, ok := expr.(*ast.CallExpr)
+	if !ok || len(call.Args) != 1 {
+		return nil
+	}
+	s, ok := stringLiteral(call.Args[0])
+	if !ok {
+		return nil
+	}
+	if isByteSliceConversion(call.Fun) {
 		return commandsInRecipeTOML(s)
 	}
-	return nil
+	if !strings.Contains(s, "/") {
+		return nil
+	}
+	return []string{commandFromBinaryPath(s)}
+}
+
+// isByteSliceConversion reports whether fun is the []byte in []byte("...").
+func isByteSliceConversion(fun ast.Expr) bool {
+	arr, ok := fun.(*ast.ArrayType)
+	if !ok || arr.Len != nil {
+		return false
+	}
+	elt, ok := arr.Elt.(*ast.Ident)
+	return ok && elt.Name == "byte"
 }
 
 func stringLiteral(expr ast.Expr) (string, bool) {

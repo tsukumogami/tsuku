@@ -19,13 +19,18 @@ import (
 // It also demonstrates the two fixture properties an assertion on names cannot
 // reach.
 //
-// The install completes with no external network, and the pass itself is the
-// proof rather than an assertion about it. The fixture recipes name an
-// unresolvable .invalid host as their version endpoint, and getOrGeneratePlan
-// turns a version-resolution failure into a hard error whenever the constraint
-// is non-empty -- which it is here. So a run that reached version *fetching*
+// Version resolution reaches no network, and the pass itself is the proof
+// rather than an assertion about it. The fixture recipes name an unresolvable
+// .invalid host as their version endpoint, and getOrGeneratePlan turns a
+// version-resolution failure into a hard error whenever the constraint is
+// non-empty -- which it is here. So a run that reached version *fetching*
 // could not pass; the exact pin resolves through HTTPJSONProvider.
 // ResolveVersion, which returns the requested string without opening a socket.
+//
+// The install *steps* reach no network either, but that is by construction
+// rather than proved here: the only step is a run_command that writes a shell
+// script. Nothing in this test would catch a step that downloaded something,
+// so keep the fixture recipes to steps that cannot.
 //
 // And the installed binary prints the path it was invoked as, which is the
 // only way "this run executed recipe X rather than its sibling" is observable

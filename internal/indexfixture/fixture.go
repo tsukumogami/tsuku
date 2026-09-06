@@ -42,6 +42,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -96,6 +97,13 @@ const (
 
 	// RecipeRankedInstalled provides CommandInstalledFirst and is recorded as
 	// installed, so it ranks first despite sorting last by name.
+	//
+	// "Installed" here means installed *in the index*, and nowhere else. No
+	// files exist under $TSUKU_HOME/tools for it and state.json does not know
+	// it, so install.Manager.GetToolState returns nil and the already-installed
+	// fast path in autoinstall.Runner.Run will not fire for it. It exists to
+	// exercise Lookup's ordering, not to stand in for a completed install. A
+	// unit that needs a real one has to lay it down itself.
 	RecipeRankedInstalled = "fixture-ranked-zulu"
 
 	// RecipeRankedUninstalled provides CommandInstalledFirst and is not
@@ -164,6 +172,12 @@ type Fixture struct {
 
 	// Index is the rebuilt binary index. Prefer the Lookup method over
 	// calling this directly.
+	//
+	// It is exported so a unit that changes installed state can rebuild. If
+	// you do, re-check what New asserts: rebuilding with a different installed
+	// set can move DeclaredRecipe to the top of CommandTwoProviders, which
+	// silently turns every criterion resting on the ranking property into one
+	// that passes either way.
 	Index index.BinaryIndex
 
 	// VersionBaseURL is the root of the local endpoint serving version JSON.
@@ -179,6 +193,17 @@ type Fixture struct {
 // It then asserts the ranking property described in the package comment, so a
 // later edit to a recipe name cannot silently turn every criterion that
 // depends on it into a tautology.
+//
+// Two consequences of the $TSUKU_HOME redirection, because it goes through
+// t.Setenv:
+//
+//   - A test that calls New cannot call t.Parallel. t.Setenv panics if it
+//     does, so this fails loudly rather than corrupting a neighbor.
+//   - Every config.DefaultConfig() after this call reads the fixture's home,
+//     including one built by code that has never heard of this package. If a
+//     test builds its own *config.Config as well, the two disagree about where
+//     $TSUKU_HOME is, and which one a given code path reads is decided by
+//     which one it was handed. Prefer f.Cfg.
 func New(t *testing.T) *Fixture {
 	t.Helper()
 
@@ -278,12 +303,25 @@ func (f *Fixture) Lookup(ctx context.Context, command string) ([]index.BinaryMat
 // This is what makes the fixture reachable from the `tsuku install` path as
 // well as from `tsuku run`.
 //
-// One condition comes with it: pin the install to [SharedVersion]. An exact
-// version resolves with no network, but an empty or `latest` constraint sends
-// the install to the recipe's version endpoint, which is deliberately
-// unreachable -- see recipeVersionHost. An empty constraint then falls back to
-// the "dev" version with only a warning, so the install still succeeds and
-// lands somewhere nobody expected; `latest` fails outright.
+// Three conditions come with driving an install, and all three are silent
+// failures rather than loud ones:
+//
+//  1. Pin the install to [SharedVersion]. An exact version resolves with no
+//     network, but an empty or `latest` constraint sends the install to the
+//     recipe's version endpoint, which is deliberately unreachable -- see
+//     recipeVersionHost. An empty constraint then falls back to the "dev"
+//     version with only a warning, so the install succeeds and lands somewhere
+//     nobody expected; `latest` fails outright.
+//
+//  2. In cmd/tsuku, assign this loader to the package-level `loader` variable
+//     and restore it afterwards. The install pipeline reads that variable, not
+//     a loader passed in.
+//
+//  3. In cmd/tsuku, set the package-level `globalCtx`. main sets it and tests
+//     have to; leaving it nil panics deep inside plan execution, in a stack
+//     that names neither globalCtx nor this package.
+//
+// See cmd/tsuku/install_fixture_test.go for the whole shape.
 func (f *Fixture) Loader() *recipe.Loader {
 	return recipe.NewLoader(recipe.NewLocalProvider(f.Cfg.RecipesDir))
 }
@@ -316,17 +354,14 @@ func (f *Fixture) WriteProjectConfig(t *testing.T, dir string, tools map[string]
 	return path
 }
 
+// sortedKeys orders the declarations so the written file is deterministic --
+// a test asserting on the file's text should not depend on map iteration.
 func sortedKeys(m map[string]string) []string {
 	keys := make([]string, 0, len(m))
 	for k := range m {
 		keys = append(keys, k)
 	}
-	// Small maps; insertion sort keeps this dependency-free and deterministic.
-	for i := 1; i < len(keys); i++ {
-		for j := i; j > 0 && keys[j] < keys[j-1]; j-- {
-			keys[j], keys[j-1] = keys[j-1], keys[j]
-		}
-	}
+	slices.Sort(keys)
 	return keys
 }
 
@@ -429,22 +464,12 @@ func (f *Fixture) assertDeclaredRecipeRanksSecond(t *testing.T) {
 		t.Fatalf("indexfixture: %q has %d providers %v, want exactly 2",
 			CommandTwoProviders, len(ranked), ranked)
 	}
-	if ranked[0] == DeclaredRecipe {
-		t.Fatalf("indexfixture: declared recipe %q ranks first for %q; it must rank second or later, "+
-			"or a narrowing that never matches anything passes every criterion that uses this fixture",
-			DeclaredRecipe, CommandTwoProviders)
-	}
-	found := false
-	for i, name := range ranked {
-		if name == DeclaredRecipe {
-			found = true
-			if i == 0 {
-				t.Fatalf("indexfixture: declared recipe %q ranks first", DeclaredRecipe)
-			}
-		}
-	}
-	if !found {
-		t.Fatalf("indexfixture: declared recipe %q does not provide %q at all (ranked: %v)",
-			DeclaredRecipe, CommandTwoProviders, ranked)
+	// With exactly two providers, "ranks second" and "is not first" are the
+	// same claim, and "provides the command at all" falls out of it too.
+	if ranked[1] != DeclaredRecipe {
+		t.Fatalf("indexfixture: %q ranks %v for %q, so the declared recipe %q is not second. "+
+			"It must rank second or later, or a narrowing that never matches anything passes "+
+			"every criterion that uses this fixture",
+			CommandTwoProviders, ranked, CommandTwoProviders, DeclaredRecipe)
 	}
 }
