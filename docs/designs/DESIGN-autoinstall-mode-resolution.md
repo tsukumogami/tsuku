@@ -529,15 +529,33 @@ reason to say that R3a's protection is forward-looking and becomes live the
 moment the gate works.
 
 **`latest` resolves offline; a prefix does not.** `http_json` takes its
-endpoint from the recipe and does not enforce HTTPS at runtime — only the
-validator does, and the validator does not run on the install path — so a
-fixture pointing at an `httptest` server resolves `latest` through production
-code with no internet. "Offline" here means no external network rather than no
-sockets, and AC49 should say so, because a hermetic-CI reader will read it the
-other way. A prefix is different: `ResolveWithinBoundary` narrows one only for
+endpoint from the recipe and does not enforce HTTPS at runtime, so a fixture
+pointing at an `httptest` server resolves `latest` through production code with
+no internet. "Offline" here means no external network rather than no sockets,
+and AC49 should say so, because a hermetic-CI reader will read it the other
+way. A prefix is different: `ResolveWithinBoundary` narrows one only for
 providers implementing `VersionLister`, and `HTTPJSONProvider` has none, so the
 constraint passes through verbatim. AC18's prefix half needs a fixture provider
 or it is cut.
+
+**Correction, from building it (Issue 1).** The sentence above originally said
+the HTTPS rule is the validator's alone and the validator does not run on the
+install path. The second half is wrong: `cmd/tsuku/install_deps.go` calls
+`recipe.ValidateRecipe` before any plan is generated and hard-fails on its
+errors, and `internal/recipe/validator.go` rejects a non-HTTPS `http_json`
+`url`. So a fixture recipe pointing at a plain `httptest` endpoint cannot be
+installed at all, and `tsuku install` against the fixture — which AC16 needs —
+is impossible in that shape.
+
+What Issue 1 built instead: the fixture recipes name an unreachable
+`https://...invalid` endpoint, and installs pin an exact version.
+`HTTPJSONProvider.ResolveVersion` returns an exact version unchanged without
+fetching, so a pinned install completes with no socket opened. The local
+`httptest` endpoint stays, and `latest` resolution is demonstrated against it
+through the production provider directly. The consequence for later units is
+that a `tsuku install` against the fixture must pin `indexfixture.SharedVersion`
+— an empty constraint silently falls back to the `dev` version and `latest`
+fails.
 
 **The R17 check is an AST pass keyed on element count, not a grep on names.**
 A grep cannot work, for the reason R17 itself gives: several registry names are

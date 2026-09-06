@@ -5,14 +5,24 @@
 // test naming two real recipes stops exercising anything the moment the
 // registry stops shipping that pair, and passes while doing so. So the recipes
 // here have names that appear in no published manifest, and a static check
-// (TestMultiProviderCasesUseTheFixture, in the repository root) fails any test
-// in internal/autoinstall, internal/project, internal/index or cmd/tsuku that
+// (TestMultiProviderCasesUseTheFixture, in the repository root) fails a test in
+// internal/autoinstall, internal/project, internal/index or cmd/tsuku that
 // builds a multi-provider case some other way.
 //
+// What that check actually catches is worth stating, because it is narrower
+// than "any other way" and reading it as total is how a gap goes unnoticed. It
+// catches composite literals: a `[]index.BinaryMatch` with two or more
+// elements, and a `map[string][]byte` whose keys yield one command twice. It
+// does not catch a slice built by append or in a loop, an array-typed literal,
+// a named slice type, or a recipe map assembled by assignment. Those are not
+// how anyone writes one of these by hand today -- the rule found five real
+// violations where the design predicted three -- but a case built that way
+// passes, and the fixture is still the right place to build it.
+//
 // The whole fixture is offline. "Offline" means no external network rather
-// than no sockets: version resolution runs through the production http_json
-// provider against an httptest server started by New, and installation runs a
-// run_command step that writes a shell script. Nothing reaches the internet.
+// than no sockets: installation runs a run_command step that writes a shell
+// script, and the local endpoint New starts serves version manifests to
+// whatever asks for them. Nothing reaches the internet.
 //
 // # The property that makes the fixture worth having
 //
@@ -267,6 +277,13 @@ func (f *Fixture) Lookup(ctx context.Context, command string) ([]index.BinaryMat
 //
 // This is what makes the fixture reachable from the `tsuku install` path as
 // well as from `tsuku run`.
+//
+// One condition comes with it: pin the install to [SharedVersion]. An exact
+// version resolves with no network, but an empty or `latest` constraint sends
+// the install to the recipe's version endpoint, which is deliberately
+// unreachable -- see recipeVersionHost. An empty constraint then falls back to
+// the "dev" version with only a warning, so the install still succeeds and
+// lands somewhere nobody expected; `latest` fails outright.
 func (f *Fixture) Loader() *recipe.Loader {
 	return recipe.NewLoader(recipe.NewLocalProvider(f.Cfg.RecipesDir))
 }
