@@ -253,9 +253,13 @@ read. The diagnostic is not.** Five call sites have to print it:
 `internal/updates/apply.go`. `cmd_run.go:95` discards the load error entirely
 today (`projectCfg, _ :=`), so it needs the most work.
 
-Diagnostics go to **stderr**, without exception. `cmd/tsuku/hook_env.go:51`
-prints `FormatExports` to stdout and the shell hook evaluates it, so a
-diagnostic written to stdout would be executed rather than read.
+Diagnostics go to **stderr**, without exception, and this is load-bearing
+rather than conventional. `cmd/tsuku/hook_env.go:51` prints `FormatExports` to
+stdout and the shell hook evaluates it, so a diagnostic written to stdout is
+*executed* rather than read — a fresh injection vector introduced by the fix
+for an injection vector, in the same change. The reason is recorded here
+because "diagnostics go to stderr" otherwise reads as house style, and someone
+will eventually move it for consistency with a command that prints to stdout.
 
 ### The name predicate
 

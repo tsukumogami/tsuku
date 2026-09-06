@@ -461,6 +461,12 @@ Accept cases, which pin the rule against over-rejection:
 - [ ] A file with one malformed declaration and several valid ones honours the
       valid ones — asserted by the valid tools' bin directories reaching the
       emitted PATH, not by the absence of an error.
+- [ ] The refusal is written to **stderr**, asserted per consumer by capturing
+      the two streams separately. Stderr here is load-bearing rather than
+      conventional: `tsuku hook-env` prints activation output to **stdout** and
+      the shell hook evaluates it, so a diagnostic on stdout is executed rather
+      than read — a new injection vector introduced by the fix for an injection
+      vector. Anyone later moving it to stdout for tidiness reopens that.
 - [ ] The refusal names the offending key and reaches the user on the
       command's error output. Asserted on
       what the command prints, not on a struct field — appending the key to a
