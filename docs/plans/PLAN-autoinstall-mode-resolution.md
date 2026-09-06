@@ -431,3 +431,36 @@ work owes them by *removing* the affected control from the mitigations
 `DESIGN-project-aware-exec.md` offers, rather than by describing it: a document
 must not offer a mitigation that does not hold, and is under no obligation to
 explain a defect being handled elsewhere.
+
+## A review step this plan earned twice
+
+**Check each criterion's assignment against the assigned unit's capability, not
+against the criterion's text.** Read the criterion, then ask whether the unit it
+is assigned to is *able* to satisfy it. This is a different question from whether
+the criterion is correct, and it is the only one that finds this failure.
+
+It has fired twice here, and neither instance would have failed any test:
+
+- **AC33**, the consent floor — an explicitly set `suggest` being honored, which
+  is what the whole bounded-elevation decision rests on — was filed among the
+  criteria this plan declared unreachable, and assigned to no unit at all. The
+  plan called its own load-bearing claim unreachable in one place and left it
+  unowned in another.
+- **AC11a** asserted that colliding org keys *refuse*, and was assigned to the
+  unit that builds the declaration set. That unit cannot refuse; the refusal is
+  two units later. It would have been marked closed by a unit that had delivered
+  half of it, and the missing half is the half a user would notice.
+
+Both criteria were correct as written. What neither carried was which unit could
+satisfy it — that property lives in the assignment, not the text — so reading the
+criterion, however carefully, says nothing about whether its assignment is
+possible. This is the plan-level form of the defect family the work itself is
+about: a control whose reported scope exceeds what it examined.
+
+**The corollary, which is the useful half.** A multi-unit change is safe to stage
+exactly when each stage has a criterion that *fails until the next stage lands*.
+Staging is not the hazard; an unforced second step is. AC11c exists because
+nothing forced the rewire after the set was produced, and it takes a different
+shape from every other criterion here — it asserts a symbol's **absence**, because
+a right answer nobody reads produces no wrong output for a behavioral test to
+catch.
