@@ -123,7 +123,7 @@ func LoadProjectConfig(startDir string) (*ConfigResult, error) {
 		if _, err := os.Stat(configPath); err == nil {
 			cfg, diags, parseErr := parseConfigFile(configPath)
 			if parseErr != nil {
-				return nil, parseErr
+				return nil, &ParseError{Dir: dir, Path: configPath, Err: parseErr}
 			}
 			return &ConfigResult{
 				Config:      cfg,
@@ -183,25 +183,32 @@ func isCeiling(dir string, ceilings map[string]struct{}) bool {
 }
 
 // parseConfigFile reads and validates a .tsuku.toml file.
+// parseConfigFile reads and decodes one .tsuku.toml.
 //
 // It returns diagnostics alongside the config: things wrong with the file that
 // do not justify refusing to load it. An error is reserved for the case where
 // nothing about the file's contents is known -- it could not be read, or it is
 // not TOML -- because there is then no per-entry judgement to make.
+//
+// Its errors are unwrapped causes; LoadProjectConfig wraps them in a
+// ParseError carrying the directory and the path. The path is deliberately
+// absent from these messages: adding it here renders it twice in the
+// diagnostic, which is the duplicated-error half of the defect that work
+// removed. TestHookEnv_ParseFailure asserts the path appears exactly once.
 func parseConfigFile(path string) (*ProjectConfig, []string, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, nil, fmt.Errorf("reading %s: %w", path, err)
+		return nil, nil, fmt.Errorf("reading: %w", err)
 	}
 
 	var cfg ProjectConfig
 	md, err := toml.Decode(string(data), &cfg)
 	if err != nil {
-		return nil, nil, fmt.Errorf("parsing %s: %w", path, err)
+		return nil, nil, fmt.Errorf("parsing: %w", err)
 	}
 
 	if len(cfg.Tools) > MaxTools {
-		return nil, nil, fmt.Errorf("parsing %s: declares %d tools, maximum is %d", path, len(cfg.Tools), MaxTools)
+		return nil, nil, fmt.Errorf("declares %d tools, maximum is %d", len(cfg.Tools), MaxTools)
 	}
 
 	var diags []string
