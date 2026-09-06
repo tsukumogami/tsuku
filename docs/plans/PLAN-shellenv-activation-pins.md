@@ -282,18 +282,34 @@ PATH when the stat fails for any reason other than not-exists.
       covered by theirs, non-exact by this one, and dropping either leaves its
       half unvalidated. `internal/updates/gc.go` already validates a
       state-derived version before building a path for the same reason.
-- [ ] **The sink uses `install.ValidateVersionString`, not
-      `internal/version`'s function of the same name.** Two functions share that
-      name and they are not the same rule, so this is a choice rather than an
-      import detail. `internal/version`'s **accepts `../../evil`** — its charset
-      permits `/` for scoped npm names such as `@biomejs/biome@2.3.8` and it
-      never checks for `..` — so wiring it in at a path sink would validate
-      nothing that matters here. It is also stricter in the other direction,
-      rejecting `1.0.0 beta` and `1.0.0~rc`, which `install`'s accepts and which
-      tsuku may therefore have installed; using it would refuse to activate
-      versions tsuku itself created, which is the silent-skip disease reappearing
-      inside its own fix. `install`'s is the gate that let the directory exist,
-      so it is the correct oracle for "could tsuku have made this path".
+- [ ] **The validator at this sink answers the question the sink asks: "is this
+      safe to compose into a path?" — which in this tree is
+      `install.ValidateVersionString`, not `internal/version`'s function of the
+      same name.** Two functions share that name and they answer different
+      questions: `internal/version`'s asks "is this a plausible version token",
+      `install`'s asks "is this safe to compose into a path". A path sink asks
+      the second.
+
+      Do not reach for this by asking which is *stricter*. Neither is: the
+      version one is stricter on charset (it rejects a space, and `~`), the
+      install one is stricter on path-safety (it rejects `..`, `/`, `\`). The
+      word silently resolves to whichever axis the reader was already thinking
+      about, and a reviewer who reads "charset-stricter, therefore safer" picks
+      the one that **accepts `../../evil`** — in-charset from end to end, since
+      `/` is permitted for scoped npm names such as `@biomejs/biome@2.3.8` and
+      `.` is a legal version character so `..` is never special. That is a check
+      reporting green on the one input it was added to stop.
+
+      The second reason is the ordinary one: `internal/version`'s rejects
+      `1.0.0 beta` and `1.0.0~rc`, which `install`'s accepts and which tsuku may
+      therefore have installed, so it would refuse to activate versions tsuku
+      itself created — the silent-skip disease reappearing inside its own fix.
+      `install`'s is the gate that let the directory exist, so it is the correct
+      oracle for "could tsuku have made this path".
+
+      Stated on the question rather than the function because a criterion naming
+      the function protects this sink, and a criterion naming the question
+      protects the next one.
 - [ ] A version tsuku installed — one `install.ValidateVersionString` accepts,
       with a directory present — always activates. The validation at the sink is
       never stricter than the one that created the directory.
