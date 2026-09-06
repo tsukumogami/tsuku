@@ -205,6 +205,13 @@ func parseConfigFile(path string) (*ProjectConfig, []string, error) {
 
 	var diags []string
 
+	// The boundary. Every consumer reaches its values through this function,
+	// so refusing here means none of them can be reached with an unchecked
+	// value -- including a consumer written later that never learns the rule.
+	kept, refusals := validateDeclarations(cfg.Tools)
+	cfg.Tools = kept
+	diags = append(diags, refusals...)
+
 	// A key tsuku does not understand is dropped by the decoder without a
 	// word. That is how a typo'd section name becomes "my tools stopped
 	// working" with nothing to go on.
@@ -214,7 +221,7 @@ func parseConfigFile(path string) (*ProjectConfig, []string, error) {
 
 	// `tools = "something"` parses cleanly and yields no tools at all, so the
 	// file looks fine and activates nothing. Worth saying out loud.
-	if len(cfg.Tools) == 0 {
+	if len(cfg.Tools) == 0 && len(refusals) == 0 {
 		diags = append(diags, "no tools declared (a [tools] table is expected)")
 	}
 
