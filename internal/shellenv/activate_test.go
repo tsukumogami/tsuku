@@ -2,6 +2,7 @@ package shellenv
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -218,14 +219,20 @@ func TestFormatExports_Bash(t *testing.T) {
 
 	output := FormatExports(result, "bash")
 
-	if !strings.Contains(output, `export PATH="/tools/go-1.22/bin:/usr/bin"`) {
-		t.Errorf("missing PATH export in:\n%s", output)
-	}
-	if !strings.Contains(output, `export _TSUKU_DIR="/home/user/project"`) {
-		t.Errorf("missing _TSUKU_DIR export in:\n%s", output)
-	}
-	if !strings.Contains(output, `export _TSUKU_PREV_PATH="/usr/bin"`) {
-		t.Errorf("missing _TSUKU_PREV_PATH export in:\n%s", output)
+	// Asserted on the variable's value after the shell has read the line, not
+	// on the emitted literal. These three assertions previously compared
+	// against the double-quoted form %q produced, which meant they pinned the
+	// defect: a correct quoter made them fail. An assertion on an exact
+	// emitted string is satisfied by whatever implementation generated the
+	// expectation, so it cannot distinguish a safe quoter from an unsafe one.
+	for _, tc := range []struct{ name, want string }{
+		{"PATH", "/tools/go-1.22/bin:/usr/bin"},
+		{"_TSUKU_DIR", "/home/user/project"},
+		{"_TSUKU_PREV_PATH", "/usr/bin"},
+	} {
+		if got := evalAndRead(t, "bash", output, tc.name); got != tc.want {
+			t.Errorf("%s = %q after eval, want %q\noutput:\n%s", tc.name, got, tc.want, output)
+		}
 	}
 }
 
@@ -375,7 +382,10 @@ func TestFormatExports_DeactivationBash(t *testing.T) {
 
 	output := FormatExports(result, "bash")
 
-	if !strings.Contains(output, `export PATH="/original/bin:/usr/bin"`) {
+	if got := evalAndRead(t, "bash", output, "PATH"); got != "/original/bin:/usr/bin" {
+		t.Errorf("PATH = %q after eval, want %q", got, "/original/bin:/usr/bin")
+	}
+	if !strings.Contains(output, `export PATH=`) {
 		t.Errorf("missing PATH export in:\n%s", output)
 	}
 	if !strings.Contains(output, "unset _TSUKU_DIR _TSUKU_PREV_PATH") {
@@ -395,7 +405,10 @@ func TestFormatExports_DeactivationFish(t *testing.T) {
 
 	output := FormatExports(result, "fish")
 
-	if !strings.Contains(output, `set -gx PATH "/original/bin:/usr/bin"`) {
+	if got := evalAndRead(t, "fish", output, "PATH"); got != "/original/bin:/usr/bin" {
+		t.Errorf("PATH = %q after eval, want %q", got, "/original/bin:/usr/bin")
+	}
+	if !strings.Contains(output, `set -gx PATH `) {
 		t.Errorf("missing PATH set in:\n%s", output)
 	}
 	if !strings.Contains(output, "set -e _TSUKU_DIR") {
@@ -407,5 +420,70 @@ func TestFormatExports_DeactivationFish(t *testing.T) {
 	// Should not contain set -gx for tracking vars.
 	if strings.Contains(output, "set -gx _TSUKU_DIR") {
 		t.Errorf("deactivation should not set -gx _TSUKU_DIR:\n%s", output)
+	}
+}
+
+// evalAndRead evaluates emitted output in a real shell and returns what the
+// named variable ends up holding. A skip when the shell is absent is fine for
+// bash, which is everywhere; fish is provisioned in CI precisely so its cases
+// do not skip on every run and read as coverage.
+func evalAndRead(t *testing.T, shell, output, varName string) string {
+	t.Helper()
+	bin, err := exec.LookPath(shell)
+	if err != nil {
+		t.Skipf("%s not available", shell)
+	}
+	var script string
+	if shell == "fish" {
+		script = output + "\nprintf '%s' $" + varName + "\n"
+	} else {
+		script = output + "\nprintf '%s' \"$" + varName + "\"\n"
+	}
+	out, err := exec.Command(bin, "-c", script).Output()
+	if err != nil {
+		t.Fatalf("%s rejected the emitted output: %v\nscript:\n%s", shell, err, script)
+	}
+	return string(out)
+}
+
+// TestFormatExports_HostileValuesDoNotExecute is the assertion the old tests
+// could not make. Every value here is attacker-influenced in production: Dir is
+// the directory holding the project config, named by whoever authored the
+// cloned repository, and it reaches the emitted output with no validation and
+// no existence check. The marker file is what separates "the string looks
+// escaped" from "nothing ran".
+func TestFormatExports_HostileValuesDoNotExecute(t *testing.T) {
+	for _, shell := range []string{"bash", "fish"} {
+		t.Run(shell, func(t *testing.T) {
+			bin, err := exec.LookPath(shell)
+			if err != nil {
+				t.Skipf("%s not available", shell)
+			}
+			dir := t.TempDir()
+			marker := filepath.Join(dir, "pwned")
+
+			for _, hostile := range []string{
+				"/tmp/proj/$(touch " + marker + ")",
+				"/tmp/proj/`touch " + marker + "`",
+				"/tmp/proj/$HOME",
+				"/tmp/pro'j",
+				"/tmp/pro\\\\j",
+			} {
+				for _, active := range []bool{true, false} {
+					result := &ActivationResult{
+						PATH: "/usr/bin", Dir: hostile, PrevPath: hostile, Active: active,
+					}
+					output := FormatExports(result, shell)
+					script := output + "\ntrue\n"
+					if err := exec.Command(bin, "-c", script).Run(); err != nil {
+						t.Fatalf("%s rejected output for %q: %v\n%s", shell, hostile, err, output)
+					}
+					if _, err := os.Stat(marker); !os.IsNotExist(err) {
+						t.Fatalf("value %q executed under %s (active=%v):\n%s",
+							hostile, shell, active, output)
+					}
+				}
+			}
+		})
 	}
 }

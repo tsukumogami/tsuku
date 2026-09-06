@@ -13,6 +13,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/project"
+	"github.com/tsukumogami/tsuku/internal/shellquote"
 )
 
 // ActivationResult holds the computed environment changes for a project
@@ -118,8 +119,31 @@ func ComputeActivation(cwd, prevPath, curDir string, cfg *config.Config) (*Activ
 	}, nil
 }
 
+// setVar writes one assignment that gives the shell a value and nothing else.
+//
+// It takes the value rather than a format string, deliberately. The defect this
+// replaces was eight fmt.Fprintf calls using %q, and %q is a Go string-literal
+// quoter: it leaves $ and the backtick live inside the double quotes it
+// produces. Routing values through a helper that quotes internally means a new
+// emitted variable cannot reintroduce that by forgetting to call something --
+// there is no format string left to get wrong.
+func setVar(b *strings.Builder, shell, name, value string) {
+	switch shell {
+	case "fish":
+		fmt.Fprintf(b, "set -gx %s %s\n", name, shellquote.Fish(value))
+	default: // bash, zsh
+		fmt.Fprintf(b, "export %s=%s\n", name, shellquote.POSIX(value))
+	}
+}
+
 // FormatExports renders the activation result as shell export statements for
 // the given shell. Supported shells: "bash", "zsh", "fish".
+//
+// Every emitted value is quoted for the target dialect. That matters because
+// the shell hooks evaluate this output -- eval "$(tsuku hook-env bash)" -- and
+// the values are not tsuku's own: PATH carries tool directories built from a
+// project config, and _TSUKU_DIR is the directory holding that config, whose
+// name is chosen by whoever authored the repository the user cloned.
 func FormatExports(result *ActivationResult, shell string) string {
 	if result == nil {
 		return ""
@@ -129,28 +153,20 @@ func FormatExports(result *ActivationResult, shell string) string {
 
 	if !result.Active {
 		// Deactivation: restore PATH and unset tracking variables.
+		setVar(&b, shell, "PATH", result.PATH)
 		switch shell {
 		case "fish":
-			fmt.Fprintf(&b, "set -gx PATH %q\n", result.PATH)
 			fmt.Fprintf(&b, "set -e _TSUKU_DIR\n")
 			fmt.Fprintf(&b, "set -e _TSUKU_PREV_PATH\n")
 		default: // bash, zsh
-			fmt.Fprintf(&b, "export PATH=%q\n", result.PATH)
 			fmt.Fprintf(&b, "unset _TSUKU_DIR _TSUKU_PREV_PATH\n")
 		}
 		return b.String()
 	}
 
-	switch shell {
-	case "fish":
-		fmt.Fprintf(&b, "set -gx PATH %q\n", result.PATH)
-		fmt.Fprintf(&b, "set -gx _TSUKU_DIR %q\n", result.Dir)
-		fmt.Fprintf(&b, "set -gx _TSUKU_PREV_PATH %q\n", result.PrevPath)
-	default: // bash, zsh
-		fmt.Fprintf(&b, "export PATH=%q\n", result.PATH)
-		fmt.Fprintf(&b, "export _TSUKU_DIR=%q\n", result.Dir)
-		fmt.Fprintf(&b, "export _TSUKU_PREV_PATH=%q\n", result.PrevPath)
-	}
+	setVar(&b, shell, "PATH", result.PATH)
+	setVar(&b, shell, "_TSUKU_DIR", result.Dir)
+	setVar(&b, shell, "_TSUKU_PREV_PATH", result.PrevPath)
 
 	return b.String()
 }

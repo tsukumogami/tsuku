@@ -9,7 +9,7 @@
 // The two dialects need different functions and one function covering both
 // would be wrong for one of them. POSIX single quotes are fully literal --
 // nothing inside them is special, and a single quote cannot appear at all.
-// Fish's single quotes recognise two escapes, \' and \\, and treat everything
+// Fish's single quotes recognize two escapes, \' and \\, and treat everything
 // else literally. So a value containing *consecutive* backslashes, quoted the
 // POSIX way and handed to fish, comes back with one of them consumed --
 // verified against fish 3.7.1: POSIX-quoting `a\\b` yields `'a\\b'`, which fish
@@ -33,7 +33,7 @@ func POSIX(s string) string {
 
 // Fish quotes s for fish.
 //
-// Fish's single quotes are not fully literal: they recognise \' and \\. Both
+// Fish's single quotes are not fully literal: they recognize \' and \\. Both
 // therefore need escaping, and the order matters. Backslashes are escaped
 // first, so that the backslash introduced when escaping a quote is not itself
 // escaped a second time. Reversing these two lines produces output that is
