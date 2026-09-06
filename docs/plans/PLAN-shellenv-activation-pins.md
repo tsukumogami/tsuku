@@ -164,17 +164,17 @@ package doc comment, which currently describes only the half that leaves.
 
 **Acceptance Criteria**:
 
-- [ ] `activate.go` and its test live in `internal/activation` with no content
+- [x] `activate.go` and its test live in `internal/activation` with no content
       change beyond the package clause. Git records it as a rename.
-- [ ] No shim, alias or forwarding declaration is left in `internal/shellenv`,
+- [x] No shim, alias or forwarding declaration is left in `internal/shellenv`,
       and nothing else in that package is edited beyond the doc comment.
-- [ ] `cmd/tsuku/hook_env.go` and `cmd/tsuku/shell.go` compile against the new
+- [x] `cmd/tsuku/hook_env.go` and `cmd/tsuku/shell.go` compile against the new
       location; no other call site exists.
-- [ ] `internal/activation` can import `internal/install` and `internal/version`
+- [x] `internal/activation` can import `internal/install` and `internal/version`
       without a cycle, demonstrated by doing so rather than asserted.
-- [ ] `internal/shellenv`'s doc comment names what stays: shell.d init-cache
+- [x] `internal/shellenv`'s doc comment names what stays: shell.d init-cache
       construction, its doctor checks, and PATH-precedence shadowing.
-- [ ] `go build ./...` and the full test suite pass with no behavior change.
+- [x] `go build ./...` and the full test suite pass with no behavior change.
 - [ ] The security chain's changes to `activate.go` survive the move intact.
 
 ### Issue 2: Add a lock-free, one-decode installed-set accessor
@@ -194,20 +194,20 @@ in-process read mutex.
 
 **Acceptance Criteria**:
 
-- [ ] Returns each named tool's recorded versions from exactly one decode,
+- [x] Returns each named tool's recorded versions from exactly one decode,
       counted, and the count does not grow with the number of names passed.
-- [ ] Takes no file lock, and completes while another process holds
+- [x] Takes no file lock, and completes while another process holds
       `state.json.lock` exclusively for the whole duration and never releases
       it.
-- [ ] Does **not** sort. The returned order is whatever the decode produced, and
+- [x] Does **not** sort. The returned order is whatever the decode produced, and
       the doc comment says callers needing "newest" must sort by version
       comparison. An accessor that sorts, by any comparator, fails.
-- [ ] A tool with no state entry yields no map entry and no error; a missing
+- [x] A tool with no state entry yields no map entry and no error; a missing
       state file yields an empty map and no error.
-- [ ] Hidden tools are included, and the doc comment says so and why.
-- [ ] The exported `LoadWithoutLock`, which has no production caller, is
+- [x] Hidden tools are included, and the doc comment says so and why.
+- [x] The exported `LoadWithoutLock`, which has no production caller, is
       deleted.
-- [ ] `loadWithoutLock`'s doc comment is corrected: the file lock is optional
+- [x] `loadWithoutLock`'s doc comment is corrected: the file lock is optional
       for readers, because `Save` publishes by atomic rename.
 
 ### Issue 3: Give `LoadProjectConfig` a typed parse error carrying the project directory
@@ -225,11 +225,11 @@ Path, Err}`, matched with `errors.As`.
 
 **Acceptance Criteria**:
 
-- [ ] A `.tsuku.toml` that will not parse produces a `*project.ParseError` whose
+- [x] A `.tsuku.toml` that will not parse produces a `*project.ParseError` whose
       `Dir` is the directory containing it, for a file at the working directory
       and for one found by walking up.
-- [ ] `errors.As` and `errors.Is` behave, and the wrapped cause is reachable.
-- [ ] Existing callers that only check for a non-nil error are unaffected.
+- [x] `errors.As` and `errors.Is` behave, and the wrapped cause is reachable.
+- [x] Existing callers that only check for a non-nil error are unaffected.
 
 ### Issue 4: Resolve all four documented version forms against the installed set
 
@@ -253,24 +253,24 @@ PATH when the stat fails for any reason other than not-exists.
 
 **Acceptance Criteria**:
 
-- [ ] `latest`, `""`, a major-only prefix and a major-minor prefix each activate
+- [x] `latest`, `""`, a major-only prefix and a major-minor prefix each activate
       the expected installed version, via both entry points.
-- [ ] An exact declaration activates the same version it does today.
-- [ ] **With `1.0.0` and `2.0.0` installed, `latest` selects `2.0.0`.** This is
+- [x] An exact declaration activates the same version it does today.
+- [x] **With `1.0.0` and `2.0.0` installed, `latest` selects `2.0.0`.** This is
       the criterion that discriminates, and it is deliberately the dullest case
       in the set: every digit-boundary fixture below is *also* satisfied by
       `sort.Strings` ascending taking the first element, because `"10.0.0"`
       happens to sort before `"9.0.0"`. Only a pair where the newer version is
       lexicographically later separates version ordering from string ordering.
-- [ ] With `9.0.0` and `10.0.0` installed and `9.0.0` recorded active, `latest`
+- [x] With `9.0.0` and `10.0.0` installed and `9.0.0` recorded active, `latest`
       selects `10.0.0`; with `0.9.0` and `0.10.0`, it selects `0.10.0`; a prefix
       of `"1"` selects neither.
-- [ ] Selection is unchanged when the accessor returns its candidates in reverse
+- [x] Selection is unchanged when the accessor returns its candidates in reverse
       order, so an implementation that takes the first element without sorting,
       or that relies on the accessor's ordering, fails.
-- [ ] With `1.0.0` and `1.0.0-rc.1` installed, `latest` selects `1.0.0`; with
+- [x] With `1.0.0` and `1.0.0-rc.1` installed, `latest` selects `1.0.0`; with
       only `1.0.0-rc.1`, it selects that.
-- [ ] Two versions that `CompareVersions` reports equal — `1.0` against `1.0.0`,
+- [x] Two versions that `CompareVersions` reports equal — `1.0` against `1.0.0`,
       or `1.0.0+a` against `1.0.0+b` — select the same one **for every ordering
       of the tied group**.
 
@@ -281,30 +281,30 @@ PATH when the stat fails for any reason other than not-exists.
       would be lucky to miss. Ordering is the right axis because it is the
       whole cause — `sort.Slice` is not stable and the candidate slice is built
       by ranging a map.
-- [ ] With `2.0.0` recorded but its directory removed and `1.0.0` intact,
+- [x] With `2.0.0` recorded but its directory removed and `1.0.0` intact,
       `latest` activates `1.0.0` and prints nothing.
-- [ ] **`jq = "2"` with only `1.6` recorded and its files gone selects the
+- [x] **`jq = "2"` with only `1.6` recorded and its files gone selects the
       no-match reason, not the missing-files reason.** This separates
       match-then-files filtering from files-then-match; the latter tells the
       developer to reinstall a version that was never recorded.
-- [ ] **A declared key whose derived bare name (after `SplitOrgKey`) is not a
+- [x] **A declared key whose derived bare name (after `SplitOrgKey`) is not a
       single safe path segment is rejected, names the offending key, and
       contributes no PATH entry.**
-- [ ] **A legitimate org-scoped key — `owner/repo` or `owner/repo:tool` — is
+- [x] **A legitimate org-scoped key — `owner/repo` or `owner/repo:tool` — is
       accepted, resolves to its bare name, and activates the installed version
       at `$TSUKU_HOME/tools/<bare>-<version>/bin`.** This is false today:
       activation iterates raw map keys and never calls `SplitOrgKey`, so
       `"tsukumogami/koto" = "1.0"` looks for `tools/tsukumogami/koto-1.0/bin`
       while the installer wrote `tools/koto-1.0`. The criterion cannot be
       satisfied by leaving that in place.
-- [ ] **Every PATH entry activation produces lies within `$TSUKU_HOME/tools`,
+- [x] **Every PATH entry activation produces lies within `$TSUKU_HOME/tools`,
       asserted by containment of the composed path** — separator-appended prefix
       check, as `internal/install/symlink.go` already does so that
       `tools-malicious` does not match `tools` — and **not** by inspecting the
       key for characters. Keying the property on the composed path rather than
       on "contains `/`" is what lets the previous criterion be true at all, and
       it does not require anyone to have enumerated every bad character.
-- [ ] **The containment guard is pinned by a direct test of the guard, because
+- [x] **The containment guard is pinned by a direct test of the guard, because
       the end-to-end assertion above cannot fail.** Found by mutation: deleting
       the guard's call site leaves the whole suite green. With the tool-name and
       version checks in place, no `.tsuku.toml` can produce an input that
@@ -319,16 +319,16 @@ PATH when the stat fails for any reason other than not-exists.
       assertion catches an escaping entry arriving by some route neither check
       covers. Neither is redundant; only the claim that the end-to-end test
       verified the guard was wrong.
-- [ ] A rejected tool name reports the `bad-form` reason once Issue 5 lands, so
+- [x] A rejected tool name reports the `bad-form` reason once Issue 5 lands, so
       the check is not merely silent.
-- [ ] **A malformed declared version — `../evil`, `1.0 0` — reports `bad-form`,
+- [x] **A malformed declared version — `../evil`, `1.0 0` — reports `bad-form`,
       not `no-match`.** Also found by mutation: dropping `ValidateRequested`
       entirely left the suite green, because a malformed declaration matches no
       recorded version anyway and the PATH result is identical. The reason is
       the only observable difference, and it is the one that matters —
       `no-match` sends the developer to look at what is installed when the
       problem is the line they wrote.
-- [ ] A state-recorded version that fails `ValidateVersionString` is dropped
+- [x] A state-recorded version that fails `ValidateVersionString` is dropped
       from the candidate set rather than becoming a path component. **This does
       not collapse into the security chain's parse-time check, and the two must
       both exist.** There are two version values: the *declared* one (`latest`,
@@ -338,7 +338,7 @@ PATH when the stat fails for any reason other than not-exists.
       covered by theirs, non-exact by this one, and dropping either leaves its
       half unvalidated. `internal/updates/gc.go` already validates a
       state-derived version before building a path for the same reason.
-- [ ] **The validator at this sink answers the question the sink asks: "is this
+- [x] **The validator at this sink answers the question the sink asks: "is this
       safe to compose into a path?" — which in this tree is
       `install.ValidateVersionString`, not `internal/version`'s function of the
       same name.** Two functions share that name and they answer different
@@ -366,22 +366,22 @@ PATH when the stat fails for any reason other than not-exists.
       Stated on the question rather than the function because a criterion naming
       the function protects this sink, and a criterion naming the question
       protects the next one.
-- [ ] A version tsuku installed — one `install.ValidateVersionString` accepts,
+- [x] A version tsuku installed — one `install.ValidateVersionString` accepts,
       with a directory present — always activates. The validation at the sink is
       never stricter than the one that created the directory.
-- [ ] With `git-lfs` installed and `git` not, `git = "latest"` puts no `git-lfs`
+- [x] With `git-lfs` installed and `git` not, `git = "latest"` puts no `git-lfs`
       directory on PATH.
-- [ ] A directory with no state entry is never activated; a state entry whose
+- [x] A directory with no state entry is never activated; a state entry whose
       directory cannot be stat-ed for any reason, including a permissions
       failure rather than absence, is never activated.
-- [ ] Changing the shared matching, pin-level or version-validation rule without
+- [x] Changing the shared matching, pin-level or version-validation rule without
       activation following in step turns an automated check of activation's own
       behavior red. The check derives its expectations by calling the shared
       routines, not from a hardcoded table, and the failing check implicates
       activation rather than only the shared routine's own tests.
-- [ ] Resolving a ten-tool file decodes installation state exactly once.
-- [ ] PATH ordering among activated tools is lexical by tool name, unchanged.
-- [ ] **Every PATH assertion compares against a literal expected path, never
+- [x] Resolving a ten-tool file decodes installation state exactly once.
+- [x] PATH ordering among activated tools is lexical by tool name, unchanged.
+- [x] **Every PATH assertion compares against a literal expected path, never
       against a value computed by calling `cfg.ToolBinDir`, and fixtures create
       their directories from literals too.** The existing tests do both — the
       oracle at `activate_test.go:74` and the fixture at `:29` are the same call
@@ -390,7 +390,7 @@ PATH when the stat fails for any reason other than not-exists.
       matched by the assertion, and every one of them would pass. A test whose
       expectation is derived from the function it is testing cannot fail for the
       reason it exists.
-- [ ] **Moving between projects replaces PATH entries rather than stacking
+- [x] **Moving between projects replaces PATH entries rather than stacking
       them.** Walking A → B → A → B leaves PATH the same length it was after the
       first activation. Each activation composes against the pre-activation base
       carried in `_TSUKU_PREV_PATH`, not against the current `PATH`. An
@@ -413,10 +413,10 @@ the existing `printWarning`.
 
 **Acceptance Criteria**:
 
-- [ ] Five reasons exist as distinct sentences with the substrings the PRD pins,
+- [x] Five reasons exist as distinct sentences with the substrings the PRD pins,
       each also naming the declared tool, and each substring absent from the
       other four messages.
-- [ ] **Reason selection is pinned, not only reason existence.** Each of these
+- [x] **Reason selection is pinned, not only reason existence.** Each of these
       inputs produces its named reason: a pin nothing installed satisfies →
       no-match; `">=26"` → bad-form; `"@lts"` → channel; undecodable
       installation state → unreadable; a satisfying version whose directory is
@@ -425,9 +425,9 @@ the existing `printWarning`.
       cannot distinguish it from a machine that has installed nothing. Without
 these, five correct sentences can be wired
       to the wrong conditions and every other criterion still passes.
-- [ ] The reasons carry different payloads, and the renderer is a switch with no
+- [x] The reasons carry different payloads, and the renderer is a switch with no
       generic `default` arm that formats an unrecognised reason.
-- [ ] **`bad-form` renders two sentences, one for a malformed name and one for a
+- [x] **`bad-form` renders two sentences, one for a malformed name and one for a
       malformed version, and the name sentence does not blame the version.**
 
       PRD R18 gives `bad-form` a single pinned substring, `not a valid version
@@ -448,7 +448,7 @@ these, five correct sentences can be wired
       keeps its pinned substring; and `Unhonorable` carries which half was
       malformed so the renderer can say so. R18's wording should be read as
       specifying the version case, which is all it knew about.
-- [ ] The five messages are not one format string with a substituted phrase.
+- [x] The five messages are not one format string with a substituted phrase.
       Five phrase constants reached through a switch and interpolated into a
       shared template satisfies every substring assertion while being exactly
       what the PRD forbids. The discriminator is that the messages differ in
@@ -456,30 +456,30 @@ these, five correct sentences can be wired
       version to reinstall, `bad-form` and `channel` name the declared string,
       `no-match` names neither. A single template cannot carry all three
       without dead fields.
-- [ ] Each payload is **used in the message**, not merely carried on the struct.
+- [x] Each payload is **used in the message**, not merely carried on the struct.
       The `missing-files` message contains the version whose files are gone, and
       the `bad-form` and `channel` messages contain the declared string. A
       write-only field that no message reads satisfies "different payloads" on
       inspection while the output is still one template.
-- [ ] `unreadable` is a separate field, not an entry in the per-declaration
+- [x] `unreadable` is a separate field, not an entry in the per-declaration
       slice: a ten-tool file with undecodable state produces exactly one message
       naming the tools it could not resolve. A design where the slice holds N
       identical entries de-duplicated at render time fails.
-- [ ] `StateUnreadable.Tools` lists only declarations that needed the read.
-- [ ] Capturing the streams separately: stdout contains only the shell code for
+- [x] `StateUnreadable.Tools` lists only declarations that needed the read.
+- [x] Capturing the streams separately: stdout contains only the shell code for
       the requested shell and nothing else, and the diagnostic appears on stderr
       and not on stdout. Asserted by string comparison rather than by the shell
       surviving the `eval`, and verified for fish as well as bash.
-- [ ] All five reasons exit 0.
-- [ ] An exact pin naming an uninstalled version reports rather than staying
+- [x] All five reasons exit 0.
+- [x] An exact pin naming an uninstalled version reports rather than staying
       silent.
-- [ ] A file mixing one satisfiable and one unsatisfiable declaration activates
+- [x] A file mixing one satisfiable and one unsatisfiable declaration activates
       the first and reports only the second.
-- [ ] A file with two unsatisfiable declarations produces two messages on entry,
+- [x] A file with two unsatisfiable declarations produces two messages on entry,
       each naming its own tool.
-- [ ] `--quiet` suppresses all five on both commands, PATH behavior unchanged.
-- [ ] `internal/activation` writes to neither stream.
-- [ ] `Entered` expresses the property it exists for: it is true exactly when
+- [x] `--quiet` suppresses all five on both commands, PATH behavior unchanged.
+- [x] `internal/activation` writes to neither stream.
+- [x] `Entered` expresses the property it exists for: it is true exactly when
       this activation entered a project not already recorded, and the caller
       decides to report from it rather than from the `curDir` comparison
       directly.
@@ -505,11 +505,11 @@ manufactures the state a broken implementation failed to produce, and passes a
 build that should fail. This applies to all of them, not only where it is
 repeated.
 
-- [ ] An activation where zero bin directories result still returns a result
+- [x] An activation where zero bin directories result still returns a result
       carrying `Dir`, the base PATH and the stamp, and still emits them. An
       implementation returning nil, or a result with an empty `Dir`, when
       nothing activated makes every once-per-entry guarantee unenforceable.
-- [ ] The stamp is composed from a single `os.Stat` of installation state and
+- [x] The stamp is composed from a single `os.Stat` of installation state and
       carries both mtime and size. **The size test holds the mtime equal and
       changes only the length**, so an mtime-only implementation cannot pass it.
 
@@ -522,34 +522,34 @@ repeated.
       for whoever later considers simplifying the stamp: on the old reading,
       dropping size costs correctness on unusual filesystems, and on the
       measurement it breaks the feature everywhere.
-- [ ] Entering a project with an unsatisfiable declaration reports; installing a
+- [x] Entering a project with an unsatisfiable declaration reports; installing a
       matching version without leaving the directory puts it on PATH at the next
       invocation, with empty stderr.
-- [ ] Installing an unrelated tool, leaving the declaration unsatisfiable,
+- [x] Installing an unrelated tool, leaving the declaration unsatisfiable,
       produces empty stderr rather than re-reporting.
-- [ ] With state unchanged, a second invocation from the same directory
+- [x] With state unchanged, a second invocation from the same directory
       short-circuits: no decode, empty stdout, empty stderr. The second
       environment is built only from what the first invocation emitted, never
       synthesized.
-- [ ] An environment carrying the two old variables and no stamp re-resolves
+- [x] An environment carrying the two old variables and no stamp re-resolves
       once and records, then short-circuits — not never, and not every prompt.
-- [ ] The stat is taken before state is read, and the recorded value is that
+- [x] The stat is taken before state is read, and the recorded value is that
       same stat. An implementation that stats after reading fails, because it
       records a stamp describing state it did not resolve against.
-- [ ] The comparison is inequality only; a state file whose mtime moves
+- [x] The comparison is inequality only; a state file whose mtime moves
       backwards still re-resolves.
-- [ ] The stat-failure token is a fixed non-empty literal carrying no error text
+- [x] The stat-failure token is a fixed non-empty literal carrying no error text
       and no path. A machine with no installation state short-circuits on the
       second prompt rather than re-resolving forever.
-- [ ] The emitted stamp is always freshly computed; a value placed in the
+- [x] The emitted stamp is always freshly computed; a value placed in the
       environment is never echoed back into stdout.
-- [ ] The stamp is emitted through the same shell quoter the other two values
+- [x] The stamp is emitted through the same shell quoter the other two values
       use, not through `%q`. It adds a third emitted value to the exact function
       the security chain re-quotes, and a new `%q` call added after that chain
       lands would silently reopen what it closed.
-- [ ] `tsuku shell` emits all three variables on its success path; deactivation
+- [x] `tsuku shell` emits all three variables on its success path; deactivation
       unsets all three.
-- [ ] **`tsuku shell` never short-circuits, whatever the environment holds.**
+- [x] **`tsuku shell` never short-circuits, whatever the environment holds.**
       With `_TSUKU_DIR` set to the current directory and `_TSUKU_STATE_STAMP`
       set to the matching stamp, it still resolves and still emits. It defeats
       the early exit by passing an empty `curDir`, and the `curDir != ""`
@@ -559,15 +559,15 @@ repeated.
       nil, which `runShell` turns into an empty string, which makes the command
       print "no .tsuku.toml found" and exit non-zero for a project that exists
       and is perfectly valid.
-- [ ] The re-resolve branch emits the full export block even when PATH is
+- [x] The re-resolve branch emits the full export block even when PATH is
       byte-identical, so the stamp is always recorded.
-- [ ] Moving from project A to project B and back to A reports on each of the
+- [x] Moving from project A to project B and back to A reports on each of the
       three entries.
-- [ ] Moving between subdirectories of an already-activated project reports
+- [x] Moving between subdirectories of an already-activated project reports
       nothing.
-- [ ] A shell inheriting the tracking variables from an activated parent
+- [x] A shell inheriting the tracking variables from an activated parent
       produces no report; one that does not inherit them reports.
-- [ ] Editing `.tsuku.toml` to add an unsatisfiable declaration while standing
+- [x] Editing `.tsuku.toml` to add an unsatisfiable declaration while standing
       at the project root produces no report and no PATH change until the
       project is left and re-entered.
 
@@ -588,38 +588,38 @@ one line, and return nil.
 
 **Acceptance Criteria**:
 
-- [ ] On a parse failure `ComputeActivation` returns a non-nil result **and** a
+- [x] On a parse failure `ComputeActivation` returns a non-nil result **and** a
       non-nil error, and the result carries the project directory, the base
       PATH, the stamp and `Entered`. The design flags this return convention as
       deliberately unusual for Go; an implementation returning a nil result and
       synthesising the exports in `cmd/tsuku` duplicates `FormatExports` and
       fails this criterion.
-- [ ] A malformed `.tsuku.toml` produces one stderr diagnostic, no usage block,
+- [x] A malformed `.tsuku.toml` produces one stderr diagnostic, no usage block,
       and exit status 0 — asserted on the exit code, not only on the absence of
       usage text.
-- [ ] Its directory becomes the recorded project and stdout carries that
+- [x] Its directory becomes the recorded project and stdout carries that
       recording, with the stamp alongside. An implementation that prints the
       diagnostic and emits nothing fails.
-- [ ] Feeding only what that invocation emitted into a second invocation from
+- [x] Feeding only what that invocation emitted into a second invocation from
       the same directory, and a third from a subdirectory, produces empty stderr
       both times. The environment is never synthesized by the test.
-- [ ] Where the recorded directory already matches, stdout is empty and the
+- [x] Where the recorded directory already matches, stdout is empty and the
       `eval` is a no-op.
-- [ ] Repairing the file while standing at the project root produces no message
+- [x] Repairing the file while standing at the project root produces no message
       and no PATH change until the project is left and re-entered.
-- [ ] `tsuku shell` on an unparseable file prints the diagnostic on stderr,
+- [x] `tsuku shell` on an unparseable file prints the diagnostic on stderr,
       nothing on stdout, emits no recording, and its exit status is asserted —
       whether or not `_TSUKU_PREV_PATH` is set. Leaving the status unstated lets
       an implementation return the parse error and exit non-zero, or emit empty
       output and hit the "no project file" branch, and both pass a criterion
       that only checks the streams.
-- [ ] `tsuku hook-env` where no project file is found and none was previously
+- [x] `tsuku hook-env` where no project file is found and none was previously
       activated exits 0 with empty stdout and empty stderr.
-- [ ] Leaving a project restores the pre-activation PATH, prints nothing, and
+- [x] Leaving a project restores the pre-activation PATH, prints nothing, and
       exits 0.
-- [ ] `tsuku shell` with no project file anywhere above keeps today's behavior,
+- [x] `tsuku shell` with no project file anywhere above keeps today's behavior,
       exit status included.
-- [ ] `--quiet` suppresses the parse diagnostic.
+- [x] `--quiet` suppresses the parse diagnostic.
 
 ### Issue 8: Amend the design and the guide to match the implementation
 
@@ -642,10 +642,10 @@ than an unbounded search for anything still false.
 
 **Acceptance Criteria**:
 
-- [ ] The algorithm step, the worked PATH example, the trade-off entry about
+- [x] The algorithm step, the worked PATH example, the trade-off entry about
       uninstalled versions, the Negative bullet and the never-built stderr
       mitigation all describe what the code does.
-- [ ] **All three statements of the name-validation control are corrected**,
+- [x] **All three statements of the name-validation control are corrected**,
       not one: the prose claiming path traversal in tool names is already
       guarded, the risk row's mitigation cell, and the security mitigation
       stating uninstalled tools are silently skipped. Each is corrected to
@@ -653,33 +653,33 @@ than an unbounded search for anything still false.
       single-path-segment check on the declared name — rather than being deleted
       or softened. The risk row's residual-risk cell no longer contradicts its
       own mitigation cell.
-- [ ] The two-variable statements and the variable table become three.
-- [ ] **The fast-path claims are corrected in both places.** The parent design
+- [x] The two-variable statements and the variable table become three.
+- [x] **The fast-path claims are corrected in both places.** The parent design
       states the unchanged-directory path does no filesystem I/O; the stamp adds
       one stat, and Issue 6's always-emit rule means that path can now also
       write output. Both are performance claims a reader would rely on.
-- [ ] **The emission claim is corrected everywhere it appears**, not only in the
+- [x] **The emission claim is corrected everywhere it appears**, not only in the
       fast-path sentences: the statement that output is emitted only when PATH
       needs to change, the corresponding step in the first flow, and the
       `ComputeActivation` doc comment. Issue 6's always-emit rule falsifies all
       of them, and this criterion exists because the previous draft named two
       locations and left three.
-- [ ] The stale `ComputeActivation` call signatures in both flow descriptions
+- [x] The stale `ComputeActivation` call signatures in both flow descriptions
       and the document's frontmatter are updated.
-- [ ] **This chain's own design is amended too.** `DESIGN-shellenv-activation-pins.md`
+- [x] **This chain's own design is amended too.** `DESIGN-shellenv-activation-pins.md`
       no longer claims to close the two security defects, and its implementation
       steps do not list work the security chain owns. A design that overstates
       what its PR delivers is the same defect as a parent design claiming a
       control it lacks.
-- [ ] Every package and file name that moved is updated, along with the
+- [x] Every package and file name that moved is updated, along with the
       `Skipped` field and the stale `ComputeActivation` signature in the Key
       Interfaces block.
-- [ ] A new section states the five reasons and the non-blocking read.
-- [ ] `docs/guides/shell-integration.md` describes what a developer sees when a
+- [x] A new section states the five reasons and the non-blocking read.
+- [x] `docs/guides/shell-integration.md` describes what a developer sees when a
       declaration cannot be honored, mentions channel pins, and lists three
       tracking variables. Its statement of the four version forms is now true.
-- [ ] `cmd/tsuku/shell.go`'s `Long` help text names the third variable.
-- [ ] One line records that `MaxTools` is a post-decode count, not an input
+- [x] `cmd/tsuku/shell.go`'s `Long` help text names the third variable.
+- [x] One line records that `MaxTools` is a post-decode count, not an input
       bound.
 
 ## Dependency Graph
