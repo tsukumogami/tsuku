@@ -25,7 +25,8 @@ decision: |
   Existing shellenv and activate commands are unchanged.
 rationale: |
   Prompt hooks with early-exit are the proven pattern (mise, direnv). The
-  fork+exec cost is under 5ms when the directory hasn't changed, well within
+  fork+exec cost is under 5ms when neither the directory nor installation
+  state has changed, well within
   the 50ms budget. Env-var-based state tracking is per-shell (won't leak
   between terminals) and requires no cleanup on abnormal exit. Prepending
   project paths before tools/current/ means project tools shadow global ones
@@ -103,9 +104,9 @@ Key assumptions:
 
 #### Chosen: Prompt Hook with Early-Exit Guard
 
-Use a single prompt-based hook per shell (`PROMPT_COMMAND` for bash, `precmd` for zsh, `fish_prompt` event for fish) that calls `tsuku hook-env`. The hook-env command compares `$PWD` against a cached directory (`$_TSUKU_DIR`), exits immediately if unchanged, and only performs config lookup + PATH rewrite on actual directory changes.
+Use a single prompt-based hook per shell (`PROMPT_COMMAND` for bash, `precmd` for zsh, `fish_prompt` event for fish) that calls `tsuku hook-env`. The hook-env command compares `$PWD` against a cached directory (`$_TSUKU_DIR`) **and** installation state's stat against a cached stamp (`$_TSUKU_STATE_STAMP`), exits immediately if both are unchanged, and performs config lookup + PATH rewrite when either has moved. A directory that has not changed is not on its own a reason to exit: an install performed without leaving the project has to take effect at the next prompt.
 
-The early-exit optimization means the per-prompt cost when the directory hasn't changed is: one fork+exec (~2-4ms), one string comparison, exit with empty stdout. The shell's `eval` of empty output is a no-op.
+The early-exit optimization means the per-prompt cost when neither has changed is: one fork+exec (~2-4ms), two string comparisons, one `os.Stat` of `state.json` (measured at 2.6 µs), exit with empty stdout. The shell's `eval` of empty output is a no-op.
 
 Hooks are opt-in, installed via `tsuku hook install --activate`. An explicit `tsuku shell` command provides identical activation logic without hooks.
 
@@ -190,7 +191,7 @@ Add new functionality through new commands and a flag, leaving existing commands
 
 `tsuku shell` reads `.tsuku.toml` from the current directory and outputs shell code to set PATH. Usage: `eval $(tsuku shell)`. It's a one-shot command, not a hook.
 
-`tsuku hook-env` is the optimized version called by prompt hooks. It checks `_TSUKU_DIR` for early exit and only emits output when PATH needs to change.
+`tsuku hook-env` is the optimized version called by prompt hooks. It checks `_TSUKU_DIR` and `_TSUKU_STATE_STAMP` for early exit, and emits the full export block on every re-resolve — including when the computed PATH is byte-identical, because the stamp still has to be recorded.
 
 #### Alternatives Considered
 
