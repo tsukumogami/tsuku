@@ -359,10 +359,25 @@ ranking.
 will actually be installed or executed, never a sibling provider of the same
 command. The
 narrowing in R3 shall therefore be applied to the candidate list where it is
-produced, so that every consumer reads the narrowed list. The candidate list is
+produced, so that every consumer reads the narrowed list **in the case where a
+declaration narrowed it**.
+
+That scoping is load-bearing and an earlier draft omitted it, which made this
+requirement wrong. Narrowing is three-way rather than two: where no declaration
+provides the command the full list passes through unchanged, because R5
+requires an undeclared command to resolve exactly as it would with no
+`.tsuku.toml` present — which is the index ranking. Narrowing the
+zero-declaration case to the empty set would turn every undeclared command into
+`ErrNoMatch`, and suppressing the multiple-provider gate for undeclared
+ambiguous commands is not something R3b licenses. So the consumers still read
+position zero of an un-narrowed list when nothing was declared, and that is
+correct rather than residue.
+
+The candidate list is
 read in exactly six places: once where it is produced, twice to test its
 cardinality, and three times to select an element positionally. Narrowing at
-production makes all five consumers correct by inheritance — the positional
+production makes all five consumers correct by inheritance **for the declared
+case** — the positional
 selections pick the declared recipe because it is the only element, and the
 cardinality tests are computed over the narrowed set.
 
@@ -658,6 +673,20 @@ unchanged by this work: which recipe is chosen, which version is chosen,
 whether a prompt appears, and the exit code. That list is closed; it is what
 "unaffected" means here.
 
+**R18a.** R18 freezes behaviour that is correct, not behaviour that is
+defective, and one case has to be named because it is a change a literal
+reading of R18 forbids. Today `tsuku run <installed-tool>` with no terminal and
+no `.tsuku.toml` exits 12, because the terminal guard runs before the
+already-installed fast path and blocks a path that would never have prompted.
+That is the guard reporting on a decision that is not being made. Once R9 moves
+the check to where the declaration is known, the command runs and exits with
+the tool's own code.
+
+The change is in scope and deliberate: it is the same defect R9 exists to fix,
+found on a different input. It is stated here rather than left to a reviewer to
+notice as an R18 violation, and the exit codes it moves are named in the
+criteria so the change is visible rather than discovered.
+
 **R19.** The binary index and the registry that `tsuku run` consults shall be
 substitutable in tests, and a fixture index shall exist defining at least one
 command with two providers that share a version string, and at least one with
@@ -750,6 +779,7 @@ mechanical check over this table is sufficient.
 | R16a | AC6, AC42 |
 | R17 | AC48 |
 | R18 | AC44 |
+| R18a | AC54, AC55 |
 | R19 | AC49 |
 | R20 | AC18 |
 | R21 | AC45, AC46, AC50, AC52 |
@@ -1010,6 +1040,16 @@ bounded rule satisfies parts of each.
       test, because it works and proves nothing about the claim.
 ### Non-functional
 
+- [ ] **AC54** With no `.tsuku.toml`, no terminal, and the tool already
+      installed, `tsuku run <tool>` executes it and exits with the tool's own
+      code rather than 12. This is R18a's named exception and the only exit
+      code this work moves for a single-provider command.
+- [ ] **AC55** With no `.tsuku.toml`, no terminal, and no index entry for the
+      command, `tsuku run <command>` reports that no recipe provides it, on
+      stderr, before exiting. The message is required because moving the
+      terminal check changes this case from a specific code with an
+      explanatory line to a bare exit 1, and a silent failure is a worse
+      outcome than the one being replaced.
 - [ ] **AC44** For a command with exactly one provider, the recipe chosen, the version
       chosen, whether a prompt appears and the exit code are unchanged from
       before this work, in the installed and not-installed cases and under each
