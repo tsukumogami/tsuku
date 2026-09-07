@@ -128,7 +128,7 @@ The solution adds org-scoped tool support to `.tsuku.toml` by teaching two exist
 func splitOrgKey(key string) (source, bare string, isOrgScoped bool, err error)
 ```
 
-Used by both `runProjectInstall` and the resolver. Delegates to the existing `parseDistributedName` parsing logic for the `owner/repo:recipe` format but lives in `internal/project/` to avoid a dependency from `internal/project` on `cmd/tsuku`. Validates the source component via the same rules as `validateRegistrySource` (must be exactly `owner/repo`, no path traversal).
+Intended for both `runProjectInstall` and the resolver, though in practice only the resolver adopted it -- `runProjectInstall` uses `parseDistributedName`, a second parser for the same key format with the opposite failure behaviour. The config boundary now validates keys before either parser sees them, so the divergence no longer decides whether a hostile key reaches a sink; it remains a wart. Delegates to the existing `parseDistributedName` parsing logic for the `owner/repo:recipe` format but lives in `internal/project/` to avoid a dependency from `internal/project` on `cmd/tsuku`. Validates the source component via the same rules as `validateRegistrySource` (must be exactly `owner/repo`, no path traversal).
 
 **2. Pre-scan in `runProjectInstall`** (`cmd/tsuku/install_project.go`, modified)
 
@@ -267,7 +267,13 @@ Mitigations:
 - With `strict_registries` enabled, `ensureDistributedSource` blocks all unregistered sources regardless of flags. CI environments that use `--yes` should also enable `strict_registries` and pre-register trusted sources via `tsuku registry add`.
 - The pre-scan phase passes `installYes` (from the `--yes`/`-y` flag) directly to `ensureDistributedSource`. This is the same flag propagation as the CLI path -- no new approval bypass mechanism is introduced.
 
-**Path traversal via org-scoped keys**: The `parseDistributedName` function already rejects keys containing `..`. The `splitOrgKey` utility adds its own validation, rejecting malformed source strings (must be exactly `owner/repo` format). The binary index's `isValidRecipeName` continues to reject `/` in recipe names, so org-scoped names never reach the registry fetch path.
+**Path traversal via org-scoped keys**: closed at the config boundary, in `internal/project`, where both halves of every declaration are validated before any consumer sees them. See `DESIGN-activation-injection.md`.
+
+Three claims previously made here were wrong and are corrected rather than removed, because each named a real function and a reviewer following the citation would have found it and stopped:
+
+- `parseDistributedName` did **not** reject keys containing `..`. It returns nil for them, and its own doc comment says such names "fall through to the regular recipe lookup path" -- so the caller keeps the raw string. That is a downgrade, not a rejection.
+- `isValidRecipeName` did not keep org-scoped names off the registry fetch path. It guards the binary index and the distributed cache; `Registry.FetchRecipe` and its `cachePath` checked only for an empty name. The conclusion did not follow from the premise, and the premise was about a different function.
+- `splitOrgKey`'s validation was real but unreached on this path: its only caller discarded the error, so a key it rejected still reached path construction. That error is now propagated.
 
 **Resolver name collision as shadowing vector**: If two org-scoped keys in `.tsuku.toml` map to the same bare recipe name (e.g., `acme/koto` and `evil/koto`), the resolver's `bareToOrg` map stores both. Values are sorted alphabetically for deterministic resolution, but this still means one org shadows the other. This is a configuration error on the user's part (pinning two different sources for the same binary). The resolver should log a warning at construction time when duplicate bare names are detected, so the user can disambiguate using the `owner/repo:recipe` qualified syntax.
 

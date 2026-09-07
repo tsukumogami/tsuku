@@ -18,6 +18,10 @@ func TestValidateRuntimeDependencyNames_AcceptsValidNames(t *testing.T) {
 		"libatomic_ops",
 		"python3.11",
 		"foo.bar",
+		// An internal doubled dot is not traversal. This moved from the reject
+		// list when the rule was shared with the config boundary: the old
+		// substring test for ".." refused it, the segment rule does not.
+		"foo..bar",
 		"a",
 		"x1",
 	}
@@ -52,11 +56,16 @@ func TestValidateRuntimeDependencyNames_RejectsBadPattern(t *testing.T) {
 	}{
 		{"uppercase", "OpenSSL", "must match"},
 		{"space", "open ssl", "must match"},
-		{"colon", "name:tag", "must match"},
-		{"at_sign", "python@3.11", "must match"},
+		{"colon", "name:tag", "must not contain ':'"},
+		{"at_sign", "python@3.11", "must not contain '@'"},
 		{"unicode", "café", "must match"},
 		{"path_traversal", "..", "path traversal"},
-		{"path_traversal_embedded", "foo..bar", "path traversal"},
+		// "foo..bar" moved to the accept side. The rule now treats ".." as a
+		// whole path segment rather than as a substring, because an internal
+		// doubled dot is not traversal -- filepath.Clean only treats a complete
+		// ".." element as an ascent. Rejecting it was over-broad, and the
+		// substring form is what made a shared rule impossible to state
+		// consistently with the config boundary.
 		{"slash", "foo/bar", "must not contain '/'"},
 		{"backslash", "foo\\bar", "must not contain"},
 		{"leading_dash", "-foo", "must not start with '-'"},

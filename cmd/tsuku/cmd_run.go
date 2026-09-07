@@ -172,7 +172,16 @@ type runWiring struct {
 // the runner needs from it. A config that fails to load is treated as no
 // config: the run continues under the consent mode alone.
 func newRunWiring(cfg *config.Config, cwd string) runWiring {
-	projectCfg, _ := project.LoadProjectConfig(cwd)
+	// The load error stays discarded: this path falls back to a non-project
+	// install when there is no usable config. The diagnostics do not -- a
+	// declaration refused at parse time has to be visible from every command
+	// that reads the file, and this route previously said nothing at all.
+	//
+	// This call arrived on main inline in the RunE body. It belongs here now
+	// because that body's project wiring was extracted into this function, and
+	// splitting the two would leave the diagnostics reporting on one path and
+	// the resolver on another.
+	projectCfg, _ := loadProjectConfigReporting(cwd)
 	return runWiring{
 		projectCfg: projectCfg,
 		resolver:   project.NewResolver(projectCfg),

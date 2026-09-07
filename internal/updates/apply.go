@@ -31,13 +31,33 @@ type ApplyResult struct {
 
 // effectivePin returns the version constraint to use for auto-apply filtering.
 // Project config takes precedence over the cached global pin when the tool is declared.
+//
+// There is no validation here any more, and there are two independent reasons
+// -- worth both being written down, because they fail differently.
+//
+// The weaker one is the cross-package invariant: a version reaching this
+// function came out of a ProjectConfig, and project.parseConfigFile refuses a
+// declaration whose version is not safe to compose into a path. That holds
+// today, but nothing enforces it from this side. Someone relaxing
+// pinsafe.ValidateRequested at the boundary -- to permit '+' for semver build
+// metadata, say -- weakens this function with nothing here turning red.
+//
+// The stronger one does not depend on the boundary at all: this function's
+// projectCfg branch is unreachable in production. MaybeAutoApply's only
+// production caller passes nil (cmd/tsuku/cmd_apply_updates.go), so the
+// returned pin is always entry.Requested, which came from the update cache
+// rather than from a config file. The removed code was dead.
+//
+// And the value never reaches a path from here regardless -- it is used for
+// pin-level comparison only.
+//
+// The fallback branch that went with it -- log at debug, silently use the
+// cached global pin instead -- was a second, quieter opinion about what an
+// invalid pin means. The boundary gives one answer: the declaration is refused
+// and the user is told.
 func effectivePin(tool string, entry UpdateCheckEntry, projectCfg *project.ConfigResult) string {
 	if projectCfg != nil && projectCfg.Config != nil {
 		if req, ok := projectCfg.Config.Tools[tool]; ok {
-			if err := install.ValidateRequested(req.Version); err != nil {
-				log.Default().Debug("auto-apply: invalid project pin", "tool", tool, "version", req.Version, "error", err)
-				return entry.Requested
-			}
 			return req.Version
 		}
 	}

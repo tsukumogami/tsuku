@@ -62,7 +62,7 @@ Refuses to overwrite existing non-shim files in $TSUKU_HOME/bin/.`,
 				fmt.Fprintf(os.Stderr, "tsuku shim install: %v\n", wdErr)
 				exitWithCode(ExitGeneral)
 			}
-			result, loadErr := project.LoadProjectConfig(cwd)
+			result, loadErr := loadProjectConfigReporting(cwd)
 			if loadErr != nil {
 				fmt.Fprintf(os.Stderr, "tsuku shim install: %v\n", loadErr)
 				exitWithCode(ExitGeneral)

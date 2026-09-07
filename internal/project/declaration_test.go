@@ -294,6 +294,20 @@ func TestDeclarationsFor_FollowsIndexRanking(t *testing.T) {
 
 // A key SplitOrgKey rejects declares nothing. Reading it as a bare name would
 // let a traversal attempt become a declaration of a recipe by that name.
+//
+// This is defense in depth, not a guard on a reachable path, and the
+// distinction changed under this test rather than in it. validateDeclarations
+// now refuses a malformed key at parse time, per declaration, so "../../etc/
+// passwd" cannot reach a resolver built from a real .tsuku.toml. The test
+// still passes because it constructs the config in memory and never goes
+// through parseConfigFile.
+//
+// It is kept because the resolver's map is populated from a caller-supplied
+// map, and a caller that is not parseConfigFile -- a future command, a test --
+// can still put a rejected key in it. What is no longer true is that this
+// demonstrates a live hole being closed. A test whose result did not change
+// while what it demonstrates did is the quietest drift there is: nothing goes
+// red, and only the comment can say so.
 func TestDeclarationsFor_MalformedKeyDeclaresNothing(t *testing.T) {
 	r := declaringResolver(map[string]string{
 		"../../etc/passwd": "1.0.0",

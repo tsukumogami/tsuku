@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/shellquote"
 )
 
 var shellenvCmd = &cobra.Command{
@@ -34,21 +36,47 @@ Usage for one-off sessions:
 			return fmt.Errorf("failed to resolve home directory: %w", err)
 		}
 
-		binDir := filepath.Join(homeDir, "bin")
-		currentDir := filepath.Join(homeDir, "tools", "current")
-
-		fmt.Fprintf(os.Stdout, "export PATH=\"%s:%s:$PATH\"\n", binDir, currentDir)
-
 		// Source the shell init cache if it exists.
 		// Detect the current shell to pick the right cache file.
 		shell := detectShellForEnv()
 		cachePath := filepath.Join(homeDir, "share", "shell.d", ".init-cache."+shell)
-		if _, err := os.Stat(cachePath); err == nil {
-			fmt.Fprintf(os.Stdout, ". \"%s\"\n", cachePath)
+		if _, err := os.Stat(cachePath); err != nil {
+			cachePath = ""
 		}
 
-		return nil
+		_, err = fmt.Fprint(os.Stdout, shellenvScript(homeDir, cachePath))
+		return err
 	},
+}
+
+// shellenvScript renders exactly what `tsuku shellenv` writes to stdout, for a
+// home directory and an optional init-cache path. An empty cachePath omits the
+// source line.
+//
+// This is a function rather than inline command body for one reason: the test
+// that proves the quoting works has to run against *this* text. It previously
+// ran against a copy of it that lived in the test file, which meant reverting
+// the command to hand-written double quotes -- the original vulnerability, in
+// full -- left the entire suite green. Verified, not assumed. A second
+// implementation cannot fail when the first one changes, so there is now only
+// one.
+//
+// Each interpolated component is quoted; the trailing $PATH is left live on
+// purpose. Quoting the whole statement would round-trip both components
+// perfectly and silently discard the user's existing PATH, which is the one
+// place in this change where the safe transformation and the correct one
+// diverge.
+func shellenvScript(homeDir, cachePath string) string {
+	binDir := filepath.Join(homeDir, "bin")
+	currentDir := filepath.Join(homeDir, "tools", "current")
+
+	var b strings.Builder
+	fmt.Fprintf(&b, "export PATH=%s:%s:\"$PATH\"\n",
+		shellquote.POSIX(binDir), shellquote.POSIX(currentDir))
+	if cachePath != "" {
+		fmt.Fprintf(&b, ". %s\n", shellquote.POSIX(cachePath))
+	}
+	return b.String()
 }
 
 // detectShellForEnv returns the shell name to use for shellenv output.
