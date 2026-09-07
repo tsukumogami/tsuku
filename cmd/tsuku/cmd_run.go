@@ -47,7 +47,7 @@ Project configuration:
 
   Tools not declared in .tsuku.toml fall through to the normal consent mode.
 
-Consent modes (for tools not in .tsuku.toml):
+Consent modes:
   suggest   Print install instructions and exit (no install)
   confirm   Prompt before installing (default, requires a terminal)
   auto      Install without prompting (requires opt-in)
@@ -63,7 +63,10 @@ Mode resolution order:
   4. Default: confirm -- raised to auto for a tool .tsuku.toml declares
 
   The declaration acts on the default only, which is why it is step 4 and
-  not step 1. A mode set at steps 1 through 3 reaches the install unchanged.
+  not step 1. A mode set at steps 1 through 3 reaches the install unchanged,
+  with one exception: TSUKU_AUTO_INSTALL_MODE=auto is honored only when
+  auto_install_mode is already auto, so the environment alone cannot raise
+  the mode. Without that, the run falls back to confirm.
 
   A raised mode can still be lowered back to confirm before installing:
   permissive permissions on config.toml, a recipe without checksums, or
