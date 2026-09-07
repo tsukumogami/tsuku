@@ -739,9 +739,9 @@ After the extraction in D3 the index lookup is not in `Runner.Run` at all, so
 the rule applied literally no longer spans the sites that moved, and AC52's
 two-way comparison would fail on correct code. The rule becomes:
 
-> Every point in `Runner.candidates` or `Runner.Run` that reads or writes the
-> effective mode, or returns before the mode dispatch is reached without having
-> reached an install or an exec.
+> Every point in `Runner.candidates`, `Runner.lowerMode` or `Runner.Run` that
+> reads or writes the effective mode, or returns before the mode dispatch is
+> reached without having reached an install or an exec.
 
 **The span's two boundaries, by identifier:** the `r.Lookup` call inside
 `Runner.candidates`, and the mode dispatch switch in `Runner.Run`.
@@ -751,9 +751,9 @@ two-way comparison would fail on correct code. The rule becomes:
 | Row | File | Function | Role |
 |---|---|---|---|
 | Project declaration | `internal/autoinstall/run.go` | `Run` | Raises the mode where it was `default` and the command is declared |
-| Configuration-permission gate | `internal/autoinstall/run.go` | `Run` | Lowers out of auto on permissive config file |
-| Verification gate | `internal/autoinstall/run.go` | `Run` | Lowers out of auto on a recipe without verification |
-| Multiple-provider gate | `internal/autoinstall/run.go` | `Run` | Lowers out of auto when the candidate list holds more than one |
+| Configuration-permission gate | `internal/autoinstall/run.go` | `lowerMode`, entry in `modeGates` | Lowers out of auto on permissive config file |
+| Verification gate | `internal/autoinstall/run.go` | `lowerMode`, entry in `modeGates` | Lowers out of auto on a recipe without verification |
+| Multiple-provider gate | `internal/autoinstall/run.go` | `lowerMode`, entry in `modeGates` | Lowers out of auto when the candidate list holds more than one |
 | Already-installed fast path | `internal/autoinstall/run.go` | `Run` | Returns before the dispatch, having reached an exec |
 
 **Informational, and not derived:** the root guard in `Run`, which ends the run
@@ -762,11 +762,23 @@ without reaching an install or an exec; and the `ErrNoMatch` and
 excludes all three by the same clause, which is why that clause is phrased
 around reaching an install or an exec rather than around returning early.
 
-**What changed from the pre-change table.** The fast path and the four
-mode-affecting rows are unmoved. The multiple-provider gate's row is unchanged
-in text but its behaviour narrows, because the list it counts is now narrowed
-where a declaration applies — which is D3's point and not a table change. What
-is new is the span: two functions rather than one.
+**What changed from the pre-change table.** The fast path and the project
+declaration are unmoved. The three gates are not: D5's announcements need an
+identifier and a condition per gate, so the gates were registered in a table
+and the lowering walk extracted into `lowerMode` — which is why their rows now
+cite two identifiers, the function that reads and writes the mode and the entry
+that decides whether this gate fires. The multiple-provider gate's row is
+unchanged in role but its behaviour narrows, because the list it counts is now
+narrowed where a declaration applies — which is D3's point and not a table
+change. What is new is the span: three functions rather than one.
+
+Two consequences worth stating rather than leaving to be rediscovered. Inside
+`Run` the three gates are now **one** site, the `lowerMode` call, so a check
+that expects three sites in `Run` fails on correct code. And a fourth gate
+added later moves no site at all: it is an entry in `modeGates`, and the two
+functions that walk the table are unchanged. That is the point of the table —
+but it means a check written only over `Run` would stop seeing new gates
+arrive, so the derivation has to reach the table itself.
 
 **AC46 searches this rule over that span in both directions; AC50 requires the
 check to read its expected site list out of this section rather than out of the
