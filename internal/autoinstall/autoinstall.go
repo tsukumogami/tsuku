@@ -84,6 +84,11 @@ const (
 	// OriginProject is a mode a project declaration raised. It outranks
 	// OriginDefault and nothing else, so it is the recorded origin only where
 	// the mode would otherwise have been the unset default.
+	//
+	// Like every value here it says where the mode came from, not what the
+	// mode ended up being: a gate may have lowered it since, and for a recipe
+	// carrying no checksum one ordinarily has. A reader of this value cannot
+	// conclude that anything was installed unattended.
 	OriginProject
 )
 

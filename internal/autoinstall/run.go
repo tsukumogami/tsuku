@@ -210,10 +210,10 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 	// question there is.
 	//
 	// The origin the elevation produces is discarded here, and deliberately.
-	// Nothing on this path writes the record it belongs to yet; what the rule
-	// must not become is three copies, one at the elevation and one at each
-	// later reader, which is why it is a function rather than a condition
-	// written inline.
+	// No record carries an origin yet -- the audit entry below writes the mode
+	// and nothing else -- and what the rule must not become is three copies,
+	// one at the elevation and one at each later reader, which is why it is a
+	// function rather than a condition written inline.
 	effectiveMode, _ := elevate(mode, origin, declaration != nil)
 
 	// Security gate 2: config permission check.
@@ -271,11 +271,14 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 		// a declared command means the declared version. Without it a user who
 		// followed the line got whatever `latest` resolved to, the declared
 		// fast path went on missing the version it stats, and the next
-		// `tsuku run` here printed this same line again.
+		// `tsuku run` here printed this same line again. That loop closes for
+		// an exact pin, which is what the version this prints is. It does not
+		// close for a declaration of `latest` or a prefix, because no install
+		// puts a binary where the fast path stats for those -- a defect older
+		// than this line, which only made it visible.
 		//
-		// It is built the way the prompt eleven lines below is built, from the
-		// recipe and the version, rather than from the declaration's
-		// configuration key. The key carries a source component, and the run
+		// It is built the way the prompt below is built, from the recipe and
+		// the version, rather than from the declaration's configuration key. The key carries a source component, and the run
 		// path deliberately does not: the recipe name comes from the binary
 		// index and the source the key names is never honored here. An
 		// instruction carrying it would send a user to the install path, which
@@ -353,6 +356,13 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 // and nothing else, so project is recorded exactly where the mode would
 // otherwise have been the unset default, and every other source is both
 // honored and recorded as itself.
+//
+// There is no term for the mode, and none is wanted. The only mode an origin
+// of default can carry is confirm, because a default is what nobody set and
+// confirm is what nobody setting anything produces. A guard against a pair
+// that cannot be resolved would state a second rule, and the one place that
+// pair could come from is a caller that resolved no origin at all -- which the
+// Origin type's own note is about.
 func elevate(mode Mode, origin Origin, declared bool) (Mode, Origin) {
 	if declared && origin == OriginDefault {
 		return ModeAuto, OriginProject
