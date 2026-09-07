@@ -252,10 +252,16 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 	}
 
 	// The disclosure, and the rule R13a required to be written before the
-	// control existed: an install whose recipe or whose consent mode was
-	// determined by a project declaration states, before the install begins,
-	// the recipe, the version, the path of the file that authorized it, and
-	// the recipe's source.
+	// control existed: an install `tsuku run` performs, whose recipe or whose
+	// consent mode was determined by a project declaration, states before the
+	// install begins the recipe, the version, the path of the file that
+	// authorized it, and the recipe's source.
+	//
+	// The rule names `tsuku run` and so does this control, which is the
+	// comparison AC51 makes. It is not that the install path needs no
+	// disclosure -- it is that no consent mode governs it and no elevation
+	// happens there, so R11a has nothing to be about. D5 carries the reasoning
+	// and says plainly what the scope leaves uncovered.
 	//
 	// It is keyed on the declaration rather than on the elevation, and that is
 	// a case rather than a nicety. R3b stops the multiple-provider gate firing

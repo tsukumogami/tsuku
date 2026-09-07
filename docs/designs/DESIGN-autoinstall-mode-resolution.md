@@ -500,14 +500,38 @@ Per-install lands once per tool per version per project by construction, needs
 no new state, and rides on output the user already receives.
 
 **The rule R13a requires, written before the control exists:** *an install
-whose recipe or whose consent mode was determined by a project declaration
-shall state, before the install begins, the recipe, the version, the path of
-the file that authorized it, and the recipe's source.*
+`tsuku run` performs, whose recipe or whose consent mode was determined by a
+project declaration, shall state before the install begins the recipe, the
+version, the path of the file that authorized it, and the recipe's source.*
 
-The source is there because the security section concludes it must be: the run
-path inherits #2552's registration exposure, so a recipe can be reached from a
-source the user never approved, and a disclosure naming only the file would not
-say so.
+**Scoped to `tsuku run`, and the scope is part of the rule rather than an
+apology for the control.** R13a's whole point is that a control can be audited
+for having a subject narrower than its rule only against a rule someone wrote
+down first, so a rule left saying "an install" while the control sits in
+`Runner.Run` hands AC51 a mismatch that was diagnosed before the sign-off ever
+ran.
+
+The install path is out of scope for three reasons, and the third is a limit
+rather than a reassurance. The user typed `tsuku install`, so nothing about the
+install is arriving unasked the way a bare command reaching `tsuku run` through
+the shell hook is. The consent mode does not govern that path at all, so there
+is no elevation there to disclose — which is what makes this a scope clause and
+not an exemption; R11a is about a mode change, and no mode changes. And the
+path already prints three of the four facts before it prompts: `Using: <the
+config path>` and `Tools: <recipe>@<version>` (`cmd/tsuku/install_project.go`),
+which is the file and the recipe and the version.
+
+What it does not print is the source, and that is where the exposure actually
+is: tsukumogami/tsuku#2552's non-interactive registration happens on the
+install path, before any of this. Scoping this rule to `tsuku run` does not
+make that safe and is not claiming to. It says which control this document is
+accountable for, so that the other one is visibly missing rather than silently
+assumed covered.
+
+The source is in the rule because the security section concludes it must be:
+the run path inherits #2552's registration exposure, so a recipe can be reached
+from a source the user never approved, and a disclosure naming only the file
+would not say so.
 
 "Determined the recipe or the mode" rather than "raised the mode", and the
 widening is not cosmetic. R3b removes the multiple-provider gate's precondition
