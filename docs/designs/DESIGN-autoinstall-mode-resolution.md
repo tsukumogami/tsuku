@@ -785,7 +785,7 @@ is the subject of the second comparison below:
 
 | Gate | Identifier | Condition it reports |
 |---|---|---|
-| Configuration-permission | `config-permissions` | Which of the four ways `config.toml` fails: mode, owner, unreadable, ownership undeterminable |
+| Configuration-permission | `config-permissions` | Which of the five ways `config.toml` fails: no path configured, mode, owner, unreadable, ownership undeterminable |
 | Verification | `recipe-verification` | The recipe carries no checksum or signature |
 | Multiple-provider | `multiple-providers` | More than one recipe provides the command |
 

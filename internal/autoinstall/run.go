@@ -687,7 +687,7 @@ func (r *Runner) execBinary(binary string, args []string) error {
 // no group or other bits at all and be owned by uid, and a file that does not
 // exist is fine because there is nothing there to tamper with.
 //
-// It returns the condition rather than a bool because this gate has four
+// It returns the condition rather than a bool because this gate has five
 // distinct ways to fire and AC21 requires the line to say which. A constant
 // string would report permissions for a file owned by somebody else, and
 // permissions are what a user would then go and change -- so the wrong
@@ -698,12 +698,17 @@ func (r *Runner) execBinary(binary string, args []string) error {
 // branch which cannot be built without a second account -- the one the
 // paragraph above is about -- is reachable from a test.
 //
-// An empty path takes the unreadable branch rather than the does-not-exist
-// one, because os.Stat("") fails with something other than IsNotExist. That is
-// the safe direction and it is deliberate: a Runner holding a Config nobody
-// filled in has no config file to check, and treating "I cannot tell" as "fine"
-// is how a gate stops being one.
+// An empty path is checked before the stat and not left to it. os.Stat("")
+// fails with ENOENT, so IsNotExist reports true and the first branch below
+// would return "no config file, which is fine" -- for a Runner that does not
+// know where its config file is, which is not the same statement at all.
+// Treating "I cannot tell" as "fine" is how a gate stops being one, and this
+// is the direction the rest of the package defaults in: a nil IsTerminal is no
+// terminal, a nil RecipeHasVerification is unverified.
 func configPermissionCondition(path string, uid int) string {
+	if path == "" {
+		return "no path is configured for config.toml, so its permissions cannot be checked"
+	}
 	info, err := os.Stat(path)
 	if os.IsNotExist(err) {
 		return ""

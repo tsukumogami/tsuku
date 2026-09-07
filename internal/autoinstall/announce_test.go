@@ -271,6 +271,20 @@ func TestConfigPermissionCondition_NamesWhichReason(t *testing.T) {
 	path := filepath.Join(dir, "config.toml")
 	me := os.Getuid()
 
+	// No path at all, which is not the same state as no file. os.Stat("")
+	// fails with ENOENT, so IsNotExist reports true and the does-not-exist
+	// branch would answer "fine" for a Runner that does not know where its
+	// config file is. The gate has to fail closed there, and the condition has
+	// to say which of the two it means.
+	unset := configPermissionCondition("", me)
+	if unset == "" {
+		t.Error("a Runner with no configured config file path passes the gate; it cannot check anything, " +
+			"so the safe direction is to fire")
+	}
+	if strings.Contains(unset, "permissions are") {
+		t.Errorf("the condition for an unset path reports permissions, which there is no file to have: %q", unset)
+	}
+
 	if got := configPermissionCondition(path, me); got != "" {
 		t.Errorf("a config file that does not exist fires the gate: %q", got)
 	}

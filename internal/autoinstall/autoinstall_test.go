@@ -89,7 +89,8 @@ func newTestRunner(t *testing.T) (*Runner, *bytes.Buffer, *bytes.Buffer) {
 		CurrentDir: filepath.Join(tmpDir, "tools", "current"),
 		// The file the configuration-permission gate guards, which is the
 		// one userconfig.Load reads. DefaultConfig fills it in; a hand-built
-		// Config has to as well, or the gate has nothing to check and fires.
+		// Config has to as well, or the gate has no path to check and fires
+		// rather than passing.
 		ConfigFile: filepath.Join(tmpDir, "config.toml"),
 	}
 	// Create the current dir so binary path construction works.
@@ -251,7 +252,7 @@ func TestRun_ModeAuto_HappyPath(t *testing.T) {
 	r.RecipeHasVerification = func(_ string) bool { return true }
 
 	// Create a config file with 0600 so the permission check passes.
-	configPath := filepath.Join(r.cfg.HomeDir, "config.toml")
+	configPath := r.cfg.ConfigFile
 	_ = os.WriteFile(configPath, []byte(""), 0600)
 
 	err := r.Run(context.Background(), "jq", nil, ModeAuto, OriginFlag, nil)
@@ -306,7 +307,7 @@ func TestRun_ConfigPermissionFallback(t *testing.T) {
 	r.ConsentReader = strings.NewReader("y\n")
 
 	// Create config with permissive permissions (0644).
-	configPath := filepath.Join(r.cfg.HomeDir, "config.toml")
+	configPath := r.cfg.ConfigFile
 	_ = os.WriteFile(configPath, []byte(""), 0644)
 
 	err := r.Run(context.Background(), "jq", nil, ModeAuto, OriginFlag, nil)
@@ -332,7 +333,7 @@ func TestRun_VerificationGateFallback(t *testing.T) {
 	r.ConsentReader = strings.NewReader("y\n")
 
 	// Config with correct permissions so gate 2 doesn't trigger.
-	configPath := filepath.Join(r.cfg.HomeDir, "config.toml")
+	configPath := r.cfg.ConfigFile
 	_ = os.WriteFile(configPath, []byte(""), 0600)
 
 	err := r.Run(context.Background(), "jq", nil, ModeAuto, OriginFlag, nil)
@@ -362,7 +363,7 @@ func TestRun_ConflictGateFallback(t *testing.T) {
 	r.RecipeHasVerification = func(_ string) bool { return true }
 	r.ConsentReader = strings.NewReader("y\n")
 
-	configPath := filepath.Join(r.cfg.HomeDir, "config.toml")
+	configPath := r.cfg.ConfigFile
 	_ = os.WriteFile(configPath, []byte(""), 0600)
 
 	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto, OriginFlag, nil)
@@ -496,7 +497,7 @@ func TestRun_InstalledTool_ProjectPinInstallsIfMissing(t *testing.T) {
 	r.RecipeHasVerification = func(_ string) bool { return true }
 
 	// Ensure config.toml exists with safe permissions for auto mode.
-	_ = os.WriteFile(filepath.Join(r.cfg.HomeDir, "config.toml"), []byte(""), 0600)
+	_ = os.WriteFile(r.cfg.ConfigFile, []byte(""), 0600)
 
 	// Resolver pins version 1.6. Its bin dir does NOT exist in the temp dir.
 	resolver := &mockDeclarationResolver{
@@ -557,7 +558,7 @@ func TestRun_ModeAuto_AuditLogNDJSON(t *testing.T) {
 	r.Exec = execRec.exec
 	r.RecipeHasVerification = func(_ string) bool { return true }
 
-	_ = os.WriteFile(filepath.Join(r.cfg.HomeDir, "config.toml"), []byte(""), 0600)
+	_ = os.WriteFile(r.cfg.ConfigFile, []byte(""), 0600)
 
 	err := r.Run(context.Background(), "jq", nil, ModeAuto, OriginFlag, nil)
 	if err != nil {
@@ -606,7 +607,7 @@ func TestRun_NilRecipeHasVerification_FallsBackToConfirm(t *testing.T) {
 	r.RecipeHasVerification = nil // not wired
 	r.ConsentReader = strings.NewReader("y\n")
 
-	_ = os.WriteFile(filepath.Join(r.cfg.HomeDir, "config.toml"), []byte(""), 0600)
+	_ = os.WriteFile(r.cfg.ConfigFile, []byte(""), 0600)
 
 	err := r.Run(context.Background(), "jq", nil, ModeAuto, OriginFlag, nil)
 	if err != nil {
@@ -639,7 +640,7 @@ func TestRun_DeclaredCommand_RaisesTheUnsetDefault(t *testing.T) {
 	r.RecipeHasVerification = func(_ string) bool { return true }
 
 	// Good config permissions so security gate 2 passes.
-	_ = os.WriteFile(filepath.Join(r.cfg.HomeDir, "config.toml"), []byte(""), 0600)
+	_ = os.WriteFile(r.cfg.ConfigFile, []byte(""), 0600)
 
 	resolver := &mockDeclarationResolver{
 		versions: map[string]string{"jq": "1.7.1"},
