@@ -12,7 +12,11 @@ description: >-
   up on the wrong node version" (pin the repo's toolchain), "my shell function vanished after I installed the tool" (init
   fragments are bash and zsh only), and "$TSUKU_HOME is 40GB, what can I delete"
   (tool data survives both upgrade and remove, and nothing tsuku ships deletes
-  it). It also settles `--reinstall` against `--fresh`, which is genuinely
+  it). It covers what happens when a command you don't have installed is run --
+  the consent mode, why a project's `.tsuku.toml` no longer overrides a mode you
+  set, and the two exits people hit in CI: "my build says confirm mode requires
+  a terminal" and "it refuses because two recipes provide the same command". It
+  also settles `--reinstall` against `--fresh`, which is genuinely
   surprising: one replays the plan stored at install time, the other regenerates
   it from the current recipe. Do NOT use it to write or change a recipe
   (`tsuku-recipe-author`), to validate or test one under development or read a
@@ -123,7 +127,7 @@ installed already.
 
 | Command | Description | Common Flags |
 |---------|-------------|--------------|
-| `tsuku run <tool> [args]` | Install if missing, then execute | `--mode suggest/confirm/auto` |
+| `tsuku run <tool> [args]` | Install if missing, then execute — see the consent-mode section | `--mode suggest/confirm/auto` |
 | `tsuku check-deps <tool>` | Report each dependency's type and status before installing | `--json` |
 | `tsuku verify <tool>` | Check binary integrity and deps | `--system-deps`, `--integrity` |
 | `tsuku doctor` | Environment health check | `--fix` |
@@ -260,6 +264,91 @@ Only tools that are visible on PATH are checked. Execution dependencies tsuku in
 
 Symlinks are followed, so if you link managed binaries into a directory that's already on your PATH instead of adding `$TSUKU_HOME/bin` to it, none of them is reported. The name is outside `$TSUKU_HOME`, but the file it runs is tsuku's. Point those links at `$TSUKU_HOME/tools/current/<binary>` rather than at a specific version's directory — a link to `current` follows updates, and one pinned to `tools/<tool>-<version>/bin/<binary>` keeps running that version after you upgrade. Doctor doesn't yet flag the pinned case.
 
+## `tsuku run` and the Consent Mode
+
+`tsuku run <command>` installs the tool that provides the command, if it isn't
+installed, and then executes it. The command-not-found hook
+(`tsuku hook install`) routes every command your shell can't resolve through it,
+so a user with that hook meets this path without ever typing `tsuku run`. The
+hook is not advisory: it installs.
+
+Whether it installs is the **consent mode**, resolved in this order:
+
+1. `--mode` flag
+2. `TSUKU_AUTO_INSTALL_MODE`
+3. `auto_install_mode` in `$TSUKU_HOME/config.toml`
+4. Default `confirm`, raised to `auto` for a tool the project's `.tsuku.toml` declares
+
+`suggest` prints an install instruction and installs nothing. `confirm` prompts.
+`auto` installs without asking.
+
+Two things about that list are worth knowing before you debug someone's report.
+
+**A declaration only raises step 4.** "The project config is consent" was true
+unconditionally once and is not any more. A declaration raises the mode when,
+and only when, nobody set one; a mode set at steps 1 through 3 reaches the
+install as set, `suggest` included. So "I set `auto_install_mode = suggest` and
+the repo installed something anyway" is not the current behavior, and if someone
+reports it, look at whether the tool was already installed rather than at the
+setting.
+
+**The environment can't raise the mode on its own.**
+`TSUKU_AUTO_INSTALL_MODE=auto` is honored only when `config.toml` already says
+`auto`. Without that, the run falls back to `confirm` — which in a script means
+exit 12, not an install. This surprises people setting the variable in CI.
+
+An install a declaration authorized announces itself on stderr before it starts:
+
+```
+project-declaration: /home/dev/myproject/.tsuku.toml declares fd@10.2.0 (recipe source: registry)
+```
+
+A mode of `auto` can also be lowered back to `confirm` before the install, by
+one of three checks that each name themselves on stderr:
+`config-permissions` (your `config.toml` grants access beyond its owner, is
+owned by someone else, or can't be read), `recipe-verification` (the recipe
+carries no checksum or signature to verify), and `multiple-providers` (more than
+one recipe provides the command — this one can't fire for a declared command).
+So an unexpected prompt in `auto` is diagnosable: the line above it says which
+check caused it.
+
+### Two exits people hit here
+
+**Exit 12 — no terminal.** `confirm` needs a TTY to ask. In a script, a
+pipeline, a Makefile or a CI job it stops:
+
+```
+tsuku: confirm mode requires a terminal; use --mode=auto for non-interactive use
+```
+
+When a mode-lowering check would block `auto` anyway, the message says that
+instead of naming a flag that wouldn't work:
+
+```
+tsuku: confirm mode requires a terminal, and auto mode is unavailable here: more than one recipe provides "fd"
+```
+
+Follow whichever hatch the message actually names. The fix for the first is
+`--mode auto` or `auto_install_mode = "auto"`; for the second it's resolving the
+named condition first. Shims (`tsuku shim install`) are the supported route for
+CI generally.
+
+**Exit 10 — the project declares two providers of one command.** If
+`.tsuku.toml` declares both `fd` and `fdclone`, and both provide `fd`, tsuku
+refuses rather than picking:
+
+```
+tsuku run: 2 recipes in /home/dev/myproject/.tsuku.toml provide "fd". Nothing was
+installed and nothing was run: the file that was meant to settle which provider
+to use names more than one of them.
+```
+
+It then lists each declaration with the `tsuku install` line and the exact
+binary path that reaches it. Removing all but one declaration fixes it. Note
+this is about what the *project file* declares, not about how many recipes exist
+— plenty of commands have several providers in the registry and run fine,
+because the project named one.
+
 ## Troubleshooting
 
 ### Exit Codes
@@ -277,8 +366,17 @@ When a command fails, the exit code tells you what went wrong:
 | 6 | Installation failed (or all tools failed in batch install) |
 | 7 | Verification failed |
 | 8 | Dependency resolution failed |
+| 10 | The project declares more than one recipe providing the command (`tsuku run`), or a name that can't be narrowed to one recipe |
+| 11 | Binary index not built — run `tsuku update-registry` |
+| 12 | `confirm` mode requires a terminal (`tsuku run`) |
+| 13 | User declined the install |
+| 14 | Forbidden (for example, running as root) |
 | 15 | Partial failure (some tools failed in batch install) |
 | 130 | Cancelled (Ctrl+C) |
+
+Codes 10 through 14 come from `tsuku run` and so from the command-not-found
+hook and from shims — see the section above for what each one means in
+practice.
 
 ### Diagnosing Issues
 
