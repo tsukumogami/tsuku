@@ -480,11 +480,13 @@ func TestRun_D1_6_TheElevationIsDisclosedBeforeTheInstall(t *testing.T) {
 // elevation, no gate, and a repository-supplied file turning a prompt into an
 // unattended install.
 //
-// This is the only case where the declaration determined the recipe and
-// nothing else -- no elevation, no gate, no prompt -- so it is the one that
-// isolates the distinction. A disclosure keyed on the elevation also fails
-// TestRun_TheDisclosurePrecedesThePrompt, whose confirm was set by the flag;
-// what that case cannot show is the silent install, because it prompts.
+// A disclosure keyed on the elevation fails here, and also fails
+// TestRun_TheDisclosureNamesTheRecipeRatherThanTheConfigurationKey, which
+// arranges the same state for a different purpose, and
+// TestRun_TheDisclosurePrecedesThePrompt, whose confirm was set by the flag.
+// What none of those shows is what this one is named for: the silent install
+// itself, which is the outcome R3b changed and the reason the rule is keyed on
+// determination in the first place.
 func TestRun_TheDisclosureFollowsTheDeterminationRatherThanTheElevation(t *testing.T) {
 	fx := indexfixture.New(t)
 	r, installer, _, stdout, stderr := newFixtureRunner(t, fx)
@@ -670,9 +672,11 @@ func TestAnnouncementIdentifiersAreStable(t *testing.T) {
 //
 // TestRun_TheDisclosurePrecedesThePrompt reaches the site at confirm too and
 // catches that narrowing as well. Neither is the other's spare: that one
-// starts from an explicitly set confirm nobody raised, and this one from a
-// confirm the elevation raised and a gate put back -- which is the state AC35
-// is about and the only one where an elevation enabled the install.
+// starts from an explicitly set confirm nobody raised, so no elevation is in
+// play there at all, while this one starts from a confirm the elevation raised
+// and a gate put back -- which is the state AC35 is about. The elevation also
+// enables the install in the D1-6 case above, and that one is the elevation
+// working; this one is the elevation surviving a gate.
 func TestRun_TheDisclosureSurvivesAGateLoweringTheRaisedMode(t *testing.T) {
 	fx := indexfixture.New(t)
 	r, installer, execRec, stdout, stderr := newFixtureRunner(t, fx)
