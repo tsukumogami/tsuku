@@ -575,8 +575,8 @@ loaded by the real provider chain, offline, ahead of embedded and central.
 plain reads of the cache dir, so writing fixture TOMLs into
 `$TSUKU_HOME/registry/<letter>/<name>.toml` and calling `Rebuild` produces a
 genuine index with no network. A package var at the lookup boundary is added
-separately, for testing the *wiring* in `cmd_run.go` — which has no test today
-— but not as the fixture source, because a hand-written `[]index.BinaryMatch`
+separately, for testing the *wiring* in `cmd_run.go`, which had none at the
+time this was decided — but not as the fixture source, because a hand-written `[]index.BinaryMatch`
 is exactly what AC48's check must reject.
 
 **Two of R19's eight properties do not survive contact, and both are recorded
