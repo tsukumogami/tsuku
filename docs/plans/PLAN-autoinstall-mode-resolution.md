@@ -476,6 +476,28 @@ This interacts with AC42, which is a separate obligation and still applies: any
 document offering a *setting* as a mitigation must name at least one case that
 setting does not cover.
 
+**Two findings from Issue 7 land here, both recorded rather than fixed.**
+
+*The disclosure and the checksum note read as a contradiction.* A declared
+install now prints the elevation disclosure — naming the recipe, version,
+authorizing path and source — and then, for a recipe with no published
+checksums, a note saying so. A user cannot reconcile a line announcing that a
+control authorized this install with a line saying the artifact carries no
+checksums. Neither line is wrong; the juxtaposition is new, because the
+disclosure is new and the note is not.
+
+The underlying cause is the control this work already documents as unavailable,
+tracked outside this PR. **Do not fix it by suppressing either line** — the note
+is the only true thing on that screen about verification. What this unit owes is
+that no document describes the pair as a working control.
+
+*Two gate announcements are correct but not actionable.* `config-permissions`
+names no file path, and `multiple-providers` names neither rival recipe. Both
+satisfy AC21, which asks for a stable identifier and the condition — so this is
+a product judgment about message quality rather than an unmet criterion, and it
+is recorded here rather than fixed so that a later reader does not mistake the
+silence for nobody having noticed.
+
 **The `tsuku-user` skill is a third half, and it is an obligation the
 repository states rather than one this plan invented.** `CLAUDE.md` requires
 that a source change under `cmd/tsuku/` or `internal/shellenv/` be followed by
