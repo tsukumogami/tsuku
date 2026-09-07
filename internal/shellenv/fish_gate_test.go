@@ -8,7 +8,7 @@ import (
 )
 
 // TestEveryFishSiteFailsClosed asserts that a test file which looks up fish
-// also honours TSUKU_REQUIRE_FISH.
+// also honors TSUKU_REQUIRE_FISH.
 //
 // This exists because the same defect happened three times on one branch. The
 // gate was written in internal/shellquote, and then evalAndRead in this package
