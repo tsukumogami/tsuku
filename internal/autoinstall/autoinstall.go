@@ -5,10 +5,13 @@ package autoinstall
 
 import (
 	"context"
+	"fmt"
 	"io"
+	"strings"
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/index"
+	"github.com/tsukumogami/tsuku/internal/project"
 )
 
 // Mode controls the consent behavior for auto-install.
@@ -55,13 +58,44 @@ func ParseMode(s string) (Mode, bool) {
 	}
 }
 
-// ProjectVersionResolver resolves project-pinned versions for commands.
-// Implementations come from the project config package (#1680).
-// Pass nil to Runner.Run to use the latest version.
-type ProjectVersionResolver interface {
-	// ProjectVersionFor returns the project-pinned version for a command.
-	// Returns ok=false if no pin exists (use latest).
-	ProjectVersionFor(ctx context.Context, command string) (version string, ok bool, err error)
+// ProjectDeclarationResolver reports which of a command's providers the
+// project declared. The implementation is *project.Resolver; pass nil to
+// Runner.Run to run as if no .tsuku.toml existed.
+//
+// It takes the matches rather than the command because Run has already looked
+// the command up, and an implementation that resolved from the command would
+// open the binary index a second time on every run that finds a config.
+//
+// The set is how "not declared" is reported, in place of the ok bool the
+// previous single-value accessor returned: an empty result is no declaration,
+// one element is the recipe to narrow to, and two or more is an ambiguity the
+// caller refuses rather than settles.
+type ProjectDeclarationResolver interface {
+	DeclarationsFor(ctx context.Context, matches []index.BinaryMatch) ([]project.ProjectDeclaration, error)
+}
+
+// AmbiguousDeclarationError reports that the project declared more than one
+// recipe providing the executed command. Nothing is installed and nothing is
+// executed: the file that was meant to settle which provider to use named
+// several, and picking one would choose on an ordering the user never
+// expressed.
+type AmbiguousDeclarationError struct {
+	Command      string
+	Declarations []project.ProjectDeclaration
+}
+
+// Error names the command and every declared recipe.
+//
+// Recipe names alone are what this unit owes: the message that also carries
+// each declaration's version and configuration key, and an invocation that
+// reaches a specific one of them, is the refusal's own work.
+func (e *AmbiguousDeclarationError) Error() string {
+	names := make([]string, 0, len(e.Declarations))
+	for _, d := range e.Declarations {
+		names = append(names, d.Recipe)
+	}
+	return fmt.Sprintf("autoinstall: the project declares %d recipes providing %q: %s",
+		len(e.Declarations), e.Command, strings.Join(names, ", "))
 }
 
 // Installer performs the actual tool installation. cmd/tsuku wires this

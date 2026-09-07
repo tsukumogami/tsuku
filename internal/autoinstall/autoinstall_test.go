@@ -14,20 +14,40 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/index"
 	"github.com/tsukumogami/tsuku/internal/indexfixture"
+	"github.com/tsukumogami/tsuku/internal/project"
 )
 
-// mockProjectVersionResolver is a test double for ProjectVersionResolver.
-type mockProjectVersionResolver struct {
-	versions map[string]string // command -> version
+// mockDeclarationResolver is a test double for ProjectDeclarationResolver,
+// for the single-provider cases where the fixture would add nothing: the
+// declared recipe is the only match, so index ranking and declaration cannot
+// disagree and there is no narrowing to get wrong. Anything with more than one
+// provider goes through internal/indexfixture instead -- see candidates_test.go.
+//
+// versions is keyed on the recipe name, which is what the real resolver keys
+// on. Every case here uses a command and a recipe of the same name.
+type mockDeclarationResolver struct {
+	versions map[string]string // recipe -> declared version
 	err      error
 }
 
-func (m *mockProjectVersionResolver) ProjectVersionFor(_ context.Context, command string) (string, bool, error) {
+func (m *mockDeclarationResolver) DeclarationsFor(_ context.Context, matches []index.BinaryMatch) ([]project.ProjectDeclaration, error) {
 	if m.err != nil {
-		return "", false, m.err
+		return nil, m.err
 	}
-	v, ok := m.versions[command]
-	return v, ok, nil
+	var set []project.ProjectDeclaration
+	for _, match := range matches {
+		version, ok := m.versions[match.Recipe]
+		if !ok {
+			continue
+		}
+		set = append(set, project.ProjectDeclaration{
+			Recipe:     match.Recipe,
+			Version:    version,
+			ConfigKey:  match.Recipe,
+			ConfigPath: "/project/.tsuku.toml",
+		})
+	}
+	return set, nil
 }
 
 // mockInstaller records install calls.
@@ -132,33 +152,6 @@ func TestModeString(t *testing.T) {
 		}
 	}
 }
-
-func TestMockProjectVersionResolver(t *testing.T) {
-	resolver := &mockProjectVersionResolver{
-		versions: map[string]string{"jq": "1.7.1"},
-	}
-
-	v, ok, err := resolver.ProjectVersionFor(context.Background(), "jq")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !ok {
-		t.Fatal("expected ok=true for pinned command")
-	}
-	if v != "1.7.1" {
-		t.Errorf("got version %q, want %q", v, "1.7.1")
-	}
-
-	_, ok, err = resolver.ProjectVersionFor(context.Background(), "curl")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if ok {
-		t.Error("expected ok=false for unpinned command")
-	}
-}
-
-// --- Runner.Run tests ---
 
 func TestRun_ModeSuggest(t *testing.T) {
 	r, stdout, _ := newTestRunner(t)
@@ -432,7 +425,7 @@ func TestRun_InstalledTool_ProjectPinOverridesGlobalVersion(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resolver := &mockProjectVersionResolver{
+	resolver := &mockDeclarationResolver{
 		versions: map[string]string{"jq": "1.6"},
 	}
 
@@ -476,7 +469,7 @@ func TestRun_InstalledTool_ProjectPinInstallsIfMissing(t *testing.T) {
 	_ = os.WriteFile(filepath.Join(r.cfg.HomeDir, "config.toml"), []byte(""), 0600)
 
 	// Resolver pins version 1.6. Its bin dir does NOT exist in the temp dir.
-	resolver := &mockProjectVersionResolver{
+	resolver := &mockDeclarationResolver{
 		versions: map[string]string{"jq": "1.6"},
 	}
 
@@ -494,7 +487,7 @@ func TestRun_InstalledTool_ProjectPinInstallsIfMissing(t *testing.T) {
 	}
 }
 
-func TestRun_ProjectVersionResolverFlowsThrough(t *testing.T) {
+func TestRun_DeclaredVersionFlowsThrough(t *testing.T) {
 	r, _, _ := newTestRunner(t)
 	installer := &mockInstaller{}
 	execRec := &execRecorder{}
@@ -506,7 +499,7 @@ func TestRun_ProjectVersionResolverFlowsThrough(t *testing.T) {
 	r.Exec = execRec.exec
 	r.ConsentReader = strings.NewReader("y\n")
 
-	resolver := &mockProjectVersionResolver{
+	resolver := &mockDeclarationResolver{
 		versions: map[string]string{"jq": "1.7.1"},
 	}
 
@@ -609,7 +602,7 @@ func TestRun_ProjectResolverOk_OverridesToAuto(t *testing.T) {
 	// Good config permissions so security gate 2 passes.
 	_ = os.WriteFile(filepath.Join(r.cfg.HomeDir, "config.toml"), []byte(""), 0600)
 
-	resolver := &mockProjectVersionResolver{
+	resolver := &mockDeclarationResolver{
 		versions: map[string]string{"jq": "1.7.1"},
 	}
 
@@ -635,7 +628,7 @@ func TestRun_ProjectResolverNotOk_ModeUnchanged(t *testing.T) {
 	}
 
 	// Resolver returns ok=false -- mode should stay as suggest.
-	resolver := &mockProjectVersionResolver{
+	resolver := &mockDeclarationResolver{
 		versions: map[string]string{}, // no entries
 	}
 

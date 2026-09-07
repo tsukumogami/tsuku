@@ -3,26 +3,26 @@ package project
 import (
 	"context"
 
-	"github.com/tsukumogami/tsuku/internal/autoinstall"
 	"github.com/tsukumogami/tsuku/internal/index"
 )
 
 // Resolver answers what a project declared, by combining the binary index
 // (command -> recipe) with the project config (recipe -> version).
+//
+// It does not look anything up itself. The caller has already opened the index
+// to find the command's providers, and resolving from the command here would
+// open it a second time on every run that finds a .tsuku.toml.
 type Resolver struct {
-	config *ConfigResult
-	lookup autoinstall.LookupFunc
-
 	// declarations maps a bare recipe name to what the configuration declared
 	// for it. It is built once, in NewResolver, so the precedence rule has one
-	// production site and the two entry points below cannot disagree about it.
+	// production site.
 	declarations map[string][]ProjectDeclaration
 }
 
-// NewResolver creates a ProjectVersionResolver. If config is nil (no
-// .tsuku.toml found), the resolver reports no declarations for every command.
-func NewResolver(config *ConfigResult, lookup autoinstall.LookupFunc) autoinstall.ProjectVersionResolver {
-	r := &Resolver{config: config, lookup: lookup}
+// NewResolver creates a Resolver. If config is nil (no .tsuku.toml found), the
+// resolver reports no declarations for every command.
+func NewResolver(config *ConfigResult) *Resolver {
+	r := &Resolver{}
 	if config != nil && config.Config != nil {
 		r.declarations = buildDeclarations(config.Config.Tools, config.Path)
 	}
@@ -37,10 +37,6 @@ func NewResolver(config *ConfigResult, lookup autoinstall.LookupFunc) autoinstal
 // The result is empty when the project declares no provider of the command,
 // which is how "not project-declared" is reported -- there is no second return
 // value that can disagree with the length of the first.
-//
-// It takes matches rather than a command because the caller has already looked
-// the command up. Resolving from the command here would open the index a
-// second time for every run that finds a .tsuku.toml.
 func (r *Resolver) DeclarationsFor(_ context.Context, matches []index.BinaryMatch) ([]ProjectDeclaration, error) {
 	if len(r.declarations) == 0 {
 		return nil, nil
@@ -60,48 +56,4 @@ func (r *Resolver) DeclarationsFor(_ context.Context, matches []index.BinaryMatc
 		set = append(set, r.declarations[m.Recipe]...)
 	}
 	return set, nil
-}
-
-// ProjectVersionFor returns the project-pinned version for a command.
-//
-// It is the pre-existing entry point and is on its way out. It reports a
-// version alone, so it cannot say which of several declared recipes the
-// version belongs to; DeclarationsFor is what replaces it.
-//
-// It is kept here only so the tree still builds: it is the single method of
-// autoinstall.ProjectVersionResolver, which NewResolver returns, and the one
-// production call is internal/autoinstall/run.go through that interface.
-// cmd/tsuku builds the resolver and hands it to Run without ever calling the
-// method, so start at the run path rather than there.
-// Deleting it is a separate unit's work, together with the lookup field and
-// NewResolver's second parameter and return type, because those are what make
-// this package import internal/autoinstall at all.
-func (r *Resolver) ProjectVersionFor(ctx context.Context, command string) (string, bool, error) {
-	if r.config == nil {
-		return "", false, nil
-	}
-
-	matches, err := r.lookup(ctx, command)
-	if err != nil {
-		return "", false, err
-	}
-
-	declared, err := r.DeclarationsFor(ctx, matches)
-	if err != nil {
-		return "", false, err
-	}
-	if len(declared) == 0 {
-		return "", false, nil
-	}
-	return declared[0].Version, true, nil
-}
-
-// Tools returns the tool map from the underlying config, or nil if no config
-// is present. This is used by callers that need to check whether a recipe
-// appears in the project config without going through the command lookup path.
-func (r *Resolver) Tools() map[string]ToolRequirement {
-	if r.config == nil {
-		return nil
-	}
-	return r.config.Config.Tools
 }

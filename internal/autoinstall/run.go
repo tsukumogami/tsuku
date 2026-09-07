@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/index"
+	"github.com/tsukumogami/tsuku/internal/project"
 )
 
 // Sentinel errors for exit code mapping in cmd/tsuku.
@@ -43,86 +44,138 @@ type auditEntry struct {
 	Mode      string `json:"mode"`
 }
 
-// Run executes the install-then-exec flow for a command.
+// candidates looks command up in the binary index and narrows the result to
+// the recipe the project declared, where it declared exactly one that provides
+// the command.
 //
-// It looks up the command in the binary index, applies security gates and
-// the consent mode, installs if needed, and hands off execution via
-// syscall.Exec (or the injected ExecFunc).
+//   - no declaration provides it: matches unchanged, nil declaration. The
+//     command resolves exactly as it would with no .tsuku.toml present (R5).
+//   - exactly one does: matches filtered to that recipe, plus the declaration.
+//   - more than one does: AmbiguousDeclarationError carrying all of them (R6).
 //
-// The resolver parameter provides project-pinned versions. Pass nil to
-// use the latest version from the registry.
-func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mode, resolver ProjectVersionResolver) error {
-	// Security gate 1: root guard.
-	if os.Geteuid() == 0 {
-		return fmt.Errorf("%w: refusing to auto-install as root", ErrForbidden)
+// The narrowing lives here, at the one site the list is produced, rather than
+// at each of the consumers below. That is what makes the consumers correct by
+// inheritance in the declared case: they go on reading position zero, and
+// position zero is now the declared recipe rather than whichever provider the
+// index happened to rank first. It is also what makes the property reviewable
+// -- the un-narrowed list never enters Run's scope at all, so there is no
+// region above the narrowing for a positional read to hide in.
+//
+// The three-way branch sits below the ErrNoMatch check, which stays on the raw
+// list: an empty index result is a lookup failure rather than a declaration
+// outcome. And the zero case is a passthrough rather than a narrowing to
+// nothing, because R5 requires an undeclared command to resolve as it would
+// with no config file, and that is the index's own ranking.
+func (r *Runner) candidates(ctx context.Context, command string, resolver ProjectDeclarationResolver) ([]index.BinaryMatch, *project.ProjectDeclaration, error) {
+	if r.Lookup == nil {
+		return nil, nil, fmt.Errorf("autoinstall: Lookup function not configured")
 	}
 
-	// Look up command in the binary index.
-	if r.Lookup == nil {
-		return fmt.Errorf("autoinstall: Lookup function not configured")
-	}
 	matches, err := r.Lookup(ctx, command)
 	if err != nil {
 		if errors.Is(err, index.ErrIndexNotBuilt) {
 			fmt.Fprintf(r.stderr, "Binary index not built. Run 'tsuku update-registry' to build it.\n")
-			return ErrIndexNotBuilt
+			return nil, nil, ErrIndexNotBuilt
 		}
 		// StaleIndexWarning: results are still valid.
 		var stale index.StaleIndexWarning
 		if !errors.As(err, &stale) {
-			return fmt.Errorf("autoinstall: lookup failed: %w", err)
+			return nil, nil, fmt.Errorf("autoinstall: lookup failed: %w", err)
 		}
 		fmt.Fprintf(r.stderr, "Warning: %v\n", err)
 	}
 
 	if len(matches) == 0 {
-		return ErrNoMatch
+		return nil, nil, ErrNoMatch
 	}
 
-	// Resolve version from project config if available. This must happen
-	// BEFORE the installed-tool fast path so that project version pins take
-	// precedence over the globally active version.
+	if resolver == nil {
+		return matches, nil, nil
+	}
+	declared, err := resolver.DeclarationsFor(ctx, matches)
+	if err != nil {
+		return nil, nil, fmt.Errorf("autoinstall: version resolution failed: %w", err)
+	}
+
+	switch len(declared) {
+	case 0:
+		return matches, nil, nil
+	case 1:
+		declaration := declared[0]
+		narrowed := make([]index.BinaryMatch, 0, 1)
+		for _, m := range matches {
+			if m.Recipe == declaration.Recipe {
+				narrowed = append(narrowed, m)
+			}
+		}
+		if len(narrowed) == 0 {
+			// The resolver derives its answer from the matches it was handed,
+			// so this cannot happen with the production one. It is checked
+			// because the parameter is an interface: an implementation that
+			// declared a recipe nothing provides would otherwise hand every
+			// consumer below an empty list to index at position zero.
+			return nil, nil, fmt.Errorf("autoinstall: the project declared %q for %q, which provides no match",
+				declaration.Recipe, command)
+		}
+		return narrowed, &declaration, nil
+	default:
+		return nil, nil, &AmbiguousDeclarationError{Command: command, Declarations: declared}
+	}
+}
+
+// Run executes the install-then-exec flow for a command.
+//
+// It looks up the command in the binary index, narrows the result to what the
+// project declared, applies security gates and the consent mode, installs if
+// needed, and hands off execution via syscall.Exec (or the injected ExecFunc).
+//
+// The resolver parameter reports what the project declared. Pass nil to run as
+// if no .tsuku.toml existed.
+func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mode, resolver ProjectDeclarationResolver) error {
+	// Security gate 1: root guard.
+	if os.Geteuid() == 0 {
+		return fmt.Errorf("%w: refusing to auto-install as root", ErrForbidden)
+	}
+
+	matches, declaration, err := r.candidates(ctx, command, resolver)
+	if err != nil {
+		return err
+	}
+
+	// The one positional read. Everything below decides from match and from
+	// declaration, and both already account for what the project declared:
+	// where it declared a provider of command, match is that recipe and
+	// version is what it was declared at; where it declared none, declaration
+	// is nil and match is whatever the index ranked first.
+	match := matches[0]
 	version := ""
-	projectDeclared := false
-	if resolver != nil {
-		v, ok, resolveErr := resolver.ProjectVersionFor(ctx, command)
-		if resolveErr != nil {
-			return fmt.Errorf("autoinstall: version resolution failed: %w", resolveErr)
-		}
-		if ok {
-			version = v
-			projectDeclared = true
-		}
+	if declaration != nil {
+		version = declaration.Version
 	}
 
 	// Project-declared tool: exec from the version-specific bin directory,
-	// not from tools/current/. Install the pinned version if needed.
-	if projectDeclared {
-		match := matches[0]
+	// not from tools/current/. Install the declared version if needed.
+	if declaration != nil {
 		binDir := r.cfg.ToolBinDir(match.Recipe, version)
 		binaryPath := filepath.Join(binDir, command)
 
-		// If the pinned version is already installed, exec directly.
-		if _, err := os.Stat(binaryPath); err == nil {
+		// If the declared version is already installed, exec directly.
+		if _, statErr := os.Stat(binaryPath); statErr == nil {
 			return r.execBinary(binaryPath, args)
 		}
 
-		// Pinned version not installed -- fall through to install flow
+		// Declared version not installed -- fall through to install flow
 		// with auto mode (project config is consent).
-	} else if matches[0].Installed {
-		// No project pin -- use the globally active version.
+	} else if match.Installed {
+		// Nothing declared -- use the globally active version.
 		binaryPath := filepath.Join(r.cfg.CurrentDir, command)
 		return r.execBinary(binaryPath, args)
 	}
 
-	// Pick the best match. If there's only one, use it. If multiple, the
-	// conflict gate may apply in auto mode.
-	match := matches[0]
-
 	// Project override: when the tool is declared in .tsuku.toml, escalate
 	// the mode to auto so the TTY gate and interactive prompt are bypassed.
 	effectiveMode := mode
-	if projectDeclared {
+	if declaration != nil {
 		effectiveMode = ModeAuto
 	}
 
@@ -150,6 +203,11 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 
 	// Security gate 4 (auto mode only): conflict gate.
 	// If multiple recipes provide this command, fall back to confirm.
+	//
+	// A declaration leaves exactly one match, so this cannot fire for a
+	// declared command: the project already said which provider it meant, and
+	// prompting about a conflict it has settled would be asking a question
+	// with a written answer.
 	if effectiveMode == ModeAuto && len(matches) > 1 {
 		effectiveMode = ModeConfirm
 	}

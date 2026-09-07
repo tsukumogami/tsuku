@@ -30,7 +30,7 @@ func declaringResolver(tools map[string]string, configPath string) *Resolver {
 		Path:   configPath,
 		Dir:    filepath.Dir(configPath),
 	}
-	return NewResolver(cfg, nil).(*Resolver)
+	return NewResolver(cfg)
 }
 
 // declarationsFor runs the resolver over the fixture's ranking of command.
@@ -212,7 +212,7 @@ func TestDeclarationsFor_RecipeInNoIndexDeclaresNothing(t *testing.T) {
 	declaring := declaringResolver(map[string]string{
 		unknownRecipe: "1.0.0",
 	}, "/project/.tsuku.toml")
-	none := NewResolver(nil, nil).(*Resolver)
+	none := NewResolver(nil)
 
 	for _, command := range []string{
 		unknownRecipe, // the command whose name resembles the unknown recipe
@@ -355,7 +355,7 @@ func TestDeclarationsFor_DuplicateMatchDeclaresOnce(t *testing.T) {
 }
 
 func TestDeclarationsFor_NoConfig(t *testing.T) {
-	r := NewResolver(nil, nil).(*Resolver)
+	r := NewResolver(nil)
 	declared, err := r.DeclarationsFor(context.Background(), []index.BinaryMatch{
 		{Recipe: "jq", Command: "jq"},
 	})
@@ -387,7 +387,7 @@ func TestDeclarationsFor_CarriesTheDeclaringFilePath(t *testing.T) {
 		t.Fatalf("LoadProjectConfig(%q) found no config; it wrote one at %q", dir, path)
 	}
 
-	r := NewResolver(cfg, nil).(*Resolver)
+	r := NewResolver(cfg)
 	declared := declarationsFor(t, r, fx, indexfixture.CommandTwoProviders)
 	if len(declared) != 1 {
 		t.Fatalf("declarations = %v, want exactly one", configKeys(declared))

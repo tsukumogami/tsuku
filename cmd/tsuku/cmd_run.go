@@ -95,9 +95,9 @@ Exit codes:
 		projectCfg, _ := project.LoadProjectConfig(cwd)
 
 		indexLookup := func(ctx context.Context, cmd string) ([]index.BinaryMatch, error) {
-			return lookupBinaryCommand(ctx, cfg, cmd)
+			return binaryCommandLookup(ctx, cfg, cmd)
 		}
-		resolver := project.NewResolver(projectCfg, indexLookup)
+		resolver := project.NewResolver(projectCfg)
 
 		// TTY gate: confirm mode requires an interactive terminal.
 		// Project-declared tools bypass this gate because the mode override
