@@ -739,3 +739,53 @@ func TestFormatExports_HostileValuesDoNotExecute(t *testing.T) {
 		})
 	}
 }
+
+// renderVar renders one assignment the way FormatExports does, for tests that
+// build an expected block.
+//
+// setVar writes into a builder and returns nothing, so a test needing the
+// string form wraps it here rather than duplicating the quoting rule. Before
+// the security fix this was exportLine, which returned a string directly; the
+// shape changed with the quoter, and duplicating shellquote.POSIX/Fish in a
+// test would be a second definition of the rule that could drift from the one
+// the emitter uses.
+func renderVar(shell, name, value string) string {
+	var b strings.Builder
+	setVar(&b, shell, name, value)
+	return b.String()
+}
+
+// recordInstalled records a version in installation state, for fixtures that
+// create a tool directory directly.
+//
+// The old resolution stat'd the composed directory and added it, so a
+// directory alone was a sufficient fixture. This one requires state and the
+// filesystem to agree and never activates a directory with no state entry, so
+// a directory-only fixture now fails on its precondition rather than on its
+// subject. Tests predating that requirement need this; their subject is
+// unchanged.
+func recordInstalled(t *testing.T, cfg *config.Config, name, version string) {
+	t.Helper()
+
+	sm := install.NewStateManager(cfg)
+	state, err := sm.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if state.Installed == nil {
+		state.Installed = map[string]install.ToolState{}
+	}
+	tool, ok := state.Installed[name]
+	if !ok {
+		tool = install.ToolState{Versions: map[string]install.VersionState{}}
+	}
+	if tool.Versions == nil {
+		tool.Versions = map[string]install.VersionState{}
+	}
+	tool.Versions[version] = install.VersionState{Requested: version}
+	tool.ActiveVersion = version
+	state.Installed[name] = tool
+	if err := sm.Save(state); err != nil {
+		t.Fatal(err)
+	}
+}

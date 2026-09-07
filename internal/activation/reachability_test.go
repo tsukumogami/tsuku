@@ -43,24 +43,28 @@ var unhonorableConditions = []struct {
 			return r
 		},
 	},
-	{
-		name:    "bad-form (name): the derived name is not a safe path segment",
-		reason:  ReasonBadForm,
-		badName: true,
-		build: func(t *testing.T) *ActivationResult {
-			r, _ := activate(t, "[tools]\n'../../etc' = \"latest\"\n", nil)
-			return r
-		},
-	},
-	{
-		name:    "bad-form (version): the declared version is malformed",
-		reason:  ReasonBadForm,
-		badName: false,
-		build: func(t *testing.T) *ActivationResult {
-			r, _ := activate(t, "[tools]\nnodejs = '>=26'\n", map[string][]string{"nodejs": {"20.16.0"}})
-			return r
-		},
-	},
+	// The two bad-form rows were removed here, and their absence is a
+	// statement rather than a tidy-up.
+	//
+	// bad-form has two producers, a malformed name and a malformed version.
+	// Both became unreachable when #2563's boundary validation landed:
+	// validateDeclarations refuses a malformed key *and* a malformed version at
+	// parse time and drops the declaration, so activation never sees either.
+	// Verified by this table going red on the rebase, which is what it was
+	// written for -- and it caught more than predicted, since the design note
+	// that anticipated it named only the version half.
+	//
+	// The reason itself is not dead: the renderer still has both bad-form
+	// sentences, and classifyForm still refuses. They are a backstop beneath
+	// the boundary now, held up by unit tests on classifyForm rather than by
+	// anything reaching them from a .tsuku.toml. A row here would assert a
+	// condition this package can no longer produce, which is the false-control
+	// record this table exists to prevent.
+	//
+	// If a future change makes either producible again -- a new caller that
+	// bypasses parse-time validation, or a boundary that stops refusing keys --
+	// the row belongs back, and its absence is where to look for why it went.
+
 	{
 		name:   "channel: the declaration names a channel",
 		reason: ReasonChannel,

@@ -1,4 +1,4 @@
-package shellenv
+package activation
 
 import (
 	"os"
@@ -23,6 +23,20 @@ import (
 //
 // Scope note: this covers this package only. internal/shellquote has its own
 // requireFish helper, which is where its sites are gated.
+//
+// It was written in internal/shellenv and moved here with the code it guards.
+// The move is the point rather than housekeeping: a package-scoped walk follows
+// its subject or it stops having one, and this guard's own "found nothing"
+// clause is what reported that -- it failed with "no fish-using test file was
+// found in this package" rather than passing on an empty directory. A guard
+// that walks the wrong tree and finds zero files is indistinguishable from one
+// that found nothing wrong, which is the failure it exists to prevent, one
+// level up.
+//
+// Checked when moving it: internal/activation's activate_test.go is the only
+// LookPath-on-fish site outside internal/shellquote. cmd/tsuku's tests mention
+// fish but never look it up -- they assert on emitted text rather than running
+// a shell -- so they are correctly out of scope rather than uncovered.
 func TestEveryFishSiteFailsClosed(t *testing.T) {
 	entries, err := os.ReadDir(".")
 	if err != nil {

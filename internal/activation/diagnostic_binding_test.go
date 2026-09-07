@@ -1,4 +1,4 @@
-package shellenv
+package activation
 
 import (
 	"os"
@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/project"
 )
 
@@ -62,7 +63,7 @@ func TestComputeActivation_ReportsRefusalOnStderr(t *testing.T) {
 	}
 
 	stderr := captureStderr(t, func() {
-		if _, err := ComputeActivation(projDir, "/usr/bin", "", cfg); err != nil {
+		if _, err := ComputeActivation(projDir, "/usr/bin", "", "", cfg, install.NewStateManager(cfg)); err != nil {
 			t.Errorf("ComputeActivation: %v", err)
 		}
 	})
@@ -102,7 +103,7 @@ func TestFormatExports_StdoutCarriesNoDiagnostic(t *testing.T) {
 
 	var result *ActivationResult
 	stderr := captureStderr(t, func() {
-		r, err := ComputeActivation(projDir, "/usr/bin", "", cfg)
+		r, err := ComputeActivation(projDir, "/usr/bin", "", "", cfg, install.NewStateManager(cfg))
 		if err != nil {
 			t.Errorf("ComputeActivation: %v", err)
 		}

@@ -55,6 +55,23 @@ func classifyForm(key, declared string) (declaration, *Unhonorable) {
 	// tree's single definition of a well-formed recipe identifier, and its doc
 	// comment states the question it answers -- safe to pass to path
 	// construction -- which is the question this sink asks.
+	//
+	// This is a backstop beneath the boundary, and its reachability is
+	// uncertain. Since #2563, validateDeclarations refuses a malformed key at
+	// parse time, so a .tsuku.toml cannot currently deliver a name that reaches
+	// here and fails -- measured, not assumed: the end-to-end version of the
+	// test below stopped being able to produce a rejection, which is why it is
+	// now a unit test on classifyForm.
+	//
+	// Deliberately not claimed: that this refuses everything the boundary
+	// refuses. The two answer overlapping questions with different rules and
+	// nobody has established containment in either direction. What is claimed
+	// is narrower and is what a path sink needs -- the composed name is a
+	// single safe segment before it is joined.
+	//
+	// TestClassifyForm_UnsafeDerivedNameIsRejected is what holds this up. An
+	// end-to-end test cannot reach it and would be green whether or not the
+	// check existed, which is the shape this chain has spent its time removing.
 	if !recipe.IsValidRecipeName(bare) {
 		return declaration{}, badForm(true)
 	}

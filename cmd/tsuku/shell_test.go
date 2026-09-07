@@ -9,6 +9,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/activation"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/shellquote"
 )
 
 // shellSetupProject creates a temp directory with a .tsuku.toml, creates a bin
@@ -79,7 +80,7 @@ go = "1.22"
 		t.Errorf("missing _TSUKU_PREV_PATH export in:\n%s", output)
 	}
 
-	want := `export PATH="` + filepath.Join(cfg.ToolsDir, "go-1.22", "bin") + `:/usr/bin:/bin"`
+	want := "export PATH=" + shellquote.POSIX(filepath.Join(cfg.ToolsDir, "go-1.22", "bin")+":/usr/bin:/bin")
 	if !strings.Contains(output, want) {
 		t.Errorf("output should contain %s, got:\n%s", want, output)
 	}
@@ -115,7 +116,7 @@ func TestRunShell_ResolvesEveryDocumentedForm(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			want := `export PATH="` + filepath.Join(cfg.ToolsDir, tc.want, "bin") + `:/usr/bin"`
+			want := "export PATH=" + shellquote.POSIX(filepath.Join(cfg.ToolsDir, tc.want, "bin")+":/usr/bin")
 			if !strings.Contains(output, want) {
 				t.Errorf("output should contain %s, got:\n%s", want, output)
 			}

@@ -61,10 +61,10 @@ func TestComputeActivation_ParseFailureEmitsARecording(t *testing.T) {
 
 	result, _ := ComputeActivation(projectDir, "", "", "", cfg, installed)
 
-	want := exportLine("bash", "PATH", "/usr/bin") +
-		exportLine("bash", "_TSUKU_DIR", projectDir) +
-		exportLine("bash", "_TSUKU_PREV_PATH", "/usr/bin") +
-		exportLine("bash", "_TSUKU_STATE_STAMP", result.Stamp)
+	want := renderVar("bash", "PATH", "/usr/bin") +
+		renderVar("bash", "_TSUKU_DIR", projectDir) +
+		renderVar("bash", "_TSUKU_PREV_PATH", "/usr/bin") +
+		renderVar("bash", "_TSUKU_STATE_STAMP", result.Stamp)
 
 	if got := FormatExports(result, "bash"); got != want {
 		t.Errorf("FormatExports = %q, want %q", got, want)

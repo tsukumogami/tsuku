@@ -1,4 +1,4 @@
-package shellenv
+package activation
 
 // NOTE for whoever rebases #2554 over this: this file is package shellenv and
 // calls ComputeActivation, which that change moves to internal/activation. The
@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/project"
 )
 
@@ -67,7 +68,7 @@ func TestActivation_TraversalDoesNotReachPATH(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			result, err := ComputeActivation(projDir, "/usr/bin", "", cfg)
+			result, err := ComputeActivation(projDir, "/usr/bin", "", "", cfg, install.NewStateManager(cfg))
 			if err != nil {
 				t.Fatalf("ComputeActivation: %v", err)
 			}
@@ -108,7 +109,7 @@ func TestActivation_InjectionValueNeverReachesPATH(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	result, err := ComputeActivation(projDir, "/usr/bin", "", cfg)
+	result, err := ComputeActivation(projDir, "/usr/bin", "", "", cfg, install.NewStateManager(cfg))
 	if err != nil {
 		t.Fatalf("ComputeActivation: %v", err)
 	}
@@ -131,13 +132,18 @@ func TestActivation_ValidToolsStillActivate(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// See recordInstalled: this branch requires state and the filesystem to
+	// agree, so a directory-only fixture would fail on its precondition rather
+	// than on the property this test is about.
+	recordInstalled(t, cfg, "jq", "1.7.1")
+
 	projDir := t.TempDir()
 	body := "[tools]\njq = \"1.7.1\"\n\"x$(id)\" = \"1.0\"\n"
 	if err := os.WriteFile(filepath.Join(projDir, project.ConfigFileName), []byte(body), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	result, err := ComputeActivation(projDir, "/usr/bin", "", cfg)
+	result, err := ComputeActivation(projDir, "/usr/bin", "", "", cfg, install.NewStateManager(cfg))
 	if err != nil {
 		t.Fatalf("ComputeActivation: %v", err)
 	}
@@ -188,13 +194,21 @@ func TestActivation_OrgScopedKeyIsNotAPathComponent(t *testing.T) {
 		t.Fatal("the key-shaped directory exists; this fixture cannot distinguish the two")
 	}
 
+	// Record the version as installed. The old resolution stat'd the composed
+	// directory and added it, so a directory alone was enough; this branch
+	// requires state and the filesystem to agree, and never activates a
+	// directory with no state entry (TestResolve_DirectoryWithoutStateEntry\
+	// IsNeverActivated). The subject of this test is unchanged -- without this
+	// it fails on the precondition rather than on the property.
+	recordInstalled(t, cfg, bare, version)
+
 	projDir := t.TempDir()
 	body := "[tools]\n\"" + key + "\" = \"" + version + "\"\n"
 	if err := os.WriteFile(filepath.Join(projDir, project.ConfigFileName), []byte(body), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	result, err := ComputeActivation(projDir, "/usr/bin", "", cfg)
+	result, err := ComputeActivation(projDir, "/usr/bin", "", "", cfg, install.NewStateManager(cfg))
 	if err != nil {
 		t.Fatalf("ComputeActivation: %v", err)
 	}

@@ -276,13 +276,13 @@ func TestFormatExports_EveryValueGoesThroughExportLine(t *testing.T) {
 
 	for _, shell := range []string{"bash", "fish"} {
 		var want strings.Builder
-		want.WriteString(exportLine(shell, "PATH", result.PATH))
-		want.WriteString(exportLine(shell, "_TSUKU_DIR", result.Dir))
-		want.WriteString(exportLine(shell, "_TSUKU_PREV_PATH", result.PrevPath))
-		want.WriteString(exportLine(shell, "_TSUKU_STATE_STAMP", result.Stamp))
+		want.WriteString(renderVar(shell, "PATH", result.PATH))
+		want.WriteString(renderVar(shell, "_TSUKU_DIR", result.Dir))
+		want.WriteString(renderVar(shell, "_TSUKU_PREV_PATH", result.PrevPath))
+		want.WriteString(renderVar(shell, "_TSUKU_STATE_STAMP", result.Stamp))
 
 		if got := FormatExports(result, shell); got != want.String() {
-			t.Errorf("%s: FormatExports = %q, want every value rendered by exportLine: %q",
+			t.Errorf("%s: FormatExports = %q, want every value rendered by setVar: %q",
 				shell, got, want.String())
 		}
 	}

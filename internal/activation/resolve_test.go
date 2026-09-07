@@ -380,39 +380,32 @@ func TestResolve_OrgScopedKeyResolvesToBareName(t *testing.T) {
 // A malformed declared version is bad-form, not no-match. The distinction is
 // the whole point of reporting a reason: no-match sends the developer to look
 // at what is installed, and the problem is the line they wrote.
-func TestResolve_MalformedDeclaredVersionIsBadForm(t *testing.T) {
+func TestClassifyForm_MalformedDeclaredVersionIsBadForm(t *testing.T) {
+	// Run against classifyForm rather than through a .tsuku.toml: since
+	// #2563's boundary validation these versions are refused at parse time, so
+	// the declaration never reaches activation and an end-to-end form of this
+	// would be green because nothing arrived.
 	for _, declared := range []string{"../evil", "1.0.0/../..", `1.0\0`, "1.0 0"} {
 		t.Run(declared, func(t *testing.T) {
-			result, toolsDir := activate(t,
-				"[tools]\njq = '"+declared+"'\n",
-				map[string][]string{"jq": {"1.0.0"}})
+			_, u := classifyForm("jq", declared)
 
-			wantOnly(t, result, toolsDir)
-			if len(result.Unhonorable) != 1 {
-				t.Fatalf("Unhonorable = %+v, want one entry", result.Unhonorable)
+			if u == nil {
+				t.Fatalf("classifyForm accepted %q; it would become a path component", declared)
 			}
-			if got := result.Unhonorable[0].Reason; got != ReasonBadForm {
-				t.Errorf("Reason = %v, want ReasonBadForm", got)
+			if u.Reason != ReasonBadForm {
+				t.Errorf("Reason = %v, want ReasonBadForm", u.Reason)
 			}
-			// Here it really is the version, so the version sentence is right.
-			if result.Unhonorable[0].BadName {
-				t.Errorf("BadName = true for a malformed version %q; the message "+
-					"would blame the name, which is fine", declared)
+			// The version is what is malformed here, so the renderer must not
+			// blame the name.
+			if u.BadName {
+				t.Errorf("BadName = true for a malformed version %q", declared)
 			}
-			if result.Unhonorable[0].Declared != declared {
-				t.Errorf("Declared = %q, want %q", result.Unhonorable[0].Declared, declared)
+			if u.Declared != declared {
+				t.Errorf("Declared = %q, want %q", u.Declared, declared)
 			}
 		})
 	}
 }
-
-// withinToolsDir is the guard that keeps a composed path inside
-// $TSUKU_HOME/tools. It is tested directly because, with the name and version
-// checks above it in place, no .tsuku.toml can currently produce an input that
-// reaches it -- an end-to-end test of it would pass whether the guard were
-// there or not, which is no test at all. It stays as the check that keeps the
-// property true if a later change adds a candidate source or relaxes one of
-// those two, and this is the test that would then already be in place.
 func TestWithinToolsDir(t *testing.T) {
 	root := t.TempDir()
 	cfg, _ := emptyConfig(t)
@@ -494,7 +487,7 @@ func TestResolve_EveryEntryIsInsideToolsDir(t *testing.T) {
 // org-scoped key legitimately contains one, and a criterion phrased as "a key
 // with a slash activates nothing" would have described the org-key bug as
 // desired behavior and gone red the day it was fixed.
-func TestResolve_UnsafeDerivedNameIsRejected(t *testing.T) {
+func TestClassifyForm_UnsafeDerivedNameIsRejected(t *testing.T) {
 	cases := []string{
 		"../../../etc",
 		`a\b`,
@@ -504,17 +497,12 @@ func TestResolve_UnsafeDerivedNameIsRejected(t *testing.T) {
 
 	for _, key := range cases {
 		t.Run(key, func(t *testing.T) {
-			// A TOML literal string, so the key reaching activation is the one
-			// written here. In a basic string `\b` is a backspace, and the
-			// test would pass a name that is not the one it meant to reject.
-			result, toolsDir := activate(t,
-				"[tools]\n'"+key+"' = \"latest\"\n", nil)
+			_, u := classifyForm(key, "latest")
 
-			wantOnly(t, result, toolsDir)
-			if len(result.Unhonorable) != 1 {
-				t.Fatalf("Unhonorable = %+v, want one entry", result.Unhonorable)
+			if u == nil {
+				t.Fatalf("classifyForm(%q) accepted the key; the sink would compose "+
+					"a path from a name that is not a single segment", key)
 			}
-			u := result.Unhonorable[0]
 			if u.Reason != ReasonBadForm {
 				t.Errorf("Reason = %v, want ReasonBadForm", u.Reason)
 			}
@@ -533,14 +521,6 @@ func TestResolve_UnsafeDerivedNameIsRejected(t *testing.T) {
 		})
 	}
 }
-
-// A version recorded in installation state becomes a path component, and no
-// parse-time check ever sees it: the file said "latest".
-//
-// "a/b" is the fixture that isolates the validator. It stays inside
-// $TSUKU_HOME/tools once joined, so the containment guard would let it through,
-// and the directory is created here so the stat would succeed. Only
-// install.ValidateVersionString rejects it.
 func TestResolve_StateDerivedVersionIsValidated(t *testing.T) {
 	projectDir, cfg, installed := setupProject(t, "[tools]\njq = \"latest\"\n", nil)
 	t.Setenv("PATH", "/usr/bin")
@@ -614,38 +594,49 @@ func TestResolve_AbsentStateFileIsNoMatchNotUnreadable(t *testing.T) {
 // activation adds no second, stricter validator. A string of letters, digits,
 // dots and hyphens passes that validation and is classified as a prefix, so it
 // is a well-formed pin that matches nothing.
-func TestResolve_BadFormIsTheInstallValidatorAndNothingStricter(t *testing.T) {
-	cases := []struct {
-		declared string
-		want     Reason
-	}{
-		{">=26", ReasonBadForm},
-		{"^1.2", ReasonBadForm},
-		{"~1.2", ReasonBadForm},
-		// Well-formed by that validation, and simply matches nothing.
-		{"twenty-six", ReasonNoMatch},
-		{"26.x", ReasonNoMatch},
+func TestBadFormIsTheInstallValidatorAndNothingStricter(t *testing.T) {
+	// The bad-form half runs against classifyForm directly. Since #2563's
+	// boundary validation, a .tsuku.toml carrying one of these versions is
+	// refused at parse time and the declaration never reaches activation, so
+	// the end-to-end form of this asserted nothing -- it was green because the
+	// input never arrived, which is indistinguishable from the check working.
+	for _, declared := range []string{">=26", "^1.2", "~1.2"} {
+		t.Run("bad-form/"+declared, func(t *testing.T) {
+			_, u := classifyForm("nodejs", declared)
+			if u == nil {
+				t.Fatalf("classifyForm accepted %q; install's validator rejects it", declared)
+			}
+			if u.Reason != ReasonBadForm {
+				t.Errorf("Reason for %q = %v, want ReasonBadForm", declared, u.Reason)
+			}
+			if u.BadName {
+				t.Errorf("BadName = true for a malformed version %q", declared)
+			}
+		})
 	}
 
-	for _, tc := range cases {
-		t.Run(tc.declared, func(t *testing.T) {
+	// The no-match half stays end-to-end, and that is the point of the pairing:
+	// these are well-formed by install's validation, so the boundary passes
+	// them through and they reach activation, where they match nothing. Running
+	// them here proves activation is not applying a second, stricter rule --
+	// which a unit test on classifyForm alone could not show, because the
+	// question is what survives the whole path.
+	for _, declared := range []string{"twenty-six", "26.x"} {
+		t.Run("no-match/"+declared, func(t *testing.T) {
 			result, toolsDir := activate(t,
-				"[tools]\nnodejs = '"+tc.declared+"'\n",
+				"[tools]\nnodejs = '"+declared+"'\n",
 				map[string][]string{"nodejs": {"20.16.0"}})
 
 			wantOnly(t, result, toolsDir)
 			if len(result.Unhonorable) != 1 {
 				t.Fatalf("Unhonorable = %+v, want one entry", result.Unhonorable)
 			}
-			if got := result.Unhonorable[0].Reason; got != tc.want {
-				t.Errorf("Reason for %q = %v, want %v", tc.declared, got, tc.want)
+			if got := result.Unhonorable[0].Reason; got != ReasonNoMatch {
+				t.Errorf("Reason for %q = %v, want ReasonNoMatch", declared, got)
 			}
 		})
 	}
 }
-
-// Entered is true exactly when this activation entered a project directory that
-// was not already the recorded one.
 func TestResolve_EnteredTracksTheDirectoryChange(t *testing.T) {
 	projectDir, cfg, installed := setupProject(t, "[tools]\njq = \"latest\"\n",
 		map[string][]string{"jq": {"1.7.1"}})

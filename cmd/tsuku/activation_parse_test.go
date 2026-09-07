@@ -8,6 +8,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/shellquote"
 )
 
 // brokenProject writes a .tsuku.toml that will not parse, over a fake
@@ -83,7 +84,7 @@ func TestHookEnv_ParseFailure(t *testing.T) {
 	if !strings.Contains(stdout, "_TSUKU_STATE_STAMP=") {
 		t.Errorf("stdout should record the stamp, got:\n%s", stdout)
 	}
-	if !strings.Contains(stdout, `export PATH="/usr/bin"`) {
+	if !strings.Contains(stdout, "export PATH="+shellquote.POSIX("/usr/bin")) {
 		t.Errorf("stdout should leave PATH unchanged, got:\n%s", stdout)
 	}
 }
@@ -215,7 +216,7 @@ func TestShell_LeavingAProjectExitsZero(t *testing.T) {
 	if stderr != "" {
 		t.Errorf("leaving a project should print nothing, got:\n%s", stderr)
 	}
-	if !strings.Contains(stdout, `export PATH="/usr/bin"`) {
+	if !strings.Contains(stdout, "export PATH="+shellquote.POSIX("/usr/bin")) {
 		t.Errorf("stdout should restore the pre-activation PATH, got:\n%s", stdout)
 	}
 }
@@ -290,7 +291,7 @@ func TestHookEnv_LeavingAProjectIsSilent(t *testing.T) {
 	if stderr != "" {
 		t.Errorf("leaving a project should print nothing, got:\n%s", stderr)
 	}
-	if !strings.Contains(stdout, `export PATH="/usr/bin"`) {
+	if !strings.Contains(stdout, "export PATH="+shellquote.POSIX("/usr/bin")) {
 		t.Errorf("stdout should restore the pre-activation PATH, got:\n%s", stdout)
 	}
 	for _, name := range []string{"_TSUKU_DIR", "_TSUKU_PREV_PATH", "_TSUKU_STATE_STAMP"} {
