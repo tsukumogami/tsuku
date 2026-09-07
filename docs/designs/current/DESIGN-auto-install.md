@@ -14,8 +14,8 @@ problem: |
 decision: |
   Introduce `tsuku run <command> [args...]` backed by a new `internal/autoinstall/` library
   that owns the install-then-exec flow. Three consent modes cover the three use cases: `confirm`
-  (interactive prompt, default), `suggest` (print instructions, exit 1), and `auto` (silent
-  install with audit log). Mode is resolved from a four-step chain: `--mode` flag, then
+  (interactive prompt, default), `suggest` (print instructions, exit 1), and `auto`
+  (install without prompting, requires opt-in). Mode is resolved from a four-step chain: `--mode` flag, then
   `TSUKU_AUTO_INSTALL_MODE` env var, then `auto_install_mode` config key, then `confirm`.
   On Unix, `syscall.Exec` replaces the tsuku process after install so exit codes propagate
   directly. The library surface is stable from day one so `tsuku exec` (#2168) can import it.
