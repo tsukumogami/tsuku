@@ -323,6 +323,12 @@ Fields: `ts` (RFC-3339), `action`, `recipe`, `version`, `mode`. The file is pars
 `jq` from day one, making future tooling (a `tsuku audit` command, log ingest, grep by recipe)
 straightforward without a migration step.
 
+The format decision is the one recorded here; the field set has since grown an
+`origin` and a `gate`, and the log now covers every install rather than the
+auto ones. See the Data Formats section below, and D6 in
+`docs/designs/DESIGN-autoinstall-mode-resolution.md`. Adding fields cost no
+migration, which is the reversibility this decision was chosen for.
+
 #### Alternatives Considered
 
 **Tab-separated text:** Human-readable with `cat` or `tail`, no parser needed. Rejected in
@@ -452,15 +458,27 @@ Unset or empty resolves to `confirm` in `resolveMode`.
 - `ExitUserDeclined = 13` — user typed 'n' at the confirm prompt
 - `ExitForbidden = 14` — operation refused (e.g., running as root)
 
-**`$TSUKU_HOME/audit.log` — auto-mode audit trail**
+**`$TSUKU_HOME/audit.log` — the install audit trail**
 
 Append-only NDJSON (one JSON object per line), created on first write with mode 0600:
 
 ```json
-{"ts":"2026-03-25T12:00:00Z","action":"auto-install","recipe":"jq","version":"1.7.1","mode":"auto"}
+{"ts":"2026-03-25T12:00:00Z","action":"auto-install","recipe":"jq","version":"1.7.1","mode":"auto","origin":"config"}
+{"ts":"2026-03-25T12:01:00Z","action":"auto-install","recipe":"jq","version":"1.7.1","mode":"confirm","origin":"config","gate":"recipe-verification"}
 ```
 
-Fields: `ts` (RFC-3339), `action` (always `"auto-install"`), `recipe`, `version`, `mode`.
+Fields: `ts` (RFC-3339), `action` (always `"auto-install"`, naming the feature
+rather than the consent mode), `recipe`, `version`, `mode`, `origin`, and
+`gate` where one fired.
+
+`origin` and `gate`, and the widening from auto-mode installs to every install
+`tsuku run` performs, come from `docs/designs/DESIGN-autoinstall-mode-resolution.md`
+(D6). The scope this document originally gave the file — auto-mode installs
+only — is what made a gate-diverted install leave no trace, which is the defect
+that change answers. `origin` holds one of `default`, `flag`, `environment`,
+`config` or `project` and names the source the consent mode was resolved from
+*before* any gate ran; `gate` names the mode-lowering gate that changed it, so
+a gate is never an origin.
 
 ### Key Interfaces
 
@@ -594,10 +612,14 @@ more than one match, falling back to `confirm` so the user makes an explicit cho
 
 ### Audit trail
 
-Silent installs in `auto` mode append a timestamped NDJSON line to `$TSUKU_HOME/audit.log`
-(mode 0600). Command arguments are not logged — arguments may contain secrets. The log has no
-built-in rotation policy; the user is responsible for managing its size. A `tsuku audit`
-command or rotation support is deferred to a follow-on issue.
+Every install `tsuku run` performs appends a timestamped NDJSON line to
+`$TSUKU_HOME/audit.log` (mode 0600), whichever consent mode governed it. This document
+originally scoped the log to silent installs in `auto` mode; D6 of
+`docs/designs/DESIGN-autoinstall-mode-resolution.md` widened it, because an install a
+security gate diverted from `auto` to a prompt is the one worth finding later and was
+the one leaving no record. Command arguments are not logged — arguments may contain
+secrets. The log has no built-in rotation policy; the user is responsible for managing
+its size. A `tsuku audit` command or rotation support is deferred to a follow-on issue.
 
 ### Environment variable inheritance
 

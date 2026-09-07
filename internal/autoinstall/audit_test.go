@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/index"
+	"github.com/tsukumogami/tsuku/internal/indexfixture"
 )
 
 // The durable record: what it says about an install, and which installs it
@@ -184,6 +185,17 @@ func TestRun_AC22_EveryInstallRecordsOneOfFiveOrigins(t *testing.T) {
 		wantGate   string
 	}{
 		{
+			// The ordinary install: nothing configured, nothing declared, a
+			// prompt answered. It is the row the enum assertion above needs
+			// most, because "default" is the origin adjacent to the "unset"
+			// that assertion exists to catch -- a record site special-casing
+			// the resolved default into an unpopulated field is invisible to
+			// every other row here.
+			name: "the unset default, answered at the prompt",
+			mode: ModeConfirm, origin: OriginDefault, verified: true,
+			wantMode: "confirm", wantOrigin: "default",
+		},
+		{
 			name: "auto set by the flag", mode: ModeAuto, origin: OriginFlag, verified: true,
 			wantMode: "auto", wantOrigin: "flag",
 		},
@@ -234,6 +246,13 @@ func TestRun_AC22_EveryInstallRecordsOneOfFiveOrigins(t *testing.T) {
 			if got.Recipe != "jq" {
 				t.Errorf("recipe = %q, want %q", got.Recipe, "jq")
 			}
+			// The action names the feature and is the same constant whichever
+			// mode governed the run. DESIGN-auto-install.md specifies it that
+			// way, and the confirm rows here are what keep the widening from
+			// quietly turning it into a second spelling of the mode.
+			if got.Action != "auto-install" {
+				t.Errorf("action = %q, want %q on every row", got.Action, "auto-install")
+			}
 		})
 	}
 }
@@ -241,11 +260,11 @@ func TestRun_AC22_EveryInstallRecordsOneOfFiveOrigins(t *testing.T) {
 // AC24. An install a mode-lowering gate diverted away from auto, which then
 // proceeded after a prompt, is in the log and names the gate that diverted it.
 //
-// Two gates rather than one, because a gate is named by an identifier and an
-// implementation that hard-codes a single string satisfies one row. The gate
-// this asserts is also the string the warning on stderr carried, which is what
-// makes the record and the terminal agree by construction: both come from the
-// one traversal of the gates table.
+// All three registered gates rather than one, because a gate is named by an
+// identifier and an implementation that hard-codes a single string satisfies
+// one row. The gate each row asserts is also the string the warning on stderr
+// carried, which is what makes the record and the terminal agree by
+// construction: both come from the one traversal of the gates table.
 func TestRun_AC24_AGateDivertedInstallNamesTheGate(t *testing.T) {
 	t.Run("the recipe-verification gate", func(t *testing.T) {
 		got := runInstall(t, ModeAuto, OriginConfig, false, nil)
@@ -295,6 +314,65 @@ func TestRun_AC24_AGateDivertedInstallNamesTheGate(t *testing.T) {
 			t.Errorf("origin = %q, want environment: a gate lowers the mode and is not itself an origin", entry.Origin)
 		}
 	})
+
+	// The third registered gate, and the one that needs the fixture: it fires
+	// on a command with more than one provider, which R17 forbids assembling
+	// by hand. Without this row the record has been seen to carry two of the
+	// three identifiers, and a gate whose condition is a property of the
+	// candidate list rather than of the recipe is the one most easily missed
+	// by a write site that reads the wrong thing.
+	t.Run("the multiple-provider gate", func(t *testing.T) {
+		fx := indexfixture.New(t)
+		r, installer, _, _, stderr := newFixtureRunner(t, fx)
+		r.ConsentReader = strings.NewReader("y\n")
+
+		// Nothing declared, so nothing narrows the two providers to one and
+		// nothing raises the mode either -- auto is the mode this call passes.
+		if err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil,
+			ModeAuto, OriginFlag, nil); err != nil {
+			t.Fatalf("Run() error = %v, want nil\nstderr:\n%s", err, stderr.String())
+		}
+		if !installer.called {
+			t.Fatalf("nothing was installed\nstderr:\n%s", stderr.String())
+		}
+
+		entry := soleEntry(t, fx.Cfg.HomeDir)
+		if entry.Gate != gateMultipleProviders {
+			t.Errorf("gate = %q, want %q", entry.Gate, gateMultipleProviders)
+		}
+		if entry.Mode != "confirm" {
+			t.Errorf("mode = %q, want confirm: this run was diverted to a prompt", entry.Mode)
+		}
+		if entry.Origin != "flag" {
+			t.Errorf("origin = %q, want flag", entry.Origin)
+		}
+	})
+}
+
+// The record is of installs that happened, which is why it is written below
+// the install rather than above it. An entry written before Installer.Install
+// runs would name a tool a failed install never put on the machine, and no
+// assertion about a successful run can see the difference -- both orderings
+// write exactly one entry for every install that worked.
+func TestRun_AFailedInstallIsNotRecorded(t *testing.T) {
+	r, _, _ := newTestRunner(t)
+	r.Lookup = func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
+		return []index.BinaryMatch{{Recipe: "jq", Command: "jq"}}, nil
+	}
+	r.Installer = &mockInstaller{err: errors.New("the download failed")}
+	r.Exec = (&execRecorder{}).exec
+	r.RecipeHasVerification = func(_ string) bool { return true }
+
+	if err := os.WriteFile(r.cfg.ConfigFile, []byte(""), 0o600); err != nil {
+		t.Fatalf("writing config.toml: %v", err)
+	}
+
+	if err := r.Run(context.Background(), "jq", nil, ModeAuto, OriginFlag, nil); err == nil {
+		t.Fatal("Run() error = nil, want the install failure")
+	}
+	if entries, written := auditLog(t, r.cfg.HomeDir); written {
+		t.Errorf("the install failed but the record claims it happened: %+v", entries)
+	}
 }
 
 // AC22, against the reading of it that records nothing.

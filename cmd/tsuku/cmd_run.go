@@ -45,7 +45,10 @@ Project configuration:
 Consent modes (for tools not in .tsuku.toml):
   suggest   Print install instructions and exit (no install)
   confirm   Prompt before installing (default, requires a terminal)
-  auto      Install silently with audit logging (requires opt-in)
+  auto      Install without prompting (requires opt-in)
+
+Every install is recorded in $TSUKU_HOME/audit.log, whichever mode governed
+it, along with where that mode came from.
 
 Mode resolution order:
   1. .tsuku.toml declares the tool -> auto (project config is consent)

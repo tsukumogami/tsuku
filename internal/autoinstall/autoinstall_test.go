@@ -580,12 +580,11 @@ func TestRun_ModeAuto_AuditLogNDJSON(t *testing.T) {
 	if err := json.Unmarshal(bytes.TrimSpace(data), &entry); err != nil {
 		t.Fatalf("audit log is not valid NDJSON: %v\nraw: %s", err, data)
 	}
-	// The action names the event and the mode field below names the consent.
-	// It said "auto-install" while the entry was written only on the auto
-	// path; now that confirm installs are recorded too, an action carrying the
-	// mode would be the mode field written twice.
-	if entry.Action != "install" {
-		t.Errorf("action = %q, want %q", entry.Action, "install")
+	// The action names the feature, not the consent mode, so it is the same
+	// constant on a confirm entry as on this one. The mode field below is
+	// where the mode is recorded.
+	if entry.Action != "auto-install" {
+		t.Errorf("action = %q, want %q", entry.Action, "auto-install")
 	}
 	if entry.Recipe != "jq" {
 		t.Errorf("recipe = %q, want %q", entry.Recipe, "jq")

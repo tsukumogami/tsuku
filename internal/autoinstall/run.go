@@ -42,16 +42,19 @@ var (
 
 // auditEntry is one line of the NDJSON audit log.
 //
-// Mode, Origin and Gate are three facts and none of them can be read off
-// another. Mode is what governed the install. Origin is the source the mode
-// was resolved from, before any gate ran (R12). Gate names the mode-lowering
-// gate that changed it, where one did (R12a), and is absent where none fired.
+// Mode is what governed the install. Origin is the source the mode was
+// resolved from, before any gate ran (R12). Gate names the mode-lowering gate
+// that changed it, where one did (R12a), and is absent where none fired.
 //
-// The pair that makes the separation load-bearing is a confirm the user asked
-// for and a confirm a gate produced by lowering an auto: same Mode, and the
-// second is the run that did something the user did not ask for. An entry
-// carrying only the mode cannot tell them apart, which is the same as not
-// having recorded where the mode came from.
+// Origin is the field that carries what the other two cannot. A confirm the
+// user asked for and a confirm a gate produced by lowering an auto are the
+// same Mode, and the second is the run that did something the user did not
+// ask for; an entry carrying only the mode cannot tell them apart, which is
+// the same as not having recorded where the mode came from.
+//
+// Gate does imply a Mode of confirm, since that is the only mode lowering
+// produces -- the implication runs one way and does not make Gate derivable,
+// because most confirms have no gate behind them.
 type auditEntry struct {
 	Timestamp string `json:"ts"`
 	Action    string `json:"action"`
@@ -243,9 +246,11 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 	// already lowered.
 	//
 	// The gate it names goes into the same record the origin above does, and
-	// for the same reason: this is the site that walked the table, and a
-	// reader recovering the answer from a second walk is where two copies
-	// start disagreeing.
+	// for the same reason: this is the one site that knows which gate *fired*,
+	// and a reader recovering that from its own walk of the table is where two
+	// copies start disagreeing. Other sites range over the table -- the hatch
+	// message asks it a different question and gets a condition back, not an
+	// identifier -- so what is single here is the answer, not the traversal.
 	subject := gateSubject{command: command, match: match, matches: matches}
 	effectiveMode, loweredBy := r.lowerMode(effectiveMode, subject)
 
@@ -768,12 +773,13 @@ func configPermissionCondition(path string, uid int) string {
 
 // writeAuditLog appends one NDJSON line to $TSUKU_HOME/audit.log.
 //
-// The action is "install" rather than the "auto-install" it said while this
-// was an auto-only line. Now that confirm installs are recorded too, that
-// spelling would be false on most of them, and a per-mode action string --
-// "confirm-install" beside "auto-install" -- would only put the mode field's
-// content in a second place free to disagree with it. The action says what
-// happened; the three fields beside it say under what consent.
+// The action stays "auto-install" now that confirm installs are recorded too,
+// and it is not the mode written twice. It names the feature -- the one this
+// package, the `tsuku run` flow and TSUKU_AUTO_INSTALL_MODE are all named for
+// -- rather than the consent mode that governed the run, which the mode field
+// beside it carries. Renaming it to match the widened scope would change a
+// durable on-disk format nothing asked to have changed and falsify
+// DESIGN-auto-install.md, which specifies this field as a constant.
 //
 // The origin is written through Origin.String, so an origin no caller resolved
 // appears as "unset" rather than as one of the five names R12 lists. That is
@@ -791,7 +797,7 @@ func writeAuditLog(homeDir, recipe, version string, mode Mode, origin Origin, lo
 
 	entry := auditEntry{
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
-		Action:    "install",
+		Action:    "auto-install",
 		Recipe:    recipe,
 		Version:   version,
 		Mode:      mode.String(),
