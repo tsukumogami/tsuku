@@ -6,12 +6,20 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/tsukumogami/tsuku/internal/activation"
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/shellquote"
 )
 
-// shellSetupProject creates a temp directory with a .tsuku.toml and optionally
-// creates tool bin directories under a fake $TSUKU_HOME.
-func shellSetupProject(t *testing.T, tomlContent string, installedTools map[string]string) (projectDir string, cfg *config.Config) {
+// shellSetupProject creates a temp directory with a .tsuku.toml, creates a bin
+// directory for every installed version under a fake $TSUKU_HOME, and writes a
+// real state.json recording them.
+//
+// The state file is written through StateManager rather than faked, because
+// this is the entry-point test: the point is that the whole path works,
+// including the accessor the package-level tests stand in for.
+func shellSetupProject(t *testing.T, tomlContent string, installedTools map[string][]string) (projectDir string, cfg *config.Config) {
 	t.Helper()
 
 	projectDir = t.TempDir()
@@ -25,11 +33,22 @@ func shellSetupProject(t *testing.T, tomlContent string, installedTools map[stri
 		ToolsDir: filepath.Join(tsukuHome, "tools"),
 	}
 
-	for name, version := range installedTools {
-		binDir := cfg.ToolBinDir(name, version)
-		if err := os.MkdirAll(binDir, 0755); err != nil {
-			t.Fatal(err)
+	state := &install.State{Installed: map[string]install.ToolState{}}
+	for name, versions := range installedTools {
+		tool := install.ToolState{
+			ActiveVersion: versions[0],
+			Versions:      map[string]install.VersionState{},
 		}
+		for _, v := range versions {
+			if err := os.MkdirAll(cfg.ToolBinDir(name, v), 0755); err != nil {
+				t.Fatal(err)
+			}
+			tool.Versions[v] = install.VersionState{Requested: v}
+		}
+		state.Installed[name] = tool
+	}
+	if err := install.NewStateManager(cfg).Save(state); err != nil {
+		t.Fatal(err)
 	}
 
 	return projectDir, cfg
@@ -40,7 +59,7 @@ func TestRunShell_ActivationOutput(t *testing.T) {
 [tools]
 go = "1.22"
 `
-	projectDir, cfg := shellSetupProject(t, toml, map[string]string{"go": "1.22"})
+	projectDir, cfg := shellSetupProject(t, toml, map[string][]string{"go": {"1.22"}})
 
 	t.Setenv("PATH", "/usr/bin:/bin")
 	t.Setenv("HOME", filepath.Dir(projectDir))
@@ -54,9 +73,6 @@ go = "1.22"
 	}
 
 	// Should contain export statements for PATH, _TSUKU_DIR, and _TSUKU_PREV_PATH.
-	if !strings.Contains(output, "export PATH=") {
-		t.Errorf("missing PATH export in:\n%s", output)
-	}
 	if !strings.Contains(output, "export _TSUKU_DIR=") {
 		t.Errorf("missing _TSUKU_DIR export in:\n%s", output)
 	}
@@ -64,10 +80,89 @@ go = "1.22"
 		t.Errorf("missing _TSUKU_PREV_PATH export in:\n%s", output)
 	}
 
-	// PATH should include the tool bin dir.
-	goBin := cfg.ToolBinDir("go", "1.22")
-	if !strings.Contains(output, goBin) {
-		t.Errorf("PATH should contain go bin dir %q, got:\n%s", goBin, output)
+	want := "export PATH=" + shellquote.POSIX(filepath.Join(cfg.ToolsDir, "go-1.22", "bin")+":/usr/bin:/bin")
+	if !strings.Contains(output, want) {
+		t.Errorf("output should contain %s, got:\n%s", want, output)
+	}
+}
+
+// Every version form the shell-integration guide documents resolves through
+// the tsuku shell entry point, against real installation state.
+func TestRunShell_ResolvesEveryDocumentedForm(t *testing.T) {
+	cases := []struct {
+		name     string
+		declared string
+		want     string
+	}{
+		{"latest", "latest", "jq-2.0.0"},
+		{"omitted", "", "jq-2.0.0"},
+		{"major prefix", "1", "jq-1.7.1"},
+		{"major-minor prefix", "1.7", "jq-1.7.1"},
+		{"exact", "1.6.0", "jq-1.6.0"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			toml := "[tools]\njq = \"" + tc.declared + "\"\n"
+			projectDir, cfg := shellSetupProject(t, toml, map[string][]string{
+				"jq": {"1.6.0", "1.7.0", "1.7.1", "2.0.0"},
+			})
+
+			t.Setenv("PATH", "/usr/bin")
+			t.Setenv("HOME", filepath.Dir(projectDir))
+
+			output, err := runShell(projectDir, "", "bash", cfg)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			want := "export PATH=" + shellquote.POSIX(filepath.Join(cfg.ToolsDir, tc.want, "bin")+":/usr/bin")
+			if !strings.Contains(output, want) {
+				t.Errorf("output should contain %s, got:\n%s", want, output)
+			}
+		})
+	}
+}
+
+// tsuku shell never short-circuits, whatever the environment holds.
+//
+// It defeats the early exit by passing an empty curDir, and it must not read
+// _TSUKU_STATE_STAMP from the environment the way hook-env does. If it did,
+// then with _TSUKU_DIR already at the current directory and a matching stamp,
+// ComputeActivation would return nil, runShell would turn that into an empty
+// string, and the command would report no .tsuku.toml found and exit non-zero
+// for a project that exists and is perfectly valid.
+func TestRunShell_NeverShortCircuits(t *testing.T) {
+	toml := `
+[tools]
+jq = "latest"
+`
+	projectDir, cfg := shellSetupProject(t, toml, map[string][]string{"jq": {"1.7.1"}})
+	t.Setenv("PATH", "/usr/bin")
+	t.Setenv("HOME", filepath.Dir(projectDir))
+
+	// The environment a shell would hold while standing in this very project,
+	// with a stamp that matches installation state exactly.
+	t.Setenv("_TSUKU_DIR", projectDir)
+	t.Setenv("_TSUKU_PREV_PATH", "/usr/bin")
+	t.Setenv("_TSUKU_STATE_STAMP", activation.StateStamp(cfg))
+
+	output, err := runShell(projectDir, "/usr/bin", "bash", cfg)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if output == "" {
+		t.Fatal("tsuku shell produced nothing for a valid project; it short-circuited")
+	}
+
+	want := filepath.Join(cfg.ToolsDir, "jq-1.7.1", "bin")
+	if !strings.Contains(output, want) {
+		t.Errorf("output should activate jq, got:\n%s", output)
+	}
+	for _, name := range []string{"_TSUKU_DIR", "_TSUKU_PREV_PATH", "_TSUKU_STATE_STAMP"} {
+		if !strings.Contains(output, name) {
+			t.Errorf("tsuku shell should emit %s on its success path, got:\n%s", name, output)
+		}
 	}
 }
 
@@ -95,7 +190,7 @@ func TestRunShell_RepeatedInvocation(t *testing.T) {
 [tools]
 go = "1.22"
 `
-	projectDir, cfg := shellSetupProject(t, toml, map[string]string{"go": "1.22"})
+	projectDir, cfg := shellSetupProject(t, toml, map[string][]string{"go": {"1.22"}})
 
 	originalPath := "/usr/bin:/bin"
 	t.Setenv("PATH", originalPath)
@@ -130,7 +225,7 @@ func TestRunShell_FishOutput(t *testing.T) {
 [tools]
 go = "1.22"
 `
-	projectDir, cfg := shellSetupProject(t, toml, map[string]string{"go": "1.22"})
+	projectDir, cfg := shellSetupProject(t, toml, map[string][]string{"go": {"1.22"}})
 
 	t.Setenv("PATH", "/usr/bin")
 	t.Setenv("HOME", filepath.Dir(projectDir))

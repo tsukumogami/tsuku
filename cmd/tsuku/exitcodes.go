@@ -63,7 +63,26 @@ const (
 	ExitCancelled = 130
 )
 
-// exitWithCode exits with the specified exit code
+// exitFunc is the seam tests replace to observe an exit instead of losing the
+// whole test binary to os.Exit. It is never called directly -- go through
+// exitWithCode, which enforces that an exit does not return.
+var exitFunc = os.Exit
+
+// exitWithCode exits with the specified exit code and never returns.
+//
+// The trailing panic is what keeps that guarantee true. Callers rely on it:
+// several treat the statements after an exitWithCode as unreachable and would
+// dereference a nil pointer if control ever continued. Making the seam a plain
+// function variable would break that for real under a test override, and would
+// also cost the static analysis that proves those dereferences unreachable.
+// Here the seam is one level down, so exitWithCode still provably does not
+// return, and a test override that tries to continue is stopped loudly rather
+// than running code that was written on the assumption it could not.
 func exitWithCode(code int) {
-	os.Exit(code)
+	exitFunc(code)
+	panic(exitSentinel{code})
 }
+
+// exitSentinel is what a test override's return turns into. Tests recover it;
+// in production exitFunc is os.Exit and this is never reached.
+type exitSentinel struct{ code int }

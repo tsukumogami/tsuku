@@ -48,6 +48,8 @@ Version strings control which release gets installed:
 - **Prefix** (`"1.22"`): resolves to the latest release that starts with `1.22.` (e.g., `1.22.5`). Prefix matching is dot-boundary-aware — `"1"` matches `"1.29.3"` but not `"10.0.0"`. A single major component like `"0"` resolves to the newest `0.x.y`.
 - **`""` or `"latest"`**: both resolve to the newest stable release. They're equivalent. Tsuku shows a "Pin versions for reproducibility" warning for either.
 
+All four forms work for activation as well as install: entering a project selects, from the versions you have installed, the newest one that satisfies the declaration. The example above is a working file — `go = "1.22"` puts your newest installed 1.22.x on PATH, and `jq = "latest"` puts your newest installed jq there.
+
 To see which versions are actually available for a tool, run `tsuku versions <tool>`.
 
 **Homebrew recipes have limited version availability.** For tools installed from Homebrew bottles, only the current stable version (and named versioned formulae like `shellcheck@0.9`) is available. Pinning to an older patch release that Homebrew no longer bottles will fail with "version not found". For these tools, either use `""` to track the current bottle, or check `tsuku versions <tool>` to confirm which versions are available before pinning.
@@ -162,12 +164,13 @@ tsuku hook uninstall --activate
 
 ### How it works
 
-Activation tracks state in two shell variables:
+Activation tracks state in three shell variables:
 
 - `_TSUKU_DIR` -- the last directory where activation ran
 - `_TSUKU_PREV_PATH` -- your PATH before any project activation
+- `_TSUKU_STATE_STAMP` -- a fingerprint of what tsuku has installed, so that installing a tool takes effect at your next prompt without leaving the directory
 
-When you enter a project directory, tsuku saves your current PATH and prepends the project's tool bins. When you leave (cd to a directory without `.tsuku.toml`), it restores the original PATH and unsets both variables.
+When you enter a project directory, tsuku saves your current PATH and prepends the project's tool bins. When you leave (cd to a directory without `.tsuku.toml`), it restores the original PATH and unsets all three variables.
 
 Switching directly between two projects works correctly. Tsuku uses the saved original PATH as the base, not the current (project-modified) PATH.
 
@@ -185,9 +188,30 @@ tsuku install direnv --no-shell-init
 
 This only affects `install_shell_init` steps. The tool's binary is still installed normally.
 
-### What if a version isn't installed?
+### What if a declaration can't be honored?
 
-Activation only works with already-installed tool versions. If `.tsuku.toml` declares `go = "1.22"` but you haven't installed Go 1.22, that tool is skipped. Run `tsuku install` to install missing versions. The auto-install feature (next section) handles this more smoothly.
+Activation works with already-installed tool versions. If nothing you have installed satisfies a declaration, that tool doesn't go on your PATH — and tsuku tells you why, on stderr, once when you enter the project:
+
+```
+tsuku: go is declared in .tsuku.toml, but nothing installed matches it. Run 'tsuku install go' to add it.
+```
+
+There are five reasons you might see:
+
+| Message says | What happened | What to do |
+|--------------|---------------|------------|
+| `nothing installed matches` | No installed version satisfies the declaration | `tsuku install <tool>` |
+| `recorded as installed but its files are missing` | Tsuku thinks it's installed, but the files are gone | Reinstall the version it names |
+| `not a valid version string` | The version in `.tsuku.toml` is malformed, e.g. `">=26"` | Fix the version — see the version forms above |
+| `is not a usable tool name` | The key is malformed, e.g. it contains `/` where an org-scoped name isn't intended | Fix the key; the version on that line is not the problem |
+| `channel pin` | The declaration names a channel, e.g. `"@lts"` | Declare a version instead; activation selects among what's installed and doesn't resolve channels |
+| `could not read` | Tsuku's installation state couldn't be read | Check `$TSUKU_HOME/state.json` |
+
+The rest of the file still activates: one unhonorable declaration doesn't stop the others.
+
+If you install the missing version without leaving the directory, it takes effect at your next prompt. You don't need to `cd` out and back in.
+
+Pass `--quiet` to suppress these messages, or run `tsuku install` with no arguments to install everything the project declares. The auto-install feature (next section) handles this more smoothly.
 
 ## Auto-Install on Command Not Found
 
