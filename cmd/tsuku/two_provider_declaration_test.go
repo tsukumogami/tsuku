@@ -70,9 +70,10 @@ func twoProviderProject(t *testing.T, tools map[string]string) (*indexfixture.Fi
 		return fx.Lookup(ctx, command)
 	}
 
-	// Neither belongs to what these cases assert and both reach outside the
-	// fixture: the update check spawns a detached process, and the telemetry
-	// notice writes and reports.
+	// Neither belongs to what these cases assert. The update check spawns a
+	// detached process; telemetry prints a first-run notice to stderr, which
+	// is a stream the terminal case compares byte for byte, and its client
+	// POSTs events to an external endpoint.
 	t.Setenv("TSUKU_NO_UPDATE_CHECK", "1")
 	t.Setenv("TSUKU_NO_TELEMETRY", "1")
 
