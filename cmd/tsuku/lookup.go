@@ -25,11 +25,9 @@ import (
 // It is a seam for the lookup, not a source of matches. A test replaces it
 // with internal/indexfixture's Lookup; a test that instead returns a
 // hand-written multi-provider []index.BinaryMatch literal is building a case
-// outside the fixture, which TestMultiProviderCasesUseTheFixture rejects.
-// That check reads composite literals of two or more elements and nothing
-// else, so a slice assembled some other way passes it. internal/indexfixture's
-// package comment enumerates what escapes; its point is that a construct
-// missing from that list is not thereby sanctioned.
+// outside the fixture, which TestMultiProviderCasesUseTheFixture rejects --
+// see internal/indexfixture's package comment for what that check does and
+// does not catch.
 var binaryCommandLookup = lookupBinaryCommand
 
 // lookupBinaryCommand opens the binary index and looks up the given command,

@@ -577,10 +577,9 @@ func TestRun_AC44_SingleProviderBehaviorIsUnchanged(t *testing.T) {
 	}
 }
 
-// A declaration for a recipe that provides none of the matches is a broken
-// resolver, not a narrowing outcome. This is the case that keeps candidates'
-// postcondition -- a non-empty list on a nil error -- true against an
-// implementation the production resolver's own shape does not rule out.
+// The case that pins candidates' non-empty postcondition. Nothing else can:
+// the production resolver cannot produce a declaration naming a recipe none of
+// the matches provide, so only a deliberately broken one reaches the guard.
 func TestCandidates_DeclarationNamingNoMatchIsAnError(t *testing.T) {
 	fx := indexfixture.New(t)
 	r, _, _, _, _ := newFixtureRunner(t, fx)

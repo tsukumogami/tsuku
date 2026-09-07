@@ -99,15 +99,11 @@ Exit codes:
 		// command nothing declares still skips the gate in a repository that
 		// declares something else, and then meets the prompt at a closed stdin
 		// and exits 13 rather than 12. A command that is declared can be
-		// lowered back to confirm by the configuration-permission gate or the
-		// verification gate inside Run -- the conflict gate cannot fire on a
-		// declared command, because narrowing left it one candidate -- so "no
-		// prompt is shown" is not something this check can know from here.
-		//
-		// Both follow from the check being in the wrong place: it runs before
-		// the declaration is resolved and before the gates, so it is guessing
-		// at an answer Run computes. Moving it inside Run, after the gates, is
-		// what fixes it, and is a separate unit's work.
+		// lowered back to confirm by a gate inside Run -- an unverified recipe
+		// is the ordinary way -- so "no prompt is shown" is not something this
+		// check can know from here. Both follow from the check running before
+		// the declaration is resolved and before the gates, which is why
+		// moving it inside Run is what fixes it, and a separate unit's work.
 		hasProjectTools := wiring.projectCfg != nil && len(wiring.projectCfg.Config.Tools) > 0
 		if mode == autoinstall.ModeConfirm && !hasProjectTools && !term.IsTerminal(int(os.Stdin.Fd())) {
 			fmt.Fprintln(os.Stderr, "tsuku: confirm mode requires a TTY; set TSUKU_AUTO_INSTALL_MODE=auto or use --mode=auto for non-interactive use")

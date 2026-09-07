@@ -87,11 +87,9 @@ type AmbiguousDeclarationError struct {
 // Error names the command and every declared recipe, each with the
 // configuration key that declared it.
 //
-// The key is not decoration even in this interim message. Recipe is a match
-// key rather than an identity -- two declarations in one set carry the same
-// bare name whenever a configuration names one recipe from two registries --
-// so a message built from Recipe alone reads "koto and koto" and reinstates
-// the confusion the declaration set exists to remove.
+// The key is not decoration even in this interim message: project.ProjectDeclaration
+// documents why Recipe cannot identify a declaration, and two registries named
+// for one recipe are the case that makes a Recipe-only message useless.
 //
 // What this message does not yet carry is each declaration's version and an
 // invocation that reaches a specific one of the recipes. Those come with the

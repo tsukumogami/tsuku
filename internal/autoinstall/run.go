@@ -53,15 +53,9 @@ type auditEntry struct {
 //   - exactly one does: matches filtered to that recipe, plus the declaration.
 //   - more than one does: AmbiguousDeclarationError carrying all of them (R6).
 //
-// # The postcondition every caller relies on
-//
 // On a nil error the returned list has at least one element. Run reads
-// position zero without checking, and every guard below exists to keep that
-// true: the ErrNoMatch return for an empty lookup, and the error return for a
-// declaration naming a recipe none of the matches provide. Neither is
-// decorative. Removing either turns a caller's matches[0] into a panic in
-// another function, which is why the second one is checked even though the
-// production resolver cannot trigger it.
+// position zero without checking, and the two guards below -- the ErrNoMatch
+// return and the one at the narrowing -- are what keep that true.
 //
 // The narrowing lives here, at the one site the list is produced, rather than
 // at each of the consumers below. That is what makes the consumers correct by
@@ -74,13 +68,10 @@ type auditEntry struct {
 //
 // "Correct by inheritance" holds for the declared case and is not a general
 // property of the consumers. Where nothing is declared they read position zero
-// of a list the index ranked, which is what R5 requires.
-//
-// The three-way branch sits below the ErrNoMatch check, which stays on the raw
-// list: an empty index result is a lookup failure rather than a declaration
-// outcome. And the zero case is a passthrough rather than a narrowing to
-// nothing, because R5 requires an undeclared command to resolve as it would
-// with no config file, and that is the index's own ranking.
+// of a list the index ranked, which is what R5 requires -- so the zero case is
+// a passthrough rather than a narrowing to nothing. The ErrNoMatch check stays
+// above the branch on the raw list for the adjacent reason: an empty index
+// result is a lookup failure rather than a declaration outcome.
 func (r *Runner) candidates(ctx context.Context, command string, resolver ProjectDeclarationResolver) ([]index.BinaryMatch, *project.ProjectDeclaration, error) {
 	if r.Lookup == nil {
 		return nil, nil, fmt.Errorf("autoinstall: Lookup function not configured")
@@ -124,10 +115,10 @@ func (r *Runner) candidates(ctx context.Context, command string, resolver Projec
 			}
 		}
 		if len(narrowed) == 0 {
-			// Keeps the postcondition above. The production resolver derives
-			// its answer from the matches it was handed and cannot get here;
-			// the parameter is an interface, so this is checked rather than
-			// assumed.
+			// Keeps the non-empty postcondition, without which the caller's
+			// matches[0] panics. The production resolver derives its answer
+			// from the matches it was handed and cannot reach this; the
+			// parameter is an interface, so it is checked rather than assumed.
 			return nil, nil, fmt.Errorf("autoinstall: the project declared %q for %q, which provides no match",
 				declaration.Recipe, command)
 		}
@@ -165,12 +156,8 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 	// gate's len(matches) is the other read of the list and is a count rather
 	// than a selection.
 	//
-	// match and declaration already account for what the project declared:
-	// where it declared a provider of command, match is that recipe and
-	// version is what it was declared at; where it declared none, declaration
-	// is nil and match is whatever the index ranked first. Indexing is safe
-	// without a length check because candidates returns a non-empty list on a
-	// nil error -- see its postcondition.
+	// Indexing without a length check is safe because candidates returns a
+	// non-empty list on a nil error.
 	match := matches[0]
 	version := ""
 	if declaration != nil {
