@@ -13,9 +13,10 @@ problem: |
   offers.
 decision: |
   Replace the version-only resolver with one that returns the set of declared
-  recipes providing a command, deduped by bare recipe name, and consume it
-  inside a new `Runner.candidates` method so the region above the narrowing
-  inside `Run` is empty of the list entirely. Narrowing is three-way: zero declarations
+  recipes providing a command, deduped by the recipe a configuration key
+  denotes rather than by bare name, and consume it inside a new
+  `Runner.candidates` method so the region above the narrowing inside `Run`
+  holds no candidate list at all. Narrowing is three-way: zero declarations
   pass the full list through, one narrows to it, more than one refuses at exit
   10 naming the declared recipes. Move the terminal check inside `Runner.Run`
   where the declaration is known, after the gates. On consent, adopt bounded

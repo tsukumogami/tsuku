@@ -99,9 +99,10 @@ Exit codes:
 		// command nothing declares still skips the gate in a repository that
 		// declares something else, and then meets the prompt at a closed stdin
 		// and exits 13 rather than 12. A command that is declared can be
-		// lowered back to confirm by any of the three gates inside Run -- an
-		// unverified recipe is the ordinary way -- so "no prompt is shown" is
-		// not something this check can know from out here.
+		// lowered back to confirm by the configuration-permission gate or the
+		// verification gate inside Run -- the conflict gate cannot fire on a
+		// declared command, because narrowing left it one candidate -- so "no
+		// prompt is shown" is not something this check can know from here.
 		//
 		// Both follow from the check being in the wrong place: it runs before
 		// the declaration is resolved and before the gates, so it is guessing

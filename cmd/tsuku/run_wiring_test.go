@@ -32,7 +32,7 @@ func (i *runWiringInstaller) Install(_ context.Context, recipe, version string) 
 //
 // It calls newRunWiring rather than runCmd because runCmd ends in exitWithCode
 // or syscall.Exec, neither of which has a seam yet -- and rather than
-// reconstructing what newRunWiring does, for the reason that function's own
+// reconstructing what newRunWiring does, for the reason the runWiring type's
 // doc comment gives.
 //
 // The two properties, both of which live in the joining and in neither package

@@ -158,11 +158,12 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 
 	// The one positional read of the candidate list, and it stays the only
 	// one: a consumer added below reads match rather than indexing matches
-	// again. That is not style. R3a's whole review instrument is that a
-	// positional read below the narrowing site can be checked by position
-	// instead of by reasoning about intent, and it only works while there is
-	// one to check. The conflict gate's len(matches) is the other read of the
-	// list and is a count rather than a selection.
+	// again. That is not style: R3a's review instrument is that a positional
+	// read below the narrowing site can be judged by its position instead of
+	// by reasoning about what its author meant, and a read that goes through
+	// match rather than around it is one fewer place to judge. The conflict
+	// gate's len(matches) is the other read of the list and is a count rather
+	// than a selection.
 	//
 	// match and declaration already account for what the project declared:
 	// where it declared a provider of command, match is that recipe and

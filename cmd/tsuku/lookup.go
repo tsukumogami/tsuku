@@ -27,9 +27,9 @@ import (
 // hand-written multi-provider []index.BinaryMatch literal is building a case
 // outside the fixture, which TestMultiProviderCasesUseTheFixture rejects.
 // That check reads composite literals of two or more elements and nothing
-// else, so a slice assembled some other way passes it -- see the package
-// comment in internal/indexfixture, which is about what to build rather than
-// about what the check will catch.
+// else, so a slice assembled some other way passes it. internal/indexfixture's
+// package comment enumerates what escapes; its point is that a construct
+// missing from that list is not thereby sanctioned.
 var binaryCommandLookup = lookupBinaryCommand
 
 // lookupBinaryCommand opens the binary index and looks up the given command,

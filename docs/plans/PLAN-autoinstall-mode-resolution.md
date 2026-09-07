@@ -186,8 +186,8 @@ declaration set can change that.
 
 ### Issue 3: Runner.candidates and the three-way narrowing
 
-**Goal**: Consume the declaration set where the un-narrowed list cannot reach
-the five consumers.
+**Goal**: Consume the declaration set at the one site that produces it, so
+the region above the narrowing inside `Run` holds no candidate list at all.
 
 Extract `Runner.candidates`, moving the lookup with its `ErrIndexNotBuilt` and
 `StaleIndexWarning` handling and the `ErrNoMatch` check into it. The three-way
