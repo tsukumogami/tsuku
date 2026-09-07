@@ -211,7 +211,11 @@ accessor produces no wrong answer while nothing calls it. AC11c is the
 criterion, and it is satisfied by the symbol's absence rather than by an
 assertion about output.
 
-**Acceptance Criteria**: AC1, AC3 through AC10, AC11c, AC19, AC44, AC47. AC1, AC3 and AC4
+**Acceptance Criteria**: AC1, AC3, AC5 (auto half), AC6 through AC10, AC11c,
+AC19, AC44, AC47. **AC4 and AC5's suggest half move to Issue 6**, because no
+state in this unit reaches suggest for a declared command: the elevation is
+still unconditional here and the three gates below it only lower auto to
+confirm. AC1, AC3 and AC4
 are run against the command whose declared recipe ranks second or later, per
 Issue 1 — otherwise a narrowing that never matches passes them. AC44 is the
 single-provider regression bar and belongs here because this is the unit that
@@ -312,7 +316,7 @@ That needs an origin, which nothing carries today: `resolveMode` returns a bare
 `Mode`. It returns an origin alongside it here, and `Run` takes both. Issue 6
 consumes that plumbing rather than introducing it.
 
-**Acceptance Criteria**: AC31, AC33, AC36, AC37, AC38, AC39, AC40, and the
+**Acceptance Criteria**: AC4, AC31, AC33, AC36, AC37, AC38, AC39, AC40, and the
 design's D1-1 through D1-5. D1-5 is the one that distinguishes this decision
 from the one it was nearly confused with: with `TSUKU_AUTO_INSTALL_MODE=auto`
 and no corroborating config, the declaration must not re-raise the output of

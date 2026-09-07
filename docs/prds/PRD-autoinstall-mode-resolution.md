@@ -845,11 +845,19 @@ because auto or suggest remains reachable under every outcome.
       other recipe.
 - [ ] **AC4** With the effective consent mode resolved to suggest, the same case prints
       an install instruction naming the declared recipe and installs nothing.
+
+      **Not reachable until the elevation is bounded**, so it is verified by that
+      unit rather than by the narrowing. For a declared command the code sets
+      `effectiveMode = ModeAuto` unconditionally and the three gates below only
+      lower auto to confirm; nothing produces suggest. The narrowing unit can reach
+      effective-auto and effective-confirm for a declared command and no third
+      state, so there is no state in which to observe this.
 - [ ] **AC5** With a project declaring one provider and a *different* provider already
       installed at the declared version, `tsuku run <command>` does not execute
       the installed one. With the mode resolved to auto it installs the declared
-      recipe; with the mode resolved to suggest it prints an install instruction
-      naming the declared recipe and installs nothing.
+      recipe. **The suggest half is not reachable until the elevation is bounded**,
+      for AC4's reason; it is carried there, and the auto half is verified by the
+      narrowing unit.
 - [ ] **AC6** With a project declaring one provider that is already installed at the
       declared version, `tsuku run <command>` executes it from that recipe's
       version directory and installs nothing, under every consent mode
