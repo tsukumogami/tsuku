@@ -441,6 +441,27 @@ This interacts with AC42, which is a separate obligation and still applies: any
 document offering a *setting* as a mitigation must name at least one case that
 setting does not cover.
 
+**The `tsuku-user` skill is a third half, and it is an obligation the
+repository states rather than one this plan invented.** `CLAUDE.md` requires
+that a source change under `cmd/tsuku/` or `internal/shellenv/` be followed by
+an assessment of that skill on two questions: whether anything it documents no
+longer matches the code, and whether the change adds behavior no skill
+mentions. This work changes `cmd/tsuku/` substantially.
+
+Both answers are known already and they differ. **Nothing in the skill is
+falsified**: it mentions `tsuku run` in one table row and says nothing about
+non-interactive behavior, consent modes or refusals, so there is no stale claim
+to correct — checked rather than assumed by the unit that moved the terminal
+check. **But the second question is a yes**: a user who runs a declared command
+with no terminal, or in a project declaring two providers of one command, now
+meets behavior the skill does not cover.
+
+That section is written *here*, at the end, and not earlier — its subject is
+what a user encounters, and the elevation decides what a user encounters. A
+section written before Issue 6 would describe a consent model that Issue 6
+changes, which is the same mistake as documenting a mitigation before checking
+it holds.
+
 **Acceptance Criteria**: AC28, AC29, AC41, AC42, AC43, AC51, AC53.
 
 AC32 and AC34 are **not** criteria of this issue and are not satisfiable under
