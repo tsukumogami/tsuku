@@ -87,19 +87,15 @@ type AmbiguousDeclarationError struct {
 // Error names the command and every declared recipe, each with the
 // configuration key that declared it.
 //
-// The key is not decoration even in this interim message: project.ProjectDeclaration
-// documents why Recipe cannot identify a declaration, and two registries named
-// for one recipe are the case that makes a Recipe-only message useless.
+// The key is not decoration: project.ProjectDeclaration documents why Recipe
+// cannot identify a declaration, and two registries named for one recipe are
+// the case that makes a Recipe-only message useless.
 //
-// What this message does not yet carry is each declaration's version and an
-// invocation that reaches a specific one of the recipes. Those come with the
-// refusal proper, which formats this error for the user and gives it its own
-// exit code.
-//
-// Until then this string is not internal: cmd/tsuku has no case for this error
-// yet, so its default branch prints it and exits 1. It has to stand on its own
-// in front of a user, which is why it names the command and the keys rather
-// than reading like a placeholder.
+// This is the one-line summary, for a caller that wraps or logs the error. The
+// refusal the user reads is Runner.refusalMessage, which the run path has
+// already printed by the time this error is returned -- it carries each
+// declaration's version and an invocation reaching a specific recipe as well,
+// which R6 requires and a single line has nowhere to put.
 func (e *AmbiguousDeclarationError) Error() string {
 	named := make([]string, 0, len(e.Declarations))
 	for _, d := range e.Declarations {

@@ -51,7 +51,8 @@ type auditEntry struct {
 //   - no declaration provides it: matches unchanged, nil declaration. The
 //     command resolves exactly as it would with no .tsuku.toml present (R5).
 //   - exactly one does: matches filtered to that recipe, plus the declaration.
-//   - more than one does: AmbiguousDeclarationError carrying all of them (R6).
+//   - more than one does: the refusal is printed and an
+//     AmbiguousDeclarationError carrying all of them is returned (R6).
 //
 // On a nil error the returned list has at least one element. Run reads
 // position zero without checking, and the two guards below -- the ErrNoMatch
@@ -124,7 +125,7 @@ func (r *Runner) candidates(ctx context.Context, command string, resolver Projec
 		}
 		return narrowed, &declaration, nil
 	default:
-		return nil, nil, &AmbiguousDeclarationError{Command: command, Declarations: declared}
+		return nil, nil, r.refuse(&AmbiguousDeclarationError{Command: command, Declarations: declared})
 	}
 }
 

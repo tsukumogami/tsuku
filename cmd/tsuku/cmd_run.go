@@ -57,6 +57,7 @@ Mode resolution order:
 Exit codes:
   0   Command executed successfully
   1   No match found or other error
+  10  The project declares more than one recipe providing the command
   11  Binary index not built
   12  Confirm mode requires a TTY
   13  User declined installation
@@ -129,7 +130,20 @@ Exit codes:
 			return
 		}
 
+		// The refusal for a project that declares two providers of one
+		// command. The runner has printed it already, the way it prints
+		// suggest mode's instructions, so this case adds only the exit code --
+		// printing here too would put the one-line Error() under the message.
+		//
+		// ExitAmbiguous is the code the install path uses for a name it cannot
+		// narrow to one recipe, which is the same condition arriving by
+		// another route, so a script that already distinguishes it needs no
+		// new handling.
+		var ambiguous *autoinstall.AmbiguousDeclarationError
+
 		switch {
+		case errors.As(runErr, &ambiguous):
+			exitWithCode(ExitAmbiguous)
 		case errors.Is(runErr, autoinstall.ErrIndexNotBuilt):
 			exitWithCode(ExitIndexNotBuilt)
 		case errors.Is(runErr, autoinstall.ErrForbidden):
