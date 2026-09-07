@@ -19,21 +19,37 @@ var hookCmd = &cobra.Command{
 	Short: "Manage shell command-not-found hooks",
 	Long: `Manage shell command-not-found hooks for bash, zsh, and fish.
 
-When installed, the hook intercepts unknown commands and suggests tsuku
-recipes that provide the missing tool. Hook files are written to
-$TSUKU_HOME/share/hooks/ and sourced from the shell's rc file.
+When installed, the hook intercepts a command your shell cannot resolve and
+runs 'tsuku run <command> -- <args>'. If a recipe provides that command,
+tsuku installs the tool and then executes the command you typed. Hook files
+are written to $TSUKU_HOME/share/hooks/ and sourced from the shell's rc file.
+
+Whether it installs is governed by the consent mode. From a hook there is
+nowhere to pass --mode, so the two reachable sources are the
+TSUKU_AUTO_INSTALL_MODE environment variable and the auto_install_mode key in
+$TSUKU_HOME/config.toml; without either, the default is confirm, which prompts
+and needs a terminal. Set auto_install_mode = "suggest" for a hook that prints
+an install instruction and installs nothing.
+
+A .tsuku.toml declaring the tool raises an unset default to auto, so a declared
+tool installs without a prompt. A mode you set yourself is honored as given,
+suggest included.
 
 Use 'tsuku hook install' to register the hook for your current shell.
 Use 'tsuku hook uninstall' to remove it.
-Use 'tsuku hook status' to check current registration state.`,
+Use 'tsuku hook status' to check current registration state.
+
+See 'tsuku run --help' for the full resolution order and exit codes.`,
 }
 
 var hookInstallCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install shell hooks",
-	Long: `Install shell hooks for command-not-found suggestions or environment activation.
+	Long: `Install shell hooks for command-not-found handling or environment activation.
 
-By default, installs the command-not-found hook. With --activate, installs
+By default, installs the command-not-found hook, which routes an unresolvable
+command to 'tsuku run' and so can install and execute it -- see 'tsuku hook'
+for the setting that governs that. With --activate, installs
 the activation hook that calls 'tsuku hook-env' on each prompt to manage
 per-project tool versions automatically.
 
@@ -82,7 +98,14 @@ Examples:
 			if err := hook.Install(shell, homeDir, shareHooksDir); err != nil {
 				return fmt.Errorf("install hook: %w", err)
 			}
+			// The second line is the account the install flow otherwise
+			// never gives. install.sh registers the hook by delegating
+			// here, so a user who took the installer's default has read
+			// nothing about what the hook does; a line saying only that
+			// something was registered leaves them to assume it suggests.
 			fmt.Fprintf(os.Stdout, "Registered command-not-found hook for %s.\n", shell)
+			fmt.Fprintf(os.Stdout, "An unresolvable command now goes to 'tsuku run', which installs the tool and runs it.\n")
+			fmt.Fprintf(os.Stdout, "Run 'tsuku hook --help' for the setting that governs whether it installs.\n")
 		}
 
 		return nil
@@ -92,10 +115,13 @@ Examples:
 var hookUninstallCmd = &cobra.Command{
 	Use:   "uninstall",
 	Short: "Remove shell hooks",
-	Long: `Remove shell hooks for command-not-found suggestions or environment activation.
+	Long: `Remove shell hooks for command-not-found handling or environment activation.
 
 By default, removes the command-not-found hook. With --activate, removes
 the activation hook instead.
+
+With the command-not-found hook removed, an unresolvable command goes straight
+to the shell's own handler and tsuku installs nothing.
 
 For bash and zsh, removes the marker block from ~/.bashrc or ~/.zshrc.
 For fish, deletes the corresponding file from ~/.config/fish/conf.d/.
@@ -137,10 +163,11 @@ Examples:
 
 var hookStatusCmd = &cobra.Command{
 	Use:   "status",
-	Short: "Report command-not-found hook installation status",
-	Long: `Report command-not-found hook installation status.
+	Short: "Report shell hook installation status",
+	Long: `Report shell hook installation status.
 
-Checks each supported shell and reports whether the hook is installed.
+Checks each supported shell and reports two lines for it: whether the
+command-not-found hook is installed, and whether the activation hook is.
 Without --shell, reports status for all supported shells.
 
 Examples:
