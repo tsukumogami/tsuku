@@ -494,15 +494,28 @@ This section previously claimed the resolution "only produces paths within `$TSU
 - An org-scoped key's `owner/repo` half is validated separately and more permissively, since GitHub allows uppercase there.
 - A declaration that fails is refused individually and reported on stderr naming the offending key; its siblings still activate.
 - Activation only references already-installed tools; it doesn't trigger downloads.
-The primary security surface is PATH modification. A malicious `.tsuku.toml` could reference tool names that, when resolved to `$TSUKU_HOME/tools/{name}-{version}/bin`, prepend unexpected directories to PATH. The resolution produces paths within `$TSUKU_HOME/tools/` because activation checks that it does.
+**The sink beneath that boundary.** Activation composes a path from what the
+boundary approved, and keeps its own checks there. They are a backstop rather
+than a second line of defence, and the distinction is worth stating because a
+reader who finds two name checks will otherwise wonder which is authoritative.
 
-This paragraph previously said the install pipeline's name validation already guarded this. It did not: that validation runs on names `tsuku install` is given, and a `.tsuku.toml` key never passes through it. Naming a control that does not cover the path in question is worse than naming none, because it ends the reader's inquiry. The control now exists and is described below.
+- Tool bin directories are always under `$TSUKU_HOME/tools/`, asserted on the composed path with a separator-appended prefix check so a sibling such as `tools-x` cannot match `tools`.
+- A declared key is split into its distributed source and bare recipe name, and the bare name -- which is what becomes a path component -- must be a well-formed recipe identifier: a single path segment, rejecting `/`, `\`, `..` and NUL.
+- A version read from installation state is validated before it becomes a path component. This one is **not** redundant with the boundary: the boundary sees the declared string (`latest`), and the string that ends up in the path is the resolved one (`26.8.1`), which no parse-time check ever sees.
 
-**Mitigations:**
-- Tool bin directories are always under `$TSUKU_HOME/tools/`, asserted on the composed path with a separator-appended prefix check so a sibling such as `tools-x` cannot match `tools`
-- A declared key is split into its distributed source and bare recipe name, and the bare name -- which is what becomes a path component -- must be a well-formed recipe identifier: a single path segment, rejecting `/`, `\`, `..` and NUL
-- A version read from installation state is validated at the same sink before it becomes a path component, because the declared string (`latest`) is not the string that ends up in the path (`26.8.1`)
-- Activation only references already-installed tools; it doesn't trigger downloads
+The first two are unreachable from a `.tsuku.toml` since the boundary landed --
+it refuses a malformed key before activation is reached -- and they are held up
+by unit tests rather than by anything traversing the whole path. Not claimed:
+that they refuse everything the boundary refuses. The two answer overlapping
+questions with different rules and containment has not been established in
+either direction.
+
+An earlier version of this section said the install pipeline's name validation
+already guarded this. It did not: that validation runs on names `tsuku install`
+is given, and a `.tsuku.toml` key never passed through it. Naming a control that
+does not cover the path in question is worse than naming none, because it ends
+the reader's inquiry. Two controls now cover it, and the paragraphs above say
+which is which.
 
 ### Prompt Hook Safety
 

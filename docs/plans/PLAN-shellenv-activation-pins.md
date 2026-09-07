@@ -175,7 +175,15 @@ package doc comment, which currently describes only the half that leaves.
 - [x] `internal/shellenv`'s doc comment names what stays: shell.d init-cache
       construction, its doctor checks, and PATH-precedence shadowing.
 - [x] `go build ./...` and the full test suite pass with no behavior change.
-- [ ] The security chain's changes to `activate.go` survive the move intact.
+- [x] The security chain's changes to `activate.go` survive the move intact.
+
+      Ticked on evidence rather than on the merge having happened. Verified by
+      mutation during the rebase: reverting `setVar` to `%q` makes
+      `TestFormatExports_HostileValuesDoNotExecute` fail with a `$(touch …)`
+      payload actually executing under bash. So the quoting is carried through
+      the rename *and* is still guarded, which is the pair the criterion asks
+      for — a fix that survived but lost its guard would satisfy a reading of
+      "intact" and be one edit from gone.
 
 ### Issue 2: Add a lock-free, one-decode installed-set accessor
 
@@ -645,7 +653,7 @@ than an unbounded search for anything still false.
 - [x] The algorithm step, the worked PATH example, the trade-off entry about
       uninstalled versions, the Negative bullet and the never-built stderr
       mitigation all describe what the code does.
-- [ ] **All three statements of the name-validation control are corrected**,
+- [x] **All three statements of the name-validation control are corrected**,
       not one: the prose claiming path traversal in tool names is already
       guarded, the risk row's mitigation cell, and the security mitigation
       stating uninstalled tools are silently skipped. Each is corrected to
@@ -665,6 +673,12 @@ than an unbounded search for anything still false.
       version path. It is the second criterion here resting on another branch,
       alongside Issue 1's, and it was ticked because the edit was made rather
       than because the criterion was met.
+
+      Ticked now, on the second condition being met rather than on the merge:
+      #2563 landed and the design's security section names both controls and
+      says which is which. Resolving the doc conflict by keeping both sides had
+      stacked two overlapping security sections, each opening with the same
+      sentence; they are merged, which is what the criterion actually asked for.
 - [x] The two-variable statements and the variable table become three.
 - [x] **The fast-path claims are corrected in both places.** The parent design
       states the unchanged-directory path does no filesystem I/O; the stamp adds
