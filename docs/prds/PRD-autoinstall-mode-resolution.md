@@ -1153,14 +1153,26 @@ bounded rule satisfies parts of each.
       derivation against its own table; without it the two could agree while
       the table every quantifier in this document reads says something else.
 
-      **Which table, stated because an earlier form of this criterion did not
-      say and could not pass.** The table printed in this document is the
-      *pre-change* one — the Coverage section says so — so comparing a
-      post-change derivation against it fails on correct code. That is a defect
-      in the criterion, not a licence to declare the printed table superseded:
-      voiding a check by removing its subject is the shape this work exists to
-      stop, and it would leave the quantifiers in this document pointing at
-      nothing.
+      **This holds by identity rather than by comparison, and the check is on
+      the premise.** The criterion was written twice against a comparison that
+      does not exist. Its first form compared the derivation against the table
+      printed in *this* document — which the Coverage section calls the
+      pre-change table, so it could never pass on correct code. Its second form
+      named the table recorded in the design beside the derivation, and the
+      design records the derivation's site list and the re-derived table as
+      **one table**. A table cannot disagree with itself.
+
+      Writing a second copy so that two things existed to compare would
+      manufacture exactly the stale duplicate this requirement set exists to
+      prevent. So the obligation is discharged by keeping the identity and
+      guarding it: a check fails if a second derived-rows table ever appears,
+      which is the moment the identity breaks and a real comparison becomes
+      both possible and necessary.
+
+      Recorded twice-wrong on purpose. A criterion that presumes a comparison
+      between two artefacts is easy to write and hard to notice when the two
+      are one, and this one survived a restatement before the implementing unit
+      found it by trying to build the check.
 
       What AC52 cannot carry is in AC52a below.
 - [ ] **AC52a** The `modeGates` table in the code and the derived rows of the
