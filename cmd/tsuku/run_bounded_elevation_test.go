@@ -56,7 +56,9 @@ func byEnvironment(mode string) consentRoute {
 func byConfig(mode string) consentRoute {
 	return func(t *testing.T, cfg *config.Config) {
 		body := "auto_install_mode = \"" + mode + "\"\n"
-		if err := os.WriteFile(filepath.Join(cfg.HomeDir, "config.toml"), []byte(body), 0o600); err != nil {
+		// cfg.ConfigFile, which is the file userconfig.Load reads and the
+		// configuration-permission gate guards.
+		if err := os.WriteFile(cfg.ConfigFile, []byte(body), 0o600); err != nil {
 			t.Fatalf("writing config.toml: %v", err)
 		}
 	}

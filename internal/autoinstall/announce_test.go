@@ -252,12 +252,13 @@ func TestModeGates_IdentifiersAreDistinctAndNonEmpty(t *testing.T) {
 // AC21's "a constant string does not pass", for the gate that can fire for
 // more than one reason.
 //
-// The configuration-permission gate has four ways to fire and they call for
+// The configuration-permission gate has five ways to fire and they call for
 // different actions: a mode a user should change, an owner they cannot change
-// by chmod, a file they cannot read at all. Reporting permissions for a file
-// owned by somebody else sends them to fix a thing that is not broken, which
-// is the escape-hatch defect R10 names, arriving through a gate instead of
-// through a message.
+// by chmod, a file they cannot read at all, ownership it cannot determine, and
+// no configured path to look at. Reporting permissions for a file owned by
+// somebody else sends them to fix a thing that is not broken, which is the
+// escape-hatch defect R10 names, arriving through a gate instead of through a
+// message.
 //
 // Ownership is left to inspection rather than tested: giving a file away needs
 // a second uid, which a test cannot have without privileges it should not ask
@@ -281,7 +282,7 @@ func TestConfigPermissionCondition_NamesWhichReason(t *testing.T) {
 		t.Error("a Runner with no configured config file path passes the gate; it cannot check anything, " +
 			"so the safe direction is to fire")
 	}
-	if strings.Contains(unset, "permissions are") {
+	if strings.Contains(unset, "the permissions on") {
 		t.Errorf("the condition for an unset path reports permissions, which there is no file to have: %q", unset)
 	}
 
@@ -305,7 +306,7 @@ func TestConfigPermissionCondition_NamesWhichReason(t *testing.T) {
 	if owned == "" {
 		t.Fatal("a config file owned by another user does not fire the gate")
 	}
-	if strings.Contains(owned, "permissions") {
+	if strings.Contains(owned, "the permissions on") {
 		t.Errorf("the condition for a file owned by someone else talks about permissions, "+
 			"which the user would then go and change: %q", owned)
 	}
