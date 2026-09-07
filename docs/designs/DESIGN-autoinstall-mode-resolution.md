@@ -820,26 +820,30 @@ check to read its expected site list out of this section rather than out of the
 table above; AC52 compares the two.** The list is here, in one place, so those
 three point at the same artefact.
 
-**Which artefact AC52 compares, now that the two have diverged.** AC52 was
-written when this section reproduced the PRD's gates table row for row, so
-"the two" could be read either way and meant the same set. It cannot now. The
-PRD's table has three gate rows where the code has one site; it has no row for
-the elevation disclosure, which did not exist; and it excludes the terminal
-check by name *and by the property that it does not read the effective mode* —
-a property Issue 6 made false when the check moved down. So a comparison
-against the PRD's table fails on correct code in three places.
+**Which artefact AC52 compares.** AC52 was written when this section
+reproduced the PRD's gates table row for row, so "the two" read either way and
+meant the same set. It cannot now: the PRD's table has three gate rows where
+the code has one site, no row for the elevation disclosure, and it excludes the
+terminal check by name *and by the property that it does not read the effective
+mode* — which Issue 6 made false when the check moved down. A comparison
+against the PRD's table therefore fails on correct code in three places.
 
-The recorded derivation above is the artefact, and the PRD's table is
-superseded rather than compared against. R21 already licenses that: it obliges
-this document to record the derivation precisely because the span moves, and a
-table that predates two of the moves is a record of where the sites used to be.
+That is a defect in the criterion rather than a licence to call the printed
+table superseded, and the restated AC52 says so. Voiding a check by removing
+its subject is the shape this work exists to stop, and three requirements and
+four criteria quantify over that table. AC52 now compares the recorded
+derivation above against the table recorded beside it, here, and this document
+carries both.
 
-That leaves the gates needing a pin of their own, because collapsing three rows
-into one is exactly what would hide a gate being deleted. The comparison to
-make is over `modeGates` itself: the identifiers it registers against the
-identifiers this section names, in both directions. It is the same shape as the
-site comparison and a different subject, and between them nothing about a gate
-— its existence or its site — changes without a check noticing.
+**AC52a is the comparison that discriminates, and this section supplies its
+subject.** AC52 puts two documents by one author in one sitting next to each
+other, which R21 already concedes catches a transcription slip and nothing
+else. A gate deleted from the code is a change both documents would agree
+about, because neither of them is the code — and it is the case the site list
+cannot catch either, since three gates share one site and deleting one moves no
+site at all. So the gates are compared against `modeGates` itself, in both
+directions, over the identifier table above. Issue 7 built that check while
+building the table; Issue 9 verifies it and owns it thereafter.
 
 ## Implementation Approach
 
