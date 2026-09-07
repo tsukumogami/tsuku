@@ -288,6 +288,9 @@ func TestConfigPermissionCondition_NamesWhichReason(t *testing.T) {
 	if strings.Contains(unset, "the permissions on") {
 		t.Errorf("the condition for an unset path reports permissions, which there is no file to have: %q", unset)
 	}
+	if !strings.Contains(unset, "no path is configured") {
+		t.Errorf("the condition for an unset path does not say the path is what is missing: %q", unset)
+	}
 
 	if got := configPermissionCondition(path, me); got != "" {
 		t.Errorf("a config file that does not exist fires the gate: %q", got)
@@ -587,37 +590,54 @@ func TestRecipeSource_NamesEveryValueTheIndexRecords(t *testing.T) {
 	}
 }
 
-// The disclosure states all four facts, including the two that can be absent.
+// The disclosure states all four facts, including the three that can be absent.
 //
 // A declaration carrying no version is ordinary: `jq = {}` in a .tsuku.toml
 // parses to one and R20 passes it through verbatim. Dropping the fact leaves a
 // line that reads as though the version were beside the point, when what it
 // actually means is that the installer will choose.
+//
+// The other two absences are unreachable today -- ConfigPath comes from a
+// discovered .tsuku.toml and Source is filled in by the index -- and are
+// covered anyway, because a fallback nobody exercises is a fallback nobody can
+// rely on. Each carries a fact recipeSource's own doc argues must never go
+// missing quietly: a line with no authorizing file still looks like a
+// disclosure.
 func TestDiscloseDeclaration_StatesEveryFact(t *testing.T) {
 	tests := []struct {
-		name    string
-		match   index.BinaryMatch
-		version string
-		want    []string
+		name       string
+		match      index.BinaryMatch
+		version    string
+		configPath string
+		want       []string
 	}{
 		{
-			name:    "a pinned declaration from the registry",
-			match:   index.BinaryMatch{Recipe: "solo", Source: "registry"},
-			version: "1.2.3",
-			want:    []string{DeclarationDisclosure, "solo", "1.2.3", "/project/.tsuku.toml", "registry"},
+			name:       "a pinned declaration from the registry",
+			match:      index.BinaryMatch{Recipe: "solo", Source: "registry"},
+			version:    "1.2.3",
+			configPath: declaredConfigPath,
+			want:       []string{DeclarationDisclosure, "solo", "1.2.3", declaredConfigPath, "registry"},
 		},
 		{
-			name:    "a declaration with no version, of a locally installed recipe",
-			match:   index.BinaryMatch{Recipe: "solo", Source: "installed"},
-			version: "",
-			want:    []string{DeclarationDisclosure, "solo", "no declared version", "/project/.tsuku.toml", "installed"},
+			name:       "a declaration with no version, of a locally installed recipe",
+			match:      index.BinaryMatch{Recipe: "solo", Source: "installed"},
+			version:    "",
+			configPath: declaredConfigPath,
+			want:       []string{DeclarationDisclosure, "solo", "no declared version", declaredConfigPath, "installed"},
+		},
+		{
+			name:       "a declaration whose authorizing file and source are both unrecorded",
+			match:      index.BinaryMatch{Recipe: "solo"},
+			version:    "1.2.3",
+			configPath: "",
+			want:       []string{DeclarationDisclosure, "solo", "1.2.3", "unrecorded", "unknown"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			stderr := &bytes.Buffer{}
 			r := NewRunner(nil, &bytes.Buffer{}, stderr)
-			r.discloseDeclaration(tt.match, tt.version, "/project/.tsuku.toml")
+			r.discloseDeclaration(tt.match, tt.version, tt.configPath)
 
 			for _, want := range tt.want {
 				if !strings.Contains(stderr.String(), want) {

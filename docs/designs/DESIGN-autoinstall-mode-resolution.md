@@ -781,7 +781,14 @@ So the derivation finds one site where the pre-change table found three, and a
 check expecting three in `Run` fails on correct code.
 
 **The registered gates, by the identifier each announces itself with**, which
-is the subject of the second comparison below:
+is the subject of the second comparison below.
+
+**This table is machine-read.** `lint_gatestable_test.go` at the repository
+root finds it by the bold sentence above and takes each identifier from the
+second column's backticks. So the sentence, the column order and the backticks
+are load-bearing: reword or reorder them and the check fails loudly, which is
+the intended direction but is worth knowing before you do it. A check that
+moves this document has to move that constant too.
 
 | Gate | Identifier | Condition it reports |
 |---|---|---|
