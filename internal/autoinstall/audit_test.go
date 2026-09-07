@@ -563,3 +563,74 @@ func TestRun_RunsThatInstallNothingRecordNothing(t *testing.T) {
 		}
 	})
 }
+
+// TestAuditLogAccumulatesAndStaysPrivate pins the two properties
+// DESIGN-auto-install.md specifies for the log and nothing was checking:
+// that it is append-only, and that it is created 0600.
+//
+// A review found both unenforced by mutation rather than by reading:
+// changing the open flags to os.O_TRUNC and the mode to 0666 -- a log that
+// keeps only the most recent install and is world-readable -- passed the
+// entire corpus. Every other case in this package drives exactly one
+// install, so no test ever had a second entry to lose, and soleEntry
+// asserts exactly one entry by design.
+//
+// It matters more after this unit than before it. While the record was
+// written only on the auto path, a log with one entry was the common case;
+// widening it to every install makes accumulation the normal state, and an
+// audit log that silently keeps only the last line is worse than none --
+// it answers the question it was asked, with the wrong answer.
+func TestAuditLogAccumulatesAndStaysPrivate(t *testing.T) {
+	dir := t.TempDir()
+
+	writeAuditLog(dir, "jq", "1.7.1", ModeAuto, OriginFlag, "")
+	writeAuditLog(dir, "fd", "9.0.0", ModeConfirm, OriginProject, "recipe-verification")
+
+	logPath := filepath.Join(dir, "audit.log")
+
+	info, err := os.Stat(logPath)
+	if err != nil {
+		t.Fatalf("audit log not written: %v", err)
+	}
+
+	// 0600. A record of what was installed on the user's behalf is not
+	// something other accounts on the machine are entitled to read.
+	if perm := info.Mode().Perm(); perm != 0o600 {
+		t.Errorf("audit log mode = %04o, want 0600: the log names what was "+
+			"installed and under whose consent, and is readable only by its owner",
+			perm)
+	}
+
+	data, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("reading audit log: %v", err)
+	}
+	lines := strings.Split(strings.TrimSpace(string(data)), "\n")
+	if len(lines) != 2 {
+		t.Fatalf("audit log has %d entries, want 2: the second write must "+
+			"append rather than replace.\nraw:\n%s", len(lines), data)
+	}
+
+	// Both entries survive, and in order. Asserting the count alone would
+	// pass a log that appended the same entry twice.
+	var first, second struct {
+		Recipe string `json:"recipe"`
+		Mode   string `json:"mode"`
+		Origin string `json:"origin"`
+		Gate   string `json:"gate,omitempty"`
+	}
+	if err := json.Unmarshal([]byte(lines[0]), &first); err != nil {
+		t.Fatalf("first entry is not valid NDJSON: %v", err)
+	}
+	if err := json.Unmarshal([]byte(lines[1]), &second); err != nil {
+		t.Fatalf("second entry is not valid NDJSON: %v", err)
+	}
+	if first.Recipe != "jq" || second.Recipe != "fd" {
+		t.Errorf("entries = %q then %q, want jq then fd: the earlier install "+
+			"must survive the later one, in the order they happened",
+			first.Recipe, second.Recipe)
+	}
+	if second.Gate != "recipe-verification" {
+		t.Errorf("second entry gate = %q, want %q", second.Gate, "recipe-verification")
+	}
+}

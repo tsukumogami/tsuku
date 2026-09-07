@@ -36,9 +36,14 @@ Use -- to separate tsuku flags from the target command's flags:
 
 Project configuration:
   When a .tsuku.toml file exists in the current directory (or a parent),
-  tsuku run checks it for the tool being executed. If the tool is declared,
-  the project-pinned version is installed and used automatically -- no
-  confirmation prompt needed. The project config is treated as consent.
+  tsuku run checks it for the tool being executed. If the tool is declared
+  and you have not chosen a consent mode yourself, the project-pinned
+  version is installed without a prompt: with nothing else to go on, the
+  declaration is taken as consent.
+
+  A mode you set is honored as given. Declaring a tool does not override a
+  --mode flag, a TSUKU_AUTO_INSTALL_MODE value or an auto_install_mode
+  config key -- including suggest, which installs nothing.
 
   Tools not declared in .tsuku.toml fall through to the normal consent mode.
 
@@ -51,11 +56,18 @@ Every install is recorded in $TSUKU_HOME/audit.log, whichever mode governed
 it, along with where that mode came from.
 
 Mode resolution order:
-  1. .tsuku.toml declares the tool -> auto (project config is consent)
-  2. --mode flag
-  3. TSUKU_AUTO_INSTALL_MODE environment variable
-  4. auto_install_mode config key ($TSUKU_HOME/config.toml)
-  5. Default: confirm
+  1. --mode flag
+  2. TSUKU_AUTO_INSTALL_MODE environment variable
+  3. auto_install_mode config key ($TSUKU_HOME/config.toml)
+  4. Default: confirm -- raised to auto for a tool .tsuku.toml declares
+
+  The declaration acts on the default only, which is why it is step 4 and
+  not step 1. A mode set at steps 1 through 3 reaches the install unchanged.
+
+  A raised mode can still be lowered back to confirm before installing:
+  permissive permissions on config.toml, a recipe without checksums, or
+  several recipes providing the command each do so, and each says which one
+  it was.
 
 Exit codes:
   0   Command executed successfully
