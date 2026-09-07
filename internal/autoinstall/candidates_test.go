@@ -627,14 +627,26 @@ func TestRun_AC44_SingleProviderBehavior(t *testing.T) {
 		// Declared, with nothing configured: the declaration raises the unset
 		// default and the install is silent. An already-present declared
 		// version execs above the mode entirely.
+		//
+		// The first row is the only one in this table that fails if the
+		// elevation stops happening at all. For every row below it an
+		// explicitly set mode being honored and never being raised are the
+		// same observable, so a rule that raised nothing would pass all of
+		// them. Do not drop this row as a near-duplicate of the one under it.
 		{"declared/default", consent{ModeConfirm, OriginDefault}, true, false, nil, false, true},
 		{"declared/default/present", consent{ModeConfirm, OriginDefault}, true, true, nil, false, false},
 
 		// Declared, with a mode set: it is honored as given. These are the
 		// bounded half of the elevation. The first two read the opposite way
-		// before it -- a declaration raised a set suggest and a set confirm to
-		// auto -- and the third is here because a rule that stopped raising
-		// anything at all would pass the first two.
+		// before it -- a declaration raised a set suggest and a set confirm
+		// to auto -- and the third covers the remaining mode, so that
+		// "honored as given" is pinned across all three rather than only
+		// where honoring and raising differ.
+		//
+		// None of these three discriminates a rule that stopped raising
+		// altogether: suggest and confirm are honored by such a rule, and
+		// auto needs no raising to install without prompting. That burden
+		// sits entirely on declared/default above.
 		{"declared/suggest", consent{ModeSuggest, OriginFlag}, true, false, ErrSuggestOnly, false, false},
 		{"declared/confirm", consent{ModeConfirm, OriginFlag}, true, false, nil, true, true},
 		{"declared/auto", consent{ModeAuto, OriginFlag}, true, false, nil, false, true},

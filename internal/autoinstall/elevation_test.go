@@ -201,3 +201,42 @@ func TestRun_AC38_AnExplicitConfirmIsHonoredForADeclaredCommand(t *testing.T) {
 		})
 	}
 }
+
+// TestOriginZeroValueIsUnset pins the property the elevation bound actually
+// rests on, which is not the one TestElevate pins.
+//
+// TestElevate passes the named constant OriginUnset and asserts it raises
+// nothing. That is true whichever slot OriginUnset occupies in the const
+// block, so it does not buy what the fix bought. What the fix bought is that
+// the *zero value* of Origin is OriginUnset -- so a caller that constructs an
+// Origin without setting one, or a struct field left at its default, gets the
+// origin that raises nothing rather than the one origin a declaration may
+// raise.
+//
+// Without this assertion, moving OriginUnset out of the iota zero slot -- by
+// inserting a new origin above it, or by reordering the block for readability
+// -- restores OriginDefault as the zero value and turns an unset origin back
+// into an unattended install of a tool the user had set suggest for. go vet
+// stays clean and the whole suite stays green through that change, which is
+// exactly why it needs an assertion rather than a comment.
+func TestOriginZeroValueIsUnset(t *testing.T) {
+	var zero Origin
+	if zero != OriginUnset {
+		t.Fatalf("the zero value of Origin is %v, want OriginUnset.\n"+
+			"OriginUnset must sit in the iota zero slot: an origin nobody set "+
+			"has to raise nothing, and OriginDefault is the one origin a "+
+			"project declaration may raise. If you reordered the const block, "+
+			"move OriginUnset back to the top rather than relaxing this test.",
+			zero)
+	}
+
+	// The other half of the same property: the origin a declaration may raise
+	// must not be the one a caller gets by omission. Asserting they differ
+	// keeps this test meaningful if OriginUnset is ever given an explicit
+	// value rather than iota.
+	if OriginDefault == OriginUnset {
+		t.Fatal("OriginDefault and OriginUnset are the same value; the bound " +
+			"on the elevation cannot distinguish a resolved default from an " +
+			"origin nobody set")
+	}
+}
