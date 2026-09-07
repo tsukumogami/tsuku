@@ -284,10 +284,29 @@ property.
 **The escape-hatch enumeration the PRD obliges this plan to produce**, one list
 per message that changes or appears:
 
-- *The moved terminal-check message*: `--mode=auto` only. The environment
-  variable is dropped, because `resolveMode` refuses an env-supplied `auto`
-  without config corroboration, so following it verbatim reproduces the
-  failure. If it is kept it must name the corroboration it requires.
+- *The moved terminal-check message*: **conditional, not flat.** An earlier
+  draft of this list said `--mode=auto` only, and dropped the environment
+  variable because `resolveMode` refuses an env-supplied `auto` without config
+  corroboration, so following it verbatim reproduces the failure. That
+  reasoning is right and the draft failed to apply it to the flag.
+
+  `--mode=auto` sets the mode to auto; the three mode-lowering gates then run
+  *from* auto and can put it straight back at confirm. An unverified recipe is
+  the ordinary case — every recipe in `internal/indexfixture` is one — so in
+  the very state this unit exists to fix (declared, configuration-permission
+  gate lowering, no terminal) following `--mode=auto` verbatim lands back on
+  the same message and the same exit code. R10 requires a hatch to *complete
+  the command* when followed verbatim from the state the message appeared in,
+  and AC27 asks for exactness against that state. A static message naming the
+  flag is false in more states than it is true.
+
+  So the message names `--mode=auto` only where auto survives the gates from
+  that state, and where a gate would lower it back it names **the gate**
+  instead of a flag — the string only ever appears when following it works.
+  The three gate conditions become named predicates shared by the gates and
+  the hatch computation, so a fourth gate cannot quietly make the message lie.
+  That is a structural guarantee rather than an invariant someone has to
+  remember, which is the difference this plan keeps asking for elsewhere.
 - *The new `ErrNoMatch` message*: no hatch. It reports that no recipe provides
   the command; there is nothing to escape to, and naming one would be the
   defect this enumeration exists to prevent.
