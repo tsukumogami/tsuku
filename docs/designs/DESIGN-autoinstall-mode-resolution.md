@@ -787,15 +787,35 @@ functions, rather than two more. Said here because a check matching on file and
 function alone finds more points in `Run` than there are rows anchored there,
 and would report a mismatch on correct code.
 
-**The derived rows after this work**, each cited by file, function and role:
+**The derived rows after this work**, each cited by file, function and role,
+plus the anchor the paragraph below the table explains:
 
-| Row | File | Function | Role |
-|---|---|---|---|
-| Project declaration | `internal/autoinstall/run.go` | `elevate` | Raises the mode where its origin was `default` and the command is declared |
-| Mode-lowering gates | `internal/autoinstall/run.go` | `lowerMode` | Writes confirm at the first entry in `modeGates` that fires |
-| Terminal check | `internal/autoinstall/run.go` | `Run` | Reads the mode; returns before the dispatch without reaching an install or an exec |
-| Elevation disclosure | `internal/autoinstall/run.go` | `Run` | Reads the mode, to skip the one dispatch that installs nothing |
-| Already-installed fast path | `internal/autoinstall/run.go` | `Run` | Returns before the dispatch, having reached an exec |
+| Row | File | Function | Anchor | Role |
+|---|---|---|---|---|
+| Project declaration | `internal/autoinstall/run.go` | `elevate` | `elevate` | Raises the mode where its origin was `default` and the command is declared |
+| Mode-lowering gates | `internal/autoinstall/run.go` | `lowerMode` | `lowerMode` | Writes confirm at the first entry in `modeGates` that fires |
+| Terminal check | `internal/autoinstall/run.go` | `Run` | `ModeConfirm` | Reads the mode; returns before the dispatch without reaching an install or an exec |
+| Elevation disclosure | `internal/autoinstall/run.go` | `Run` | `ModeSuggest` | Reads the mode, to skip the one dispatch that installs nothing |
+| Already-installed fast path | `internal/autoinstall/run.go` | `Run` | `execBinary` | Returns before the dispatch, having reached an exec |
+
+**What the Anchor column is for, and why the table cannot do without one.**
+Three rows are anchored at `Run`, so file and function together do not identify
+a row: a check comparing those two columns compares `elevate`, `lowerMode` and
+`Run` against themselves, and passes with the terminal check deleted. The
+anchor is the identifier the site's deciding expression names — the function
+itself where the row is one, and the constant or the call the point turns on
+where the row sits inside `Run`. Two rows can share a function; no two share an
+anchor, which is what makes a row findable.
+
+**This table is machine-read too.** `lint_derivation_test.go` at the repository
+root finds it by the bold sentence above it, reads the columns by their
+headings rather than by position, and takes the anchor from the backticks. It
+reads the four in-scope functions out of the rule quoted above and the two
+boundaries out of the sentence naming them, so this section is the whole of
+what that check knows. Rewrite the rule, rename the section, or change the
+expression a row turns on without changing its anchor, and the check fails
+rather than drifting. Renaming or moving this file means changing
+`derivationRecordPath` with it.
 
 **The three gates are not three rows, and that is the substantive change here.**
 A gate is an entry in `modeGates`: it decides *whether* the mode is lowered and
@@ -849,7 +869,10 @@ table change. What is new is the span: four functions rather than one.
 **AC46 searches this rule over that span in both directions; AC50 requires the
 check to read its expected site list out of this section rather than out of the
 table above; AC52 compares the two.** The list is here, in one place, so those
-three point at the same artefact.
+three point at the same artefact. `TestDerivationMatchesTheCode` is the check:
+it reads the rule, the boundaries and the rows out of this section and nothing
+out of itself, so a derivation that stops matching the code fails rather than
+waiting for a reader to notice.
 
 **Which artefact AC52 compares.** AC52 was written when this section
 reproduced the PRD's gates table row for row, so "the two" read either way and
@@ -865,6 +888,16 @@ its subject is the shape this work exists to stop, and three requirements and
 four criteria quantify over that table. AC52 now compares the recorded
 derivation above against the table recorded beside it, here, and this document
 carries both.
+
+**And carries them as one table, which is what AC52 costs.** The derivation's
+site list and the derived rows of the re-derived table are the same rows, so
+the comparison AC52 asks for holds by identity: a table cannot disagree with
+itself. Writing a second copy of the list so there would be two things to
+compare would produce exactly the stale duplicate the rest of this document is
+about, so the identity is kept and guarded instead.
+`TestDerivationRecordsOneSiteList` fails if a second derived-rows table ever
+appears here, which is the moment the identity stops holding and AC52 becomes a
+comparison somebody has to make.
 
 **AC52a is the comparison that discriminates, and this section supplies its
 subject.** AC52 puts two documents by one author in one sitting next to each
