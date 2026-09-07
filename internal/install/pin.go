@@ -1,9 +1,9 @@
 package install
 
 import (
-	"fmt"
 	"strings"
-	"unicode"
+
+	"github.com/tsukumogami/tsuku/internal/pinsafe"
 )
 
 // PinLevel represents how tightly a tool is pinned to a version range.
@@ -86,21 +86,13 @@ func VersionMatchesPin(version, requested string) bool {
 // ValidateRequested checks that a Requested string contains only expected
 // characters. This is defense-in-depth against malformed state data reaching
 // the version resolution path.
+//
+// The rule itself lives in internal/pinsafe, a leaf package, because
+// internal/project needs it at the config boundary and cannot import this
+// package: the cycle is project -> install -> shellenv -> project. This is a
+// delegation rather than a second copy, deliberately -- two near-identical
+// definitions of one rule is the defect this codebase is being corrected for,
+// not a pattern to add to.
 func ValidateRequested(requested string) error {
-	if requested == "" {
-		return nil
-	}
-	for _, r := range requested {
-		if unicode.IsDigit(r) || r == '.' || r == '@' || unicode.IsLetter(r) || r == '-' {
-			continue
-		}
-		return fmt.Errorf("invalid character %q in requested version %q", string(r), requested)
-	}
-	if strings.Contains(requested, "..") {
-		return fmt.Errorf("path traversal pattern in requested version %q", requested)
-	}
-	if strings.ContainsAny(requested, "/\\") {
-		return fmt.Errorf("path separator in requested version %q", requested)
-	}
-	return nil
+	return pinsafe.ValidateRequested(requested)
 }

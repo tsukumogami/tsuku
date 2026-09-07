@@ -92,7 +92,13 @@ Exit codes:
 		// Load project config from working directory. Errors are ignored;
 		// a nil result means no .tsuku.toml was found.
 		cwd, _ := os.Getwd()
-		projectCfg, _ := project.LoadProjectConfig(cwd)
+		// The load error stays discarded here: this path falls back to a
+		// non-project install when there is no usable config, and that
+		// behavior is not this change's to alter. The diagnostics are not
+		// discarded, though -- a refused declaration has to be visible from
+		// every command that reads the file, and this is the one route that
+		// previously said nothing at all.
+		projectCfg, _ := loadProjectConfigReporting(cwd)
 
 		indexLookup := func(ctx context.Context, cmd string) ([]index.BinaryMatch, error) {
 			return lookupBinaryCommand(ctx, cfg, cmd)

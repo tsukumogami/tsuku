@@ -415,7 +415,9 @@ if strings.ContainsAny(notice.Tool, "/\\") || notice.Tool == ".." {
 }
 ```
 
-This closes a theoretical path-traversal window. Recipe names are validated kebab-case when added to the registry, so the practical exposure is low, but the guard is a one-line addition with no downside.
+This closes a theoretical path-traversal window. The guard is a one-line addition with no downside.
+
+An earlier version of this paragraph justified "low practical exposure" by saying recipe names are validated kebab-case when added to the registry. That was not true: `validateMetadata` errors on a space in the name and *warns* on uppercase, with no charset check, and the name reaching `WriteNotice` is the state key rather than validated recipe metadata in any case. The guard stands on its own; the reassurance did not.
 
 ### ANSI Sanitization in InboxReporter (Low-Medium)
 

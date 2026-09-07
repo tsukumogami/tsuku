@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -134,24 +133,16 @@ func runRecipeValidations(result *ValidationResult, r *Recipe) {
 	// they need cross-recipe context.
 }
 
-// runtimeDepNamePattern is the strict pattern allowed for entries in
-// metadata.runtime_dependencies (and metadata.extra_runtime_dependencies):
-// lowercase ASCII letters, digits, '.', '_', and '-'. Anything else is
-// rejected to keep recipe identifiers safe across URL, path, and shell
-// contexts.
-var runtimeDepNamePattern = regexp.MustCompile(`^[a-z0-9._-]+$`)
-
-// validateRuntimeDependencyNames enforces the strict naming rules for
-// runtime_dependencies and extra_runtime_dependencies entries: each entry
-// must match runtimeDepNamePattern, must not contain path-traversal
-// sequences or null bytes, must not start with '-' (which would look like
-// a CLI flag), and the list must not contain empty strings or duplicates.
+// validateRuntimeDependencyNames enforces the naming rules for
+// runtime_dependencies and extra_runtime_dependencies entries: each entry must
+// be a well-formed recipe identifier per ValidateStrictName, and the list must
+// not contain empty strings or duplicates.
 //
-// These rules layer strict pattern enforcement on top of the minimal
-// IsValidRecipeName helper used elsewhere in the codebase. The strict
-// pattern is appropriate here because the field carries author-declared
-// recipe references that downstream consumers (wrapper PATH, RPATH chain
-// in homebrew_relocate) interpolate into shell-visible paths.
+// The rule itself lives in ValidateStrictName rather than here. This field
+// carries author-declared recipe references that downstream consumers (wrapper
+// PATH, the RPATH chain in homebrew_relocate) interpolate into shell-visible
+// paths, which is the same exposure the config boundary has -- so it is the
+// same rule, in one place, rather than a second copy that drifts.
 func validateRuntimeDependencyNames(result *ValidationResult, r *Recipe) {
 	checkList := func(field string, deps []string) {
 		seen := make(map[string]int, len(deps))
@@ -162,33 +153,18 @@ func validateRuntimeDependencyNames(result *ValidationResult, r *Recipe) {
 				result.addError(entryField, "entry must not be empty")
 				continue
 			}
-			if strings.Contains(dep, "\x00") {
-				result.addError(entryField, fmt.Sprintf("entry %q contains a null byte", dep))
-				continue
-			}
-			if strings.Contains(dep, "..") {
-				result.addError(entryField, fmt.Sprintf("entry %q must not contain '..' (path traversal)", dep))
-				continue
-			}
-			if strings.Contains(dep, "/") {
-				result.addError(entryField, fmt.Sprintf("entry %q must not contain '/'", dep))
-				continue
-			}
-			if strings.Contains(dep, "\\") {
-				result.addError(entryField, fmt.Sprintf("entry %q must not contain '\\'", dep))
-				continue
-			}
-			if strings.HasPrefix(dep, "-") {
-				result.addError(entryField, fmt.Sprintf("entry %q must not start with '-' (looks like a CLI flag)", dep))
-				continue
-			}
-			if !runtimeDepNamePattern.MatchString(dep) {
-				result.addError(entryField, fmt.Sprintf("entry %q must match %s (lowercase letters, digits, '.', '_', '-')", dep, runtimeDepNamePattern.String()))
-				continue
-			}
-			// Belt-and-suspenders: also pass through the shared name helper.
-			if !IsValidRecipeName(dep) {
-				result.addError(entryField, fmt.Sprintf("entry %q is not a valid recipe name", dep))
+			// One definition of a well-formed recipe identifier, shared with
+			// the config boundary rather than restated here. The rule used to
+			// live inline as a denylist chain with the pattern bolted on the
+			// end; a second near-identical copy is the defect this codebase is
+			// being corrected for.
+			//
+			// One behavior change comes with the consolidation: ".." is now
+			// rejected as a whole path segment rather than as a substring, so
+			// "foo..bar" is accepted. An internal doubled dot is not traversal
+			// and refusing it was over-broad.
+			if err := ValidateStrictName(dep); err != nil {
+				result.addError(entryField, err.Error())
 				continue
 			}
 			if firstIdx, dup := seen[dep]; dup {
@@ -215,7 +191,7 @@ func validateRuntimeDependenciesResolvable(result *ValidationResult, r *Recipe, 
 	check := func(field string, deps []string) {
 		for i, dep := range deps {
 			// Skip entries that already failed the syntactic checks.
-			if dep == "" || !runtimeDepNamePattern.MatchString(dep) {
+			if dep == "" || ValidateStrictName(dep) != nil {
 				continue
 			}
 			if _, err := loader.Get(dep, LoaderOptions{}); err != nil {

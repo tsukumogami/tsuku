@@ -45,6 +45,9 @@ func NewRegistryProvider(name string, source RecipeSource, manifest Manifest, st
 // Get retrieves raw recipe TOML bytes by name.
 func (p *RegistryProvider) Get(ctx context.Context, name string) ([]byte, error) {
 	path := p.recipePath(name)
+	if path == "" {
+		return nil, fmt.Errorf("invalid recipe name %q", name)
+	}
 	return p.store.Get(ctx, path)
 }
 
@@ -256,6 +259,9 @@ func (p *RegistryProvider) aliasesFromRecipes(ctx context.Context) (map[string][
 // Has checks if the store contains a recipe with the given name.
 func (p *RegistryProvider) Has(ctx context.Context, name string) bool {
 	path := p.recipePath(name)
+	if path == "" {
+		return false
+	}
 	data, err := p.store.Get(ctx, path)
 	return err == nil && data != nil
 }
@@ -266,13 +272,35 @@ func (p *RegistryProvider) Store() BackingStore {
 	return p.store
 }
 
-// recipePath computes the store path for a recipe name based on the manifest layout.
+// recipePath computes the store path for a recipe name based on the manifest
+// layout. It returns "" for a name that would traverse out of the store.
+//
+// The returned string is used as both an HTTP path and a disk-cache write key,
+// so a traversing name here redirects where a recipe is fetched from *and*
+// where the fetched bytes land.
+//
+// This is a backstop beneath the boundary, not the remedy. A name arriving from
+// a project config is refused at parse time by internal/project, which is what
+// closes the drive-by vector; this covers a caller that reaches the sink
+// without passing through config load. Do not delete the boundary check on the
+// grounds that this exists: a guard at each sink covering one consumer each is
+// the shape that produced the defect both are fixing. The unit test for this
+// function is what holds the check up -- deleting it must turn that test red --
+// because with the boundary in place there may be no config-driven route left
+// that reaches here with a bad name for an end-to-end test to exercise.
+//
+// It checks with IsValidRecipeName, which is weaker than the boundary's rule
+// and deliberately so: it is a denylist, and it accepts names ValidateStrictName
+// refuses, "a:b" and "x$(id)y" among them. Traversal is what matters for this
+// sink -- the value becomes an HTTP path segment and a cache filename, neither
+// of which evaluates a substitution, and a colon splits a PATH entry but is
+// inert in both of these. Do not read this check as the boundary's.
 func (p *RegistryProvider) recipePath(name string) string {
+	if !IsValidRecipeName(name) {
+		return ""
+	}
 	switch p.manifest.Layout {
 	case "grouped":
-		if len(name) == 0 {
-			return name + ".toml"
-		}
 		return string(name[0]) + "/" + name + ".toml"
 	default: // "flat" or empty
 		return name + ".toml"

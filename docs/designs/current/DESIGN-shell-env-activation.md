@@ -385,40 +385,59 @@ Deliverables:
 
 ### PATH Manipulation Safety
 
-The primary security surface is PATH modification. A malicious `.tsuku.toml` could reference tool names that, when resolved to `$TSUKU_HOME/tools/{name}-{version}/bin`, prepend unexpected directories to PATH. However, the resolution only produces paths within `$TSUKU_HOME/tools/`, which is a controlled directory. Path traversal in tool names is already guarded by the install pipeline's name validation.
+The primary security surface is PATH modification. A malicious `.tsuku.toml` can reference tool names and versions that, when resolved to `$TSUKU_HOME/tools/{name}-{version}/bin`, prepend unexpected directories to PATH.
+
+This section previously claimed the resolution "only produces paths within `$TSUKU_HOME/tools/`" and that traversal was "already guarded by the install pipeline's name validation". Both were false. `filepath.Join` calls `Clean`, so `..` in either component escaped the tools directory, and no name validation existed on the install path -- the validator the claim referred to lived in a neighbouring package and was called by nobody on this route. The residual-risk table below said as much, one column away from the claim that it was mitigated.
 
 **Mitigations:**
-- Tool bin directories are always under `$TSUKU_HOME/tools/` -- no arbitrary path injection
-- Activation only references already-installed tools; it doesn't trigger downloads
-- The existing name validation in the install pipeline prevents path traversal characters in tool names
+- Both components of a declaration -- the tool name and the declared version -- are validated where `.tsuku.toml` becomes a configuration object, in `internal/project`. Every consumer reads its values through that point, so activation, `tsuku install`, `tsuku shim install` and the `tsuku run` fast path all inherit the guarantee.
+- The name rule is an allowlist of lowercase letters, digits, `.`, `_` and `-`, rejecting `..` as a path segment, a leading `-` or `.`, and anything outside that set. An allowlist rather than a denylist because a colon is neither traversal nor a shell metacharacter but *is* the `PATH` separator, so `a:b` would split one entry into two with the second relative to the working directory -- which neither quoting nor a containment check catches.
+- An org-scoped key's `owner/repo` half is validated separately and more permissively, since GitHub allows uppercase there.
+- A declaration that fails is refused individually and reported on stderr naming the offending key; its siblings still activate.
+- Activation only references already-installed tools; it doesn't trigger downloads.
 
 ### Prompt Hook Safety
 
-Shell hooks execute with user privileges on every prompt. The hooks invoke `tsuku hook-env` as a subprocess (not eval'd shell code), limiting the attack surface.
+Shell hooks execute with user privileges on every prompt, and the shell **evaluates** what `tsuku hook-env` prints: the hook body is `eval "$(tsuku hook-env bash)"`. Calling tsuku as a subprocess does not change that -- its stdout becomes shell code.
+
+This section previously said the output was "structured (export/unset statements with validated values)". The statements were structured; the values inside them were not validated and were not shell-quoted. They were rendered with Go's `%q`, which escapes `"` and `\` but leaves `$` and the backtick live inside the double quotes it produces, so a value containing `$( )` executed on evaluation. `_TSUKU_DIR` in particular carries the directory holding the project config, whose name is chosen by whoever authored the cloned repository -- no validator can help there, because the path is legitimate and merely contains metacharacters.
 
 **Mitigations:**
-- Hooks call `tsuku hook-env` as a subprocess, not via `eval` of untrusted content
-- The hook-env output is structured (export/unset statements with validated values)
-- Hook installation uses marker blocks for clean install/uninstall
+- Every emitted value is quoted for the target dialect by `internal/shellquote`, with separate POSIX and fish functions. Fish's single quotes recognise `\'` and `\\` where POSIX's recognise nothing, so one shared function would be wrong for one of them.
+- Emission goes through a helper that takes the value rather than a format string, so a variable added later cannot reintroduce the defect by omitting a call.
+- Diagnostics are written to stderr, never stdout, precisely because stdout is evaluated -- and diagnostics quote the offending key, which is attacker-controlled.
+- Hook installation uses marker blocks for clean install/uninstall.
 
 ### Untrusted Repository Config
 
 Same concern as Block 4: cloning a repo with `.tsuku.toml` and running `tsuku hook install --activate` means the repo author influences your PATH. Unlike `tsuku install` (which requires explicit invocation), prompt hooks activate automatically on directory entry.
 
 **Mitigations:**
-- Prompt hooks are opt-in (`tsuku hook install --activate`), not default
-- Activation only references installed tools -- it can't install new ones
-- `TSUKU_CEILING_PATHS` prevents traversal into untrusted parent directories
-- Tools that aren't installed are silently skipped, not fetched
+- Prompt hooks are opt-in (`tsuku hook install --activate`), not default. Note that `tsuku shell` needs no hook at all, so anyone running it in an untrusted repository is exposed regardless of hook state.
+- Declared names and versions are validated at config load, so a hostile declaration is refused before it reaches a path or the emitted output.
+- Activation only references installed tools -- it can't install new ones.
+- `TSUKU_CEILING_PATHS` adds ceilings to the discovery walk, but it is **opt-in and unset by default**, and the walk's only unconditional ceiling is `$HOME`. A repository checked out elsewhere walks to `/`, so a config in a world-writable directory applies beneath it. Tracked separately as tsukumogami/tsuku#2555.
+- Tools that aren't installed are silently skipped, not fetched.
 
 ### Mitigations Summary
 
 | Risk | Severity | Mitigation | Residual Risk |
 |------|----------|------------|---------------|
-| PATH injection via malicious .tsuku.toml | Low | All paths constrained to $TSUKU_HOME/tools/, name validation | Tool names with unusual characters could construct unexpected paths |
-| Auto-activation in cloned repos | Medium | Hooks are opt-in, only installed tools activate | User may not realize activation affects their PATH in untrusted repos |
-| Prompt hook eval of hook-env output | Low | Structured output (export/unset only), subprocess invocation | If tsuku binary is compromised, hook-env output is arbitrary |
-| _TSUKU_PREV_PATH tampering | Low | Graceful handling when variable is missing | User could inject malicious PATH via env var manipulation |
+| PATH injection via malicious .tsuku.toml | Was Critical, now Low | Names and versions validated at config load in `internal/project`; refused declarations reported on stderr | A name accepted by the allowlist still selects which installed tool activates |
+| Auto-activation in cloned repos | Medium | Hooks are opt-in, only installed tools activate | User may not realize activation affects their PATH in untrusted repos; `tsuku shell` needs no hook |
+| Prompt hook eval of hook-env output | Was Critical, now Low | Every emitted value quoted per dialect by `internal/shellquote`; emission takes values, not format strings | If the tsuku binary is compromised, hook-env output is arbitrary |
+| Config discovered outside `$HOME` | Medium | None yet | A config in a world-writable directory applies to everyone working beneath it. tsukumogami/tsuku#2555 |
+| _TSUKU_PREV_PATH tampering | Low | Value is shell-quoted on emission, so it cannot execute | A user can still put a misleading PATH in their own environment |
+
+The first and third rows were rated Low against mitigations that did not exist.
+Row one claimed "All paths constrained to $TSUKU_HOME/tools/, name validation"
+while its own residual-risk cell, one column to the right, said "Tool names with
+unusual characters could construct unexpected paths" -- the table recorded the
+real behaviour and rated it Low anyway. Row three claimed structured output was
+the control, when the structure was never in question and the values inside it
+were unquoted. Both were reported as tsukumogami/tsuku#2553 and are fixed above;
+the severities here now describe the state after that fix, with the pre-fix
+rating shown so the correction is visible rather than silent.
 
 ## Consequences
 

@@ -1,3 +1,22 @@
+// REBASE WARNING for tsukumogami/tsuku#2554, which moves this file into a new
+// internal/activation package and rewrites the emitter around a shared
+// exportLine helper.
+//
+// That helper still formats with %q. Taking their side of the conflict compiles
+// cleanly, passes review as a package move, and silently reverts the quoting fix
+// this file carries -- %q is a Go string-literal quoter, so $ and backticks stay
+// live inside the double quotes it produces, and the shell hook evaluates this
+// output. The correct resolution is setVar's body plus their additions, not
+// either side whole.
+//
+// TestFormatExports_HostileValuesDoNotExecute is what catches the revert
+// (mutation-verified), and internal/shellenv/injection_test.go will fail to
+// compile after the package move -- which is intended. Move that file; do not
+// delete it to fix the build.
+//
+// This warning lives here rather than only in the test files because the person
+// resolving that conflict is working in this one.
+
 // Package shellenv computes per-directory PATH activation for tsuku projects.
 // A project directory with a .tsuku.toml file declares tool requirements;
 // ComputeActivation resolves those to concrete bin directories under
@@ -13,6 +32,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/project"
+	"github.com/tsukumogami/tsuku/internal/shellquote"
 )
 
 // ActivationResult holds the computed environment changes for a project
@@ -61,6 +81,15 @@ func ComputeActivation(cwd, prevPath, curDir string, cfg *config.Config) (*Activ
 		return nil, nil
 	}
 
+	// Stderr, never stdout: hook-env's stdout is what the shell hook evaluates,
+	// and these lines quote a key that came from the config file.
+	//
+	// Below the nil check rather than above it. It read correctly above only
+	// because FprintDiagnostics guards its own nil receiver, which is a subtle
+	// thing to rest on when the equivalent placement needs no guard at all: a
+	// nil result means no config was found, so there is nothing to report.
+	result.FprintDiagnostics(os.Stderr)
+
 	// Determine the base PATH: use prevPath if we already have an activation,
 	// otherwise use the current PATH from the environment.
 	basePath := prevPath
@@ -87,7 +116,22 @@ func ComputeActivation(cwd, prevPath, curDir string, cfg *config.Config) (*Activ
 			continue
 		}
 
-		binDir := cfg.ToolBinDir(name, req.Version)
+		// Compose the path from the bare name, not the declaration key. For an
+		// org-scoped entry the key is "owner/repo:tool", which the boundary
+		// validated as three separate components -- and it validated them
+		// separately precisely because the whole key is not a path component.
+		// Passing the key here would compose <tools>/owner/repo:tool-1.0/bin
+		// and put a colon inside one PATH entry, which the join below then
+		// splits in two: the same PATH-separator failure the name rule exists
+		// to prevent, arriving through a value the boundary approved. The
+		// resolver already splits; this is the sink that did not.
+		_, bare, _, err := project.SplitOrgKey(name)
+		if err != nil {
+			skipped = append(skipped, name)
+			continue
+		}
+
+		binDir := cfg.ToolBinDir(bare, req.Version)
 		if _, err := os.Stat(binDir); os.IsNotExist(err) {
 			skipped = append(skipped, name)
 			continue
@@ -118,8 +162,31 @@ func ComputeActivation(cwd, prevPath, curDir string, cfg *config.Config) (*Activ
 	}, nil
 }
 
+// setVar writes one assignment that gives the shell a value and nothing else.
+//
+// It takes the value rather than a format string, deliberately. The defect this
+// replaces was eight fmt.Fprintf calls using %q, and %q is a Go string-literal
+// quoter: it leaves $ and the backtick live inside the double quotes it
+// produces. Routing values through a helper that quotes internally means a new
+// emitted variable cannot reintroduce that by forgetting to call something --
+// there is no format string left to get wrong.
+func setVar(b *strings.Builder, shell, name, value string) {
+	switch shell {
+	case "fish":
+		fmt.Fprintf(b, "set -gx %s %s\n", name, shellquote.Fish(value))
+	default: // bash, zsh
+		fmt.Fprintf(b, "export %s=%s\n", name, shellquote.POSIX(value))
+	}
+}
+
 // FormatExports renders the activation result as shell export statements for
 // the given shell. Supported shells: "bash", "zsh", "fish".
+//
+// Every emitted value is quoted for the target dialect. That matters because
+// the shell hooks evaluate this output -- eval "$(tsuku hook-env bash)" -- and
+// the values are not tsuku's own: PATH carries tool directories built from a
+// project config, and _TSUKU_DIR is the directory holding that config, whose
+// name is chosen by whoever authored the repository the user cloned.
 func FormatExports(result *ActivationResult, shell string) string {
 	if result == nil {
 		return ""
@@ -129,28 +196,20 @@ func FormatExports(result *ActivationResult, shell string) string {
 
 	if !result.Active {
 		// Deactivation: restore PATH and unset tracking variables.
+		setVar(&b, shell, "PATH", result.PATH)
 		switch shell {
 		case "fish":
-			fmt.Fprintf(&b, "set -gx PATH %q\n", result.PATH)
 			fmt.Fprintf(&b, "set -e _TSUKU_DIR\n")
 			fmt.Fprintf(&b, "set -e _TSUKU_PREV_PATH\n")
 		default: // bash, zsh
-			fmt.Fprintf(&b, "export PATH=%q\n", result.PATH)
 			fmt.Fprintf(&b, "unset _TSUKU_DIR _TSUKU_PREV_PATH\n")
 		}
 		return b.String()
 	}
 
-	switch shell {
-	case "fish":
-		fmt.Fprintf(&b, "set -gx PATH %q\n", result.PATH)
-		fmt.Fprintf(&b, "set -gx _TSUKU_DIR %q\n", result.Dir)
-		fmt.Fprintf(&b, "set -gx _TSUKU_PREV_PATH %q\n", result.PrevPath)
-	default: // bash, zsh
-		fmt.Fprintf(&b, "export PATH=%q\n", result.PATH)
-		fmt.Fprintf(&b, "export _TSUKU_DIR=%q\n", result.Dir)
-		fmt.Fprintf(&b, "export _TSUKU_PREV_PATH=%q\n", result.PrevPath)
-	}
+	setVar(&b, shell, "PATH", result.PATH)
+	setVar(&b, shell, "_TSUKU_DIR", result.Dir)
+	setVar(&b, shell, "_TSUKU_PREV_PATH", result.PrevPath)
 
 	return b.String()
 }
