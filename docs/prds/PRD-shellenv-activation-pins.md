@@ -1,6 +1,6 @@
 ---
 schema: prd/v1
-status: Accepted
+status: Done
 problem: |
   Documented `.tsuku.toml` forms resolve to directory names tsuku never
   creates, so they put nothing on PATH: the "latest", "" and prefix version
@@ -22,7 +22,7 @@ source_issue: 2543
 
 ## Status
 
-Accepted
+Done
 
 ## Problem Statement
 

@@ -1,6 +1,6 @@
 ---
 schema: brief/v1
-status: Accepted
+status: Done
 problem: |
   Documented `.tsuku.toml` forms silently do not activate. The "latest",
   "" and prefix version pins put nothing on PATH, and so do org-scoped
@@ -23,7 +23,7 @@ motivating_context: |
 
 ## Status
 
-Accepted
+Done
 
 The brief frames the problem and the boundary. The requirements contract, the
 reporting shape, and the choice of where the shared version-matching code lives
