@@ -139,7 +139,7 @@ func TestRun_AC21_EachGateAnnouncesItselfAndItsCondition(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fx := indexfixture.New(t)
-			r, installer, _, _, stderr := newFixtureRunner(t, fx)
+			r, installer, _, stdout, stderr := newFixtureRunner(t, fx)
 			r.ConsentReader = strings.NewReader("y\n")
 			tt.state(t, fx, r)
 
@@ -149,12 +149,17 @@ func TestRun_AC21_EachGateAnnouncesItselfAndItsCondition(t *testing.T) {
 			if err := r.Run(context.Background(), tt.command, nil, ModeAuto, OriginFlag, nil); err != nil {
 				t.Fatalf("Run() error = %v", err)
 			}
-			// The gate has to have changed the mode rather than merely
-			// printed: consent was given at the prompt, so an install that
-			// happened is an install that asked.
-			if !installer.called {
-				t.Fatalf("nothing was installed, so no prompt was answered and the mode never reached confirm.\nstderr: %s",
+			// AC21 is about a gate that *changes* the mode, so the change has
+			// to be observed rather than inferred. The run started at auto, so
+			// a gate that printed its line and returned the mode untouched
+			// would install just the same -- installer.called cannot tell the
+			// two apart. The prompt can: it appears only from confirm.
+			if !promptShown(stdout.String()) {
+				t.Fatalf("no prompt appeared, so the gate announced itself without lowering the mode.\nstderr: %s",
 					stderr.String())
+			}
+			if !installer.called {
+				t.Fatalf("nothing was installed, so no prompt was answered.\nstderr: %s", stderr.String())
 			}
 
 			announced := gatesAnnouncedIn(stderr.String())
@@ -343,6 +348,15 @@ func TestModeGates_AFourthGateReachesBothSites(t *testing.T) {
 	}
 	if !strings.Contains(announced.String(), fourthGate) {
 		t.Errorf("the fourth gate lowered the mode without announcing itself: %q", announced.String())
+	}
+
+	// And the third site, which is what carries AC30's "survives a fourth gate
+	// being added" out of this package. A GateIdentifiers that listed the
+	// constants instead of walking the table passes every other assertion
+	// here, and the end-to-end suggest guard would then stop seeing new gates.
+	if !slices.Contains(GateIdentifiers(), fourthGate) {
+		t.Errorf("GateIdentifiers() = %v, which omits the registered fourth gate; the guards that read "+
+			"it would not see a gate added later", GateIdentifiers())
 	}
 }
 
@@ -587,5 +601,120 @@ func TestAnnouncementIdentifiersAreStable(t *testing.T) {
 	}
 	if DeclarationDisclosure != "project-declaration" {
 		t.Errorf("DeclarationDisclosure = %q, want %q", DeclarationDisclosure, "project-declaration")
+	}
+}
+
+// AC35 in the state that actually needs it, and the one no auto-dispatch case
+// can reach: the elevation raised the mode, a gate put it back at confirm, and
+// the user consented at the prompt.
+//
+// An install happened, so R11a's "before or at the first install the elevation
+// enables" applies in full. Every other disclosure case here arrives at the
+// site with the mode still at auto, so a condition of `effectiveMode ==
+// ModeAuto` passes all of them and leaves this install saying nothing -- and
+// the state is an unverified recipe, which is the ordinary case rather than a
+// corner.
+func TestRun_TheDisclosureSurvivesAGateLoweringTheRaisedMode(t *testing.T) {
+	fx := indexfixture.New(t)
+	r, installer, execRec, stdout, stderr := newFixtureRunner(t, fx)
+	r.RecipeHasVerification = func(string) bool { return false }
+	r.ConsentReader = strings.NewReader("y\n")
+
+	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil,
+		ModeConfirm, OriginDefault, declaredOnly())
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	// The state the case claims to be in: raised, lowered again, consented to.
+	if got := gatesAnnouncedIn(stderr.String()); len(got) != 1 || got[0] != gateRecipeVerification {
+		t.Fatalf("gates announced = %v, want exactly [%s]: this case needs the raised mode lowered again",
+			got, gateRecipeVerification)
+	}
+	if !promptShown(stdout.String()) {
+		t.Fatalf("no prompt appeared, so the mode never reached confirm: %q", stdout.String())
+	}
+	if !installer.called || !execRec.called {
+		t.Fatalf("no install reached: installed = %v, exec = %v", installer.called, execRec.called)
+	}
+
+	if !disclosureShown(stderr.String()) {
+		t.Errorf("an install the elevation enabled was not disclosed. A gate lowered the raised mode "+
+			"back to confirm, so a disclosure conditioned on the mode still being auto sees nothing "+
+			"here.\nstderr: %q", stderr.String())
+	}
+}
+
+// consentSnapshot answers the prompt and records what the user had been told
+// by the time it was put to them.
+//
+// The call site's stated contract is that the prompt is where the person
+// decides, so the disclosure precedes it. Without this the disclosure could
+// move below the dispatch to just above the install with every other assertion
+// here still passing -- and a user would answer [y/N] before being told which
+// file authorized the install or where the recipe came from.
+type consentSnapshot struct {
+	stderr    *bytes.Buffer
+	toldSoFar string
+	answer    *strings.Reader
+}
+
+func (c *consentSnapshot) Read(p []byte) (int, error) {
+	if c.toldSoFar == "" {
+		c.toldSoFar = c.stderr.String()
+	}
+	return c.answer.Read(p)
+}
+
+func TestRun_TheDisclosurePrecedesThePrompt(t *testing.T) {
+	fx := indexfixture.New(t)
+	r, installer, _, _, stderr := newFixtureRunner(t, fx)
+	consent := &consentSnapshot{stderr: stderr, answer: strings.NewReader("y\n")}
+	r.ConsentReader = consent
+
+	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil,
+		ModeConfirm, OriginFlag, declaredOnly())
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if !installer.called {
+		t.Fatal("nothing was installed, so no prompt was answered")
+	}
+	if !disclosureShown(consent.toldSoFar) {
+		t.Errorf("the user was asked to consent before being told what a declaration had determined. "+
+			"Facts delivered after the decision are not disclosure.\ntold by then: %q\ntold in the end: %q",
+			consent.toldSoFar, stderr.String())
+	}
+}
+
+// lowerMode names the gate that lowered the mode, which is the value R12a's
+// record will carry. Nothing reads it yet, so this is where it is pinned --
+// without it `return ModeConfirm, ""` changes no outcome anywhere and the
+// value is computed for nobody.
+func TestLowerMode_NamesTheGateThatFired(t *testing.T) {
+	fx := indexfixture.New(t)
+	r, _, _, _, _ := newFixtureRunner(t, fx)
+	solo := index.BinaryMatch{Recipe: indexfixture.RecipeSolo, Command: indexfixture.CommandOneProvider}
+	subject := gateSubject{
+		command: indexfixture.CommandOneProvider,
+		match:   solo,
+		matches: []index.BinaryMatch{solo},
+	}
+
+	r.RecipeHasVerification = func(string) bool { return false }
+	if mode, gate := r.lowerMode(ModeAuto, subject); mode != ModeConfirm || gate != gateRecipeVerification {
+		t.Errorf("lowerMode(auto) = %v, %q; want confirm, %q", mode, gate, gateRecipeVerification)
+	}
+
+	// No gate fires, so there is no gate to name.
+	r.RecipeHasVerification = func(string) bool { return true }
+	if mode, gate := r.lowerMode(ModeAuto, subject); mode != ModeAuto || gate != "" {
+		t.Errorf("lowerMode(auto) = %v, %q; want auto and no gate", mode, gate)
+	}
+
+	// A mode that is not auto is returned untouched and consults no gate, so
+	// there is nothing to name there either.
+	r.RecipeHasVerification = func(string) bool { return false }
+	if mode, gate := r.lowerMode(ModeSuggest, subject); mode != ModeSuggest || gate != "" {
+		t.Errorf("lowerMode(suggest) = %v, %q; want suggest and no gate", mode, gate)
 	}
 }

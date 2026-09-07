@@ -453,10 +453,12 @@ type modeGate struct {
 	blocks func(r *Runner, subject gateSubject) string
 }
 
-// modeGates registers the mode-lowering gates. Both sites that need to know
-// about a gate read this table: lowerMode, which lowers the mode and announces
-// the gate that did it, and autoBlockedBy, which decides whether the terminal
-// check's message may name --mode=auto.
+// modeGates registers the mode-lowering gates. Every site that needs to know
+// about a gate reads this table, and there are three: lowerMode, which lowers
+// the mode and announces the gate that did it; autoBlockedBy, which decides
+// whether the terminal check's message may name --mode=auto; and
+// GateIdentifiers, which hands the identifiers to the assertions that
+// establish no gate fired.
 //
 // Registration is the thing the table closes, and it is worth being explicit
 // about what it is not. Sharing the *conditions* between those two sites was
@@ -471,10 +473,12 @@ type modeGate struct {
 // The order is the order they run in, so the condition either site reports is
 // the one a user would hit first.
 //
-// Each gate is answered twice on the path that prints the hatch message,
-// including the recipe load behind RecipeHasVerification. That path is about
-// to end the run without installing anything, so the second answer is cheaper
-// than the divergence caching it would invite.
+// On the path that prints the hatch message a gate can be answered twice,
+// including the recipe load behind RecipeHasVerification -- once by lowerMode
+// and once by autoBlockedBy. Only where the mode arrived as auto: a mode that
+// was already confirm skips lowerMode entirely. That path is about to end the
+// run without installing anything, so the second answer is cheaper than the
+// divergence caching it would invite.
 var modeGates = []modeGate{
 	{
 		// The config file gates auto mode, so a file someone else can write
