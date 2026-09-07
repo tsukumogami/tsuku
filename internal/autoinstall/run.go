@@ -361,8 +361,15 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 // of default can carry is confirm, because a default is what nobody set and
 // confirm is what nobody setting anything produces. A guard against a pair
 // that cannot be resolved would state a second rule; what makes the absence
-// safe rather than merely tidy is that a caller which resolved no origin has
-// OriginUnset, not OriginDefault, and OriginUnset raises nothing.
+// safe rather than merely tidy is that a caller which *forgets* to resolve an
+// origin has OriginUnset, not OriginDefault, and OriginUnset raises nothing.
+//
+// Scoped to forgetting deliberately. A caller that supplies OriginDefault
+// explicitly and wrongly is not covered: elevate(ModeSuggest, OriginDefault,
+// true) still returns ModeAuto. That pair is unresolvable rather than unsafe
+// -- an origin of default asserts nothing set the mode, a mode of suggest
+// asserts something did, and no guard here can tell which half is the lie.
+// The absence is defensible for the case named, not for the wider one.
 func elevate(mode Mode, origin Origin, declared bool) (Mode, Origin) {
 	if declared && origin == OriginDefault {
 		return ModeAuto, OriginProject
