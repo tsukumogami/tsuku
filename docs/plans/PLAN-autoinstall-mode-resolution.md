@@ -447,19 +447,11 @@ so a gate deleted from the table is caught rather than agreed with. Issue 7
 built it; this issue verifies it and owns it thereafter.
 
 **Two things found while building the site check, both settled in the design.**
-The derived-rows table needed a fourth column. Three of its five rows sit in
-`Run`, so file and function together do not identify a row, and a comparison
-over those two columns matches `elevate`, `lowerMode` and `Run` against
-themselves — it passes with the terminal check deleted, which is the wrong
-implementation this issue's standard asks about. The anchor is the identifier
-the row's deciding expression names, and it is what makes a row findable.
-
-And AC52 holds by identity rather than by comparison. The design records the
-derivation's site list and the re-derived table as one table and says so, so
-the two sets cannot disagree. Writing a second copy so there would be something
-to compare would produce the stale duplicate this work exists to prevent, so
-what guards it instead is a check that fails if a second derived-rows table
-ever appears.
+The derived-rows table cannot be compared against code on file and function
+alone, because three of its rows sit in `Run`; it gained two columns that make
+a row findable. And AC52 turns out to hold by identity rather than by
+comparison, because the derivation's site list and the re-derived table are one
+table. The design carries the reasoning for both.
 
 **Complexity**: testable
 

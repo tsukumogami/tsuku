@@ -27,7 +27,7 @@ import (
 // what would hide a gate disappearing. So the gates get a comparison of their
 // own, against the one artifact that cannot be wrong about them.
 
-const gatesRecordPath = "docs/designs/DESIGN-autoinstall-mode-resolution.md"
+const designRecordPath = "docs/designs/DESIGN-autoinstall-mode-resolution.md"
 
 // gatesRecordHeading opens the recorded table. It is matched as a line prefix,
 // which is specific enough that a section renamed without this check being
@@ -43,7 +43,7 @@ func TestGatesTableMatchesTheRecord(t *testing.T) {
 		t.Fatalf("reading the recorded gates table: %v\n\n"+
 			"This check compares %s against autoinstall.GateIdentifiers(). It cannot pass by "+
 			"finding nothing: a record it cannot locate is a record nobody is checking.",
-			err, gatesRecordPath)
+			err, designRecordPath)
 	}
 
 	registered := append([]string(nil), autoinstall.GateIdentifiers()...)
@@ -65,7 +65,7 @@ func TestGatesTableMatchesTheRecord(t *testing.T) {
 		"recorded but not registered: %v -- a gate left modeGates while its row stayed, which is the "+
 		"case the site list cannot catch: three gates share one site, so deleting one moves no site "+
 		"at all.",
-		gatesRecordPath, registered, recorded, missing, extra)
+		designRecordPath, registered, recorded, missing, extra)
 }
 
 // recordedGateIdentifiers reads the identifiers out of the markdown table that
@@ -75,7 +75,7 @@ func TestGatesTableMatchesTheRecord(t *testing.T) {
 // nothing, because a silent empty result would make the comparison above
 // vacuously true -- which is the failure mode a check like this actually has.
 func recordedGateIdentifiers() ([]string, error) {
-	body, err := os.ReadFile(gatesRecordPath)
+	body, err := os.ReadFile(designRecordPath)
 	if err != nil {
 		return nil, err
 	}

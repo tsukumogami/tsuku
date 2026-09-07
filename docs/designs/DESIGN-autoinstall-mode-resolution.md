@@ -790,13 +790,13 @@ and would report a mismatch on correct code.
 **The derived rows after this work**, each cited by file, function and role,
 plus the anchor the paragraph below the table explains:
 
-| Row | File | Function | Anchor | Role |
-|---|---|---|---|---|
-| Project declaration | `internal/autoinstall/run.go` | `elevate` | `elevate` | Raises the mode where its origin was `default` and the command is declared |
-| Mode-lowering gates | `internal/autoinstall/run.go` | `lowerMode` | `lowerMode` | Writes confirm at the first entry in `modeGates` that fires |
-| Terminal check | `internal/autoinstall/run.go` | `Run` | `ModeConfirm` | Reads the mode; returns before the dispatch without reaching an install or an exec |
-| Elevation disclosure | `internal/autoinstall/run.go` | `Run` | `ModeSuggest` | Reads the mode, to skip the one dispatch that installs nothing |
-| Already-installed fast path | `internal/autoinstall/run.go` | `Run` | `execBinary` | Returns before the dispatch, having reached an exec |
+| Row | File | Function | Anchor | Points | Role |
+|---|---|---|---|---|---|
+| Project declaration | `internal/autoinstall/run.go` | `elevate` | `elevate` | 1 | Raises the mode where its origin was `default` and the command is declared |
+| Mode-lowering gates | `internal/autoinstall/run.go` | `lowerMode` | `lowerMode` | 1 | Writes confirm at the first entry in `modeGates` that fires |
+| Terminal check | `internal/autoinstall/run.go` | `Run` | `ModeConfirm` | 1 | Reads the mode; returns before the dispatch without reaching an install or an exec |
+| Elevation disclosure | `internal/autoinstall/run.go` | `Run` | `ModeSuggest` | 1 | Reads the mode, to skip the one dispatch that installs nothing |
+| Already-installed fast path | `internal/autoinstall/run.go` | `Run` | `execBinary` | 2 | Returns before the dispatch, having reached an exec: the declared version already installed, and the globally active one |
 
 **What the Anchor column is for, and why the table cannot do without one.**
 Three rows are anchored at `Run`, so file and function together do not identify
@@ -807,15 +807,26 @@ itself where the row is one, and the constant or the call the point turns on
 where the row sits inside `Run`. Two rows can share a function; no two share an
 anchor, which is what makes a row findable.
 
+**And Points, because an anchor cannot tell two points apart.** The fast path
+is two returns and one row — the declared version already installed, and the
+globally active one — and a row that says only "`execBinary` appears here"
+would be satisfied by a third return nobody recorded. It is the same hole one
+step along from the last: a new branch turning on `ModeConfirm` would be
+attributed to the terminal check and vanish. So the row says how many points
+share its anchor, and a point added or removed fails rather than being absorbed.
+The count is over the points the row *accounts for*, so a row that is a whole
+function counts the calls to it and not what its body does — an edit inside
+`elevate` is not a new site.
+
 **This table is machine-read too.** `lint_derivation_test.go` at the repository
 root finds it by the bold sentence above it, reads the columns by their
-headings rather than by position, and takes the anchor from the backticks. It
-reads the four in-scope functions out of the rule quoted above and the two
-boundaries out of the sentence naming them, so this section is the whole of
-what that check knows. Rewrite the rule, rename the section, or change the
-expression a row turns on without changing its anchor, and the check fails
-rather than drifting. Renaming or moving this file means changing
-`derivationRecordPath` with it.
+headings rather than by position, and takes the anchor from the backticks and
+the count from Points. It reads the four in-scope functions out of the rule
+quoted above and the two boundaries out of the sentence naming them, so this
+section is the whole of what that check knows. Rewrite the rule, rename the
+section, or change the expression a row turns on without changing its anchor,
+and the check fails rather than drifting. Renaming or moving this file means
+changing `designRecordPath`, which both checks in this section read.
 
 **The three gates are not three rows, and that is the substantive change here.**
 A gate is an entry in `modeGates`: it decides *whether* the mode is lowered and
@@ -832,7 +843,8 @@ root finds it by the bold sentence above and takes each identifier from the
 second column's backticks. So the sentence, the column order and the backticks
 are load-bearing: reword or reorder them and the check fails loudly, which is
 the intended direction but is worth knowing before you do it. Renaming or
-moving this file means changing `gatesRecordPath` with it.
+moving this file means changing `designRecordPath` with it, which is the one
+constant both checks read.
 
 | Gate | Identifier | Condition it reports |
 |---|---|---|

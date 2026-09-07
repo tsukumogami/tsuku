@@ -10,7 +10,9 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -35,8 +37,6 @@ import (
 // from the package rather than being told. So a site added to the code without
 // a row appears as a find nothing claims, and a row whose site was deleted
 // appears as a row nothing found.
-
-const derivationRecordPath = "docs/designs/DESIGN-autoinstall-mode-resolution.md"
 
 // The record's landmarks. Each is matched as a line prefix, which is specific
 // enough that renaming one fails loudly rather than matching something else
@@ -66,6 +66,7 @@ type recordedSite struct {
 	File     string
 	Function string
 	Anchor   string
+	Points   int
 	Role     string
 }
 
@@ -76,7 +77,7 @@ type recordedSite struct {
 func (s recordedSite) wholeFunction() bool { return s.Anchor == s.Function }
 
 func (s recordedSite) String() string {
-	return fmt.Sprintf("%s (%s, %s, anchor %s)", s.Row, s.File, s.Function, s.Anchor)
+	return fmt.Sprintf("%s (%s, %s, anchor %s, %d point(s))", s.Row, s.File, s.Function, s.Anchor, s.Points)
 }
 
 // A foundSite is one point the searches produced.
@@ -107,14 +108,14 @@ func TestDerivationMatchesTheCode(t *testing.T) {
 		t.Fatalf("reading the recorded derivation: %v\n\n"+
 			"This check compares %s against the code the derivation describes. It cannot pass by "+
 			"finding nothing: a record it cannot read is a record nobody is checking.",
-			err, derivationRecordPath)
+			err, designRecordPath)
 	}
 
 	found, err := searchSpan(record)
 	if err != nil {
 		t.Fatalf("searching the span the record names: %v\n\n"+
 			"The span is %s in %s through the mode dispatch in %s, and the record is %s.",
-			err, record.StartCall, record.StartFunc, record.EndFunc, derivationRecordPath)
+			err, record.StartCall, record.StartFunc, record.EndFunc, designRecordPath)
 	}
 	if len(found) == 0 {
 		t.Fatalf("the searches found nothing in %s over the span %s..%s.\n\n"+
@@ -127,9 +128,16 @@ func TestDerivationMatchesTheCode(t *testing.T) {
 	claimed := make(map[recordedSite][]foundSite, len(record.Sites))
 	var unclaimed []foundSite
 	for _, f := range found {
-		site, ok := attributeToRow(f, record.Sites)
+		site, absorbed, ok := attributeToRow(f, record.Sites)
 		if !ok {
 			unclaimed = append(unclaimed, f)
+			continue
+		}
+		if absorbed {
+			// A find inside a function that is itself a row. The record puts
+			// the row at the function, so what its body does is that one site
+			// however many lines it takes, and counting those lines would make
+			// an edit inside elevate look like a new site.
 			continue
 		}
 		claimed[site] = append(claimed[site], f)
@@ -141,18 +149,30 @@ func TestDerivationMatchesTheCode(t *testing.T) {
 			"A point reading or writing the effective mode, or returning into an install or an "+
 			"exec, is a row by the rule the record states. Add it to the derived-rows table in %s "+
 			"with an anchor naming the identifier it turns on.",
-			f, derivationRecordPath)
+			f, designRecordPath)
 	}
 
 	for _, site := range record.Sites {
-		if len(claimed[site]) > 0 {
-			continue
+		switch found := claimed[site]; {
+		case len(found) == site.Points:
+		case len(found) == 0:
+			t.Errorf("the recorded derivation lists a site the searches did not find: %s.\n"+
+				"Either the site moved or was deleted and the row stayed behind, or the anchor no "+
+				"longer names what the site turns on. A row whose site was deleted otherwise "+
+				"passes forever, which is why this direction is checked too.",
+				site)
+		default:
+			// The count is what stops a new site hiding behind an anchor that
+			// is already recorded. A second branch turning on ModeConfirm is a
+			// site the record does not name, and without this it would be
+			// attributed to the terminal check and disappear.
+			t.Errorf("the recorded derivation puts %d point(s) at %s, and the searches found %d: "+
+				"%v.\n"+
+				"Points sharing an anchor are the one thing the anchor cannot tell apart, so the "+
+				"record says how many there are. Either a point was added or removed here, or the "+
+				"count was never right.",
+				site.Points, site, len(found), found)
 		}
-		t.Errorf("the recorded derivation lists a site the searches did not find: %s.\n"+
-			"Either the site moved or was deleted and the row stayed behind, or the anchor no "+
-			"longer names what the site turns on. A row whose site was deleted otherwise passes "+
-			"forever, which is why this direction is checked too.",
-			site)
 	}
 }
 
@@ -176,7 +196,7 @@ func TestDerivationMatchesTheCode(t *testing.T) {
 func TestDerivationRecordsOneSiteList(t *testing.T) {
 	section, err := derivationSection()
 	if err != nil {
-		t.Fatalf("reading %s: %v", derivationRecordPath, err)
+		t.Fatalf("reading %s: %v", designRecordPath, err)
 	}
 
 	headings := 0
@@ -202,7 +222,7 @@ func TestDerivationRecordsOneSiteList(t *testing.T) {
 // derivationSection returns the lines of the recorded derivation, from its
 // heading to the next section.
 func derivationSection() ([]string, error) {
-	body, err := os.ReadFile(derivationRecordPath)
+	body, err := os.ReadFile(designRecordPath)
 	if err != nil {
 		return nil, err
 	}
@@ -260,12 +280,12 @@ func readDerivationRecord() (derivationRecord, error) {
 	}
 
 	for _, site := range record.Sites {
-		if !contains(record.InScope, site.Function) {
+		if !slices.Contains(record.InScope, site.Function) {
 			return record, fmt.Errorf("the derived rows put %q in %s, which the rule does not name "+
 				"as in scope (%v). One of the two is wrong", site.Row, site.Function, record.InScope)
 		}
 	}
-	if !contains(record.InScope, record.StartFunc) || !contains(record.InScope, record.EndFunc) {
+	if !slices.Contains(record.InScope, record.StartFunc) || !slices.Contains(record.InScope, record.EndFunc) {
 		return record, fmt.Errorf("the span runs %s..%s but the rule names %v as in scope; the "+
 			"boundaries have to be inside the span they bound",
 			record.StartFunc, record.EndFunc, record.InScope)
@@ -347,6 +367,13 @@ func derivedRows(section []string) ([]recordedSite, error) {
 				"function and role, and the anchor is what makes a row findable when three of "+
 				"them share a function", row)
 		}
+		points, err := strconv.Atoi(row["points"])
+		if err != nil || points < 1 {
+			return nil, fmt.Errorf("the row %q records %q points, which is not a count of one or "+
+				"more. A row has to say how many points share its anchor, because the anchor "+
+				"cannot tell them apart", site.Row, row["points"])
+		}
+		site.Points = points
 		sites = append(sites, site)
 	}
 
@@ -514,13 +541,6 @@ func searchSpan(record derivationRecord) ([]foundSite, error) {
 		return nil, err
 	}
 
-	wholeFunctionRows := map[string]bool{}
-	for _, site := range record.Sites {
-		if site.wholeFunction() {
-			wholeFunctionRows[site.Function] = true
-		}
-	}
-
 	var found []foundSite
 	for _, name := range record.InScope {
 		fn := funcs[name]
@@ -536,25 +556,41 @@ func searchSpan(record derivationRecord) ([]foundSite, error) {
 
 		found = append(found, searchModeUses(fset, fn, name, inSpan, deciders)...)
 		found = append(found, searchTerminalReturns(fset, fn, name, inSpan, terminal)...)
-
-		// A read of the mode through a variable alone names no constant and
-		// calls nothing, so the search above cannot anchor it. Left there it
-		// would be a site the record never has to mention. Rows that are whole
-		// functions are exempt: they claim everything in their body already.
-		if !wholeFunctionRows[name] {
-			found = append(found, searchBareModeReads(fset, fn, name, inSpan, deciders)...)
-		}
 	}
 
+	found = dedupe(found)
 	sort.Slice(found, func(i, j int) bool { return found[i].Pos < found[j].Pos })
 	return found, nil
 }
 
+// dedupe collapses finds that are the same point reached by two of the rules.
+// The call to a decider is both a call to a decider and a call taking the mode
+// as an argument, and it is one site either way.
+func dedupe(found []foundSite) []foundSite {
+	seen := map[foundSite]bool{}
+	out := make([]foundSite, 0, len(found))
+	for _, f := range found {
+		key := f
+		key.Search = 0
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		out = append(out, f)
+	}
+	return out
+}
+
 // searchModeUses is AC46's first search: reads and writes of the effective
-// mode. It recognizes one by the mode's own constants and by calls to the
-// functions that return a Mode, which are the two ways this file has of
-// touching the value.
+// mode. It recognizes one three ways -- the mode's own constants, a call to a
+// function that returns a Mode, and a call handed the mode as an argument.
+//
+// The third is what keeps a future reader from being invisible. A site that
+// passes the mode somewhere without comparing it to anything names no constant,
+// and without this rule the record would never have to mention it.
 func searchModeUses(fset *token.FileSet, fn *ast.FuncDecl, name string, inSpan func(token.Pos) bool, deciders map[string]bool) []foundSite {
+	vars := modeVariables(fn, deciders)
+
 	var found []foundSite
 	ast.Inspect(fn.Body, func(n ast.Node) bool {
 		if n == nil || !inSpan(n.Pos()) {
@@ -562,7 +598,8 @@ func searchModeUses(fset *token.FileSet, fn *ast.FuncDecl, name string, inSpan f
 		}
 		switch node := n.(type) {
 		case *ast.CallExpr:
-			if callee := calleeName(node); deciders[callee] {
+			callee := calleeName(node)
+			if deciders[callee] || passesMode(node, vars) {
 				found = append(found, foundSite{
 					Function: name, Anchor: callee, Pos: position(fset, node.Pos()), Search: 1,
 				})
@@ -579,33 +616,14 @@ func searchModeUses(fset *token.FileSet, fn *ast.FuncDecl, name string, inSpan f
 	return found
 }
 
-// searchBareModeReads finds statements that use a Mode-typed variable without
-// naming a constant or calling a decider, which is a read the first search
-// cannot anchor. There are none today. The check reports one as a site the
-// record does not claim, because that is what it is.
-func searchBareModeReads(fset *token.FileSet, fn *ast.FuncDecl, name string, inSpan func(token.Pos) bool, deciders map[string]bool) []foundSite {
-	vars := modeVariables(fn, deciders)
-	if len(vars) == 0 {
-		return nil
+// passesMode reports whether a call is handed a Mode-typed variable directly.
+func passesMode(call *ast.CallExpr, vars map[string]bool) bool {
+	for _, arg := range call.Args {
+		if ident, ok := arg.(*ast.Ident); ok && vars[ident.Name] {
+			return true
+		}
 	}
-	parents := parentMap(fn.Body)
-
-	var found []foundSite
-	ast.Inspect(fn.Body, func(n ast.Node) bool {
-		ident, ok := n.(*ast.Ident)
-		if !ok || !vars[ident.Name] || !inSpan(ident.Pos()) {
-			return true
-		}
-		stmt := enclosingStmt(ident, parents)
-		if stmt == nil || statementAnchors(stmt, deciders) {
-			return true
-		}
-		found = append(found, foundSite{
-			Function: name, Anchor: ident.Name, Pos: position(fset, ident.Pos()), Search: 1,
-		})
-		return true
-	})
-	return found
+	return false
 }
 
 // searchTerminalReturns is AC46's second search: returns that reach an install
@@ -638,30 +656,31 @@ func searchTerminalReturns(fset *token.FileSet, fn *ast.FuncDecl, name string, i
 	return found
 }
 
-// attributeToRow decides which recorded row a find belongs to.
+// attributeToRow decides which recorded row a find belongs to, and reports
+// whether the row absorbed it rather than counting it.
 //
 // The two indirect cases are the record's own anchoring rule. A find inside a
 // function that is itself a row belongs to that row rather than being a row of
-// its own, and a call to such a function from elsewhere is the same site as the
-// function it calls -- Run's two assignments are the elevate and lowerMode
-// rows, not two more.
-func attributeToRow(f foundSite, sites []recordedSite) (recordedSite, bool) {
+// its own -- absorbed -- and a call to such a function from elsewhere is the
+// same site as the function it calls, which is the point the row counts. Run's
+// two assignments are the elevate and lowerMode rows, not two more.
+func attributeToRow(f foundSite, sites []recordedSite) (site recordedSite, absorbed, ok bool) {
 	for _, site := range sites {
 		if site.wholeFunction() && site.Function == f.Function {
-			return site, true
+			return site, true, true
 		}
 	}
 	for _, site := range sites {
 		if site.wholeFunction() && site.Function == f.Anchor {
-			return site, true
+			return site, false, true
 		}
 	}
 	for _, site := range sites {
 		if site.Function == f.Function && site.Anchor == f.Anchor {
-			return site, true
+			return site, false, true
 		}
 	}
-	return recordedSite{}, false
+	return recordedSite{}, false, false
 }
 
 // modeDecidingFunctions returns the functions in the file that return a Mode.
@@ -764,26 +783,6 @@ func modeVariables(fn *ast.FuncDecl, deciders map[string]bool) map[string]bool {
 	return vars
 }
 
-// statementAnchors reports whether a statement names something the first
-// search can anchor a site to.
-func statementAnchors(stmt ast.Stmt, deciders map[string]bool) bool {
-	anchored := false
-	ast.Inspect(stmt, func(n ast.Node) bool {
-		switch node := n.(type) {
-		case *ast.CallExpr:
-			if deciders[calleeName(node)] {
-				anchored = true
-			}
-		case *ast.Ident:
-			if modeConstant.MatchString(node.Name) {
-				anchored = true
-			}
-		}
-		return !anchored
-	})
-	return anchored
-}
-
 // singleCall locates the one call to the named function inside fn. More than
 // one, or none, means the boundary the record names does not identify a point.
 func singleCall(fset *token.FileSet, fn *ast.FuncDecl, call string) (token.Pos, error) {
@@ -846,43 +845,6 @@ func exprString(fset *token.FileSet, expr ast.Expr) string {
 func position(fset *token.FileSet, pos token.Pos) string {
 	p := fset.Position(pos)
 	return fmt.Sprintf("%s:%d", p.Filename, p.Line)
-}
-
-// parentMap records each node's parent, so a find can be walked back up to the
-// statement holding it.
-func parentMap(root ast.Node) map[ast.Node]ast.Node {
-	parents := map[ast.Node]ast.Node{}
-	var stack []ast.Node
-	ast.Inspect(root, func(n ast.Node) bool {
-		if n == nil {
-			stack = stack[:len(stack)-1]
-			return true
-		}
-		if len(stack) > 0 {
-			parents[n] = stack[len(stack)-1]
-		}
-		stack = append(stack, n)
-		return true
-	})
-	return parents
-}
-
-func enclosingStmt(n ast.Node, parents map[ast.Node]ast.Node) ast.Stmt {
-	for cur := n; cur != nil; cur = parents[cur] {
-		if stmt, ok := cur.(ast.Stmt); ok {
-			return stmt
-		}
-	}
-	return nil
-}
-
-func contains(haystack []string, needle string) bool {
-	for _, s := range haystack {
-		if s == needle {
-			return true
-		}
-	}
-	return false
 }
 
 func sortedKeys(m map[string]bool) []string {
