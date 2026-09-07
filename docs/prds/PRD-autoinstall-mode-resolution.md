@@ -1162,16 +1162,17 @@ bounded rule satisfies parts of each.
       stop, and it would leave the quantifiers in this document pointing at
       nothing.
 
-      **AC52a.** The `modeGates` table in the code and the derived rows of the
-      recorded table are the same set, checked mechanically.
+      What AC52 cannot carry is in AC52a below.
+- [ ] **AC52a** The `modeGates` table in the code and the derived rows of the
+      recorded table are the same set, checked mechanically, in both
+      directions, and the check fails rather than passes when it finds nothing.
 
-      This carries what AC52 cannot. R21 already concedes that comparing two
-      artefacts by the same author "catches a transcription slip and nothing
-      else", and AC52 is exactly that comparison — both documents, one author,
-      one sitting. AC52a compares a record against *code*, so a gate deleted
-      from the table is caught rather than agreed with. Where three recorded
-      rows collapse to one site, that collapse must be visible in the
-      comparison rather than hidden by it.
+      R21 already concedes that comparing two artefacts by the same author
+      "catches a transcription slip and nothing else", and AC52 is exactly that
+      comparison — both documents, one author, one sitting. This one compares a
+      record against *code*, so a gate deleted from the table is caught rather
+      than agreed with, and where three recorded rows collapse to one site that
+      collapse is visible in the comparison rather than hidden by it.
 - [ ] **AC46** Over that named span, two searches together produce exactly the
       site list the derivation records — no site absent from that list, and no
       listed site absent from the code. The comparison target is the recorded
