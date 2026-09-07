@@ -692,8 +692,8 @@ func TestRun_TheAlreadyInstalledFastPathDisclosesNothing(t *testing.T) {
 func TestAnnouncementIdentifiersAreStable(t *testing.T) {
 	want := []string{"config-permissions", "recipe-verification", "multiple-providers"}
 	if got := GateIdentifiers(); !slices.Equal(got, want) {
-		t.Errorf("GateIdentifiers() = %v, want %v.\nThese are printed output and a later unit records "+
-			"them. Renaming one is a user-visible change, not a refactor.", got, want)
+		t.Errorf("GateIdentifiers() = %v, want %v.\nThese are printed output and the audit entry's "+
+			"gate field records them. Renaming one is a user-visible change, not a refactor.", got, want)
 	}
 	if DeclarationDisclosure != "project-declaration" {
 		t.Errorf("DeclarationDisclosure = %q, want %q", DeclarationDisclosure, "project-declaration")

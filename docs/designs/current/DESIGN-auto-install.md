@@ -481,16 +481,31 @@ that change answers. `origin` holds one of `default`, `flag`, `environment`,
 *before* any gate ran; `gate` names the mode-lowering gate that changed it, so
 a gate is never an origin.
 
+A sixth spelling, `unset`, is not one of the five and should not appear in a
+log. It means a caller reached the library without resolving an origin, which
+no production path does. Encountering it is a bug report about that caller
+rather than a value to interpret: the library records what it was handed
+instead of substituting a plausible source nobody chose.
+
 ### Key Interfaces
 
 The `ProjectVersionResolver` interface is the primary integration point for downstream designs.
 `tsuku run` passes `nil` (latest). `tsuku exec` (#2168) will pass a resolver backed by
-`tsuku.toml` from the current directory. `internal/autoinstall/` never imports the project
-config package; #1680 imports `internal/autoinstall/` and implements the interface.
+`tsuku.toml` from the current directory. The dependency direction stated here — that
+`internal/autoinstall/` never imports the project config package — did not survive: the
+declaration lookup takes `project` types, so `internal/autoinstall/` imports
+`internal/project`, and the interface is implemented there rather than the other way round.
+`internal/project` does not import back, so there is no cycle.
 
 The `Runner.Run` signature is the contract #2168 depends on. Its parameters — `command`,
-`args`, `mode`, `resolver` — are the full public surface. The `--` separator is recommended in
-documentation to prevent flag collision between tsuku flags and the target command's flags.
+`args`, `mode`, `origin`, `resolver` — are the full public surface. The `--` separator is
+recommended in documentation to prevent flag collision between tsuku flags and the target
+command's flags.
+
+`origin` is not a second spelling of `mode`: it says which source supplied the mode, so the
+library can tell a `confirm` somebody chose from the one nobody did. It arrives with `mode`
+from the caller, and it is what the audit entry's `origin` field records. See
+`DESIGN-autoinstall-mode-resolution.md`.
 
 ### Security Gates
 

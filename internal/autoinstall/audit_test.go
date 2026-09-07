@@ -91,18 +91,24 @@ func auditLog(t *testing.T, homeDir string) ([]recordedEntry, bool) {
 }
 
 // soleEntry is the one entry a single-install run wrote, and it fails rather
-// than returning a zero value where the run wrote none. The absent-file case
-// is the one an auto-path-only implementation produces for every confirm
-// install, so the message says so.
+// than returning a zero value where the run wrote none.
+//
+// The message names both ways the file can be missing, because they produce
+// the identical symptom and only one of them is the regression this file
+// exists to catch. writeAuditLog is best effort and returns silently on a
+// marshal or open failure, so a broken home directory looks exactly like a
+// write site that never ran.
 func soleEntry(t *testing.T, homeDir string) recordedEntry {
 	t.Helper()
 
 	entries, written := auditLog(t, homeDir)
 	if !written {
-		t.Fatalf("this run installed a tool and wrote no audit log.\n" +
-			"Every install is recorded, not only the ones that dispatched as " +
-			"auto: an install a gate diverted to a prompt is exactly the run " +
-			"worth finding in the log later.")
+		t.Fatalf("this run installed a tool and wrote no audit log at %s.\n"+
+			"Either the write site did not run -- every install is recorded, "+
+			"not only the ones that dispatched as auto, and an install a gate "+
+			"diverted to a prompt is exactly the run worth finding later -- or "+
+			"writeAuditLog failed and swallowed it, which it does by design.",
+			homeDir)
 	}
 	if len(entries) != 1 {
 		t.Fatalf("the audit log holds %d entries, want 1: %+v", len(entries), entries)
@@ -110,20 +116,26 @@ func soleEntry(t *testing.T, homeDir string) recordedEntry {
 	return entries[0]
 }
 
-// installRun is one install driven through Run, and what it recorded.
-type installRun struct {
+// completedInstall is where to look for what an install left behind: the home
+// holding the audit log, and what the run announced on the way.
+type completedInstall struct {
 	homeDir string
 	stderr  string
 }
 
-// runInstall drives one install to completion and returns the home it wrote
-// into. Every case below installs the same recipe under a different consent
-// state, so the wiring that does not vary lives here.
+// installOnce drives one install to completion under the given consent state.
 //
-// verified and consent are the two levers that decide which path the run
-// takes: an unverified recipe fires the recipe-verification gate, and the
-// consent answer is what a run diverted to a prompt needs to get past it.
-func runInstall(t *testing.T, mode Mode, origin Origin, verified bool, resolver ProjectDeclarationResolver) installRun {
+// Most cases below install the same recipe and differ only in that state, so
+// the wiring that does not vary lives here. Two do not use it: AC24's
+// configuration-permission subtest needs a config file at permissions this
+// helper deliberately does not write, and its multiple-provider subtest needs
+// the index fixture rather than a stub lookup. Both are spelled out where
+// they are, and both say why.
+//
+// verified is the lever that chooses the path: an unverified recipe fires the
+// recipe-verification gate and diverts the run to a prompt, which the consent
+// reader wired below then answers.
+func installOnce(t *testing.T, mode Mode, origin Origin, verified bool, resolver ProjectDeclarationResolver) completedInstall {
 	t.Helper()
 
 	r, _, stderr := newTestRunner(t)
@@ -152,13 +164,44 @@ func runInstall(t *testing.T, mode Mode, origin Origin, verified bool, resolver 
 	if !installer.called {
 		t.Fatalf("nothing was installed, so there is no install to have recorded\nstderr:\n%s", stderr.String())
 	}
-	return installRun{homeDir: r.cfg.HomeDir, stderr: stderr.String()}
+	return completedInstall{homeDir: r.cfg.HomeDir, stderr: stderr.String()}
 }
 
 // declaresJq is the resolver for the rows that need a project declaration, so
 // that the elevation applies and the recorded origin can be project.
 func declaresJq() *mockDeclarationResolver {
 	return &mockDeclarationResolver{versions: map[string]string{"jq": "1.7.1"}}
+}
+
+// The gate field is absent from an entry no gate lowered, which is what
+// `omitempty` on it means and what the struct's doc claims.
+//
+// It needs the raw bytes. Every other assertion here goes through
+// recordedEntry, whose Gate is a plain string, so an absent key and a key
+// holding "" both decode to "" -- the two states the contract distinguishes
+// are the two that decoding merges. Dropping `omitempty` would keep the whole
+// corpus green and put `"gate":""` on the majority of lines in the file.
+func TestRun_AnEntryNoGateLoweredOmitsTheGateKey(t *testing.T) {
+	got := installOnce(t, ModeAuto, OriginFlag, true, nil)
+
+	data, err := os.ReadFile(filepath.Join(got.homeDir, "audit.log"))
+	if err != nil {
+		t.Fatalf("reading the audit log: %v", err)
+	}
+	if strings.Contains(string(data), `"gate"`) {
+		t.Errorf("no gate lowered this run, but the entry carries a gate key:\n%s", data)
+	}
+
+	// The other direction, so this is a statement about absence rather than
+	// about the key never being written at all.
+	diverted := installOnce(t, ModeAuto, OriginFlag, false, nil)
+	data, err = os.ReadFile(filepath.Join(diverted.homeDir, "audit.log"))
+	if err != nil {
+		t.Fatalf("reading the audit log: %v", err)
+	}
+	if !strings.Contains(string(data), `"gate"`) {
+		t.Errorf("a gate lowered this run, but the entry carries no gate key:\n%s", data)
+	}
 }
 
 // AC22. Every install is recorded, and the origin it records is one of the
@@ -237,7 +280,7 @@ func TestRun_AC22_EveryInstallRecordsOneOfFiveOrigins(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := soleEntry(t, runInstall(t, tc.mode, tc.origin, tc.verified, tc.resolver).homeDir)
+			got := soleEntry(t, installOnce(t, tc.mode, tc.origin, tc.verified, tc.resolver).homeDir)
 			seen = append(seen, got.Origin)
 
 			if got.Origin != tc.wantOrigin {
@@ -294,7 +337,7 @@ func TestRun_AC22_EveryInstallRecordsOneOfFiveOrigins(t *testing.T) {
 // the seam, not a property each row has to re-establish.
 func TestRun_AC24_AGateDivertedInstallNamesTheGate(t *testing.T) {
 	t.Run("the recipe-verification gate", func(t *testing.T) {
-		got := runInstall(t, ModeAuto, OriginConfig, false, nil)
+		got := installOnce(t, ModeAuto, OriginConfig, false, nil)
 		entry := soleEntry(t, got.homeDir)
 
 		if entry.Gate != gateRecipeVerification {
@@ -411,8 +454,8 @@ func TestRun_AFailedInstallIsNotRecorded(t *testing.T) {
 // or deriving one from the other -- writes "confirm" in both rows and passes
 // every assertion stated in terms of a single run.
 func TestRun_AC22_TheOriginIsNotTheModeUnderAnotherName(t *testing.T) {
-	asked := soleEntry(t, runInstall(t, ModeConfirm, OriginFlag, true, nil).homeDir)
-	lowered := soleEntry(t, runInstall(t, ModeAuto, OriginConfig, false, nil).homeDir)
+	asked := soleEntry(t, installOnce(t, ModeConfirm, OriginFlag, true, nil).homeDir)
+	lowered := soleEntry(t, installOnce(t, ModeAuto, OriginConfig, false, nil).homeDir)
 
 	if asked.Mode != lowered.Mode {
 		t.Fatalf("these two runs recorded different modes (%q and %q), so the pair no longer "+
@@ -446,7 +489,7 @@ func TestRun_AC22_TheOriginIsNotTheModeUnderAnotherName(t *testing.T) {
 // writes "default" here, which claims nobody set a mode for a run that
 // installed unattended because a file in the working tree said to.
 func TestRun_AC22_AnElevatedDeclarationRecordsProject(t *testing.T) {
-	got := soleEntry(t, runInstall(t, ModeConfirm, OriginDefault, true, declaresJq()).homeDir)
+	got := soleEntry(t, installOnce(t, ModeConfirm, OriginDefault, true, declaresJq()).homeDir)
 
 	if got.Origin != "project" {
 		t.Errorf("origin = %q, want project: the declaration raised the mode, and the origin "+
