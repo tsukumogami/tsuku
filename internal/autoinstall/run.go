@@ -41,12 +41,25 @@ var (
 )
 
 // auditEntry is one line of the NDJSON audit log.
+//
+// Mode, Origin and Gate are three facts and none of them can be read off
+// another. Mode is what governed the install. Origin is the source the mode
+// was resolved from, before any gate ran (R12). Gate names the mode-lowering
+// gate that changed it, where one did (R12a), and is absent where none fired.
+//
+// The pair that makes the separation load-bearing is a confirm the user asked
+// for and a confirm a gate produced by lowering an auto: same Mode, and the
+// second is the run that did something the user did not ask for. An entry
+// carrying only the mode cannot tell them apart, which is the same as not
+// having recorded where the mode came from.
 type auditEntry struct {
 	Timestamp string `json:"ts"`
 	Action    string `json:"action"`
 	Recipe    string `json:"recipe"`
 	Version   string `json:"version"`
 	Mode      string `json:"mode"`
+	Origin    string `json:"origin"`
+	Gate      string `json:"gate,omitempty"`
 }
 
 // candidates looks command up in the binary index and narrows the result to
@@ -209,16 +222,18 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 	// what the declaration bypasses is the prompt it consented to, not every
 	// question there is.
 	//
-	// The origin the elevation produces is discarded here, and deliberately.
-	// No record carries an origin yet -- the audit entry below has no field
-	// for one -- and what the rule must not become is three copies, one at the
-	// elevation and one at each later reader, which is why it is a function
-	// rather than a condition written inline.
+	// The origin the elevation produces is what the record names, and it is
+	// taken from here rather than decided again down there. This line is the
+	// one place that knows a declaration turned a default into project; a
+	// record applying the rule a second time, from the mode and the
+	// declaration it can still see, would be a copy free to disagree with this
+	// one. The parameter is the wrong value for it to read for the same
+	// reason: on an elevated run the parameter still says default.
 	//
-	// The disclosure below does not read it either, and that is the point of
-	// the paragraph there rather than an oversight here: what it announces is
+	// The disclosure below does not read it, and that is the point of the
+	// paragraph there rather than an oversight here: what it announces is
 	// wider than what this line raised.
-	effectiveMode, _ := elevate(mode, origin, declaration != nil)
+	effectiveMode, effectiveOrigin := elevate(mode, origin, declaration != nil)
 
 	// The mode-lowering gates, from the table they are registered in -- however
 	// many are registered, which is the point of the table and the reason this
@@ -227,10 +242,12 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 	// the mode and the ones after it would be reporting a mode they found
 	// already lowered.
 	//
-	// The gate it names is discarded here for the reason the origin above is,
-	// and it is the same record that will read both.
+	// The gate it names goes into the same record the origin above does, and
+	// for the same reason: this is the site that walked the table, and a
+	// reader recovering the answer from a second walk is where two copies
+	// start disagreeing.
 	subject := gateSubject{command: command, match: match, matches: matches}
-	effectiveMode, _ = r.lowerMode(effectiveMode, subject)
+	effectiveMode, loweredBy := r.lowerMode(effectiveMode, subject)
 
 	// The terminal check. It asks whether *this* command needs a prompt, and
 	// it asks here because here is the first place that question has an
@@ -333,7 +350,9 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 		}
 
 	case ModeAuto:
-		// Proceed silently; audit log is written after install.
+		// Proceed silently. The record below is written for this dispatch and
+		// for confirm alike, so "silently" means no prompt rather than no
+		// trace.
 	}
 
 	// Install.
@@ -344,10 +363,23 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 		return fmt.Errorf("autoinstall: install failed: %w", err)
 	}
 
-	// Write audit log for auto-mode installs.
-	if effectiveMode == ModeAuto {
-		writeAuditLog(r.cfg.HomeDir, match.Recipe, version)
-	}
+	// The record, on every install rather than on the auto ones (R12). The
+	// guard that used to stand here was the defect: an install a gate diverted
+	// to confirm left no trace at all, so the runs that ended somewhere other
+	// than where the configuration pointed were exactly the runs with nothing
+	// written about them.
+	//
+	// It is below the install rather than above it because what it records is
+	// an install that happened. A failed install returns before this line, and
+	// an entry for one would be a record of something the machine does not
+	// have.
+	//
+	// Suggest never reaches here: its dispatch returns above without
+	// installing. That is the reason this is unconditional rather than a
+	// condition naming the two modes that install -- the modes that get here
+	// are the ones that install, and restating the list would be a second
+	// place for it to be wrong.
+	writeAuditLog(r.cfg.HomeDir, match.Recipe, version, effectiveMode, effectiveOrigin, loweredBy)
 
 	// Exec the installed binary.
 	binaryPath := filepath.Join(r.cfg.CurrentDir, command)
@@ -400,8 +432,8 @@ func elevate(mode Mode, origin Origin, declared bool) (Mode, Origin) {
 // The stable identifiers the three mode-lowering gates announce themselves by.
 //
 // They are output, not internal labels, and three things read them: a user
-// grepping their own terminal, the record a later unit writes, and every "no
-// gate intervened" assertion in the test corpus. That last one is why they
+// grepping their own terminal, the gate field of the audit entry, and every
+// "no gate intervened" assertion in the test corpus. That last one is why they
 // have to stay distinct. Those assertions establish their negative by the
 // absence of these three strings rather than by enumerating the preconditions
 // that would produce them -- an enumeration attempted twice while the criteria
@@ -552,13 +584,12 @@ var modeGates = []modeGate{
 // mode of auto" is in AC21 rather than being a condition the criterion could
 // have left out.
 //
-// The gate identifier has no reader yet, the way the origin elevate returns
-// has none: R12a's record names the gate that lowered the mode, and the audit
-// entry has no field for one. It is returned rather than left inside this
-// function for the reason the elevation's origin is returned rather than
-// recomputed -- there is one place that knows which gate fired, and a later
-// reader deciding it again from a second walk of the table is the divergence
-// the table was built to remove.
+// The gate identifier is what the audit entry's gate field carries, which is
+// R12a. It is returned rather than left inside this function because this is
+// the one place that knows which gate fired: a later reader deciding it again
+// from a second walk of the table is the divergence the table was built to
+// remove. The identifier the record names and the identifier the warning above
+// printed are therefore the same string by construction, not by agreement.
 func (r *Runner) lowerMode(mode Mode, subject gateSubject) (Mode, string) {
 	if mode != ModeAuto {
 		return mode, ""
@@ -736,15 +767,36 @@ func configPermissionCondition(path string, uid int) string {
 }
 
 // writeAuditLog appends one NDJSON line to $TSUKU_HOME/audit.log.
-func writeAuditLog(homeDir, recipe, version string) {
+//
+// The action is "install" rather than the "auto-install" it said while this
+// was an auto-only line. Now that confirm installs are recorded too, that
+// spelling would be false on most of them, and a per-mode action string --
+// "confirm-install" beside "auto-install" -- would only put the mode field's
+// content in a second place free to disagree with it. The action says what
+// happened; the three fields beside it say under what consent.
+//
+// The origin is written through Origin.String, so an origin no caller resolved
+// appears as "unset" rather than as one of the five names R12 lists. That is
+// the honest report of a wiring bug rather than a sixth origin: every
+// production path into Run resolves one, and the corpus asserts every install
+// it drives records one of the five. Substituting a plausible value here would
+// make the log agree with R12 by naming a source nobody chose, which is the
+// one failure a record has no way to survive.
+//
+// It stays best effort in both directions -- a marshal that fails and a file
+// that cannot be opened both return silently. A run that installed what the
+// user asked for should not fail because the log could not be appended to.
+func writeAuditLog(homeDir, recipe, version string, mode Mode, origin Origin, loweredBy string) {
 	logPath := filepath.Join(homeDir, "audit.log")
 
 	entry := auditEntry{
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
-		Action:    "auto-install",
+		Action:    "install",
 		Recipe:    recipe,
 		Version:   version,
-		Mode:      "auto",
+		Mode:      mode.String(),
+		Origin:    origin.String(),
+		Gate:      loweredBy,
 	}
 
 	data, err := json.Marshal(entry)

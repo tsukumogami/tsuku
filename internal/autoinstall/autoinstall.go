@@ -25,8 +25,11 @@ const (
 	// ModeSuggest prints install instructions and exits without installing.
 	ModeSuggest
 
-	// ModeAuto installs silently with audit logging.
-	// Requires explicit opt-in via config and flag/env corroboration.
+	// ModeAuto installs without prompting. Requires explicit opt-in via
+	// config and flag/env corroboration.
+	//
+	// It is not the mode audit logging is attached to: every install is
+	// recorded, whichever mode governed it, and the entry names that mode.
 	ModeAuto
 )
 

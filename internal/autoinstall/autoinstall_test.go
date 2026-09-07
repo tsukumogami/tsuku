@@ -269,8 +269,8 @@ func TestRun_ModeAuto_HappyPath(t *testing.T) {
 	if readErr != nil {
 		t.Fatalf("audit log not written: %v", readErr)
 	}
-	if !strings.Contains(string(data), `"auto-install"`) {
-		t.Errorf("audit log should contain auto-install entry, got %q", string(data))
+	if !strings.Contains(string(data), `"mode":"auto"`) {
+		t.Errorf("audit log should record this install as auto, got %q", string(data))
 	}
 }
 
@@ -580,8 +580,12 @@ func TestRun_ModeAuto_AuditLogNDJSON(t *testing.T) {
 	if err := json.Unmarshal(bytes.TrimSpace(data), &entry); err != nil {
 		t.Fatalf("audit log is not valid NDJSON: %v\nraw: %s", err, data)
 	}
-	if entry.Action != "auto-install" {
-		t.Errorf("action = %q, want %q", entry.Action, "auto-install")
+	// The action names the event and the mode field below names the consent.
+	// It said "auto-install" while the entry was written only on the auto
+	// path; now that confirm installs are recorded too, an action carrying the
+	// mode would be the mode field written twice.
+	if entry.Action != "install" {
+		t.Errorf("action = %q, want %q", entry.Action, "install")
 	}
 	if entry.Recipe != "jq" {
 		t.Errorf("recipe = %q, want %q", entry.Recipe, "jq")
