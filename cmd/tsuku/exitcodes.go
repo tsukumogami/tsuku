@@ -44,8 +44,12 @@ const (
 	// Run 'tsuku update-registry' to build it.
 	ExitIndexNotBuilt = 11
 
-	// ExitNotInteractive indicates confirm mode was used without a TTY.
-	// Set TSUKU_AUTO_INSTALL_MODE or use --mode to override.
+	// ExitNotInteractive indicates confirm mode was reached with no terminal
+	// to prompt on. The run itself says what would get past it, which is not
+	// always the same answer: --mode=auto works only where the mode-lowering
+	// gates leave it at auto, and TSUKU_AUTO_INSTALL_MODE=auto does not work
+	// on its own at all, because resolveMode ignores an env-supplied auto
+	// unless config.toml already says auto.
 	ExitNotInteractive = 12
 
 	// ExitUserDeclined indicates the user declined an interactive prompt.

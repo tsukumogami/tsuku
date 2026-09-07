@@ -69,10 +69,12 @@ func TestRunWiring_DeclaredRecipeReachesTheInstaller(t *testing.T) {
 		t.Fatalf("config.DefaultConfig() error = %v", err)
 	}
 
+	// That the config below dir was found at all is not asserted separately:
+	// it is what the installed recipe below reports. A resolver built from no
+	// config declares nothing, so the run would install the index's first
+	// choice rather than the declared one, and the check at the end of this
+	// test is that difference.
 	wiring := newRunWiring(cfg, dir)
-	if wiring.projectCfg == nil {
-		t.Fatalf("newRunWiring found no config below %q; one was written there", dir)
-	}
 
 	installer := &runWiringInstaller{}
 	stdout := &bytes.Buffer{}

@@ -170,10 +170,8 @@ Exit codes:
 // reconstructed the same four lines would pass while this function was wrong,
 // which is the whole reason it is a function.
 type runWiring struct {
-	// projectCfg is nil when no .tsuku.toml was found on the walk.
-	projectCfg *project.ConfigResult
-	resolver   *project.Resolver
-	lookup     autoinstall.LookupFunc
+	resolver *project.Resolver
+	lookup   autoinstall.LookupFunc
 }
 
 // newRunWiring discovers the project configuration from cwd and builds what
@@ -191,8 +189,7 @@ func newRunWiring(cfg *config.Config, cwd string) runWiring {
 	// the resolver on another.
 	projectCfg, _ := loadProjectConfigReporting(cwd)
 	return runWiring{
-		projectCfg: projectCfg,
-		resolver:   project.NewResolver(projectCfg),
+		resolver: project.NewResolver(projectCfg),
 		lookup: func(ctx context.Context, command string) ([]index.BinaryMatch, error) {
 			return binaryCommandLookup(ctx, cfg, command)
 		},

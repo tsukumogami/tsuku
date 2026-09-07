@@ -317,6 +317,11 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 // copy of these conditions would go on printing the hatch the first time a
 // gate changed, and what R10 requires is that the message be true, not that it
 // once was.
+//
+// Two callers means each is answered twice on the path that prints the
+// message, including the recipe load behind RecipeHasVerification. That is a
+// path that is about to end the run without installing anything, so the second
+// answer is cheaper than the divergence caching it would invite.
 
 func (r *Runner) configPermissionGateOK() bool {
 	return configPermissionsOK(filepath.Join(r.cfg.HomeDir, "config.toml"))
