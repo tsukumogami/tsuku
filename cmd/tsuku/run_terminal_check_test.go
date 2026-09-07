@@ -137,7 +137,7 @@ func TestRunCmd_ADeclaredCommandLoweredByAGateIsNotInteractive(t *testing.T) {
 	}
 	// Without this the case could pass for the wrong reason: a run that never
 	// reached auto never exercised the elevation the criterion is about.
-	if !strings.Contains(got.stderr, "permissions are too open") {
+	if !strings.Contains(got.stderr, "config-permissions") {
 		t.Errorf("the configuration-permission gate did not fire, so this run never reached confirm the way it meant to:\n%s",
 			got.stderr)
 	}

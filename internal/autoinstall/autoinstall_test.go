@@ -309,8 +309,8 @@ func TestRun_ConfigPermissionFallback(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(stderr.String(), "permissions are too open") {
-		t.Errorf("stderr should warn about permissions, got %q", stderr.String())
+	if !strings.Contains(stderr.String(), gateConfigPermissions) {
+		t.Errorf("stderr should name the %s gate, got %q", gateConfigPermissions, stderr.String())
 	}
 }
 

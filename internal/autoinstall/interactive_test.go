@@ -158,8 +158,9 @@ func TestRun_DeclaredCommandLoweredByAGateRefusesRatherThanPrompting(t *testing.
 	if installer.called {
 		t.Errorf("installed %q without consent", installer.recipe)
 	}
-	// The gate has to have fired for this case to be the case it claims to be.
-	if !strings.Contains(stderr.String(), "permissions are too open") {
+	// The gate has to have fired for this case to be the case it claims to be,
+	// and it says so by name since R11.
+	if !strings.Contains(stderr.String(), gateConfigPermissions) {
 		t.Errorf("the configuration-permission gate did not fire, so this run never reached confirm the way it meant to:\n%s",
 			stderr.String())
 	}

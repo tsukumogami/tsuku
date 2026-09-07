@@ -49,6 +49,11 @@ func newFixtureRunner(t *testing.T, fx *indexfixture.Fixture) (*Runner, *mockIns
 	return r, installer, execRec, stdout, stderr
 }
 
+// declaredConfigPath is the file every declaration below comes from. It is the
+// authorizing path the elevation disclosure names, which is the one consumer
+// that reads it back rather than passing it through.
+const declaredConfigPath = "/project/.tsuku.toml"
+
 // declaring builds the production project resolver over tools, given as
 // recipe -> version. It is the real *project.Resolver rather than a double,
 // so the declaration set these cases narrow on is the one `tsuku run` builds.
@@ -59,7 +64,7 @@ func declaring(tools map[string]string) *project.Resolver {
 	}
 	return project.NewResolver(&project.ConfigResult{
 		Config: &project.ProjectConfig{Tools: reqs},
-		Path:   "/project/.tsuku.toml",
+		Path:   declaredConfigPath,
 	})
 }
 
@@ -217,6 +222,11 @@ func TestRun_AC4_AnExplicitSuggestIsHonoredForADeclaredCommand(t *testing.T) {
 			fx := indexfixture.New(t)
 			r, installer, execRec, stdout, stderr := newFixtureRunner(t, fx)
 			layDownTool(t, fx.Cfg, sibling, indexfixture.SharedVersion, indexfixture.CommandTwoProviders)
+			// AC30's fourth assertion, which has to be made before the run:
+			// with the declared recipe already installed the fast path returns
+			// above every mode and nothing below would be exercised.
+			assertNotInstalled(t, fx.Cfg, indexfixture.DeclaredRecipe, indexfixture.SharedVersion,
+				indexfixture.CommandTwoProviders)
 
 			err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil,
 				ModeSuggest, origin, declaredOnly())
@@ -242,15 +252,10 @@ func TestRun_AC4_AnExplicitSuggestIsHonoredForADeclaredCommand(t *testing.T) {
 				t.Errorf("executed %q under suggest; the declared recipe is not installed and the "+
 					"sibling that is was not the one declared", execRec.binary)
 			}
-			// Nothing on stderr. No gate can have fired here -- all three are
-			// guarded on the mode already being auto -- so what this asserts
-			// is the other half: that nothing raised the mode and then said
-			// so. It is written against the stream rather than against a
-			// particular message so that it goes on holding when the
-			// announcements exist to be written.
-			if stderr.Len() != 0 {
-				t.Errorf("stderr = %q, want nothing: no gate fired and no mode was raised", stderr.String())
-			}
+			// AC30's two negative assertions: no gate diverted the mode, and
+			// no declaration raised it. Both are read by identifier, which is
+			// what lets them cover a gate added later.
+			assertAC30(t, stderr.String())
 		})
 	}
 }

@@ -69,6 +69,47 @@ type declaredRun struct {
 	stderr    string
 	installer *runWiringInstaller
 	execed    bool
+	// cfg is the home the run used, for the assertion that the declared
+	// recipe was not already installed when it began.
+	cfg *config.Config
+}
+
+// assertAC30 is the guard AC30 puts on a `suggest` demonstration: the install
+// instruction was printed, no gate diverted the mode, no declaration raised
+// it, and the declared recipe was not already installed when the run began.
+//
+// The last two are what stop the demonstration measuring something else. If a
+// gate fires, the observer sees a prompt and records `suggest` as honored when
+// the outcome was really confirm -- a weaker guarantee that disappears the
+// moment the recipe gains a checksum. If the recipe was already installed, the
+// fast path returns before any mode is consulted and nothing installs, so the
+// observer records a protection that was never exercised.
+//
+// The gate half reads autoinstall.GateIdentifiers rather than a list written
+// out here, so a gate added later is covered without anyone revisiting this.
+func (got declaredRun) assertAC30(t *testing.T) {
+	t.Helper()
+
+	want := "tsuku install " + indexfixture.DeclaredRecipe + "@" + indexfixture.SharedVersion
+	if !strings.Contains(got.stdout, want) {
+		t.Errorf("stdout names no instruction for the declared recipe, want %q:\n%s", want, got.stdout)
+	}
+	for _, gate := range autoinstall.GateIdentifiers() {
+		if strings.Contains(got.stderr, gate) {
+			t.Errorf("the %s gate diverted the mode, so this run observed confirm rather than suggest:\n%s",
+				gate, got.stderr)
+		}
+	}
+	if strings.Contains(got.stderr, autoinstall.DeclarationDisclosure) {
+		t.Errorf("a declaration determined an install here; suggest installs nothing:\n%s", got.stderr)
+	}
+	installed := filepath.Join(
+		got.cfg.ToolBinDir(indexfixture.DeclaredRecipe, indexfixture.SharedVersion),
+		indexfixture.CommandTwoProviders)
+	if _, err := os.Stat(installed); err == nil {
+		t.Errorf("%s was already installed at %s; the fast path returns before the mode is consulted",
+			indexfixture.DeclaredRecipe, installed)
+	}
 }
 
 // runDeclaredCommand runs the fixture's two-provider command in a project that
@@ -101,7 +142,7 @@ func runDeclaredCommand(t *testing.T, route consentRoute, terminal bool) declare
 		t.Fatalf("resolveMode() error = %v", err)
 	}
 
-	got := declaredRun{installer: &runWiringInstaller{}}
+	got := declaredRun{installer: &runWiringInstaller{}, cfg: cfg}
 	stdout, stderr := &bytes.Buffer{}, &bytes.Buffer{}
 	wiring := newRunWiring(cfg, dir)
 
@@ -150,10 +191,7 @@ func TestRunCmd_AC33_AnExplicitSuggestIsHonoredThroughEveryRoute(t *testing.T) {
 				t.Fatalf("Run() error = %v, want ErrSuggestOnly: suggest set by the %s was not honored\nstdout:\n%s\nstderr:\n%s",
 					got.err, tt.name, got.stdout, got.stderr)
 			}
-			want := "tsuku install " + indexfixture.DeclaredRecipe + "@" + indexfixture.SharedVersion
-			if !strings.Contains(got.stdout, want) {
-				t.Errorf("stdout names no instruction for the declared recipe, want %q:\n%s", want, got.stdout)
-			}
+			got.assertAC30(t)
 			if got.installer.recipe != "" {
 				t.Errorf("installed %q under suggest", got.installer.recipe)
 			}

@@ -79,8 +79,17 @@ func TestRun_AC36_TheUnsetDefaultIsRaisedForADeclaredCommand(t *testing.T) {
 	if !execRec.called {
 		t.Error("exec was not called")
 	}
-	if stderr.Len() != 0 {
-		t.Errorf("stderr = %q, want nothing: no gate fired here", stderr.String())
+	// No gate fired here, and it is the identifiers rather than the stream
+	// that say so: the disclosure D1-6 requires is on this stream too, and an
+	// emptiness assertion could no longer tell the two apart.
+	if got := gatesAnnouncedIn(stderr.String()); len(got) != 0 {
+		t.Errorf("gates %v announced themselves; none should have fired here.\nstderr: %s", got, stderr.String())
+	}
+	// The elevation this test is about is the one D1-6 obliges to disclose,
+	// so its absence would be a defect rather than a clean run. What the line
+	// has to contain is TestRun_D1_6_TheElevationIsDisclosed's.
+	if !disclosureShown(stderr.String()) {
+		t.Errorf("the elevation was not disclosed: %q", stderr.String())
 	}
 }
 
@@ -192,11 +201,14 @@ func TestRun_AC38_AnExplicitConfirmIsHonoredForADeclaredCommand(t *testing.T) {
 			// doing: a gate lowering a raised auto back to confirm produces
 			// the same prompt from the opposite state. What rules the gates
 			// out is the fixture -- a verified recipe, a list narrowed to one,
-			// and no config.toml to have permissions -- and this assertion is
-			// the part of that which is observable, since the
-			// configuration-permission gate is the one that announces itself.
-			if stderr.Len() != 0 {
-				t.Errorf("stderr = %q, want nothing: this prompt is the mode's, not a gate's", stderr.String())
+			// and no config.toml to have permissions -- and since R11 all
+			// three say so by name, so this reads the identifiers rather than
+			// the stream. The disclosure is on that stream too, and it belongs
+			// here: the recipe was determined by the declaration whether or
+			// not the mode was.
+			if got := gatesAnnouncedIn(stderr.String()); len(got) != 0 {
+				t.Errorf("gates %v announced themselves; this prompt is the mode's, not a gate's.\nstderr: %s",
+					got, stderr.String())
 			}
 		})
 	}

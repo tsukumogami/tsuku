@@ -214,36 +214,18 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 	// for one -- and what the rule must not become is three copies, one at the
 	// elevation and one at each later reader, which is why it is a function
 	// rather than a condition written inline.
+	//
+	// The disclosure below does not read it either, and that is the point of
+	// the paragraph there rather than an oversight here: what it announces is
+	// wider than what this line raised.
 	effectiveMode, _ := elevate(mode, origin, declaration != nil)
 
-	// Security gate 2: config permission check.
-	// If the config file has permissive permissions, fall back to confirm
-	// to prevent a tampered config from enabling auto mode.
-	if effectiveMode == ModeAuto && !r.configPermissionGateOK() {
-		fmt.Fprintf(r.stderr, "Warning: config file permissions are too open, falling back to confirm mode\n")
-		effectiveMode = ModeConfirm
-	}
-
-	// Security gate 3 (auto mode only): verification gate.
-	// If the recipe has no checksum or signature verification, fall back to confirm.
-	if effectiveMode == ModeAuto && !r.verificationGateOK(match.Recipe) {
-		effectiveMode = ModeConfirm
-	}
-
-	// Security gate 4 (auto mode only): conflict gate.
-	// If multiple recipes provide this command, fall back to confirm.
-	//
-	// For a declared command the list holds one recipe, so this gate cannot
-	// fire on a rival provider: the project already said which one it meant,
-	// and prompting about a conflict it has settled would be asking a question
-	// that has a written answer. It is still a count of the narrowed list
-	// rather than an assertion about it -- the index's primary key makes one
-	// recipe appear once per command, but matches reaches this package from a
-	// caller, and internal/project guards the same parameter for the same
-	// reason rather than trusting that.
-	if effectiveMode == ModeAuto && !r.providerGateOK(matches) {
-		effectiveMode = ModeConfirm
-	}
+	// Security gates 2 through 4, from the table they are registered in. Each
+	// announces itself where it fires, which is R11; the traversal stops at
+	// the first, because that is the one that *changed* the mode and the ones
+	// after it would be reporting a mode they found already lowered.
+	subject := gateSubject{command: command, match: match, matches: matches}
+	effectiveMode = r.lowerMode(effectiveMode, subject)
 
 	// The terminal check. It asks whether *this* command needs a prompt, and
 	// it asks here because here is the first place that question has an
@@ -260,8 +242,35 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 	// there could not know. By this line the mode already carries everything a
 	// declaration contributes, so asking again would be asking twice.
 	if effectiveMode == ModeConfirm && !r.terminalAttached() {
-		fmt.Fprintf(r.stderr, "%s\n", r.notInteractiveMessage(command, match, matches))
+		fmt.Fprintf(r.stderr, "%s\n", r.notInteractiveMessage(subject))
 		return ErrNotInteractive
+	}
+
+	// The disclosure, and the rule R13a required to be written before the
+	// control existed: an install whose recipe or whose consent mode was
+	// determined by a project declaration states, before the install begins,
+	// the recipe, the version, the path of the file that authorized it, and
+	// the recipe's source.
+	//
+	// It is keyed on the declaration rather than on the elevation, and that is
+	// a case rather than a nicety. R3b stops the multiple-provider gate firing
+	// for a declared command, so a user in an explicitly configured auto who
+	// runs an ambiguous command in a repository declaring one provider now
+	// gets a silent install where they previously got a prompt. No elevation
+	// happened, so a disclosure keyed on one says nothing; no gate changed the
+	// mode, so no announcement above says anything either. A
+	// repository-supplied file would have turned a prompt into a silent
+	// install with nothing reporting it.
+	//
+	// Suggest is the one dispatch it is skipped for. Suggest installs nothing,
+	// so a per-install disclosure has no install to attach to, and AC30
+	// asserts its absence there. Confirm is not skipped and the disclosure
+	// precedes the prompt rather than following it: the prompt is where the
+	// person decides, and facts delivered after the decision are not
+	// disclosure. A run that then declines has disclosed an install that did
+	// not happen, which is the harmless direction to be wrong in.
+	if declaration != nil && effectiveMode != ModeSuggest {
+		r.discloseDeclaration(match, version, declaration.ConfigPath)
 	}
 
 	// Mode dispatch.
@@ -377,34 +386,151 @@ func elevate(mode Mode, origin Origin, declared bool) (Mode, Origin) {
 	return mode, origin
 }
 
-// The three mode-lowering gates, each as a predicate reporting whether auto
-// survives it.
+// The stable identifiers the three mode-lowering gates announce themselves by.
 //
-// They are predicates rather than three conditions written inline because two
-// callers need the same answer: the gates above, which lower the mode, and the
-// terminal check's message, which names --mode=auto only where auto would
-// still be auto by the time it got here. A message deciding that from a second
-// copy of these conditions would go on printing the hatch the first time a
-// gate changed, and what R10 requires is that the message be true, not that it
-// once was.
+// They are output, not internal labels, and three things read them: a user
+// grepping their own terminal, the record a later unit writes, and every "no
+// gate intervened" assertion in the test corpus. That last one is why they
+// have to stay distinct. Those assertions establish their negative by the
+// absence of these three strings rather than by enumerating the preconditions
+// that would produce them -- an enumeration attempted twice while the criteria
+// were written and incomplete both times, because the configuration-permission
+// gate's precondition is filesystem state rather than anything about the
+// recipe.
 //
-// Two callers means each is answered twice on the path that prints the
-// message, including the recipe load behind RecipeHasVerification. That is a
-// path that is about to end the run without installing anything, so the second
-// answer is cheaper than the divergence caching it would invite.
+// So a later simplification collapsing the three into one generic line is not
+// a simplification. It removes that seam, and every assertion resting on it
+// goes on passing while measuring nothing.
+const (
+	gateConfigPermissions  = "config-permissions"
+	gateRecipeVerification = "recipe-verification"
+	gateMultipleProviders  = "multiple-providers"
+)
 
-func (r *Runner) configPermissionGateOK() bool {
-	return configPermissionsOK(filepath.Join(r.cfg.HomeDir, "config.toml"))
+// GateIdentifiers returns the identifiers above, in the order the gates run.
+//
+// It is exported for the assertions that establish the negative -- that no
+// gate diverted the mode on a given run -- from outside this package, which is
+// where the end-to-end demonstrations of the consent modes live. It reads the
+// table rather than listing the constants so those assertions cover a gate
+// added later without anyone going back to revisit them, which is the property
+// AC30 asks for by name.
+func GateIdentifiers() []string {
+	ids := make([]string, 0, len(modeGates))
+	for _, gate := range modeGates {
+		ids = append(ids, gate.id)
+	}
+	return ids
 }
 
-// A nil RecipeHasVerification is treated as "unverified": the gate fires
-// rather than being silently skipped.
-func (r *Runner) verificationGateOK(recipe string) bool {
-	return r.RecipeHasVerification != nil && r.RecipeHasVerification(recipe)
+// gateSubject is what a gate reads: the command as typed, the recipe that will
+// actually be installed, and the candidate list it was selected from.
+//
+// The list is narrowed by the time a gate sees it where a declaration applies,
+// which is what makes the multiple-provider gate's count mean what R3b says it
+// means rather than what it counted before.
+type gateSubject struct {
+	command string
+	match   index.BinaryMatch
+	matches []index.BinaryMatch
 }
 
-func (r *Runner) providerGateOK(matches []index.BinaryMatch) bool {
-	return len(matches) <= 1
+// modeGate is one mode-lowering gate: the identifier it announces itself by,
+// and the condition under which auto does not survive it.
+type modeGate struct {
+	id string
+
+	// blocks reports the condition that fires this gate for the subject, or ""
+	// where auto survives it.
+	//
+	// One function rather than a predicate beside a message, because the two
+	// would be free to disagree: a gate that fires while naming a condition
+	// other than the one that fired it is worse than a gate that says nothing,
+	// since a user acts on what it named.
+	blocks func(r *Runner, subject gateSubject) string
+}
+
+// modeGates registers the mode-lowering gates. Both sites that need to know
+// about a gate read this table: lowerMode, which lowers the mode and announces
+// the gate that did it, and autoBlockedBy, which decides whether the terminal
+// check's message may name --mode=auto.
+//
+// Registration is the thing the table closes, and it is worth being explicit
+// about what it is not. Sharing the *conditions* between those two sites was
+// already done: it stops a gate and the hatch message drifting apart on what
+// fires them. What it could not stop is a fourth gate added to the lowering
+// path and not to the hatch computation, which leaves the message naming
+// --mode=auto in a state that gate blocks -- a user following it verbatim
+// arrives back at the same message having changed nothing, which is the defect
+// R10 is about. A gate needs an identifier and a condition regardless, so
+// there was almost nothing left to pay for closing that door here.
+//
+// The order is the order they run in, so the condition either site reports is
+// the one a user would hit first.
+//
+// Each gate is answered twice on the path that prints the hatch message,
+// including the recipe load behind RecipeHasVerification. That path is about
+// to end the run without installing anything, so the second answer is cheaper
+// than the divergence caching it would invite.
+var modeGates = []modeGate{
+	{
+		// The config file gates auto mode, so a file someone else can write
+		// is a file that can turn auto on.
+		id: gateConfigPermissions,
+		blocks: func(r *Runner, _ gateSubject) string {
+			return configPermissionCondition(filepath.Join(r.cfg.HomeDir, "config.toml"))
+		},
+	},
+	{
+		// A nil RecipeHasVerification is treated as "unverified": the gate
+		// fires rather than being silently skipped.
+		id: gateRecipeVerification,
+		blocks: func(r *Runner, subject gateSubject) string {
+			if r.RecipeHasVerification != nil && r.RecipeHasVerification(subject.match.Recipe) {
+				return ""
+			}
+			return fmt.Sprintf("%s carries no checksum or signature to verify", subject.match.Recipe)
+		},
+	},
+	{
+		// For a declared command the list holds one recipe, so this gate
+		// cannot fire on a rival provider: the project already said which one
+		// it meant, and prompting about a conflict it has settled would be
+		// asking a question that has a written answer. It is still a count of
+		// the narrowed list rather than an assertion about it -- the index's
+		// primary key makes one recipe appear once per command, but matches
+		// reaches this package from a caller, and internal/project guards the
+		// same parameter for the same reason rather than trusting that.
+		id: gateMultipleProviders,
+		blocks: func(_ *Runner, subject gateSubject) string {
+			if len(subject.matches) <= 1 {
+				return ""
+			}
+			return fmt.Sprintf("more than one recipe provides %q", subject.command)
+		},
+	},
+}
+
+// lowerMode returns the mode that survives the gates, announcing the one that
+// fired (R11).
+//
+// Only auto is lowered, so a mode that is not auto is returned untouched and
+// no gate is consulted -- which is why "starting from an effective consent
+// mode of auto" is in AC21 rather than being a condition the criterion could
+// have left out.
+func (r *Runner) lowerMode(mode Mode, subject gateSubject) Mode {
+	if mode != ModeAuto {
+		return mode
+	}
+	for _, gate := range modeGates {
+		condition := gate.blocks(r, subject)
+		if condition == "" {
+			continue
+		}
+		fmt.Fprintf(r.stderr, "Warning: %s: %s; falling back to confirm mode\n", gate.id, condition)
+		return ModeConfirm
+	}
+	return mode
 }
 
 // terminalAttached reports whether a prompt could be answered. A nil
@@ -429,29 +555,68 @@ func (r *Runner) terminalAttached() bool {
 // case -- following it reaches this same message, so the message names the
 // gate instead and does not spell the flag at all. Nothing here says
 // "--mode=auto" except where --mode=auto works.
-func (r *Runner) notInteractiveMessage(command string, match index.BinaryMatch, matches []index.BinaryMatch) string {
+func (r *Runner) notInteractiveMessage(subject gateSubject) string {
 	const opening = "tsuku: confirm mode requires a terminal"
-	if blocked := r.autoBlockedBy(command, match, matches); blocked != "" {
+	if blocked := r.autoBlockedBy(subject); blocked != "" {
 		return opening + ", and auto mode is unavailable here: " + blocked
 	}
 	return opening + "; use --mode=auto for non-interactive use"
 }
 
-// autoBlockedBy names the mode-lowering gate that would put a mode of auto
-// back at confirm for this command, or "" where none of them would.
+// autoBlockedBy names the condition under which a mode-lowering gate would put
+// a mode of auto back at confirm for this command, or "" where none of them
+// would.
 //
-// The order matches the order the gates run in, so the reason named is the one
-// a user would hit first.
-func (r *Runner) autoBlockedBy(command string, match index.BinaryMatch, matches []index.BinaryMatch) string {
-	switch {
-	case !r.configPermissionGateOK():
-		return "the permissions on config.toml are too open"
-	case !r.verificationGateOK(match.Recipe):
-		return fmt.Sprintf("%s carries no checksum or signature to verify", match.Recipe)
-	case !r.providerGateOK(matches):
-		return fmt.Sprintf("more than one recipe provides %q", command)
+// It iterates modeGates rather than restating them, which is what makes a
+// fourth gate reach this message without anyone remembering to bring it here.
+func (r *Runner) autoBlockedBy(subject gateSubject) string {
+	for _, gate := range modeGates {
+		if condition := gate.blocks(r, subject); condition != "" {
+			return condition
+		}
 	}
 	return ""
+}
+
+// DeclarationDisclosure is the stable identifier the elevation disclosure
+// leads with, for the reason the gate identifiers have one: AC30 asserts this
+// line's absence wherever a declaration determined nothing that installs, and
+// an assertion against the whole stream cannot tell this line from a gate's.
+const DeclarationDisclosure = "project-declaration"
+
+// discloseDeclaration writes the line D5 requires before an install a project
+// declaration determined. See the call site for the rule and for why suggest
+// is the one dispatch it is skipped for.
+//
+// The recipe's source is named because the run path inherits the registration
+// exposure in tsukumogami/tsuku#2552. That defect can put a recipe in the
+// index under a bare name after registering a source the user never approved,
+// and a bare declaration then matches it here with no source component
+// anywhere in sight -- so a disclosure naming only the authorizing file would
+// not say where the thing being installed came from.
+func (r *Runner) discloseDeclaration(match index.BinaryMatch, version, configPath string) {
+	named := match.Recipe
+	if version != "" {
+		named += "@" + version
+	}
+	fmt.Fprintf(r.stderr, "%s: %s declares %s (recipe source: %s)\n",
+		DeclarationDisclosure, configPath, named, recipeSource(match))
+}
+
+// recipeSource is the source the binary index recorded for a match: "registry"
+// for a recipe the user's configured registries carry, "installed" for one
+// that exists only because something installed it locally, which is the half
+// of the pair #2552 produces.
+//
+// An empty source is reported rather than omitted. The field is filled in by
+// the index, so empty means a caller built the match by hand, and a
+// disclosure that quietly dropped its fourth fact would be a disclosure that
+// no longer satisfies the rule while still looking like one.
+func recipeSource(match index.BinaryMatch) string {
+	if match.Source == "" {
+		return "unknown"
+	}
+	return match.Source
 }
 
 // execBinary replaces the current process with the given binary.
@@ -463,28 +628,36 @@ func (r *Runner) execBinary(binary string, args []string) error {
 	return r.Exec(binary, execArgs, os.Environ())
 }
 
-// configPermissionsOK checks that the config file is mode 0600 and owned
-// by the current user. Returns true if the file doesn't exist (no config
-// to tamper with).
-func configPermissionsOK(path string) bool {
+// configPermissionCondition reports why the configuration-permission gate
+// fires for the file at path, or "" where it does not: the file has to be
+// unreadable by group and other and owned by the current user, and a file that
+// does not exist is fine because there is nothing there to tamper with.
+//
+// It returns the condition rather than a bool because this gate has four
+// distinct ways to fire and AC21 requires the line to say which. A constant
+// string would report permissions for a file owned by somebody else, and
+// permissions are what a user would then go and change -- so the wrong
+// condition here is not a cosmetic failure, it is an instruction that does not
+// work, which is the same defect R10 names for the escape hatches.
+func configPermissionCondition(path string) string {
 	info, err := os.Stat(path)
 	if os.IsNotExist(err) {
-		return true // no config file is fine
+		return ""
 	}
 	if err != nil {
-		return false // can't stat, be cautious
+		return fmt.Sprintf("config.toml cannot be read: %v", err)
 	}
-	// Check permissions: no group/other access.
-	mode := info.Mode().Perm()
-	if mode&0077 != 0 {
-		return false
+	if perm := info.Mode().Perm(); perm&0o077 != 0 {
+		return fmt.Sprintf("the permissions on config.toml are %#o, which grants access beyond its owner", perm)
 	}
-	// Check ownership: must be owned by the current user.
 	stat, ok := info.Sys().(*syscall.Stat_t)
 	if !ok {
-		return false // can't determine ownership, be cautious
+		return "the ownership of config.toml cannot be determined"
 	}
-	return stat.Uid == uint32(os.Getuid())
+	if stat.Uid != uint32(os.Getuid()) {
+		return fmt.Sprintf("config.toml is owned by uid %d rather than by uid %d", stat.Uid, os.Getuid())
+	}
+	return ""
 }
 
 // writeAuditLog appends one NDJSON line to $TSUKU_HOME/audit.log.
