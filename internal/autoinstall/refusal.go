@@ -43,7 +43,7 @@ func (r *Runner) refusalMessage(e *AmbiguousDeclarationError) string {
 	var b strings.Builder
 
 	fmt.Fprintf(&b, "tsuku run: %d recipes in %s provide %q. Nothing was installed and nothing was run: "+
-		"the file that was meant to settle which provider to use names several.\n\n",
+		"the file that was meant to settle which provider to use names more than one of them.\n\n",
 		len(e.Declarations), e.configPath(), e.Command)
 
 	b.WriteString("Each declaration, with the two commands that reach it:\n\n")
