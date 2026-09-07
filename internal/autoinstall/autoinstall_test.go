@@ -444,9 +444,6 @@ func TestRun_InstalledTool_ProjectPinOverridesGlobalVersion(t *testing.T) {
 	installer := &mockInstaller{}
 	execRec := &execRecorder{}
 
-	// Set ToolsDir so ToolBinDir resolves to an absolute path in the temp dir.
-	r.cfg.ToolsDir = filepath.Join(r.cfg.HomeDir, "tools")
-
 	// Tool is installed (some version), so it would normally fast-path
 	// to tools/current/jq. But the resolver pins a specific version.
 	r.Lookup = func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
@@ -493,9 +490,6 @@ func TestRun_InstalledTool_ProjectPinInstallsIfMissing(t *testing.T) {
 	r, _, _ := newTestRunner(t)
 	installer := &mockInstaller{}
 	execRec := &execRecorder{}
-
-	// Set ToolsDir so ToolBinDir resolves to an absolute path in the temp dir.
-	r.cfg.ToolsDir = filepath.Join(r.cfg.HomeDir, "tools")
 
 	// Tool is installed (some version), but the pinned version is NOT installed.
 	r.Lookup = func(_ context.Context, _ string) ([]index.BinaryMatch, error) {

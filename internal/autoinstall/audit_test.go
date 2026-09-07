@@ -57,11 +57,13 @@ type recordedEntry struct {
 }
 
 // recordedOrigins is the enum R12 requires the origin field to hold exactly
-// one of. "unset" is deliberately not in it: OriginUnset is what a caller that
+// one of, and the set the criterion table below has to reach all of.
+//
+// "unset" is deliberately not in it: OriginUnset is what a caller that
 // resolved no origin has, and an install recording it has recorded no origin
-// at all -- which is the failure this list exists to fail on rather than a
-// sixth permitted value. See TestOriginZeroValueIsUnset for why that slot is
-// the zero value.
+// at all rather than a sixth permitted value. See TestOriginZeroValueIsUnset
+// for why that slot is the zero value -- an origin nobody set has to be the
+// one that raises nothing.
 var recordedOrigins = []string{"default", "flag", "environment", "config", "project"}
 
 // auditLog decodes every entry the run under test wrote, or reports that the
@@ -167,11 +169,17 @@ func declaresJq() *mockDeclarationResolver {
 // ModeAuto` guard writes nothing for them, so soleEntry fails before any field
 // is looked at.
 //
-// The origin-membership check is the other half, and it is the one that
-// catches a field left unpopulated. Origin's zero value is OriginUnset by
-// design, so a record site that forgot to set the field gets a valid Go value
-// and no error -- the entry simply says "unset", or nothing at all, and only
-// an assertion naming the permitted five can tell.
+// The per-row origin equality is the other half, and it is what catches a
+// field left unpopulated. Origin's zero value is OriginUnset by design, so a
+// record site that forgot to set the field gets a valid Go value and no error
+// -- the entry says "unset", or nothing at all, rather than failing. The
+// "default" row is where that bites hardest: it is the origin a record site
+// is most tempted to treat as absence, since a resolved default and an
+// unresolved one are the same English word and different states.
+//
+// The coverage assertion after the loop is what holds the row set together;
+// see it for why it, and not a per-row membership check, is the one that can
+// fail on its own.
 func TestRun_AC22_EveryInstallRecordsOneOfFiveOrigins(t *testing.T) {
 	cases := []struct {
 		name     string
@@ -224,16 +232,14 @@ func TestRun_AC22_EveryInstallRecordsOneOfFiveOrigins(t *testing.T) {
 		},
 	}
 
+	// What each row observed, for the coverage assertion after the loop.
+	seen := make([]string, 0, len(cases))
+
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			got := soleEntry(t, runInstall(t, tc.mode, tc.origin, tc.verified, tc.resolver).homeDir)
+			seen = append(seen, got.Origin)
 
-			if !slices.Contains(recordedOrigins, got.Origin) {
-				t.Errorf("the entry records origin %q, which is not one of %v.\n"+
-					"An origin field nobody populated reads as \"unset\" or as "+
-					"nothing, and neither says where the mode came from.",
-					got.Origin, recordedOrigins)
-			}
 			if got.Origin != tc.wantOrigin {
 				t.Errorf("origin = %q, want %q", got.Origin, tc.wantOrigin)
 			}
@@ -254,6 +260,24 @@ func TestRun_AC22_EveryInstallRecordsOneOfFiveOrigins(t *testing.T) {
 				t.Errorf("action = %q, want %q on every row", got.Action, "auto-install")
 			}
 		})
+	}
+
+	// AC22 names five origins, and the rows above have to reach all five for
+	// the criterion to be covered rather than sampled.
+	//
+	// This is the assertion that can fail on its own. A per-row check that the
+	// origin is one of the five cannot: every row already compares against a
+	// wantOrigin drawn from that list, so membership is implied and the check
+	// is dead weight. What is not implied is that the table still visits every
+	// value -- delete the "default" row, or the elevated one that produces
+	// "project", and each remaining row goes on passing while the criterion
+	// stops being met. That deletion is how enum coverage regresses, and this
+	// is what notices.
+	for _, want := range recordedOrigins {
+		if !slices.Contains(seen, want) {
+			t.Errorf("no row recorded origin %q, so AC22's enum is covered by %v and not by all "+
+				"five. Add a row that produces it rather than shortening the list.", want, seen)
+		}
 	}
 }
 
@@ -444,10 +468,14 @@ func TestRun_AC22_AnElevatedDeclarationRecordsProject(t *testing.T) {
 // The two fast paths are here alongside the two dispatches, and they are the
 // rows that need saying. Suggest and a declined prompt return from below the
 // mode dispatch, where a write site is plainly on the other side of a return;
-// the fast paths return from above it, before any origin has been settled and
-// before the gates have run. An entry written there would carry the "unset"
-// that recordedOrigins exists to reject, for a tool that was already on the
-// machine and that this run only executed.
+// the fast paths return from above it, before the gates have run and before
+// the elevation has settled which origin the record would name.
+//
+// What an entry there would claim is the damage: an install, for a tool that
+// was already on the machine and that this run only executed. It would carry
+// a mode and an origin that read as ordinary -- the caller's, unexamined by
+// any gate -- so nothing in the line would mark it as the one install in the
+// log that never happened.
 func TestRun_RunsThatInstallNothingRecordNothing(t *testing.T) {
 	t.Run("the already-installed fast path execs without installing", func(t *testing.T) {
 		r, _, _ := newTestRunner(t)
