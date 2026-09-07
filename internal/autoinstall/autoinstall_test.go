@@ -92,6 +92,15 @@ func newTestRunner(t *testing.T) (*Runner, *bytes.Buffer, *bytes.Buffer) {
 		// Config has to as well, or the gate has no path to check and fires
 		// rather than passing.
 		ConfigFile: filepath.Join(tmpDir, "config.toml"),
+		// What ToolBinDir joins against, and it has to be set. Left empty it
+		// is not merely unused: Run's declared fast path stats
+		// ToolBinDir(recipe, version)/command, which without this resolves
+		// *relative to the package directory* -- so the path a case stats,
+		// and the path a case that lays a tool down writes to, is
+		// internal/autoinstall/jq-1.7.1/bin/jq in the source tree. That
+		// leaves a stray directory behind and, while it exists, every later
+		// declared case takes the fast path and installs nothing.
+		ToolsDir: filepath.Join(tmpDir, "tools"),
 	}
 	// Create the current dir so binary path construction works.
 	if err := os.MkdirAll(cfg.CurrentDir, 0755); err != nil {

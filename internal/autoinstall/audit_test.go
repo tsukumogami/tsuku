@@ -261,10 +261,13 @@ func TestRun_AC22_EveryInstallRecordsOneOfFiveOrigins(t *testing.T) {
 // proceeded after a prompt, is in the log and names the gate that diverted it.
 //
 // All three registered gates rather than one, because a gate is named by an
-// identifier and an implementation that hard-codes a single string satisfies
-// one row. The gate each row asserts is also the string the warning on stderr
-// carried, which is what makes the record and the terminal agree by
-// construction: both come from the one traversal of the gates table.
+// identifier and an implementation hard-coding a single string satisfies one
+// row while failing the other two.
+//
+// The first row also checks that the identifier the record names is the one
+// stderr announced. That agreement is by construction -- lowerMode prints and
+// returns the same gate.id from one traversal -- so one row asserting it is
+// the seam, not a property each row has to re-establish.
 func TestRun_AC24_AGateDivertedInstallNamesTheGate(t *testing.T) {
 	t.Run("the recipe-verification gate", func(t *testing.T) {
 		got := runInstall(t, ModeAuto, OriginConfig, false, nil)
@@ -316,11 +319,10 @@ func TestRun_AC24_AGateDivertedInstallNamesTheGate(t *testing.T) {
 	})
 
 	// The third registered gate, and the one that needs the fixture: it fires
-	// on a command with more than one provider, which R17 forbids assembling
-	// by hand. Without this row the record has been seen to carry two of the
-	// three identifiers, and a gate whose condition is a property of the
-	// candidate list rather than of the recipe is the one most easily missed
-	// by a write site that reads the wrong thing.
+	// on a command with more than one provider, and R17 forbids assembling a
+	// multi-provider case by hand. Its condition is a property of the
+	// candidate list rather than of the recipe, which is what makes it the
+	// gate a write site reading the wrong thing is most likely to miss.
 	t.Run("the multiple-provider gate", func(t *testing.T) {
 		fx := indexfixture.New(t)
 		r, installer, _, _, stderr := newFixtureRunner(t, fx)
@@ -438,7 +440,64 @@ func TestRun_AC22_AnElevatedDeclarationRecordsProject(t *testing.T) {
 // nothing. Without this the criterion is met by writing an entry on every run,
 // which turns the log into a record of invocations and loses the property that
 // every line in it is a tool that reached the machine.
+//
+// The two fast paths are here alongside the two dispatches, and they are the
+// rows that need saying. Suggest and a declined prompt return from below the
+// mode dispatch, where a write site is plainly on the other side of a return;
+// the fast paths return from above it, before any origin has been settled and
+// before the gates have run. An entry written there would carry the "unset"
+// that recordedOrigins exists to reject, for a tool that was already on the
+// machine and that this run only executed.
 func TestRun_RunsThatInstallNothingRecordNothing(t *testing.T) {
+	t.Run("the already-installed fast path execs without installing", func(t *testing.T) {
+		r, _, _ := newTestRunner(t)
+		installer := &mockInstaller{}
+		execRec := &execRecorder{}
+		r.Lookup = func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
+			return []index.BinaryMatch{{Recipe: "jq", Command: "jq", Installed: true}}, nil
+		}
+		r.Installer = installer
+		r.Exec = execRec.exec
+
+		if err := r.Run(context.Background(), "jq", nil, ModeAuto, OriginFlag, nil); err != nil {
+			t.Fatalf("Run() error = %v, want nil", err)
+		}
+		if installer.called {
+			t.Fatal("the fast path installed something")
+		}
+		if !execRec.called {
+			t.Fatal("the fast path did not exec, so it is not the path under test")
+		}
+		if entries, written := auditLog(t, r.cfg.HomeDir); written {
+			t.Errorf("an already-installed tool was executed, not installed, but recorded %+v", entries)
+		}
+	})
+
+	t.Run("the declared fast path execs the declared version without installing", func(t *testing.T) {
+		r, _, _ := newTestRunner(t)
+		installer := &mockInstaller{}
+		execRec := &execRecorder{}
+		r.Lookup = func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
+			return []index.BinaryMatch{{Recipe: "jq", Command: "jq"}}, nil
+		}
+		r.Installer = installer
+		r.Exec = execRec.exec
+		layDownTool(t, r.cfg, "jq", "1.7.1", "jq")
+
+		if err := r.Run(context.Background(), "jq", nil, ModeConfirm, OriginDefault, declaresJq()); err != nil {
+			t.Fatalf("Run() error = %v, want nil", err)
+		}
+		if installer.called {
+			t.Fatal("the declared fast path installed something")
+		}
+		if !execRec.called {
+			t.Fatal("the declared fast path did not exec, so it is not the path under test")
+		}
+		if entries, written := auditLog(t, r.cfg.HomeDir); written {
+			t.Errorf("the declared version was already present and only executed, but recorded %+v", entries)
+		}
+	})
+
 	t.Run("suggest prints an instruction and installs nothing", func(t *testing.T) {
 		r, _, _ := newTestRunner(t)
 		r.Lookup = func(_ context.Context, _ string) ([]index.BinaryMatch, error) {

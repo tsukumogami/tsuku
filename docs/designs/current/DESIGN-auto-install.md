@@ -326,7 +326,7 @@ straightforward without a migration step.
 The format decision is the one recorded here; the field set has since grown an
 `origin` and a `gate`, and the log now covers every install rather than the
 auto ones. See the Data Formats section below, and D6 in
-`docs/designs/DESIGN-autoinstall-mode-resolution.md`. Adding fields cost no
+`DESIGN-autoinstall-mode-resolution.md`. Adding fields cost no
 migration, which is the reversibility this decision was chosen for.
 
 #### Alternatives Considered
@@ -353,8 +353,9 @@ Inside `Runner.Run`, the flow is: look up `command` in the binary index offline;
 installed, call `syscall.Exec` immediately (no prompt, no install); if not installed, apply
 mode logic — `suggest` prints the install command and exits 1, `confirm` checks for a TTY
 (returning `ExitNotInteractive` with an actionable error if stdin is not a TTY, then prompts
-and installs on 'y'), `auto` installs silently and appends a timestamped NDJSON line to
-`$TSUKU_HOME/audit.log`. After any successful install, `syscall.Exec` replaces the tsuku
+and installs on 'y'), `auto` installs without prompting. Any successful install appends a
+timestamped NDJSON line to `$TSUKU_HOME/audit.log` — originally the `auto` branch only, widened
+by D6 of `DESIGN-autoinstall-mode-resolution.md`. Then `syscall.Exec` replaces the tsuku
 process with the installed command, so the tool's exit code becomes the process exit code
 with no wrapping.
 
@@ -410,7 +411,7 @@ type Mode int
 const (
     ModeConfirm Mode = iota // default: prompt interactively
     ModeSuggest             // print instructions, exit 1
-    ModeAuto                // install silently, audit log
+    ModeAuto                // install without prompting
 )
 
 // ProjectVersionResolver provides an optional version pin from project config.
@@ -472,7 +473,7 @@ rather than the consent mode), `recipe`, `version`, `mode`, `origin`, and
 `gate` where one fired.
 
 `origin` and `gate`, and the widening from auto-mode installs to every install
-`tsuku run` performs, come from `docs/designs/DESIGN-autoinstall-mode-resolution.md`
+`tsuku run` performs, come from `DESIGN-autoinstall-mode-resolution.md`
 (D6). The scope this document originally gave the file — auto-mode installs
 only — is what made a gate-diverted install leave no trace, which is the defect
 that change answers. `origin` holds one of `default`, `flag`, `environment`,
@@ -522,6 +523,7 @@ tsuku run jq .foo data.json
   │   │   ├─ print "Install jq? [y/N]: "
   │   │   ├─ read stdin → 'y'
   │   │   ├─ tsuku install jq@<version from resolver, or latest>
+  │   │   ├─ append NDJSON line to $TSUKU_HOME/audit.log
   │   │   └─ syscall.Exec("/home/user/.tsuku/bin/jq", ...) ← process replaced
   │   │
   │   ├─ [if not installed, ModeSuggest]
@@ -615,7 +617,7 @@ more than one match, falling back to `confirm` so the user makes an explicit cho
 Every install `tsuku run` performs appends a timestamped NDJSON line to
 `$TSUKU_HOME/audit.log` (mode 0600), whichever consent mode governed it. This document
 originally scoped the log to silent installs in `auto` mode; D6 of
-`docs/designs/DESIGN-autoinstall-mode-resolution.md` widened it, because an install a
+`DESIGN-autoinstall-mode-resolution.md` widened it, because an install a
 security gate diverted from `auto` to a prompt is the one worth finding later and was
 the one leaving no record. Command arguments are not logged — arguments may contain
 secrets. The log has no built-in rotation policy; the user is responsible for managing
