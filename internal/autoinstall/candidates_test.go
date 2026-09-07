@@ -49,9 +49,10 @@ func newFixtureRunner(t *testing.T, fx *indexfixture.Fixture) (*Runner, *mockIns
 	return r, installer, execRec, stdout, stderr
 }
 
-// declaredConfigPath is the file every declaration below comes from. It is the
-// authorizing path the elevation disclosure names, which is the one consumer
-// that reads it back rather than passing it through.
+// declaredConfigPath is the file the declarations in this package's tests come
+// from. Two consumers read it back rather than passing it through: the
+// elevation disclosure names it as the authorizing path, and the ambiguity
+// refusal names it as where the competing declarations were found.
 const declaredConfigPath = "/project/.tsuku.toml"
 
 // declaring builds the production project resolver over tools, given as

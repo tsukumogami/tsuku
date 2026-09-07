@@ -44,7 +44,7 @@ func (m *mockDeclarationResolver) DeclarationsFor(_ context.Context, matches []i
 			Recipe:     match.Recipe,
 			Version:    version,
 			ConfigKey:  match.Recipe,
-			ConfigPath: "/project/.tsuku.toml",
+			ConfigPath: declaredConfigPath,
 		})
 	}
 	return set, nil
