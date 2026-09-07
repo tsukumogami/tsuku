@@ -1,4 +1,4 @@
-package shellenv
+package activation
 
 import (
 	"os"
@@ -8,11 +8,42 @@ import (
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/install"
 )
 
-// setupProject creates a temp directory with a .tsuku.toml and optionally
-// creates tool bin directories under a fake $TSUKU_HOME.
-func setupProject(t *testing.T, tomlContent string, installedTools map[string]string) (projectDir string, cfg *config.Config) {
+// fakeInstalledSet stands in for installation state. Tests that need recorded
+// versions and on-disk directories to disagree set them separately; setupProject
+// keeps them in step for the cases where they should agree.
+type fakeInstalledSet struct {
+	versions map[string][]string
+	err      error
+
+	calls   int
+	queried [][]string
+}
+
+// InstalledVersionsFor mirrors the real accessor: only requested names appear,
+// names with no entry are absent rather than present-and-empty, and the order
+// of each slice carries no meaning.
+func (f *fakeInstalledSet) InstalledVersionsFor(names []string) (map[string][]string, error) {
+	f.calls++
+	f.queried = append(f.queried, append([]string(nil), names...))
+	if f.err != nil {
+		return nil, f.err
+	}
+	out := make(map[string][]string, len(names))
+	for _, n := range names {
+		if v, ok := f.versions[n]; ok {
+			out[n] = append([]string(nil), v...)
+		}
+	}
+	return out, nil
+}
+
+// setupProject creates a temp directory with a .tsuku.toml, creates a bin
+// directory for every installed version under a fake $TSUKU_HOME, and returns
+// an installed set recording exactly those versions.
+func setupProject(t *testing.T, tomlContent string, installedTools map[string][]string) (projectDir string, cfg *config.Config, installed *fakeInstalledSet) {
 	t.Helper()
 
 	projectDir = t.TempDir()
@@ -26,14 +57,52 @@ func setupProject(t *testing.T, tomlContent string, installedTools map[string]st
 		ToolsDir: filepath.Join(tsukuHome, "tools"),
 	}
 
-	for name, version := range installedTools {
-		binDir := cfg.ToolBinDir(name, version)
-		if err := os.MkdirAll(binDir, 0755); err != nil {
-			t.Fatal(err)
+	installed = &fakeInstalledSet{versions: map[string][]string{}}
+	for name, versions := range installedTools {
+		for _, v := range versions {
+			if err := os.MkdirAll(cfg.ToolBinDir(name, v), 0755); err != nil {
+				t.Fatal(err)
+			}
 		}
+		installed.versions[name] = append([]string(nil), versions...)
 	}
 
-	return projectDir, cfg
+	return projectDir, cfg, installed
+}
+
+// writeState writes a real state.json, for the tests whose subject is the stamp
+// rather than resolution. The stamp is built from a stat of that file, so these
+// cases need a file that actually exists and can actually move.
+func writeState(t *testing.T, cfg *config.Config, tools map[string][]string) {
+	t.Helper()
+
+	state := &install.State{Installed: map[string]install.ToolState{}}
+	for name, versions := range tools {
+		tool := install.ToolState{
+			ActiveVersion: versions[0],
+			Versions:      map[string]install.VersionState{},
+		}
+		for _, v := range versions {
+			tool.Versions[v] = install.VersionState{Requested: v}
+		}
+		state.Installed[name] = tool
+	}
+	if err := install.NewStateManager(cfg).Save(state); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// emptyConfig builds a config over an empty fake $TSUKU_HOME, for the cases
+// that never reach resolution.
+func emptyConfig(t *testing.T) (*config.Config, *fakeInstalledSet) {
+	t.Helper()
+	tsukuHome := t.TempDir()
+	return &config.Config{
+			HomeDir:  tsukuHome,
+			ToolsDir: filepath.Join(tsukuHome, "tools"),
+		}, &fakeInstalledSet{
+			versions: map[string][]string{},
+		}
 }
 
 func TestComputeActivation_ProjectFound(t *testing.T) {
@@ -42,16 +111,16 @@ func TestComputeActivation_ProjectFound(t *testing.T) {
 go = "1.22"
 node = "20.16.0"
 `
-	projectDir, cfg := setupProject(t, toml, map[string]string{
-		"go":   "1.22",
-		"node": "20.16.0",
+	projectDir, cfg, installed := setupProject(t, toml, map[string][]string{
+		"go":   {"1.22"},
+		"node": {"20.16.0"},
 	})
 
 	t.Setenv("PATH", "/usr/bin:/bin")
 	// Prevent LoadProjectConfig from stopping at $HOME ceiling.
 	t.Setenv("HOME", filepath.Dir(projectDir))
 
-	result, err := ComputeActivation(projectDir, "", "", cfg)
+	result, err := ComputeActivation(projectDir, "", "", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -67,21 +136,20 @@ node = "20.16.0"
 	if result.PrevPath != "/usr/bin:/bin" {
 		t.Errorf("PrevPath = %q, want %q", result.PrevPath, "/usr/bin:/bin")
 	}
-	if len(result.Skipped) != 0 {
-		t.Errorf("Skipped = %v, want empty", result.Skipped)
+	if len(result.Unhonorable) != 0 {
+		t.Errorf("Unhonorable = %+v, want empty", result.Unhonorable)
 	}
 
-	// PATH should contain both tool bin dirs prepended to the original.
-	goBin := cfg.ToolBinDir("go", "1.22")
-	nodeBin := cfg.ToolBinDir("node", "20.16.0")
-	if !strings.Contains(result.PATH, goBin) {
-		t.Errorf("PATH missing go bin dir %q", goBin)
-	}
-	if !strings.Contains(result.PATH, nodeBin) {
-		t.Errorf("PATH missing node bin dir %q", nodeBin)
-	}
-	if !strings.HasSuffix(result.PATH, ":/usr/bin:/bin") {
-		t.Errorf("PATH should end with original PATH, got %q", result.PATH)
+	// The whole PATH, spelled out. Building the expectation with
+	// cfg.ToolBinDir would make the test agree with any layout the code
+	// happens to compose, including a wrong one; and asserting the two
+	// entries separately would not pin the lexical tool ordering PRD R13
+	// requires.
+	want := filepath.Join(cfg.ToolsDir, "go-1.22", "bin") + ":" +
+		filepath.Join(cfg.ToolsDir, "node-20.16.0", "bin") + ":" +
+		"/usr/bin:/bin"
+	if result.PATH != want {
+		t.Errorf("PATH = %q, want %q", result.PATH, want)
 	}
 }
 
@@ -90,30 +158,93 @@ func TestComputeActivation_SameDirectory(t *testing.T) {
 [tools]
 go = "1.22"
 `
-	projectDir, cfg := setupProject(t, toml, map[string]string{"go": "1.22"})
+	projectDir, cfg, installed := setupProject(t, toml, map[string][]string{"go": {"1.22"}})
 
-	// When cwd == curDir, should return nil (no-op).
-	result, err := ComputeActivation(projectDir, "/usr/bin", projectDir, cfg)
+	// The same directory is not enough on its own: an environment from before
+	// the stamp existed carries no stamp, and must re-resolve once and record
+	// one. Short-circuiting here would leave such a shell never re-resolving.
+	first, err := ComputeActivation(projectDir, "/usr/bin", projectDir, "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if result != nil {
-		t.Errorf("expected nil for same directory, got %+v", result)
+	if first == nil {
+		t.Fatal("an environment with no stamp should re-resolve, got nil")
+	}
+	if first.Stamp == "" {
+		t.Fatal("the re-resolve must record a stamp, got empty")
+	}
+
+	// Feeding back only what the first call produced -- never a hand-built
+	// value, which would manufacture the state a broken implementation failed
+	// to emit -- the second call short-circuits.
+	second, err := ComputeActivation(projectDir, "/usr/bin", projectDir, first.Stamp, cfg, installed)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if second != nil {
+		t.Errorf("expected nil for same directory and unchanged state, got %+v", second)
+	}
+}
+
+// A remediation the developer performs takes effect at the next prompt: once
+// installation state moves, the stamp differs and activation re-resolves even
+// though the directory has not changed.
+func TestComputeActivation_StateChangeDefeatsTheShortCircuit(t *testing.T) {
+	toml := `
+[tools]
+jq = "latest"
+`
+	projectDir, cfg, installed := setupProject(t, toml, map[string][]string{"jq": {"1.6"}})
+	t.Setenv("PATH", "/usr/bin")
+	t.Setenv("HOME", filepath.Dir(projectDir))
+
+	// A real state file, so the stamp describes something that can move.
+	writeState(t, cfg, map[string][]string{"jq": {"1.6"}})
+
+	first, err := ComputeActivation(projectDir, "", "", "", cfg, installed)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Standing still with state unchanged: short-circuit.
+	if got, err := ComputeActivation(projectDir, first.PrevPath, first.Dir, first.Stamp, cfg, installed); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	} else if got != nil {
+		t.Fatalf("expected a short-circuit with state unchanged, got %+v", got)
+	}
+
+	// The developer installs 1.7 without leaving the directory.
+	writeState(t, cfg, map[string][]string{"jq": {"1.6", "1.7"}})
+	installed.versions["jq"] = []string{"1.6", "1.7"}
+	if err := os.MkdirAll(cfg.ToolBinDir("jq", "1.7"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	after, err := ComputeActivation(projectDir, first.PrevPath, first.Dir, first.Stamp, cfg, installed)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if after == nil {
+		t.Fatal("installing a matching version should re-resolve at the next prompt, got nil")
+	}
+	want := filepath.Join(cfg.ToolsDir, "jq-1.7", "bin")
+	if !strings.HasPrefix(after.PATH, want+":") {
+		t.Errorf("PATH = %q, want it to start with %q", after.PATH, want)
+	}
+	if after.Stamp == first.Stamp {
+		t.Error("the recorded stamp should have moved with installation state")
 	}
 }
 
 func TestComputeActivation_NoConfig(t *testing.T) {
 	// Directory without .tsuku.toml.
 	dir := t.TempDir()
-	cfg := &config.Config{
-		HomeDir:  t.TempDir(),
-		ToolsDir: filepath.Join(t.TempDir(), "tools"),
-	}
+	cfg, installed := emptyConfig(t)
 
 	// Prevent walking up to find a real config.
 	t.Setenv("HOME", dir)
 
-	result, err := ComputeActivation(dir, "", "", cfg)
+	result, err := ComputeActivation(dir, "", "", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -122,22 +253,22 @@ func TestComputeActivation_NoConfig(t *testing.T) {
 	}
 }
 
-func TestComputeActivation_SkippedTools(t *testing.T) {
+func TestComputeActivation_UnhonorableTools(t *testing.T) {
 	toml := `
 [tools]
 go = "1.22"
 node = "20.16.0"
 python = "3.12"
 `
-	// Only install go; node and python are missing.
-	projectDir, cfg := setupProject(t, toml, map[string]string{
-		"go": "1.22",
+	// Only go is installed; node and python are recorded nowhere.
+	projectDir, cfg, installed := setupProject(t, toml, map[string][]string{
+		"go": {"1.22"},
 	})
 
 	t.Setenv("PATH", "/usr/bin")
 	t.Setenv("HOME", filepath.Dir(projectDir))
 
-	result, err := ComputeActivation(projectDir, "", "", cfg)
+	result, err := ComputeActivation(projectDir, "", "", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -145,41 +276,56 @@ python = "3.12"
 		t.Fatal("expected activation result, got nil")
 	}
 
-	// node and python should be skipped (sorted).
-	if len(result.Skipped) != 2 {
-		t.Fatalf("Skipped = %v, want 2 entries", result.Skipped)
+	// node and python are unhonorable, in PATH order, both for no-match:
+	// nothing is recorded for them at all.
+	if len(result.Unhonorable) != 2 {
+		t.Fatalf("Unhonorable = %+v, want 2 entries", result.Unhonorable)
 	}
-	if result.Skipped[0] != "node" || result.Skipped[1] != "python" {
-		t.Errorf("Skipped = %v, want [node python]", result.Skipped)
+	if result.Unhonorable[0].Tool != "node" || result.Unhonorable[1].Tool != "python" {
+		t.Errorf("Unhonorable tools = %q, %q, want node, python",
+			result.Unhonorable[0].Tool, result.Unhonorable[1].Tool)
+	}
+	for _, u := range result.Unhonorable {
+		if u.Reason != ReasonNoMatch {
+			t.Errorf("%s: Reason = %v, want ReasonNoMatch", u.Tool, u.Reason)
+		}
 	}
 
-	// PATH should still contain the installed go bin dir.
-	goBin := cfg.ToolBinDir("go", "1.22")
-	if !strings.Contains(result.PATH, goBin) {
-		t.Errorf("PATH missing go bin dir %q", goBin)
+	want := filepath.Join(cfg.ToolsDir, "go-1.22", "bin")
+	if !strings.Contains(result.PATH, want) {
+		t.Errorf("PATH = %q, missing %q", result.PATH, want)
 	}
 }
 
-func TestComputeActivation_EmptyVersion(t *testing.T) {
+// An omitted version means "whatever is installed", the same as "latest". The
+// loop this replaces skipped it outright, which is why "" was one of the forms
+// the shell-integration guide documents and activation silently dropped.
+func TestComputeActivation_EmptyVersionActivatesNewestInstalled(t *testing.T) {
 	toml := `
 [tools]
 jq = ""
 `
-	projectDir, cfg := setupProject(t, toml, nil)
+	projectDir, cfg, installed := setupProject(t, toml, map[string][]string{
+		"jq": {"1.6", "1.7"},
+	})
 
 	t.Setenv("PATH", "/usr/bin")
 	t.Setenv("HOME", filepath.Dir(projectDir))
 
-	result, err := ComputeActivation(projectDir, "", "", cfg)
+	result, err := ComputeActivation(projectDir, "", "", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if result == nil {
 		t.Fatal("expected activation result, got nil")
 	}
-	// jq with empty version should be skipped.
-	if len(result.Skipped) != 1 || result.Skipped[0] != "jq" {
-		t.Errorf("Skipped = %v, want [jq]", result.Skipped)
+	if len(result.Unhonorable) != 0 {
+		t.Fatalf("Unhonorable = %+v, want none", result.Unhonorable)
+	}
+
+	want := filepath.Join(cfg.ToolsDir, "jq-1.7", "bin")
+	if !strings.HasPrefix(result.PATH, want+":") {
+		t.Errorf("PATH = %q, want it to start with %q", result.PATH, want)
 	}
 }
 
@@ -188,13 +334,13 @@ func TestComputeActivation_UsesPrevPath(t *testing.T) {
 [tools]
 go = "1.22"
 `
-	projectDir, cfg := setupProject(t, toml, map[string]string{"go": "1.22"})
+	projectDir, cfg, installed := setupProject(t, toml, map[string][]string{"go": {"1.22"}})
 
 	t.Setenv("PATH", "/something/modified:/usr/bin")
 	t.Setenv("HOME", filepath.Dir(projectDir))
 
 	// When prevPath is provided, it should be used as the base instead of $PATH.
-	result, err := ComputeActivation(projectDir, "/original/bin:/usr/bin", "", cfg)
+	result, err := ComputeActivation(projectDir, "/original/bin:/usr/bin", "", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -302,14 +448,11 @@ func TestFormatExports_Nil(t *testing.T) {
 func TestComputeActivation_Deactivation(t *testing.T) {
 	// Directory without .tsuku.toml, but prevPath is set (was in a project).
 	dir := t.TempDir()
-	cfg := &config.Config{
-		HomeDir:  t.TempDir(),
-		ToolsDir: filepath.Join(t.TempDir(), "tools"),
-	}
+	cfg, installed := emptyConfig(t)
 
 	t.Setenv("HOME", dir)
 
-	result, err := ComputeActivation(dir, "/original/bin:/usr/bin", "/some/project", cfg)
+	result, err := ComputeActivation(dir, "/original/bin:/usr/bin", "/some/project", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -333,14 +476,11 @@ func TestComputeActivation_Deactivation(t *testing.T) {
 func TestComputeActivation_NoOpWithoutPriorActivation(t *testing.T) {
 	// Directory without .tsuku.toml and no prevPath -- should be nil (no-op).
 	dir := t.TempDir()
-	cfg := &config.Config{
-		HomeDir:  t.TempDir(),
-		ToolsDir: filepath.Join(t.TempDir(), "tools"),
-	}
+	cfg, installed := emptyConfig(t)
 
 	t.Setenv("HOME", dir)
 
-	result, err := ComputeActivation(dir, "", "", cfg)
+	result, err := ComputeActivation(dir, "", "", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -356,8 +496,8 @@ func TestComputeActivation_ProjectToProjectSwitch(t *testing.T) {
 [tools]
 node = "20.16.0"
 `
-	projectB, cfg := setupProject(t, toml, map[string]string{
-		"node": "20.16.0",
+	projectB, cfg, installed := setupProject(t, toml, map[string][]string{
+		"node": {"20.16.0"},
 	})
 
 	t.Setenv("PATH", "/project-a-modified:/usr/bin")
@@ -365,7 +505,7 @@ node = "20.16.0"
 
 	// prevPath represents the original PATH before project A was activated.
 	originalPath := "/original/bin:/usr/bin"
-	result, err := ComputeActivation(projectB, originalPath, "/some/project-a", cfg)
+	result, err := ComputeActivation(projectB, originalPath, "/some/project-a", "", cfg, installed)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -597,5 +737,55 @@ func TestFormatExports_HostileValuesDoNotExecute(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// renderVar renders one assignment the way FormatExports does, for tests that
+// build an expected block.
+//
+// setVar writes into a builder and returns nothing, so a test needing the
+// string form wraps it here rather than duplicating the quoting rule. Before
+// the security fix this was exportLine, which returned a string directly; the
+// shape changed with the quoter, and duplicating shellquote.POSIX/Fish in a
+// test would be a second definition of the rule that could drift from the one
+// the emitter uses.
+func renderVar(shell, name, value string) string {
+	var b strings.Builder
+	setVar(&b, shell, name, value)
+	return b.String()
+}
+
+// recordInstalled records a version in installation state, for fixtures that
+// create a tool directory directly.
+//
+// The old resolution stat'd the composed directory and added it, so a
+// directory alone was a sufficient fixture. This one requires state and the
+// filesystem to agree and never activates a directory with no state entry, so
+// a directory-only fixture now fails on its precondition rather than on its
+// subject. Tests predating that requirement need this; their subject is
+// unchanged.
+func recordInstalled(t *testing.T, cfg *config.Config, name, version string) {
+	t.Helper()
+
+	sm := install.NewStateManager(cfg)
+	state, err := sm.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if state.Installed == nil {
+		state.Installed = map[string]install.ToolState{}
+	}
+	tool, ok := state.Installed[name]
+	if !ok {
+		tool = install.ToolState{Versions: map[string]install.VersionState{}}
+	}
+	if tool.Versions == nil {
+		tool.Versions = map[string]install.VersionState{}
+	}
+	tool.Versions[version] = install.VersionState{Requested: version}
+	tool.ActiveVersion = version
+	state.Installed[name] = tool
+	if err := sm.Save(state); err != nil {
+		t.Fatal(err)
 	}
 }

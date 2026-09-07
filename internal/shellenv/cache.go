@@ -1,3 +1,12 @@
+// Package shellenv builds and maintains the shell integration tsuku installs
+// into a user's shell: the shell.d init-cache assembled from per-tool
+// fragments, the doctor checks that report on its health, and detection of
+// binaries on PATH that shadow the tools tsuku manages.
+//
+// Per-directory PATH activation used to live here and now lives in
+// internal/activation. The two never shared a symbol, and separating them lets
+// activation depend on internal/install -- which imports this package -- without
+// a cycle.
 package shellenv
 
 import (

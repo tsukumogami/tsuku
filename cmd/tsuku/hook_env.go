@@ -5,8 +5,9 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/tsukumogami/tsuku/internal/activation"
 	"github.com/tsukumogami/tsuku/internal/config"
-	"github.com/tsukumogami/tsuku/internal/shellenv"
+	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/updates"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
@@ -32,9 +33,20 @@ var hookEnvCmd = &cobra.Command{
 
 		prevPath := os.Getenv("_TSUKU_PREV_PATH")
 		curDir := os.Getenv("_TSUKU_DIR")
+		stamp := os.Getenv("_TSUKU_STATE_STAMP")
 
-		result, err := shellenv.ComputeActivation(cwd, prevPath, curDir, cfg)
+		result, err := activation.ComputeActivation(cwd, prevPath, curDir, stamp, cfg, install.NewStateManager(cfg))
 		if err != nil {
+			// A parse failure comes back with a usable result alongside the
+			// error. Returning the error instead would make cobra print it a
+			// second time with a full usage block, and main would exit
+			// non-zero -- on every prompt, in a directory the developer cannot
+			// leave without fixing the file.
+			if line := parseDiagnostic(err); line != "" {
+				reportParseFailure(result, err)
+				fmt.Print(activation.FormatExports(result, shell))
+				return nil
+			}
 			return err
 		}
 
@@ -48,7 +60,12 @@ var hookEnvCmd = &cobra.Command{
 			return nil
 		}
 
-		fmt.Print(shellenv.FormatExports(result, shell))
+		// Reasons to stderr, shell code to stdout, and always exit 0: a prompt
+		// hook that exits non-zero gets wrapped in "|| true" by users, which
+		// would discard this reporting entirely.
+		reportActivation(result)
+
+		fmt.Print(activation.FormatExports(result, shell))
 		return nil
 	},
 }

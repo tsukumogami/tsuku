@@ -236,9 +236,20 @@ func NewStateManager(cfg *config.Config) *StateManager {
 	}
 }
 
+// StatePath returns the path to the installation state file.
+//
+// It is exported for callers that need to observe the file without decoding it
+// -- activation stats it to build its per-prompt change stamp. Those callers
+// must not compute the join themselves: a duplicate would keep working until
+// this path moved, and would then stat a file that does not exist, which reads
+// as "no state" rather than as an error.
+func StatePath(cfg *config.Config) string {
+	return filepath.Join(cfg.HomeDir, "state.json")
+}
+
 // statePath returns the path to the state file
 func (sm *StateManager) statePath() string {
-	return filepath.Join(sm.config.HomeDir, "state.json")
+	return StatePath(sm.config)
 }
 
 // lockPath returns the path to the lock file
@@ -340,13 +351,17 @@ func (sm *StateManager) saveWithLock(state *State) error {
 }
 
 // loadWithoutLock reads the state from disk without acquiring the file lock.
-// Caller must already hold both sm.mu and the file lock.
-// LoadWithoutLock reads state without acquiring the file lock.
-// The caller must already hold the file lock.
-func (sm *StateManager) LoadWithoutLock() (*State, error) {
-	return sm.loadWithoutLock()
-}
-
+//
+// Callers that mutate must hold both sm.mu and the file lock. Readers need
+// neither: Save publishes by writing a temp file and renaming it over the
+// target, and rename is atomic, so a reader without the lock sees either the
+// old complete file or the new one -- never a torn one. The worst it can get is
+// data one write stale.
+//
+// That is why InstalledVersionsFor can call this from a shell prompt hook. The
+// shared lock has no non-blocking variant in this package, so taking it would
+// let an install in another process stall the user's prompt for as long as it
+// held the lock.
 func (sm *StateManager) loadWithoutLock() (*State, error) {
 	path := sm.statePath()
 	if _, err := os.Stat(path); os.IsNotExist(err) {
