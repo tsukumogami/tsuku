@@ -242,13 +242,12 @@ func TestRun_AC4_AnExplicitSuggestIsHonoredForADeclaredCommand(t *testing.T) {
 				t.Errorf("executed %q under suggest; the declared recipe is not installed and the "+
 					"sibling that is was not the one declared", execRec.binary)
 			}
-			// Nothing on stderr. Of the three mode-lowering gates only the
-			// configuration-permission one announces itself today, so this
-			// catches that one and the other two are excluded by the fixture
-			// instead -- a recipe that verifies, and a list narrowed to one.
-			// The assertion is written against the stream rather than against
-			// that one message so that it covers the other two gates and any
-			// announcement of a raised mode the moment either exists.
+			// Nothing on stderr. No gate can have fired here -- all three are
+			// guarded on the mode already being auto -- so what this asserts
+			// is the other half: that nothing raised the mode and then said
+			// so. It is written against the stream rather than against a
+			// particular message so that it goes on holding when the
+			// announcements exist to be written.
 			if stderr.Len() != 0 {
 				t.Errorf("stderr = %q, want nothing: no gate fired and no mode was raised", stderr.String())
 			}
@@ -631,9 +630,11 @@ func TestRun_AC44_SingleProviderBehavior(t *testing.T) {
 		{"declared/default", consent{ModeConfirm, OriginDefault}, true, false, nil, false, true},
 		{"declared/default/present", consent{ModeConfirm, OriginDefault}, true, true, nil, false, false},
 
-		// Declared, with a mode set: it is honored as given. These three rows
-		// are the bounded half of the elevation, and each was the opposite
-		// before it: a declaration used to raise every one of them to auto.
+		// Declared, with a mode set: it is honored as given. These are the
+		// bounded half of the elevation. The first two read the opposite way
+		// before it -- a declaration raised a set suggest and a set confirm to
+		// auto -- and the third is here because a rule that stopped raising
+		// anything at all would pass the first two.
 		{"declared/suggest", consent{ModeSuggest, OriginFlag}, true, false, ErrSuggestOnly, false, false},
 		{"declared/confirm", consent{ModeConfirm, OriginFlag}, true, false, nil, true, true},
 		{"declared/auto", consent{ModeAuto, OriginFlag}, true, false, nil, false, true},

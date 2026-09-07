@@ -231,7 +231,7 @@ func resolveMode(flagMode string, cfg *userconfig.Config) (autoinstall.Mode, aut
 	if flagMode != "" {
 		m, ok := autoinstall.ParseMode(flagMode)
 		if !ok {
-			return 0, autoinstall.OriginDefault, fmt.Errorf("invalid mode %q: must be suggest, confirm, or auto", flagMode)
+			return 0, autoinstall.OriginUnset, fmt.Errorf("invalid mode %q: must be suggest, confirm, or auto", flagMode)
 		}
 		return m, autoinstall.OriginFlag, nil
 	}
@@ -241,7 +241,7 @@ func resolveMode(flagMode string, cfg *userconfig.Config) (autoinstall.Mode, aut
 	if envMode != "" {
 		m, ok := autoinstall.ParseMode(envMode)
 		if !ok {
-			return 0, autoinstall.OriginDefault, fmt.Errorf("invalid TSUKU_AUTO_INSTALL_MODE %q: must be suggest, confirm, or auto", envMode)
+			return 0, autoinstall.OriginUnset, fmt.Errorf("invalid TSUKU_AUTO_INSTALL_MODE %q: must be suggest, confirm, or auto", envMode)
 		}
 
 		// Escalation restriction: env var cannot escalate to auto unless
@@ -257,7 +257,7 @@ func resolveMode(flagMode string, cfg *userconfig.Config) (autoinstall.Mode, aut
 	if cfg.AutoInstallMode != "" {
 		m, ok := autoinstall.ParseMode(cfg.AutoInstallMode)
 		if !ok {
-			return 0, autoinstall.OriginDefault, fmt.Errorf("invalid auto_install_mode config %q: must be suggest, confirm, or auto", cfg.AutoInstallMode)
+			return 0, autoinstall.OriginUnset, fmt.Errorf("invalid auto_install_mode config %q: must be suggest, confirm, or auto", cfg.AutoInstallMode)
 		}
 		return m, autoinstall.OriginConfig, nil
 	}

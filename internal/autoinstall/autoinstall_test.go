@@ -165,6 +165,7 @@ func TestOriginString(t *testing.T) {
 		origin Origin
 		want   string
 	}{
+		{OriginUnset, "unset"},
 		{OriginDefault, "default"},
 		{OriginFlag, "flag"},
 		{OriginEnvironment, "environment"},
@@ -498,6 +499,9 @@ func TestRun_InstalledTool_ProjectPinInstallsIfMissing(t *testing.T) {
 		versions: map[string]string{"jq": "1.6"},
 	}
 
+	// The origin is load-bearing here and is not filler: no ConsentReader is
+	// wired, so the install only happens because the declaration raises the
+	// unset default. An explicit origin makes this case fail at the prompt.
 	err := r.Run(context.Background(), "jq", []string{"."}, ModeConfirm, OriginDefault, resolver)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

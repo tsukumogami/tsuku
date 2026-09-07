@@ -32,6 +32,10 @@ func TestElevate(t *testing.T) {
 	}{
 		{"the unset default, declared", ModeConfirm, OriginDefault, true, ModeAuto, OriginProject},
 		{"the unset default, undeclared", ModeConfirm, OriginDefault, false, ModeConfirm, OriginDefault},
+		// The zero value, which is a caller that resolved no origin rather
+		// than one that resolved "nobody set a mode". It raises nothing, and
+		// the mode it is paired with is the one that would be raised wrongly.
+		{"no origin at all, declared", ModeSuggest, OriginUnset, true, ModeSuggest, OriginUnset},
 		{"suggest by the flag", ModeSuggest, OriginFlag, true, ModeSuggest, OriginFlag},
 		{"confirm by the environment", ModeConfirm, OriginEnvironment, true, ModeConfirm, OriginEnvironment},
 		{"confirm by the config", ModeConfirm, OriginConfig, true, ModeConfirm, OriginConfig},
@@ -119,10 +123,12 @@ func TestRun_TheRaisedDefaultSurvivesWithNoTerminal(t *testing.T) {
 // the file rather than on the command would.
 //
 // AC10 compares the same two runs over a configuration naming a recipe no
-// index knows, where the resolver finds nothing to declare at all. Here it
-// finds a real declaration, of a real recipe, that provides a different
-// command -- so a rule reading "this project declares something" rather than
-// "this project declares this command" is caught here and is not there.
+// index knows. This one declares a real recipe that provides a different
+// command, which is the configuration a working repository actually has. Both
+// reach Run with no declaration, because the resolver is asked about this
+// command's matches and answers about those alone -- so what this pins is the
+// composition rather than the resolver: whatever the file holds, an undeclared
+// command comes out of Run the way it does with no file at all.
 func TestRun_AC36_TheElevationDoesNotReachAnUndeclaredCommand(t *testing.T) {
 	for _, state := range everyConsentState {
 		t.Run(state.String(), func(t *testing.T) {

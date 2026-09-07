@@ -210,10 +210,10 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 	// question there is.
 	//
 	// The origin the elevation produces is discarded here, and deliberately.
-	// No record carries an origin yet -- the audit entry below writes the mode
-	// and nothing else -- and what the rule must not become is three copies,
-	// one at the elevation and one at each later reader, which is why it is a
-	// function rather than a condition written inline.
+	// No record carries an origin yet -- the audit entry below has no field
+	// for one -- and what the rule must not become is three copies, one at the
+	// elevation and one at each later reader, which is why it is a function
+	// rather than a condition written inline.
 	effectiveMode, _ := elevate(mode, origin, declaration != nil)
 
 	// Security gate 2: config permission check.
@@ -360,9 +360,9 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 // There is no term for the mode, and none is wanted. The only mode an origin
 // of default can carry is confirm, because a default is what nobody set and
 // confirm is what nobody setting anything produces. A guard against a pair
-// that cannot be resolved would state a second rule, and the one place that
-// pair could come from is a caller that resolved no origin at all -- which the
-// Origin type's own note is about.
+// that cannot be resolved would state a second rule; what makes the absence
+// safe rather than merely tidy is that a caller which resolved no origin has
+// OriginUnset, not OriginDefault, and OriginUnset raises nothing.
 func elevate(mode Mode, origin Origin, declared bool) (Mode, Origin) {
 	if declared && origin == OriginDefault {
 		return ModeAuto, OriginProject

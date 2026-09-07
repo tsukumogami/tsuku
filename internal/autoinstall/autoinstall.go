@@ -55,21 +55,32 @@ func (m Mode) String() string {
 // arrives here as a confirm whose origin is environment, and raising it would
 // reverse the control that produced it.
 //
-// The five values are the ones the durable record names, and they are
-// exhaustive: a gate that lowers the mode afterwards is recorded as a gate
-// rather than as an origin.
+// Five values are the ones the durable record names, and they are exhaustive
+// for it: a gate that lowers the mode afterwards is recorded as a gate rather
+// than as an origin. The sixth, OriginUnset, is the zero value and is not one
+// of them -- see its own note for why it exists.
 type Origin int
 
 const (
+	// OriginUnset is the zero value, and it is not an origin: it is what a
+	// caller that resolved none has. It raises nothing, which is the direction
+	// this type has to fail in.
+	//
+	// Without it OriginDefault would be the zero value, and OriginDefault is
+	// the one origin a declaration may raise -- so an entry point that forgot
+	// to resolve an origin would not merely lose the bound, it would turn a
+	// suggest the user set into an unattended install, which is the defect
+	// this whole rule exists to remove. The package defaults in the same
+	// direction elsewhere: a nil IsTerminal is no terminal, and a nil
+	// RecipeHasVerification is unverified.
+	OriginUnset Origin = iota
+
 	// OriginDefault means nothing set a mode: no flag, no environment
 	// variable, no configuration key. This is the only origin a project
-	// declaration may raise.
-	//
-	// It is also the zero value, so a caller that resolves no origin at all
-	// gets the permissive one. Every caller resolves it explicitly; the note
-	// is here because the safe direction for this type is the other one, and
-	// a second entry point that forgets would fail open rather than closed.
-	OriginDefault Origin = iota
+	// declaration may raise, and it is a resolved answer rather than an
+	// absent one -- resolveMode returns it after reading all three sources
+	// and finding none of them set.
+	OriginDefault
 
 	// OriginFlag is --mode on the command line.
 	OriginFlag
@@ -96,6 +107,8 @@ const (
 // the record uses.
 func (o Origin) String() string {
 	switch o {
+	case OriginUnset:
+		return "unset"
 	case OriginDefault:
 		return "default"
 	case OriginFlag:
