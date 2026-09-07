@@ -304,9 +304,21 @@ per message that changes or appears:
   that state, and where a gate would lower it back it names **the gate**
   instead of a flag — the string only ever appears when following it works.
   The three gate conditions become named predicates shared by the gates and
-  the hatch computation, so a fourth gate cannot quietly make the message lie.
-  That is a structural guarantee rather than an invariant someone has to
-  remember, which is the difference this plan keeps asking for elsewhere.
+  the hatch computation. **State what that buys precisely, because an earlier
+  draft of this paragraph overstated it** and the implementing unit corrected
+  it: what becomes structural is that the *conditions* cannot drift — one
+  definition per gate, read by both the gate and the message, so changing a
+  condition changes both. What remains a human step is *registration*. Someone
+  adding a fourth gate must also add it to the hatch computation, and if they
+  do not, the message will name `--mode=auto` in a state the new gate blocks.
+  The same defect, through a narrower door.
+
+  Closing that door means the gates becoming a table which the lowering loop
+  and the hatch computation both iterate, so a new gate is one entry and both
+  sites pick it up. That belongs to Issue 7, which already needs a stable
+  identifier and a condition per gate for its announcements — most of the table
+  already — and would get the structural version nearly free. Doing it in this
+  unit would reshape a block Issue 7 then edits again.
 - *The new `ErrNoMatch` message*: no hatch. It reports that no recipe provides
   the command; there is nothing to escape to, and naming one would be the
   defect this enumeration exists to prevent.
@@ -359,7 +371,17 @@ Closes #2544.
 **Goal**: Stop the mode changing silently, in either direction.
 
 Each of the three mode-lowering gates writes one line naming itself with a
-stable distinct identifier and the condition that fired it. The identifiers are
+stable distinct identifier and the condition that fired it.
+
+**Build the gates as a table while you are here, and have the hatch
+computation iterate it too.** Issue 5 made the three gate conditions shared
+predicates, which stops the conditions drifting between a gate and the
+escape-hatch message. What it could not close is registration: a fourth gate
+added to the lowering loop and not to the hatch computation makes the message
+name `--mode=auto` in a state that gate blocks. This issue needs an identifier
+and a condition per gate regardless, which is most of the table, so it is the
+one place where closing that door costs almost nothing. A new gate then becomes
+one entry that both sites read. The identifiers are
 the test seam for every "no gate intervened" assertion in the criteria; a later
 simplification that collapses them into one generic line removes that seam.
 
