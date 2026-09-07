@@ -260,9 +260,12 @@ func TestModeGates_IdentifiersAreDistinctAndNonEmpty(t *testing.T) {
 // escape-hatch defect R10 names, arriving through a gate instead of through a
 // message.
 //
-// Ownership is left to inspection rather than tested: giving a file away needs
-// a second uid, which a test cannot have without privileges it should not ask
-// for.
+// Ownership is tested by asking about a uid the file does not have, which is
+// why configPermissionCondition takes the owner as a parameter: giving a file
+// away needs a second account, and asking the question from the other side
+// needs nothing. Only the undeterminable-ownership branch is left to
+// inspection, and it is unreachable on Linux -- os.FileInfo.Sys() is always a
+// *syscall.Stat_t there.
 func TestConfigPermissionCondition_NamesWhichReason(t *testing.T) {
 	if os.Getuid() == 0 {
 		t.Skip("root reads a directory it has no search bit on, so the unreadable case cannot be built")
