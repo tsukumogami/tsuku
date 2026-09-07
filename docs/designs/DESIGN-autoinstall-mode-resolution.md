@@ -787,8 +787,8 @@ is the subject of the second comparison below.
 root finds it by the bold sentence above and takes each identifier from the
 second column's backticks. So the sentence, the column order and the backticks
 are load-bearing: reword or reorder them and the check fails loudly, which is
-the intended direction but is worth knowing before you do it. A check that
-moves this document has to move that constant too.
+the intended direction but is worth knowing before you do it. Renaming or
+moving this file means changing `gatesRecordPath` with it.
 
 | Gate | Identifier | Condition it reports |
 |---|---|---|

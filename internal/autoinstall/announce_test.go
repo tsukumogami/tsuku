@@ -600,8 +600,9 @@ func TestRecipeSource_NamesEveryValueTheIndexRecords(t *testing.T) {
 // The other two absences are unreachable today -- ConfigPath comes from a
 // discovered .tsuku.toml and Source is filled in by the index -- and are
 // covered anyway, because a fallback nobody exercises is a fallback nobody can
-// rely on. Each carries a fact recipeSource's own doc argues must never go
-// missing quietly: a line with no authorizing file still looks like a
+// rely on. Each carries a fact the two functions argue must never go missing
+// quietly -- discloseDeclaration for the path, recipeSource for the source --
+// on the same ground: a line with no authorizing file still looks like a
 // disclosure.
 func TestDiscloseDeclaration_StatesEveryFact(t *testing.T) {
 	tests := []struct {
