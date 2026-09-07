@@ -742,7 +742,9 @@ variable together with the corroboration it requires. Moving the message behind
 across a change that touches the line.
 
 **The moved check's predicate is `effectiveMode == ModeConfirm &&
-!r.IsTerminal()`, with no declaration term**, and that is not an oversight. R9
+!r.terminalAttached()`, with no declaration term**, and that is not an
+oversight. `terminalAttached` is the nil-safe reader of the `IsTerminal` field
+below, so the two names are the same question asked once. R9
 says the check must test whether the executed command is project-declared, and
 an implementer reading it literally will write a declaredness term — which
 reintroduces the exact defect the move exists to fix: a declared command
@@ -828,6 +830,14 @@ section, or change the expression a row turns on without changing its anchor,
 and the check fails rather than drifting. Renaming or moving this file means
 changing `designRecordPath`, which both checks in this section read.
 
+Three things the check needs that the columns do not say. Every identifier the
+rule writes in backticks is read as a function name, so a reworded rule that
+quotes a type or a table names a function that does not exist. The boundary
+sentence needs exactly three backticked identifiers, matched bare, so
+`r.Lookup`, `Runner.Lookup` and `Lookup` all mean the same call. And every row
+has to name one file: the derivation spanning two would need the check
+extending rather than the table editing, and it says so where it stops.
+
 **The three gates are not three rows, and that is the substantive change here.**
 A gate is an entry in `modeGates`: it decides *whether* the mode is lowered and
 supplies the condition that says why, but it never touches a `Mode` value. The
@@ -840,11 +850,12 @@ is the subject of the second comparison below.
 
 **This table is machine-read.** `lint_gatestable_test.go` at the repository
 root finds it by the bold sentence above and takes each identifier from the
-second column's backticks. So the sentence, the column order and the backticks
-are load-bearing: reword or reorder them and the check fails loudly, which is
-the intended direction but is worth knowing before you do it. Renaming or
-moving this file means changing `designRecordPath` with it, which is the one
-constant both checks read.
+backticks in the Identifier column, which it locates by that heading rather
+than by position. So the sentence, the column headings and the backticks are
+load-bearing: reword them and the check fails loudly, which is the intended
+direction but is worth knowing before you do it. Reordering the columns is
+safe. Renaming or moving this file means changing `designRecordPath` with it,
+which is the one constant both checks read.
 
 | Gate | Identifier | Condition it reports |
 |---|---|---|

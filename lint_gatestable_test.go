@@ -2,8 +2,6 @@ package main_test
 
 import (
 	"fmt"
-	"os"
-	"regexp"
 	"sort"
 	"strings"
 	"testing"
@@ -33,9 +31,6 @@ const designRecordPath = "docs/designs/DESIGN-autoinstall-mode-resolution.md"
 // which is specific enough that a section renamed without this check being
 // updated fails loudly rather than matching some other table further down.
 const gatesRecordHeading = "**The registered gates, by the identifier each announces itself with**,"
-
-// backtickedIdentifier pulls the identifier out of a row's second column.
-var backtickedIdentifier = regexp.MustCompile("^\\s*\\|[^|]*\\|\\s*`([^`]+)`\\s*\\|")
 
 func TestGatesTableMatchesTheRecord(t *testing.T) {
 	recorded, err := recordedGateIdentifiers()
@@ -71,44 +66,32 @@ func TestGatesTableMatchesTheRecord(t *testing.T) {
 // recordedGateIdentifiers reads the identifiers out of the markdown table that
 // follows the recorded heading.
 //
+// It shares markdownTableAfter with the derivation check next door: one reader
+// for two tables in one section, and columns taken by their headings rather
+// than by position, so reordering them is an edit rather than a silent change
+// of meaning.
+//
 // It returns an error rather than an empty list for every way of finding
 // nothing, because a silent empty result would make the comparison above
 // vacuously true -- which is the failure mode a check like this actually has.
 func recordedGateIdentifiers() ([]string, error) {
-	body, err := os.ReadFile(designRecordPath)
+	section, err := derivationSection()
 	if err != nil {
 		return nil, err
 	}
-	lines := strings.Split(string(body), "\n")
-
-	start := -1
-	for i, line := range lines {
-		if strings.HasPrefix(strings.TrimSpace(line), gatesRecordHeading) {
-			start = i
-			break
-		}
-	}
-	if start < 0 {
-		return nil, fmt.Errorf("no line begins %q; the section was renamed or removed", gatesRecordHeading)
+	rows, err := markdownTableAfter(section, gatesRecordHeading)
+	if err != nil {
+		return nil, err
 	}
 
 	var found []string
-	inTable := false
-	for _, line := range lines[start+1:] {
-		trimmed := strings.TrimSpace(line)
-		if !strings.HasPrefix(trimmed, "|") {
-			if inTable {
-				break // the table ended
-			}
-			continue // still in the prose between the heading and the table
+	for _, row := range rows {
+		identifier := backticked(row["identifier"])
+		if identifier == "" {
+			return nil, fmt.Errorf("the row %q records no identifier; a gate that does not announce "+
+				"itself under a name cannot be compared with one that does", row["gate"])
 		}
-		inTable = true
-		if match := backtickedIdentifier.FindStringSubmatch(line); match != nil {
-			found = append(found, match[1])
-		}
-	}
-	if len(found) == 0 {
-		return nil, fmt.Errorf("the table after %q records no backticked identifiers", gatesRecordHeading)
+		found = append(found, identifier)
 	}
 	return found, nil
 }

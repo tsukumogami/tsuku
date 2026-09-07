@@ -1,11 +1,9 @@
 package main_test
 
 import (
-	"bytes"
 	"fmt"
 	"go/ast"
 	"go/parser"
-	"go/printer"
 	"go/token"
 	"os"
 	"path/filepath"
@@ -47,12 +45,6 @@ const (
 	spanBoundariesHeading    = "**The span's two boundaries, by identifier:**"
 )
 
-// autoinstallPackageDir is scanned to work out which functions reach an
-// install or an exec. It is not where the sites come from -- those come from
-// the record -- but the span's rule is stated in terms of installing and
-// execing, and this check has to be able to recognize one.
-const autoinstallPackageDir = "internal/autoinstall"
-
 var backtickedText = regexp.MustCompile("`([^`]+)`")
 
 // modeConstant matches the effective mode's own values. Reading one is the
@@ -80,16 +72,26 @@ func (s recordedSite) String() string {
 	return fmt.Sprintf("%s (%s, %s, anchor %s, %d point(s))", s.Row, s.File, s.Function, s.Anchor, s.Points)
 }
 
+// Which of AC46's two searches produced a find.
+const (
+	searchModeUse = iota + 1
+	searchTerminalReturn
+)
+
 // A foundSite is one point the searches produced.
 type foundSite struct {
 	Function string // the in-scope function it was found in
 	Anchor   string // the identifier that makes it qualify
 	Pos      string // file:line
-	Search   int    // 1 for a mode read or write, 2 for a return that installs or execs
+	Search   int    // which search found it
 }
 
 func (f foundSite) String() string {
-	return fmt.Sprintf("%s in %s at %s (search %d)", f.Anchor, f.Function, f.Pos, f.Search)
+	kind := "a mode read or write"
+	if f.Search == searchTerminalReturn {
+		kind = "a return that installs or execs"
+	}
+	return fmt.Sprintf("%s in %s at %s (%s)", f.Anchor, f.Function, f.Pos, kind)
 }
 
 // derivationRecord is what the check knows, all of it parsed out of the design.
@@ -156,11 +158,11 @@ func TestDerivationMatchesTheCode(t *testing.T) {
 		switch found := claimed[site]; {
 		case len(found) == site.Points:
 		case len(found) == 0:
-			t.Errorf("the recorded derivation lists a site the searches did not find: %s.\n"+
+			t.Errorf("the recorded derivation lists a site the searches did not find: %s -- %q.\n"+
 				"Either the site moved or was deleted and the row stayed behind, or the anchor no "+
 				"longer names what the site turns on. A row whose site was deleted otherwise "+
 				"passes forever, which is why this direction is checked too.",
-				site)
+				site, site.Role)
 		default:
 			// The count is what stops a new site hiding behind an anchor that
 			// is already recorded. A second branch turning on ModeConfirm is a
@@ -342,7 +344,7 @@ func spanBoundaries(section []string) (startCall, startFunc, endFunc string, err
 			"want 3: the opening call, the function holding it, and the function holding the "+
 			"dispatch", len(matches))
 	}
-	return matches[0][1], baseName(matches[1][1]), baseName(matches[2][1]), nil
+	return baseName(matches[0][1]), baseName(matches[1][1]), baseName(matches[2][1]), nil
 }
 
 // derivedRows reads the table of derived rows, taking columns by their heading
@@ -363,15 +365,17 @@ func derivedRows(section []string) ([]recordedSite, error) {
 			Role:     row["role"],
 		}
 		if site.Row == "" || site.File == "" || site.Function == "" || site.Anchor == "" || site.Role == "" {
-			return nil, fmt.Errorf("a derived row is missing a column: %+v. AC45 wants file, "+
-				"function and role, and the anchor is what makes a row findable when three of "+
-				"them share a function", row)
+			return nil, fmt.Errorf("a derived row is missing a column: %+v. The columns are read by "+
+				"their headings, so a renamed heading arrives here as an empty cell. Row, File, "+
+				"Function and Role are what the criterion asks a row to cite; Anchor is what makes "+
+				"a row findable when three of them share a function", row)
 		}
 		points, err := strconv.Atoi(row["points"])
 		if err != nil || points < 1 {
 			return nil, fmt.Errorf("the row %q records %q points, which is not a count of one or "+
-				"more. A row has to say how many points share its anchor, because the anchor "+
-				"cannot tell them apart", site.Row, row["points"])
+				"more, in %+v. A row has to say how many points share its anchor, because the "+
+				"anchor cannot tell them apart -- and an empty value here usually means the Points "+
+				"heading was renamed rather than the cell emptied", site.Row, row["points"], row)
 		}
 		site.Points = points
 		sites = append(sites, site)
@@ -498,9 +502,19 @@ func baseName(identifier string) string {
 // searchSpan runs AC46's two searches over the span the record names.
 func searchSpan(record derivationRecord) ([]foundSite, error) {
 	fset := token.NewFileSet()
-	file, err := parser.ParseFile(fset, record.SourceFile, nil, 0)
+
+	// The whole package, not just the recorded file. Both sets computed below
+	// -- what decides a mode, what reaches an install or an exec -- are
+	// properties of the package, and reading them out of one file would make a
+	// helper moved next door invisible rather than loud.
+	pkg, err := parsePackage(fset, filepath.Dir(record.SourceFile))
 	if err != nil {
 		return nil, err
+	}
+	file := pkg[record.SourceFile]
+	if file == nil {
+		return nil, fmt.Errorf("the rows name %s, which is not a source file of %s",
+			record.SourceFile, filepath.Dir(record.SourceFile))
 	}
 
 	funcs := map[string]*ast.FuncDecl{}
@@ -511,34 +525,34 @@ func searchSpan(record derivationRecord) ([]foundSite, error) {
 	}
 	for _, name := range record.InScope {
 		if funcs[name] == nil {
-			return nil, fmt.Errorf("the rule names %s but %s declares no such function; the rule "+
-				"and the code have parted company", name, record.SourceFile)
+			return nil, fmt.Errorf("the rule names %s but %s declares no such function. Every "+
+				"identifier the rule writes in backticks is read as one, so a rule that quotes a "+
+				"type or a table reaches here too", name, record.SourceFile)
 		}
 	}
 
+	deciders := modeDecidingFunctions(pkg)
+	if len(deciders) == 0 {
+		return nil, fmt.Errorf("%s declares no function returning a Mode, so nothing in it decides "+
+			"the effective mode and the first search has nothing to find",
+			filepath.Dir(record.SourceFile))
+	}
+	terminal := installOrExecFunctions(pkg)
+
 	// The span's opening: the call the record names, inside the function it
 	// names. Everything before it in that function is outside the span.
-	openPos, err := singleCall(fset, funcs[record.StartFunc], record.StartCall)
+	openPos, err := boundaryCall(funcs[record.StartFunc], record.StartCall)
 	if err != nil {
 		return nil, fmt.Errorf("locating the span's opening: %w", err)
 	}
 
-	// The span's close: the mode dispatch. It is the one switch in the closing
-	// function, and it is the boundary rather than a site -- a row for it would
-	// be a row for the thing every other row is measured against.
-	dispatchPos, err := singleSwitch(funcs[record.EndFunc])
+	// The span's close: the mode dispatch, which is the switch on the mode
+	// rather than whichever switch happens to be the only one. It is the
+	// boundary rather than a site -- a row for it would be a row for the thing
+	// every other row is measured against.
+	dispatchPos, err := modeDispatch(funcs[record.EndFunc], deciders)
 	if err != nil {
 		return nil, fmt.Errorf("locating the mode dispatch that closes the span: %w", err)
-	}
-
-	deciders := modeDecidingFunctions(file)
-	if len(deciders) == 0 {
-		return nil, fmt.Errorf("%s declares no function returning a Mode, so nothing in it decides "+
-			"the effective mode and the first search has nothing to find", record.SourceFile)
-	}
-	terminal, err := installOrExecFunctions()
-	if err != nil {
-		return nil, err
 	}
 
 	var found []foundSite
@@ -563,9 +577,11 @@ func searchSpan(record derivationRecord) ([]foundSite, error) {
 	return found, nil
 }
 
-// dedupe collapses finds that are the same point reached by two of the rules.
-// The call to a decider is both a call to a decider and a call taking the mode
-// as an argument, and it is one site either way.
+// dedupe collapses a point that both searches reach -- a return whose call
+// installs or execs and is also handed the mode. Nothing in the code does that
+// today. It is here because the count in the record is per point, so a point
+// counted twice would fail as loudly as a point added, and for the wrong
+// reason.
 func dedupe(found []foundSite) []foundSite {
 	seen := map[foundSite]bool{}
 	out := make([]foundSite, 0, len(found))
@@ -601,13 +617,13 @@ func searchModeUses(fset *token.FileSet, fn *ast.FuncDecl, name string, inSpan f
 			callee := calleeName(node)
 			if deciders[callee] || passesMode(node, vars) {
 				found = append(found, foundSite{
-					Function: name, Anchor: callee, Pos: position(fset, node.Pos()), Search: 1,
+					Function: name, Anchor: callee, Pos: position(fset, node.Pos()), Search: searchModeUse,
 				})
 			}
 		case *ast.Ident:
 			if modeConstant.MatchString(node.Name) {
 				found = append(found, foundSite{
-					Function: name, Anchor: node.Name, Pos: position(fset, node.Pos()), Search: 1,
+					Function: name, Anchor: node.Name, Pos: position(fset, node.Pos()), Search: searchModeUse,
 				})
 			}
 		}
@@ -645,7 +661,7 @@ func searchTerminalReturns(fset *token.FileSet, fn *ast.FuncDecl, name string, i
 				}
 				if callee := calleeName(call); terminal[callee] {
 					found = append(found, foundSite{
-						Function: name, Anchor: callee, Pos: position(fset, ret.Pos()), Search: 2,
+						Function: name, Anchor: callee, Pos: position(fset, ret.Pos()), Search: searchTerminalReturn,
 					})
 				}
 				return true
@@ -664,7 +680,12 @@ func searchTerminalReturns(fset *token.FileSet, fn *ast.FuncDecl, name string, i
 // its own -- absorbed -- and a call to such a function from elsewhere is the
 // same site as the function it calls, which is the point the row counts. Run's
 // two assignments are the elevate and lowerMode rows, not two more.
-func attributeToRow(f foundSite, sites []recordedSite) (site recordedSite, absorbed, ok bool) {
+//
+// The order matters and is not arbitrary: a whole-function row claims a call to
+// it before any point row could, so a row written as Run/elevate would never be
+// reached. That is the right way round -- the record says a row sits at the
+// function that decides the value -- and it is why no such row exists.
+func attributeToRow(f foundSite, sites []recordedSite) (recordedSite, bool, bool) {
 	for _, site := range sites {
 		if site.wholeFunction() && site.Function == f.Function {
 			return site, true, true
@@ -683,72 +704,101 @@ func attributeToRow(f foundSite, sites []recordedSite) (site recordedSite, absor
 	return recordedSite{}, false, false
 }
 
-// modeDecidingFunctions returns the functions in the file that return a Mode.
-// They are read off the declarations rather than listed, so a third one added
-// later is searched for without this check being told about it.
-func modeDecidingFunctions(file *ast.File) map[string]bool {
-	deciders := map[string]bool{}
-	for _, decl := range file.Decls {
-		fn, ok := decl.(*ast.FuncDecl)
-		if !ok || fn.Type.Results == nil {
+// parsePackage parses every non-test source file in a directory, keyed by path.
+func parsePackage(fset *token.FileSet, dir string) (map[string]*ast.File, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	pkg := map[string]*ast.File{}
+	for _, entry := range entries {
+		name := entry.Name()
+		if entry.IsDir() || !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
 			continue
+		}
+		path := filepath.Join(dir, name)
+		parsed, err := parser.ParseFile(fset, path, nil, 0)
+		if err != nil {
+			return nil, err
+		}
+		pkg[path] = parsed
+	}
+	if len(pkg) == 0 {
+		return nil, fmt.Errorf("%s holds no source files, so both searches have nothing to find", dir)
+	}
+	return pkg, nil
+}
+
+// modeDecidingFunctions returns the functions in the package that return a
+// Mode. They are read off the declarations rather than listed, so a third one
+// added later is searched for without this check being told about it.
+func modeDecidingFunctions(pkg map[string]*ast.File) map[string]bool {
+	deciders := map[string]bool{}
+	forEachFunc(pkg, func(fn *ast.FuncDecl) {
+		if fn.Type.Results == nil {
+			return
 		}
 		for _, result := range fn.Type.Results.List {
 			if ident, ok := result.Type.(*ast.Ident); ok && ident.Name == "Mode" {
 				deciders[fn.Name.Name] = true
 			}
 		}
-	}
+	})
 	return deciders
 }
 
 // installOrExecFunctions returns the names a return can call to reach an
 // install or an exec: the install and exec calls themselves, and the functions
-// in the package whose bodies make one.
+// in the package that reach one through any number of hops.
 //
 // It is computed rather than listed for the same reason as the deciders. A
 // second exec helper added beside execBinary is recognized without an edit
 // here, and a return through it is a site the record has to claim.
-func installOrExecFunctions() (map[string]bool, error) {
+//
+// The loop runs to a fixed point rather than once. A single pass would make
+// recognition depend on declaration order -- a helper written above the one it
+// calls would not be terminal -- and the direction it fails in is the silent
+// one: the return stops being a find, its row keeps its count, and nothing
+// says so.
+func installOrExecFunctions(pkg map[string]*ast.File) map[string]bool {
 	terminal := map[string]bool{"Exec": true, "Install": true}
-
-	entries, err := os.ReadDir(autoinstallPackageDir)
-	if err != nil {
-		return nil, err
-	}
-	fset := token.NewFileSet()
-	var files []*ast.File
-	for _, entry := range entries {
-		name := entry.Name()
-		if entry.IsDir() || !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
-			continue
-		}
-		parsed, err := parser.ParseFile(fset, filepath.Join(autoinstallPackageDir, name), nil, 0)
-		if err != nil {
-			return nil, err
-		}
-		files = append(files, parsed)
-	}
-	if len(files) == 0 {
-		return nil, fmt.Errorf("%s holds no source files, so nothing in it installs or execs and "+
-			"the second search has nothing to find", autoinstallPackageDir)
-	}
-
-	for _, file := range files {
-		for _, decl := range file.Decls {
-			fn, ok := decl.(*ast.FuncDecl)
-			if !ok || fn.Body == nil {
-				continue
+	for {
+		grew := false
+		forEachFunc(pkg, func(fn *ast.FuncDecl) {
+			if fn.Body == nil || terminal[fn.Name.Name] {
+				return
 			}
 			ast.Inspect(fn.Body, func(n ast.Node) bool {
 				if call, ok := n.(*ast.CallExpr); ok && terminal[calleeName(call)] {
 					terminal[fn.Name.Name] = true
+					grew = true
 				}
 				return true
 			})
+		})
+		if !grew {
+			return terminal
 		}
 	}
-	return terminal, nil
+}
+
+func forEachFunc(pkg map[string]*ast.File, visit func(*ast.FuncDecl)) {
+	for _, path := range sortedFileKeys(pkg) {
+		for _, decl := range pkg[path].Decls {
+			if fn, ok := decl.(*ast.FuncDecl); ok {
+				visit(fn)
+			}
+		}
+	}
+}
+
+func sortedFileKeys(pkg map[string]*ast.File) []string {
+	paths := make([]string, 0, len(pkg))
+	for path := range pkg {
+		paths = append(paths, path)
+	}
+	sort.Strings(paths)
+	return paths
 }
 
 // modeVariables returns the Mode-typed names in a function: its parameters
@@ -783,12 +833,17 @@ func modeVariables(fn *ast.FuncDecl, deciders map[string]bool) map[string]bool {
 	return vars
 }
 
-// singleCall locates the one call to the named function inside fn. More than
+// boundaryCall locates the one call to the named function inside fn. More than
 // one, or none, means the boundary the record names does not identify a point.
-func singleCall(fset *token.FileSet, fn *ast.FuncDecl, call string) (token.Pos, error) {
+//
+// The name is matched bare, so the record may write r.Lookup, Runner.Lookup or
+// Lookup and mean the same call. Matching the receiver as written would make a
+// document edit that normalizes those spellings fail with a message pointing at
+// the code.
+func boundaryCall(fn *ast.FuncDecl, call string) (token.Pos, error) {
 	var positions []token.Pos
 	ast.Inspect(fn.Body, func(n ast.Node) bool {
-		if c, ok := n.(*ast.CallExpr); ok && exprString(fset, c.Fun) == call {
+		if c, ok := n.(*ast.CallExpr); ok && calleeName(c) == call {
 			positions = append(positions, c.Pos())
 		}
 		return true
@@ -804,11 +859,22 @@ func singleCall(fset *token.FileSet, fn *ast.FuncDecl, call string) (token.Pos, 
 	}
 }
 
-// singleSwitch locates the one switch in fn, which is the mode dispatch.
-func singleSwitch(fn *ast.FuncDecl) (token.Pos, error) {
+// modeDispatch locates the switch on the mode, which is the span's close.
+//
+// It is the switch whose subject is the mode rather than the only switch in the
+// function. Keying on "the only one" made an ordinary refactor above the
+// dispatch -- turning an if-else chain into a switch -- fail as though the
+// boundary had moved.
+func modeDispatch(fn *ast.FuncDecl, deciders map[string]bool) (token.Pos, error) {
+	vars := modeVariables(fn, deciders)
+
 	var positions []token.Pos
 	ast.Inspect(fn.Body, func(n ast.Node) bool {
-		if s, ok := n.(*ast.SwitchStmt); ok {
+		s, ok := n.(*ast.SwitchStmt)
+		if !ok {
+			return true
+		}
+		if tag, ok := s.Tag.(*ast.Ident); ok && vars[tag.Name] {
 			positions = append(positions, s.Pos())
 		}
 		return true
@@ -817,10 +883,12 @@ func singleSwitch(fn *ast.FuncDecl) (token.Pos, error) {
 	case 1:
 		return positions[0], nil
 	case 0:
-		return 0, fmt.Errorf("%s holds no switch, so the span has no closing boundary", fn.Name.Name)
+		return 0, fmt.Errorf("%s switches on no mode-typed value, so the span has no closing "+
+			"boundary; the dispatch was removed or the mode now travels under another name",
+			fn.Name.Name)
 	default:
-		return 0, fmt.Errorf("%s holds %d switches, so which one closes the span is a guess",
-			fn.Name.Name, len(positions))
+		return 0, fmt.Errorf("%s holds %d switches on the mode, so which one closes the span is a "+
+			"guess", fn.Name.Name, len(positions))
 	}
 }
 
@@ -832,14 +900,6 @@ func calleeName(call *ast.CallExpr) string {
 		return fun.Sel.Name
 	}
 	return ""
-}
-
-func exprString(fset *token.FileSet, expr ast.Expr) string {
-	var buf bytes.Buffer
-	if err := printer.Fprint(&buf, fset, expr); err != nil {
-		return ""
-	}
-	return buf.String()
 }
 
 func position(fset *token.FileSet, pos token.Pos) string {
