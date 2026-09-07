@@ -114,6 +114,8 @@ To add extra boundaries, set `TSUKU_CEILING_PATHS` (colon-separated list of dire
 export TSUKU_CEILING_PATHS="/home/dev/vendor:/tmp"
 ```
 
+Each entry is matched against the directory being visited, exactly, and the test runs before that directory's `.tsuku.toml` is looked for. So a ceiling stops the walk at the directory it names and not at anything below it: `/home/dev/vendor` does not stop tsuku reading `/home/dev/vendor/somerepo/.tsuku.toml`, because `somerepo` is the directory tested on that iteration and it doesn't match. Name the directory whose config you want ignored.
+
 ## Shell Activation
 
 Shell activation makes project-declared tool versions available in your PATH automatically. Two approaches: explicit (one-shot) or automatic (prompt hooks).
@@ -229,26 +231,40 @@ This is separate from the activation hook. You can use both, either, or neither.
 
 ### How it works
 
-When you type a command that doesn't exist, the hook calls `tsuku run`. If the command maps to a tool declared in `.tsuku.toml`, tsuku installs the pinned version and runs the command. No confirmation prompt.
+When you type a command your shell can't resolve, the hook calls `tsuku run`. If the command maps to a tool declared in `.tsuku.toml` and you haven't configured a consent mode, tsuku installs the pinned version and runs the command without a prompt, printing a line first that says which file authorized it.
 
 ```sh
 # In a project with ripgrep = "14.1.0" in .tsuku.toml
 # ripgrep isn't installed yet
 
 $ rg "TODO" src/
+project-declaration: /home/dev/myproject/.tsuku.toml declares ripgrep@14.1.0 (recipe source: registry)
 # tsuku installs ripgrep 14.1.0, then runs the command
 ```
 
-For tools NOT in `.tsuku.toml`, the normal consent mode applies (defaults to prompting for confirmation).
+For tools NOT in `.tsuku.toml`, the consent mode applies as configured, defaulting to a confirmation prompt.
 
 ### The consent model
 
-`.tsuku.toml` is the consent. When your team checks a config file into the repo declaring `ripgrep = "14.1.0"`, they're authorizing that tool at that version. Tsuku treats this as sufficient consent to install without prompting.
+`.tsuku.toml` is a consent signal, and it is bounded. When your team checks a config file into the repo declaring `ripgrep = "14.1.0"`, they're authorizing that tool at that version, and tsuku treats that as enough to skip the prompt — but only when you haven't chosen a mode yourself. A declaration raises the *default*; it does not overrule a `--mode` flag, a `TSUKU_AUTO_INSTALL_MODE` value or an `auto_install_mode` config key. Those are honored as given, `suggest` included, which is what makes `suggest` usable as protection in a repository you haven't read.
 
 This means:
 
-- **Tool in `.tsuku.toml`**: install the pinned version silently, then run
-- **Tool not in `.tsuku.toml`**: use the normal consent mode (suggest, confirm, or auto)
+- **Tool in `.tsuku.toml`, no mode configured**: install the pinned version without a prompt, after the disclosure line, then run
+- **Tool in `.tsuku.toml`, a mode configured**: your mode, unchanged
+- **Tool not in `.tsuku.toml`**: your mode, or the `confirm` default
+
+A mode of `auto` — raised by a declaration or set by you — can be lowered back to `confirm` before anything installs. Three checks do that, and each names itself on stderr when it fires:
+
+| Identifier | Fires when |
+|------------|------------|
+| `config-permissions` | `$TSUKU_HOME/config.toml` grants access beyond its owner, is owned by someone else, or can't be read |
+| `recipe-verification` | the recipe carries no checksum or signature to verify |
+| `multiple-providers` | more than one recipe provides the command |
+
+The last one can't fire for a declared command — the declaration already says which recipe was meant. The first two can, so a declared tool can still end up prompting.
+
+**What a consent mode does not cover.** It governs installing, not running. A tool already installed at the version the project declares is executed straight from `$TSUKU_HOME/tools`, before any mode is consulted — so `suggest` does not stop a project from getting a tool you already have run for you. It also has nothing to say about what a tool does once it runs.
 
 ### Using `tsuku run` directly
 
@@ -264,20 +280,24 @@ Use `--` to separate tsuku's flags from the target command's flags.
 
 ### Consent mode configuration
 
-For tools outside `.tsuku.toml`, the consent mode follows this priority:
+The consent mode follows this priority, for every tool — declared or not:
 
 1. `--mode` flag on `tsuku run`
 2. `TSUKU_AUTO_INSTALL_MODE` environment variable
 3. `auto_install_mode` in `$TSUKU_HOME/config.toml`
-4. Default: `confirm`
+4. Default: `confirm`, raised to `auto` for a tool `.tsuku.toml` declares
+
+A declaration acts on step 4 and nowhere else, which is why it is written there and not at the top. Anything set at steps 1 through 3 reaches the install as you set it.
+
+The one exception is `TSUKU_AUTO_INSTALL_MODE=auto`: tsuku honors it only when `config.toml` already says `auto`, so an environment variable alone can't raise the mode. Without that corroboration the run falls back to `confirm`.
 
 The three modes:
 
 | Mode | Behavior |
 |------|----------|
 | `suggest` | Print install instructions and exit |
-| `confirm` | Prompt before installing (needs a TTY) |
-| `auto` | Install silently |
+| `confirm` | Prompt before installing (needs a TTY; exits 12 without one) |
+| `auto` | Install without prompting |
 
 ## Shims for CI
 
@@ -351,7 +371,12 @@ steps:
     run: go build ./...   # shim handles version resolution from .tsuku.toml
 ```
 
-The `--yes` flag on `tsuku shim install` skips any confirmation prompts. Since shims delegate to `tsuku run` at runtime, and `.tsuku.toml` provides consent, tools install automatically when first invoked.
+The `--yes` flag on `tsuku shim install` skips any confirmation prompts. Since shims delegate to `tsuku run` at runtime, a tool the project declares installs on first invocation without a prompt — provided the job has configured no consent mode, which is the usual case in CI.
+
+Two ways that stops, both of which surface as exit codes rather than hangs:
+
+- **Exit 12** — `confirm mode requires a terminal`. A CI job has no TTY, so anything that lands in `confirm` stops here: a command the project doesn't declare, or a declared one that a mode-lowering check put back at `confirm`. Set `auto_install_mode = "auto"` in `config.toml`, or pass `--mode auto` where you can reach the command line.
+- **Exit 10** — the project declares more than one recipe providing the same command. Several commands have more than one provider in the registry (`fd` comes from both `fd` and `fdclone`; `go` from both `go` and `golang`), and declaring one of them is exactly what settles the ambiguity — declaring two puts it back. Nothing installs and nothing runs; the message names each declaration and the exact `tsuku install` line that reaches it. Remove all but one.
 
 ## Quick Reference
 

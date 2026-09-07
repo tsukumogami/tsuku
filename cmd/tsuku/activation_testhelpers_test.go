@@ -35,6 +35,37 @@ func chdir(t *testing.T, dir string) {
 func runCommand(t *testing.T, fn func() error) (stdout, stderr string, err error) {
 	t.Helper()
 
+	got := runCommandOutcome(t, fn)
+	return got.stdout, got.stderr, got.err
+}
+
+// commandOutcome is everything a driven command produced, including the exit
+// code as a number.
+//
+// runCommand flattens the exit into an error, which is enough for a test
+// asserting that a path does not exit at all. A test whose subject is *which*
+// code a path exits with has to compare numbers, and reading them back out of
+// an error string would pass for a command that exited with a different code
+// and a matching message.
+type commandOutcome struct {
+	stdout string
+	stderr string
+
+	// exit is the code passed to exitWithCode, and exited says whether one was.
+	// A command that returned normally leaves exit at zero, which is why the
+	// two are separate: zero is also a code a command can exit with.
+	exit   int
+	exited bool
+
+	// err is what fn returned, or the exit rendered as an error for
+	// runCommand's callers.
+	err error
+}
+
+// runCommandOutcome is runCommand keeping the exit code. See commandOutcome.
+func runCommandOutcome(t *testing.T, fn func() error) (outcome commandOutcome) {
+	t.Helper()
+
 	outR, outW, pipeErr := os.Pipe()
 	if pipeErr != nil {
 		t.Fatal(pipeErr)
@@ -58,17 +89,19 @@ func runCommand(t *testing.T, fn func() error) (stdout, stderr string, err error
 				if !ok {
 					panic(r)
 				}
-				err = fmt.Errorf("command exited with code %d", sentinel.code)
+				outcome.exit, outcome.exited = sentinel.code, true
+				outcome.err = fmt.Errorf("command exited with code %d", sentinel.code)
 			}
 		}()
-		err = fn()
+		outcome.err = fn()
 	}()
 
 	os.Stdout, os.Stderr, exitFunc = origOut, origErr, origExit
 	_ = outW.Close()
 	_ = errW.Close()
 
-	return readAll(t, outR), readAll(t, errR), err
+	outcome.stdout, outcome.stderr = readAll(t, outR), readAll(t, errR)
+	return outcome
 }
 
 func runHookEnv(t *testing.T, shell string) (stdout, stderr string, err error) {

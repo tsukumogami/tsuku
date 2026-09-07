@@ -33,73 +33,10 @@ func buildIndexWithRows(t *testing.T, idx BinaryIndex, recipes map[string][]byte
 	}
 }
 
-// TestLookup_InstalledFirst verifies that an installed recipe appears before
-// an uninstalled recipe when both provide the same command.
-func TestLookup_InstalledFirst(t *testing.T) {
-	idx := openTestIndex(t)
-	ctx := context.Background()
-
-	// Two recipes both providing "vi": neovim (installed) and vim (not installed).
-	recipes := map[string][]byte{
-		"neovim": minimalRecipeTOML("bin/vi"),
-		"vim":    minimalRecipeTOML("bin/vi"),
-	}
-	tools := map[string]ToolInfo{
-		"neovim": {ActiveVersion: "0.9.0"},
-		// vim is not installed
-	}
-	buildIndexWithRows(t, idx, recipes, tools)
-
-	matches, err := idx.Lookup(ctx, "vi")
-	if err != nil {
-		t.Fatalf("Lookup() error = %v", err)
-	}
-	if len(matches) != 2 {
-		t.Fatalf("Lookup() returned %d matches, want 2", len(matches))
-	}
-	if matches[0].Recipe != "neovim" {
-		t.Errorf("matches[0].Recipe = %q, want %q (installed recipe should be first)", matches[0].Recipe, "neovim")
-	}
-	if matches[0].Installed != true {
-		t.Errorf("matches[0].Installed = %v, want true", matches[0].Installed)
-	}
-	if matches[1].Recipe != "vim" {
-		t.Errorf("matches[1].Recipe = %q, want %q", matches[1].Recipe, "vim")
-	}
-	if matches[1].Installed != false {
-		t.Errorf("matches[1].Installed = %v, want false", matches[1].Installed)
-	}
-}
-
-// TestLookup_LexicographicTiebreaker verifies that among recipes in the same
-// installation tier, results are ordered alphabetically by recipe name.
-func TestLookup_LexicographicTiebreaker(t *testing.T) {
-	idx := openTestIndex(t)
-	ctx := context.Background()
-
-	// Three uninstalled recipes all providing "tool".
-	recipes := map[string][]byte{
-		"zebra": minimalRecipeTOML("bin/tool"),
-		"alpha": minimalRecipeTOML("bin/tool"),
-		"mango": minimalRecipeTOML("bin/tool"),
-	}
-	tools := map[string]ToolInfo{}
-	buildIndexWithRows(t, idx, recipes, tools)
-
-	matches, err := idx.Lookup(ctx, "tool")
-	if err != nil {
-		t.Fatalf("Lookup() error = %v", err)
-	}
-	if len(matches) != 3 {
-		t.Fatalf("Lookup() returned %d matches, want 3", len(matches))
-	}
-	want := []string{"alpha", "mango", "zebra"}
-	for i, w := range want {
-		if matches[i].Recipe != w {
-			t.Errorf("matches[%d].Recipe = %q, want %q", i, matches[i].Recipe, w)
-		}
-	}
-}
+// The ordering contract -- installed providers first, then recipe name
+// ascending -- is exercised in lookup_ordering_test.go against the shared
+// fixture index. It cannot live here: an in-package test file cannot import
+// internal/indexfixture, which imports this package.
 
 // TestLookup_NotFound verifies that a command with no matching rows returns an
 // empty slice and nil error (never an error for "not found").

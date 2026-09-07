@@ -2,91 +2,58 @@ package project
 
 import (
 	"context"
-	"fmt"
-	"os"
-	"sort"
 
-	"github.com/tsukumogami/tsuku/internal/autoinstall"
+	"github.com/tsukumogami/tsuku/internal/index"
 )
 
-// Resolver maps commands to project-pinned versions by combining the binary
-// index (command -> recipe) with the project config (recipe -> version).
+// Resolver answers what a project declared, by combining the binary index
+// (command -> recipe) with the project config (recipe -> version).
+//
+// It does not look anything up itself. The caller has already opened the index
+// to find the command's providers, and resolving from the command here would
+// open it a second time on every run that finds a .tsuku.toml.
 type Resolver struct {
-	config    *ConfigResult
-	lookup    autoinstall.LookupFunc
-	bareToOrg map[string][]string // bare recipe name -> org-scoped config keys
+	// declarations maps a bare recipe name to what the configuration declared
+	// for it. It is built once, in NewResolver, so the precedence rule has one
+	// production site.
+	declarations map[string][]ProjectDeclaration
 }
 
-// NewResolver creates a ProjectVersionResolver. If config is nil (no
-// .tsuku.toml found), the resolver returns ("", false, nil) for every command.
-func NewResolver(config *ConfigResult, lookup autoinstall.LookupFunc) autoinstall.ProjectVersionResolver {
-	r := &Resolver{config: config, lookup: lookup}
+// NewResolver creates a Resolver. If config is nil (no .tsuku.toml found), the
+// resolver reports no declarations for every command.
+func NewResolver(config *ConfigResult) *Resolver {
+	r := &Resolver{}
 	if config != nil && config.Config != nil {
-		r.bareToOrg = buildBareToOrgMap(config.Config.Tools)
+		r.declarations = buildDeclarations(config.Config.Tools, config.Path)
 	}
 	return r
 }
 
-// buildBareToOrgMap scans config tool keys for org-scoped entries and builds
-// a reverse map from bare recipe names to their org-scoped config keys.
-func buildBareToOrgMap(tools map[string]ToolRequirement) map[string][]string {
-	m := make(map[string][]string)
-	for key := range tools {
-		_, bare, isOrg, err := SplitOrgKey(key)
-		if err != nil || !isOrg {
+// DeclarationsFor returns the recipes the project declared among matches, each
+// with the version declared for it. Order follows the index's ranking of
+// matches; where one recipe carries several declarations, they follow the
+// order buildDeclarations states.
+//
+// The result is empty when the project declares no provider of the command,
+// which is how "not project-declared" is reported -- there is no second return
+// value that can disagree with the length of the first.
+func (r *Resolver) DeclarationsFor(_ context.Context, matches []index.BinaryMatch) ([]ProjectDeclaration, error) {
+	if len(r.declarations) == 0 {
+		return nil, nil
+	}
+
+	// A recipe appearing twice in matches would duplicate its declarations.
+	// The index cannot produce that -- (command, recipe) is its primary key --
+	// but matches arrives from the caller, so the guard is here rather than
+	// left to an invariant this package does not own.
+	var set []ProjectDeclaration
+	seen := make(map[string]bool)
+	for _, m := range matches {
+		if seen[m.Recipe] {
 			continue
 		}
-		m[bare] = append(m[bare], key)
+		seen[m.Recipe] = true
+		set = append(set, r.declarations[m.Recipe]...)
 	}
-
-	// Sort values for deterministic resolution and warn on duplicates.
-	for bare, keys := range m {
-		sort.Strings(keys)
-		if len(keys) > 1 {
-			fmt.Fprintf(os.Stderr, "warning: multiple org-scoped tools map to bare name %q: %v\n", bare, keys)
-		}
-	}
-
-	return m
-}
-
-// ProjectVersionFor returns the project-pinned version for a command.
-// It looks up the command in the binary index, then checks if any matching
-// recipe is declared in the project config.
-func (r *Resolver) ProjectVersionFor(ctx context.Context, command string) (string, bool, error) {
-	if r.config == nil {
-		return "", false, nil
-	}
-
-	matches, err := r.lookup(ctx, command)
-	if err != nil {
-		return "", false, err
-	}
-
-	for _, m := range matches {
-		// Fast path: bare key match (existing behavior)
-		if req, ok := r.config.Config.Tools[m.Recipe]; ok {
-			return req.Version, true, nil
-		}
-		// Org-scoped key match via reverse map
-		if orgKeys, ok := r.bareToOrg[m.Recipe]; ok {
-			for _, orgKey := range orgKeys {
-				if req, ok := r.config.Config.Tools[orgKey]; ok {
-					return req.Version, true, nil
-				}
-			}
-		}
-	}
-
-	return "", false, nil
-}
-
-// Tools returns the tool map from the underlying config, or nil if no config
-// is present. This is used by callers that need to check whether a recipe
-// appears in the project config without going through the command lookup path.
-func (r *Resolver) Tools() map[string]ToolRequirement {
-	if r.config == nil {
-		return nil
-	}
-	return r.config.Config.Tools
+	return set, nil
 }

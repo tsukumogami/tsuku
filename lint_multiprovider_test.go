@@ -1,0 +1,997 @@
+package main_test
+
+import (
+	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/printer"
+	"go/token"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
+	"testing"
+)
+
+// multiProviderPackages are the only packages that construct or consume
+// index.BinaryMatch. A multi-provider case built anywhere in here has to come
+// from internal/indexfixture, which is where the sanctioned constructor lives
+// and is deliberately not in this list.
+var multiProviderPackages = []string{
+	"internal/autoinstall",
+	"internal/project",
+	"internal/index",
+	"cmd/tsuku",
+}
+
+// fixtureCheckScanRoot is the tree the negative control lives in:
+// internal/indexfixture, which holds conforming test files of its own plus
+// testdata/fixturecheck/nonconforming_test.go, a file that violates both
+// rules.
+//
+// The control sits under testdata/ because the Go tool never compiles anything
+// there, and a file that breaks the rules on purpose has to be a file that
+// never builds. That is why the scanner below descends into testdata/ rather
+// than skipping it the way TestNoStdlibLog does.
+//
+// The scan root is the package directory rather than the testdata directory
+// itself, and that matters: pointing it straight at testdata/fixturecheck
+// would make the opt-in unfalsifiable, because a walk rooted inside testdata
+// never meets a directory named testdata and so cannot skip one.
+//
+// This tree is deliberately not in multiProviderPackages -- it is where the
+// sanctioned constructor lives, so the control is not a violation of anything.
+const fixtureCheckScanRoot = "internal/indexfixture"
+
+// A multiProviderViolation is one place a test builds a multi-provider case
+// without going through the fixture.
+type multiProviderViolation struct {
+	Pos  string // file:line
+	Rule string // which of the two rules fired
+	What string // the detail that identifies the construct
+}
+
+func (v multiProviderViolation) String() string {
+	return fmt.Sprintf("%s: %s: %s", v.Pos, v.Rule, v.What)
+}
+
+// TestMultiProviderCasesUseTheFixture is R17's static check.
+//
+// It fails on two constructs. The first is a composite literal of two or more
+// index.BinaryMatch elements: a hand-written match slice is a multi-provider
+// case that no index ever produced. The second is a recipe map with two keys
+// yielding the same command, which is a multi-provider case assembled for
+// Rebuild.
+//
+// The rule keys on element count rather than on recipe names, and that is what
+// makes it writable at all. R17 says a grep cannot work because several
+// registry names are ordinary words; it also cannot work in the other
+// direction, because roughly twenty-five single-element literals across these
+// packages are legitimate single-provider cases that R18 freezes, and any
+// name-keyed rule flags every one of them. The count rule flags none of them.
+//
+// The per-package file count is asserted separately from the violations,
+// because a whole-scan "matched nothing" guard would be satisfied by a scan
+// that silently walked one package of four.
+func TestMultiProviderCasesUseTheFixture(t *testing.T) {
+	for _, pkg := range multiProviderPackages {
+		t.Run(pkg, func(t *testing.T) {
+			violations, files, err := scanMultiProviderConstruction(pkg)
+			if err != nil {
+				t.Fatalf("scanning %s: %v", pkg, err)
+			}
+			if files == 0 {
+				t.Fatalf("%s: scanned 0 test files; the check is not looking at this package", pkg)
+			}
+			for _, v := range violations {
+				t.Errorf("%s\n  build this through internal/indexfixture instead: "+
+					"a multi-provider case written by hand stops exercising anything the moment "+
+					"the names in it stop meaning what they meant", v)
+			}
+		})
+	}
+}
+
+// TestMultiProviderCheckFiresOnNonConformingFixture exercises the check
+// against a file that breaks both rules, which is what AC48 requires: a check
+// that cannot fail is worse than no check.
+//
+// It carries the assertion that the scanner opts back into testdata/, as its
+// own check rather than as a side effect. Every violation the negative control
+// produces comes from under testdata/, so a scanner that skipped testdata/
+// would report nothing here -- and "the check found nothing wrong" is exactly
+// how a check that no longer works reads.
+func TestMultiProviderCheckFiresOnNonConformingFixture(t *testing.T) {
+	violations, files, err := scanMultiProviderConstruction(fixtureCheckScanRoot)
+	if err != nil {
+		t.Fatalf("scanning %s: %v", fixtureCheckScanRoot, err)
+	}
+	if files == 0 {
+		t.Fatalf("%s: scanned 0 files", fixtureCheckScanRoot)
+	}
+
+	sawTestdata := false
+	fired := map[string]bool{}
+	for _, v := range violations {
+		fired[v.Rule] = true
+		if strings.Contains(filepath.ToSlash(v.Pos), "/testdata/") {
+			sawTestdata = true
+		}
+	}
+	if !sawTestdata {
+		t.Fatalf("no violation was reported from under testdata/ in %s; the scanner is skipping testdata/, "+
+			"so the negative control was never read and this check is unexercised. Found: %v",
+			fixtureCheckScanRoot, violations)
+	}
+	for _, rule := range []string{ruleMatchLiteral, ruleRecipeMap} {
+		if !fired[rule] {
+			t.Errorf("negative control did not trigger %q; found: %v", rule, violations)
+		}
+	}
+
+	// The count, not just the rules. Without it the control's two deliberately
+	// clean functions -- oneRecipe and appendBuiltTwoProviders -- are
+	// unmeasured: each claims in its comment to be a case the check must not
+	// flag, and nothing here would notice if either started firing. A check
+	// that reports "both rules fired" is satisfied whether the file yields two
+	// violations or twenty.
+	//
+	// If you add a violating construct to the control, raise this number in
+	// the same change. If you add a *clean* one, the number stays and that is
+	// the assertion earning its keep.
+	const wantViolations = 2
+	if len(violations) != wantViolations {
+		t.Errorf("negative control produced %d violations, want %d: %v.\n"+
+			"More than expected means a function meant to be clean is now "+
+			"flagged -- check oneRecipe and appendBuiltTwoProviders, which "+
+			"document themselves as cases the rule does not reach.",
+			len(violations), wantViolations, violations)
+	}
+}
+
+// TestMultiProviderCheckAllowsSingleProviderCases pins the other half of the
+// rule: a one-element literal is a single-provider case, and R18 requires
+// those to keep working untouched.
+func TestMultiProviderCheckAllowsSingleProviderCases(t *testing.T) {
+	src := `package p
+
+import "github.com/tsukumogami/tsuku/internal/index"
+
+func f() []index.BinaryMatch {
+	return []index.BinaryMatch{{Recipe: "jq", Command: "jq"}}
+}
+
+func g() map[string][]byte {
+	return map[string][]byte{"jq": recipeTOML("bin/jq")}
+}
+`
+	violations, err := checkMultiProviderSource("single_test.go", src)
+	if err != nil {
+		t.Fatalf("parsing source: %v", err)
+	}
+	if len(violations) != 0 {
+		t.Errorf("single-provider constructs were flagged: %v", violations)
+	}
+}
+
+// TestMultiProviderCheckReadsInlineRecipeTOML covers the second of the two
+// shapes a recipe map value can take. Nothing in the repository writes a
+// recipe map this way today, which is exactly why it has a test: without one
+// the TOML scanner is a branch nobody ever runs, and a branch nobody runs is
+// indistinguishable from a branch that does not work.
+func TestMultiProviderCheckReadsInlineRecipeTOML(t *testing.T) {
+	const toml = "[metadata]\\nname = \\\"x\\\"\\nbinaries = [\\\"bin/vi\\\"]\\n"
+	src := `package p
+
+func g() map[string][]byte {
+	return map[string][]byte{
+		"neovim": []byte("` + toml + `"),
+		"vim":    []byte("` + toml + `"),
+	}
+}
+
+func h() map[string][]byte {
+	return map[string][]byte{
+		"jq":   []byte("[metadata]\nbinaries = [\"bin/jq\"]\n"),
+		"ripgrep": []byte("[metadata]\nbinaries = [\"bin/rg\"]\n"),
+	}
+}
+`
+	violations, err := checkMultiProviderSource("inline_test.go", src)
+	if err != nil {
+		t.Fatalf("parsing source: %v", err)
+	}
+	if len(violations) != 1 {
+		t.Fatalf("got %d violations, want 1 (the pair yielding \"vi\"): %v", len(violations), violations)
+	}
+	if violations[0].Rule != ruleRecipeMap {
+		t.Errorf("rule = %q, want %q", violations[0].Rule, ruleRecipeMap)
+	}
+	if !strings.Contains(violations[0].What, `"vi"`) {
+		t.Errorf("violation does not name the duplicated command: %s", violations[0].What)
+	}
+}
+
+// TestMultiProviderCheckReadsHelperCallArgument is the other half of the pair
+// above, and pins the split between the two arms. A helper's argument says
+// nothing about which command the recipe declares -- the helper decides that,
+// and "vi" here is a name, not a path -- so the pair is reported under the
+// conditional message rather than as a command. What makes the two keys a pair
+// is that the same argument produces the same recipe.
+func TestMultiProviderCheckReadsHelperCallArgument(t *testing.T) {
+	src := `package p
+
+func g() map[string][]byte {
+	return map[string][]byte{
+		"neovim": recipeTOML("vi"),
+		"vim":    recipeTOML("vi"),
+	}
+}
+
+func h() map[string][]byte {
+	return map[string][]byte{
+		"neovim": recipeTOML("vi"),
+		"vim":    recipeTOML("jq"),
+	}
+}
+`
+	violations, err := checkMultiProviderSource("helper_test.go", src)
+	if err != nil {
+		t.Fatalf("parsing source: %v", err)
+	}
+	if len(violations) != 1 || violations[0].Rule != ruleRecipeMap {
+		t.Fatalf("got %v, want one %s violation", violations, ruleRecipeMap)
+	}
+	if !strings.Contains(violations[0].What, "if it declares a binary") {
+		t.Errorf("helper-argument pair was reported as a settled command rather than a conditional pair: %s",
+			violations[0].What)
+	}
+}
+
+// TestMultiProviderCheckCatchesElidedLiterals covers the shape a command-keyed
+// LookupFunc stub takes. The inner literals carry no type of their own, so the
+// type-keyed rule cannot see them and they have to be reached through their
+// container.
+func TestMultiProviderCheckCatchesElidedLiterals(t *testing.T) {
+	src := `package p
+
+import "github.com/tsukumogami/tsuku/internal/index"
+
+var byCommand = map[string][]index.BinaryMatch{
+	"vi": {
+		{Recipe: "neovim", Command: "vi"},
+		{Recipe: "vim", Command: "vi"},
+	},
+	"jq": {
+		{Recipe: "jq", Command: "jq"},
+	},
+}
+
+var nested = [][]index.BinaryMatch{
+	{
+		{Recipe: "neovim", Command: "vi"},
+		{Recipe: "vim", Command: "vi"},
+	},
+}
+
+var fixed = [2]index.BinaryMatch{
+	{Recipe: "neovim", Command: "vi"},
+	{Recipe: "vim", Command: "vi"},
+}
+`
+	violations, err := checkMultiProviderSource("elided_test.go", src)
+	if err != nil {
+		t.Fatalf("parsing source: %v", err)
+	}
+	if len(violations) != 3 {
+		t.Fatalf("got %d violations, want 3 (map value, nested slice, fixed array): %v",
+			len(violations), violations)
+	}
+	for _, v := range violations {
+		if v.Rule != ruleMatchLiteral {
+			t.Errorf("rule = %q, want %q", v.Rule, ruleMatchLiteral)
+		}
+	}
+}
+
+// TestMultiProviderCheckCatchesSharedRecipeBody covers recipe-map values whose
+// contents cannot be read here. Two keys holding the textually identical
+// expression hold the same recipe bytes, so if that recipe declares a binary
+// the pair is a multi-provider case -- which is a thing the syntax cannot
+// settle, so the rule reports the pair and says so.
+//
+// A shared field counts as much as a shared variable: it was the form the
+// first version of this rule missed while advertising that it caught the
+// other.
+func TestMultiProviderCheckCatchesSharedRecipeBody(t *testing.T) {
+	src := `package p
+
+type fixtures struct{ toml []byte }
+
+func shared(toml, other []byte) map[string][]byte {
+	return map[string][]byte{"neovim": toml, "vim": toml}
+}
+
+func sharedField(f fixtures) map[string][]byte {
+	return map[string][]byte{"neovim": f.toml, "vim": f.toml}
+}
+
+func distinct(toml, other []byte) map[string][]byte {
+	return map[string][]byte{"neovim": toml, "vim": other}
+}
+
+func single(toml []byte) map[string][]byte {
+	return map[string][]byte{"multi": toml}
+}
+`
+	violations, err := checkMultiProviderSource("sharedbody_test.go", src)
+	if err != nil {
+		t.Fatalf("parsing source: %v", err)
+	}
+	if len(violations) != 2 {
+		t.Fatalf("got %d violations, want 2 (the shared variable and the shared field): %v",
+			len(violations), violations)
+	}
+	for _, v := range violations {
+		if strings.Contains(v.What, sharedPrefix) {
+			t.Errorf("internal marker leaked into the message: %s", v.What)
+		}
+	}
+	if !strings.Contains(violations[0].What, "toml") || !strings.Contains(violations[1].What, "f.toml") {
+		t.Errorf("violations do not name the shared expressions: %v", violations)
+	}
+}
+
+// TestMultiProviderCheckIgnoresNilRecipeValues is the one shape excluded from
+// the shared-body rule. Two keys holding nil hold no recipe at all, so
+// reporting them would produce a message that is not true of anything -- and a
+// rule with no exemption hatch has to be right about what it reports.
+func TestMultiProviderCheckIgnoresNilRecipeValues(t *testing.T) {
+	src := `package p
+
+func g() map[string][]byte {
+	return map[string][]byte{"broken": nil, "alsobroken": nil}
+}
+`
+	violations, err := checkMultiProviderSource("nil_test.go", src)
+	if err != nil {
+		t.Fatalf("parsing source: %v", err)
+	}
+	if len(violations) != 0 {
+		t.Errorf("nil recipe values were flagged: %v", violations)
+	}
+}
+
+const (
+	ruleMatchLiteral = "multi-element BinaryMatch literal"
+	ruleRecipeMap    = "recipe map with two keys yielding the same command"
+
+	// sharedPrefix marks a key that stands for "whatever these keys have in
+	// common" rather than for a command read out of a recipe, so the two
+	// namespaces share one counting map without colliding. Only this side is
+	// prefixed, and a command name is the base of a path from a recipe's
+	// binaries list, so colliding would take a recipe declaring a binary
+	// literally named "shared:something".
+	sharedPrefix = "shared:"
+)
+
+// scanMultiProviderConstruction parses every _test.go file under root,
+// including files under testdata/ directories, and returns the violations
+// found along with the number of files parsed.
+//
+// Descending into testdata/ is deliberate and is the one place this scanner
+// differs from TestNoStdlibLog's walk: the negative control is a file that
+// must never compile, so it can only live where the Go tool does not look.
+func scanMultiProviderConstruction(root string) ([]multiProviderViolation, int, error) {
+	var violations []multiProviderViolation
+	files := 0
+
+	err := filepath.WalkDir(root, func(p string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			if d.Name() == "vendor" {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if !strings.HasSuffix(p, "_test.go") {
+			return nil
+		}
+		data, readErr := os.ReadFile(p) //nolint:gosec // p comes from a walk of the repository
+		if readErr != nil {
+			return readErr
+		}
+		files++
+		found, parseErr := checkMultiProviderSource(p, string(data))
+		if parseErr != nil {
+			return parseErr
+		}
+		violations = append(violations, found...)
+		return nil
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+	return violations, files, nil
+}
+
+// checkMultiProviderSource applies both rules to one file's source.
+func checkMultiProviderSource(name, src string) ([]multiProviderViolation, error) {
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, name, src, parser.SkipObjectResolution)
+	if err != nil {
+		return nil, err
+	}
+
+	var violations []multiProviderViolation
+	ast.Inspect(file, func(n ast.Node) bool {
+		lit, ok := n.(*ast.CompositeLit)
+		if !ok {
+			return true
+		}
+		pos := fset.Position(lit.Pos()).String()
+
+		if isBinaryMatchSlice(lit.Type) && len(lit.Elts) >= 2 {
+			violations = append(violations, multiProviderViolation{
+				Pos:  pos,
+				Rule: ruleMatchLiteral,
+				What: fmt.Sprintf("%d elements", len(lit.Elts)),
+			})
+			return true
+		}
+
+		// A literal whose elements are themselves []BinaryMatch elides the
+		// inner types: in
+		//
+		//	map[string][]index.BinaryMatch{"vi": {{...}, {...}}}
+		//
+		// the inner literal has a nil Type, so the check above never sees it.
+		// That is the natural shape for a command-keyed LookupFunc stub, which
+		// is what the units consuming this fixture reach for, so it is caught
+		// here rather than left as a documented gap.
+		if elt, ok := elementType(lit.Type); ok && isBinaryMatchSlice(elt) {
+			for _, e := range lit.Elts {
+				inner := e
+				if kv, ok := e.(*ast.KeyValueExpr); ok {
+					inner = kv.Value
+				}
+				il, ok := inner.(*ast.CompositeLit)
+				if ok && il.Type == nil && len(il.Elts) >= 2 {
+					violations = append(violations, multiProviderViolation{
+						Pos:  fset.Position(il.Pos()).String(),
+						Rule: ruleMatchLiteral,
+						What: fmt.Sprintf("%d elements, in an elided literal", len(il.Elts)),
+					})
+				}
+			}
+		}
+
+		if isRecipeMap(lit.Type) {
+			if cmd, n := duplicateCommandInRecipeMap(lit); n >= 2 {
+				what := fmt.Sprintf("%d keys declare the command %q", n, cmd)
+				if text, ok := strings.CutPrefix(cmd, sharedPrefix); ok {
+					what = fmt.Sprintf("%d keys hold the same recipe, built from %s; "+
+						"if it declares a binary, they are two providers of one command", n, text)
+				}
+				violations = append(violations, multiProviderViolation{
+					Pos:  pos,
+					Rule: ruleRecipeMap,
+					What: what,
+				})
+			}
+		}
+		return true
+	})
+	return violations, nil
+}
+
+// isBinaryMatchSlice reports whether expr is a slice or array of BinaryMatch,
+// qualified or not: the unqualified form is how internal/index's own tests
+// write it. The type name alone is the test -- no import resolution happens
+// here, so a BinaryMatch from some other package would match too, which has
+// not come up and would be a strange thing to write. Fixed-size arrays count:
+// an [2]index.BinaryMatch literal is the same construct with a length on it.
+func isBinaryMatchSlice(expr ast.Expr) bool {
+	arr, ok := expr.(*ast.ArrayType)
+	if !ok {
+		return false
+	}
+	switch elt := arr.Elt.(type) {
+	case *ast.Ident:
+		return elt.Name == "BinaryMatch"
+	case *ast.SelectorExpr:
+		return elt.Sel.Name == "BinaryMatch"
+	}
+	return false
+}
+
+// elementType returns the type a composite literal of type expr gives its
+// elements, which is the type the elements may elide.
+func elementType(expr ast.Expr) (ast.Expr, bool) {
+	switch t := expr.(type) {
+	case *ast.ArrayType:
+		return t.Elt, true
+	case *ast.MapType:
+		return t.Value, true
+	}
+	return nil, false
+}
+
+// isRecipeMap reports whether expr is map[string][]byte, which is the shape
+// every recipe map handed to Rebuild has: recipe name to raw TOML.
+//
+// The type is generic, so this rule is scoped to multiProviderPackages rather
+// than run repository-wide: internal/recipe/loader_test.go alone has fifteen
+// map[string][]byte literals that have nothing to do with the index. Within
+// the four scanned packages every such map is a Rebuild input, but that is a
+// fact about those packages, not about the type.
+//
+// If this ever produces a false positive -- a map[string][]byte in one of the
+// four that is not a recipe map at all, or one whose shared value carries no
+// binary -- the fix is to change the construct or to narrow this predicate so
+// the map is not read as a recipe map. It is not to narrow
+// duplicateCommandInRecipeMap, which for an opaque value has nothing finer to
+// go on, and it is not to add a suppression comment: there is deliberately no
+// exemption mechanism, because an escape hatch on this rule is an escape hatch
+// on R17.
+func isRecipeMap(expr ast.Expr) bool {
+	m, ok := expr.(*ast.MapType)
+	if !ok {
+		return false
+	}
+	key, ok := m.Key.(*ast.Ident)
+	if !ok || key.Name != "string" {
+		return false
+	}
+	val, ok := m.Value.(*ast.ArrayType)
+	if !ok || val.Len != nil {
+		return false
+	}
+	elt, ok := val.Elt.(*ast.Ident)
+	return ok && elt.Name == "byte"
+}
+
+// duplicateCommandInRecipeMap returns the key that two or more entries of lit
+// share, and how many share it. See commandsYieldedBy for what a key is: a
+// command read out of inline TOML, or a sharedPrefix key standing for the
+// bytes two opaque values have in common.
+func duplicateCommandInRecipeMap(lit *ast.CompositeLit) (string, int) {
+	counts := map[string]int{}
+	var order []string
+	for _, elt := range lit.Elts {
+		kv, ok := elt.(*ast.KeyValueExpr)
+		if !ok {
+			continue
+		}
+		for _, cmd := range commandsYieldedBy(kv.Value) {
+			if counts[cmd] == 0 {
+				order = append(order, cmd)
+			}
+			counts[cmd]++
+		}
+	}
+	// Source order, not map order: which duplicate gets reported should not
+	// change between runs of the same check on the same file.
+	for _, cmd := range order {
+		if counts[cmd] >= 2 {
+			return cmd, counts[cmd]
+		}
+	}
+	return "", 0
+}
+
+// commandsYieldedBy extracts what a recipe map value contributes to the
+// duplicate count.
+//
+// A map[string][]byte entry cannot be a bare string literal -- an untyped
+// string constant is not assignable to []byte -- so there is no literal form
+// to read. Exactly one form can be read for the commands it actually
+// declares: a []byte conversion wrapping inline TOML,
+// []byte("[metadata]\nbinaries = [\"bin/vi\"]"), scanned for its binaries.
+// Those keys are unprefixed, and a duplicate among them is a duplicate
+// command with nothing left to assume.
+//
+// Everything else -- a helper call, a variable, a field, an index expression
+// -- is opaque. Those are keyed on what two entries would have to share to
+// hold the same bytes: the helper's argument where there is one, the source
+// text of the expression otherwise. A duplicate among them says the two keys
+// hold the same recipe, and *if* that recipe declares a binary they are two
+// providers of one command.
+//
+// The "if" is real and is not proved here. A shared value declaring no binary
+// produces no index rows and is not a multi-provider case, but which it is
+// cannot be known from the syntax, so the rule reports the pair and leaves
+// the author to say which. The assumption underneath is that a repeated
+// expression evaluates to the same bytes both times, which an impure one
+// breaks; nobody writes a recipe map that way, and if someone does, being
+// asked about it is the right outcome.
+//
+// nil is the one shape excluded outright, because it never carries a recipe
+// and reporting it would only ever be noise.
+//
+// See the package comment on internal/indexfixture for what this rule misses.
+// That list names the cases worth knowing about; it is not exhaustive, and a
+// construct absent from it is not thereby sanctioned.
+func commandsYieldedBy(expr ast.Expr) []string {
+	if call, ok := expr.(*ast.CallExpr); ok && len(call.Args) == 1 {
+		if s, ok := stringLiteral(call.Args[0]); ok {
+			if isByteSliceConversion(call.Fun) {
+				// Inline TOML that declares no binary under bin/ falls through
+				// to the opaque key rather than yielding nothing: two keys
+				// holding identical TOML are the same pair either way, and the
+				// scanner only recognizes one layout.
+				if cmds := commandsInRecipeTOML(s); len(cmds) > 0 {
+					return cmds
+				}
+			} else {
+				// A helper's argument, whatever the helper does with it. Two
+				// keys built from the same argument hold the same recipe even
+				// when the helpers differ.
+				return []string{sharedPrefix + strconv.Quote(s)}
+			}
+		}
+	}
+	if ident, ok := expr.(*ast.Ident); ok && ident.Name == "nil" {
+		return nil
+	}
+	return []string{sharedPrefix + exprText(expr)}
+}
+
+// exprText renders an expression back to source, so two values can be compared
+// for textual identity.
+func exprText(expr ast.Expr) string {
+	var b strings.Builder
+	if err := printer.Fprint(&b, token.NewFileSet(), expr); err != nil {
+		// Unprintable expressions are not comparable, and a unique string
+		// keeps them from being counted as duplicates of anything.
+		return fmt.Sprintf("<unprintable %T %p>", expr, expr)
+	}
+	return b.String()
+}
+
+// isByteSliceConversion reports whether fun is the []byte in []byte("...").
+func isByteSliceConversion(fun ast.Expr) bool {
+	arr, ok := fun.(*ast.ArrayType)
+	if !ok || arr.Len != nil {
+		return false
+	}
+	elt, ok := arr.Elt.(*ast.Ident)
+	return ok && elt.Name == "byte"
+}
+
+func stringLiteral(expr ast.Expr) (string, bool) {
+	lit, ok := expr.(*ast.BasicLit)
+	if !ok || lit.Kind != token.STRING {
+		return "", false
+	}
+	s, err := strconv.Unquote(lit.Value)
+	if err != nil {
+		return "", false
+	}
+	return s, true
+}
+
+// commandsInRecipeTOML pulls every bin/<name> out of an inline recipe TOML.
+func commandsInRecipeTOML(toml string) []string {
+	var cmds []string
+	rest := toml
+	for {
+		i := strings.Index(rest, "bin/")
+		if i < 0 {
+			return cmds
+		}
+		rest = rest[i+len("bin/"):]
+		end := strings.IndexFunc(rest, func(r rune) bool {
+			return r == '"' || r == '\'' || r == ' ' || r == '\n' || r == ']' || r == ','
+		})
+		name := rest
+		if end >= 0 {
+			name = rest[:end]
+		}
+		if name != "" {
+			cmds = append(cmds, strings.TrimSuffix(name, ".exe"))
+		}
+	}
+}
+
+// TestMultiProviderPackagesIsDerivedNotRemembered keeps multiProviderPackages
+// honest.
+//
+// The list above is a hand-maintained enumeration of scan targets, and a
+// hand-maintained list of what a check examines is the failure this repository
+// keeps meeting: the check goes on passing while its subject stops matching
+// its rule. The per-package file count in TestMultiProviderCasesUseTheFixture
+// closes the neighboring failure -- a scan that silently walked one package
+// of four -- but it cannot see a package that was never in the list to begin
+// with. A fifth package acquiring BinaryMatch construction is uncovered, and
+// nothing says so.
+//
+// So the truth set is derived from the tree and compared against the list.
+//
+// The type is matched in BOTH its qualified and unqualified forms, and that is
+// the part to read before editing. Inside internal/index -- the package that
+// declares the type -- it is referenced bare: "[]BinaryMatch", "var m
+// BinaryMatch". A derivation written against "index.BinaryMatch" alone finds
+// six packages and misses internal/index, so it fails against a list that is
+// correct, and the obvious repair is to delete a real scan target. That would
+// leave a green suite covering one package fewer than before, which is worse
+// than the gap this test closes.
+func TestMultiProviderPackagesIsDerivedNotRemembered(t *testing.T) {
+	// Packages that reference the type but sit outside the enumeration, each
+	// for a stated reason rather than by omission.
+	exempt := map[string]string{
+		// The sanctioned constructor. Building multi-provider cases is its
+		// purpose, so it cannot violate the rule it exists to serve.
+		"internal/indexfixture": "sanctioned constructor",
+		// The negative control: a file that must break both rules.
+		"internal/indexfixture/testdata/fixturecheck": "negative control",
+		// The check's own source, which names the type to describe it.
+		".": "the check itself",
+	}
+
+	found, err := packagesReferencingBinaryMatch()
+	if err != nil {
+		t.Fatalf("deriving the truth set: %v", err)
+	}
+	if len(found) == 0 {
+		t.Fatal("derivation found no package referencing BinaryMatch at all; " +
+			"the walk is broken, not the tree")
+	}
+
+	derived := map[string]bool{}
+	for _, pkg := range found {
+		if _, ok := exempt[pkg]; ok {
+			continue
+		}
+		derived[pkg] = true
+	}
+
+	listed := map[string]bool{}
+	for _, pkg := range multiProviderPackages {
+		listed[pkg] = true
+	}
+
+	for pkg := range derived {
+		if !listed[pkg] {
+			t.Errorf("package %q references BinaryMatch but is not in "+
+				"multiProviderPackages, so R17's check never examines it. "+
+				"Add it to the list, or add it to this test's exempt map "+
+				"with a reason.", pkg)
+		}
+	}
+	for pkg := range listed {
+		if !derived[pkg] {
+			t.Errorf("package %q is in multiProviderPackages but no longer "+
+				"references BinaryMatch. Remove it, or find out why the "+
+				"derivation cannot see it -- note that internal/index names "+
+				"the type unqualified.", pkg)
+		}
+	}
+}
+
+// packagesReferencingBinaryMatch walks the module and returns every directory
+// holding a .go file that names the BinaryMatch type, qualified or not.
+//
+// It is deliberately textual rather than type-checked. A type-checked
+// derivation cannot see internal/indexfixture/testdata/fixturecheck, which
+// does not compile by design, and a derivation blind to the negative control
+// could not assert that the control is exempt on purpose rather than by
+// accident.
+func packagesReferencingBinaryMatch() ([]string, error) {
+	seen := map[string]bool{}
+	err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			name := info.Name()
+			// Skip every dot-directory, not just .git. This repository's
+			// worktree flow puts complete copies of the tree under
+			// .claude/worktrees/<name>/, and filepath.Walk does not honor
+			// .gitignore. Walking into one yields a second copy of every
+			// scanned package under a path that is in neither the list nor
+			// the exempt map, so the test fails -- and fails only for
+			// developers with a worktree open, never in CI, which checks out
+			// clean. The failure message would then invite pasting worktree
+			// paths into multiProviderPackages, which is the wrong repair.
+			//
+			// "." itself has Name() == "." and must not be skipped.
+			if name == "vendor" || (name != "." && strings.HasPrefix(name, ".")) {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if !strings.HasSuffix(path, ".go") {
+			return nil
+		}
+		src, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		if !referencesBinaryMatch(string(src)) {
+			return nil
+		}
+		seen[filepath.ToSlash(filepath.Dir(path))] = true
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	out := make([]string, 0, len(seen))
+	for dir := range seen {
+		out = append(out, dir)
+	}
+	return out, nil
+}
+
+// binaryMatchRE matches the type name on word boundaries, which covers both
+// forms: the qualified "index.BinaryMatch" (the '.' is a boundary) and the
+// unqualified "BinaryMatch" used inside the declaring package. The boundaries
+// are what stop it firing on a longer identifier that merely contains the
+// word, such as binaryMatchCache.
+var binaryMatchRE = regexp.MustCompile(`\bBinaryMatch\b`)
+
+// referencesBinaryMatch reports whether src names the type in either form.
+func referencesBinaryMatch(src string) bool {
+	return binaryMatchRE.MatchString(src)
+}
+
+// TestMultiProviderCheckHasAKnownGap pins the boundary of the rule's reach.
+//
+// Everything else in this file asserts what the check catches. This asserts
+// what it does not, and that asymmetry is the point: the negative control
+// breaks two rules and both of them are composite-literal rules, so until now
+// the gap existed only in prose. A limit stated only in a comment is a limit
+// nobody can test against, and the whole batch this work belongs to keeps
+// finding controls whose reported scope exceeded what they examined.
+//
+// The construct below is the forbidden one -- two providers of one command,
+// out of the published registry -- built by append rather than written as a
+// literal. The check reports nothing, deliberately.
+//
+// This is not a bug to fix while passing through. If the rule is ever widened
+// to reach append and loop construction, this test is where that shows up: the
+// expected count changes from zero to one, and a widening that did not
+// actually work fails here rather than passing quietly.
+func TestMultiProviderCheckHasAKnownGap(t *testing.T) {
+	src := `package p
+
+import "github.com/tsukumogami/tsuku/internal/index"
+
+func f() []index.BinaryMatch {
+	var matches []index.BinaryMatch
+	for _, r := range []string{"neovim", "vim"} {
+		matches = append(matches, index.BinaryMatch{Recipe: r, Command: "vi"})
+	}
+	return matches
+}
+`
+	violations, err := checkMultiProviderSource("gap_test.go", src)
+	if err != nil {
+		t.Fatalf("parsing source: %v", err)
+	}
+	if len(violations) != 0 {
+		t.Errorf("the append-built gap now reports %d violation(s): %v.\n"+
+			"If the rule was widened on purpose, change the expectation here "+
+			"to match and update the package comment on internal/indexfixture, "+
+			"which still documents this shape as out of reach.",
+			len(violations), violations)
+	}
+
+	// The single-element literal inside the loop must not be what saves it:
+	// the rule keys on element count, and a one-element literal is legitimate
+	// everywhere. Without this, a future rule that flagged every BinaryMatch
+	// literal regardless of count would make the assertion above fail for a
+	// reason unrelated to the gap.
+	single := `package p
+
+import "github.com/tsukumogami/tsuku/internal/index"
+
+func f() index.BinaryMatch { return index.BinaryMatch{Recipe: "jq", Command: "jq"} }
+`
+	singleViolations, err := checkMultiProviderSource("single_gap_test.go", single)
+	if err != nil {
+		t.Fatalf("parsing source: %v", err)
+	}
+	if len(singleViolations) != 0 {
+		t.Errorf("a single-element literal was flagged: %v", singleViolations)
+	}
+}
+
+// TestNegativeControlAppendShapeContributesNothing asserts the known gap
+// through the real file-scanning path, not through an inline source string.
+//
+// TestMultiProviderCheckHasAKnownGap pins the same boundary against a source
+// literal, which exercises the two rules but not the walker. This one scans
+// the negative control on disk and asserts that appendBuiltTwoProviders --
+// the forbidden construct, assembled by append instead of written as a
+// literal -- contributes no violation from inside its own line range.
+//
+// It exists because the comment on that function used to claim the gap test
+// covered it, and the gap test never reads that file. A function that
+// contributes zero violations to a test which only checks that violations
+// fired is invisible: nothing would have noticed if it started firing, and
+// nothing would have noticed if it were deleted. The claim is now checked
+// where it is made.
+//
+// If the rule is widened to reach append construction, this fails, and it
+// should: the fix is to move appendBuiltTwoProviders into the counted
+// violations rather than to relax this assertion.
+func TestNegativeControlAppendShapeContributesNothing(t *testing.T) {
+	const controlPath = "internal/indexfixture/testdata/fixturecheck/nonconforming_test.go"
+
+	src, err := os.ReadFile(controlPath)
+	if err != nil {
+		t.Fatalf("reading the negative control: %v", err)
+	}
+
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, controlPath, src, parser.ParseComments)
+	if err != nil {
+		t.Fatalf("parsing the negative control: %v", err)
+	}
+
+	var lo, hi int
+	for _, decl := range file.Decls {
+		fn, ok := decl.(*ast.FuncDecl)
+		if !ok || fn.Name.Name != "appendBuiltTwoProviders" {
+			continue
+		}
+		lo = fset.Position(fn.Pos()).Line
+		hi = fset.Position(fn.End()).Line
+	}
+	if lo == 0 {
+		t.Fatalf("appendBuiltTwoProviders is gone from %s. It is the executable "+
+			"record of what the rule does not reach; if it was removed on purpose, "+
+			"remove this test in the same change and say so in the package comment "+
+			"on internal/indexfixture.", controlPath)
+	}
+
+	violations, err := checkMultiProviderSource(controlPath, string(src))
+	if err != nil {
+		t.Fatalf("scanning the negative control: %v", err)
+	}
+
+	// The control as a whole must still be a control: if nothing fires at all,
+	// this test would pass for the wrong reason.
+	if len(violations) == 0 {
+		t.Fatal("the negative control produced no violations at all; the check " +
+			"is broken, and this test's zero-in-range result means nothing")
+	}
+
+	for _, v := range violations {
+		line := lineOfPos(v.Pos)
+		if line >= lo && line <= hi {
+			t.Errorf("append-built construction at %s is now reported (%s: %s). "+
+				"If the rule was widened deliberately, move this function into the "+
+				"counted violations and update the package comment on "+
+				"internal/indexfixture, which documents the shape as out of reach.",
+				v.Pos, v.Rule, v.What)
+		}
+	}
+}
+
+// lineOfPos pulls the line number out of a violation position.
+//
+// token.Position.String() renders "file:line:column", so the line is the
+// second-to-last colon-separated field, not the last. Reading the last field
+// yields the column, which is a small number that falls inside no realistic
+// line range -- an in-range test built on it would pass unconditionally. It
+// did, until a mutation caught it.
+//
+// A path containing colons is why this counts from the right rather than
+// splitting on the first.
+func lineOfPos(pos string) int {
+	parts := strings.Split(pos, ":")
+	if len(parts) < 3 {
+		return 0
+	}
+	n, err := strconv.Atoi(parts[len(parts)-2])
+	if err != nil {
+		return 0
+	}
+	return n
+}

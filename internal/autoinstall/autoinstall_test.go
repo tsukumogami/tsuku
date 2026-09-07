@@ -13,20 +13,41 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/index"
+	"github.com/tsukumogami/tsuku/internal/indexfixture"
+	"github.com/tsukumogami/tsuku/internal/project"
 )
 
-// mockProjectVersionResolver is a test double for ProjectVersionResolver.
-type mockProjectVersionResolver struct {
-	versions map[string]string // command -> version
+// mockDeclarationResolver is a test double for ProjectDeclarationResolver,
+// for the single-provider cases where the fixture would add nothing: the
+// declared recipe is the only match, so index ranking and declaration cannot
+// disagree and there is no narrowing to get wrong. Anything with more than one
+// provider goes through internal/indexfixture instead -- see candidates_test.go.
+//
+// versions is keyed on the recipe name, which is what the real resolver keys
+// on. Every case here uses a command and a recipe of the same name.
+type mockDeclarationResolver struct {
+	versions map[string]string // recipe -> declared version
 	err      error
 }
 
-func (m *mockProjectVersionResolver) ProjectVersionFor(_ context.Context, command string) (string, bool, error) {
+func (m *mockDeclarationResolver) DeclarationsFor(_ context.Context, matches []index.BinaryMatch) ([]project.ProjectDeclaration, error) {
 	if m.err != nil {
-		return "", false, m.err
+		return nil, m.err
 	}
-	v, ok := m.versions[command]
-	return v, ok, nil
+	var set []project.ProjectDeclaration
+	for _, match := range matches {
+		version, ok := m.versions[match.Recipe]
+		if !ok {
+			continue
+		}
+		set = append(set, project.ProjectDeclaration{
+			Recipe:     match.Recipe,
+			Version:    version,
+			ConfigKey:  match.Recipe,
+			ConfigPath: declaredConfigPath,
+		})
+	}
+	return set, nil
 }
 
 // mockInstaller records install calls.
@@ -66,6 +87,20 @@ func newTestRunner(t *testing.T) (*Runner, *bytes.Buffer, *bytes.Buffer) {
 		HomeDir:    tmpDir,
 		CacheDir:   filepath.Join(tmpDir, "cache"),
 		CurrentDir: filepath.Join(tmpDir, "tools", "current"),
+		// The file the configuration-permission gate guards, which is the
+		// one userconfig.Load reads. DefaultConfig fills it in; a hand-built
+		// Config has to as well, or the gate has no path to check and fires
+		// rather than passing.
+		ConfigFile: filepath.Join(tmpDir, "config.toml"),
+		// What ToolBinDir joins against, and it has to be set. Left empty it
+		// is not merely unused: Run's declared fast path stats
+		// ToolBinDir(recipe, version)/command, which without this resolves
+		// *relative to the package directory* -- so the path a case stats,
+		// and the path a case that lays a tool down writes to, is
+		// internal/autoinstall/jq-1.7.1/bin/jq in the source tree. That
+		// leaves a stray directory behind and, while it exists, every later
+		// declared case takes the fast path and installs nothing.
+		ToolsDir: filepath.Join(tmpDir, "tools"),
 	}
 	// Create the current dir so binary path construction works.
 	if err := os.MkdirAll(cfg.CurrentDir, 0755); err != nil {
@@ -75,6 +110,11 @@ func newTestRunner(t *testing.T) (*Runner, *bytes.Buffer, *bytes.Buffer) {
 	stdout := &bytes.Buffer{}
 	stderr := &bytes.Buffer{}
 	r := NewRunner(cfg, stdout, stderr)
+	// A terminal is attached unless a case says otherwise. Confirm mode is
+	// what most of the cases below drive, and confirm mode with no terminal
+	// now refuses instead of prompting -- which is the point of the check, and
+	// would otherwise cut short every case that answers a prompt.
+	r.IsTerminal = func() bool { return true }
 	return r, stdout, stderr
 }
 
@@ -132,32 +172,26 @@ func TestModeString(t *testing.T) {
 	}
 }
 
-func TestMockProjectVersionResolver(t *testing.T) {
-	resolver := &mockProjectVersionResolver{
-		versions: map[string]string{"jq": "1.7.1"},
+// The five spellings are the record's, fixed by the requirement that names
+// them, so they are pinned rather than left to whoever next edits the switch.
+func TestOriginString(t *testing.T) {
+	tests := []struct {
+		origin Origin
+		want   string
+	}{
+		{OriginUnset, "unset"},
+		{OriginDefault, "default"},
+		{OriginFlag, "flag"},
+		{OriginEnvironment, "environment"},
+		{OriginConfig, "config"},
+		{OriginProject, "project"},
 	}
-
-	v, ok, err := resolver.ProjectVersionFor(context.Background(), "jq")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !ok {
-		t.Fatal("expected ok=true for pinned command")
-	}
-	if v != "1.7.1" {
-		t.Errorf("got version %q, want %q", v, "1.7.1")
-	}
-
-	_, ok, err = resolver.ProjectVersionFor(context.Background(), "curl")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if ok {
-		t.Error("expected ok=false for unpinned command")
+	for _, tt := range tests {
+		if got := tt.origin.String(); got != tt.want {
+			t.Errorf("Origin(%d).String() = %q, want %q", tt.origin, got, tt.want)
+		}
 	}
 }
-
-// --- Runner.Run tests ---
 
 func TestRun_ModeSuggest(t *testing.T) {
 	r, stdout, _ := newTestRunner(t)
@@ -165,7 +199,7 @@ func TestRun_ModeSuggest(t *testing.T) {
 		return []index.BinaryMatch{{Recipe: "jq", Command: "jq"}}, nil
 	}
 
-	err := r.Run(context.Background(), "jq", nil, ModeSuggest, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeSuggest, OriginFlag, nil)
 	if !errors.Is(err, ErrSuggestOnly) {
 		t.Fatalf("expected ErrSuggestOnly, got %v", err)
 	}
@@ -186,7 +220,7 @@ func TestRun_ModeConfirm_Yes(t *testing.T) {
 	r.Exec = execRec.exec
 	r.ConsentReader = strings.NewReader("y\n")
 
-	err := r.Run(context.Background(), "jq", []string{"."}, ModeConfirm, nil)
+	err := r.Run(context.Background(), "jq", []string{"."}, ModeConfirm, OriginFlag, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -208,7 +242,7 @@ func TestRun_ModeConfirm_No(t *testing.T) {
 	}
 	r.ConsentReader = strings.NewReader("n\n")
 
-	err := r.Run(context.Background(), "jq", nil, ModeConfirm, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeConfirm, OriginFlag, nil)
 	if !errors.Is(err, ErrUserDeclined) {
 		t.Fatalf("expected ErrUserDeclined, got %v", err)
 	}
@@ -227,10 +261,10 @@ func TestRun_ModeAuto_HappyPath(t *testing.T) {
 	r.RecipeHasVerification = func(_ string) bool { return true }
 
 	// Create a config file with 0600 so the permission check passes.
-	configPath := filepath.Join(r.cfg.HomeDir, "config.toml")
+	configPath := r.cfg.ConfigFile
 	_ = os.WriteFile(configPath, []byte(""), 0600)
 
-	err := r.Run(context.Background(), "jq", nil, ModeAuto, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeAuto, OriginFlag, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -244,8 +278,8 @@ func TestRun_ModeAuto_HappyPath(t *testing.T) {
 	if readErr != nil {
 		t.Fatalf("audit log not written: %v", readErr)
 	}
-	if !strings.Contains(string(data), `"auto-install"`) {
-		t.Errorf("audit log should contain auto-install entry, got %q", string(data))
+	if !strings.Contains(string(data), `"mode":"auto"`) {
+		t.Errorf("audit log should record this install as auto, got %q", string(data))
 	}
 }
 
@@ -261,7 +295,7 @@ func TestRun_RootGuard(t *testing.T) {
 		return []index.BinaryMatch{{Recipe: "jq", Command: "jq"}}, nil
 	}
 
-	err := r.Run(context.Background(), "jq", nil, ModeSuggest, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeSuggest, OriginFlag, nil)
 	if errors.Is(err, ErrForbidden) {
 		t.Fatal("root guard should not trigger for non-root user")
 	}
@@ -282,15 +316,15 @@ func TestRun_ConfigPermissionFallback(t *testing.T) {
 	r.ConsentReader = strings.NewReader("y\n")
 
 	// Create config with permissive permissions (0644).
-	configPath := filepath.Join(r.cfg.HomeDir, "config.toml")
+	configPath := r.cfg.ConfigFile
 	_ = os.WriteFile(configPath, []byte(""), 0644)
 
-	err := r.Run(context.Background(), "jq", nil, ModeAuto, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeAuto, OriginFlag, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(stderr.String(), "permissions are too open") {
-		t.Errorf("stderr should warn about permissions, got %q", stderr.String())
+	if !strings.Contains(stderr.String(), gateConfigPermissions) {
+		t.Errorf("stderr should name the %s gate, got %q", gateConfigPermissions, stderr.String())
 	}
 }
 
@@ -308,10 +342,10 @@ func TestRun_VerificationGateFallback(t *testing.T) {
 	r.ConsentReader = strings.NewReader("y\n")
 
 	// Config with correct permissions so gate 2 doesn't trigger.
-	configPath := filepath.Join(r.cfg.HomeDir, "config.toml")
+	configPath := r.cfg.ConfigFile
 	_ = os.WriteFile(configPath, []byte(""), 0600)
 
-	err := r.Run(context.Background(), "jq", nil, ModeAuto, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeAuto, OriginFlag, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -322,31 +356,32 @@ func TestRun_VerificationGateFallback(t *testing.T) {
 }
 
 func TestRun_ConflictGateFallback(t *testing.T) {
+	// Multi-provider case, so it comes from the shared fixture rather than a
+	// hand-written match slice: the pair this test used to name has to keep
+	// existing in the published registry for the test to mean anything, and
+	// nothing guarantees that.
+	fx := indexfixture.New(t)
+
 	r, _, _ := newTestRunner(t)
 	installer := &mockInstaller{}
 	execRec := &execRecorder{}
 
-	r.Lookup = func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
-		return []index.BinaryMatch{
-			{Recipe: "jq", Command: "jq"},
-			{Recipe: "jq-alt", Command: "jq"},
-		}, nil
-	}
+	r.Lookup = fx.Lookup
 	r.Installer = installer
 	r.Exec = execRec.exec
 	r.RecipeHasVerification = func(_ string) bool { return true }
 	r.ConsentReader = strings.NewReader("y\n")
 
-	configPath := filepath.Join(r.cfg.HomeDir, "config.toml")
+	configPath := r.cfg.ConfigFile
 	_ = os.WriteFile(configPath, []byte(""), 0600)
 
-	err := r.Run(context.Background(), "jq", nil, ModeAuto, nil)
+	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto, OriginFlag, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	// Should have fallen back to confirm due to multiple matches.
-	if installer.recipe != "jq" {
-		t.Errorf("should install first match, got %q", installer.recipe)
+	if installer.recipe != indexfixture.RecipeDupFirst {
+		t.Errorf("should install first match %q, got %q", indexfixture.RecipeDupFirst, installer.recipe)
 	}
 }
 
@@ -358,7 +393,7 @@ func TestRun_InstallFailure(t *testing.T) {
 	r.Installer = &mockInstaller{err: errors.New("download failed")}
 	r.ConsentReader = strings.NewReader("y\n")
 
-	err := r.Run(context.Background(), "jq", nil, ModeConfirm, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeConfirm, OriginFlag, nil)
 	if err == nil {
 		t.Fatal("expected error for install failure")
 	}
@@ -373,7 +408,7 @@ func TestRun_IndexNotBuilt(t *testing.T) {
 		return nil, index.ErrIndexNotBuilt
 	}
 
-	err := r.Run(context.Background(), "jq", nil, ModeConfirm, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeConfirm, OriginFlag, nil)
 	if !errors.Is(err, ErrIndexNotBuilt) {
 		t.Fatalf("expected ErrIndexNotBuilt, got %v", err)
 	}
@@ -391,7 +426,7 @@ func TestRun_AlreadyInstalled_ExecImmediately(t *testing.T) {
 	}
 	r.Exec = execRec.exec
 
-	err := r.Run(context.Background(), "jq", []string{"."}, ModeConfirm, nil)
+	err := r.Run(context.Background(), "jq", []string{"."}, ModeConfirm, OriginFlag, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -408,9 +443,6 @@ func TestRun_InstalledTool_ProjectPinOverridesGlobalVersion(t *testing.T) {
 	r, _, _ := newTestRunner(t)
 	installer := &mockInstaller{}
 	execRec := &execRecorder{}
-
-	// Set ToolsDir so ToolBinDir resolves to an absolute path in the temp dir.
-	r.cfg.ToolsDir = filepath.Join(r.cfg.HomeDir, "tools")
 
 	// Tool is installed (some version), so it would normally fast-path
 	// to tools/current/jq. But the resolver pins a specific version.
@@ -430,11 +462,11 @@ func TestRun_InstalledTool_ProjectPinOverridesGlobalVersion(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resolver := &mockProjectVersionResolver{
+	resolver := &mockDeclarationResolver{
 		versions: map[string]string{"jq": "1.6"},
 	}
 
-	err := r.Run(context.Background(), "jq", []string{"."}, ModeConfirm, resolver)
+	err := r.Run(context.Background(), "jq", []string{"."}, ModeConfirm, OriginFlag, resolver)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -459,9 +491,6 @@ func TestRun_InstalledTool_ProjectPinInstallsIfMissing(t *testing.T) {
 	installer := &mockInstaller{}
 	execRec := &execRecorder{}
 
-	// Set ToolsDir so ToolBinDir resolves to an absolute path in the temp dir.
-	r.cfg.ToolsDir = filepath.Join(r.cfg.HomeDir, "tools")
-
 	// Tool is installed (some version), but the pinned version is NOT installed.
 	r.Lookup = func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
 		return []index.BinaryMatch{{Recipe: "jq", Command: "jq", Installed: true}}, nil
@@ -471,14 +500,17 @@ func TestRun_InstalledTool_ProjectPinInstallsIfMissing(t *testing.T) {
 	r.RecipeHasVerification = func(_ string) bool { return true }
 
 	// Ensure config.toml exists with safe permissions for auto mode.
-	_ = os.WriteFile(filepath.Join(r.cfg.HomeDir, "config.toml"), []byte(""), 0600)
+	_ = os.WriteFile(r.cfg.ConfigFile, []byte(""), 0600)
 
 	// Resolver pins version 1.6. Its bin dir does NOT exist in the temp dir.
-	resolver := &mockProjectVersionResolver{
+	resolver := &mockDeclarationResolver{
 		versions: map[string]string{"jq": "1.6"},
 	}
 
-	err := r.Run(context.Background(), "jq", []string{"."}, ModeConfirm, resolver)
+	// The origin is load-bearing here and is not filler: no ConsentReader is
+	// wired, so the install only happens because the declaration raises the
+	// unset default. An explicit origin makes this case fail at the prompt.
+	err := r.Run(context.Background(), "jq", []string{"."}, ModeConfirm, OriginDefault, resolver)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -492,7 +524,7 @@ func TestRun_InstalledTool_ProjectPinInstallsIfMissing(t *testing.T) {
 	}
 }
 
-func TestRun_ProjectVersionResolverFlowsThrough(t *testing.T) {
+func TestRun_DeclaredVersionFlowsThrough(t *testing.T) {
 	r, _, _ := newTestRunner(t)
 	installer := &mockInstaller{}
 	execRec := &execRecorder{}
@@ -504,11 +536,11 @@ func TestRun_ProjectVersionResolverFlowsThrough(t *testing.T) {
 	r.Exec = execRec.exec
 	r.ConsentReader = strings.NewReader("y\n")
 
-	resolver := &mockProjectVersionResolver{
+	resolver := &mockDeclarationResolver{
 		versions: map[string]string{"jq": "1.7.1"},
 	}
 
-	err := r.Run(context.Background(), "jq", nil, ModeConfirm, resolver)
+	err := r.Run(context.Background(), "jq", nil, ModeConfirm, OriginFlag, resolver)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -529,9 +561,9 @@ func TestRun_ModeAuto_AuditLogNDJSON(t *testing.T) {
 	r.Exec = execRec.exec
 	r.RecipeHasVerification = func(_ string) bool { return true }
 
-	_ = os.WriteFile(filepath.Join(r.cfg.HomeDir, "config.toml"), []byte(""), 0600)
+	_ = os.WriteFile(r.cfg.ConfigFile, []byte(""), 0600)
 
-	err := r.Run(context.Background(), "jq", nil, ModeAuto, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeAuto, OriginFlag, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -551,6 +583,9 @@ func TestRun_ModeAuto_AuditLogNDJSON(t *testing.T) {
 	if err := json.Unmarshal(bytes.TrimSpace(data), &entry); err != nil {
 		t.Fatalf("audit log is not valid NDJSON: %v\nraw: %s", err, data)
 	}
+	// The action names the feature, not the consent mode, so it is the same
+	// constant on a confirm entry as on this one. The mode field below is
+	// where the mode is recorded.
 	if entry.Action != "auto-install" {
 		t.Errorf("action = %q, want %q", entry.Action, "auto-install")
 	}
@@ -578,9 +613,9 @@ func TestRun_NilRecipeHasVerification_FallsBackToConfirm(t *testing.T) {
 	r.RecipeHasVerification = nil // not wired
 	r.ConsentReader = strings.NewReader("y\n")
 
-	_ = os.WriteFile(filepath.Join(r.cfg.HomeDir, "config.toml"), []byte(""), 0600)
+	_ = os.WriteFile(r.cfg.ConfigFile, []byte(""), 0600)
 
-	err := r.Run(context.Background(), "jq", nil, ModeAuto, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeAuto, OriginFlag, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -590,9 +625,15 @@ func TestRun_NilRecipeHasVerification_FallsBackToConfirm(t *testing.T) {
 	}
 }
 
-// --- Project mode override tests ---
+// --- Project elevation tests, over the single-provider mock ---
+//
+// The bounded elevation's own criteria run against the fixture, in
+// elevation_test.go and candidates_test.go, where a declared recipe and the
+// index's preference can disagree. These are the older mock-based cases and
+// stay as the check that the elevation is reached at all through the plain
+// single-provider path.
 
-func TestRun_ProjectResolverOk_OverridesToAuto(t *testing.T) {
+func TestRun_DeclaredCommand_RaisesTheUnsetDefault(t *testing.T) {
 	r, _, _ := newTestRunner(t)
 	installer := &mockInstaller{}
 	execRec := &execRecorder{}
@@ -605,15 +646,16 @@ func TestRun_ProjectResolverOk_OverridesToAuto(t *testing.T) {
 	r.RecipeHasVerification = func(_ string) bool { return true }
 
 	// Good config permissions so security gate 2 passes.
-	_ = os.WriteFile(filepath.Join(r.cfg.HomeDir, "config.toml"), []byte(""), 0600)
+	_ = os.WriteFile(r.cfg.ConfigFile, []byte(""), 0600)
 
-	resolver := &mockProjectVersionResolver{
+	resolver := &mockDeclarationResolver{
 		versions: map[string]string{"jq": "1.7.1"},
 	}
 
-	// Start with confirm mode -- the project override should escalate to auto.
-	// No ConsentReader is set, so if it falls through to confirm it will fail.
-	err := r.Run(context.Background(), "jq", nil, ModeConfirm, resolver)
+	// The unset default: confirm, from an origin of default, which is the one
+	// mode a declaration raises. No ConsentReader is set, so if it falls
+	// through to confirm it will fail.
+	err := r.Run(context.Background(), "jq", nil, ModeConfirm, OriginDefault, resolver)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -625,19 +667,19 @@ func TestRun_ProjectResolverOk_OverridesToAuto(t *testing.T) {
 	}
 }
 
-func TestRun_ProjectResolverNotOk_ModeUnchanged(t *testing.T) {
+func TestRun_UndeclaredCommand_ModeUnchanged(t *testing.T) {
 	r, stdout, _ := newTestRunner(t)
 
 	r.Lookup = func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
 		return []index.BinaryMatch{{Recipe: "jq", Command: "jq"}}, nil
 	}
 
-	// Resolver returns ok=false -- mode should stay as suggest.
-	resolver := &mockProjectVersionResolver{
+	// Nothing declared -- mode should stay as suggest.
+	resolver := &mockDeclarationResolver{
 		versions: map[string]string{}, // no entries
 	}
 
-	err := r.Run(context.Background(), "jq", nil, ModeSuggest, resolver)
+	err := r.Run(context.Background(), "jq", nil, ModeSuggest, OriginFlag, resolver)
 	if !errors.Is(err, ErrSuggestOnly) {
 		t.Fatalf("expected ErrSuggestOnly, got %v", err)
 	}
@@ -653,7 +695,7 @@ func TestRun_NilResolver_ModeUnchanged(t *testing.T) {
 		return []index.BinaryMatch{{Recipe: "jq", Command: "jq"}}, nil
 	}
 
-	err := r.Run(context.Background(), "jq", nil, ModeSuggest, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeSuggest, OriginFlag, nil)
 	if !errors.Is(err, ErrSuggestOnly) {
 		t.Fatalf("expected ErrSuggestOnly, got %v", err)
 	}

@@ -25,7 +25,7 @@ tsuku is a package manager that makes it easy to install and manage development 
 curl -fsSL https://get.tsuku.dev/now | bash
 ```
 
-The installer downloads the latest release binary, verifies its checksum, and configures your shell. It also registers the command-not-found hook for your shell automatically so you get install hints when you type an unknown command.
+The installer downloads the latest release binary, verifies its checksum, and configures your shell. It also registers the command-not-found hook for your shell automatically, which routes an unknown command to `tsuku run` — that installs the tool and executes the command, under the consent mode described in the [command-not-found guide](docs/guides/GUIDE-command-not-found.md). Pass `--no-hooks` if you'd rather set that up yourself.
 
 ### Installer flags
 
@@ -840,11 +840,13 @@ The binary index must be built before `suggest` works. Run `tsuku update-registr
 
 Exit codes: `0` on match, `1` on no match, `11` if the index hasn't been built yet.
 
-The shell hook invokes `tsuku suggest` automatically when you type a command that isn't found, so you get install hints without running `suggest` directly.
+The shell hook does not call `suggest`. It calls `tsuku run`, which installs and executes — see below.
 
 ### Command-not-found hook
 
-The command-not-found hook integrates tsuku suggestions directly into your shell. When you type a command that isn't found, your shell calls `tsuku suggest` automatically and prints an install hint.
+When you type a command your shell can't resolve, the hook runs `tsuku run <command> -- <args>`. If a recipe provides the command, tsuku installs the tool and then executes what you typed.
+
+Whether it installs is governed by the consent mode: `TSUKU_AUTO_INSTALL_MODE`, or `auto_install_mode` in `$TSUKU_HOME/config.toml`, or the default `confirm`, which prompts and needs a terminal. Set `auto_install_mode = "suggest"` for a hook that prints an install instruction and installs nothing. A `.tsuku.toml` declaring the tool raises an unset default to `auto`; a mode you set yourself is honored as given. The [command-not-found guide](docs/guides/GUIDE-command-not-found.md) has the full account.
 
 **Install the hook:**
 
@@ -883,7 +885,7 @@ The hook script itself lives in `$TSUKU_HOME/share/hooks/` and is updated automa
 tsuku hook status
 ```
 
-Reports installed or not installed for each shell detected on the system.
+Reports two lines per supported shell — the command-not-found hook and the activation hook — each installed or not installed.
 
 **Remove the hook:**
 

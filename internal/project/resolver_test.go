@@ -2,301 +2,143 @@ package project
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/index"
 )
 
-func TestResolver_CommandInIndexAndConfig(t *testing.T) {
-	cfg := &ConfigResult{
-		Config: &ProjectConfig{
-			Tools: map[string]ToolRequirement{
-				"jq": {Version: "1.7.1"},
-			},
-		},
-	}
-	lookup := func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
-		return []index.BinaryMatch{{Recipe: "jq", Command: "jq"}}, nil
-	}
-
-	r := NewResolver(cfg, lookup)
-	version, ok, err := r.ProjectVersionFor(context.Background(), "jq")
+// resolveOver builds a resolver over tools and runs it against matches. The
+// cases here are all single-provider, so the matches are written out rather
+// than taken from the fixture -- what they exercise is which configuration key
+// denotes a recipe, not which of several providers wins.
+func resolveOver(t *testing.T, tools map[string]ToolRequirement, matches []index.BinaryMatch) []ProjectDeclaration {
+	t.Helper()
+	r := NewResolver(&ConfigResult{Config: &ProjectConfig{Tools: tools}})
+	declared, err := r.DeclarationsFor(context.Background(), matches)
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Fatalf("DeclarationsFor error = %v", err)
 	}
-	if !ok {
-		t.Fatal("expected ok=true for command in config")
+	return declared
+}
+
+// soleDeclaration fails unless exactly one recipe was declared, and returns it.
+func soleDeclaration(t *testing.T, declared []ProjectDeclaration) ProjectDeclaration {
+	t.Helper()
+	if len(declared) != 1 {
+		t.Fatalf("declarations = %v, want exactly one", configKeys(declared))
 	}
-	if version != "1.7.1" {
-		t.Errorf("version = %q, want %q", version, "1.7.1")
+	return declared[0]
+}
+
+func TestResolver_CommandInIndexAndConfig(t *testing.T) {
+	declared := resolveOver(t,
+		map[string]ToolRequirement{"jq": {Version: "1.7.1"}},
+		[]index.BinaryMatch{{Recipe: "jq", Command: "jq"}})
+
+	if got := soleDeclaration(t, declared); got.Version != "1.7.1" {
+		t.Errorf("version = %q, want %q", got.Version, "1.7.1")
 	}
 }
 
 func TestResolver_CommandInIndexButNotConfig(t *testing.T) {
-	cfg := &ConfigResult{
-		Config: &ProjectConfig{
-			Tools: map[string]ToolRequirement{
-				"ripgrep": {Version: "14.0.0"},
-			},
-		},
-	}
-	lookup := func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
-		return []index.BinaryMatch{{Recipe: "jq", Command: "jq"}}, nil
-	}
+	declared := resolveOver(t,
+		map[string]ToolRequirement{"ripgrep": {Version: "14.0.0"}},
+		[]index.BinaryMatch{{Recipe: "jq", Command: "jq"}})
 
-	r := NewResolver(cfg, lookup)
-	version, ok, err := r.ProjectVersionFor(context.Background(), "jq")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if ok {
-		t.Fatal("expected ok=false for command not in config")
-	}
-	if version != "" {
-		t.Errorf("version = %q, want empty", version)
+	if len(declared) != 0 {
+		t.Errorf("declarations = %v, want none: the config declares no provider of jq",
+			configKeys(declared))
 	}
 }
 
+// A command no recipe provides is declared by nothing, however much the
+// configuration names. The caller reports that as ErrNoMatch before it ever
+// asks about declarations, so an answer here is not what decides the run --
+// but a resolver that read its config instead of the matches would answer
+// anyway, and this is where that shows.
 func TestResolver_CommandNotInIndex(t *testing.T) {
-	cfg := &ConfigResult{
-		Config: &ProjectConfig{
-			Tools: map[string]ToolRequirement{
-				"jq": {Version: "1.7.1"},
-			},
-		},
-	}
-	lookup := func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
-		return nil, nil
-	}
+	declared := resolveOver(t,
+		map[string]ToolRequirement{"jq": {Version: "1.7.1"}},
+		nil)
 
-	r := NewResolver(cfg, lookup)
-	version, ok, err := r.ProjectVersionFor(context.Background(), "unknown")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if ok {
-		t.Fatal("expected ok=false for command not in index")
-	}
-	if version != "" {
-		t.Errorf("version = %q, want empty", version)
-	}
-}
-
-func TestResolver_NilConfig(t *testing.T) {
-	lookup := func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
-		t.Fatal("lookup should not be called when config is nil")
-		return nil, nil
-	}
-
-	r := NewResolver(nil, lookup)
-	version, ok, err := r.ProjectVersionFor(context.Background(), "jq")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if ok {
-		t.Fatal("expected ok=false for nil config")
-	}
-	if version != "" {
-		t.Errorf("version = %q, want empty", version)
-	}
-}
-
-func TestResolver_LookupErrorPropagation(t *testing.T) {
-	cfg := &ConfigResult{
-		Config: &ProjectConfig{
-			Tools: map[string]ToolRequirement{
-				"jq": {Version: "1.7.1"},
-			},
-		},
-	}
-	lookupErr := errors.New("index corrupted")
-	lookup := func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
-		return nil, lookupErr
-	}
-
-	r := NewResolver(cfg, lookup)
-	_, _, err := r.ProjectVersionFor(context.Background(), "jq")
-	if !errors.Is(err, lookupErr) {
-		t.Fatalf("expected lookup error to propagate, got %v", err)
-	}
-}
-
-func TestResolver_MultipleMatchesFirstConfigWins(t *testing.T) {
-	cfg := &ConfigResult{
-		Config: &ProjectConfig{
-			Tools: map[string]ToolRequirement{
-				"jq-alt": {Version: "2.0.0"},
-			},
-		},
-	}
-	lookup := func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
-		return []index.BinaryMatch{
-			{Recipe: "jq", Command: "jq"},
-			{Recipe: "jq-alt", Command: "jq"},
-		}, nil
-	}
-
-	r := NewResolver(cfg, lookup)
-	version, ok, err := r.ProjectVersionFor(context.Background(), "jq")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !ok {
-		t.Fatal("expected ok=true for command matching second recipe in config")
-	}
-	if version != "2.0.0" {
-		t.Errorf("version = %q, want %q", version, "2.0.0")
+	if len(declared) != 0 {
+		t.Errorf("declarations = %v, want none for a command with no providers",
+			configKeys(declared))
 	}
 }
 
 func TestResolver_OrgScopedKeyMatchesBareName(t *testing.T) {
-	cfg := &ConfigResult{
-		Config: &ProjectConfig{
-			Tools: map[string]ToolRequirement{
-				"tsukumogami/koto": {Version: "1.0.0"},
-			},
-		},
-	}
-	lookup := func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
-		return []index.BinaryMatch{{Recipe: "koto", Command: "koto"}}, nil
-	}
+	declared := resolveOver(t,
+		map[string]ToolRequirement{"tsukumogami/koto": {Version: "1.0.0"}},
+		[]index.BinaryMatch{{Recipe: "koto", Command: "koto"}})
 
-	r := NewResolver(cfg, lookup)
-	version, ok, err := r.ProjectVersionFor(context.Background(), "koto")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !ok {
-		t.Fatal("expected ok=true for org-scoped key matching bare recipe name")
-	}
-	if version != "1.0.0" {
-		t.Errorf("version = %q, want %q", version, "1.0.0")
+	got := soleDeclaration(t, declared)
+	if got.Recipe != "koto" || got.Version != "1.0.0" {
+		t.Errorf("declaration = %+v, want koto at 1.0.0 from the org-scoped key", got)
 	}
 }
 
 func TestResolver_OrgScopedWithQualifiedName(t *testing.T) {
-	cfg := &ConfigResult{
-		Config: &ProjectConfig{
-			Tools: map[string]ToolRequirement{
-				"myorg/registry:mytool": {Version: "2.0.0"},
-			},
-		},
-	}
-	lookup := func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
-		return []index.BinaryMatch{{Recipe: "mytool", Command: "mytool"}}, nil
-	}
+	declared := resolveOver(t,
+		map[string]ToolRequirement{"myorg/registry:mytool": {Version: "2.0.0"}},
+		[]index.BinaryMatch{{Recipe: "mytool", Command: "mytool"}})
 
-	r := NewResolver(cfg, lookup)
-	version, ok, err := r.ProjectVersionFor(context.Background(), "mytool")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !ok {
-		t.Fatal("expected ok=true for qualified org-scoped key")
-	}
-	if version != "2.0.0" {
-		t.Errorf("version = %q, want %q", version, "2.0.0")
+	got := soleDeclaration(t, declared)
+	if got.Recipe != "mytool" || got.Version != "2.0.0" {
+		t.Errorf("declaration = %+v, want mytool at 2.0.0 from the qualified key", got)
 	}
 }
 
 func TestResolver_BareKeyTakesPriorityOverOrgScoped(t *testing.T) {
-	cfg := &ConfigResult{
-		Config: &ProjectConfig{
-			Tools: map[string]ToolRequirement{
-				"koto":             {Version: "3.0.0"},
-				"tsukumogami/koto": {Version: "1.0.0"},
-			},
-		},
-	}
-	lookup := func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
-		return []index.BinaryMatch{{Recipe: "koto", Command: "koto"}}, nil
-	}
+	declared := resolveOver(t, map[string]ToolRequirement{
+		"koto":             {Version: "3.0.0"},
+		"tsukumogami/koto": {Version: "1.0.0"},
+	}, []index.BinaryMatch{{Recipe: "koto", Command: "koto"}})
 
-	r := NewResolver(cfg, lookup)
-	version, ok, err := r.ProjectVersionFor(context.Background(), "koto")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !ok {
-		t.Fatal("expected ok=true")
-	}
-	if version != "3.0.0" {
-		t.Errorf("bare key should take priority: version = %q, want %q", version, "3.0.0")
+	got := soleDeclaration(t, declared)
+	if got.Version != "3.0.0" {
+		t.Errorf("version = %q, want %q: the bare key outranks the one org-scoped source",
+			got.Version, "3.0.0")
 	}
 }
 
+// Two bare names declared alongside one org-scoped key. Each command sees its
+// own declaration and nothing of the other's, which is the property that would
+// break if declarations were keyed on anything but the recipe a key denotes.
 func TestResolver_OrgScopedMixedWithBareKeys(t *testing.T) {
-	cfg := &ConfigResult{
-		Config: &ProjectConfig{
-			Tools: map[string]ToolRequirement{
-				"node":             {Version: "20"},
-				"tsukumogami/koto": {Version: "1.0.0"},
-			},
-		},
-	}
-	lookupNode := func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
-		return []index.BinaryMatch{{Recipe: "node", Command: "node"}}, nil
-	}
-	lookupKoto := func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
-		return []index.BinaryMatch{{Recipe: "koto", Command: "koto"}}, nil
+	tools := map[string]ToolRequirement{
+		"node":             {Version: "20"},
+		"tsukumogami/koto": {Version: "1.0.0"},
 	}
 
-	r1 := NewResolver(cfg, lookupNode)
-	version, ok, err := r1.ProjectVersionFor(context.Background(), "node")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !ok || version != "20" {
-		t.Errorf("bare key node: ok=%v, version=%q, want ok=true, version=20", ok, version)
-	}
-
-	r2 := NewResolver(cfg, lookupKoto)
-	version, ok, err = r2.ProjectVersionFor(context.Background(), "koto")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !ok || version != "1.0.0" {
-		t.Errorf("org-scoped koto: ok=%v, version=%q, want ok=true, version=1.0.0", ok, version)
+	for _, tc := range []struct {
+		recipe  string
+		version string
+	}{
+		{"node", "20"},
+		{"koto", "1.0.0"},
+	} {
+		t.Run(tc.recipe, func(t *testing.T) {
+			declared := resolveOver(t, tools,
+				[]index.BinaryMatch{{Recipe: tc.recipe, Command: tc.recipe}})
+			got := soleDeclaration(t, declared)
+			if got.Version != tc.version {
+				t.Errorf("version = %q, want %q", got.Version, tc.version)
+			}
+		})
 	}
 }
 
-func TestResolver_ToolsMethodWithOrgScoped(t *testing.T) {
-	cfg := &ConfigResult{
-		Config: &ProjectConfig{
-			Tools: map[string]ToolRequirement{
-				"tsukumogami/koto": {Version: "1.0.0"},
-			},
-		},
-	}
-	r := NewResolver(cfg, nil)
-	tools := r.(*Resolver).Tools()
-	if _, ok := tools["tsukumogami/koto"]; !ok {
-		t.Error("Tools() should return original config keys including org-scoped")
-	}
-}
-
+// An empty version still declares the recipe. Declaredness and the version are
+// separate answers, and collapsing them -- reporting "not declared" because
+// there is no version to report -- is what the set replaced.
 func TestResolver_EmptyVersionInConfig(t *testing.T) {
-	cfg := &ConfigResult{
-		Config: &ProjectConfig{
-			Tools: map[string]ToolRequirement{
-				"jq": {Version: ""},
-			},
-		},
-	}
-	lookup := func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
-		return []index.BinaryMatch{{Recipe: "jq", Command: "jq"}}, nil
-	}
+	declared := resolveOver(t,
+		map[string]ToolRequirement{"jq": {Version: ""}},
+		[]index.BinaryMatch{{Recipe: "jq", Command: "jq"}})
 
-	r := NewResolver(cfg, lookup)
-	version, ok, err := r.ProjectVersionFor(context.Background(), "jq")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !ok {
-		t.Fatal("expected ok=true for recipe in config even with empty version")
-	}
-	if version != "" {
-		t.Errorf("version = %q, want empty (use latest)", version)
+	got := soleDeclaration(t, declared)
+	if got.Version != "" {
+		t.Errorf("version = %q, want empty (use latest)", got.Version)
 	}
 }

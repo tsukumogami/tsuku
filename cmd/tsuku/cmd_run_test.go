@@ -10,135 +10,116 @@ import (
 
 // --- resolveMode tests ---
 
-func TestResolveMode_FlagWins(t *testing.T) {
-	cfg := &userconfig.Config{AutoInstallMode: "auto"}
-	t.Setenv("TSUKU_AUTO_INSTALL_MODE", "suggest")
-
-	m, err := resolveMode("confirm", cfg)
-	if err != nil {
-		t.Fatal(err)
+// The priority chain, and the origin each step records. The origin is the half
+// the runner's elevation reads: it raises a mode whose origin is default and
+// no other, so a step that recorded the wrong origin would either give a
+// declaration a mode it must not raise or withhold one it should.
+//
+// This is D1-3's and D1-5's route half. Which routes produce which origin is
+// settled here, because the flag, the environment variable and the
+// configuration key are read here and nowhere else; what the runner then does
+// with each origin is pinned in internal/autoinstall.
+func TestResolveMode_ModeAndOrigin(t *testing.T) {
+	tests := []struct {
+		name       string
+		flag       string
+		env        string
+		config     string
+		wantMode   autoinstall.Mode
+		wantOrigin autoinstall.Origin
+	}{
+		{
+			name: "the flag wins over both", flag: "confirm", env: "suggest", config: "auto",
+			wantMode: autoinstall.ModeConfirm, wantOrigin: autoinstall.OriginFlag,
+		},
+		{
+			name: "the environment wins over the config", env: "suggest", config: "confirm",
+			wantMode: autoinstall.ModeSuggest, wantOrigin: autoinstall.OriginEnvironment,
+		},
+		{
+			name: "the config wins over the default", config: "suggest",
+			wantMode: autoinstall.ModeSuggest, wantOrigin: autoinstall.OriginConfig,
+		},
+		{
+			name:     "nothing set anywhere",
+			wantMode: autoinstall.ModeConfirm, wantOrigin: autoinstall.OriginDefault,
+		},
+		// D1-3, the three routes an explicit suggest arrives by. The first two
+		// are covered above by rows that also fix a precedence; this is the
+		// third, and the set is what the criterion names.
+		{
+			name: "suggest by the flag", flag: "suggest",
+			wantMode: autoinstall.ModeSuggest, wantOrigin: autoinstall.OriginFlag,
+		},
+		{
+			name: "suggest by the environment", env: "suggest",
+			wantMode: autoinstall.ModeSuggest, wantOrigin: autoinstall.OriginEnvironment,
+		},
+		// D1-5. The escalation restriction's output is a confirm the
+		// environment produced, not a default one. Recorded as a default it
+		// would be raised straight back to auto by any project declaration,
+		// which is the reversal the restriction exists to prevent.
+		{
+			name: "an uncorroborated environment auto is lowered, and stays the environment's",
+			env:  "auto", config: "confirm",
+			wantMode: autoinstall.ModeConfirm, wantOrigin: autoinstall.OriginEnvironment,
+		},
+		{
+			name:     "the same with no config at all",
+			env:      "auto",
+			wantMode: autoinstall.ModeConfirm, wantOrigin: autoinstall.OriginEnvironment,
+		},
+		{
+			name: "a corroborated environment auto survives",
+			env:  "auto", config: "auto",
+			wantMode: autoinstall.ModeAuto, wantOrigin: autoinstall.OriginEnvironment,
+		},
+		{
+			name: "the environment downgrades a config auto",
+			env:  "confirm", config: "auto",
+			wantMode: autoinstall.ModeConfirm, wantOrigin: autoinstall.OriginEnvironment,
+		},
 	}
-	if m != autoinstall.ModeConfirm {
-		t.Errorf("got %v, want ModeConfirm", m)
-	}
-}
 
-func TestResolveMode_EnvWinsOverConfig(t *testing.T) {
-	cfg := &userconfig.Config{AutoInstallMode: "confirm"}
-	t.Setenv("TSUKU_AUTO_INSTALL_MODE", "suggest")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("TSUKU_AUTO_INSTALL_MODE", tt.env)
 
-	m, err := resolveMode("", cfg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if m != autoinstall.ModeSuggest {
-		t.Errorf("got %v, want ModeSuggest", m)
-	}
-}
-
-func TestResolveMode_ConfigWinsOverDefault(t *testing.T) {
-	cfg := &userconfig.Config{AutoInstallMode: "suggest"}
-	t.Setenv("TSUKU_AUTO_INSTALL_MODE", "")
-
-	m, err := resolveMode("", cfg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if m != autoinstall.ModeSuggest {
-		t.Errorf("got %v, want ModeSuggest", m)
-	}
-}
-
-func TestResolveMode_DefaultIsConfirm(t *testing.T) {
-	cfg := &userconfig.Config{}
-	t.Setenv("TSUKU_AUTO_INSTALL_MODE", "")
-
-	m, err := resolveMode("", cfg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if m != autoinstall.ModeConfirm {
-		t.Errorf("got %v, want ModeConfirm", m)
-	}
-}
-
-func TestResolveMode_EscalationRestriction_EnvAutoWithoutConfigAuto(t *testing.T) {
-	cfg := &userconfig.Config{AutoInstallMode: "confirm"}
-	t.Setenv("TSUKU_AUTO_INSTALL_MODE", "auto")
-
-	m, err := resolveMode("", cfg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if m != autoinstall.ModeConfirm {
-		t.Errorf("got %v, want ModeConfirm (escalation blocked)", m)
-	}
-}
-
-func TestResolveMode_EscalationRestriction_EnvAutoWithEmptyConfig(t *testing.T) {
-	cfg := &userconfig.Config{}
-	t.Setenv("TSUKU_AUTO_INSTALL_MODE", "auto")
-
-	m, err := resolveMode("", cfg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if m != autoinstall.ModeConfirm {
-		t.Errorf("got %v, want ModeConfirm (escalation blocked)", m)
-	}
-}
-
-func TestResolveMode_EscalationAllowed_EnvAutoWithConfigAuto(t *testing.T) {
-	cfg := &userconfig.Config{AutoInstallMode: "auto"}
-	t.Setenv("TSUKU_AUTO_INSTALL_MODE", "auto")
-
-	m, err := resolveMode("", cfg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if m != autoinstall.ModeAuto {
-		t.Errorf("got %v, want ModeAuto", m)
+			mode, origin, err := resolveMode(tt.flag, &userconfig.Config{AutoInstallMode: tt.config})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if mode != tt.wantMode {
+				t.Errorf("mode = %v, want %v", mode, tt.wantMode)
+			}
+			if origin != tt.wantOrigin {
+				t.Errorf("origin = %v, want %v", origin, tt.wantOrigin)
+			}
+		})
 	}
 }
 
-func TestResolveMode_EnvDowngrade_ConfigAutoEnvConfirm(t *testing.T) {
-	cfg := &userconfig.Config{AutoInstallMode: "auto"}
-	t.Setenv("TSUKU_AUTO_INSTALL_MODE", "confirm")
-
-	m, err := resolveMode("", cfg)
-	if err != nil {
-		t.Fatal(err)
+func TestResolveMode_InvalidValues(t *testing.T) {
+	tests := []struct {
+		name   string
+		flag   string
+		env    string
+		config string
+	}{
+		{name: "flag", flag: "invalid"},
+		{name: "environment variable", env: "invalid"},
+		{name: "config key", config: "invalid"},
 	}
-	if m != autoinstall.ModeConfirm {
-		t.Errorf("got %v, want ModeConfirm (downgrade)", m)
-	}
-}
 
-func TestResolveMode_InvalidFlag(t *testing.T) {
-	cfg := &userconfig.Config{}
-	_, err := resolveMode("invalid", cfg)
-	if err == nil {
-		t.Fatal("expected error for invalid flag")
-	}
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("TSUKU_AUTO_INSTALL_MODE", tt.env)
 
-func TestResolveMode_InvalidEnvVar(t *testing.T) {
-	cfg := &userconfig.Config{}
-	t.Setenv("TSUKU_AUTO_INSTALL_MODE", "invalid")
-
-	_, err := resolveMode("", cfg)
-	if err == nil {
-		t.Fatal("expected error for invalid env var")
-	}
-}
-
-func TestResolveMode_InvalidConfig(t *testing.T) {
-	cfg := &userconfig.Config{AutoInstallMode: "invalid"}
-	t.Setenv("TSUKU_AUTO_INSTALL_MODE", "")
-
-	_, err := resolveMode("", cfg)
-	if err == nil {
-		t.Fatal("expected error for invalid config value")
+			_, _, err := resolveMode(tt.flag, &userconfig.Config{AutoInstallMode: tt.config})
+			if err == nil {
+				t.Fatalf("resolveMode() error = nil, want one for an invalid %s", tt.name)
+			}
+		})
 	}
 }
 

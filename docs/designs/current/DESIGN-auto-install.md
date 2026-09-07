@@ -1,6 +1,6 @@
 ---
+schema: design/v1
 status: Current
-upstream: docs/designs/DESIGN-shell-integration-building-blocks.md
 spawned_from:
   issue: 1679
   repo: tsukumogami/tsuku
@@ -14,8 +14,8 @@ problem: |
 decision: |
   Introduce `tsuku run <command> [args...]` backed by a new `internal/autoinstall/` library
   that owns the install-then-exec flow. Three consent modes cover the three use cases: `confirm`
-  (interactive prompt, default), `suggest` (print instructions, exit 1), and `auto` (silent
-  install with audit log). Mode is resolved from a four-step chain: `--mode` flag, then
+  (interactive prompt, default), `suggest` (print instructions, exit 1), and `auto`
+  (install without prompting, requires opt-in). Mode is resolved from a four-step chain: `--mode` flag, then
   `TSUKU_AUTO_INSTALL_MODE` env var, then `auto_install_mode` config key, then `confirm`.
   On Unix, `syscall.Exec` replaces the tsuku process after install so exit codes propagate
   directly. The library surface is stable from day one so `tsuku exec` (#2168) can import it.
@@ -323,6 +323,12 @@ Fields: `ts` (RFC-3339), `action`, `recipe`, `version`, `mode`. The file is pars
 `jq` from day one, making future tooling (a `tsuku audit` command, log ingest, grep by recipe)
 straightforward without a migration step.
 
+The format decision is the one recorded here; the field set has since grown an
+`origin` and a `gate`, and the log now covers every install rather than the
+auto ones. See the Data Formats section below, and D6 in
+`DESIGN-autoinstall-mode-resolution.md`. Adding fields cost no
+migration, which is the reversibility this decision was chosen for.
+
 #### Alternatives Considered
 
 **Tab-separated text:** Human-readable with `cat` or `tail`, no parser needed. Rejected in
@@ -347,8 +353,9 @@ Inside `Runner.Run`, the flow is: look up `command` in the binary index offline;
 installed, call `syscall.Exec` immediately (no prompt, no install); if not installed, apply
 mode logic — `suggest` prints the install command and exits 1, `confirm` checks for a TTY
 (returning `ExitNotInteractive` with an actionable error if stdin is not a TTY, then prompts
-and installs on 'y'), `auto` installs silently and appends a timestamped NDJSON line to
-`$TSUKU_HOME/audit.log`. After any successful install, `syscall.Exec` replaces the tsuku
+and installs on 'y'), `auto` installs without prompting. Any successful install appends a
+timestamped NDJSON line to `$TSUKU_HOME/audit.log` — originally the `auto` branch only, widened
+by D6 of `DESIGN-autoinstall-mode-resolution.md`. Then `syscall.Exec` replaces the tsuku
 process with the installed command, so the tool's exit code becomes the process exit code
 with no wrapping.
 
@@ -404,7 +411,7 @@ type Mode int
 const (
     ModeConfirm Mode = iota // default: prompt interactively
     ModeSuggest             // print instructions, exit 1
-    ModeAuto                // install silently, audit log
+    ModeAuto                // install without prompting
 )
 
 // ProjectVersionResolver provides an optional version pin from project config.
@@ -452,26 +459,53 @@ Unset or empty resolves to `confirm` in `resolveMode`.
 - `ExitUserDeclined = 13` — user typed 'n' at the confirm prompt
 - `ExitForbidden = 14` — operation refused (e.g., running as root)
 
-**`$TSUKU_HOME/audit.log` — auto-mode audit trail**
+**`$TSUKU_HOME/audit.log` — the install audit trail**
 
 Append-only NDJSON (one JSON object per line), created on first write with mode 0600:
 
 ```json
-{"ts":"2026-03-25T12:00:00Z","action":"auto-install","recipe":"jq","version":"1.7.1","mode":"auto"}
+{"ts":"2026-03-25T12:00:00Z","action":"auto-install","recipe":"jq","version":"1.7.1","mode":"auto","origin":"config"}
+{"ts":"2026-03-25T12:01:00Z","action":"auto-install","recipe":"jq","version":"1.7.1","mode":"confirm","origin":"config","gate":"recipe-verification"}
 ```
 
-Fields: `ts` (RFC-3339), `action` (always `"auto-install"`), `recipe`, `version`, `mode`.
+Fields: `ts` (RFC-3339), `action` (always `"auto-install"`, naming the feature
+rather than the consent mode), `recipe`, `version`, `mode`, `origin`, and
+`gate` where one fired.
+
+`origin` and `gate`, and the widening from auto-mode installs to every install
+`tsuku run` performs, come from `DESIGN-autoinstall-mode-resolution.md`
+(D6). The scope this document originally gave the file — auto-mode installs
+only — is what made a gate-diverted install leave no trace, which is the defect
+that change answers. `origin` holds one of `default`, `flag`, `environment`,
+`config` or `project` and names the source the consent mode was resolved from
+*before* any gate ran; `gate` names the mode-lowering gate that changed it, so
+a gate is never an origin.
+
+A sixth spelling, `unset`, is not one of the five and should not appear in a
+log. It means a caller reached the library without resolving an origin, which
+no production path does. Encountering it is a bug report about that caller
+rather than a value to interpret: the library records what it was handed
+instead of substituting a plausible source nobody chose.
 
 ### Key Interfaces
 
 The `ProjectVersionResolver` interface is the primary integration point for downstream designs.
 `tsuku run` passes `nil` (latest). `tsuku exec` (#2168) will pass a resolver backed by
-`tsuku.toml` from the current directory. `internal/autoinstall/` never imports the project
-config package; #1680 imports `internal/autoinstall/` and implements the interface.
+`tsuku.toml` from the current directory. The dependency direction stated here — that
+`internal/autoinstall/` never imports the project config package — did not survive: the
+declaration lookup takes `project` types, so `internal/autoinstall/` imports
+`internal/project`, and the interface is implemented there rather than the other way round.
+`internal/project` does not import back, so there is no cycle.
 
 The `Runner.Run` signature is the contract #2168 depends on. Its parameters — `command`,
-`args`, `mode`, `resolver` — are the full public surface. The `--` separator is recommended in
-documentation to prevent flag collision between tsuku flags and the target command's flags.
+`args`, `mode`, `origin`, `resolver` — are the full public surface. The `--` separator is
+recommended in documentation to prevent flag collision between tsuku flags and the target
+command's flags.
+
+`origin` is not a second spelling of `mode`: it says which source supplied the mode, so the
+library can tell a `confirm` somebody chose from the one nobody did. It arrives with `mode`
+from the caller, and it is what the audit entry's `origin` field records. See
+`DESIGN-autoinstall-mode-resolution.md`.
 
 ### Security Gates
 
@@ -504,6 +538,7 @@ tsuku run jq .foo data.json
   │   │   ├─ print "Install jq? [y/N]: "
   │   │   ├─ read stdin → 'y'
   │   │   ├─ tsuku install jq@<version from resolver, or latest>
+  │   │   ├─ append NDJSON line to $TSUKU_HOME/audit.log
   │   │   └─ syscall.Exec("/home/user/.tsuku/bin/jq", ...) ← process replaced
   │   │
   │   ├─ [if not installed, ModeSuggest]
@@ -594,10 +629,14 @@ more than one match, falling back to `confirm` so the user makes an explicit cho
 
 ### Audit trail
 
-Silent installs in `auto` mode append a timestamped NDJSON line to `$TSUKU_HOME/audit.log`
-(mode 0600). Command arguments are not logged — arguments may contain secrets. The log has no
-built-in rotation policy; the user is responsible for managing its size. A `tsuku audit`
-command or rotation support is deferred to a follow-on issue.
+Every install `tsuku run` performs appends a timestamped NDJSON line to
+`$TSUKU_HOME/audit.log` (mode 0600), whichever consent mode governed it. This document
+originally scoped the log to silent installs in `auto` mode; D6 of
+`DESIGN-autoinstall-mode-resolution.md` widened it, because an install a
+security gate diverted from `auto` to a prompt is the one worth finding later and was
+the one leaving no record. Command arguments are not logged — arguments may contain
+secrets. The log has no built-in rotation policy; the user is responsible for managing
+its size. A `tsuku audit` command or rotation support is deferred to a follow-on issue.
 
 ### Environment variable inheritance
 

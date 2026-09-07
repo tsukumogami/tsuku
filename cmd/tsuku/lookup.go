@@ -10,6 +10,26 @@ import (
 	"github.com/tsukumogami/tsuku/internal/index"
 )
 
+// binaryCommandLookup is the lookup the `tsuku run` path goes through, and
+// only that path -- newRunWiring is its one production caller. It exists so a
+// test can put a known index behind that path and see which recipe the wiring
+// reaches, which until now was only exercisable through whatever index
+// happened to be on the machine.
+//
+// `tsuku which` and `tsuku suggest` call lookupBinaryCommand directly and are
+// deliberately left alone: neither joins the index to the project
+// configuration, so neither has the composition this variable exists to make
+// testable. Swapping this variable does not redirect them, and a test that
+// needs it to should route them through here first rather than assume it.
+//
+// It is a seam for the lookup, not a source of matches. A test replaces it
+// with internal/indexfixture's Lookup; a test that instead returns a
+// hand-written multi-provider []index.BinaryMatch literal is building a case
+// outside the fixture, which TestMultiProviderCasesUseTheFixture rejects --
+// see internal/indexfixture's package comment for what that check does and
+// does not catch.
+var binaryCommandLookup = lookupBinaryCommand
+
 // lookupBinaryCommand opens the binary index and looks up the given command,
 // returning all matching recipes. It is network-free: it reads only the local
 // SQLite index and must not transmit command names or results externally.

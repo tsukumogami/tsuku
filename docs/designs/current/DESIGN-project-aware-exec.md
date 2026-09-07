@@ -16,16 +16,19 @@ decision: |
   Wire a ProjectVersionResolver into the auto-install flow so it checks
   .tsuku.toml before falling back to latest. When a command-not-found fires
   and .tsuku.toml declares the tool, treat the project config as consent and
-  install the pinned version automatically -- no confirmation needed. tsuku run
+  install the pinned version without a prompt -- but only where the user has
+  configured no consent mode; a mode they set is honored as given. tsuku run
   gains the same project awareness. Optional shims provide the same behavior
   in CI and scripts without shell hooks.
 rationale: |
   The project config is explicit user intent -- the team deliberately declared
-  which tools and versions they need. That declaration is sufficient consent for
-  auto-install, eliminating the confirmation prompt that would break the
-  seamless experience. The resolver is ~30-50 lines connecting existing
-  infrastructure (binary index, LoadProjectConfig, Runner.Run). Shims are
-  static shell scripts that call tsuku run, deferring all logic to runtime.
+  which tools and versions they need. That declaration is consent enough to
+  skip the confirmation prompt that would break the seamless experience, in the
+  one state where nobody has said otherwise: the unset default. It does not
+  outrank a mode the person running the command chose. The resolver is ~30-50
+  lines connecting existing infrastructure (binary index, LoadProjectConfig,
+  Runner.Run). Shims are static shell scripts that call tsuku run, deferring
+  all logic to runtime.
 ---
 
 # DESIGN: Project-Aware Exec Wrapper
@@ -54,18 +57,19 @@ The auto-install flow (`autoinstall.Runner.Run`) already accepts a `ProjectVersi
 
 ### The Consent Model
 
-The key insight: `.tsuku.toml` IS the consent. When a team checks in a project config declaring their tools, they're saying "these tools should be available in this project." That's sufficient authorization to install them without prompting. The confirmation prompt that `tsuku run` uses for ad-hoc installs is unnecessary when the project config explicitly declares the tool.
+`.tsuku.toml` is a consent signal, and it is bounded. When a team checks in a project config declaring their tools, they're saying "these tools should be available in this project," and the confirmation prompt `tsuku run` uses for ad-hoc installs adds nothing on top of that -- for a developer who has not said anything themselves. So the declaration raises the effective consent mode to `auto` when, and only when, nobody set a mode: a `--mode` flag, a `TSUKU_AUTO_INSTALL_MODE` value and an `auto_install_mode` config key each outrank the declaration and are honored as given, `suggest` included. A file the repository ships does not overrule the person running the command.
 
 This means:
-- **Command in `.tsuku.toml`**: install the pinned version silently, then exec
-- **Command NOT in `.tsuku.toml`**: fall back to normal behavior (suggest or confirm, depending on mode)
+- **Command in `.tsuku.toml`, no mode configured**: install the pinned version without a prompt, disclosing which file authorized it, then exec
+- **Command in `.tsuku.toml`, a mode configured**: that mode, unchanged -- `suggest` prints an instruction and installs nothing
+- **Command NOT in `.tsuku.toml`**: the configured mode, or the `confirm` default
 
 ### Scope
 
 **In scope:**
 - `ProjectVersionResolver` implementation using `LoadProjectConfig` + binary index
 - Wiring the resolver into `tsuku run` and the command-not-found path
-- Auto-install without confirmation when `.tsuku.toml` declares the tool
+- Install without confirmation when `.tsuku.toml` declares the tool and no consent mode is configured
 - Optional shim generation for CI/scripts without hooks
 - CI usage patterns
 
@@ -76,7 +80,7 @@ This means:
 ## Decision Drivers
 
 - **Seamless experience**: Users type commands, they work. No tsuku prefix, no prompts for project-declared tools.
-- **Project config is consent**: `.tsuku.toml` is deliberate -- no additional confirmation needed for declared tools
+- **Project config is consent**: `.tsuku.toml` is deliberate -- no additional confirmation needed for declared tools, where the user has expressed no preference of their own
 - **Works everywhere**: Interactive shells (via hooks), scripts (via shims), CI (via shims or `tsuku run`)
 - **Performance**: Cached tool lookup must complete in under 50ms
 - **Composability**: Leverage existing `ProjectVersionResolver`, `LoadProjectConfig`, binary index, and consent model
@@ -95,20 +99,20 @@ Key assumptions:
 - The binary index maps command -> recipe reliably
 - `tsuku run` has no established user base (Block 3 was recently built)
 
-#### Chosen: Resolver + Auto Mode Override for Project-Declared Tools
+#### Chosen: Resolver + Bounded Mode Elevation for Project-Declared Tools
 
-Wire a `ProjectVersionResolver` into `tsuku run` using `LoadProjectConfig` + binary index `LookupFunc`. When the resolver finds a project-pinned version, `Runner.Run` uses it. The critical addition: when the resolver returns a version (tool is in `.tsuku.toml`), the consent mode is overridden to `auto` regardless of the user's configured mode. The project config is the consent.
+Wire a `ProjectVersionResolver` into `tsuku run` using `LoadProjectConfig` + binary index `LookupFunc`. When the resolver finds a project-pinned version, `Runner.Run` uses it. The critical addition: when the resolver returns a version (tool is in `.tsuku.toml`), the consent mode is raised to `auto` -- but only from the unset default, so a mode the user configured is kept. The project config is a consent signal, not an override.
 
-For the command-not-found path: change the hook behavior so that when `.tsuku.toml` declares the tool, the hook calls `tsuku run <command> [args]` instead of `tsuku suggest <command>`. Since `tsuku run` now has the resolver and auto-mode override, this installs the pinned version silently and execs the command.
+For the command-not-found path: change the hook to call `tsuku run <command> -- [args]` instead of `tsuku suggest <command>`. The hook makes no declaration check of its own -- it cannot cheaply, and `tsuku run` has to load the project config anyway -- so every unresolvable command goes there and the runner decides. For a declared tool under an unset default that means installing the pinned version without a prompt and execing the command.
 
-The flow for a project-declared tool (not installed):
+The flow for a project-declared tool (not installed, no consent mode configured):
 1. User types `rg .foo data.json`
 2. Shell's command-not-found hook fires
-3. Hook calls `tsuku run rg .foo data.json`
+3. Hook calls `tsuku run rg -- .foo data.json`
 4. `tsuku run` loads `.tsuku.toml`, constructs resolver
 5. Resolver maps `rg` -> `ripgrep` (via index) -> `14.1.0` (via config)
-6. Runner.Run gets version from resolver, overrides mode to `auto`
-7. Installs ripgrep 14.1.0 silently, execs `rg .foo data.json`
+6. Runner.Run gets the version from the resolver and raises the unset default to `auto`; a mode the user set would survive here instead, and a mode-lowering gate can put the raised one back at `confirm`
+7. Discloses the authorizing file, installs ripgrep 14.1.0, execs `rg .foo data.json`
 
 The flow for a project-declared tool (already installed, different version):
 1. User types `rg .foo data.json`
@@ -175,26 +179,27 @@ When shell activation is active, real binaries take precedence and shims never f
 
 ## Decision Outcome
 
-**Chosen: Project-config-as-consent auto-install via resolver + command-not-found hook upgrade + explicit shims**
+**Chosen: Project config as a bounded consent signal, via resolver + command-not-found hook upgrade + explicit shims**
 
 ### Summary
 
-When a developer types `rg .foo data.json` in a project with `.tsuku.toml` declaring `ripgrep = "14.1.0"`, the command just works. The command-not-found hook calls `tsuku run`, which uses the new `ProjectVersionResolver` to find the project pin, overrides the consent mode to `auto` (project config IS consent), installs ripgrep 14.1.0 silently, and execs the command.
+When a developer types `rg .foo data.json` in a project with `.tsuku.toml` declaring `ripgrep = "14.1.0"`, and that developer has configured no consent mode, the command just works. The command-not-found hook calls `tsuku run`, which uses the new `ProjectVersionResolver` to find the project pin, raises the unset default to `auto`, discloses which file authorized the install, installs ripgrep 14.1.0, and execs the command. A developer who has configured a mode gets that mode instead.
 
 The resolver is a thin struct (~30-50 lines) connecting `LoadProjectConfig` and the binary index's `LookupFunc`. It maps command -> recipe (via index) -> version (via project config). When the tool isn't in `.tsuku.toml`, the resolver returns `!ok` and the normal consent flow applies.
 
-The command-not-found hook changes from calling `tsuku suggest` to calling `tsuku run` -- but only when `.tsuku.toml` declares the tool. For undeclared tools, the hook behavior depends on the user's configured auto-install mode (suggest/confirm/auto).
+The command-not-found hook changes from calling `tsuku suggest` to calling `tsuku run` for every command the shell cannot resolve, declared or not. For undeclared tools the behavior is whatever the configured auto-install mode says (suggest/confirm/auto), which for the default `confirm` means a prompt -- or, with no terminal, exit 12.
 
 Optional shims (`tsuku shim install <tool>`) provide the same experience in CI and scripts. A shim is `exec tsuku run "$(basename "$0")" -- "$@"` -- static, no regeneration.
 
-Three contexts, one experience:
-- **Interactive shell with hooks**: command-not-found -> `tsuku run` -> resolver -> auto-install
-- **Interactive shell without hooks**: `tsuku run go build` -> resolver -> auto-install
-- **CI/scripts with shims**: `go build` -> shim -> `tsuku run` -> resolver -> auto-install
+Three contexts, one rule -- each reaches `tsuku run`, and what happens there is
+the consent mode, raised by a declaration only where nothing set one:
+- **Interactive shell with hooks**: command-not-found -> `tsuku run` -> resolver -> mode
+- **Interactive shell without hooks**: `tsuku run go build` -> resolver -> mode
+- **CI/scripts with shims**: `go build` -> shim -> `tsuku run` -> resolver -> mode
 
 ### Rationale
 
-The project config is the consent mechanism. When a team checks `.tsuku.toml` into their repo declaring `ripgrep = "14.1.0"`, they're authorizing that tool at that version. Prompting the developer for confirmation on top of that is friction without value -- the decision was already made.
+The project config is a consent signal, and it is bounded. When a team checks `.tsuku.toml` into their repo declaring `ripgrep = "14.1.0"`, they're authorizing that tool at that version, and prompting the developer on top of that is friction without value -- but only where the developer has said nothing themselves. So the declaration raises the effective mode to `auto` when, and only when, the mode's origin is the unset default. A mode set by `--mode`, by `TSUKU_AUTO_INSTALL_MODE` or by `auto_install_mode` in `config.toml` is honored as given, `suggest` included; a repository-supplied file does not outrank a person. The raise can also be undone afterwards: any of the mode-lowering gates puts an elevated `auto` back at `confirm` and says which gate it was.
 
 The hook upgrade (suggest -> run) is what delivers the seamless experience. Without it, users would need the `tsuku run` prefix, which defeats the purpose of shell integration.
 
@@ -202,7 +207,7 @@ Shims extend the same experience to hook-free contexts. Static shims keep the sy
 
 ### Trade-offs Accepted
 
-- **Auto-install in cloned repos**: Cloning a repo with `.tsuku.toml` and typing a declared command auto-installs it. This is intentional -- the project config is consent. Users concerned about untrusted repos can set `auto_install_mode = suggest` which the resolver won't override (only project-declared tools get the override).
+- **Auto-install in cloned repos**: Cloning a repo with `.tsuku.toml` and typing a declared command installs it, for a user who has configured no consent mode. This is intentional. A user who has set one keeps it: `auto_install_mode = suggest` is not overridden by a declaration, and see Security Considerations below for what that setting does and does not reach.
 - **Binary index dependency**: The resolver needs the index built. Clear error message on cold start.
 - **Command-not-found hook change**: Existing hook users get upgraded behavior. This is additive (run instead of suggest for project tools) not breaking.
 
@@ -210,7 +215,7 @@ Shims extend the same experience to hook-free contexts. Static shims keep the sy
 
 ### Overview
 
-Block 6 adds a `ProjectVersionResolver` implementation, modifies `tsuku run` to use it, upgrades the command-not-found hooks to call `tsuku run` for project-declared tools, and adds a shim manager.
+Block 6 adds a `ProjectVersionResolver` implementation, modifies `tsuku run` to use it, upgrades the command-not-found hooks to call `tsuku run`, and adds a shim manager.
 
 ### Components
 
@@ -223,15 +228,9 @@ Block 6 adds a `ProjectVersionResolver` implementation, modifies `tsuku run` to 
 │       ▼                                                        │
 │  command_not_found_handle                                      │
 │       │                                                        │
-│       ├─ .tsuku.toml declares rg's recipe? ──yes──┐            │
-│       │                                           ▼            │
-│       │                                   tsuku run rg ...     │
-│       │                                   (auto-install)       │
-│       │                                                        │
-│       └─ no ──────────────────────────────┐                    │
-│                                           ▼                    │
-│                                   tsuku suggest rg             │
-│                                   (existing behavior)          │
+│       └─ tsuku run rg -- .foo data.json                        │
+│          (every unresolvable command; the hook does not        │
+│           check .tsuku.toml, the runner does)                  │
 └────────────────────────────────────────────────────────────────┘
             │
             ▼
@@ -246,8 +245,9 @@ Block 6 adds a `ProjectVersionResolver` implementation, modifies `tsuku run` to 
 │    │    │    ├─ index.Lookup("rg") -> recipe "ripgrep"         │
 │    │    │    └─ config.Tools["ripgrep"] -> "14.1.0"            │
 │    │    │                                                      │
-│    │    ├─ version found in project config -> mode = auto      │
-│    │    ├─ install ripgrep@14.1.0 if needed                    │
+│    │    ├─ declared + mode origin is default -> mode = auto    │
+│    │    ├─ gates may lower auto back to confirm                │
+│    │    ├─ disclose, then install ripgrep@14.1.0 if needed     │
 │    │    └─ syscall.Exec rg .foo data.json                      │
 │    │                                                           │
 └────────────────────────────────────────────────────────────────┘
@@ -292,7 +292,7 @@ func IsShim(path string) bool
 
 **`internal/autoinstall/run.go`**: The resolver lookup must happen BEFORE the installed-tool fast path. When the resolver returns a pinned version, `Runner.Run` must exec from the version-specific bin directory (`$TSUKU_HOME/tools/{recipe}-{version}/bin/{command}`) rather than the global `tools/current/{command}` symlink. The fast path (exec from `tools/current/`) only fires when the resolver returns `!ok` or is nil.
 
-**`autoinstall.Runner.Run`**: When the resolver returns a version (tool is project-declared), override the consent mode to `auto`. This is a small change in the existing Runner -- check if the version came from the resolver and if so, skip the consent prompt.
+**`autoinstall.Runner.Run`**: When the resolver returns a version (tool is project-declared) and the mode's origin is the unset default, raise the mode to `auto`. This is a small change in the existing Runner -- it reads the mode's origin as well as its value, and raises nothing that anything else set.
 
 **Command-not-found hook scripts** (`internal/hooks/tsuku.{bash,zsh,fish}`): Add a check before calling `tsuku suggest`. If `.tsuku.toml` exists and declares the tool (via a quick `tsuku run --check <command>` or by having the hook call `tsuku run` directly and letting the Runner handle the suggest/run distinction), call `tsuku run <command> [args]` instead.
 
@@ -353,13 +353,13 @@ Deliverables:
 - `internal/project/resolver.go`: `NewResolver`, `ProjectVersionFor`
 - `internal/project/resolver_test.go`: Tests
 
-### Phase 2: Wire Resolver into `tsuku run` + Auto Mode Override
+### Phase 2: Wire Resolver into `tsuku run` + Bounded Mode Elevation
 
-Modify `cmd_run.go` to construct resolver. Modify `Runner.Run` to override mode to `auto` when resolver returns a version.
+Modify `cmd_run.go` to construct the resolver and to resolve the mode's origin alongside its value. Modify `Runner.Run` to raise the mode to `auto` when the resolver returns a version and that origin is the unset default.
 
 Deliverables:
 - Modified `cmd/tsuku/cmd_run.go`
-- Modified `internal/autoinstall/run.go` (mode override logic)
+- Modified `internal/autoinstall/run.go` (mode elevation logic)
 - Tests
 
 ### Phase 3: Upgrade Command-Not-Found Hooks
@@ -385,31 +385,65 @@ Update CLI help and CI usage examples.
 
 ## Security Considerations
 
-### Project Config as Consent
+### The threat
 
-The core security decision: `.tsuku.toml` declaring a tool authorizes its installation without prompting. This is safe because:
+A user clones a repository they have not read, runs a command in it, and the
+`.tsuku.toml` that repository ships causes a tool to be installed and executed.
+That is the threat this section is about, and the mitigations below are offered
+against it.
 
-1. **Deliberate action**: Someone (the project maintainer) explicitly added the tool to `.tsuku.toml` and committed it
-2. **Curated recipes only**: The binary index limits resolution to the curated registry
-3. **Checksum verification**: All installs go through the existing verification pipeline
-4. **Version-pinned**: Project configs typically pin specific versions, not "latest"
+The exposure exists because a declaration is a consent signal written by
+whoever wrote the repository. The rule bounds it -- a declaration raises only
+the unset default, never a mode the user set -- so the exposed population is
+users who have configured no consent mode, which is the common case.
 
-**Risk**: Cloning an untrusted repo and typing a declared command auto-installs it. This is the intended behavior -- but users who want protection can:
-- Not install shell hooks (command-not-found won't fire)
-- Set `auto_install_mode = suggest` globally (overrides the project-consent mechanism)
-- Use `TSUKU_CEILING_PATHS` to prevent config discovery in untrusted directories
+Every install a declaration authorizes announces itself before it begins,
+naming the recipe, the version, the path of the file that authorized it and the
+recipe's source:
+
+```
+project-declaration: /home/dev/myproject/.tsuku.toml declares fd@10.2.0 (recipe source: registry)
+```
+
+That is disclosure, not prevention. It tells a user what happened; it does not
+stop it.
+
+### What a user can do about it
+
+Two controls work against the threat as stated. Both have been followed and
+then tested by typing the bare command in a repository that declares it.
+
+**Do not install the command-not-found hook.** With no hook registered, an
+unresolvable command goes to the shell's own handler and tsuku is never
+invoked, so nothing installs. This is the strongest control, and it costs the
+feature: `tsuku run` typed explicitly still installs, hook or no hook.
+
+**Set `auto_install_mode = "suggest"` in `$TSUKU_HOME/config.toml`.** A mode
+the user set is not raised by a declaration, so a declared tool in an untrusted
+clone prints an install instruction and installs nothing. Setting it through
+`TSUKU_AUTO_INSTALL_MODE` works too, and a `--mode` flag outranks both. This
+control holds because the elevation is bounded; under the unconditional rule a
+declaration raised `suggest` too, and the setting protected nobody.
+
+**What `suggest` does not cover.** It governs installing, not running. A tool
+already installed at the version the repository declares is executed straight
+from `$TSUKU_HOME/tools`, on the fast path above, before any consent mode is
+consulted -- so a repository that declares a version you happen to have already
+gets that tool run for you regardless of the setting. `suggest` also says
+nothing about what a tool does once it runs, and nothing about the install path
+(`tsuku install`), which is a separate command with its own confirmation.
 
 ### Shim Safety
 
-Same consent model as hooks. Shims call `tsuku run`, which uses the resolver and mode override. Creating shims is an explicit user action (`tsuku shim install`).
+Same consent model as hooks. Shims call `tsuku run`, so the same bounded rule applies: a declaration raises an unset default, a mode the user set survives. Creating shims is an explicit user action (`tsuku shim install`), which is what makes "do not install the hook" reachable as a control without giving up shim-driven CI.
 
 ### Mitigations Summary
 
 | Risk | Severity | Mitigation | Residual Risk |
 |------|----------|------------|---------------|
-| Untrusted repo auto-installs via hook | Medium | Curated registry, checksums, hooks are opt-in, global mode override | User with hooks in untrusted repo gets auto-install |
-| Untrusted repo auto-installs via shim | Medium | Same as above plus shims are explicit user action | Same |
-| Malicious .tsuku.toml declares many tools | Low | MaxTools cap (256), curated registry | Registry compromise |
+| Untrusted repo installs a declared tool via the hook | Medium | Do not install the hook; or set a consent mode, which a declaration does not raise | A user who has configured no mode and kept the hook gets the install; a version already on disk runs without any mode being consulted |
+| Untrusted repo installs a declared tool via a shim | Medium | Same, plus creating shims is an explicit user action | Same |
+| Malicious .tsuku.toml declares many tools | Low | MaxTools cap (256) | Each declared tool is still one install |
 
 ## Consequences
 
@@ -417,17 +451,17 @@ Same consent model as hooks. Shims call `tsuku run`, which uses the resolver and
 
 - **Seamless experience**: `rg .foo data.json` just works in a project that declares ripgrep
 - **Complete vision**: The shell integration building blocks are fully connected
-- **Minimal new code**: Resolver ~30-50 lines, hook change ~10 lines per shell, mode override ~5 lines in Runner
+- **Minimal new code**: Resolver ~30-50 lines, hook change ~10 lines per shell, mode elevation ~5 lines in Runner
 - **Three contexts, one experience**: Hooks, tsuku run, and shims all produce the same behavior
 
 ### Negative
 
-- **Auto-install in untrusted repos**: Deliberate trade-off. Project config is consent.
+- **Auto-install in untrusted repos**: Deliberate trade-off, bounded to users who have configured no consent mode.
 - **Binary index dependency**: Resolver needs the index built
-- **Hook behavior change**: command-not-found goes from suggest to run for project tools
+- **Hook behavior change**: command-not-found goes from suggest to run
 
 ### Mitigations
 
-- **Untrusted repos**: Document the escape hatches (global mode override, no hooks, ceiling paths)
+- **Untrusted repos**: The two controls in Security Considerations -- do not install the hook, or set a consent mode -- and the disclosure line on every install a declaration authorizes
 - **Index dependency**: Clear error message directing to `tsuku update-registry`
-- **Hook change**: Additive -- undeclared tools still get suggest/confirm behavior
+- **Hook change**: Documented as installing and executing, in the guide and in `tsuku hook --help`, since it is not additive for an undeclared tool either
