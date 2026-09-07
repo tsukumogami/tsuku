@@ -304,9 +304,10 @@ func TestRun_AC8_DeclaredRecipeWinsOverAnInstalledSibling(t *testing.T) {
 // AC9. Three declared providers of one command: the refusal names all three,
 // installs nothing and executes nothing.
 //
-// The message this unit owes is the recipe names. The versions, the
-// configuration keys and an invocation that reaches a specific one of them
-// belong to the refusal itself.
+// The versions and an invocation that reaches a specific one of the recipes
+// belong to the refusal itself, which formats this error. What this unit owes
+// is that the error can be formatted at all -- that it carries every
+// declaration, and that the message it makes in the meantime tells them apart.
 func TestRun_AC9_ThreeDeclaredProvidersAreAllNamed(t *testing.T) {
 	fx := indexfixture.New(t)
 	r, installer, execRec, _, _ := newFixtureRunner(t, fx)
@@ -335,6 +336,48 @@ func TestRun_AC9_ThreeDeclaredProvidersAreAllNamed(t *testing.T) {
 	}
 	if execRec.called {
 		t.Errorf("executed %q, want nothing", execRec.binary)
+	}
+}
+
+// Two registries declaring one recipe name are two declarations, and the
+// refusal has to tell them apart. Recipe is a match key rather than an
+// identity, so both carry the same bare name and only the configuration key
+// separates them.
+//
+// This is the case that keeps the interim message honest. AC9's fixture
+// declares bare keys, where the key and the recipe are the same string, so the
+// whole message could be built from Recipe alone and AC9 would not notice.
+// Here it would read "the project declares 2 recipes ... koto, koto", which is
+// the confusion the declaration set exists to remove.
+//
+// The refusal's own criteria for this configuration are AC11b and AC14 and
+// belong to the unit that formats the message. What is asserted here is only
+// that the two are distinguishable at all.
+func TestRun_TwoRegistriesForOneNameAreDistinguishable(t *testing.T) {
+	fx := indexfixture.New(t)
+	r, _, _, _, _ := newFixtureRunner(t, fx)
+
+	keyA := "org-a/" + indexfixture.DeclaredRecipe
+	keyB := "org-b/" + indexfixture.DeclaredRecipe
+	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto,
+		declaring(map[string]string{
+			keyA: indexfixture.SharedVersion,
+			keyB: indexfixture.SharedVersion,
+		}))
+
+	var ambiguous *AmbiguousDeclarationError
+	if !errors.As(err, &ambiguous) {
+		t.Fatalf("Run() error = %v, want an AmbiguousDeclarationError", err)
+	}
+	if len(ambiguous.Declarations) != 2 {
+		t.Fatalf("error carries %d declarations, want 2", len(ambiguous.Declarations))
+	}
+	for _, key := range []string{keyA, keyB} {
+		if !strings.Contains(ambiguous.Error(), key) {
+			t.Errorf("refusal %q does not name the configuration key %q; the two "+
+				"declarations share a recipe name and nothing else tells them apart",
+				ambiguous.Error(), key)
+		}
 	}
 }
 

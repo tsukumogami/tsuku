@@ -14,8 +14,8 @@ problem: |
 decision: |
   Replace the version-only resolver with one that returns the set of declared
   recipes providing a command, deduped by bare recipe name, and consume it
-  inside a new `Runner.candidates` method so the un-narrowed list never exists
-  in the scope of the five consumers. Narrowing is three-way: zero declarations
+  inside a new `Runner.candidates` method so the region above the narrowing
+  inside `Run` is empty of the list entirely. Narrowing is three-way: zero declarations
   pass the full list through, one narrows to it, more than one refuses at exit
   10 naming the declared recipes. Move the terminal check inside `Runner.Run`
   where the declaration is known, after the gates. On consent, adopt bounded
@@ -408,10 +408,11 @@ find this sentence rather than a discrepancy.
 the paragraph above is the sentence a reviewer would otherwise trip on. Once
 the list is confined to `candidates`, the three positional selections inside
 `Run` have no reason to stay separate: `Run` reads position zero once, into a
-`match` the six sites below read instead, and the only other read is the
-conflict gate's `len(matches) > 1`. So below the narrowing there is one
+`match` that the sites below read instead, and the only other read of the list
+is the conflict gate's `len(matches) > 1`. So below the narrowing there is one
 positional selection and one cardinality test; above it, on the raw list,
-`len(matches) == 0`, exactly as described.
+`len(matches) == 0` and the whole-list hand-off to `DeclarationsFor`, which
+ranges rather than selecting.
 
 That strengthens the property rather than weakening it — R3a's review
 instrument asks a reviewer to check positional reads, and there is now one to
@@ -663,7 +664,7 @@ redirections build no index.
 ## Decision Outcome
 
 Group A is built as: a declaration-set resolver (D2), consumed inside
-`Runner.candidates` so the un-narrowed list never enters the consumers' scope
+`Runner.candidates` so the region above the narrowing inside `Run` holds no list at all
 (D3), with narrowing three-way and the zero case an explicit passthrough; a
 refusal carrying the declared recipes, versions and config keys at exit 10
 (D4); the terminal check moved inside `Run`, after the gates, where the
