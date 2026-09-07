@@ -461,17 +461,21 @@ type modeGate struct {
 // establish no gate fired.
 //
 // Registration is the thing the table closes, and it is worth being explicit
-// about what it is not. Sharing the *conditions* between those two sites was
-// already done: it stops a gate and the hatch message drifting apart on what
-// fires them. What it could not stop is a fourth gate added to the lowering
-// path and not to the hatch computation, which leaves the message naming
-// --mode=auto in a state that gate blocks -- a user following it verbatim
-// arrives back at the same message having changed nothing, which is the defect
-// R10 is about. A gate needs an identifier and a condition regardless, so
-// there was almost nothing left to pay for closing that door here.
+// about what it is not. Sharing the *conditions* between the two sites that
+// evaluate them -- lowerMode and autoBlockedBy -- was already done: it stops a
+// gate and the hatch message drifting apart on what fires them. What it could
+// not stop is a fourth gate added to the lowering path and not to the hatch
+// computation, which leaves the message naming --mode=auto in a state that
+// gate blocks -- a user following it verbatim arrives back at the same message
+// having changed nothing, which is the defect R10 is about. A gate needs an
+// identifier and a condition regardless, so there was almost nothing left to
+// pay for closing that door here.
 //
-// The order is the order they run in, so the condition either site reports is
-// the one a user would hit first.
+// The order is the order they run in, and both evaluating sites stop at the
+// first gate that fires, so the condition either one reports is the one a user
+// would hit first. Stopping is not an optimization: a gate that has not
+// changed the mode has nothing to announce, because by the time it is reached
+// the mode is already confirm.
 //
 // On the path that prints the hatch message a gate can be answered twice,
 // including the recipe load behind RecipeHasVerification -- once by lowerMode

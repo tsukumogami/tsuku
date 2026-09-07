@@ -739,23 +739,35 @@ After the extraction in D3 the index lookup is not in `Runner.Run` at all, so
 the rule applied literally no longer spans the sites that moved, and AC52's
 two-way comparison would fail on correct code. The rule becomes:
 
-> Every point in `Runner.candidates`, `Runner.lowerMode` or `Runner.Run` that
-> reads or writes the effective mode, or returns before the mode dispatch is
-> reached having reached an install or an exec.
+> Every point in `Runner.candidates`, `elevate`, `Runner.lowerMode` or
+> `Runner.Run` that reads or writes the effective mode, or returns before the
+> mode dispatch is reached having reached an install or an exec.
 
 The second limb reads "having reached" and not "without having reached", which
 is the opposite of what an earlier draft said. Inverted it admits the root
 guard and the two error returns and excludes the fast path, which is precisely
 backwards from the paragraph below and from the table.
 
+`elevate` and `lowerMode` are both named because both take the mode, decide
+what it becomes, and hand it back for `Run` to assign. Leaving either out would
+make the rule miss a decision while catching its assignment, and the two have
+to be treated alike: they are the raise and the lowering of the same value.
+
 **The span's two boundaries, by identifier:** the `r.Lookup` call inside
 `Runner.candidates`, and the mode dispatch switch in `Runner.Run`.
+
+**Rows are anchored at the function that decides the value, not at every line
+that touches it.** `Run`'s two assignments — the one from `elevate` and the one
+from `lowerMode` — are the same sites as the two rows below that name those
+functions, rather than two more. Said here because a check matching on file and
+function alone finds more points in `Run` than there are rows anchored there,
+and would report a mismatch on correct code.
 
 **The derived rows after this work**, each cited by file, function and role:
 
 | Row | File | Function | Role |
 |---|---|---|---|
-| Project declaration | `internal/autoinstall/run.go` | `Run` | Writes the mode `elevate` returns, raising it where it was `default` and the command is declared |
+| Project declaration | `internal/autoinstall/run.go` | `elevate` | Raises the mode where its origin was `default` and the command is declared |
 | Mode-lowering gates | `internal/autoinstall/run.go` | `lowerMode` | Writes confirm at the first entry in `modeGates` that fires |
 | Terminal check | `internal/autoinstall/run.go` | `Run` | Reads the mode; returns before the dispatch without reaching an install or an exec |
 | Elevation disclosure | `internal/autoinstall/run.go` | `Run` | Reads the mode, to skip the one dispatch that installs nothing |
@@ -768,7 +780,16 @@ one write is `lowerMode`'s, shared by all of them and by any gate added later.
 So the derivation finds one site where the pre-change table found three, and a
 check expecting three in `Run` fails on correct code.
 
-The consequence for the check is that the derivation has to reach the table as
+**The registered gates, by the identifier each announces itself with**, which
+is the subject of the second comparison below:
+
+| Gate | Identifier | Condition it reports |
+|---|---|---|
+| Configuration-permission | `config-permissions` | Which of the four ways `config.toml` fails: mode, owner, unreadable, ownership undeterminable |
+| Verification | `recipe-verification` | The recipe carries no checksum or signature |
+| Multiple-provider | `multiple-providers` | More than one recipe provides the command |
+
+The consequence for the check is that the derivation has to reach that table as
 well as the sites. A fourth gate moves no site at all — three functions walk
 `modeGates` (`lowerMode`, `autoBlockedBy` and `GateIdentifiers`) and none of
 them changes when one is registered — so a check written over the sites alone
@@ -792,12 +813,33 @@ disclosure, added in Issue 7. Neither was a site before and both are now, so
 a derivation carried over unchanged is short by two. The multiple-provider
 gate's role is unchanged but its behaviour narrows, because the list it counts
 is now narrowed where a declaration applies — which is D3's point and not a
-table change. What is new is the span: three functions rather than one.
+table change. What is new is the span: four functions rather than one.
 
 **AC46 searches this rule over that span in both directions; AC50 requires the
 check to read its expected site list out of this section rather than out of the
 table above; AC52 compares the two.** The list is here, in one place, so those
 three point at the same artefact.
+
+**Which artefact AC52 compares, now that the two have diverged.** AC52 was
+written when this section reproduced the PRD's gates table row for row, so
+"the two" could be read either way and meant the same set. It cannot now. The
+PRD's table has three gate rows where the code has one site; it has no row for
+the elevation disclosure, which did not exist; and it excludes the terminal
+check by name *and by the property that it does not read the effective mode* —
+a property Issue 6 made false when the check moved down. So a comparison
+against the PRD's table fails on correct code in three places.
+
+The recorded derivation above is the artefact, and the PRD's table is
+superseded rather than compared against. R21 already licenses that: it obliges
+this document to record the derivation precisely because the span moves, and a
+table that predates two of the moves is a record of where the sites used to be.
+
+That leaves the gates needing a pin of their own, because collapsing three rows
+into one is exactly what would hide a gate being deleted. The comparison to
+make is over `modeGates` itself: the identifiers it registers against the
+identifiers this section names, in both directions. It is the same shape as the
+site comparison and a different subject, and between them nothing about a gate
+— its existence or its site — changes without a check noticing.
 
 ## Implementation Approach
 

@@ -177,6 +177,57 @@ func TestRun_AC21_EachGateAnnouncesItselfAndItsCondition(t *testing.T) {
 	}
 }
 
+// Two gates would fire, and the announcement is the first one's alone.
+//
+// R11 is about a gate that *changes* the mode, and only the first does: by the
+// time the second is reached the mode is already confirm, so a line from it
+// would report a change nobody made. This is also where the identifier
+// lowerMode returns is pinned to the first rather than the last -- R12a's
+// record names the gate that lowered the mode, and with two firing, a
+// traversal that ran on, or ran backwards, names the wrong one while every
+// single-gate case in this file still passes.
+//
+// autoBlockedBy has this case already, in AC25and27's "two gates would lower
+// it" row. The announcement site had none, which is exactly the asymmetry a
+// registration table is supposed to remove.
+func TestLowerMode_AnnouncesOnlyTheGateThatChangedTheMode(t *testing.T) {
+	fx := indexfixture.New(t)
+	r, installer, _, stdout, stderr := newFixtureRunner(t, fx)
+	// The first and second gates in table order both fire.
+	openPermissionsConfig(t, fx.Cfg)
+	r.RecipeHasVerification = func(string) bool { return false }
+	r.ConsentReader = strings.NewReader("y\n")
+
+	subject := gateSubject{
+		command: indexfixture.CommandOneProvider,
+		match:   index.BinaryMatch{Recipe: indexfixture.RecipeSolo, Command: indexfixture.CommandOneProvider},
+		matches: []index.BinaryMatch{{Recipe: indexfixture.RecipeSolo, Command: indexfixture.CommandOneProvider}},
+	}
+	mode, gate := r.lowerMode(ModeAuto, subject)
+	if mode != ModeConfirm {
+		t.Fatalf("lowerMode(auto) = %v, want confirm: this case needs both gates able to fire", mode)
+	}
+	if gate != gateConfigPermissions {
+		t.Errorf("lowerMode named %q, want %q -- the gate that changed the mode is the first one to fire",
+			gate, gateConfigPermissions)
+	}
+
+	// And on stderr, through Run, where a user reads it.
+	if err := r.Run(context.Background(), indexfixture.CommandOneProvider, nil,
+		ModeAuto, OriginFlag, nil); err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if !promptShown(stdout.String()) || !installer.called {
+		t.Fatalf("the run did not reach confirm: prompt = %v, installed = %v",
+			promptShown(stdout.String()), installer.called)
+	}
+	if got := gatesAnnouncedIn(stderr.String()); len(got) != 1 || got[0] != gateConfigPermissions {
+		t.Errorf("gates announced = %v, want exactly [%s]. Two gates would fire here and only the first "+
+			"changed the mode; the second would be reporting a change it did not make.\nstderr: %s",
+			got, gateConfigPermissions, stderr.String())
+	}
+}
+
 // The identifiers are distinct, which every "no gate intervened" assertion
 // rests on: two gates sharing an identifier make one of them unobservable, and
 // gatesAnnouncedIn would report the wrong gate as having fired.
@@ -429,8 +480,11 @@ func TestRun_D1_6_TheElevationIsDisclosedBeforeTheInstall(t *testing.T) {
 // elevation, no gate, and a repository-supplied file turning a prompt into an
 // unattended install.
 //
-// A disclosure keyed on the elevation passes every other case in this file and
-// fails only here, which is what makes this the case worth writing.
+// This is the only case where the declaration determined the recipe and
+// nothing else -- no elevation, no gate, no prompt -- so it is the one that
+// isolates the distinction. A disclosure keyed on the elevation also fails
+// TestRun_TheDisclosurePrecedesThePrompt, whose confirm was set by the flag;
+// what that case cannot show is the silent install, because it prompts.
 func TestRun_TheDisclosureFollowsTheDeterminationRatherThanTheElevation(t *testing.T) {
 	fx := indexfixture.New(t)
 	r, installer, _, stdout, stderr := newFixtureRunner(t, fx)
@@ -609,11 +663,16 @@ func TestAnnouncementIdentifiersAreStable(t *testing.T) {
 // the user consented at the prompt.
 //
 // An install happened, so R11a's "before or at the first install the elevation
-// enables" applies in full. Every other disclosure case here arrives at the
-// site with the mode still at auto, so a condition of `effectiveMode ==
-// ModeAuto` passes all of them and leaves this install saying nothing -- and
-// the state is an unverified recipe, which is the ordinary case rather than a
-// corner.
+// enables" applies in full. What makes it worth its own case is that the state
+// is an unverified recipe, which is the ordinary case rather than a corner:
+// narrowing the condition to `effectiveMode == ModeAuto` would leave the
+// commonest declared install saying nothing, and AC35 unmet outright.
+//
+// TestRun_TheDisclosurePrecedesThePrompt reaches the site at confirm too and
+// catches that narrowing as well. Neither is the other's spare: that one
+// starts from an explicitly set confirm nobody raised, and this one from a
+// confirm the elevation raised and a gate put back -- which is the state AC35
+// is about and the only one where an elevation enabled the install.
 func TestRun_TheDisclosureSurvivesAGateLoweringTheRaisedMode(t *testing.T) {
 	fx := indexfixture.New(t)
 	r, installer, execRec, stdout, stderr := newFixtureRunner(t, fx)
@@ -683,6 +742,46 @@ func TestRun_TheDisclosurePrecedesThePrompt(t *testing.T) {
 		t.Errorf("the user was asked to consent before being told what a declaration had determined. "+
 			"Facts delivered after the decision are not disclosure.\ntold by then: %q\ntold in the end: %q",
 			consent.toldSoFar, stderr.String())
+	}
+}
+
+// The disclosure names the recipe, not the configuration key, and this is the
+// case that can tell them apart: an org-scoped key carries a source component
+// and a bare key does not, so everywhere else in this corpus the two strings
+// are equal and a disclosure built from either passes.
+//
+// The run path does not honor a source: the recipe name comes from the binary
+// index, and what will be installed is the bare name. A disclosure naming the
+// key would print "org-a/registry:fixture-dup-omega" beside a fourth fact
+// saying the recipe came from the registry -- two statements about provenance,
+// one of them describing an install this run is not performing, in a line
+// whose whole purpose is to say where the thing came from.
+//
+// The suggest instruction one dispatch over has this case and this hazard
+// written down. The disclosure inherited the exposure and neither.
+func TestRun_TheDisclosureNamesTheRecipeRatherThanTheConfigurationKey(t *testing.T) {
+	fx := indexfixture.New(t)
+	r, installer, _, _, stderr := newFixtureRunner(t, fx)
+	const keySource = "org-a/"
+
+	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto, OriginFlag,
+		declaring(map[string]string{keySource + indexfixture.DeclaredRecipe: indexfixture.SharedVersion}))
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if installer.recipe != indexfixture.DeclaredRecipe {
+		t.Fatalf("installed %q, want the bare %q", installer.recipe, indexfixture.DeclaredRecipe)
+	}
+	if !disclosureShown(stderr.String()) {
+		t.Fatalf("nothing was disclosed: %q", stderr.String())
+	}
+	if strings.Contains(stderr.String(), keySource) {
+		t.Errorf("the disclosure carries the source component %q from the configuration key, which this "+
+			"path does not honor, next to a fourth fact naming where the recipe actually came from: %q",
+			keySource, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), indexfixture.DeclaredRecipe) {
+		t.Errorf("the disclosure does not name the recipe that will be installed: %q", stderr.String())
 	}
 }
 
