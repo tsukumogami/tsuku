@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 	"testing"
@@ -25,7 +26,33 @@ import (
 // what would hide a gate disappearing. So the gates get a comparison of their
 // own, against the one artifact that cannot be wrong about them.
 
-const designRecordPath = "docs/designs/DESIGN-autoinstall-mode-resolution.md"
+// designRecordPath is the design that carries the record, resolved to
+// whichever of the two places its lifecycle puts it.
+//
+// The finalization cascade moves an accepted DESIGN from docs/designs/ to
+// docs/designs/current/, and does so after every review the document has been
+// through. A check naming one path passed for the whole life of this change
+// and then failed the moment the cascade ran -- which is that step's whole
+// hazard: it is the one point where the artifact moves after the last
+// verification.
+//
+// Resolving both is not defensive vagueness. Either location is a correct
+// place for the document to be, and this check's subject is the record's
+// content rather than its filename. What it must never do is silently find
+// nothing: if neither exists, the path stays at the canonical location so the
+// readers below fail on a missing file rather than skipping.
+var designRecordPath = func() string {
+	candidates := []string{
+		"docs/designs/current/DESIGN-autoinstall-mode-resolution.md",
+		"docs/designs/DESIGN-autoinstall-mode-resolution.md",
+	}
+	for _, c := range candidates {
+		if _, err := os.Stat(c); err == nil {
+			return c
+		}
+	}
+	return candidates[0]
+}()
 
 // gatesRecordHeading opens the recorded table. It is matched as a line prefix,
 // which is specific enough that a section renamed without this check being

@@ -1,6 +1,6 @@
 ---
 schema: prd/v1
-status: Accepted
+status: Done
 problem: |
   `tsuku run` is keyed by command while `.tsuku.toml` declares recipes, so it
   has to invert a many-to-one mapping to find out what a project asked for. The
@@ -32,7 +32,7 @@ motivating_context: |
 
 ## Status
 
-Accepted
+Done
 
 Absorbed [BRIEF: Autoinstall Mode Resolution](docs/briefs/BRIEF-autoinstall-mode-resolution.md); carried in Absorbed Brief.
 
