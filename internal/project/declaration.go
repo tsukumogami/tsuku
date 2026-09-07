@@ -19,12 +19,17 @@ import (
 // reach the installer unchanged, because resolving them stays the installer's
 // job (R20).
 //
-// ConfigKey and ConfigPath are not decoration, though nothing outside this
-// package reads them yet. A refusal naming two declared providers will have to
-// name the key each came from, and the disclosure internal/autoinstall will
-// emit needs the authorizing file's path, which that package has no other
-// route to. Both consumers are later units; the fields are here because the
-// set is what carries the association to them.
+// ConfigKey and ConfigPath both have consumers now, and neither is decoration.
+// The refusal naming two declared providers names the key each came from,
+// because Recipe cannot tell them apart. The elevation disclosure in
+// internal/autoinstall names ConfigPath, because "this was authorized by
+// /home/you/src/theirrepo/.tsuku.toml" is the part of that line a user can act
+// on, and that package has no other route to the path.
+//
+// The disclosure deliberately does *not* name ConfigKey. The key carries an
+// org-scoped source component and the run path never honors one -- the recipe
+// comes from the binary index -- so a line built from the key would name a
+// source that is not where the install comes from.
 type ProjectDeclaration struct {
 	Recipe     string
 	Version    string

@@ -42,7 +42,8 @@ func disclosureShown(stderr string) bool {
 	return strings.Contains(stderr, DeclarationDisclosure)
 }
 
-// assertAC30 is the guard AC30 puts on every `suggest` demonstration: no gate
+// assertAC30 is the guard AC30 puts on a `suggest` demonstration -- this
+// package's; cmd/tsuku has its own twin for the end-to-end one: no gate
 // diverted the mode and no declaration raised it, so what the demonstration
 // observed was `suggest` being honored rather than some other state that
 // happens to install nothing.

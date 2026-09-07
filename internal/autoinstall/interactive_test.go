@@ -47,9 +47,10 @@ func newHeadlessRunner(t *testing.T, fx *indexfixture.Fixture) (*Runner, *mockIn
 func openPermissionsConfig(t *testing.T, cfg *config.Config) {
 	t.Helper()
 
-	path := filepath.Join(cfg.HomeDir, "config.toml")
-	if err := os.WriteFile(path, nil, 0o644); err != nil { //nolint:gosec // the permissive mode is the fixture
-		t.Fatalf("writing %s: %v", path, err)
+	// cfg.ConfigFile, not a path rebuilt here: the gate reads that field, so
+	// a fixture writing anywhere else would be testing a file nothing guards.
+	if err := os.WriteFile(cfg.ConfigFile, nil, 0o644); err != nil { //nolint:gosec // the permissive mode is the fixture
+		t.Fatalf("writing %s: %v", cfg.ConfigFile, err)
 	}
 }
 

@@ -29,9 +29,9 @@ import (
 
 const gatesRecordPath = "docs/designs/DESIGN-autoinstall-mode-resolution.md"
 
-// gatesRecordHeading opens the recorded table. It is matched as a whole line
-// so that a section renamed without this check being updated fails loudly
-// rather than matching some other table further down.
+// gatesRecordHeading opens the recorded table. It is matched as a line prefix,
+// which is specific enough that a section renamed without this check being
+// updated fails loudly rather than matching some other table further down.
 const gatesRecordHeading = "**The registered gates, by the identifier each announces itself with**,"
 
 // backtickedIdentifier pulls the identifier out of a row's second column.

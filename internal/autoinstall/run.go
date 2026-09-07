@@ -220,10 +220,12 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 	// wider than what this line raised.
 	effectiveMode, _ := elevate(mode, origin, declaration != nil)
 
-	// Security gates 2 through 4, from the table they are registered in. Each
-	// announces itself where it fires, which is R11; the traversal stops at
-	// the first, because that is the one that *changed* the mode and the ones
-	// after it would be reporting a mode they found already lowered.
+	// The mode-lowering gates, from the table they are registered in -- however
+	// many are registered, which is the point of the table and the reason this
+	// no longer counts them. Each announces itself where it fires, which is R11;
+	// the traversal stops at the first, because that is the one that *changed*
+	// the mode and the ones after it would be reporting a mode they found
+	// already lowered.
 	//
 	// The gate it names is discarded here for the reason the origin above is,
 	// and it is the same record that will read both.
@@ -453,8 +455,15 @@ type modeGate struct {
 	blocks func(r *Runner, subject gateSubject) string
 }
 
+// The table is a package-level var rather than a constant because a test
+// registers a fourth gate through it to observe that one entry reaches every
+// site. Nothing in production writes it, and it deliberately is not a Runner
+// field: these are security controls, and a field lets a wiring site build a
+// Runner with no gates at all and no compile error to say so.
+//
 // modeGates registers the mode-lowering gates. Every site that needs to know
-// about a gate reads this table, and there are three: lowerMode, which lowers
+// about a gate reads this table, and in production there are three (the test
+// corpus walks it too, for the assertions below): lowerMode, which lowers
 // the mode and announces the gate that did it; autoBlockedBy, which decides
 // whether the terminal check's message may name --mode=auto; and
 // GateIdentifiers, which hands the identifiers to the assertions that
@@ -487,9 +496,16 @@ var modeGates = []modeGate{
 	{
 		// The config file gates auto mode, so a file someone else can write
 		// is a file that can turn auto on.
+		//
+		// cfg.ConfigFile rather than a path joined here, because the file this
+		// has to guard is the one userconfig.Load actually reads, and that is
+		// the field it reads. Two literals that agree today is not the same
+		// property: if the config file ever moves, a joined path guards a file
+		// nobody consults, while still reporting permissions in a message
+		// naming config.toml.
 		id: gateConfigPermissions,
 		blocks: func(r *Runner, _ gateSubject) string {
-			return configPermissionCondition(filepath.Join(r.cfg.HomeDir, "config.toml"), os.Getuid())
+			return configPermissionCondition(r.cfg.ConfigFile, os.Getuid())
 		},
 	},
 	{
@@ -613,17 +629,29 @@ const DeclarationDisclosure = "project-declaration"
 // and a bare declaration then matches it here with no source component
 // anywhere in sight -- so a disclosure naming only the authorizing file would
 // not say where the thing being installed came from.
-// All four facts are stated, including the two that can be absent. A
+// All four facts are stated, including the three that can be absent. A
 // declaration carrying no version is ordinary rather than exotic -- `jq = {}`
 // in a .tsuku.toml parses to one, and R20 passes it through verbatim -- and
 // what the user needs told there is that the version is the installer's
-// choice, which dropping the fact does not tell them.
+// choice, which dropping the fact does not tell them. The same reasoning
+// covers an absent path and an absent source: a line missing a fact still
+// looks like a disclosure, so each says it is missing instead.
+//
+// It goes to stderr, while the confirm prompt it precedes goes to stdout.
+// That is the package's existing split rather than a choice made here -- the
+// gates announce on stderr, the prompt and the suggest instruction are the
+// command's own output -- and it means a user piping stdout still sees the
+// disclosure. What it costs is that the two are only interleaved on a
+// terminal, which is where the person deciding is.
 func (r *Runner) discloseDeclaration(match index.BinaryMatch, version, configPath string) {
 	named := match.Recipe
 	if version != "" {
 		named += "@" + version
 	} else {
 		named += " at no declared version"
+	}
+	if configPath == "" {
+		configPath = "an unrecorded file"
 	}
 	fmt.Fprintf(r.stderr, "%s: %s declares %s (recipe source: %s)\n",
 		DeclarationDisclosure, configPath, named, recipeSource(match))
@@ -669,6 +697,12 @@ func (r *Runner) execBinary(binary string, args []string) error {
 // The owner is a parameter rather than a call to os.Getuid inside, so that the
 // branch which cannot be built without a second account -- the one the
 // paragraph above is about -- is reachable from a test.
+//
+// An empty path takes the unreadable branch rather than the does-not-exist
+// one, because os.Stat("") fails with something other than IsNotExist. That is
+// the safe direction and it is deliberate: a Runner holding a Config nobody
+// filled in has no config file to check, and treating "I cannot tell" as "fine"
+// is how a gate stops being one.
 func configPermissionCondition(path string, uid int) string {
 	info, err := os.Stat(path)
 	if os.IsNotExist(err) {

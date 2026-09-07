@@ -87,6 +87,10 @@ func newTestRunner(t *testing.T) (*Runner, *bytes.Buffer, *bytes.Buffer) {
 		HomeDir:    tmpDir,
 		CacheDir:   filepath.Join(tmpDir, "cache"),
 		CurrentDir: filepath.Join(tmpDir, "tools", "current"),
+		// The file the configuration-permission gate guards, which is the
+		// one userconfig.Load reads. DefaultConfig fills it in; a hand-built
+		// Config has to as well, or the gate has nothing to check and fires.
+		ConfigFile: filepath.Join(tmpDir, "config.toml"),
 	}
 	// Create the current dir so binary path construction works.
 	if err := os.MkdirAll(cfg.CurrentDir, 0755); err != nil {
