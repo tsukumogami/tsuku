@@ -587,7 +587,7 @@ func TestRun_NilRecipeHasVerification_FallsBackToConfirm(t *testing.T) {
 
 // --- Project mode override tests ---
 
-func TestRun_ProjectResolverOk_OverridesToAuto(t *testing.T) {
+func TestRun_DeclaredCommand_OverridesToAuto(t *testing.T) {
 	r, _, _ := newTestRunner(t)
 	installer := &mockInstaller{}
 	execRec := &execRecorder{}
@@ -620,14 +620,14 @@ func TestRun_ProjectResolverOk_OverridesToAuto(t *testing.T) {
 	}
 }
 
-func TestRun_ProjectResolverNotOk_ModeUnchanged(t *testing.T) {
+func TestRun_UndeclaredCommand_ModeUnchanged(t *testing.T) {
 	r, stdout, _ := newTestRunner(t)
 
 	r.Lookup = func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
 		return []index.BinaryMatch{{Recipe: "jq", Command: "jq"}}, nil
 	}
 
-	// Resolver returns ok=false -- mode should stay as suggest.
+	// Nothing declared -- mode should stay as suggest.
 	resolver := &mockDeclarationResolver{
 		versions: map[string]string{}, // no entries
 	}

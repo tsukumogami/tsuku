@@ -31,11 +31,9 @@ func (i *runWiringInstaller) Install(_ context.Context, recipe, version string) 
 // index, and checks the two things that composition can get wrong.
 //
 // It calls newRunWiring rather than runCmd because runCmd ends in exitWithCode
-// or syscall.Exec, neither of which has a seam yet. It calls newRunWiring
-// rather than reconstructing those four lines because a reconstruction passes
-// while the production wiring is wrong: rewire the run path to
-// project.NewResolver(nil) -- exactly the defect this work repairs -- and a
-// test that built its own resolver would not notice.
+// or syscall.Exec, neither of which has a seam yet -- and rather than
+// reconstructing what newRunWiring does, for the reason that function's own
+// doc comment gives.
 //
 // The two properties, both of which live in the joining and in neither package
 // it joins:

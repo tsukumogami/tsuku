@@ -578,10 +578,9 @@ func TestRun_AC44_SingleProviderBehaviorIsUnchanged(t *testing.T) {
 }
 
 // A declaration for a recipe that provides none of the matches is a broken
-// resolver, not a narrowing outcome. The production resolver derives its
-// answer from the matches it is handed and cannot produce this; the parameter
-// is an interface, so it is checked rather than assumed. Without the check
-// every consumer below would be handed an empty list to read position zero of.
+// resolver, not a narrowing outcome. This is the case that keeps candidates'
+// postcondition -- a non-empty list on a nil error -- true against an
+// implementation the production resolver's own shape does not rule out.
 func TestCandidates_DeclarationNamingNoMatchIsAnError(t *testing.T) {
 	fx := indexfixture.New(t)
 	r, _, _, _, _ := newFixtureRunner(t, fx)

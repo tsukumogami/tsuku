@@ -53,6 +53,16 @@ type auditEntry struct {
 //   - exactly one does: matches filtered to that recipe, plus the declaration.
 //   - more than one does: AmbiguousDeclarationError carrying all of them (R6).
 //
+// # The postcondition every caller relies on
+//
+// On a nil error the returned list has at least one element. Run reads
+// position zero without checking, and every guard below exists to keep that
+// true: the ErrNoMatch return for an empty lookup, and the error return for a
+// declaration naming a recipe none of the matches provide. Neither is
+// decorative. Removing either turns a caller's matches[0] into a panic in
+// another function, which is why the second one is checked even though the
+// production resolver cannot trigger it.
+//
 // The narrowing lives here, at the one site the list is produced, rather than
 // at each of the consumers below. That is what makes the consumers correct by
 // inheritance in the declared case: they go on reading position zero, and
@@ -114,11 +124,10 @@ func (r *Runner) candidates(ctx context.Context, command string, resolver Projec
 			}
 		}
 		if len(narrowed) == 0 {
-			// The resolver derives its answer from the matches it was handed,
-			// so this cannot happen with the production one. It is checked
-			// because the parameter is an interface: an implementation that
-			// declared a recipe nothing provides would otherwise hand every
-			// consumer below an empty list to index at position zero.
+			// Keeps the postcondition above. The production resolver derives
+			// its answer from the matches it was handed and cannot get here;
+			// the parameter is an interface, so this is checked rather than
+			// assumed.
 			return nil, nil, fmt.Errorf("autoinstall: the project declared %q for %q, which provides no match",
 				declaration.Recipe, command)
 		}
@@ -147,14 +156,20 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 		return err
 	}
 
-	// The one positional read of the candidate list. Everything below decides
-	// from match and from declaration -- the conflict gate's len(matches) is
-	// the only other read, and it is a count rather than a selection.
+	// The one positional read of the candidate list, and it stays the only
+	// one: a consumer added below reads match rather than indexing matches
+	// again. That is not style. R3a's whole review instrument is that a
+	// positional read below the narrowing site can be checked by position
+	// instead of by reasoning about intent, and it only works while there is
+	// one to check. The conflict gate's len(matches) is the other read of the
+	// list and is a count rather than a selection.
 	//
-	// Both already account for what the project declared: where it declared a
-	// provider of command, match is that recipe and version is what it was
-	// declared at; where it declared none, declaration is nil and match is
-	// whatever the index ranked first.
+	// match and declaration already account for what the project declared:
+	// where it declared a provider of command, match is that recipe and
+	// version is what it was declared at; where it declared none, declaration
+	// is nil and match is whatever the index ranked first. Indexing is safe
+	// without a length check because candidates returns a non-empty list on a
+	// nil error -- see its postcondition.
 	match := matches[0]
 	version := ""
 	if declaration != nil {

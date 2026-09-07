@@ -95,7 +95,13 @@ type AmbiguousDeclarationError struct {
 //
 // What this message does not yet carry is each declaration's version and an
 // invocation that reaches a specific one of the recipes. Those come with the
-// refusal proper, which formats this error for the user.
+// refusal proper, which formats this error for the user and gives it its own
+// exit code.
+//
+// Until then this string is not internal: cmd/tsuku has no case for this error
+// yet, so its default branch prints it and exits 1. It has to stand on its own
+// in front of a user, which is why it names the command and the keys rather
+// than reading like a placeholder.
 func (e *AmbiguousDeclarationError) Error() string {
 	named := make([]string, 0, len(e.Declarations))
 	for _, d := range e.Declarations {
