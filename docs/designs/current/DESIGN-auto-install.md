@@ -1,6 +1,6 @@
 ---
+schema: design/v1
 status: Current
-upstream: docs/designs/DESIGN-shell-integration-building-blocks.md
 spawned_from:
   issue: 1679
   repo: tsukumogami/tsuku
