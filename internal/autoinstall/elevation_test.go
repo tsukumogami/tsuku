@@ -16,6 +16,39 @@ import (
 // asserting only that cannot tell the two apart. It is where the elevation
 // stops: at the commands the file declares, and at the modes nobody set.
 
+// The rule itself, at every input it has. Run discards the origin it returns
+// because nothing on that path writes a record yet, so this is where the value
+// the record will carry is pinned -- without it the second half of the rule is
+// computed and read by nobody, and a later reader would be free to disagree
+// with it.
+func TestElevate(t *testing.T) {
+	tests := []struct {
+		name       string
+		mode       Mode
+		origin     Origin
+		declared   bool
+		wantMode   Mode
+		wantOrigin Origin
+	}{
+		{"the unset default, declared", ModeConfirm, OriginDefault, true, ModeAuto, OriginProject},
+		{"the unset default, undeclared", ModeConfirm, OriginDefault, false, ModeConfirm, OriginDefault},
+		{"suggest by the flag", ModeSuggest, OriginFlag, true, ModeSuggest, OriginFlag},
+		{"confirm by the environment", ModeConfirm, OriginEnvironment, true, ModeConfirm, OriginEnvironment},
+		{"confirm by the config", ModeConfirm, OriginConfig, true, ModeConfirm, OriginConfig},
+		{"auto by the flag", ModeAuto, OriginFlag, true, ModeAuto, OriginFlag},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mode, origin := elevate(tt.mode, tt.origin, tt.declared)
+			if mode != tt.wantMode || origin != tt.wantOrigin {
+				t.Errorf("elevate(%v, %v, %v) = %v, %v; want %v, %v",
+					tt.mode, tt.origin, tt.declared, mode, origin, tt.wantMode, tt.wantOrigin)
+			}
+		})
+	}
+}
+
 // AC36's first half and D1-1. With nothing configured anywhere, a declared
 // command installs without prompting.
 //
@@ -44,6 +77,33 @@ func TestRun_AC36_TheUnsetDefaultIsRaisedForADeclaredCommand(t *testing.T) {
 	}
 	if stderr.Len() != 0 {
 		t.Errorf("stderr = %q, want nothing: no gate fired here", stderr.String())
+	}
+}
+
+// D1-1 in the state the shell hook puts it in: nothing configured, the command
+// declared, and no terminal to answer a prompt on. The elevation is what
+// carries it past the terminal check, and this is the ordinary case rather
+// than a corner -- a command-not-found hook has no terminal by construction.
+//
+// AC2 is the neighboring case and does not cover it: its auto is explicitly
+// set, so the run succeeds there whether or not a declaration raises anything.
+func TestRun_TheRaisedDefaultSurvivesWithNoTerminal(t *testing.T) {
+	fx := indexfixture.New(t)
+	r, installer, execRec, stdout, _ := newHeadlessRunner(t, fx)
+
+	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil,
+		ModeConfirm, OriginDefault, declaredOnly())
+	if err != nil {
+		t.Fatalf("Run() error = %v, want nil", err)
+	}
+	if installer.recipe != indexfixture.DeclaredRecipe {
+		t.Errorf("installed %q, want %q", installer.recipe, indexfixture.DeclaredRecipe)
+	}
+	if !execRec.called {
+		t.Error("exec was not called")
+	}
+	if promptShown(stdout.String()) {
+		t.Errorf("a prompt appeared with no terminal to answer it: %q", stdout.String())
 	}
 }
 
@@ -123,8 +183,12 @@ func TestRun_AC38_AnExplicitConfirmIsHonoredForADeclaredCommand(t *testing.T) {
 				t.Errorf("consent was given for %q but %q was installed", want, installer.recipe)
 			}
 			// The prompt has to be the honored mode's rather than a gate's
-			// doing. A gate that lowered a raised auto back to confirm would
-			// name itself here, and the outcome would look the same.
+			// doing: a gate lowering a raised auto back to confirm produces
+			// the same prompt from the opposite state. What rules the gates
+			// out is the fixture -- a verified recipe, a list narrowed to one,
+			// and no config.toml to have permissions -- and this assertion is
+			// the part of that which is observable, since the
+			// configuration-permission gate is the one that announces itself.
 			if stderr.Len() != 0 {
 				t.Errorf("stderr = %q, want nothing: this prompt is the mode's, not a gate's", stderr.String())
 			}

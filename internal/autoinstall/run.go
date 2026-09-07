@@ -203,30 +203,18 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 		return r.execBinary(binaryPath, args)
 	}
 
-	// The bounded elevation. A declaration raises the mode to auto only where
-	// the mode is the unset default, and only for the command it declared --
-	// this branch is below the narrowing, so an undeclared command in a
-	// project that declares something else has a nil declaration here and is
-	// not raised.
+	// The bounded elevation. It raises the mode and nothing else: the terminal
+	// check below reads the mode rather than the declaration, so a declared
+	// command a gate lowers back to confirm meets that check like any other --
+	// what the declaration bypasses is the prompt it consented to, not every
+	// question there is.
 	//
-	// The bound is the origin rather than the mode, and the mode would not do.
-	// The case for raising confirm is that confirm is a default nobody chose,
-	// and that reasoning does not survive someone choosing it -- so an
-	// explicitly set mode is honored as given, whichever it is. Confirm is
-	// also what the escalation restriction substitutes for an environment
-	// variable asking for auto that the persistent config did not corroborate,
-	// and raising every confirm would take that control's output and put it
-	// straight back to auto, which is the reverse of what it is for. An origin
-	// of default is the one state in which nobody has said anything.
-	//
-	// It raises the mode and nothing else. The terminal check below reads the
-	// mode rather than the declaration, so a declared command a gate lowers
-	// back to confirm meets that check like any other -- what the declaration
-	// bypasses is the prompt it consented to, not every question there is.
-	effectiveMode := mode
-	if declaration != nil && origin == OriginDefault {
-		effectiveMode = ModeAuto
-	}
+	// The origin the elevation produces is discarded here, and deliberately.
+	// Nothing on this path writes the record it belongs to yet; what the rule
+	// must not become is three copies, one at the elevation and one at each
+	// later reader, which is why it is a function rather than a condition
+	// written inline.
+	effectiveMode, _ := elevate(mode, origin, declaration != nil)
 
 	// Security gate 2: config permission check.
 	// If the config file has permissive permissions, fall back to confirm
@@ -279,15 +267,23 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 	// Mode dispatch.
 	switch effectiveMode {
 	case ModeSuggest:
-		// A declared command's instruction is built from the declaration
-		// rather than from the match, through the same helper the refusal
-		// uses. The configuration key carries the source and the declaration
-		// carries the version, and an instruction naming the bare recipe would
-		// install something the project did not ask for -- leaving the next
-		// `tsuku run` in this directory printing this same line.
+		// The instruction names what this run would have installed, which for
+		// a declared command means the declared version. Without it a user who
+		// followed the line got whatever `latest` resolved to, the declared
+		// fast path went on missing the version it stats, and the next
+		// `tsuku run` here printed this same line again.
+		//
+		// It is built the way the prompt eleven lines below is built, from the
+		// recipe and the version, rather than from the declaration's
+		// configuration key. The key carries a source component, and the run
+		// path deliberately does not: the recipe name comes from the binary
+		// index and the source the key names is never honored here. An
+		// instruction carrying it would send a user to the install path, which
+		// does honor it -- a different install from the one this run declined
+		// to perform, reached through a line a repository-supplied file wrote.
 		argument := match.Recipe
-		if declaration != nil {
-			argument = installArgument(*declaration)
+		if version != "" {
+			argument += "@" + version
 		}
 		fmt.Fprintf(r.stdout, "Install with: tsuku install %s\n", argument)
 		return ErrSuggestOnly
@@ -333,6 +329,35 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 	// Exec the installed binary.
 	binaryPath := filepath.Join(r.cfg.CurrentDir, command)
 	return r.execBinary(binaryPath, args)
+}
+
+// elevate applies the bounded elevation: what mode is in force for this
+// command, and which origin the record names for it.
+//
+// A declaration raises the mode to auto only where the mode is the unset
+// default, and only for a command it declared -- declared is false for every
+// other command, because the narrowing above has already decided which
+// declaration, if any, is this command's.
+//
+// The bound is the origin rather than the mode, and the mode would not do. The
+// case for raising confirm is that confirm is a default nobody chose, and that
+// reasoning does not survive someone choosing it -- so an explicitly set mode
+// is honored as given, whichever it is. Confirm is also what the escalation
+// restriction substitutes for an environment variable asking for auto that the
+// persistent config did not corroborate, and raising every confirm would take
+// that control's output and put it straight back to auto, which is the reverse
+// of what it is for. An origin of default is the one state in which nobody has
+// said anything.
+//
+// Where it raises, the origin becomes project: a declaration outranks default
+// and nothing else, so project is recorded exactly where the mode would
+// otherwise have been the unset default, and every other source is both
+// honored and recorded as itself.
+func elevate(mode Mode, origin Origin, declared bool) (Mode, Origin) {
+	if declared && origin == OriginDefault {
+		return ModeAuto, OriginProject
+	}
+	return mode, origin
 }
 
 // The three mode-lowering gates, each as a predicate reporting whether auto

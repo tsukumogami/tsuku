@@ -242,14 +242,50 @@ func TestRun_AC4_AnExplicitSuggestIsHonoredForADeclaredCommand(t *testing.T) {
 				t.Errorf("executed %q under suggest; the declared recipe is not installed and the "+
 					"sibling that is was not the one declared", execRec.binary)
 			}
-			// Nothing on stderr is the strongest form of "no gate lowered the
-			// mode": a gate that fired would name itself there, and so would
-			// any later announcement of an elevation. Suggest is the state in
-			// which neither has anything to say.
+			// Nothing on stderr. Of the three mode-lowering gates only the
+			// configuration-permission one announces itself today, so this
+			// catches that one and the other two are excluded by the fixture
+			// instead -- a recipe that verifies, and a list narrowed to one.
+			// The assertion is written against the stream rather than against
+			// that one message so that it covers the other two gates and any
+			// announcement of a raised mode the moment either exists.
 			if stderr.Len() != 0 {
 				t.Errorf("stderr = %q, want nothing: no gate fired and no mode was raised", stderr.String())
 			}
 		})
+	}
+}
+
+// The instruction names the recipe, not the configuration key, and this is the
+// case that can tell the two apart: an org-scoped key carries a source
+// component, and the bare key every other case here uses does not.
+//
+// The run path does not honor a source: the recipe name comes from the binary
+// index, and the install this run declined to perform would have been of that
+// bare name. An instruction carrying the key would send a user to `tsuku
+// install org-a/registry:koto`, which is a different install, reached through
+// a line a repository-supplied file decided the contents of. The refusal one
+// file over does print the key, and that is not a contradiction: it is
+// choosing between two declarations the user must be able to tell apart, and
+// there is nothing here to choose between.
+func TestRun_SuggestNamesTheRecipeRatherThanTheConfigurationKey(t *testing.T) {
+	fx := indexfixture.New(t)
+	r, _, _, stdout, _ := newFixtureRunner(t, fx)
+	const source = "org-a/"
+
+	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeSuggest, OriginFlag,
+		declaring(map[string]string{source + indexfixture.DeclaredRecipe: indexfixture.SharedVersion}))
+	if !errors.Is(err, ErrSuggestOnly) {
+		t.Fatalf("Run() error = %v, want ErrSuggestOnly", err)
+	}
+
+	want := "tsuku install " + indexfixture.DeclaredRecipe + "@" + indexfixture.SharedVersion
+	if !strings.Contains(stdout.String(), want) {
+		t.Errorf("stdout = %q, want an instruction naming %q", stdout.String(), want)
+	}
+	if strings.Contains(stdout.String(), source) {
+		t.Errorf("the instruction carries the source component %q, which this path does not honor: %q",
+			source, stdout.String())
 	}
 }
 
@@ -579,7 +615,7 @@ func TestRun_AC19_VerificationGateAsksAboutTheDeclaredRecipe(t *testing.T) {
 // provider is not recorded as installed, and nothing exported can change that;
 // TestRun_AlreadyInstalled_ExecImmediately covers it and was not modified by
 // this work, which is the other half of what AC44 asks.
-func TestRun_AC44_SingleProviderBehaviorIsUnchanged(t *testing.T) {
+func TestRun_AC44_SingleProviderBehavior(t *testing.T) {
 	tests := []struct {
 		name        string
 		state       consent

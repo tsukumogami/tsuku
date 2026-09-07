@@ -64,6 +64,11 @@ const (
 	// OriginDefault means nothing set a mode: no flag, no environment
 	// variable, no configuration key. This is the only origin a project
 	// declaration may raise.
+	//
+	// It is also the zero value, so a caller that resolves no origin at all
+	// gets the permissive one. Every caller resolves it explicitly; the note
+	// is here because the safe direction for this type is the other one, and
+	// a second entry point that forgets would fail open rather than closed.
 	OriginDefault Origin = iota
 
 	// OriginFlag is --mode on the command line.

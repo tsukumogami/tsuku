@@ -158,6 +158,26 @@ func TestModeString(t *testing.T) {
 	}
 }
 
+// The five spellings are the record's, fixed by the requirement that names
+// them, so they are pinned rather than left to whoever next edits the switch.
+func TestOriginString(t *testing.T) {
+	tests := []struct {
+		origin Origin
+		want   string
+	}{
+		{OriginDefault, "default"},
+		{OriginFlag, "flag"},
+		{OriginEnvironment, "environment"},
+		{OriginConfig, "config"},
+		{OriginProject, "project"},
+	}
+	for _, tt := range tests {
+		if got := tt.origin.String(); got != tt.want {
+			t.Errorf("Origin(%d).String() = %q, want %q", tt.origin, got, tt.want)
+		}
+	}
+}
+
 func TestRun_ModeSuggest(t *testing.T) {
 	r, stdout, _ := newTestRunner(t)
 	r.Lookup = func(_ context.Context, _ string) ([]index.BinaryMatch, error) {
