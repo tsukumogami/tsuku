@@ -421,7 +421,9 @@ feature: `tsuku run` typed explicitly still installs, hook or no hook.
 **Set `auto_install_mode = "suggest"` in `$TSUKU_HOME/config.toml`.** A mode
 the user set is not raised by a declaration, so a declared tool in an untrusted
 clone prints an install instruction and installs nothing. Setting it through
-`TSUKU_AUTO_INSTALL_MODE` works too, and a `--mode` flag outranks both.
+`TSUKU_AUTO_INSTALL_MODE` works too, and a `--mode` flag outranks both. This
+control holds because the elevation is bounded; under the unconditional rule a
+declaration raised `suggest` too, and the setting protected nobody.
 
 **What `suggest` does not cover.** It governs installing, not running. A tool
 already installed at the version the repository declares is executed straight

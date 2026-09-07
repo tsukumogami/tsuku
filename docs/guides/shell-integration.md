@@ -376,7 +376,7 @@ The `--yes` flag on `tsuku shim install` skips any confirmation prompts. Since s
 Two ways that stops, both of which surface as exit codes rather than hangs:
 
 - **Exit 12** — `confirm mode requires a terminal`. A CI job has no TTY, so anything that lands in `confirm` stops here: a command the project doesn't declare, or a declared one that a mode-lowering check put back at `confirm`. Set `auto_install_mode = "auto"` in `config.toml`, or pass `--mode auto` where you can reach the command line.
-- **Exit 10** — the project declares more than one recipe providing the same command. Nothing installs and nothing runs; the message names each declaration and the exact `tsuku install` line that reaches it. Remove all but one.
+- **Exit 10** — the project declares more than one recipe providing the same command. Several commands have more than one provider in the registry (`fd` comes from both `fd` and `fdclone`; `go` from both `go` and `golang`), and declaring one of them is exactly what settles the ambiguity — declaring two puts it back. Nothing installs and nothing runs; the message names each declaration and the exact `tsuku install` line that reaches it. Remove all but one.
 
 ## Quick Reference
 

@@ -94,6 +94,28 @@ See [Shell Integration](shell-integration.md) for the full consent model, and
 
 ## What It Looks Like
 
+The first two examples use `fd`, and two recipes provide that command — `fd`
+and `fdclone`. **Both are the declared case**, where `.tsuku.toml` names one of
+them and so settles which was meant. The declaration is what settles which
+recipe was meant, so without one the command cannot run under `auto` at all —
+the `multiple-providers` check puts the mode back at `confirm`. You get a
+prompt, or, with no terminal, the run stops:
+
+```
+$ fd --version                    # nothing declares fd, terminal attached
+Install fd? [y/N]
+
+$ fd --version                    # nothing declares fd, auto asked for
+Warning: multiple-providers: more than one recipe provides "fd"; falling back to confirm mode
+Install fd? [y/N]
+
+$ fd --version                    # nothing declares fd, from a script
+tsuku: confirm mode requires a terminal, and auto mode is unavailable here: more than one recipe provides "fd"
+```
+
+So if you copy an example below and get a prompt where it shows an install,
+check whether the tool is declared before concluding the guide is wrong.
+
 In a project that declares `fd = "10.2.0"`, with no consent mode configured:
 
 ```
@@ -122,7 +144,8 @@ before you installed tsuku's, that one runs next and prints its message
 underneath.
 
 For a tool the project doesn't declare, under the default mode with a terminal
-attached:
+attached — `hyperfine` here, which has one provider, so nothing narrows the
+mode before the prompt:
 
 ```
 $ hyperfine --version
