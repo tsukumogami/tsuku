@@ -224,8 +224,11 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 	// announces itself where it fires, which is R11; the traversal stops at
 	// the first, because that is the one that *changed* the mode and the ones
 	// after it would be reporting a mode they found already lowered.
+	//
+	// The gate it names is discarded here for the reason the origin above is,
+	// and it is the same record that will read both.
 	subject := gateSubject{command: command, match: match, matches: matches}
-	effectiveMode = r.lowerMode(effectiveMode, subject)
+	effectiveMode, _ = r.lowerMode(effectiveMode, subject)
 
 	// The terminal check. It asks whether *this* command needs a prompt, and
 	// it asks here because here is the first place that question has an
@@ -478,7 +481,7 @@ var modeGates = []modeGate{
 		// is a file that can turn auto on.
 		id: gateConfigPermissions,
 		blocks: func(r *Runner, _ gateSubject) string {
-			return configPermissionCondition(filepath.Join(r.cfg.HomeDir, "config.toml"))
+			return configPermissionCondition(filepath.Join(r.cfg.HomeDir, "config.toml"), os.Getuid())
 		},
 	},
 	{
@@ -512,15 +515,23 @@ var modeGates = []modeGate{
 }
 
 // lowerMode returns the mode that survives the gates, announcing the one that
-// fired (R11).
+// fired (R11), and naming that gate to the caller.
 //
 // Only auto is lowered, so a mode that is not auto is returned untouched and
 // no gate is consulted -- which is why "starting from an effective consent
 // mode of auto" is in AC21 rather than being a condition the criterion could
 // have left out.
-func (r *Runner) lowerMode(mode Mode, subject gateSubject) Mode {
+//
+// The gate identifier has no reader yet, the way the origin elevate returns
+// has none: R12a's record names the gate that lowered the mode, and the audit
+// entry has no field for one. It is returned rather than left inside this
+// function for the reason the elevation's origin is returned rather than
+// recomputed -- there is one place that knows which gate fired, and a later
+// reader deciding it again from a second walk of the table is the divergence
+// the table was built to remove.
+func (r *Runner) lowerMode(mode Mode, subject gateSubject) (Mode, string) {
 	if mode != ModeAuto {
-		return mode
+		return mode, ""
 	}
 	for _, gate := range modeGates {
 		condition := gate.blocks(r, subject)
@@ -528,9 +539,9 @@ func (r *Runner) lowerMode(mode Mode, subject gateSubject) Mode {
 			continue
 		}
 		fmt.Fprintf(r.stderr, "Warning: %s: %s; falling back to confirm mode\n", gate.id, condition)
-		return ModeConfirm
+		return ModeConfirm, gate.id
 	}
-	return mode
+	return mode, ""
 }
 
 // terminalAttached reports whether a prompt could be answered. A nil
@@ -594,10 +605,17 @@ const DeclarationDisclosure = "project-declaration"
 // and a bare declaration then matches it here with no source component
 // anywhere in sight -- so a disclosure naming only the authorizing file would
 // not say where the thing being installed came from.
+// All four facts are stated, including the two that can be absent. A
+// declaration carrying no version is ordinary rather than exotic -- `jq = {}`
+// in a .tsuku.toml parses to one, and R20 passes it through verbatim -- and
+// what the user needs told there is that the version is the installer's
+// choice, which dropping the fact does not tell them.
 func (r *Runner) discloseDeclaration(match index.BinaryMatch, version, configPath string) {
 	named := match.Recipe
 	if version != "" {
 		named += "@" + version
+	} else {
+		named += " at no declared version"
 	}
 	fmt.Fprintf(r.stderr, "%s: %s declares %s (recipe source: %s)\n",
 		DeclarationDisclosure, configPath, named, recipeSource(match))
@@ -629,9 +647,9 @@ func (r *Runner) execBinary(binary string, args []string) error {
 }
 
 // configPermissionCondition reports why the configuration-permission gate
-// fires for the file at path, or "" where it does not: the file has to be
-// unreadable by group and other and owned by the current user, and a file that
-// does not exist is fine because there is nothing there to tamper with.
+// fires for the file at path, or "" where it does not: the file has to carry
+// no group or other bits at all and be owned by uid, and a file that does not
+// exist is fine because there is nothing there to tamper with.
 //
 // It returns the condition rather than a bool because this gate has four
 // distinct ways to fire and AC21 requires the line to say which. A constant
@@ -639,7 +657,11 @@ func (r *Runner) execBinary(binary string, args []string) error {
 // permissions are what a user would then go and change -- so the wrong
 // condition here is not a cosmetic failure, it is an instruction that does not
 // work, which is the same defect R10 names for the escape hatches.
-func configPermissionCondition(path string) string {
+//
+// The owner is a parameter rather than a call to os.Getuid inside, so that the
+// branch which cannot be built without a second account -- the one the
+// paragraph above is about -- is reachable from a test.
+func configPermissionCondition(path string, uid int) string {
 	info, err := os.Stat(path)
 	if os.IsNotExist(err) {
 		return ""
@@ -654,8 +676,8 @@ func configPermissionCondition(path string) string {
 	if !ok {
 		return "the ownership of config.toml cannot be determined"
 	}
-	if stat.Uid != uint32(os.Getuid()) {
-		return fmt.Sprintf("config.toml is owned by uid %d rather than by uid %d", stat.Uid, os.Getuid())
+	if stat.Uid != uint32(uid) {
+		return fmt.Sprintf("config.toml is owned by uid %d rather than by uid %d", stat.Uid, uid)
 	}
 	return ""
 }

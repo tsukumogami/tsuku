@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/index"
 	"github.com/tsukumogami/tsuku/internal/indexfixture"
 )
 
@@ -210,16 +212,31 @@ func TestConfigPermissionCondition_NamesWhichReason(t *testing.T) {
 
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.toml")
+	me := os.Getuid()
 
-	if got := configPermissionCondition(path); got != "" {
+	if got := configPermissionCondition(path, me); got != "" {
 		t.Errorf("a config file that does not exist fires the gate: %q", got)
 	}
 
 	if err := os.WriteFile(path, nil, 0o600); err != nil {
 		t.Fatalf("writing %s: %v", path, err)
 	}
-	if got := configPermissionCondition(path); got != "" {
+	if got := configPermissionCondition(path, me); got != "" {
 		t.Errorf("a config file only its owner can read fires the gate: %q", got)
+	}
+
+	// The ownership branch, which is the reason this function returns a
+	// condition at all: a file at 0600 that somebody else owns is one this
+	// user cannot fix by chmod, and a line telling them to is worse than
+	// none. Asking about a uid that is not the file's stands in for the
+	// second account a test cannot have.
+	owned := configPermissionCondition(path, me+1)
+	if owned == "" {
+		t.Fatal("a config file owned by another user does not fire the gate")
+	}
+	if strings.Contains(owned, "permissions") {
+		t.Errorf("the condition for a file owned by someone else talks about permissions, "+
+			"which the user would then go and change: %q", owned)
 	}
 
 	// Two permissive modes rather than one. A condition that named the reason
@@ -230,7 +247,7 @@ func TestConfigPermissionCondition_NamesWhichReason(t *testing.T) {
 		if err := os.Chmod(path, perm); err != nil {
 			t.Fatalf("chmod %s: %v", perm, err)
 		}
-		got := configPermissionCondition(path)
+		got := configPermissionCondition(path, me)
 		if got == "" {
 			t.Fatalf("a config file at %#o does not fire the gate", perm)
 		}
@@ -248,7 +265,7 @@ func TestConfigPermissionCondition_NamesWhichReason(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(dir, 0o700) })
 
-	unreadable := configPermissionCondition(path)
+	unreadable := configPermissionCondition(path, me)
 	if unreadable == "" {
 		t.Fatal("a config file that cannot be stat'ed does not fire the gate; the cautious direction is to fire")
 	}
@@ -449,5 +466,126 @@ func TestRun_NothingIsDisclosedForAnUndeclaredCommand(t *testing.T) {
 	}
 	if disclosureShown(stderr.String()) {
 		t.Errorf("an undeclared command was disclosed as though a declaration determined it: %q", stderr.String())
+	}
+}
+
+// The disclosure's fourth fact, at every value it takes.
+//
+// Without this the whole corpus asserts the literal "registry", which is the
+// only source internal/indexfixture produces -- so `return "registry"` passes
+// every other case in this file while removing the one thing the design says
+// the disclosure must carry. "installed" is the value #2552 produces and is
+// the reason the fact is required at all.
+func TestRecipeSource_NamesEveryValueTheIndexRecords(t *testing.T) {
+	tests := []struct {
+		recorded string
+		want     string
+	}{
+		{"registry", "registry"},
+		// A recipe that exists only because something installed it locally,
+		// which is what a non-interactively registered source leaves behind.
+		{"installed", "installed"},
+		// A match nothing filled in. Reported rather than dropped: a
+		// disclosure quietly missing a fact still looks like a disclosure.
+		{"", "unknown"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.want, func(t *testing.T) {
+			if got := recipeSource(index.BinaryMatch{Recipe: "solo", Source: tt.recorded}); got != tt.want {
+				t.Errorf("recipeSource(%q) = %q, want %q", tt.recorded, got, tt.want)
+			}
+		})
+	}
+}
+
+// The disclosure states all four facts, including the two that can be absent.
+//
+// A declaration carrying no version is ordinary: `jq = {}` in a .tsuku.toml
+// parses to one and R20 passes it through verbatim. Dropping the fact leaves a
+// line that reads as though the version were beside the point, when what it
+// actually means is that the installer will choose.
+func TestDiscloseDeclaration_StatesEveryFact(t *testing.T) {
+	tests := []struct {
+		name    string
+		match   index.BinaryMatch
+		version string
+		want    []string
+	}{
+		{
+			name:    "a pinned declaration from the registry",
+			match:   index.BinaryMatch{Recipe: "solo", Source: "registry"},
+			version: "1.2.3",
+			want:    []string{DeclarationDisclosure, "solo", "1.2.3", "/project/.tsuku.toml", "registry"},
+		},
+		{
+			name:    "a declaration with no version, of a locally installed recipe",
+			match:   index.BinaryMatch{Recipe: "solo", Source: "installed"},
+			version: "",
+			want:    []string{DeclarationDisclosure, "solo", "no declared version", "/project/.tsuku.toml", "installed"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stderr := &bytes.Buffer{}
+			r := NewRunner(nil, &bytes.Buffer{}, stderr)
+			r.discloseDeclaration(tt.match, tt.version, "/project/.tsuku.toml")
+
+			for _, want := range tt.want {
+				if !strings.Contains(stderr.String(), want) {
+					t.Errorf("the disclosure does not state %q: %q", want, stderr.String())
+				}
+			}
+		})
+	}
+}
+
+// D5 rejected per-invocation disclosure by name, and this is the case that
+// would make it per-invocation: most invocations of a declared tool install
+// nothing, because the already-installed fast path returns above every mode.
+// A line there reports a decision that is not being made, and trains the
+// reader to skip the line that matters.
+//
+// AC6 covers the same path and asserts what runs; this asserts what is not
+// said. Neither substitutes for the other.
+func TestRun_TheAlreadyInstalledFastPathDisclosesNothing(t *testing.T) {
+	for _, state := range everyConsentState {
+		t.Run(state.String(), func(t *testing.T) {
+			fx := indexfixture.New(t)
+			r, installer, execRec, _, stderr := newFixtureRunner(t, fx)
+			layDownTool(t, fx.Cfg, indexfixture.DeclaredRecipe, indexfixture.SharedVersion,
+				indexfixture.CommandTwoProviders)
+
+			err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil,
+				state.mode, state.origin, declaredOnly())
+			if err != nil {
+				t.Fatalf("Run() error = %v", err)
+			}
+			if installer.called || !execRec.called {
+				t.Fatalf("this run did not take the fast path: installed = %v, exec = %v",
+					installer.called, execRec.called)
+			}
+			if disclosureShown(stderr.String()) {
+				t.Errorf("an invocation that installed nothing carried a per-install disclosure: %q",
+					stderr.String())
+			}
+		})
+	}
+}
+
+// The identifiers are output, so they are pinned as the literals a user reads
+// and a log holds.
+//
+// Everything else in this file reads them through the constants, which is what
+// keeps those assertions honest across a rename -- and is exactly why a rename
+// would otherwise be silent. "Stable" is a claim about the strings themselves,
+// so one place has to spell them.
+func TestAnnouncementIdentifiersAreStable(t *testing.T) {
+	want := []string{"config-permissions", "recipe-verification", "multiple-providers"}
+	if got := GateIdentifiers(); !slices.Equal(got, want) {
+		t.Errorf("GateIdentifiers() = %v, want %v.\nThese are printed output and a later unit records "+
+			"them. Renaming one is a user-visible change, not a refactor.", got, want)
+	}
+	if DeclarationDisclosure != "project-declaration" {
+		t.Errorf("DeclarationDisclosure = %q, want %q", DeclarationDisclosure, "project-declaration")
 	}
 }
