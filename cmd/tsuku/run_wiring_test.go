@@ -26,20 +26,23 @@ func (i *runWiringInstaller) Install(_ context.Context, recipe, version string) 
 	return nil
 }
 
-// TestRunWiring_DeclaredRecipeReachesTheInstaller drives what `tsuku run`
-// composes -- project config discovered from the working directory, the
-// declaration resolver built over it, and the lookup this package supplies --
-// against a known index, and checks both things that composition can get
-// wrong.
+// TestRunWiring_DeclaredRecipeReachesTheInstaller drives newRunWiring -- the
+// function `tsuku run` builds its resolver and lookup with -- against a known
+// index, and checks the two things that composition can get wrong.
 //
-// It reconstructs the wiring rather than invoking runCmd because runCmd ends
-// in exitWithCode or syscall.Exec, and neither has a seam yet. What makes the
-// reconstruction worth running is that both properties below live in the
-// wiring and not in either package it joins:
+// It calls newRunWiring rather than runCmd because runCmd ends in exitWithCode
+// or syscall.Exec, neither of which has a seam yet. It calls newRunWiring
+// rather than reconstructing those four lines because a reconstruction passes
+// while the production wiring is wrong: rewire the run path to
+// project.NewResolver(nil) -- exactly the defect this work repairs -- and a
+// test that built its own resolver would not notice.
+//
+// The two properties, both of which live in the joining and in neither package
+// it joins:
 //
 //   - the recipe that reaches the installer is the one the file declared,
-//     which is only true if the resolver cmd_run.go builds is handed to the
-//     runner and the runner narrows on it;
+//     which holds only if the resolver built from the discovered config is the
+//     one the runner is handed;
 //   - the binary index is opened once per run. It used to be opened twice
 //     whenever a .tsuku.toml was found, because the resolver looked the
 //     command up again for itself; taking the matches instead is what removed
@@ -63,32 +66,28 @@ func TestRunWiring_DeclaredRecipeReachesTheInstaller(t *testing.T) {
 		indexfixture.DeclaredRecipe: indexfixture.SharedVersion,
 	})
 
-	projectCfg, err := project.LoadProjectConfig(dir)
-	if err != nil {
-		t.Fatalf("LoadProjectConfig(%q) error = %v", dir, err)
-	}
-	if projectCfg == nil {
-		t.Fatalf("LoadProjectConfig(%q) found no config", dir)
-	}
-
 	cfg, err := config.DefaultConfig()
 	if err != nil {
 		t.Fatalf("config.DefaultConfig() error = %v", err)
 	}
-	indexLookup := func(ctx context.Context, command string) ([]index.BinaryMatch, error) {
-		return binaryCommandLookup(ctx, cfg, command)
+
+	wiring := newRunWiring(cfg, dir)
+	if wiring.projectCfg == nil {
+		t.Fatalf("newRunWiring found no config below %q; one was written there", dir)
 	}
 
 	installer := &runWiringInstaller{}
 	stdout := &bytes.Buffer{}
 	runner := autoinstall.NewRunner(cfg, stdout, &bytes.Buffer{})
-	runner.Lookup = indexLookup
+	runner.Lookup = wiring.lookup
 	runner.Installer = installer
 	runner.RecipeHasVerification = func(string) bool { return true }
 	runner.Exec = func(string, []string, []string) error { return nil }
 
+	// ModeConfirm with no ConsentReader: reaching a prompt would fail rather
+	// than hang, so a run that completes is one the declaration consented to.
 	err = runner.Run(context.Background(), indexfixture.CommandTwoProviders, nil,
-		autoinstall.ModeConfirm, project.NewResolver(projectCfg))
+		autoinstall.ModeConfirm, wiring.resolver)
 	if err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}

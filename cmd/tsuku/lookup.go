@@ -10,11 +10,17 @@ import (
 	"github.com/tsukumogami/tsuku/internal/index"
 )
 
-// binaryCommandLookup is the boundary every command-to-recipe lookup in this
-// package goes through. It exists so a test can put a known index behind
-// `tsuku run` and see which recipe the wiring in cmd_run.go actually reaches
-// -- until now that wiring was only exercisable by whatever index happened to
-// be on the machine, so it had no test at all.
+// binaryCommandLookup is the lookup the `tsuku run` path goes through, and
+// only that path -- newRunWiring is its one production caller. It exists so a
+// test can put a known index behind that path and see which recipe the wiring
+// reaches, which until now was only exercisable through whatever index
+// happened to be on the machine.
+//
+// `tsuku which` and `tsuku suggest` call lookupBinaryCommand directly and are
+// deliberately left alone: neither joins the index to the project
+// configuration, so neither has the composition this variable exists to make
+// testable. Swapping this variable does not redirect them, and a test that
+// needs it to should route them through here first rather than assume it.
 //
 // It is a seam for the lookup, not a source of matches. A test replaces it
 // with internal/indexfixture's Lookup; a test that instead returns a

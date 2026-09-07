@@ -89,27 +89,20 @@ Exit codes:
 			exitWithCode(ExitUsage)
 		}
 
-		// Load project config from working directory. Errors are ignored;
-		// a nil result means no .tsuku.toml was found.
 		cwd, _ := os.Getwd()
-		projectCfg, _ := project.LoadProjectConfig(cwd)
-
-		indexLookup := func(ctx context.Context, cmd string) ([]index.BinaryMatch, error) {
-			return binaryCommandLookup(ctx, cfg, cmd)
-		}
-		resolver := project.NewResolver(projectCfg)
+		wiring := newRunWiring(cfg, cwd)
 
 		// TTY gate: confirm mode requires an interactive terminal.
 		// Project-declared tools bypass this gate because the mode override
 		// in Runner.Run will escalate to auto before any prompt is shown.
-		hasProjectTools := projectCfg != nil && len(projectCfg.Config.Tools) > 0
+		hasProjectTools := wiring.projectCfg != nil && len(wiring.projectCfg.Config.Tools) > 0
 		if mode == autoinstall.ModeConfirm && !hasProjectTools && !term.IsTerminal(int(os.Stdin.Fd())) {
 			fmt.Fprintln(os.Stderr, "tsuku: confirm mode requires a TTY; set TSUKU_AUTO_INSTALL_MODE=auto or use --mode=auto for non-interactive use")
 			exitWithCode(ExitNotInteractive)
 		}
 
 		runner := autoinstall.NewRunner(cfg, os.Stdout, os.Stderr)
-		runner.Lookup = indexLookup
+		runner.Lookup = wiring.lookup
 		runner.Installer = &runInstaller{}
 		runner.Exec = func(binary string, execArgs []string, env []string) error {
 			return syscall.Exec(binary, execArgs, env)
@@ -122,7 +115,7 @@ Exit codes:
 			return r.HasChecksumVerification()
 		}
 
-		runErr := runner.Run(globalCtx, command, commandArgs, mode, resolver)
+		runErr := runner.Run(globalCtx, command, commandArgs, mode, wiring.resolver)
 		if runErr == nil {
 			return
 		}
@@ -144,6 +137,40 @@ Exit codes:
 			exitWithCode(ExitGeneral)
 		}
 	},
+}
+
+// runWiring is everything `tsuku run` builds between the working directory and
+// the runner: the project configuration discovered by walking up from cwd, the
+// declaration resolver over it, and the lookup the runner resolves commands
+// with.
+//
+// It is a named function rather than four lines inside the command because the
+// properties that can go wrong here live in the joining and in neither package
+// it joins -- whether the resolver the runner is handed is the one built from
+// the discovered file, and whether the index is opened once per run or twice.
+// Inline, the only way to exercise those was to run the command, which ends in
+// exitWithCode or syscall.Exec and so cannot be driven in process. A test that
+// reconstructed the same four lines would pass while this function was wrong,
+// which is the whole reason it is a function.
+type runWiring struct {
+	// projectCfg is nil when no .tsuku.toml was found on the walk.
+	projectCfg *project.ConfigResult
+	resolver   *project.Resolver
+	lookup     autoinstall.LookupFunc
+}
+
+// newRunWiring discovers the project configuration from cwd and builds what
+// the runner needs from it. A config that fails to load is treated as no
+// config: the run continues under the consent mode alone.
+func newRunWiring(cfg *config.Config, cwd string) runWiring {
+	projectCfg, _ := project.LoadProjectConfig(cwd)
+	return runWiring{
+		projectCfg: projectCfg,
+		resolver:   project.NewResolver(projectCfg),
+		lookup: func(ctx context.Context, command string) ([]index.BinaryMatch, error) {
+			return binaryCommandLookup(ctx, cfg, command)
+		},
+	}
 }
 
 // runInstaller wraps the existing install pipeline for use by autoinstall.Runner.

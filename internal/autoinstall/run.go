@@ -57,9 +57,14 @@ type auditEntry struct {
 // at each of the consumers below. That is what makes the consumers correct by
 // inheritance in the declared case: they go on reading position zero, and
 // position zero is now the declared recipe rather than whichever provider the
-// index happened to rank first. It is also what makes the property reviewable
-// -- the un-narrowed list never enters Run's scope at all, so there is no
-// region above the narrowing for a positional read to hide in.
+// index happened to rank first. It is also what makes the property reviewable:
+// the region above the narrowing inside Run is empty by construction, because
+// the list does not exist there at all, so there is nowhere above it for a
+// positional read to hide.
+//
+// "Correct by inheritance" holds for the declared case and is not a general
+// property of the consumers. Where nothing is declared they read position zero
+// of a list the index ranked, which is what R5 requires.
 //
 // The three-way branch sits below the ErrNoMatch check, which stays on the raw
 // list: an empty index result is a lookup failure rather than a declaration
@@ -142,11 +147,14 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 		return err
 	}
 
-	// The one positional read. Everything below decides from match and from
-	// declaration, and both already account for what the project declared:
-	// where it declared a provider of command, match is that recipe and
-	// version is what it was declared at; where it declared none, declaration
-	// is nil and match is whatever the index ranked first.
+	// The one positional read of the candidate list. Everything below decides
+	// from match and from declaration -- the conflict gate's len(matches) is
+	// the only other read, and it is a count rather than a selection.
+	//
+	// Both already account for what the project declared: where it declared a
+	// provider of command, match is that recipe and version is what it was
+	// declared at; where it declared none, declaration is nil and match is
+	// whatever the index ranked first.
 	match := matches[0]
 	version := ""
 	if declaration != nil {
@@ -204,10 +212,14 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 	// Security gate 4 (auto mode only): conflict gate.
 	// If multiple recipes provide this command, fall back to confirm.
 	//
-	// A declaration leaves exactly one match, so this cannot fire for a
-	// declared command: the project already said which provider it meant, and
-	// prompting about a conflict it has settled would be asking a question
-	// with a written answer.
+	// For a declared command the list holds one recipe, so this gate cannot
+	// fire on a rival provider: the project already said which one it meant,
+	// and prompting about a conflict it has settled would be asking a question
+	// that has a written answer. It is still a count of the narrowed list
+	// rather than an assertion about it -- the index's primary key makes one
+	// recipe appear once per command, but matches reaches this package from a
+	// caller, and internal/project guards the same parameter for the same
+	// reason rather than trusting that.
 	if effectiveMode == ModeAuto && len(matches) > 1 {
 		effectiveMode = ModeConfirm
 	}

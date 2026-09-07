@@ -159,8 +159,8 @@ func TestRun_AC3_ConfirmPromptsForTheDeclaredRecipe(t *testing.T) {
 	}
 }
 
-// AC4 and AC5's second sentence cannot be observed in this unit, and this
-// pins the reason so it fails as soon as that stops being true.
+// AC4, and the suggest clause of AC5, cannot be observed in this unit. This
+// pins the reason so it fails the moment that stops being true.
 //
 // Both ask what `tsuku run` prints when the effective mode resolves to
 // `suggest` for a *declared* command. Run elevates any declared command to
@@ -168,22 +168,27 @@ func TestRun_AC3_ConfirmPromptsForTheDeclaredRecipe(t *testing.T) {
 // so no declared command reaches the suggest dispatch at all. Bounded
 // elevation is what makes it reachable: once an explicitly set `suggest` is
 // honored, this test fails, and whoever makes it fail owns AC4 and AC5's
-// suggest half -- which is the point of writing it down here rather than in a
-// comment nobody is obliged to read.
+// suggest clause -- which is the point of writing it down as a failing test
+// rather than as a comment nobody is obliged to read.
+//
+// The suggest outcome is checked before the error is, because once elevation
+// is bounded this run returns ErrSuggestOnly, and failing on that first would
+// report the wrong thing.
 func TestRun_DeclaredCommandCannotReachSuggestYet(t *testing.T) {
 	fx := indexfixture.New(t)
 	r, installer, _, stdout, _ := newFixtureRunner(t, fx)
 
 	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeSuggest, declaredOnly())
+
+	if strings.Contains(stdout.String(), "tsuku install") || errors.Is(err, ErrSuggestOnly) {
+		t.Fatalf("a declared command reached the suggest dispatch (stdout %q, error %v).\n"+
+			"That is bounded elevation landing, and it makes AC4 and AC5's suggest clause "+
+			"reachable: replace this test with them -- the instruction must name %q, name "+
+			"no other recipe, and install nothing",
+			stdout.String(), err, indexfixture.DeclaredRecipe)
+	}
 	if err != nil {
 		t.Fatalf("Run() error = %v", err)
-	}
-	if strings.Contains(stdout.String(), "tsuku install") {
-		t.Fatalf("a declared command reached the suggest dispatch: %q.\n"+
-			"That is bounded elevation landing, and it makes AC4 and AC5's suggest half "+
-			"reachable: replace this test with them -- the instruction must name %q and "+
-			"nothing must be installed",
-			stdout.String(), indexfixture.DeclaredRecipe)
 	}
 	if !installer.called {
 		t.Error("the declaration should still have elevated to auto and installed")

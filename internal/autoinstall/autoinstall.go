@@ -84,18 +84,25 @@ type AmbiguousDeclarationError struct {
 	Declarations []project.ProjectDeclaration
 }
 
-// Error names the command and every declared recipe.
+// Error names the command and every declared recipe, each with the
+// configuration key that declared it.
 //
-// Recipe names alone are what this unit owes: the message that also carries
-// each declaration's version and configuration key, and an invocation that
-// reaches a specific one of them, is the refusal's own work.
+// The key is not decoration even in this interim message. Recipe is a match
+// key rather than an identity -- two declarations in one set carry the same
+// bare name whenever a configuration names one recipe from two registries --
+// so a message built from Recipe alone reads "koto and koto" and reinstates
+// the confusion the declaration set exists to remove.
+//
+// What this message does not yet carry is each declaration's version and an
+// invocation that reaches a specific one of the recipes. Those come with the
+// refusal proper, which formats this error for the user.
 func (e *AmbiguousDeclarationError) Error() string {
-	names := make([]string, 0, len(e.Declarations))
+	named := make([]string, 0, len(e.Declarations))
 	for _, d := range e.Declarations {
-		names = append(names, d.Recipe)
+		named = append(named, fmt.Sprintf("%s (declared as %q)", d.Recipe, d.ConfigKey))
 	}
 	return fmt.Sprintf("autoinstall: the project declares %d recipes providing %q: %s",
-		len(e.Declarations), e.Command, strings.Join(names, ", "))
+		len(e.Declarations), e.Command, strings.Join(named, ", "))
 }
 
 // Installer performs the actual tool installation. cmd/tsuku wires this
