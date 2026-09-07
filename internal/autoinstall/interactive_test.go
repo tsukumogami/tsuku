@@ -299,6 +299,19 @@ func TestRun_AC25andAC27_TheMessageNamesTheHatchesThatWork(t *testing.T) {
 			wantReason:  "more than one recipe",
 			wantHatches: "",
 		},
+		{
+			// Two gates at once, which is what pins the order the reasons are
+			// named in. The message says the first gate a user would hit, and
+			// with only one gate failing per case a reordered switch would
+			// read the same.
+			name: "two gates would lower it, and the first one is named",
+			state: func(t *testing.T, fx *indexfixture.Fixture, r *Runner) {
+				openPermissionsConfig(t, fx.Cfg)
+				r.RecipeHasVerification = func(string) bool { return false }
+			},
+			command:    indexfixture.CommandOneProvider,
+			wantReason: "config.toml",
+		},
 	}
 
 	for _, tt := range tests {

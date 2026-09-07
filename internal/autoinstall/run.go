@@ -198,8 +198,13 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 		return r.execBinary(binaryPath, args)
 	}
 
-	// Project override: when the tool is declared in .tsuku.toml, escalate
-	// the mode to auto so the TTY gate and interactive prompt are bypassed.
+	// Project override: when the tool is declared in .tsuku.toml, raise the
+	// mode to auto, the file being the consent the prompt would ask for.
+	//
+	// It raises the mode and nothing else. The terminal check below reads the
+	// mode rather than the declaration, so a declared command a gate lowers
+	// back to confirm meets that check like any other -- what the declaration
+	// bypasses is the prompt it consented to, not every question there is.
 	effectiveMode := mode
 	if declaration != nil {
 		effectiveMode = ModeAuto

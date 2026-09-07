@@ -44,7 +44,7 @@ Project configuration:
 
 Consent modes (for tools not in .tsuku.toml):
   suggest   Print install instructions and exit (no install)
-  confirm   Prompt before installing (default, requires TTY)
+  confirm   Prompt before installing (default, requires a terminal)
   auto      Install silently with audit logging (requires opt-in)
 
 Mode resolution order:
@@ -59,7 +59,7 @@ Exit codes:
   1   No match found or other error
   10  The project declares more than one recipe providing the command
   11  Binary index not built
-  12  Confirm mode requires a TTY
+  12  Confirm mode requires a terminal
   13  User declined installation
   14  Forbidden (e.g., running as root)`,
 	Args:                  cobra.MinimumNArgs(1),
