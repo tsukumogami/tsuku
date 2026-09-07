@@ -22,7 +22,7 @@ func refuseRun(t *testing.T, command string, declared map[string]string) (*index
 	fx := indexfixture.New(t)
 	r, installer, execRec, stdout, stderr := newFixtureRunner(t, fx)
 
-	err := r.Run(context.Background(), command, nil, ModeAuto, declaring(declared))
+	err := r.Run(context.Background(), command, nil, ModeAuto, OriginFlag, declaring(declared))
 
 	var ambiguous *AmbiguousDeclarationError
 	if !errors.As(err, &ambiguous) {

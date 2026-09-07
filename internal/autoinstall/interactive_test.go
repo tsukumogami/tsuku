@@ -64,7 +64,7 @@ func TestRun_AC2_DeclaredAutoRunSucceedsWithNoTerminal(t *testing.T) {
 	fx := indexfixture.New(t)
 	r, installer, execRec, stdout, _ := newHeadlessRunner(t, fx)
 
-	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto, declaredOnly())
+	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto, OriginFlag, declaredOnly())
 	if err != nil {
 		t.Fatalf("Run() error = %v, want nil", err)
 	}
@@ -91,12 +91,12 @@ func TestRun_AC17a_UnknownRecipeConfigConsentsAsNoConfigDoes(t *testing.T) {
 	const unknownRecipe = "fixture-absent-from-every-index"
 
 	for _, command := range []string{indexfixture.CommandTwoProviders, indexfixture.CommandOneProvider} {
-		for _, mode := range []Mode{ModeSuggest, ModeConfirm, ModeAuto} {
-			t.Run(command+"/"+mode.String(), func(t *testing.T) {
+		for _, state := range everyConsentState {
+			t.Run(command+"/"+state.String(), func(t *testing.T) {
 				fx := indexfixture.New(t)
-				withConfig := runOutcome(t, fx, command, mode,
+				withConfig := runOutcome(t, fx, command, state,
 					declaring(map[string]string{unknownRecipe: "1.0.0"}), withoutTerminal)
-				noConfig := runOutcome(t, fx, command, mode, project.NewResolver(nil), withoutTerminal)
+				noConfig := runOutcome(t, fx, command, state, project.NewResolver(nil), withoutTerminal)
 
 				if withConfig != noConfig {
 					t.Errorf("with no terminal, a config declaring only %q changed the run.\nwith config: %+v\nno config:   %+v",
@@ -113,7 +113,7 @@ func TestRun_AC20_UndeclaredCommandWithNoTerminalRefuses(t *testing.T) {
 	fx := indexfixture.New(t)
 	r, installer, _, stdout, stderr := newHeadlessRunner(t, fx)
 
-	err := r.Run(context.Background(), indexfixture.CommandOneProvider, nil, ModeConfirm,
+	err := r.Run(context.Background(), indexfixture.CommandOneProvider, nil, ModeConfirm, OriginDefault,
 		declaring(map[string]string{indexfixture.DeclaredRecipe: indexfixture.SharedVersion}))
 
 	if !errors.Is(err, ErrNotInteractive) {
@@ -145,7 +145,7 @@ func TestRun_DeclaredCommandLoweredByAGateRefusesRatherThanPrompting(t *testing.
 	r, installer, _, stdout, stderr := newHeadlessRunner(t, fx)
 	openPermissionsConfig(t, fx.Cfg)
 
-	err := r.Run(context.Background(), indexfixture.CommandOneProvider, nil, ModeConfirm,
+	err := r.Run(context.Background(), indexfixture.CommandOneProvider, nil, ModeConfirm, OriginDefault,
 		declaring(map[string]string{indexfixture.RecipeSolo: indexfixture.SharedVersion}))
 
 	if !errors.Is(err, ErrNotInteractive) {
@@ -179,7 +179,7 @@ func TestRun_AC54_InstalledToolExecsWithNoTerminal(t *testing.T) {
 	fx := indexfixture.New(t)
 	r, installer, execRec, stdout, _ := newHeadlessRunner(t, fx)
 
-	err := r.Run(context.Background(), indexfixture.CommandInstalledFirst, nil, ModeConfirm, project.NewResolver(nil))
+	err := r.Run(context.Background(), indexfixture.CommandInstalledFirst, nil, ModeConfirm, OriginFlag, project.NewResolver(nil))
 	if err != nil {
 		t.Fatalf("Run() error = %v, want nil", err)
 	}
@@ -205,7 +205,7 @@ func TestRun_AC55_NoProviderIsReported(t *testing.T) {
 	r, _, _, _, stderr := newHeadlessRunner(t, fx)
 
 	const absent = "fixture-command-no-recipe-provides"
-	err := r.Run(context.Background(), absent, nil, ModeConfirm, project.NewResolver(nil))
+	err := r.Run(context.Background(), absent, nil, ModeConfirm, OriginFlag, project.NewResolver(nil))
 
 	if !errors.Is(err, ErrNoMatch) {
 		t.Fatalf("Run() error = %v, want ErrNoMatch", err)
@@ -320,7 +320,7 @@ func TestRun_AC25andAC27_TheMessageNamesTheHatchesThatWork(t *testing.T) {
 			r, _, _, _, stderr := newHeadlessRunner(t, fx)
 			tt.state(t, fx, r)
 
-			err := r.Run(context.Background(), tt.command, nil, ModeConfirm, project.NewResolver(nil))
+			err := r.Run(context.Background(), tt.command, nil, ModeConfirm, OriginDefault, project.NewResolver(nil))
 			if !errors.Is(err, ErrNotInteractive) {
 				t.Fatalf("Run() error = %v, want ErrNotInteractive: this case is about the message that comes with it", err)
 			}
@@ -354,7 +354,7 @@ func assertHatchCompletes(t *testing.T, fx *indexfixture.Fixture,
 	r, installer, execRec, _, stderr := newHeadlessRunner(t, fx)
 	state(t, fx, r)
 
-	if err := r.Run(context.Background(), command, nil, mode, project.NewResolver(nil)); err != nil {
+	if err := r.Run(context.Background(), command, nil, mode, OriginFlag, project.NewResolver(nil)); err != nil {
 		t.Fatalf("following the message's own hatch (mode %s) failed: %v\n%s", mode, err, stderr.String())
 	}
 	if !installer.called {
@@ -374,7 +374,7 @@ func assertAutoAlsoRefuses(t *testing.T, fx *indexfixture.Fixture,
 	r, _, _, _, _ := newHeadlessRunner(t, fx)
 	state(t, fx, r)
 
-	err := r.Run(context.Background(), command, nil, ModeAuto, project.NewResolver(nil))
+	err := r.Run(context.Background(), command, nil, ModeAuto, OriginFlag, project.NewResolver(nil))
 	if !errors.Is(err, ErrNotInteractive) {
 		t.Errorf("--mode=auto returned %v from a state whose message names no hatch; if it completes the command, the message is the thing that is wrong", err)
 	}

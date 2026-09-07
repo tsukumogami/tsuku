@@ -151,7 +151,12 @@ func (r *Runner) candidates(ctx context.Context, command string, resolver Projec
 //
 // The resolver parameter reports what the project declared. Pass nil to run as
 // if no .tsuku.toml existed.
-func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mode, resolver ProjectDeclarationResolver) error {
+//
+// mode and origin travel together and are both resolved by the caller: the
+// mode is what to do, and the origin is who asked for it. The elevation below
+// needs the second, because the same Mode means different things depending on
+// whether anyone chose it.
+func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mode, origin Origin, resolver ProjectDeclarationResolver) error {
 	// Security gate 1: root guard.
 	if os.Geteuid() == 0 {
 		return fmt.Errorf("%w: refusing to auto-install as root", ErrForbidden)
@@ -190,23 +195,36 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 			return r.execBinary(binaryPath, args)
 		}
 
-		// Declared version not installed -- fall through to install flow
-		// with auto mode (project config is consent).
+		// Declared version not installed -- fall through to the consent mode
+		// below, which the declaration raises only where nothing set one.
 	} else if match.Installed {
 		// Nothing declared -- use the globally active version.
 		binaryPath := filepath.Join(r.cfg.CurrentDir, command)
 		return r.execBinary(binaryPath, args)
 	}
 
-	// Project override: when the tool is declared in .tsuku.toml, raise the
-	// mode to auto, the file being the consent the prompt would ask for.
+	// The bounded elevation. A declaration raises the mode to auto only where
+	// the mode is the unset default, and only for the command it declared --
+	// this branch is below the narrowing, so an undeclared command in a
+	// project that declares something else has a nil declaration here and is
+	// not raised.
+	//
+	// The bound is the origin rather than the mode, and the mode would not do.
+	// The case for raising confirm is that confirm is a default nobody chose,
+	// and that reasoning does not survive someone choosing it -- so an
+	// explicitly set mode is honored as given, whichever it is. Confirm is
+	// also what the escalation restriction substitutes for an environment
+	// variable asking for auto that the persistent config did not corroborate,
+	// and raising every confirm would take that control's output and put it
+	// straight back to auto, which is the reverse of what it is for. An origin
+	// of default is the one state in which nobody has said anything.
 	//
 	// It raises the mode and nothing else. The terminal check below reads the
 	// mode rather than the declaration, so a declared command a gate lowers
 	// back to confirm meets that check like any other -- what the declaration
 	// bypasses is the prompt it consented to, not every question there is.
 	effectiveMode := mode
-	if declaration != nil {
+	if declaration != nil && origin == OriginDefault {
 		effectiveMode = ModeAuto
 	}
 
@@ -261,7 +279,17 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 	// Mode dispatch.
 	switch effectiveMode {
 	case ModeSuggest:
-		fmt.Fprintf(r.stdout, "Install with: tsuku install %s\n", match.Recipe)
+		// A declared command's instruction is built from the declaration
+		// rather than from the match, through the same helper the refusal
+		// uses. The configuration key carries the source and the declaration
+		// carries the version, and an instruction naming the bare recipe would
+		// install something the project did not ask for -- leaving the next
+		// `tsuku run` in this directory printing this same line.
+		argument := match.Recipe
+		if declaration != nil {
+			argument = installArgument(*declaration)
+		}
+		fmt.Fprintf(r.stdout, "Install with: tsuku install %s\n", argument)
 		return ErrSuggestOnly
 
 	case ModeConfirm:

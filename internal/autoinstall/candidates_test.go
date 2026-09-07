@@ -102,6 +102,34 @@ func promptShown(stdout string) bool {
 	return strings.Contains(stdout, "[y/N]")
 }
 
+// consent is a resolved mode together with where it came from, which is the
+// pair Run takes. The two travel together because the same Mode means
+// different things depending on whether anyone chose it: a confirm nobody set
+// is what a declaration raises, and a confirm somebody set is not.
+type consent struct {
+	mode   Mode
+	origin Origin
+}
+
+func (c consent) String() string {
+	return c.mode.String() + "/" + c.origin.String()
+}
+
+// everyConsentState is every state a user can actually arrive in. The unset
+// default is confirm, and each of the three modes can be set explicitly; a
+// suggest or an auto whose origin is default is not a state, because neither
+// is ever what saying nothing produces.
+//
+// The flag stands for all three explicit routes here. What separates them is
+// which origin they produce, which is resolveMode's and is pinned there --
+// below this line all three are the same value with a different name.
+var everyConsentState = []consent{
+	{ModeConfirm, OriginDefault},
+	{ModeSuggest, OriginFlag},
+	{ModeConfirm, OriginFlag},
+	{ModeAuto, OriginFlag},
+}
+
 // AC1. Effective mode auto, one declared provider of a two-provider command,
 // nothing installed: the declared recipe is installed at the declared version
 // and executed, with no prompt.
@@ -109,7 +137,7 @@ func TestRun_AC1_AutoInstallsTheDeclaredRecipe(t *testing.T) {
 	fx := indexfixture.New(t)
 	r, installer, execRec, stdout, _ := newFixtureRunner(t, fx)
 
-	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto, declaredOnly())
+	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto, OriginFlag, declaredOnly())
 	if err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
@@ -131,17 +159,18 @@ func TestRun_AC1_AutoInstallsTheDeclaredRecipe(t *testing.T) {
 // AC3. Effective mode confirm: the prompt names the declared recipe at the
 // declared version and no other recipe.
 //
-// A declared command is elevated to auto on the way in, so confirm is reached
-// here the way a user would reach it -- by the verification gate lowering the
-// mode. That is a real path rather than a contrivance: the gate fires whenever
-// the recipe to be installed carries no checksum.
+// With nothing configured, a declared command is elevated to auto on the way
+// in, so confirm is reached here the way a user would reach it -- by the
+// verification gate lowering the mode. That is a real path rather than a
+// contrivance: the gate fires whenever the recipe to be installed carries no
+// checksum.
 func TestRun_AC3_ConfirmPromptsForTheDeclaredRecipe(t *testing.T) {
 	fx := indexfixture.New(t)
 	r, installer, _, stdout, _ := newFixtureRunner(t, fx)
 	r.RecipeHasVerification = func(string) bool { return false }
 	r.ConsentReader = strings.NewReader("y\n")
 
-	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeConfirm, declaredOnly())
+	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeConfirm, OriginDefault, declaredOnly())
 	if err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
@@ -163,39 +192,64 @@ func TestRun_AC3_ConfirmPromptsForTheDeclaredRecipe(t *testing.T) {
 	}
 }
 
-// AC4, and the suggest clause of AC5, cannot be observed in this unit. This
-// pins the reason so it fails the moment that stops being true.
+// AC4, D1-3, and the suggest clause of AC5. A suggest somebody set is honored
+// for a declared command: the instruction names the declared recipe at the
+// declared version, nothing is installed, and nothing is executed.
 //
-// Both ask what `tsuku run` prints when the effective mode resolves to
-// `suggest` for a *declared* command. Run elevates any declared command to
-// auto unconditionally, and the three gates below only lower auto to confirm,
-// so no declared command reaches the suggest dispatch at all. Bounded
-// elevation is what makes it reachable: once an explicitly set `suggest` is
-// honored, this test fails, and whoever makes it fail owns AC4 and AC5's
-// suggest clause -- which is the point of writing it down as a failing test
-// rather than as a comment nobody is obliged to read.
+// This replaces the test that pinned AC4 as unobservable. Under the
+// unconditional elevation, a declared command was raised to auto whatever the
+// user had set and the gates below only lower auto to confirm, so the suggest
+// dispatch was unreachable for a declared command and the criterion had no
+// state to be observed in.
 //
-// The suggest outcome is checked before the error is, because once elevation
-// is bounded this run returns ErrSuggestOnly, and failing on that first would
-// report the wrong thing.
-func TestRun_DeclaredCommandCannotReachSuggestYet(t *testing.T) {
-	fx := indexfixture.New(t)
-	r, installer, _, stdout, _ := newFixtureRunner(t, fx)
+// The three cases are the three origins an explicit suggest arrives by, which
+// is D1-3's "flag, environment variable and configuration key in turn" as this
+// package sees them. Which route produces which origin is resolveMode's half,
+// and it is pinned in cmd/tsuku/cmd_run_test.go, where those three are read;
+// the two halves together are the criterion.
+//
+// The sibling is laid down at the declared version because that is AC5's
+// suggest clause: a provider the project did not declare is present and
+// runnable, and suggest still executes nothing.
+func TestRun_AC4_AnExplicitSuggestIsHonoredForADeclaredCommand(t *testing.T) {
+	for _, origin := range []Origin{OriginFlag, OriginEnvironment, OriginConfig} {
+		t.Run(origin.String(), func(t *testing.T) {
+			fx := indexfixture.New(t)
+			r, installer, execRec, stdout, stderr := newFixtureRunner(t, fx)
+			layDownTool(t, fx.Cfg, sibling, indexfixture.SharedVersion, indexfixture.CommandTwoProviders)
 
-	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeSuggest, declaredOnly())
+			err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil,
+				ModeSuggest, origin, declaredOnly())
 
-	if strings.Contains(stdout.String(), "tsuku install") || errors.Is(err, ErrSuggestOnly) {
-		t.Fatalf("a declared command reached the suggest dispatch (stdout %q, error %v).\n"+
-			"That is bounded elevation landing, and it makes AC4 and AC5's suggest clause "+
-			"reachable: replace this test with them -- the instruction must name %q, name "+
-			"no other recipe, and install nothing",
-			stdout.String(), err, indexfixture.DeclaredRecipe)
-	}
-	if err != nil {
-		t.Fatalf("Run() error = %v", err)
-	}
-	if !installer.called {
-		t.Error("the declaration should still have elevated to auto and installed")
+			if !errors.Is(err, ErrSuggestOnly) {
+				t.Fatalf("Run() error = %v, want ErrSuggestOnly: a suggest set by the %s was not honored\nstdout: %q",
+					err, origin, stdout.String())
+			}
+			// The positive observable. Without it every assertion below is
+			// met by a run that failed before reaching the mode at all.
+			want := "tsuku install " + indexfixture.DeclaredRecipe + "@" + indexfixture.SharedVersion
+			if !strings.Contains(stdout.String(), want) {
+				t.Errorf("stdout = %q, want an instruction naming %q", stdout.String(), want)
+			}
+			if strings.Contains(stdout.String(), sibling) {
+				t.Errorf("stdout = %q, want it to name no recipe but the declared one; it names %q",
+					stdout.String(), sibling)
+			}
+			if installer.called {
+				t.Errorf("installed %q under suggest", installer.recipe)
+			}
+			if execRec.called {
+				t.Errorf("executed %q under suggest; the declared recipe is not installed and the "+
+					"sibling that is was not the one declared", execRec.binary)
+			}
+			// Nothing on stderr is the strongest form of "no gate lowered the
+			// mode": a gate that fired would name itself there, and so would
+			// any later announcement of an elevation. Suggest is the state in
+			// which neither has anything to say.
+			if stderr.Len() != 0 {
+				t.Errorf("stderr = %q, want nothing: no gate fired and no mode was raised", stderr.String())
+			}
+		})
 	}
 }
 
@@ -212,7 +266,7 @@ func TestRun_AC5_InstalledSiblingIsNotExecuted(t *testing.T) {
 	r, installer, execRec, _, _ := newFixtureRunner(t, fx)
 	siblingBinary := layDownTool(t, fx.Cfg, sibling, indexfixture.SharedVersion, indexfixture.CommandTwoProviders)
 
-	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto, declaredOnly())
+	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto, OriginFlag, declaredOnly())
 	if err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
@@ -233,14 +287,15 @@ func TestRun_AC5_InstalledSiblingIsNotExecuted(t *testing.T) {
 // mode genuinely cannot reach it. Pinned here so a later change to the mode
 // machinery cannot alter that without a test saying so.
 func TestRun_AC6_InstalledDeclaredVersionExecsUnderEveryMode(t *testing.T) {
-	for _, mode := range []Mode{ModeSuggest, ModeConfirm, ModeAuto} {
-		t.Run(mode.String(), func(t *testing.T) {
+	for _, state := range everyConsentState {
+		t.Run(state.String(), func(t *testing.T) {
 			fx := indexfixture.New(t)
 			r, installer, execRec, stdout, _ := newFixtureRunner(t, fx)
 			want := layDownTool(t, fx.Cfg, indexfixture.DeclaredRecipe,
 				indexfixture.SharedVersion, indexfixture.CommandTwoProviders)
 
-			err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, mode, declaredOnly())
+			err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil,
+				state.mode, state.origin, declaredOnly())
 			if err != nil {
 				t.Fatalf("Run() error = %v", err)
 			}
@@ -266,7 +321,7 @@ func TestRun_AC7_OtherInstalledVersionIsNotExecuted(t *testing.T) {
 	const otherVersion = "9.9.9"
 	stale := layDownTool(t, fx.Cfg, indexfixture.DeclaredRecipe, otherVersion, indexfixture.CommandTwoProviders)
 
-	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto, declaredOnly())
+	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto, OriginFlag, declaredOnly())
 	if err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
@@ -293,7 +348,7 @@ func TestRun_AC8_DeclaredRecipeWinsOverAnInstalledSibling(t *testing.T) {
 		indexfixture.SharedVersion, indexfixture.CommandTwoProviders)
 	layDownTool(t, fx.Cfg, sibling, indexfixture.SharedVersion, indexfixture.CommandTwoProviders)
 
-	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto, declaredOnly())
+	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto, OriginFlag, declaredOnly())
 	if err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
@@ -321,7 +376,7 @@ func TestRun_AC9_ThreeDeclaredProvidersAreAllNamed(t *testing.T) {
 		indexfixture.RecipeTrioSecond: indexfixture.SharedVersion,
 		indexfixture.RecipeTrioThird:  indexfixture.SharedVersion,
 	}
-	err := r.Run(context.Background(), indexfixture.CommandThreeProviders, nil, ModeAuto, declaring(declared))
+	err := r.Run(context.Background(), indexfixture.CommandThreeProviders, nil, ModeAuto, OriginFlag, declaring(declared))
 
 	var ambiguous *AmbiguousDeclarationError
 	if !errors.As(err, &ambiguous) {
@@ -363,7 +418,7 @@ func TestRun_TwoRegistriesForOneNameAreDistinguishable(t *testing.T) {
 
 	keyA := "org-a/" + indexfixture.DeclaredRecipe
 	keyB := "org-b/" + indexfixture.DeclaredRecipe
-	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto,
+	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto, OriginFlag,
 		declaring(map[string]string{
 			keyA: indexfixture.SharedVersion,
 			keyB: indexfixture.SharedVersion,
@@ -402,7 +457,7 @@ const (
 	withoutTerminal = false
 )
 
-func runOutcome(t *testing.T, fx *indexfixture.Fixture, command string, mode Mode, resolver ProjectDeclarationResolver, terminal bool) outcome {
+func runOutcome(t *testing.T, fx *indexfixture.Fixture, command string, state consent, resolver ProjectDeclarationResolver, terminal bool) outcome {
 	t.Helper()
 	r, installer, execRec, stdout, stderr := newFixtureRunner(t, fx)
 	r.IsTerminal = func() bool { return terminal }
@@ -411,7 +466,7 @@ func runOutcome(t *testing.T, fx *indexfixture.Fixture, command string, mode Mod
 	// at all is still compared, through stdout.
 	r.ConsentReader = strings.NewReader("y\n")
 
-	err := r.Run(context.Background(), command, nil, mode, resolver)
+	err := r.Run(context.Background(), command, nil, state.mode, state.origin, resolver)
 	got := outcome{
 		stdout:           stdout.String(),
 		stderr:           stderr.String(),
@@ -438,12 +493,12 @@ func TestRun_AC10_UnknownRecipeConfigMatchesNoConfigAtAll(t *testing.T) {
 	const unknownRecipe = "fixture-absent-from-every-index"
 
 	for _, command := range []string{indexfixture.CommandTwoProviders, indexfixture.CommandOneProvider} {
-		for _, mode := range []Mode{ModeSuggest, ModeConfirm, ModeAuto} {
-			t.Run(command+"/"+mode.String(), func(t *testing.T) {
+		for _, state := range everyConsentState {
+			t.Run(command+"/"+state.String(), func(t *testing.T) {
 				fx := indexfixture.New(t)
-				withConfig := runOutcome(t, fx, command, mode,
+				withConfig := runOutcome(t, fx, command, state,
 					declaring(map[string]string{unknownRecipe: "1.0.0"}), withTerminal)
-				noConfig := runOutcome(t, fx, command, mode, project.NewResolver(nil), withTerminal)
+				noConfig := runOutcome(t, fx, command, state, project.NewResolver(nil), withTerminal)
 
 				if withConfig != noConfig {
 					t.Errorf("a config declaring only %q changed the run.\nwith config: %+v\nno config:   %+v",
@@ -466,7 +521,7 @@ func TestRun_UndeclaredCommandKeepsEveryProvider(t *testing.T) {
 	r, installer, _, _, _ := newFixtureRunner(t, fx)
 	r.ConsentReader = strings.NewReader("") // consent unavailable
 
-	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto,
+	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto, OriginFlag,
 		declaring(map[string]string{"fixture-absent-from-every-index": "1.0.0"}))
 
 	if !errors.Is(err, ErrUserDeclined) {
@@ -494,7 +549,7 @@ func TestRun_AC19_VerificationGateAsksAboutTheDeclaredRecipe(t *testing.T) {
 		return true
 	}
 
-	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto, declaredOnly())
+	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto, OriginFlag, declaredOnly())
 	if err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
@@ -510,9 +565,14 @@ func TestRun_AC19_VerificationGateAsksAboutTheDeclaredRecipe(t *testing.T) {
 	}
 }
 
-// AC44. The single-provider case is unchanged: the recipe and version chosen,
-// whether a prompt appears, and what Run returns, across every consent mode,
-// declared and not, installed and not.
+// AC44. The single-provider case: the recipe and version chosen, whether a
+// prompt appears, and what Run returns, across every consent state, declared
+// and not, installed and not.
+//
+// The undeclared rows are unchanged and are what AC44 asks about. The declared
+// rows are the elevation itself and this is where its whole shape is visible
+// at once -- one row raised, three honored -- which is why they are read
+// against the origin rather than against the mode alone.
 //
 // The undeclared-and-installed corner is not here. It turns on the index's own
 // Installed flag rather than on a version directory, the fixture's single
@@ -522,26 +582,30 @@ func TestRun_AC19_VerificationGateAsksAboutTheDeclaredRecipe(t *testing.T) {
 func TestRun_AC44_SingleProviderBehaviorIsUnchanged(t *testing.T) {
 	tests := []struct {
 		name        string
-		mode        Mode
+		state       consent
 		declared    bool
 		laidDown    bool
 		wantErr     error
 		wantPrompt  bool
 		wantInstall bool
 	}{
-		// Declared: the declaration is consent, so every mode installs
-		// silently, and an already-present declared version execs.
-		{"declared/suggest", ModeSuggest, true, false, nil, false, true},
-		{"declared/confirm", ModeConfirm, true, false, nil, false, true},
-		{"declared/auto", ModeAuto, true, false, nil, false, true},
-		{"declared/suggest/present", ModeSuggest, true, true, nil, false, false},
-		{"declared/confirm/present", ModeConfirm, true, true, nil, false, false},
-		{"declared/auto/present", ModeAuto, true, true, nil, false, false},
+		// Declared, with nothing configured: the declaration raises the unset
+		// default and the install is silent. An already-present declared
+		// version execs above the mode entirely.
+		{"declared/default", consent{ModeConfirm, OriginDefault}, true, false, nil, false, true},
+		{"declared/default/present", consent{ModeConfirm, OriginDefault}, true, true, nil, false, false},
+
+		// Declared, with a mode set: it is honored as given. These three rows
+		// are the bounded half of the elevation, and each was the opposite
+		// before it: a declaration used to raise every one of them to auto.
+		{"declared/suggest", consent{ModeSuggest, OriginFlag}, true, false, ErrSuggestOnly, false, false},
+		{"declared/confirm", consent{ModeConfirm, OriginFlag}, true, false, nil, true, true},
+		{"declared/auto", consent{ModeAuto, OriginFlag}, true, false, nil, false, true},
 
 		// Undeclared: the consent mode is honored as given.
-		{"undeclared/suggest", ModeSuggest, false, false, ErrSuggestOnly, false, false},
-		{"undeclared/confirm", ModeConfirm, false, false, nil, true, true},
-		{"undeclared/auto", ModeAuto, false, false, nil, false, true},
+		{"undeclared/suggest", consent{ModeSuggest, OriginFlag}, false, false, ErrSuggestOnly, false, false},
+		{"undeclared/confirm", consent{ModeConfirm, OriginFlag}, false, false, nil, true, true},
+		{"undeclared/auto", consent{ModeAuto, OriginFlag}, false, false, nil, false, true},
 	}
 
 	for _, tt := range tests {
@@ -563,7 +627,8 @@ func TestRun_AC44_SingleProviderBehaviorIsUnchanged(t *testing.T) {
 				wantVersion = indexfixture.SharedVersion
 			}
 
-			err := r.Run(context.Background(), indexfixture.CommandOneProvider, nil, tt.mode, resolver)
+			err := r.Run(context.Background(), indexfixture.CommandOneProvider, nil,
+				tt.state.mode, tt.state.origin, resolver)
 			if !errors.Is(err, tt.wantErr) {
 				t.Fatalf("Run() error = %v, want %v", err, tt.wantErr)
 			}
@@ -623,7 +688,7 @@ func TestCandidates_ResolverErrorStopsTheRun(t *testing.T) {
 	r, installer, _, _, _ := newFixtureRunner(t, fx)
 
 	sentinel := errors.New("config unreadable")
-	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto,
+	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto, OriginFlag,
 		&mockDeclarationResolver{err: sentinel})
 
 	if !errors.Is(err, sentinel) {

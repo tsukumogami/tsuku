@@ -84,7 +84,7 @@ Exit codes:
 		// Trigger background update check (best-effort)
 		updates.CheckAndSpawnUpdateCheck(cfg, userCfg)
 
-		mode, err := resolveMode(runModeFlag, userCfg)
+		mode, modeOrigin, err := resolveMode(runModeFlag, userCfg)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "tsuku run: %v\n", err)
 			exitWithCode(ExitUsage)
@@ -113,7 +113,7 @@ Exit codes:
 			return r.HasChecksumVerification()
 		}
 
-		runErr := runner.Run(globalCtx, command, commandArgs, mode, wiring.resolver)
+		runErr := runner.Run(globalCtx, command, commandArgs, mode, modeOrigin, wiring.resolver)
 		if runErr == nil {
 			return
 		}
@@ -214,17 +214,26 @@ func (i *runInstaller) Install(ctx context.Context, recipeName, version string) 
 // resolveMode applies the four-step priority chain to determine the active
 // consent mode: flag > env var > config > default (confirm).
 //
+// It returns the origin alongside the mode, because the mode alone does not
+// say whether anyone chose it and the runner's project elevation turns on
+// exactly that: only a mode nobody set is raised by a declaration. The origin
+// is the highest-precedence source that supplied a value, which is this
+// function's own step order.
+//
 // The env var escalation restriction prevents TSUKU_AUTO_INSTALL_MODE=auto
 // from taking effect unless the config also has auto_install_mode = "auto".
-// This blocks malicious .envrc files from silently enabling auto mode.
-func resolveMode(flagMode string, cfg *userconfig.Config) (autoinstall.Mode, error) {
+// This blocks malicious .envrc files from silently enabling auto mode. Its
+// output is an environment-origin confirm rather than a default one -- the
+// environment did supply a value, and recording it as a default would hand the
+// runner a mode a declaration could raise straight back to auto.
+func resolveMode(flagMode string, cfg *userconfig.Config) (autoinstall.Mode, autoinstall.Origin, error) {
 	// Step 1: explicit flag wins unconditionally.
 	if flagMode != "" {
 		m, ok := autoinstall.ParseMode(flagMode)
 		if !ok {
-			return 0, fmt.Errorf("invalid mode %q: must be suggest, confirm, or auto", flagMode)
+			return 0, autoinstall.OriginDefault, fmt.Errorf("invalid mode %q: must be suggest, confirm, or auto", flagMode)
 		}
-		return m, nil
+		return m, autoinstall.OriginFlag, nil
 	}
 
 	// Step 2: environment variable.
@@ -232,29 +241,29 @@ func resolveMode(flagMode string, cfg *userconfig.Config) (autoinstall.Mode, err
 	if envMode != "" {
 		m, ok := autoinstall.ParseMode(envMode)
 		if !ok {
-			return 0, fmt.Errorf("invalid TSUKU_AUTO_INSTALL_MODE %q: must be suggest, confirm, or auto", envMode)
+			return 0, autoinstall.OriginDefault, fmt.Errorf("invalid TSUKU_AUTO_INSTALL_MODE %q: must be suggest, confirm, or auto", envMode)
 		}
 
 		// Escalation restriction: env var cannot escalate to auto unless
 		// the persistent config also has auto_install_mode = "auto".
 		if m == autoinstall.ModeAuto && cfg.AutoInstallMode != "auto" {
-			return autoinstall.ModeConfirm, nil
+			return autoinstall.ModeConfirm, autoinstall.OriginEnvironment, nil
 		}
 
-		return m, nil
+		return m, autoinstall.OriginEnvironment, nil
 	}
 
 	// Step 3: config file value.
 	if cfg.AutoInstallMode != "" {
 		m, ok := autoinstall.ParseMode(cfg.AutoInstallMode)
 		if !ok {
-			return 0, fmt.Errorf("invalid auto_install_mode config %q: must be suggest, confirm, or auto", cfg.AutoInstallMode)
+			return 0, autoinstall.OriginDefault, fmt.Errorf("invalid auto_install_mode config %q: must be suggest, confirm, or auto", cfg.AutoInstallMode)
 		}
-		return m, nil
+		return m, autoinstall.OriginConfig, nil
 	}
 
 	// Step 4: default.
-	return autoinstall.ModeConfirm, nil
+	return autoinstall.ModeConfirm, autoinstall.OriginDefault, nil
 }
 
 func init() {

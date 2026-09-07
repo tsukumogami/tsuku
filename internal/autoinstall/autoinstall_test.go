@@ -164,7 +164,7 @@ func TestRun_ModeSuggest(t *testing.T) {
 		return []index.BinaryMatch{{Recipe: "jq", Command: "jq"}}, nil
 	}
 
-	err := r.Run(context.Background(), "jq", nil, ModeSuggest, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeSuggest, OriginFlag, nil)
 	if !errors.Is(err, ErrSuggestOnly) {
 		t.Fatalf("expected ErrSuggestOnly, got %v", err)
 	}
@@ -185,7 +185,7 @@ func TestRun_ModeConfirm_Yes(t *testing.T) {
 	r.Exec = execRec.exec
 	r.ConsentReader = strings.NewReader("y\n")
 
-	err := r.Run(context.Background(), "jq", []string{"."}, ModeConfirm, nil)
+	err := r.Run(context.Background(), "jq", []string{"."}, ModeConfirm, OriginFlag, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -207,7 +207,7 @@ func TestRun_ModeConfirm_No(t *testing.T) {
 	}
 	r.ConsentReader = strings.NewReader("n\n")
 
-	err := r.Run(context.Background(), "jq", nil, ModeConfirm, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeConfirm, OriginFlag, nil)
 	if !errors.Is(err, ErrUserDeclined) {
 		t.Fatalf("expected ErrUserDeclined, got %v", err)
 	}
@@ -229,7 +229,7 @@ func TestRun_ModeAuto_HappyPath(t *testing.T) {
 	configPath := filepath.Join(r.cfg.HomeDir, "config.toml")
 	_ = os.WriteFile(configPath, []byte(""), 0600)
 
-	err := r.Run(context.Background(), "jq", nil, ModeAuto, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeAuto, OriginFlag, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -260,7 +260,7 @@ func TestRun_RootGuard(t *testing.T) {
 		return []index.BinaryMatch{{Recipe: "jq", Command: "jq"}}, nil
 	}
 
-	err := r.Run(context.Background(), "jq", nil, ModeSuggest, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeSuggest, OriginFlag, nil)
 	if errors.Is(err, ErrForbidden) {
 		t.Fatal("root guard should not trigger for non-root user")
 	}
@@ -284,7 +284,7 @@ func TestRun_ConfigPermissionFallback(t *testing.T) {
 	configPath := filepath.Join(r.cfg.HomeDir, "config.toml")
 	_ = os.WriteFile(configPath, []byte(""), 0644)
 
-	err := r.Run(context.Background(), "jq", nil, ModeAuto, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeAuto, OriginFlag, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -310,7 +310,7 @@ func TestRun_VerificationGateFallback(t *testing.T) {
 	configPath := filepath.Join(r.cfg.HomeDir, "config.toml")
 	_ = os.WriteFile(configPath, []byte(""), 0600)
 
-	err := r.Run(context.Background(), "jq", nil, ModeAuto, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeAuto, OriginFlag, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -340,7 +340,7 @@ func TestRun_ConflictGateFallback(t *testing.T) {
 	configPath := filepath.Join(r.cfg.HomeDir, "config.toml")
 	_ = os.WriteFile(configPath, []byte(""), 0600)
 
-	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto, nil)
+	err := r.Run(context.Background(), indexfixture.CommandTwoProviders, nil, ModeAuto, OriginFlag, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -358,7 +358,7 @@ func TestRun_InstallFailure(t *testing.T) {
 	r.Installer = &mockInstaller{err: errors.New("download failed")}
 	r.ConsentReader = strings.NewReader("y\n")
 
-	err := r.Run(context.Background(), "jq", nil, ModeConfirm, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeConfirm, OriginFlag, nil)
 	if err == nil {
 		t.Fatal("expected error for install failure")
 	}
@@ -373,7 +373,7 @@ func TestRun_IndexNotBuilt(t *testing.T) {
 		return nil, index.ErrIndexNotBuilt
 	}
 
-	err := r.Run(context.Background(), "jq", nil, ModeConfirm, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeConfirm, OriginFlag, nil)
 	if !errors.Is(err, ErrIndexNotBuilt) {
 		t.Fatalf("expected ErrIndexNotBuilt, got %v", err)
 	}
@@ -391,7 +391,7 @@ func TestRun_AlreadyInstalled_ExecImmediately(t *testing.T) {
 	}
 	r.Exec = execRec.exec
 
-	err := r.Run(context.Background(), "jq", []string{"."}, ModeConfirm, nil)
+	err := r.Run(context.Background(), "jq", []string{"."}, ModeConfirm, OriginFlag, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -434,7 +434,7 @@ func TestRun_InstalledTool_ProjectPinOverridesGlobalVersion(t *testing.T) {
 		versions: map[string]string{"jq": "1.6"},
 	}
 
-	err := r.Run(context.Background(), "jq", []string{"."}, ModeConfirm, resolver)
+	err := r.Run(context.Background(), "jq", []string{"."}, ModeConfirm, OriginFlag, resolver)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -478,7 +478,7 @@ func TestRun_InstalledTool_ProjectPinInstallsIfMissing(t *testing.T) {
 		versions: map[string]string{"jq": "1.6"},
 	}
 
-	err := r.Run(context.Background(), "jq", []string{"."}, ModeConfirm, resolver)
+	err := r.Run(context.Background(), "jq", []string{"."}, ModeConfirm, OriginDefault, resolver)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -508,7 +508,7 @@ func TestRun_DeclaredVersionFlowsThrough(t *testing.T) {
 		versions: map[string]string{"jq": "1.7.1"},
 	}
 
-	err := r.Run(context.Background(), "jq", nil, ModeConfirm, resolver)
+	err := r.Run(context.Background(), "jq", nil, ModeConfirm, OriginFlag, resolver)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -531,7 +531,7 @@ func TestRun_ModeAuto_AuditLogNDJSON(t *testing.T) {
 
 	_ = os.WriteFile(filepath.Join(r.cfg.HomeDir, "config.toml"), []byte(""), 0600)
 
-	err := r.Run(context.Background(), "jq", nil, ModeAuto, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeAuto, OriginFlag, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -580,7 +580,7 @@ func TestRun_NilRecipeHasVerification_FallsBackToConfirm(t *testing.T) {
 
 	_ = os.WriteFile(filepath.Join(r.cfg.HomeDir, "config.toml"), []byte(""), 0600)
 
-	err := r.Run(context.Background(), "jq", nil, ModeAuto, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeAuto, OriginFlag, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -590,9 +590,15 @@ func TestRun_NilRecipeHasVerification_FallsBackToConfirm(t *testing.T) {
 	}
 }
 
-// --- Project mode override tests ---
+// --- Project elevation tests, over the single-provider mock ---
+//
+// The bounded elevation's own criteria run against the fixture, in
+// elevation_test.go and candidates_test.go, where a declared recipe and the
+// index's preference can disagree. These are the older mock-based cases and
+// stay as the check that the elevation is reached at all through the plain
+// single-provider path.
 
-func TestRun_DeclaredCommand_OverridesToAuto(t *testing.T) {
+func TestRun_DeclaredCommand_RaisesTheUnsetDefault(t *testing.T) {
 	r, _, _ := newTestRunner(t)
 	installer := &mockInstaller{}
 	execRec := &execRecorder{}
@@ -611,9 +617,10 @@ func TestRun_DeclaredCommand_OverridesToAuto(t *testing.T) {
 		versions: map[string]string{"jq": "1.7.1"},
 	}
 
-	// Start with confirm mode -- the project override should escalate to auto.
-	// No ConsentReader is set, so if it falls through to confirm it will fail.
-	err := r.Run(context.Background(), "jq", nil, ModeConfirm, resolver)
+	// The unset default: confirm, from an origin of default, which is the one
+	// mode a declaration raises. No ConsentReader is set, so if it falls
+	// through to confirm it will fail.
+	err := r.Run(context.Background(), "jq", nil, ModeConfirm, OriginDefault, resolver)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -637,7 +644,7 @@ func TestRun_UndeclaredCommand_ModeUnchanged(t *testing.T) {
 		versions: map[string]string{}, // no entries
 	}
 
-	err := r.Run(context.Background(), "jq", nil, ModeSuggest, resolver)
+	err := r.Run(context.Background(), "jq", nil, ModeSuggest, OriginFlag, resolver)
 	if !errors.Is(err, ErrSuggestOnly) {
 		t.Fatalf("expected ErrSuggestOnly, got %v", err)
 	}
@@ -653,7 +660,7 @@ func TestRun_NilResolver_ModeUnchanged(t *testing.T) {
 		return []index.BinaryMatch{{Recipe: "jq", Command: "jq"}}, nil
 	}
 
-	err := r.Run(context.Background(), "jq", nil, ModeSuggest, nil)
+	err := r.Run(context.Background(), "jq", nil, ModeSuggest, OriginFlag, nil)
 	if !errors.Is(err, ErrSuggestOnly) {
 		t.Fatalf("expected ErrSuggestOnly, got %v", err)
 	}

@@ -44,6 +44,63 @@ func (m Mode) String() string {
 	}
 }
 
+// Origin names where the consent mode came from, before any gate ran.
+//
+// It exists because the mode alone does not say whether anyone chose it, and
+// the bounded elevation turns on exactly that. A confirm nobody asked for and
+// a confirm the user set by flag are the same Mode and different states: the
+// first is a default a project declaration may raise, the second is a choice
+// it may not. So does the escalation restriction's output -- an environment
+// variable asking for auto that the persistent config did not corroborate
+// arrives here as a confirm whose origin is environment, and raising it would
+// reverse the control that produced it.
+//
+// The five values are the ones the durable record names, and they are
+// exhaustive: a gate that lowers the mode afterwards is recorded as a gate
+// rather than as an origin.
+type Origin int
+
+const (
+	// OriginDefault means nothing set a mode: no flag, no environment
+	// variable, no configuration key. This is the only origin a project
+	// declaration may raise.
+	OriginDefault Origin = iota
+
+	// OriginFlag is --mode on the command line.
+	OriginFlag
+
+	// OriginEnvironment is TSUKU_AUTO_INSTALL_MODE, including the confirm the
+	// escalation restriction substitutes for an uncorroborated auto.
+	OriginEnvironment
+
+	// OriginConfig is auto_install_mode in $TSUKU_HOME/config.toml.
+	OriginConfig
+
+	// OriginProject is a mode a project declaration raised. It outranks
+	// OriginDefault and nothing else, so it is the recorded origin only where
+	// the mode would otherwise have been the unset default.
+	OriginProject
+)
+
+// String returns the string representation of an Origin, which is the spelling
+// the record uses.
+func (o Origin) String() string {
+	switch o {
+	case OriginDefault:
+		return "default"
+	case OriginFlag:
+		return "flag"
+	case OriginEnvironment:
+		return "environment"
+	case OriginConfig:
+		return "config"
+	case OriginProject:
+		return "project"
+	default:
+		return "unknown"
+	}
+}
+
 // ParseMode converts a string to a Mode. Returns ok=false for invalid strings.
 func ParseMode(s string) (Mode, bool) {
 	switch s {

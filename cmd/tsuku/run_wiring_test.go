@@ -84,10 +84,12 @@ func TestRunWiring_DeclaredRecipeReachesTheInstaller(t *testing.T) {
 	runner.RecipeHasVerification = func(string) bool { return true }
 	runner.Exec = func(string, []string, []string) error { return nil }
 
-	// ModeConfirm with no ConsentReader: reaching a prompt would fail rather
-	// than hang, so a run that completes is one the declaration consented to.
+	// The unset default with no ConsentReader: reaching a prompt would fail
+	// rather than hang, so a run that completes is one the declaration
+	// consented to. The origin is what makes that so -- a confirm the user set
+	// would be honored here and would prompt.
 	err = runner.Run(context.Background(), indexfixture.CommandTwoProviders, nil,
-		autoinstall.ModeConfirm, wiring.resolver)
+		autoinstall.ModeConfirm, autoinstall.OriginDefault, wiring.resolver)
 	if err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
