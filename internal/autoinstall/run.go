@@ -368,11 +368,7 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 		return fmt.Errorf("autoinstall: install failed: %w", err)
 	}
 
-	// The record, on every install rather than on the auto ones (R12). The
-	// guard that used to stand here was the defect: an install a gate diverted
-	// to confirm left no trace at all, so the runs that ended somewhere other
-	// than where the configuration pointed were exactly the runs with nothing
-	// written about them.
+	// The record, on every install rather than on the auto ones (R12).
 	//
 	// It is below the install rather than above it because what it records is
 	// an install that happened. A failed install returns before this line, and
