@@ -138,6 +138,15 @@ type Runner struct {
 	// Exec replaces the process with the installed binary.
 	Exec ExecFunc
 
+	// IsTerminal reports whether a prompt written to stdout can be answered.
+	// cmd/tsuku wires this to stdin's terminal check.
+	//
+	// A nil function means no terminal. A caller that never wired one cannot
+	// answer a prompt, so the refusal is the right outcome for it -- the
+	// alternative is a prompt written into a stream nobody reads, which is
+	// the failure the check exists to prevent rather than a lenient default.
+	IsTerminal func() bool
+
 	// RecipeHasVerification checks whether a recipe has checksum_url or
 	// signature_url. Used by the verification security gate (auto mode).
 	// Returns true if the recipe has at least one verification method.

@@ -93,26 +93,14 @@ Exit codes:
 		cwd, _ := os.Getwd()
 		wiring := newRunWiring(cfg, cwd)
 
-		// TTY gate: confirm mode requires an interactive terminal.
-		//
-		// The skip is keyed on the configuration declaring *any* tool, not on
-		// it declaring this command, and both halves of that are wrong. A
-		// command nothing declares still skips the gate in a repository that
-		// declares something else, and then meets the prompt at a closed stdin
-		// and exits 13 rather than 12. A command that is declared can be
-		// lowered back to confirm by a gate inside Run -- an unverified recipe
-		// is the ordinary way -- so "no prompt is shown" is not something this
-		// check can know from here. Both follow from the check running before
-		// the declaration is resolved and before the gates, which is why
-		// moving it inside Run is what fixes it, and a separate unit's work.
-		hasProjectTools := wiring.projectCfg != nil && len(wiring.projectCfg.Config.Tools) > 0
-		if mode == autoinstall.ModeConfirm && !hasProjectTools && !term.IsTerminal(int(os.Stdin.Fd())) {
-			fmt.Fprintln(os.Stderr, "tsuku: confirm mode requires a TTY; set TSUKU_AUTO_INSTALL_MODE=auto or use --mode=auto for non-interactive use")
-			exitWithCode(ExitNotInteractive)
-		}
-
 		runner := autoinstall.NewRunner(cfg, os.Stdout, os.Stderr)
 		runner.Lookup = wiring.lookup
+		// The terminal is an input to the check rather than the site of it.
+		// The check itself is inside Run, below the declaration lookup and the
+		// gates, which is the only place it can ask whether *this* command
+		// needs a prompt; here it could only ask whether the configuration
+		// declared anything at all.
+		runner.IsTerminal = func() bool { return term.IsTerminal(int(os.Stdin.Fd())) }
 		runner.Installer = &runInstaller{}
 		runner.Exec = func(binary string, execArgs []string, env []string) error {
 			return syscall.Exec(binary, execArgs, env)
@@ -149,6 +137,12 @@ Exit codes:
 		case errors.Is(runErr, autoinstall.ErrForbidden):
 			fmt.Fprintf(os.Stderr, "tsuku run: %v\n", runErr)
 			exitWithCode(ExitForbidden)
+		case errors.Is(runErr, autoinstall.ErrNotInteractive):
+			// The runner has printed the message, so this case adds only the
+			// code -- the same ExitNotInteractive the check exited with when
+			// it lived here, which is what keeps a script that already
+			// distinguishes 12 working across the move.
+			exitWithCode(ExitNotInteractive)
 		case errors.Is(runErr, autoinstall.ErrUserDeclined):
 			exitWithCode(ExitUserDeclined)
 		case errors.Is(runErr, autoinstall.ErrSuggestOnly):

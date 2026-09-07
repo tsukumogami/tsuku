@@ -42,6 +42,10 @@ func newFixtureRunner(t *testing.T, fx *indexfixture.Fixture) (*Runner, *mockIns
 	// Auto mode is the interesting mode here and it needs a verified recipe;
 	// a case that wants the verification gate to fire overrides this.
 	r.RecipeHasVerification = func(string) bool { return true }
+	// A terminal is attached unless a case says otherwise, for the reason
+	// newTestRunner's is: confirm mode with no terminal refuses rather than
+	// prompting, and the cases about the prompt are not about the terminal.
+	r.IsTerminal = func() bool { return true }
 	return r, installer, execRec, stdout, stderr
 }
 
@@ -391,9 +395,17 @@ type outcome struct {
 	execBinary       string
 }
 
-func runOutcome(t *testing.T, fx *indexfixture.Fixture, command string, mode Mode, resolver ProjectDeclarationResolver) outcome {
+// Whether a terminal is attached, named at the call sites so the comparisons
+// below say which half of the criterion they are running.
+const (
+	withTerminal    = true
+	withoutTerminal = false
+)
+
+func runOutcome(t *testing.T, fx *indexfixture.Fixture, command string, mode Mode, resolver ProjectDeclarationResolver, terminal bool) outcome {
 	t.Helper()
 	r, installer, execRec, stdout, stderr := newFixtureRunner(t, fx)
+	r.IsTerminal = func() bool { return terminal }
 	// Consent is answered so a run that reaches the prompt completes rather
 	// than differing only in how it was cut short. Whether the prompt appeared
 	// at all is still compared, through stdout.
@@ -430,8 +442,8 @@ func TestRun_AC10_UnknownRecipeConfigMatchesNoConfigAtAll(t *testing.T) {
 			t.Run(command+"/"+mode.String(), func(t *testing.T) {
 				fx := indexfixture.New(t)
 				withConfig := runOutcome(t, fx, command, mode,
-					declaring(map[string]string{unknownRecipe: "1.0.0"}))
-				noConfig := runOutcome(t, fx, command, mode, project.NewResolver(nil))
+					declaring(map[string]string{unknownRecipe: "1.0.0"}), withTerminal)
+				noConfig := runOutcome(t, fx, command, mode, project.NewResolver(nil), withTerminal)
 
 				if withConfig != noConfig {
 					t.Errorf("a config declaring only %q changed the run.\nwith config: %+v\nno config:   %+v",

@@ -31,6 +31,11 @@ var (
 	// ErrNoMatch indicates no recipe provides the requested command.
 	ErrNoMatch = errors.New("autoinstall: no matching recipe")
 
+	// ErrNotInteractive indicates confirm mode was reached with no terminal
+	// to prompt on. cmd/tsuku maps it to ExitNotInteractive, the code the
+	// command layer's own check exited with before this one replaced it.
+	ErrNotInteractive = errors.New("autoinstall: confirm mode requires a terminal")
+
 	// ErrSuggestOnly is returned in suggest mode after printing instructions.
 	ErrSuggestOnly = errors.New("autoinstall: suggest mode, not installing")
 )
@@ -93,6 +98,15 @@ func (r *Runner) candidates(ctx context.Context, command string, resolver Projec
 	}
 
 	if len(matches) == 0 {
+		// Moving the terminal check below this point turned the no-terminal
+		// case from an exit code with a line explaining it into a bare exit 1,
+		// so this line is what keeps the failure from being silent (AC55).
+		//
+		// It names no escape hatch, and there is none to name: no recipe
+		// provides the command, so every invocation that could be printed here
+		// fails the same way this one did. Naming one anyway is the defect
+		// R10 is about.
+		fmt.Fprintf(r.stderr, "No recipe provides %q.\n", command)
 		return nil, nil, ErrNoMatch
 	}
 
@@ -194,23 +208,15 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 	// Security gate 2: config permission check.
 	// If the config file has permissive permissions, fall back to confirm
 	// to prevent a tampered config from enabling auto mode.
-	if effectiveMode == ModeAuto {
-		configPath := filepath.Join(r.cfg.HomeDir, "config.toml")
-		if !configPermissionsOK(configPath) {
-			fmt.Fprintf(r.stderr, "Warning: config file permissions are too open, falling back to confirm mode\n")
-			effectiveMode = ModeConfirm
-		}
+	if effectiveMode == ModeAuto && !r.configPermissionGateOK() {
+		fmt.Fprintf(r.stderr, "Warning: config file permissions are too open, falling back to confirm mode\n")
+		effectiveMode = ModeConfirm
 	}
 
 	// Security gate 3 (auto mode only): verification gate.
 	// If the recipe has no checksum or signature verification, fall back to confirm.
-	// A nil RecipeHasVerification function is treated as "unverified" — the gate
-	// fires rather than being silently skipped.
-	if effectiveMode == ModeAuto {
-		hasVerification := r.RecipeHasVerification != nil && r.RecipeHasVerification(match.Recipe)
-		if !hasVerification {
-			effectiveMode = ModeConfirm
-		}
+	if effectiveMode == ModeAuto && !r.verificationGateOK(match.Recipe) {
+		effectiveMode = ModeConfirm
 	}
 
 	// Security gate 4 (auto mode only): conflict gate.
@@ -224,8 +230,27 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 	// recipe appear once per command, but matches reaches this package from a
 	// caller, and internal/project guards the same parameter for the same
 	// reason rather than trusting that.
-	if effectiveMode == ModeAuto && len(matches) > 1 {
+	if effectiveMode == ModeAuto && !r.providerGateOK(matches) {
 		effectiveMode = ModeConfirm
+	}
+
+	// The terminal check. It asks whether *this* command needs a prompt, and
+	// it asks here because here is the first place that question has an
+	// answer: below the declaration lookup, below the two fast paths that
+	// return without prompting, and below every gate that can lower a raised
+	// mode back to confirm.
+	//
+	// There is deliberately no declaredness term in the predicate. The command
+	// layer's check had one -- it asked whether the configuration declared
+	// anything at all -- and both halves of that were wrong. A command nothing
+	// declares skipped the check in a repository that declared something else,
+	// and then met the prompt at a closed stdin. A command that is declared
+	// could be lowered back to confirm by a gate down here, which the check up
+	// there could not know. By this line the mode already carries everything a
+	// declaration contributes, so asking again would be asking twice.
+	if effectiveMode == ModeConfirm && !r.terminalAttached() {
+		fmt.Fprintf(r.stderr, "%s\n", r.notInteractiveMessage(command, match, matches))
+		return ErrNotInteractive
 	}
 
 	// Mode dispatch.
@@ -275,6 +300,78 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 	// Exec the installed binary.
 	binaryPath := filepath.Join(r.cfg.CurrentDir, command)
 	return r.execBinary(binaryPath, args)
+}
+
+// The three mode-lowering gates, each as a predicate reporting whether auto
+// survives it.
+//
+// They are predicates rather than three conditions written inline because two
+// callers need the same answer: the gates above, which lower the mode, and the
+// terminal check's message, which names --mode=auto only where auto would
+// still be auto by the time it got here. A message deciding that from a second
+// copy of these conditions would go on printing the hatch the first time a
+// gate changed, and what R10 requires is that the message be true, not that it
+// once was.
+
+func (r *Runner) configPermissionGateOK() bool {
+	return configPermissionsOK(filepath.Join(r.cfg.HomeDir, "config.toml"))
+}
+
+// A nil RecipeHasVerification is treated as "unverified": the gate fires
+// rather than being silently skipped.
+func (r *Runner) verificationGateOK(recipe string) bool {
+	return r.RecipeHasVerification != nil && r.RecipeHasVerification(recipe)
+}
+
+func (r *Runner) providerGateOK(matches []index.BinaryMatch) bool {
+	return len(matches) <= 1
+}
+
+// terminalAttached reports whether a prompt could be answered. A nil
+// IsTerminal is not a terminal -- see the field's own doc for why that is the
+// safe direction to default in.
+func (r *Runner) terminalAttached() bool {
+	return r.IsTerminal != nil && r.IsTerminal()
+}
+
+// notInteractiveMessage says why the run stopped, and names every escape hatch
+// that works from the state it is printed in and no others (R10).
+//
+// --mode=auto is the only hatch there is, because it is the only source
+// resolveMode honors unconditionally. TSUKU_AUTO_INSTALL_MODE=auto reads like
+// its sibling and is deliberately absent: resolveMode ignores an env-supplied
+// auto unless config.toml already says auto, so a user following it verbatim
+// would arrive back at this message having changed nothing.
+//
+// The flag is named only where auto would survive the mode-lowering gates.
+// Where one of them would put it back at confirm -- a recipe carrying no
+// checksum is the ordinary way, and it is why this branch is not a corner
+// case -- following it reaches this same message, so the message names the
+// gate instead and does not spell the flag at all. Nothing here says
+// "--mode=auto" except where --mode=auto works.
+func (r *Runner) notInteractiveMessage(command string, match index.BinaryMatch, matches []index.BinaryMatch) string {
+	const opening = "tsuku: confirm mode requires a terminal"
+	if blocked := r.autoBlockedBy(command, match, matches); blocked != "" {
+		return opening + ", and auto mode is unavailable here: " + blocked
+	}
+	return opening + "; use --mode=auto for non-interactive use"
+}
+
+// autoBlockedBy names the mode-lowering gate that would put a mode of auto
+// back at confirm for this command, or "" where none of them would.
+//
+// The order matches the order the gates run in, so the reason named is the one
+// a user would hit first.
+func (r *Runner) autoBlockedBy(command string, match index.BinaryMatch, matches []index.BinaryMatch) string {
+	switch {
+	case !r.configPermissionGateOK():
+		return "the permissions on config.toml are too open"
+	case !r.verificationGateOK(match.Recipe):
+		return fmt.Sprintf("%s carries no checksum or signature to verify", match.Recipe)
+	case !r.providerGateOK(matches):
+		return fmt.Sprintf("more than one recipe provides %q", command)
+	}
+	return ""
 }
 
 // execBinary replaces the current process with the given binary.

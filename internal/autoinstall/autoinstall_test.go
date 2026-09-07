@@ -96,6 +96,11 @@ func newTestRunner(t *testing.T) (*Runner, *bytes.Buffer, *bytes.Buffer) {
 	stdout := &bytes.Buffer{}
 	stderr := &bytes.Buffer{}
 	r := NewRunner(cfg, stdout, stderr)
+	// A terminal is attached unless a case says otherwise. Confirm mode is
+	// what most of the cases below drive, and confirm mode with no terminal
+	// now refuses instead of prompting -- which is the point of the check, and
+	// would otherwise cut short every case that answers a prompt.
+	r.IsTerminal = func() bool { return true }
 	return r, stdout, stderr
 }
 

@@ -51,6 +51,10 @@ func twoRegistries() map[string]string {
 //
 // It also moves the working directory into the project, because both commands
 // driven below discover their configuration by walking up from cwd.
+//
+// A nil tools map writes no .tsuku.toml at all, which is a different thing
+// from writing one that declares nothing: the criteria comparing a
+// configuration against its absence need the file to be absent.
 func twoProviderProject(t *testing.T, tools map[string]string) (*indexfixture.Fixture, string) {
 	t.Helper()
 
@@ -79,7 +83,9 @@ func twoProviderProject(t *testing.T, tools map[string]string) (*indexfixture.Fi
 
 	dir := t.TempDir()
 	t.Setenv(project.EnvCeilingPaths, filepath.Dir(dir))
-	fx.WriteProjectConfig(t, dir, tools)
+	if tools != nil {
+		fx.WriteProjectConfig(t, dir, tools)
+	}
 	chdir(t, dir)
 
 	return fx, dir
