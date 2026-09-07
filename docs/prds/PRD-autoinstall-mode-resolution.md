@@ -401,6 +401,14 @@ case** — the positional
 selections pick the declared recipe because it is the only element, and the
 cardinality tests are computed over the narrowed set.
 
+**Correction, from building it.** The count above is the pre-implementation
+count and the requirement does not turn on it. Confining the list to the
+function that produces it left the three positional selections with no reason
+to stay apart, so there is now one — `Run` reads position zero once and the
+sites below read what it read — alongside the conflict gate's cardinality test
+and, above the narrowing on the raw list, the empty-result test. The design
+records the same correction under D3.
+
 Stated this way it is also a review instrument. Any future positional read of
 the candidate list introduced below the point of production is either correct
 by inheritance or is a new defect, and that can be checked by position rather

@@ -404,6 +404,22 @@ is a cardinality test rather than a positional selection, and AC47's question is
 about positional reads — but a reviewer counting five and finding four should
 find this sentence rather than a discrepancy.
 
+**Correction, from building it (Issue 3).** The count is now two, not four, and
+the paragraph above is the sentence a reviewer would otherwise trip on. Once
+the list is confined to `candidates`, the three positional selections inside
+`Run` have no reason to stay separate: `Run` reads position zero once, into a
+`match` the six sites below read instead, and the only other read is the
+conflict gate's `len(matches) > 1`. So below the narrowing there is one
+positional selection and one cardinality test; above it, on the raw list,
+`len(matches) == 0`, exactly as described.
+
+That strengthens the property rather than weakening it — R3a's review
+instrument asks a reviewer to check positional reads, and there is now one to
+check — but it means the arithmetic in this paragraph and in R3a is the
+pre-implementation arithmetic. Both are left standing with this note beside
+them, because the counting was the reasoning that produced the confinement and
+deleting it would leave the conclusion with nothing under it.
+
 ### D4. The refusal's shape
 
 Exit 10 is settled by R7, and `ExitAmbiguous = 10` exists — but `tsuku run`
