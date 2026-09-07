@@ -52,8 +52,9 @@ Consent modes (for tools not in .tsuku.toml):
   confirm   Prompt before installing (default, requires a terminal)
   auto      Install without prompting (requires opt-in)
 
-Every install is recorded in $TSUKU_HOME/audit.log, whichever mode governed
-it, along with where that mode came from.
+Every install tsuku run performs is recorded in $TSUKU_HOME/audit.log,
+whichever mode governed it, along with where that mode came from. Installs
+started any other way, and dependencies pulled in by one, are not recorded.
 
 Mode resolution order:
   1. --mode flag
