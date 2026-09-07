@@ -812,7 +812,7 @@ mechanical check over this table is sufficient.
 | R18a | AC54, AC55 |
 | R19 | AC49 |
 | R20 | AC18 |
-| R21 | AC45, AC46, AC50, AC52 |
+| R21 | AC45, AC46, AC50, AC52, AC52a |
 
 - **[a]** AC35 and AC40 are reachable only under the raise-with-a-floor and
   bounded alternatives.
@@ -1147,11 +1147,31 @@ bounded rule satisfies parts of each.
 - [ ] **AC45** The design records the gates table's derivation against the rule
       stated with the table, naming the span's two boundaries by identifier and
       citing each site by file, function and role.
-- [ ] **AC52** The recorded derivation's site list and the table's derived rows
-      are the same set, checked mechanically. AC50 pins the code against the
-      derivation and this pins the derivation against the table; without it the
-      two could agree while the table every quantifier in this document reads
-      says something else.
+- [ ] **AC52** The recorded derivation's site list and the derived rows of the
+      table **recorded with it in the design** are the same set, checked
+      mechanically. AC50 pins the code against the derivation and this pins the
+      derivation against its own table; without it the two could agree while
+      the table every quantifier in this document reads says something else.
+
+      **Which table, stated because an earlier form of this criterion did not
+      say and could not pass.** The table printed in this document is the
+      *pre-change* one — the Coverage section says so — so comparing a
+      post-change derivation against it fails on correct code. That is a defect
+      in the criterion, not a licence to declare the printed table superseded:
+      voiding a check by removing its subject is the shape this work exists to
+      stop, and it would leave the quantifiers in this document pointing at
+      nothing.
+
+      **AC52a.** The `modeGates` table in the code and the derived rows of the
+      recorded table are the same set, checked mechanically.
+
+      This carries what AC52 cannot. R21 already concedes that comparing two
+      artefacts by the same author "catches a transcription slip and nothing
+      else", and AC52 is exactly that comparison — both documents, one author,
+      one sitting. AC52a compares a record against *code*, so a gate deleted
+      from the table is caught rather than agreed with. Where three recorded
+      rows collapse to one site, that collapse must be visible in the
+      comparison rather than hidden by it.
 - [ ] **AC46** Over that named span, two searches together produce exactly the
       site list the derivation records — no site absent from that list, and no
       listed site absent from the code. The comparison target is the recorded

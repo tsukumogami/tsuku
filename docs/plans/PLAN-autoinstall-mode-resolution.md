@@ -431,7 +431,20 @@ recorded list, no listed site absent from the code. The check reads its expected
 list out of the recorded derivation rather than out of the table, so a record
 that stops matching the code fails rather than waiting for a reader.
 
-**Acceptance Criteria**: AC45, AC46, AC50, AC52.
+**Acceptance Criteria**: AC45, AC46, AC50, AC52, AC52a.
+
+**AC52 was restated and AC52a added while Issue 7 was in flight**, because
+building the gates as a table falsified the design's derivation record and
+exposed a defect in the criterion. AC52 compared the derivation against the
+table printed in the PRD — which the PRD's own Coverage section calls the
+*pre-change* table, so the comparison cannot pass on correct code. It now
+names the table recorded in the design alongside the derivation.
+
+That comparison is still two artefacts by one author, which R21 concedes
+catches a transcription slip and nothing else. **AC52a is the one that
+discriminates**: the `modeGates` table in the code against the recorded rows,
+so a gate deleted from the table is caught rather than agreed with. Issue 7
+built it; this issue verifies it and owns it thereafter.
 
 **Complexity**: testable
 
