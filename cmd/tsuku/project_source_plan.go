@@ -177,27 +177,21 @@ func (p *projectSourcePlan) commit() error {
 		}
 		userCfg = loaded
 	}
-	if userCfg.Registries == nil {
-		userCfg.Registries = map[string]userconfig.RegistryEntry{}
-	}
 
+	names := make([]string, 0, len(approved))
 	for _, s := range approved {
-		if _, exists := userCfg.Registries[s.Name]; exists {
-			// Somebody registered it between the classification and now, or two
-			// projects named it. The first record stands.
-			continue
-		}
-		userCfg.Registries[s.Name] = userconfig.RegistryEntry{
-			URL:            fmt.Sprintf("https://github.com/%s", s.Name),
-			AutoRegistered: true,
-		}
+		names = append(names, s.Name)
 	}
 
-	if err := userCfg.Save(); err != nil {
+	// Through the one writer, not a second save of its own. Two writers would
+	// make "the install path writes config.toml in exactly one place" a claim
+	// about one door in a room with two, and that claim is what makes gating
+	// consent here sufficient rather than merely necessary.
+	if err := autoRegisterSource(userCfg, names...); err != nil {
 		return err
 	}
-	for _, s := range approved {
-		fmt.Fprintf(os.Stderr, "Auto-registered source %q\n", s.Name)
+	for _, name := range names {
+		fmt.Fprintf(os.Stderr, "Auto-registered source %q\n", name)
 	}
 	return nil
 }
@@ -259,4 +253,26 @@ func quotedList(items []string) string {
 		out = append(out, fmt.Sprintf("%q", item))
 	}
 	return strings.Join(out, ", ")
+}
+
+// allToolsBlocked reports whether every declared tool belongs to a source that
+// cannot be used.
+//
+// When that holds there is nothing left to proceed with, so asking "Proceed?"
+// would be asking about an empty list. The run reports what it skipped and
+// exits instead.
+func allToolsBlocked(tools []toolEntry, plan *projectSourcePlan) bool {
+	if len(tools) == 0 {
+		return false
+	}
+	for _, t := range tools {
+		if t.Distributed == nil {
+			return false
+		}
+		st, ok := plan.state(t.Distributed.Source)
+		if !ok || st == sourceRegistered || st == sourceApproved {
+			return false
+		}
+	}
+	return true
 }

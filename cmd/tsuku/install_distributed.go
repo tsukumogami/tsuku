@@ -131,13 +131,12 @@ func classifySource(source string) (sourceClassification, error) {
 	return sourceClassification{Source: source, Registered: registered, UserCfg: userCfg}, nil
 }
 
-// writeSourceRegistration saves the entry.
+// writeSourceRegistration saves one entry.
 //
-// This is the only place any install path writes config.toml, which is what
-// makes gating it sufficient rather than merely necessary.
-// TestSaveIsTheOnlyConfigWriter pins that; if a second writer appears on an
-// install path, everything the deferred write guarantees becomes a claim about
-// one door in a room with two.
+// Both install paths route their write through autoRegisterSource, which is the
+// only place any of them saves config.toml. TestSaveIsTheOnlyConfigWriter pins
+// that: if a second writer appears on an install path, everything the deferred
+// write guarantees becomes a claim about one door in a room with two.
 func writeSourceRegistration(userCfg *userconfig.Config, source string) error {
 	if err := autoRegisterSource(userCfg, source); err != nil {
 		return fmt.Errorf("failed to auto-register source %q: %w", source, err)
@@ -211,15 +210,31 @@ func prepareDistributedSourceForPreview(source string, sysCfg *config.Config) er
 	return addDistributedProvider(source, sysCfg)
 }
 
-// autoRegisterSource adds a distributed source to the user config with
-// AutoRegistered=true.
-func autoRegisterSource(userCfg *userconfig.Config, source string) error {
+// autoRegisterSource adds one or more distributed sources to the user config
+// with AutoRegistered=true, in a single save.
+//
+// This is the only function on any install path that writes config.toml, which
+// is what makes gating the install paths' consent sufficient rather than merely
+// necessary for #2552. TestSaveIsTheOnlyConfigWriter holds it to that.
+//
+// It takes a list rather than one source because the project install approves
+// several sources in the same breath and writes them together: a save that
+// re-encodes the file per source would leave a partial registration behind if
+// the second one failed, which is an outcome nobody asked for. A source already
+// present is left exactly as it is, so a second project naming it does not
+// rewrite the record of how the first one was approved.
+func autoRegisterSource(userCfg *userconfig.Config, sources ...string) error {
 	if userCfg.Registries == nil {
 		userCfg.Registries = make(map[string]userconfig.RegistryEntry)
 	}
-	userCfg.Registries[source] = userconfig.RegistryEntry{
-		URL:            fmt.Sprintf("https://github.com/%s", source),
-		AutoRegistered: true,
+	for _, source := range sources {
+		if _, exists := userCfg.Registries[source]; exists {
+			continue
+		}
+		userCfg.Registries[source] = userconfig.RegistryEntry{
+			URL:            fmt.Sprintf("https://github.com/%s", source),
+			AutoRegistered: true,
+		}
 	}
 	return userCfg.Save()
 }
