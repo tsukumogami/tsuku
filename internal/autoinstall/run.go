@@ -236,7 +236,8 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 	// The disclosure below does not read it, and that is the point of the
 	// paragraph there rather than an oversight here: what it announces is
 	// wider than what this line raised.
-	effectiveMode, effectiveOrigin := elevate(mode, origin, declaration != nil)
+	unregisteredSource, qualifies := r.declarationQualifies(declaration)
+	effectiveMode, effectiveOrigin := elevate(mode, origin, declaration != nil, qualifies)
 
 	// The mode-lowering gates, from the table they are registered in -- however
 	// many are registered, which is the point of the table and the reason this
@@ -269,6 +270,9 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 	// there could not know. By this line the mode already carries everything a
 	// declaration contributes, so asking again would be asking twice.
 	if effectiveMode == ModeConfirm && !r.terminalAttached() {
+		if unregisteredSource != "" {
+			fmt.Fprintf(r.stderr, "%s\n", unregisteredSourceNotice(unregisteredSource))
+		}
 		fmt.Fprintf(r.stderr, "%s\n", r.notInteractiveMessage(subject))
 		return ErrNotInteractive
 	}
@@ -334,6 +338,14 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 		return ErrSuggestOnly
 
 	case ModeConfirm:
+		// Say why, before asking. Without it the prompt is indistinguishable
+		// from the one a user in plain confirm mode sees, and the fact that
+		// makes this one worth reading -- that the file declaring the tool
+		// named a source they have never approved -- goes unsaid.
+		if unregisteredSource != "" {
+			fmt.Fprintf(r.stderr, "%s\n", unregisteredSourceNotice(unregisteredSource))
+		}
+
 		prompt := fmt.Sprintf("Install %s", match.Recipe)
 		if version != "" {
 			prompt += "@" + version
@@ -423,8 +435,68 @@ func (r *Runner) Run(ctx context.Context, command string, args []string, mode Mo
 // -- an origin of default asserts nothing set the mode, a mode of suggest
 // asserts something did, and no guard here can tell which half is the lie.
 // The absence is defensible for the case named, not for the wider one.
-func elevate(mode Mode, origin Origin, declared bool) (Mode, Origin) {
-	if declared && origin == OriginDefault {
+// unregisteredSourceNotice says why the prompt was not waived.
+//
+// Three facts, and the third is the one a reader cannot work out for
+// themselves: the source named in the file is not where the recipe comes from.
+// Recipes resolve through the user's own chain -- the default registry, their
+// local recipes, their registered sources -- so a source they have not
+// registered could not supply this install whatever the file says. Stating that
+// unconditionally is safe because this line is only reached for a source
+// outside the registries, so the named one is categorically not the origin.
+//
+// The source name is quoted. It came from a file the invoking user may not have
+// written.
+func unregisteredSourceNotice(source string) string {
+	return fmt.Sprintf(
+		"The project declares this tool from source %q, which is not in your registered sources.\n"+
+			"Recipes are resolved through your own configured sources, not through the one named here.\n"+
+			"To trust it: tsuku registry add %s",
+		source, source)
+}
+
+// declarationQualifies reports whether a declaration's key may waive the
+// prompt, and names the source when it may not.
+//
+// A key with no source component always qualifies: it resolves through the
+// user's own chain -- the default registry, their local recipes, their
+// registered sources -- so it can never cause an install from somewhere they
+// have not already accepted. A key naming a source qualifies only when that
+// source is one of the user's registered ones, whichever route registered it.
+//
+// What the rule does not do is worth stating where it is implemented. The
+// predicate reads the declaration's *winning* key, and which key wins is a
+// precedence decision: a config declaring the same tool both plainly and with a
+// source collapses to the plain key. So a file naming an unapproved source and
+// nothing else is caught, and one that adds a plain line is not. The attacker
+// gains nothing by that -- a plain key already installs silently, and the
+// source they named could never supply the recipe either way -- but this
+// surfaces an unapproved source to somebody reading an honest repository rather
+// than standing as a barrier against a file written to evade it.
+func (r *Runner) declarationQualifies(declaration *project.ProjectDeclaration) (string, bool) {
+	if declaration == nil {
+		return "", false
+	}
+	source, _, isOrgScoped, err := project.SplitOrgKey(declaration.ConfigKey)
+	if err != nil || !isOrgScoped || source == "" {
+		return "", true
+	}
+	if r.SourceRegistered != nil && r.SourceRegistered(source) {
+		return "", true
+	}
+	return source, false
+}
+
+// qualifies is the fourth input, and it is the narrowing #2559 asks for.
+//
+// A declaration used to raise the mode on one fact: that a declaration exists.
+// That fact says nothing about where the install comes from, so a key naming a
+// source the user never approved waived the prompt exactly as a plain key does.
+// qualifies is false when the declaration's winning key names a source outside
+// the user's configured registries, and it can only withhold the raise --
+// never grant one.
+func elevate(mode Mode, origin Origin, declared, qualifies bool) (Mode, Origin) {
+	if declared && qualifies && origin == OriginDefault {
 		return ModeAuto, OriginProject
 	}
 	return mode, origin

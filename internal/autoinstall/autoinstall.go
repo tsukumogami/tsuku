@@ -234,6 +234,22 @@ type Runner struct {
 	// signature_url. Used by the verification security gate (auto mode).
 	// Returns true if the recipe has at least one verification method.
 	RecipeHasVerification func(recipe string) bool
+
+	// SourceRegistered reports whether a recipe source is present in the
+	// user's configured registries. cmd/tsuku wires this to the user config it
+	// has already loaded, which is why this package still takes no dependency
+	// on user configuration.
+	//
+	// A nil function means no source is registered. A caller that never wired
+	// one cannot tell an approved source from an unapproved one, so withholding
+	// the raise is the right outcome for it -- the alternative is waiving a
+	// prompt on the strength of a question nobody answered, which is the
+	// failure this input exists to prevent rather than a lenient default. Same
+	// reasoning as IsTerminal above.
+	//
+	// It only ever withholds. A declaration can narrow what happens on this
+	// path and can never widen it.
+	SourceRegistered func(source string) bool
 }
 
 // NewRunner creates a Runner with the given config and I/O writers.

@@ -120,6 +120,21 @@ Exit codes:
 		// needs a prompt; here it could only ask whether the configuration
 		// declared anything at all.
 		runner.IsTerminal = func() bool { return term.IsTerminal(int(os.Stdin.Fd())) }
+		// From the user config this command already loaded, and from the
+		// configured registries rather than the loader's live provider list:
+		// providers are built at startup under a shared timeout and a failure
+		// only warns, so reading that list would make a registered source read
+		// as unregistered whenever its repository was briefly unreachable, and
+		// consent would depend on network conditions.
+		//
+		// The comparison is exact. A spelling variant reads as unregistered and
+		// prompts, which fails in the safe direction; matching loosely would
+		// grant nothing a plain key does not already grant, and would raise for
+		// a key the user's configuration does not contain.
+		runner.SourceRegistered = func(source string) bool {
+			_, ok := userCfg.Registries[source]
+			return ok
+		}
 		runner.Installer = &runInstaller{}
 		runner.Exec = func(binary string, execArgs []string, env []string) error {
 			return syscall.Exec(binary, execArgs, env)
