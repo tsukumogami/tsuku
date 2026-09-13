@@ -1,6 +1,6 @@
 ---
 schema: design/v1
-status: Accepted
+status: Planned
 problem: |
   A `.tsuku.toml` reaches three code paths that each treat it as a file the
   invoking user wrote. Discovery walks past the checkout and applies whatever it
@@ -37,7 +37,7 @@ user_visible_surface: true
 
 ## Status
 
-Accepted
+Planned
 
 ## Context and Problem Statement
 
