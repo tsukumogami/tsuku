@@ -50,21 +50,32 @@ func TestLoadProjectConfigReportingIsTheOnlyCaller(t *testing.T) {
 				return true
 			}
 			sel, ok := call.Fun.(*ast.SelectorExpr)
-			if !ok || sel.Sel.Name != "LoadProjectConfig" {
+			if !ok || !isProjectLoadName(sel.Sel.Name) {
 				return true
 			}
 			pkg, ok := sel.X.(*ast.Ident)
 			if !ok || pkg.Name != "project" {
 				return true
 			}
-			t.Errorf("%s calls project.LoadProjectConfig directly at %s.\n\n"+
+			t.Errorf("%s calls project.%s directly at %s.\n\n"+
 				"Use loadProjectConfigReporting instead. Loading without reporting drops "+
 				"the refused-declaration diagnostics, and a refusal nobody sees is the "+
 				"silent partial application the config boundary exists to prevent.",
-				name, fset.Position(call.Pos()))
+				name, sel.Sel.Name, fset.Position(call.Pos()))
 			return true
 		})
 	}
+}
+
+// isProjectLoadName reports whether a selector names one of the package's
+// discovery entry points.
+//
+// Both forms are matched, not just the one-argument one. The environment-taking
+// form exists so a test can present another user's files, and a command calling
+// it directly would route around the reporting helper exactly as a call to the
+// short form does -- but would be invisible to a check that matched one name.
+func isProjectLoadName(name string) bool {
+	return name == "LoadProjectConfig" || name == "LoadProjectConfigIn"
 }
 
 // TestOnlyCallerCheckCanFail pins that the check above can actually fail.
@@ -96,9 +107,13 @@ func TestOnlyCallerCheckCanFail(t *testing.T) {
 	if err != nil {
 		t.Fatalf("reading the helper: %v", err)
 	}
-	if !strings.Contains(string(src), "project.LoadProjectConfig(") {
-		t.Fatal("project_config.go no longer calls project.LoadProjectConfig, so the " +
-			"exclusion in the check above now hides nothing and the check proves less " +
-			"than it claims. Re-point it at wherever the call moved.")
+	// Either form satisfies this: the helper calls whichever one it needs, and
+	// what the canary is for is proving the exclusion above still hides a real
+	// occurrence rather than pinning which call the helper makes.
+	if !strings.Contains(string(src), "project.LoadProjectConfig(") &&
+		!strings.Contains(string(src), "project.LoadProjectConfigIn(") {
+		t.Fatal("project_config.go no longer calls a project discovery entry point, so " +
+			"the exclusion in the check above now hides nothing and the check proves " +
+			"less than it claims. Re-point it at wherever the call moved.")
 	}
 }
