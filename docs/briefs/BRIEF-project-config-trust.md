@@ -1,6 +1,6 @@
 ---
 schema: brief/v1
-status: Draft
+status: Accepted
 problem: |
   A `.tsuku.toml` now decides what `tsuku run` installs unprompted and which
   sources `tsuku install` registers, yet tsuku applies whatever file it finds as
@@ -17,7 +17,7 @@ outcome: |
 
 ## Status
 
-Draft
+Accepted
 
 ## Problem Statement
 
