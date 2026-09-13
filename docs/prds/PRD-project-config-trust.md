@@ -310,16 +310,18 @@ Terms used below:
 
 ### Non-functional
 
-- **R25.** Discovery's added checks read only file metadata (the walk's
-  directories, a config's link and target, and the resolution of `$HOME` and
-  ceiling entries), read no config contents before the decision, and make no
-  network calls, since `tsuku hook-env` runs on every shell prompt.
+- **R25.** Discovery's added checks read only file metadata (the directories on
+  the path from the start directory to the filesystem root, a config's link and
+  target, and the resolution of `$HOME` and ceiling entries), read no config
+  contents before the decision, and make no network calls, since `tsuku hook-env`
+  runs on every shell prompt.
 - **R26.** Tests can substitute the invoking uid, each path's owner and mode, the
-  filesystem access discovery performs, and the terminal check. Every acceptance
-  criterion below that involves another user's files, root, or a terminal runs
-  through these seams in `go test -short` as a non-root user with no second
-  account, including in-process tests of `cmd/tsuku` commands, since a
-  functional scenario can only create files owned by the invoking user.
+  filesystem access discovery performs, the enumeration of a path's ancestors, and
+  the terminal check. Every acceptance criterion below that involves another
+  user's files, root, or a terminal runs through these seams in `go test -short`
+  as a non-root user with no second account, including in-process tests of
+  `cmd/tsuku` commands, since a functional scenario can only create files owned by
+  the invoking user.
 
 ### Design constraint
 
@@ -332,11 +334,13 @@ Terms used below:
 Discovery and reporting:
 
 - [ ] A unit test builds each R2 layout under `t.TempDir()`, reproducing the
-  parent's owner and mode (a 1777 stand-in for `/tmp`, a root-owned 0755 stand-in
-  for `/srv`) through the R26 seams, and asserts the discovery outcome, not only a
-  message: every "found" row loads its config and every "refused" row returns a
-  refusal, with any row changed under R2's conflict clause asserted as amended
-  (R2, R26).
+  parent's owner and mode (a sticky world-writable stand-in for `/tmp`, a
+  root-owned 0755 stand-in for `/srv`) through the R26 seams, and asserts the
+  discovery outcome, not only a message: every "found" row loads its config and
+  every "refused" row returns a refusal, with any row changed under R2's conflict
+  clause asserted as amended. The seam covers ancestor enumeration, so a fixture's
+  synthetic root ends the walk instead of the test inheriting the real
+  filesystem's directories above the temporary directory (R2, R26).
 - [ ] A test with `HOME` pointed at a directory that is not an ancestor of the
   project asserts that a config at the root of a checkout outside `$HOME` is
   found (R2).
@@ -468,10 +472,11 @@ Cross-cutting:
   description of the discovery rule and of the narrowed escalation matches the
   implementation (R24).
 - [ ] A unit test routes all of discovery's filesystem access (open, stat, lstat,
-  readlink, directory reads and path resolution) through the R26 seam, fails on
-  any access that bypasses it, and asserts that discovery examines only the
-  walk's directories, the config's link and target, and `$HOME` and ceiling
-  resolution, and reads no config contents before the decision (R25, R26).
+  readlink, directory reads, ancestor enumeration and path resolution) through the
+  R26 seams, fails on any access that bypasses them, and asserts that discovery
+  examines only the directories from the start directory to the filesystem root,
+  the config's link and target, and `$HOME` and ceiling resolution, and reads no
+  config contents before the decision (R25, R26).
 - [ ] `tsuku hook-env` under a refused config and under an accepted config exits
   0 with the expected output when `HTTP_PROXY` and `HTTPS_PROXY` point at an
   unreachable address (R25).
