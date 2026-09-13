@@ -7,8 +7,12 @@ split_rationale: |
   lands: it adds working recipes for a set of tools, which a user can install
   without waiting on any other batch. As the Decomposition Strategy says, the
   batches add files to a stable schema with no runtime coupling between them.
-  The one real dependency is the foundation issue that introduces the schema,
-  and the rest depend only on it.
+  The foundation issue that introduces the schema gates every batch; the top-100
+  research issue additionally gates the backfill batches, which need its
+  prioritized list to choose which recipes to write; and two batches are
+  sequenced after a sibling (#2268 after #2266 and #2267, #2313 after #2312).
+  Those dependencies set the order batches land in, not whether each is useful
+  once it does.
 upstream: docs/designs/DESIGN-curated-recipes.md
 milestone: "Curated Recipe System"
 issue_count: 42
