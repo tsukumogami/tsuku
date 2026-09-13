@@ -128,8 +128,11 @@ existing statements about discovery and consent now contradict.
   in-process tests of the command package, following the existing
   `configPermissionCondition` pattern of passing the uid as a parameter.
 - **D8 — Supported platforms are Linux and macOS.** `syscall.Stat_t` is
-  available on both; the binary does not build for Windows today, so no clause
-  may depend on a facility only one platform has.
+  available on both; the binary does not build for Windows today. No clause may
+  depend on a facility only one platform has, and none may depend on a value whose
+  *meaning* differs between them — a clause that reads such a value gives the same
+  repository different outcomes on the two platforms, which is the same defect
+  wearing a subtler face.
 - **D9 — One reviewable pull request** covering #2555, #2552 and #2559, built as
   a sequence of commits rather than separate releases.
 
@@ -374,7 +377,9 @@ be told apart from an install failure.
 - **A separate project-mode entry point.** Rejected because it duplicates
   validation, the registration lookup and the strict refusal whose exact message a
   functional scenario asserts, and because the command-line path has to change
-  anyway to stop writing under `--dry-run`.
+  anyway to stop writing under `--dry-run`. Keeping the existing entry point also
+  keeps the existing test that pins its non-terminal registration, which is the
+  cheapest guard on the R17 promise.
 - **Register during the pre-scan and roll back on decline or dry run.** Rejected
   because saving re-encodes the whole file from a residue-free decode, so a restore
   cannot be byte-identical and drops unknown keys; it races concurrent writers; and
@@ -744,16 +749,22 @@ on a link rather than succeeding. On that failure: read the link, apply the
 ownership and directory clauses at the link's own location, resolve the target,
 apply all three clauses at the *target's* location, then open the target without
 following and compare device and inode against the target's own metadata before
-reading. A chain of more than one link is refused rather than walked, and so is a
-target reached through a symlinked directory component.
+reading. A chain of more than one link is refused rather than walked. A symlinked
+*directory* component of the target's path is resolved rather than refused, the
+way the start directory already is: refusing one would refuse every absolute
+target under `/tmp` or `/var` on macOS, where both are links into `/private`, and
+find the same layout on Linux — the platform divergence the mode split below
+exists to avoid. What resolution does not give is a pin: the resolved path is a
+path, so the limit stated for the ancestor chain applies to it too.
 
 The mode clause runs at the target only, and deliberately: a symlink's own mode is
 not a permission on Linux, where `lstat` reports `0777` for every link, so testing
 it there would refuse every symlinked config on Linux and accept the same
-repository on macOS, where the mode comes from the umask. The clause belongs to
-the object whose bytes are parsed. The ownership and directory clauses do run at
-both locations, because both say something about who could have put the link
-there.
+repository on macOS, where the mode comes from the umask — a value whose meaning
+differs between the platforms, which is what D8 forbids a clause to read. The
+clause belongs to the object whose bytes are parsed. The ownership and directory
+clauses do run at both locations, because both say something about who could have
+put the link there.
 
 Judging the target at its own location, rather than only at the link's, closes the
 bypass R2's L9 leaves open: a repository checked out somewhere the rule accepts,
@@ -805,7 +816,9 @@ computation the ceiling set performs unresolved today, and splitting them would
 leave two notions of home in one file for a phase. Deliverables: the decision and
 its unit tests over the layout table, including the cases needing a foreign owner
 and a root invoker; the read discipline, which also refuses anything that is not a
-regular file; `LoadProjectConfig`'s second exported form taking the environment,
+regular file — judged on the object whose bytes are parsed, so a symlink to a
+regular file is found, not refused; `LoadProjectConfig`'s second exported form
+taking the environment,
 with the existing form calling it with the production one; the centralization lint
 and its canary extended to match both forms; the type and its message
 construction.
