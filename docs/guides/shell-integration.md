@@ -89,6 +89,7 @@ After confirming, tsuku installs each tool and prints a summary. If some tools f
 | 0 | All tools installed (or already current) |
 | 6 | Every tool failed |
 | 15 | Some tools installed, some failed |
+| 16 | A source the config names needs your approval; its tools were skipped |
 
 Skip the confirmation prompt with `--yes` (useful in scripts):
 
@@ -115,6 +116,16 @@ export TSUKU_CEILING_PATHS="/home/dev/vendor:/tmp"
 ```
 
 Each entry is matched against the directory being visited, exactly, and the test runs before that directory's `.tsuku.toml` is looked for. So a ceiling stops the walk at the directory it names and not at anything below it: `/home/dev/vendor` does not stop tsuku reading `/home/dev/vendor/somerepo/.tsuku.toml`, because `somerepo` is the directory tested on that iteration and it doesn't match. Name the directory whose config you want ignored.
+
+Both `$HOME` and every ceiling entry are resolved through symlinks before they are compared, because the walk they are compared against is resolved too. That is what makes the `/tmp` in the example above work on macOS, where `/tmp` is a symlink to `/private/tmp`: an unresolved entry could never match the resolved path the walk was visiting, so it stopped nothing. An entry naming a directory that doesn't exist is ignored.
+
+### Configs outside your home directory
+
+A ceiling is a boundary you set. It is not what protects you from a config somebody else left somewhere above your working directory, and it never was — it is unset by default, and outside `$HOME` the walk otherwise reaches `/`.
+
+What does that job is a check on each config the walk finds. Outside your home directory, tsuku applies one only when you can be held to have chosen it: you own it, root owns it, or it is owned by somebody else and nothing above it is writable by anyone but that same owner. In every case the file and its directory must not be writable by everyone. Ordinary layouts outside `$HOME` keep working — a checkout on a server, a volume in a container, files copied into an image under a different owner. A config planted in a shared directory like `/tmp`, or sitting in a directory anybody can delete from, is refused.
+
+A refusal is never silent: one line on stderr naming the file, why, and what to do. `tsuku install` and `tsuku shim install` exit 14; `tsuku run` and the shell hook say their piece and carry on as though no config were there. Nothing below your home directory is affected.
 
 ## Shell Activation
 

@@ -72,6 +72,12 @@ tsuku install --dry-run
 
 tsuku finds `.tsuku.toml` by walking up from the current directory, stopping at `$HOME` (or directories listed in `TSUKU_CEILING_PATHS`).
 
+Outside your home directory the walk reaches `/`, so it also checks whether you can be held to have chosen each config it finds. A config is applied when you own it, when root owns it, or when it is owned by somebody else and nothing above it is writable by anyone but that same owner — and in every case only when neither the file nor its directory is left writable by everyone. That accepts the ordinary cases outside `$HOME`: a checkout on a server, a volume in a container, files copied into an image with a different owner. It refuses a config somebody planted in a shared directory like `/tmp`, and one in a directory anybody can delete from.
+
+A refused config is never silent. You get one line on stderr naming the file, why it was not applied, and what to do about it — usually taking ownership, moving the checkout somewhere only you can write, or `chmod o-w`. On a Windows drive mounted without the `metadata` option, `chmod` cannot help and the message says so: remount with that option instead. `tsuku install` and `tsuku shim install` stop with exit code 14; `tsuku run` and the shell hook report and carry on as if no config were there.
+
+Nothing below your home directory changed.
+
 ## Core CLI Commands
 
 ### Install and Manage
@@ -277,7 +283,7 @@ Whether it installs is the **consent mode**, resolved in this order:
 1. `--mode` flag
 2. `TSUKU_AUTO_INSTALL_MODE`
 3. `auto_install_mode` in `$TSUKU_HOME/config.toml`
-4. Default `confirm`, raised to `auto` for a tool the project's `.tsuku.toml` declares
+4. Default `confirm`, raised to `auto` for a tool the project's `.tsuku.toml` declares — unless the declaration's key names a recipe source you have not registered, in which case you are asked. A key with no source component always qualifies, and so does one naming a source you have registered, however it got there.
 
 `suggest` prints an install instruction and installs nothing. `confirm` prompts.
 `auto` installs without asking.
@@ -370,13 +376,18 @@ When a command fails, the exit code tells you what went wrong:
 | 11 | Binary index not built — run `tsuku update-registry` |
 | 12 | `confirm` mode requires a terminal (`tsuku run`) |
 | 13 | User declined the install |
-| 14 | Forbidden (for example, running as root) |
+| 14 | Forbidden: running as root, or a `.tsuku.toml` discovery refused |
 | 15 | Partial failure (some tools failed in batch install) |
+| 16 | A project-named recipe source needs your approval; its tools were skipped and nothing was written |
 | 130 | Cancelled (Ctrl+C) |
 
 Codes 10 through 14 come from `tsuku run` and so from the command-not-found
 hook and from shims — see the section above for what each one means in
-practice.
+practice. Code 16 comes from `tsuku install` with no arguments, and it is the
+one worth scripting against rather than retrying: a retry cannot supply an
+approval nobody gave. It outranks the install-failure codes, so a run that both
+skips a source and fails an unrelated tool returns 16 and you meet the failure
+on the next run.
 
 ### Diagnosing Issues
 
