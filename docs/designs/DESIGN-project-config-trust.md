@@ -958,17 +958,21 @@ matters because that setting is the remedy offered to anyone who relied on silen
 installs from a source they registered. A per-source allow list is the recorded
 follow-up for both the first and the third.
 
-A dry run still contacts the network: resolving a preview builds a session
-provider for each named source, which probes that source's repository. Because a
-dry run deliberately asks nothing, that contact precedes any consent, and it is
-the one unconsented outbound request the feature leaves. A real run is ordered
-differently: a registered source is probed without a new question, because the
-provider chain is built from the user's configuration on every command; an
-unregistered source is probed only once it has been approved. On a run with no
-terminal an unapproved source is neither probed nor written — its tools are
-skipped and the command exits. The destination is constrained to a known host by
-the source-name validation, so this is a signal to the attacker that a specific
-machine ran the command rather than a general request forgery.
+A dry run over a source the user typed still contacts the network: resolving the
+preview builds a session provider, which probes that source's repository, and a
+dry run deliberately asks nothing, so that contact precedes any consent. It is
+the one unconsented outbound request the feature leaves. The destination is
+constrained to a known host by the source-name validation, so it signals that a
+specific machine ran the command rather than being a general request forgery.
+
+A dry run over a source only a project file named does not reach that far. The
+plan builds session providers for registered and approved sources alone, so an
+unapproved one is listed on stderr and never probed — the preview then reports
+it as unresolvable, which is the honest answer for a source the user has not
+accepted. A real run is ordered the same way: a registered source is probed
+without a new question, because the provider chain is built from the user's
+configuration on every command; an unregistered one is probed only once it has
+been approved; and with no terminal it is neither probed nor written.
 
 **What the new output discloses.** The one stream a shell evaluates carries only
 the exports, every value quoted per dialect by the existing shell-quoting helper,

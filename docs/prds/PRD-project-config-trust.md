@@ -610,8 +610,12 @@ Cross-cutting:
   add` in the image is the explicit form. A flag approving only named sources
   remains a candidate follow-up.
 - **Dry-run still populates the distributed recipe cache** under
-  `$TSUKU_HOME/cache/distributed/`. It grants no trust, since sources are loaded
-  from `config.toml` only, and the broader dry-run write problem is #2549.
+  `$TSUKU_HOME/cache/distributed/`, for a source the user typed on the command
+  line. It grants no trust, since sources are loaded from `config.toml` only,
+  and the broader dry-run write problem is #2549. A dry run over a source only a
+  project file named does not reach the cache at all: no provider is built for
+  an unapproved source, so it is listed on stderr and the preview reports it as
+  unresolvable rather than probing it.
 - **Every source already registered becomes trusted, including any the defect
   registered silently.** This is the decision, taken deliberately, not an
   oversight. Under R18 a registered source authorizes silent installs, and
