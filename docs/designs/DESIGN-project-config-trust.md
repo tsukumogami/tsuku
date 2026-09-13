@@ -25,8 +25,9 @@ rationale: |
   checkout that must keep working from a directory another user pre-created in a
   shared space, because those differ not in ownership but in who could have
   created the path. Trusting registered sources keeps the fix proportionate: the
-  alternative made the organization's own configurations prompt on every run
-  forever, whose only remedy was to switch the protection off globally.
+  alternative made every repository that declares a tool from a distributed source
+  prompt on every run forever, whose only remedy was to switch the protection off
+  globally.
 upstream: docs/prds/PRD-project-config-trust.md
 user_visible_surface: true
 ---
@@ -169,24 +170,23 @@ That single condition is what separates the two deciding layouts, which are
 ownership-identical (D1): a checkout under an ordinary parent has nothing
 writable above it belonging to anyone else, while a directory pre-created in a
 shared space sits under a parent that is world-writable and owned by root rather
-than by the squatter. An earlier form of this rule also required the config's
-owner to *be* the owner of its own directory. That was redundant — the chain test
-refuses both attack layouts on its own — and it refused a layout that occurs in
-practice: files copied into a container image with an explicit owner, landing in
-a directory the build created as root. Removing it also removes the asymmetry
-this design otherwise had to warn about.
+than by the squatter. The clause deliberately does not also require the config's
+owner to own its own directory: that would be redundant, since the chain test
+refuses both attack layouts on its own, and it would refuse a layout that occurs
+in practice — files copied into a container image with an explicit owner, landing
+in a directory the build created as root.
 
 **The config's directory.** Refuse when it is world-writable and does not carry
 the sticky bit. In such a directory an attacker can unlink the user's config and
 put a hard link to another of the user's own files in its place, which every
-ownership check then accepts; the sticky bit is what forbids the unlink. This
-clause applies identically on both supported platforms. An earlier form gated it
-on the Linux kernel setting that forbids the link half of that attack, which
-would have had to define what an absent reading means: macOS has no such setting,
-so failing open would disable the clause on the one platform with no protection
-at all, and failing closed is the same as not gating. Ungated, it must read the
-world bit only, because a group-writable directory is the ordinary result of a
-umask of 002 (D2).
+ownership check then accepts; the sticky bit is what forbids the unlink. The
+clause is unconditional, so it applies identically on both supported platforms
+(D8). Gating it on the Linux kernel setting that forbids the link half of the
+attack would have to define what an absent reading means, and macOS has no such
+setting: failing open disables the clause on the one platform with no protection
+at all, and failing closed is the same as not gating. Being unconditional, it
+must read the world bit only, because a group-writable directory is the ordinary
+result of a umask of 002 (D2).
 
 **The config's own mode.** Refuse when the file itself is world-writable, which
 closes an in-place rewrite that leaves no trace in any metadata an ownership
@@ -279,12 +279,6 @@ file, and neither can one added later.
 - **Printing at each call site, or from inside the library.** Rejected because the
   first reverses the property the shared helper exists for, and the second puts
   gating decisions (the quiet flag, the entry check) in the wrong layer.
-- **Naming the resolved source in the existing disclosure line.** Considered as a
-  lighter-weight substitute for changing the escalation rule at all: tell the user
-  where the recipe came from instead of withholding the raise. Rejected because
-  that line is printed whatever the consent mode, while the provenance read behind
-  it was guarded on the unset default, so the same command would have described its
-  source differently depending on a flag that has nothing to do with provenance.
 
 ### Decision 3: How project install gates, defers and records a source registration
 
@@ -377,12 +371,13 @@ project-named registration.
 
 #### Alternatives Considered
 
-- **Keep both.** The consistency argument is real and was put to the user at full
-  strength: a deliberate `--force` is as deliberate as a deliberate `--yes`, and
-  the user had already decided that a deliberate `--yes` confers trust. Rejected
-  because the two grounds originally offered for keeping it — the documented
-  meaning, and script breakage — are both false here, and because it leaves two
-  flags granting the same permanent write with only one of them documented for it.
+- **Keep both.** The consistency argument is real: a deliberate `--force` is as
+  deliberate as a deliberate `--yes`, and decision 5 already treats a source
+  registered with `--yes` as trusted thereafter. Rejected because the two grounds
+  that would support keeping it — that `--force` is documented to approve this, and
+  that removing it breaks existing scripts — are both false here, and because it
+  leaves two flags granting the same permanent write with only one of them
+  documented for it (D4).
 - **Make `--force` imply `--yes` everywhere.** Rejected because it resolves the
   inconsistency by widening at the moment this work exists to narrow, and changes
   `--force` for every current user in the quiet direction: more things proceed
@@ -441,16 +436,18 @@ them.
 #### Alternatives Considered
 
 - **The conjunction: a plain key AND a recipe resolving from the default registry
-  or local recipes.** Rejected because it breaks the ordinary case it was meant
-  to leave alone. Every repository in this organization declares tools from the
-  organization's own distributed source, one of them as `latest`, and a non-exact
-  declaration never matches the already-installed shortcut
-  (tsukumogami/tsuku#2571). Those declarations would prompt on every invocation
-  forever and fail on every headless run, with no remedy short of enabling auto
-  mode globally — a larger hammer that switches the protection off everywhere,
-  and the one a user reaches for when the smaller control has no proportionate
-  answer. Consenting to have a source available is then treated as consenting to
-  unattended installs from it, which is the trade this decision accepts.
+  or local recipes.** Rejected because it breaks the ordinary case it was meant to
+  leave alone: a repository whose `.tsuku.toml` declares a tool from a distributed
+  source the user has already registered. Such a declaration would prompt on every
+  invocation forever, and a declaration pinned to `latest` would prompt even once
+  the tool is installed, because a non-exact declaration never matches the
+  already-installed shortcut (tsukumogami/tsuku#2571). Headless runs would fail
+  outright, with no remedy short of enabling auto mode globally — a larger hammer
+  that switches the protection off everywhere, and the one a user reaches for when
+  the smaller control has no proportionate answer. The repositories that maintain
+  tsuku itself are in exactly this shape, which is how the regression was found.
+  Consenting to have a source available is therefore treated as consenting to
+  unattended installs from it, which is the trade this decision accepts (D5).
 - **Admit sources added with `tsuku registry add` but not those approved with
   `--yes`.** A middle position. Rejected on the same evidence and for a second
   reason: the flag that would distinguish them is written only when true, so the
@@ -461,11 +458,19 @@ them.
   inserted a row, so a local recipe and a distributed one land in the same bucket;
   the installed state is never written on the run path and its migration records a
   distributed install as central.
+- **Change nothing about the raise; name the resolved source in the existing
+  disclosure line instead.** The lightest possible answer to the same question:
+  let the raise stand and tell the user where the recipe came from. Rejected
+  because that line is printed whatever the consent mode, while the provenance read
+  behind it would be guarded on the unset default, so the same command would
+  describe its source differently depending on a flag that has nothing to do with
+  provenance — and because disclosure after the fact is not consent, which is what
+  R18 asks for.
 
 ## Decision Outcome
 
-**Chosen:** an ownership-plus-writability trust decision on the file discovery
-actually opens; a typed `RefusedError` printed once by the shared loader helper;
+**Chosen:** a three-clause trust decision on the file discovery actually opens; a
+typed `RefusedError` printed once by the shared loader helper;
 a project install that classifies sources up front and defers every
 `config.toml` write to a single save after "Proceed?"; `--yes` as the only flag
 that consents to that write; and an escalation predicate that is a membership
@@ -476,11 +481,25 @@ test against the user's configured registries.
 The five decisions answer one question at four different points, and they compose
 in one direction: **a project file may narrow what happens, never widen it.**
 
-Discovery decides which file is read at all. Outside the user's home it applies a
-config only when the file it actually opens is owned by someone the user can be
-held to have chosen, and it refuses loudly rather than skipping quietly, because a
-config that vanishes without explanation is its own bug report. Inside a resolved
-home directory an early return skips the whole decision.
+Discovery decides which file is read at all. Inside a resolved home directory an
+early return skips the whole decision. Outside it, three clauses judge the file
+the walk actually opens, and all three must pass:
+
+1. **Ownership.** Accept when the config's owner is the invoking user or root.
+   Otherwise accept only when every group- or other-writable directory from the
+   config's own directory up to the filesystem root is owned by that same owner.
+   An unreadable directory counts as writable.
+2. **The config's directory.** Refuse when it is world-writable and does not carry
+   the sticky bit. Unconditional, and it reads the world bit only.
+3. **The config's own mode.** Refuse when the file itself is world-writable. The
+   refusal names mount options as well as `chmod`.
+
+The walk never stops on ownership, so every refusal names a file, and discovery
+refuses loudly rather than skipping quietly — a config that vanishes without
+explanation is its own bug report. Together the three clauses give every row of
+the PRD's thirteen-row layout table (R2) the outcome it asks for, so nothing in
+that table is contested and no row changes; the two ownership-identical rows are
+separated by clause 1's ancestor test alone.
 
 Refusal reporting is the shared channel for all of it. `internal/project` gains a
 `RefusedError` carrying the path, its directory, the reason and the remedy. The
@@ -581,7 +600,8 @@ exists.
 ### Key Interfaces
 
 The seams are the design, not an afterthought, because the cases that matter are
-another user's files, root, and a terminal. Discovery's filesystem access is one
+another user's files, root, and a terminal, and all three have to be reachable
+without root and without a second account (D7). Discovery's filesystem access is one
 interface rather than a metadata accessor, because three acceptance criteria
 assert things about the *open* and the *read* rather than about owners and modes:
 that a file swapped between the check and the read is not parsed, that no config
@@ -615,21 +635,35 @@ exported name, so it must be extended to match both forms, or the second one is
 invisible to it.
 
 The terminal check is not yet substitutable: it is a plain function with several
-call sites, and the replaceable variable this design first pointed at belongs to
-a different package. Converting it to a package-level variable in the command
-package is part of the work, and doing it once covers every existing prompt as
-well as the new one.
+call sites, and the replaceable-variable precedent that looks like it applies
+(`tsuku config set`) belongs to a different package. Converting it to a
+package-level variable in the command package is part of the work, and doing it
+once covers every existing prompt as well as the new one. Without that
+conversion no criterion about a missing terminal (D4) can be exercised in
+process.
 
 ### Data Flow
 
 Discovery walks from the working directory. At each directory it tests the
 resolved ceilings, then the entry: absent, continue; present, decide. The decision
-reads the link, opens the file without following symlinks and without blocking,
-compares device and inode, checks the descriptor, and either reads the bytes from
-that same descriptor or returns a refusal that stops the walk. Callers receive a
-config, nothing, or a refusal; the refusal reaches stderr once, through the shared
-helper for commands and through activation's existing unusable-config path for the
-shell hook.
+reads the link metadata, opens the entry without following symlinks and without
+blocking, compares device and inode against what the link metadata reported,
+applies the three clauses to the descriptor, and either reads the bytes from that
+same descriptor or returns a refusal that stops the walk.
+
+A symlinked config needs its own sequence, because opening without following fails
+on a link rather than succeeding. On that failure: read the link, judge the link's
+own owner, resolve the target, judge the target, then open the *target* without
+following and compare device and inode against the target's own metadata before
+reading. A chain of more than one link is refused rather than walked. "In the
+tree" means the resolved target lies under the directory holding the link: for a
+target inside it the directory clauses apply to the link's directory, and for a
+target outside it only the ownership clause applies, so a target's own directory
+is never examined.
+
+Callers receive a config, nothing, or a refusal; the refusal reaches stderr once,
+through the shared helper for commands and through activation's existing
+unusable-config path for the shell hook.
 
 Project install parses the file, classifies each named source, prints the tool
 list, asks about each unregistered source, asks the existing confirmation, then
@@ -729,16 +763,10 @@ and its reasoning already exist in `internal/actions/install_program_files.go`.
 Two live denial-of-service paths close as a side effect, described under
 Consequences.
 
-A symlinked config needs the sequence spelled out, because opening without
-following fails on a link rather than succeeding. On that failure: read the link,
-judge the link's own owner, resolve the target, judge the target, then open the
-*target* without following and compare device and inode against the target's own
-metadata before reading. A chain of more than one link is refused rather than
-walked. "In the tree" means the resolved target lies under the directory holding
-the link: for a target inside it the directory clauses apply to the link's
-directory, and for a target outside it only the ownership test applies, so a
-target's own directory is never examined. That is a real limit, stated rather
-than implied.
+The symlink case carries a real limit, stated rather than implied: a link whose
+target resolves outside the directory holding it is judged on the target's owner
+alone, and the target's own directory is never examined. The sequence that
+produces that is in Data Flow.
 
 One pre-existing exposure is not closed: nothing caps the byte size of a config
 before it is read and decoded, and inside `$HOME` the rule returns early without
