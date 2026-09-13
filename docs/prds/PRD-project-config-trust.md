@@ -1,6 +1,6 @@
 ---
 schema: prd/v1
-status: Draft
+status: Accepted
 problem: |
   Since v0.14.0 a `.tsuku.toml` decides whether `tsuku run` installs a declared
   tool without asking and which recipe sources `tsuku install` adds to the
@@ -22,7 +22,7 @@ upstream: docs/briefs/BRIEF-project-config-trust.md
 
 ## Status
 
-Draft
+Accepted
 
 ## Problem Statement
 
