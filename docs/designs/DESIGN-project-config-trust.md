@@ -154,17 +154,29 @@ the namespace was not open to everyone.
 #### Chosen: judge the owner of the file actually read, and ask who could have created the path
 
 Below a resolved home directory nothing changes, as an early return before any of
-this runs (D2). Outside it, three clauses decide, all judged on the file the walk
+this runs (D2). That early return is the rule's off switch, so its preconditions
+matter as much as the clauses: it fires only when `$HOME` is set, resolves, is not
+the filesystem root, and is owned by the invoking user, and the config's resolved
+path is strictly below it. `HOME` is an environment variable an attacker who can
+write a shell profile or a `.envrc` can set, so `HOME=/` must not switch the rule
+off for the whole filesystem; it fails to meet the preconditions and the clauses
+apply.
+
+Outside a qualifying home, three clauses decide, all judged on the file the walk
 actually opens rather than on a path.
 
-**Ownership.** Accept when the config's owner is the invoking user or root.
-Otherwise accept only when every group- or other-writable directory on the chain
-from the config's own directory up to the filesystem root is owned by that same
-owner. A directory whose metadata cannot be read counts as writable, following
-the existing treatment of "cannot determine" as failing in
-`configPermissionCondition`. The chain is walked only when the config's owner is
-a third party, which is what keeps the ordinary path free of it (D6) and what
-lets this clause read the group bit where the two below cannot.
+**Ownership.** Accept when the config's owner is the invoking user or root, with
+no further test. Otherwise — and only then — accept when every group- or
+other-writable directory on the chain from the config's own directory up to the
+filesystem root is owned by *that config's owner*. Owned by the config's owner
+specifically, not by anyone the rule would otherwise trust: `/tmp` is root-owned
+and world-writable, so a chain test that accepted a root-owned writable ancestor
+would accept every config planted under `/tmp`. No ancestor is exempted for
+carrying the sticky bit either, for the same reason. A directory whose metadata
+cannot be read counts as writable, following the existing treatment of "cannot
+determine" as failing in `configPermissionCondition`. Skipping the chain for a
+user- or root-owned config is what keeps the ordinary path free of it (D6) and
+what lets this clause read the group bit where the two below cannot.
 
 That single condition is what separates the two deciding layouts, which are
 ownership-identical (D1): a checkout under an ordinary parent has nothing
@@ -177,16 +189,20 @@ in practice — files copied into a container image with an explicit owner, land
 in a directory the build created as root.
 
 **The config's directory.** Refuse when it is world-writable and does not carry
-the sticky bit. In such a directory an attacker can unlink the user's config and
-put a hard link to another of the user's own files in its place, which every
-ownership check then accepts; the sticky bit is what forbids the unlink. The
-clause is unconditional, so it applies identically on both supported platforms
-(D8). Gating it on the Linux kernel setting that forbids the link half of the
-attack would have to define what an absent reading means, and macOS has no such
-setting: failing open disables the clause on the one platform with no protection
-at all, and failing closed is the same as not gating. Being unconditional, it
-must read the world bit only, because a group-writable directory is the ordinary
-result of a umask of 002 (D2).
+the sticky bit. What the sticky bit governs is unlinking, not creating, and that
+is exactly the gap: in a world-writable non-sticky directory an attacker can
+remove the user's config and put something else at the path, including a hard link
+to one of the user's own files, which every ownership check then accepts because
+the owner is genuinely the user. With the sticky bit set the attacker cannot
+remove the user's file, and anything they create instead carries their own
+ownership, which the first clause judges. The clause is unconditional, so it
+applies identically on both supported platforms (D8) — gating it on the Linux
+kernel setting that forbids the link half of the attack would have to define what
+an absent reading means, and macOS has no such setting, so failing open would
+disable the clause on the one platform with no protection at all while failing
+closed is the same as not gating. Being unconditional, it must read the world bit
+only, because a group-writable directory is the ordinary result of a umask of 002
+(D2).
 
 **The config's own mode.** Refuse when the file itself is world-writable, which
 closes an in-place rewrite that leaves no trace in any metadata an ownership
@@ -199,6 +215,17 @@ The walk never stops on ownership, so every refusal names a file (D3). The file
 is opened without following symlinks and without blocking, checked on the
 descriptor, and read from that same descriptor, so the bytes parsed belong to the
 object the decision was made on (R4).
+
+**Layouts the requirement does not list.** The three clauses give every row of
+R2's table the outcome it asks for, so no row is contested and none changes. For
+anything the table does not list, the clauses decide, and two cases are worth
+naming because a reader will meet them. A config the invoking user wrote inside a
+directory somebody else created is found: clause 1 accepts on the owner and asks
+nothing further, which is right, because the user authored the file. And a
+foreign-owned checkout on a macOS mounted volume is refused, because `/Volumes` is
+world-writable and root-owned, so the chain fails. That is the container-volume
+layout with a worse parent, and there is no opt-out (R27); the remedy the refusal
+names is to take ownership of the checkout or to run as the user who owns it.
 
 #### Alternatives Considered
 
@@ -357,9 +384,13 @@ names. The question is whether both should.
 
 #### Chosen: only `--yes`
 
-`--force` keeps its other meanings: suppressing security warnings, and replacing
-a tool already installed from a different source, including during a project
-install. It no longer approves a registration. The reasoning is what the flags
+The narrowing is scoped to a project-named source. A command-line
+`tsuku install owner/repo:tool` still registers exactly as today, `--force`
+included, because R17 holds that path unchanged; what `--force` stops doing is
+approving a source the user learned about only from a file they may not have
+written. `--force` keeps its other meanings there and everywhere: suppressing
+security warnings, and replacing a tool already installed from a different source,
+including during a project install. The reasoning is what the flags
 mean rather than distrust of the person typing them. `--yes` answers consent
 questions; `--force` forces an operation through; a permanent new entry in the
 user's global configuration is not what someone forcing an install asked for.
@@ -537,11 +568,12 @@ say that a source is trusted, that a mode is auto, or that a directory is safe.
 
 ### Overview
 
-Three packages change, each at one entry point, plus two small surfaces for
-recording and reporting. Discovery gains a decision and a typed refusal; the
-install command gains a plan that separates checking a source from writing it;
-the run path gains a membership test; the user configuration gains two fields; the
-registry listing renders them.
+Four packages change, plus two small surfaces for recording and reporting.
+Discovery gains a decision and a typed refusal; activation gains a refusal branch
+and a way to pass discovery's environment through; the install command gains a
+plan that separates checking a source from writing it; the run path gains a
+membership test; the user configuration gains two fields; the registry listing
+renders them.
 
 ### Components
 
@@ -560,9 +592,11 @@ rebuilt from three primitives: classify a source (validate, look up, apply the
 strict-registries refusal; no network, no write), add a session-only provider, and
 write the entry. For a real install the command-line path composes them in
 today's order, so its behavior is unchanged, including the registration it
-performs with no terminal. Under a dry run it composes the first two and skips
-the write, which means the dry-run branch moves above the source handling in that
-command: today it sits below, which is why a dry run currently registers.
+performs with no terminal (R17). Under a dry run it composes the first two and
+skips the write. The dry-run branch stays where it is, below the source handling:
+`runDryRun` resolves a qualified name through the provider chain, so the
+session-only provider has to exist by the time it runs. What changes is which
+primitives the source handling composes, not where the branch sits.
 
 Project install gets a plan object holding, per source, its state, its declared
 tools, its approval and its error; it classifies, asks after printing the tool
@@ -575,8 +609,19 @@ defaulting a skipped tool to success.
 `loadProjectConfigReporting` prints the refusal line itself, because `tsuku run`
 discards the load error. It prints unconditionally rather than through the
 quiet-aware helper, because `tsuku install`'s exit code is meaningless without
-the line; the shell hook and `tsuku shell` report through activation's own path,
-where the quiet flag applies.
+the line. It also takes discovery's environment, defaulted to production, so an
+in-process test of `tsuku install` or `tsuku shim install` can drive a
+foreign-owned layout (R26).
+
+**`internal/activation` — the refusal branch and the hook's report.**
+`ComputeActivation` gains a `RefusedError` branch alongside the existing
+`ParseError` one: `PATH` gains nothing, the refused file's directory goes into
+the existing tracking variable, and `Entered` widens to mean "report this one",
+covering a file that becomes refused in place while its tools are active.
+`tsuku hook-env` honors `--quiet` for that line; `tsuku shell` prints it on every
+invocation regardless (R7, R8). `ComputeActivation` takes discovery's environment
+the same way, defaulted to production, because the shell-hook layouts have to run
+in process too.
 
 One exit code is new, for a source needing approval; the refused-config case
 reuses the existing "blocked for security reasons" code rather than adding a
@@ -645,21 +690,30 @@ process.
 ### Data Flow
 
 Discovery walks from the working directory. At each directory it tests the
-resolved ceilings, then the entry: absent, continue; present, decide. The decision
+resolved ceilings, then the entry: absent, continue; unexaminable, stop the walk
+with no config and no message (R5); present, decide. The middle case is a change
+from today, where a directory the walk cannot read is indistinguishable from one
+holding no config and the walk continues past it; ending there is the fail-closed
+direction and matches how the clauses treat metadata they cannot read. The
+decision
 reads the link metadata, opens the entry without following symlinks and without
 blocking, compares device and inode against what the link metadata reported,
 applies the three clauses to the descriptor, and either reads the bytes from that
 same descriptor or returns a refusal that stops the walk.
 
 A symlinked config needs its own sequence, because opening without following fails
-on a link rather than succeeding. On that failure: read the link, judge the link's
-own owner, resolve the target, judge the target, then open the *target* without
-following and compare device and inode against the target's own metadata before
-reading. A chain of more than one link is refused rather than walked. "In the
-tree" means the resolved target lies under the directory holding the link: for a
-target inside it the directory clauses apply to the link's directory, and for a
-target outside it only the ownership clause applies, so a target's own directory
-is never examined.
+on a link rather than succeeding. On that failure: read the link, apply the three
+clauses at the link's own location, resolve the target, apply the three clauses
+again at the *target's* location, then open the target without following and
+compare device and inode against the target's own metadata before reading. A
+chain of more than one link is refused rather than walked.
+
+Judging the target at its own location, rather than at the link's, is what the
+requirement's symlink row (R2's L9) leaves open and what closes the obvious
+bypass: a repository checked out somewhere the rule accepts, shipping
+`.tsuku.toml` as a link to a path in a world-writable directory that anybody can
+plant. The link's chain says nothing about where the bytes come from, so both
+locations have to pass.
 
 Callers receive a config, nothing, or a refusal; the refusal reaches stderr once,
 through the shared helper for commands and through activation's existing
@@ -683,12 +737,13 @@ to get right. Within the discovery slice, phases 1 and 2 are a walking skeleton 
 the decision and its type, then the reporting across five callers — so the rule
 can be tested before anything renders it.
 
-The unlock edges are worth stating, because two of them are not obvious. Phase 2's
-reporting needs phase 1's refusal type, so the type ships in phase 1 even though
-nothing renders it yet. Phase 4's provenance fields need phase 3's write
-primitive, since that is the only place an entry is written. Phase 5's membership
-predicate needs phase 3's classification, which is where a source's registration
-state is already computed.
+The unlock edges are worth stating. Phase 2's reporting needs phase 1's refusal
+type, so the type ships in phase 1 even though nothing renders it yet. Phase 4's
+provenance fields need phase 3's write primitive, since that is the only place an
+entry is written. Phase 5 depends on neither: the command layer already loads the
+user configuration before it builds the runner, so the membership predicate has
+its input without anything from phase 3, and phase 5 can be built in parallel with
+phases 3 and 4.
 
 These are six commits in one pull request (D9), not six releases. Between phase 1
 and phase 2 a refusal has a type but no renderer, so activation would surface it
@@ -738,9 +793,13 @@ including a configuration file written by the previous version.
 ### Phase 5: the escalation predicate
 
 The membership test, its wiring from the command layer, and the prompt and
-no-terminal messages that name the unregistered source. Deliverables: the
-predicate and its unit tests asserting the decision rather than the prompt; the
-test pinning that a run adds no provider; the messages.
+no-terminal messages that name the unregistered source. The predicate arrives as
+a new `Runner` field, so it inherits that struct's convention of documenting the
+nil default: an unwired predicate means no source is registered, which withholds
+the raise rather than granting it, matching how `IsTerminal` treats an unwired
+terminal check. Deliverables: the predicate and its unit tests asserting the
+decision rather than the prompt; the nil-default test; the test pinning that a run
+adds no provider; the messages.
 
 ### Phase 6: documentation
 
@@ -760,35 +819,44 @@ source is registered. Four dimensions apply.
 its security claim is that the decision and the bytes concern one object, which a
 stat-then-open pair cannot guarantee. The sequence is in Data Flow; the same idiom
 and its reasoning already exist in `internal/actions/install_program_files.go`.
-Two live denial-of-service paths close as a side effect, described under
-Consequences.
+Two live denial-of-service paths close as a side effect outside the home tree,
+described under Consequences.
 
 The symlink case carries a real limit, stated rather than implied: a link whose
 target resolves outside the directory holding it is judged on the target's owner
 alone, and the target's own directory is never examined. The sequence that
 produces that is in Data Flow.
 
-One pre-existing exposure is not closed: nothing caps the byte size of a config
-before it is read and decoded, and inside `$HOME` the rule returns early without
-any check, so an oversized file in a cloned repository is read on every prompt.
-`MaxTools` is a post-decode count and documented as not being a defense against a
-large file. A byte cap is cheap and independent of the trust rule; it is recorded
-here rather than folded in, because it belongs to the parse path.
+Two pre-existing exposures below a resolved `$HOME` are not closed, both because
+R1 holds that path unchanged. Nothing caps the byte size of a config before it is
+read and decoded; `MaxTools` is a post-decode count and documented as not being a
+defense against a large file. And the old stat-then-`ReadFile` pair stays there,
+so a named pipe at `.tsuku.toml` in a cloned repository still blocks every
+prompt. Both belong to the parse path rather than to the trust rule: a byte cap
+and a regular-file check are cheap and independent of it, and are recorded here
+as the follow-up rather than folded in.
 
 **What the rule may read, and what it trusts.** Discovery reads metadata only:
 the entry, the opened descriptor, the config's directory, the owners and modes of
 that directory's ancestors when a third party's claim is in question, and the
 resolution of `$HOME` and the ceilings. It reads no kernel settings, which is what
 lets the sticky-bit clause behave identically on both supported platforms. It
-writes nothing. The
-trusted set is the invoking user and root, plus the config directory's owner when
-no group- or other-writable ancestor above it belongs to anyone else. Three limits
-are stated rather than defended: a symlink pointing out of the tree is judged on
-its target's owner but not on its target's directory; the in-tree test is a path
-comparison the descriptor cannot confirm, which is exploitable only by someone
-already trusted; and a bind mount can present a parent chain that differs from the
-real one, which is unreachable because such a mount is not visible in the victim's
-namespace rather than because it cannot be created.
+writes nothing.
+
+The trusted set is the invoking user and root unconditionally, plus the config's
+own owner when no group- or other-writable directory from the config's directory
+up to the filesystem root belongs to anyone but that owner. Nothing else is
+trusted, and in particular a root-owned writable ancestor does not qualify — that
+is `/tmp`, and admitting it re-admits the reported attack.
+
+Two limits are stated rather than defended. A parent chain can be forged by
+anything that controls what the filesystem reports: a bind mount the victim can
+see, or a user-mounted FUSE filesystem on a host that permits `allow_other`.
+Neither needs privilege on every host, so this is a bound on what any
+ownership-based rule can promise rather than a defended boundary. And the chain is
+read one directory at a time, so a rename above the walk between two reads can
+present a chain that never existed as a whole; the dev-and-inode check covers the
+config itself but not its ancestry.
 
 **Source trust and consent.** No consent input comes from the project file: the
 approval decision takes flags, a terminal check and a prompt function, reads no
@@ -839,6 +907,13 @@ the terminal; owners are reported as numeric ids rather than resolved through th
 name service, which would be a network call on the prompt path. Nothing from a
 refused file's contents can appear anywhere, because the file is never read.
 
+Two new renderers carry strings a project file chose, and both quote them the same
+way: the needs-approval message, which names the declaring file and the tools a
+skipped source declared, and the registry listing's provenance line, which prints
+the declaring config's absolute path. A source name cannot carry anything
+surprising — it is validated before it reaches either — but a path and a tool name
+can, so neither reaches a terminal unquoted.
+
 **The largest residual is the standing grant**, and it belongs here rather than
 only under Consequences: every source already in the user's registries is trusted
 from the upgrade onward, including any the registration defect placed there with
@@ -857,16 +932,39 @@ here by accident rather than design: the permission gate on that file lowers a
 raised consent mode whenever it is writable beyond its owner, so the common way to
 acquire that write also disarms the raise.
 
-**Residual risks, in one place.** A config the invoking user owns but leaves
-writable by a shared group can be rewritten in place with no change any ownership
-check can see; the file-mode clause covers the world-writable case only, because a
-group check would refuse ordinary repositories on distributions that use
-user-private groups. A checkout owned by another user is applied when the user
-works in it, and with root invoking, that means an unprivileged user chooses what
-root installs. Ownership means nothing where the filesystem does not implement it
-or where uids are supplied by a mount option. And a project file can still pin an
-old version of a default-registry tool, which `tsuku run` installs and executes
-without asking, because default-registry declarations deliberately stay silent.
+**Residual risks, in one place.**
+
+Below a resolved home directory nothing is checked at all. That is R1, and it is
+the largest scoped-out area: an attacker who can write anywhere under `$HOME` —
+a shared group on a home subdirectory, a network mount, a cloned repository whose
+contents the user has not read — plants a config that applies with no test. The
+rule's subject is the namespace the user does not control, not the one they do.
+
+A refusal stops the walk (R3), which makes a planted config a shadowing primitive
+rather than only a nuisance: a file planted between the working directory and a
+real project root refuses, the walk stops, and the project's own pins never apply.
+`tsuku run` then executes whatever version is globally current. The refusal line
+is what makes this visible, which is why R6 requires it on every affected command
+rather than once per session.
+
+A config the invoking user owns but leaves writable by a shared group can be
+rewritten in place with no change any ownership check can see; the file-mode
+clause covers the world-writable case only, because a group check would refuse
+ordinary repositories on distributions that use user-private groups. In a
+world-writable *sticky* directory an attacker can still create `.tsuku.toml` as a
+hard link to a file the user owns; they choose which of the user's own files gets
+parsed, not its content.
+
+A checkout owned by another user is applied when the user works in it, and with
+root invoking, that means an unprivileged user chooses what root installs.
+Ownership means nothing where the filesystem does not implement it, where uids are
+supplied by a mount option, or where a user-mounted FUSE filesystem reports
+owners it chose; the last is not namespace-scoped when the host permits
+`allow_other`, so it forges a whole chain rather than one entry.
+
+And a project file can still pin an old version of a default-registry tool, which
+`tsuku run` installs and executes without asking, because default-registry
+declarations deliberately stay silent.
 
 ## Consequences
 
@@ -875,10 +973,11 @@ without asking, because default-registry declarations deliberately stay silent.
 - A file the user did not write can no longer choose where their tools come from.
   Discovery refuses what they cannot be held to have chosen, registration needs
   their agreement, and the run path asks about any source they have not approved.
-- Two denial-of-service paths on the shell-prompt path close as a side effect: a
-  named pipe at the config path currently hangs every prompt, and a planted config
-  is currently read and decoded on every prompt where it will now be refused
-  unread.
+- Two denial-of-service paths close outside the home tree, where the new read
+  discipline runs: a named pipe at the config path currently hangs every prompt,
+  and a planted config is currently read and decoded on every prompt where it will
+  now be refused unread. Neither closes below a resolved `$HOME`, because R1 holds
+  that path unchanged.
 - A refusal is legible. One line naming the file, the reason and a remedy that
   works, including on mounts where the obvious remedy does not.
 - Registrations become auditable: how a source was approved and which file asked
@@ -891,13 +990,15 @@ without asking, because default-registry declarations deliberately stay silent.
 ### Negative
 
 - The discovery rule is intricate for its size, and its central asymmetry is
-  invisible without a comment: the ancestor test must compare against the narrow
-  trusted set, never the one including the config's own owner, and it must never
-  exempt a sticky ancestor. Both are easy mistakes — each looks like a
-  simplification and each re-admits the squatting layout.
+  invisible without a comment: a writable ancestor must be owned by the config's
+  own owner, not merely by somebody otherwise trusted, and no ancestor is exempted
+  for carrying the sticky bit. Both are easy mistakes, and each re-admits the
+  squatting layout — `/tmp` is root-owned, so accepting a root-owned writable
+  ancestor accepts every config planted under it.
 - A Windows-drive checkout mounted without metadata is refused until the user sets
   a mount option, because its reported permissions are translated from Windows
-  and grant write to others.
+  and grant write to others. A foreign-owned checkout on a macOS mounted volume is
+  refused for a related reason — `/Volumes` is world-writable — with no opt-out.
 - Scripts gain one new exit code to know about, 16 for a source left unapproved,
   and see the existing security-block code, 14, on a refused config. A project
   install that relied on `--force` alone to register a source now fails, loudly,
@@ -913,8 +1014,9 @@ without asking, because default-registry declarations deliberately stay silent.
 ### Mitigations
 
 - The comment at the decision site names the squatting layout as the regression to
-  re-derive before either clause is changed, and the test table covers every
-  layout in the requirement rather than a sample.
+  re-derive before either clause is changed, and states the root-owned-`/tmp`
+  trap explicitly; the test table covers every layout in the requirement rather
+  than a sample.
 - The refusal message names the mount options as well as `chmod`, so the
   instruction works wherever the user reads it.
 - The needs-approval message names both ways to approve, and the refused-config

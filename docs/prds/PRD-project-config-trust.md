@@ -191,7 +191,7 @@ Terms used below:
   | L6 | `/tmp/.tsuku.toml` owned by another user, working directory `/tmp/shared-work`, `/tmp` root-owned 1777 | non-root | refused |
   | L7 | As L6 | root | refused |
   | L8 | `/tmp/build` pre-created by another user with a config inside, then entered by the invoking user, `/tmp` root-owned 1777 | non-root or root | refused |
-  | L9 | A `.tsuku.toml` symlink, or its target, owned by a uid the rule would not accept for a regular file at the link's location | any | refused |
+  | L9 | A `.tsuku.toml` symlink whose link fails the rule at the link's own location, or whose target fails it at the target's own location | any | refused |
   | L10 | A `.tsuku.toml` symlink and its target both owned by a uid the rule accepts for that location (for example inside L3's checkout) | any | found |
   | L11 | A config at mode 0664 in a 0775 directory the invoking user owns (the ordinary result of a umask of 002) | non-root | found |
   | L12 | A config owned by a third uid inside a root-owned 0755 directory, for example files copied into a container image with a different owner than the directory | any | found |
@@ -404,9 +404,10 @@ Discovery and reporting:
 - [ ] A test places a refused config below a second, acceptable config and
   asserts that neither is applied; a refused config with invalid TOML produces
   the refusal and no parse diagnostic (R3).
-- [ ] Tests cover the L9 symlink cases (foreign-owned link, foreign-owned target)
-  and the L10 case, and a test swaps the file between the check and the read
-  through a seam and asserts the swapped file is not parsed (R4).
+- [ ] Tests cover the L9 symlink cases (foreign-owned link, foreign-owned target,
+  and a link from an acceptable location to a target in a world-writable
+  directory) and the L10 case, and a test swaps the file between the check and the
+  read through a seam and asserts the swapped file is not parsed (R4).
 - [ ] Tests with `HOME` set to a symlinked path, and with a symlinked
   `TSUKU_CEILING_PATHS` entry, place a config above the real directory and assert
   it is not found. With `HOME=/`, with `HOME` unset, and with `HOME` owned by
@@ -683,6 +684,26 @@ Cross-cutting:
 - **`tsuku run` repeats the refusal on every invocation.** With the
   command-not-found hook, each missing command under a refused config prints the
   line once.
+- **Nothing is checked below a resolved `$HOME`.** R1 keeps that path exactly as
+  it is, so a config an attacker plants anywhere under the user's home — a home
+  subdirectory a shared group can write, a network mount, a cloned repository the
+  user has not read — applies with no test. The rule's subject is the namespace
+  the user does not control.
+- **A refused config shadows the project config below it.** R3 stops the walk at
+  a refusal, so a file planted between the working directory and a real project
+  root prevents that project's pins from applying, and `tsuku run` executes
+  whatever version is globally current instead. This is the fail-closed direction
+  for trust and the wrong one for availability; the refusal line on every affected
+  command (R6) is what keeps it visible rather than silent.
+- **A world-writable sticky directory still admits a hard link to the user's own
+  file.** The sticky bit stops an attacker unlinking the user's config, not
+  creating one, so in such a directory they can place `.tsuku.toml` as a hard link
+  to a file the user owns. They choose which of the user's existing files gets
+  parsed as a config, not its content.
+- **A foreign-owned checkout on a macOS mounted volume is refused.** `/Volumes`
+  is world-writable and root-owned, so the L3 layout on an external disk fails the
+  ownership rule with no opt-out (R27). The remedy is to own the checkout or to
+  run as the user who does.
 
 ## Decisions and Trade-offs
 
