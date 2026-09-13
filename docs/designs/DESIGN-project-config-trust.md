@@ -231,8 +231,12 @@ wording is sharpened to say the rule is applied at each object's own location,
 which the design exceeds rather than contradicts. For anything the table does not
 list, the clauses decide, and two cases are worth naming because a reader will
 meet them. A config the invoking user wrote inside a directory somebody else
-created is found when that directory is not world-writable: clause 1 accepts on
-the owner, and clauses 2 and 3 still run. And a
+created is found: clause 1 accepts on the owner, and clauses 2 and 3 still run,
+which refuse it only if that directory is world-writable without the sticky bit.
+So a config the user wrote directly in `/tmp` is found — `/tmp` is sticky — and
+that is the layout the hard-link residual under Security Considerations describes,
+where the file's owner is genuinely the user but the user may not have written it.
+And a
 foreign-owned checkout on a macOS mounted volume is refused, because `/Volumes` is
 world-writable and root-owned, so the chain fails. That is the container-volume
 layout with a worse parent, and there is no opt-out (R27); the remedy the refusal
@@ -540,9 +544,10 @@ the walk actually opens, and all three must pass:
    clause is applied to the target alone; the other two are applied at the link's
    location and again at the target's.
 
-The walk never stops on ownership, so every refusal names a file, and discovery
-refuses loudly rather than skipping quietly — a config that vanishes without
-explanation is its own bug report. Together the three clauses give every row of
+A failed clause produces a refusal naming the file rather than a silent decision
+to keep walking; the walk stops there. Discovery refuses loudly rather than
+skipping quietly — a config that vanishes without explanation is its own bug
+report. Together the three clauses give every row of
 the PRD's thirteen-row layout table (R2) the outcome it asks for, so nothing in
 that table is contested and no row changes; the two ownership-identical rows are
 separated by clause 1's ancestor test alone.
@@ -606,7 +611,14 @@ for any path a user sees.
 **`cmd/tsuku` — consent, reporting and exit codes.** `ensureDistributedSource` is
 rebuilt from three primitives: classify a source (validate, look up, apply the
 strict-registries refusal; no network, no write), add a session-only provider, and
-write the entry. For a real install the command-line path composes them in
+write the entry. Classification answers "is this source registered?" from the
+configured registries in `config.toml`, not from the loader's live provider list,
+for the reason Security Considerations gives for the run path: providers are built
+at startup under a timeout and a failure only warns, so reading the provider list
+would make a registered source classify as unregistered whenever its repository is
+briefly unreachable — and a non-interactive project install would then skip its
+tools and exit 16 on a transient outage. Both consent decisions read the same
+state. For a real install the command-line path composes them in
 today's order, so its behavior is unchanged, including the registration it
 performs with no terminal (R17). Under a dry run it composes the first two and
 skips the write. The dry-run branch stays where it is, below the source handling:
@@ -637,9 +649,12 @@ second name for the same number.
 **`internal/activation` — the refusal branch and the hook's report.**
 `ComputeActivation` gains a `RefusedError` branch alongside the existing
 `ParseError` one: `PATH` gains nothing, the refused file's directory goes into the
-existing tracking variable, and `Entered` is set on that branch when the refusal
-changes `PATH`, covering a file that becomes refused in place while its tools are
-active. The widening is confined to the refusal branch, because `Entered` is also
+existing tracking variable, and `Entered` is set on that branch when the refused
+file differs from the previous prompt's or, in addition, when the refusal changes
+`PATH` — the second disjunct covers a file that becomes refused in place while its
+tools are active, which directory comparison alone cannot see, and the first
+covers a first entry that changes no `PATH` and must still report (R7). The
+widening is confined to the refusal branch, because `Entered` is also
 read by the activation reporter and the found-config path must keep its present
 meaning. `tsuku hook-env` honors `--quiet` for the refusal line; `tsuku shell`
 prints it on every invocation regardless (R7, R8). `ComputeActivation` takes
@@ -863,11 +878,11 @@ described under Consequences.
 
 A symlinked config is judged twice, at the link's location and at the target's, so
 a link from an acceptable path to a plantable one is refused on the target's own
-directory rather than accepted on the link's. The sequence is in Data Flow. What
-this does not cover is the resolution itself: the target is found by resolving the
-path, and only the opened target is pinned by device and inode, so a component of
-the target's path renamed between the resolution and the open is outside what the
-check can see.
+directory rather than accepted on the link's. The sequence is in Data Flow. The
+device-and-inode comparison pins the target itself, so a swap there is caught;
+what it does not pin is the target's own directory, which the directory clause
+reads through a path. Its mode or owner can change after the clause has read it,
+which is the same limit the chain read has, one level out.
 
 Two pre-existing exposures below a resolved `$HOME` are not closed, both because
 R1 holds that path unchanged. Nothing caps the byte size of a config before it is
@@ -987,7 +1002,11 @@ rather than only a nuisance: a file planted between the working directory and a
 real project root refuses, the walk stops, and the project's own pins never apply.
 `tsuku run` then executes whatever version is globally current. The refusal line
 is what makes this visible, which is why R6 requires it on every affected command
-rather than once per session.
+rather than once per session. The unexaminable-directory stop (R5) shadows the
+same way and prints nothing, because nothing was found to name. That is the
+silent variant, and it is the worse one for the "my tools stopped working and
+nobody said why" failure, so an unreadable directory on the walk is worth
+mentioning in whatever diagnostic command a user is pointed at.
 
 A config the invoking user owns but leaves writable by a shared group can be
 rewritten in place with no change any ownership check can see; the file-mode
