@@ -303,10 +303,14 @@ installs from a source they registered. A per-source allow list is the recorded
 follow-up for both the first and the third.
 
 A dry run still contacts the network: resolving a preview builds a session
-provider for each named source, which probes the source's repository before any
-consent. The destination is constrained to a known host by the source-name
-validation, so this is a signal to the attacker that a specific machine ran the
-command rather than a general request forgery.
+provider for each named source, which probes that source's repository. Because a
+dry run deliberately asks nothing, that contact precedes any consent. A real run
+is ordered differently: at a terminal an unregistered source is asked about
+before anything is fetched, while an already-registered source, and any source on
+a run with no terminal, is probed without a new question. The destination is
+constrained to a known host by the source-name validation, so this is a signal to
+the attacker that a specific machine ran the command rather than a general request
+forgery.
 
 **What the new output discloses.** The one stream a shell evaluates carries only
 the exports, every value quoted per dialect by the existing shell-quoting helper,
