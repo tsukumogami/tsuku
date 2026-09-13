@@ -25,7 +25,7 @@ var runPathEntryPoints = []string{
 // Asserted structurally rather than by running an install, because the property
 // is about what the code can reach rather than about what one run happened to
 // do. A run that adds no provider today because its recipe was cached would
-// pass a behavioural test and prove nothing.
+// pass a behavioral test and prove nothing.
 func TestRunAddsNoSourceToTheRegistries(t *testing.T) {
 	forbidden := map[string]string{
 		"addDistributedProvider":             "builds a session provider",

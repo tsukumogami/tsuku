@@ -79,7 +79,14 @@ func mustBeFound(t *testing.T, l *layoutFixture, startDir string) {
 	}
 }
 
-func mustBeRefused(t *testing.T, l *layoutFixture, startDir string) *RefusedError {
+// mustBeRefused asserts the layout is refused. Use refusalFor when the test
+// also needs to read the reason or the remedy.
+func mustBeRefused(t *testing.T, l *layoutFixture, startDir string) {
+	t.Helper()
+	_ = refusalFor(t, l, startDir)
+}
+
+func refusalFor(t *testing.T, l *layoutFixture, startDir string) *RefusedError {
 	t.Helper()
 	result, err := l.load(startDir)
 	if result != nil {
@@ -210,7 +217,7 @@ func TestRootOwnedWritableAncestorDoesNotSatisfyTheChain(t *testing.T) {
 	app := l.dir("shared/app", otherUID, 0o755)
 	l.config(app, otherUID, 0o644)
 
-	refused := mustBeRefused(t, l, app)
+	refused := refusalFor(t, l, app)
 	if !strings.Contains(refused.Reason, "anyone can write") {
 		t.Fatalf("refused for the wrong reason: %q", refused.Reason)
 	}
@@ -235,7 +242,7 @@ func TestClausesDoNotShortCircuitEachOther(t *testing.T) {
 		l := newLayout(t)
 		app := l.dir("work", l.env.uid, 0o755)
 		l.config(app, l.env.uid, 0o666)
-		refused := mustBeRefused(t, l, app)
+		refused := refusalFor(t, l, app)
 		if !strings.Contains(refused.Remedy, "metadata") {
 			t.Fatalf("the mode refusal must name the mount option as well as chmod: %q", refused.Remedy)
 		}
@@ -343,7 +350,7 @@ func TestSymlinkLayouts(t *testing.T) {
 		link(t, target, linkPath)
 		l.env.ownerOf[linkPath] = l.env.uid
 
-		refused := mustBeRefused(t, l, app)
+		refused := refusalFor(t, l, app)
 		if !strings.Contains(refused.Reason, "anyone can write") {
 			t.Fatalf("the target's own directory was not judged: %q", refused.Reason)
 		}
@@ -407,7 +414,7 @@ func TestRefusalStopsTheWalk(t *testing.T) {
 	open := l.dir("above/open", l.env.uid, 0o777)
 	l.config(open, l.env.uid, 0o644)
 
-	refused := mustBeRefused(t, l, open)
+	refused := refusalFor(t, l, open)
 	if refused.Dir != filepath.Clean(open) {
 		t.Fatalf("the refusal names %s, want the nearer config's directory %s", refused.Dir, open)
 	}

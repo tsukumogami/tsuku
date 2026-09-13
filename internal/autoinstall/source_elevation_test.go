@@ -164,7 +164,7 @@ func TestUnregisteredSourceNoticeCarriesAllThreeFacts(t *testing.T) {
 // into one declaration carrying the plain key, so a file that adds one plain
 // line evades this rule. The attacker gains nothing by it -- a plain key
 // already installs silently, and the source they named could never supply the
-// recipe -- but the behaviour should be a decision on the page rather than a
+// recipe -- but the behavior should be a decision on the page rather than a
 // surprise.
 func TestCollapsedKeyIsRaised(t *testing.T) {
 	r := &Runner{SourceRegistered: func(string) bool { return false }}

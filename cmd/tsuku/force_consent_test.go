@@ -118,6 +118,7 @@ func TestForceHelpDoesNotClaimItSkipsPrompts(t *testing.T) {
 	flag := installCmd.Flags().Lookup("force")
 	if flag == nil {
 		t.Fatal("the --force flag is gone")
+		return // t.Fatal ends the test; this keeps the analysis simple.
 	}
 	if strings.Contains(strings.ToLower(flag.Usage), "without prompts") {
 		t.Errorf("--force still claims it proceeds without prompts: %q", flag.Usage)
