@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/term"
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/discover"
@@ -237,11 +236,22 @@ Exit codes for project install:
 					exitWithCode(ExitGeneral)
 				}
 
-				// ensureDistributedSource must run before GetWithContext because
-				// it dynamically registers the provider that qualified name
-				// routing depends on.
-				if err := ensureDistributedSource(dArgs.Source, installYes || installForce, sysCfg); err != nil {
-					printError(err)
+				// Source handling must run before GetWithContext because it
+				// dynamically registers the provider that qualified name
+				// routing depends on. That is also why the --dry-run branch
+				// below stays where it is rather than moving above this:
+				// runDryRun resolves the qualified name through that provider,
+				// so the provider has to exist by the time it runs. What a dry
+				// run changes is which primitives are composed here, not where
+				// the branch sits.
+				sourceErr := error(nil)
+				if installDryRun {
+					sourceErr = prepareDistributedSourceForPreview(dArgs.Source, sysCfg)
+				} else {
+					sourceErr = ensureDistributedSource(dArgs.Source, installYes || installForce, sysCfg)
+				}
+				if sourceErr != nil {
+					printError(sourceErr)
 					exitWithCode(ExitGeneral)
 				}
 
@@ -399,10 +409,6 @@ func init() {
 // isInteractive returns true if stdin is connected to a terminal.
 // Uses term.IsTerminal for a proper ioctl check — the previous
 // ModeCharDevice check incorrectly returned true for /dev/null.
-func isInteractive() bool {
-	return term.IsTerminal(int(os.Stdin.Fd()))
-}
-
 // isToolPathConfigured reports whether the user's PATH already contains
 // either $TSUKU_HOME/tools/current or $TSUKU_HOME/bin, indicating that
 // shell integration (via `tsuku hook install` or `eval $(tsuku shellenv)`)
