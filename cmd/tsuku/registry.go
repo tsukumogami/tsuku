@@ -113,6 +113,9 @@ func runRegistryList(cmd *cobra.Command, args []string) {
 			url = fmt.Sprintf("https://github.com/%s", name)
 		}
 		fmt.Printf("  %-30s  %s%s\n", name, url, annotation)
+		if line := provenanceLine(entry); line != "" {
+			fmt.Printf("      %s\n", line)
+		}
 	}
 
 	fmt.Println()
@@ -239,4 +242,38 @@ func printToolsFromSource(source string) {
 		fmt.Printf("  - %s\n", name)
 	}
 	fmt.Println("\nTo remove them, run: tsuku remove <tool>")
+}
+
+// provenanceLine renders the record a project-caused registration carries, or
+// "" when it carries none.
+//
+// It is a second, indented line rather than an addition to the first, so the
+// first stays byte-for-byte what it has always been: existing output and the
+// tests that assert it are unchanged, and an entry with no record looks exactly
+// as it does today.
+//
+// The declaring path is quoted. It came from a repository the invoking user may
+// not control, so it is the one attacker-chosen string this command prints.
+func provenanceLine(entry userconfig.RegistryEntry) string {
+	if entry.ApprovedVia == "" && entry.DeclaredIn == "" {
+		return ""
+	}
+
+	var parts []string
+	switch entry.ApprovedVia {
+	case "":
+	case userconfig.ApprovedViaPrompt:
+		parts = append(parts, "approved at the prompt")
+	case userconfig.ApprovedViaYesFlag:
+		parts = append(parts, "approved with --yes")
+	default:
+		// Something hand-edited the file. Render it rather than dropping it or
+		// assuming: the record is advisory, and an unexpected value is worth
+		// showing to whoever is reading.
+		parts = append(parts, fmt.Sprintf("approved via %q", entry.ApprovedVia))
+	}
+	if entry.DeclaredIn != "" {
+		parts = append(parts, fmt.Sprintf("declared in %q", entry.DeclaredIn))
+	}
+	return strings.Join(parts, ", ")
 }

@@ -138,7 +138,7 @@ func classifySource(source string) (sourceClassification, error) {
 // that: if a second writer appears on an install path, everything the deferred
 // write guarantees becomes a claim about one door in a room with two.
 func writeSourceRegistration(userCfg *userconfig.Config, source string) error {
-	if err := autoRegisterSource(userCfg, source); err != nil {
+	if err := autoRegisterSource(userCfg, sourceProvenance{}, source); err != nil {
 		return fmt.Errorf("failed to auto-register source %q: %w", source, err)
 	}
 	fmt.Fprintf(os.Stderr, "Auto-registered source %q\n", source)
@@ -223,7 +223,15 @@ func prepareDistributedSourceForPreview(source string, sysCfg *config.Config) er
 // the second one failed, which is an outcome nobody asked for. A source already
 // present is left exactly as it is, so a second project naming it does not
 // rewrite the record of how the first one was approved.
-func autoRegisterSource(userCfg *userconfig.Config, sources ...string) error {
+// sourceProvenance is the record a project-caused registration carries: how it
+// was approved and which file asked. Both empty for every other route, which is
+// what keeps those entries byte-identical to what they are today.
+type sourceProvenance struct {
+	ApprovedVia string
+	DeclaredIn  string
+}
+
+func autoRegisterSource(userCfg *userconfig.Config, prov sourceProvenance, sources ...string) error {
 	if userCfg.Registries == nil {
 		userCfg.Registries = make(map[string]userconfig.RegistryEntry)
 	}
@@ -234,6 +242,8 @@ func autoRegisterSource(userCfg *userconfig.Config, sources ...string) error {
 		userCfg.Registries[source] = userconfig.RegistryEntry{
 			URL:            fmt.Sprintf("https://github.com/%s", source),
 			AutoRegistered: true,
+			ApprovedVia:    prov.ApprovedVia,
+			DeclaredIn:     prov.DeclaredIn,
 		}
 	}
 	return userCfg.Save()

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -39,6 +40,9 @@ type projectSource struct {
 	// who was never asked.
 	NoTerminal bool
 
+	// ApprovedVia records which route approved it, for the provenance record.
+	ApprovedVia string
+
 	userCfg *userconfig.Config
 }
 
@@ -60,6 +64,15 @@ type projectSourcePlan struct {
 }
 
 func newProjectSourcePlan(declaredIn string) *projectSourcePlan {
+	// Resolved and absolute, because the record outlives the run: a relative
+	// path or one through a symlink says nothing to somebody reading
+	// `tsuku registry list` from a different directory a month later.
+	if abs, err := filepath.Abs(declaredIn); err == nil {
+		declaredIn = abs
+	}
+	if resolved, err := filepath.EvalSymlinks(declaredIn); err == nil {
+		declaredIn = resolved
+	}
 	return &projectSourcePlan{
 		DeclaredIn: declaredIn,
 		sources:    map[string]*projectSource{},
@@ -140,6 +153,7 @@ func (p *projectSourcePlan) decideConsent(in consentInputs) {
 		}
 		if in.AutoApprove {
 			s.State = sourceApproved
+			s.ApprovedVia = userconfig.ApprovedViaYesFlag
 			return
 		}
 		if !in.Interactive() {
@@ -150,6 +164,7 @@ func (p *projectSourcePlan) decideConsent(in consentInputs) {
 			s.Name, p.DeclaredIn, strings.Join(s.Tools, ", "))
 		if in.Ask(prompt) {
 			s.State = sourceApproved
+			s.ApprovedVia = userconfig.ApprovedViaPrompt
 		}
 	})
 }
@@ -178,20 +193,31 @@ func (p *projectSourcePlan) commit() error {
 		userCfg = loaded
 	}
 
-	names := make([]string, 0, len(approved))
+	// Grouped by approval route so each group carries its own record, while
+	// still going through the one writer. In practice a run uses one route for
+	// everything, so this is almost always a single group.
+	byRoute := map[string][]string{}
 	for _, s := range approved {
-		names = append(names, s.Name)
+		byRoute[s.ApprovedVia] = append(byRoute[s.ApprovedVia], s.Name)
 	}
+	routes := make([]string, 0, len(byRoute))
+	for route := range byRoute {
+		routes = append(routes, route)
+	}
+	sort.Strings(routes)
 
 	// Through the one writer, not a second save of its own. Two writers would
 	// make "the install path writes config.toml in exactly one place" a claim
 	// about one door in a room with two, and that claim is what makes gating
 	// consent here sufficient rather than merely necessary.
-	if err := autoRegisterSource(userCfg, names...); err != nil {
-		return err
+	for _, route := range routes {
+		prov := sourceProvenance{ApprovedVia: route, DeclaredIn: p.DeclaredIn}
+		if err := autoRegisterSource(userCfg, prov, byRoute[route]...); err != nil {
+			return err
+		}
 	}
-	for _, name := range names {
-		fmt.Fprintf(os.Stderr, "Auto-registered source %q\n", name)
+	for _, s := range approved {
+		fmt.Fprintf(os.Stderr, "Auto-registered source %q\n", s.Name)
 	}
 	return nil
 }
