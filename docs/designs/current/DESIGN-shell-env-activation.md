@@ -537,7 +537,7 @@ Same concern as Block 4: cloning a repo with `.tsuku.toml` and running `tsuku ho
 - Prompt hooks are opt-in (`tsuku hook install --activate`), not default. Note that `tsuku shell` needs no hook at all, so anyone running it in an untrusted repository is exposed regardless of hook state.
 - Declared names and versions are validated at config load, so a hostile declaration is refused before it reaches a path or the emitted output.
 - Activation only references installed tools -- it can't install new ones.
-- `TSUKU_CEILING_PATHS` adds ceilings to the discovery walk, but it is **opt-in and unset by default**, and the walk's only unconditional ceiling is `$HOME`. A repository checked out elsewhere walks to `/`. What stops a config in a world-writable directory applying beneath it is not the ceiling variable but the discovery trust rule, which outside `$HOME` applies a config only when the invoking user can be held to have chosen it and refuses the rest by name. See `docs/designs/DESIGN-project-config-trust.md`.
+- `TSUKU_CEILING_PATHS` adds ceilings to the discovery walk, but it is **opt-in and unset by default**, and the walk's only unconditional ceiling is `$HOME`. A repository checked out elsewhere walks to `/`. What stops a config in a world-writable directory applying beneath it is not the ceiling variable but the discovery trust rule, which outside `$HOME` applies a config only when the invoking user can be held to have chosen it and refuses the rest by name. See `docs/designs/current/DESIGN-project-config-trust.md`.
 - Tools that aren't installed are silently skipped, not fetched.
 - Prompt hooks are opt-in (`tsuku hook install --activate`), not default
 - Activation only references installed tools -- it can't install new ones

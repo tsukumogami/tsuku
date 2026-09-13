@@ -1,6 +1,6 @@
 ---
 schema: prd/v1
-status: In Progress
+status: Done
 problem: |
   Since v0.14.0 a `.tsuku.toml` decides whether `tsuku run` installs a declared
   tool without asking and which recipe sources `tsuku install` adds to the
@@ -23,7 +23,7 @@ absorbed:
 
 ## Status
 
-In Progress
+Done
 
 Absorbed [BRIEF: Project Config Trust](docs/briefs/BRIEF-project-config-trust.md); carried in Absorbed Brief.
 
