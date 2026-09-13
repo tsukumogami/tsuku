@@ -208,8 +208,12 @@ Terms used below:
 - **R5.** `$HOME` and every `TSUKU_CEILING_PATHS` entry are compared against the
   walk on symlink-resolved paths, as the start directory already is. A ceiling
   entry that cannot be resolved is compared as written, as today. A directory the
-  walk cannot examine ends the walk with no config found and no message, as
-  today; nothing was found, so there is nothing to refuse.
+  walk cannot examine ends the walk with no config found and no message; nothing
+  was found, so there is nothing to refuse. This is a change, not a preservation:
+  today an unreadable directory is indistinguishable from one holding no config
+  and the walk continues past it. Ending there is the fail-closed direction, and
+  it matches how the discovery rule treats a directory whose metadata it cannot
+  read.
 
 ### Functional: refusal reporting
 
@@ -314,7 +318,12 @@ Terms used below:
   the path from the start directory to the filesystem root, a config's link and
   target, and the resolution of `$HOME` and ceiling entries), read no config
   contents before the decision, and make no network calls, since `tsuku hook-env`
-  runs on every shell prompt.
+  runs on every shell prompt. The requirement stands, but its premise does not
+  describe today's prompt path: that path already makes network requests before
+  discovery is reached, once per registered distributed source, as the #2548 entry
+  under Out of Scope describes. R25 keeps discovery from adding to that; it does
+  not make the prompt path network-free, and the criterion below asserts only what
+  discovery itself does.
 - **R26.** Tests can substitute the invoking uid, each path's owner and mode, the
   filesystem access discovery performs, the enumeration of a path's ancestors, and
   the terminal check. Every acceptance criterion below that involves another
@@ -493,7 +502,15 @@ Cross-cutting:
   added.
 - Other dry-run side effects from steps that run before any command, including
   writes to the recipe caches (#2549).
-- Startup cost proportional to the number of registries (#2548).
+- The cost of a registered registry on every command (#2548). This is filed as
+  startup cost, and it is worse than that name suggests: the provider chain is
+  built for every subcommand, including `tsuku hook-env`, and each registered
+  distributed source is probed with uncached network requests under a shared
+  timeout. So a registered source slows every shell prompt, a source that stalls
+  hangs it for the timeout, and the requests are a standing signal to whoever owns
+  that source. That is what a silently registered source actually costs a user,
+  which is why this PRD closes the registration path even though the per-prompt
+  cost itself belongs to #2548.
 - Cleaning up sources that earlier versions auto-registered.
 - A flag that approves a named source for one project install (for example
   `--approve-source owner/repo`); see Known Limitations.
@@ -526,6 +543,21 @@ Cross-cutting:
 - **A config inside a checkout owned by another user is applied when the user
   works in it** (L3). Discovery bounds which files are reachable; what a
   reachable file may do is bounded by the consent rules above.
+- **`tsuku install` over a plain key still installs from an already-registered
+  source, with no consent step.** The consent rules above cover a source a project
+  *names*. A key with no source component is resolved down the loader chain, which
+  includes every registered distributed source, so a project file can still cause
+  an install from a source the user did not deliberately approve for that project.
+  This is the natural misreading of R18, which narrows `tsuku run` only. Two
+  registered sources carrying the same tool name compose badly with it: the order
+  among them is not fixed, so which one supplies the recipe can vary between runs.
+- **A plain key still chooses the version installed and executed, unprompted.**
+  R18 stops a project file deciding *where* a tool comes from without asking; it
+  does not stop one pinning an old, known-vulnerable version of a default-registry
+  tool, which `tsuku run` will install and execute with no prompt. That follows
+  from keeping default-registry declarations silent, which is deliberate and in
+  Out of Scope, but it is the residual a reader is most likely to assume this work
+  closed.
 - **`tsuku run` repeats the refusal on every invocation.** With the
   command-not-found hook, each missing command under a refused config prints the
   line once.
