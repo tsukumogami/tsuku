@@ -193,6 +193,9 @@ Terms used below:
   | L8 | `/tmp/build` pre-created by another user with a config inside, then entered by the invoking user, `/tmp` root-owned 1777 | non-root or root | refused |
   | L9 | A `.tsuku.toml` symlink, or its target, owned by a uid the rule would not accept for a regular file at the link's location | any | refused |
   | L10 | A `.tsuku.toml` symlink and its target both owned by a uid the rule accepts for that location (for example inside L3's checkout) | any | found |
+  | L11 | A config at mode 0664 in a 0775 directory the invoking user owns (the ordinary result of a umask of 002) | non-root | found |
+  | L12 | A config owned by a third uid inside a root-owned 0755 directory, for example files copied into a container image with a different owner than the directory | any | found |
+  | L13 | A config in a world-writable directory without the sticky bit | any | refused |
 
   The table is the minimum. For a layout it doesn't list, the design states the
   outcome. If the design finds that no rule can give two listed layouts their
@@ -263,6 +266,12 @@ Terms used below:
   ways to approve it: `tsuku install --yes` and `tsuku registry add <source>`.
   The exit code distinguishes "needs approval" from an install failure; the
   design names it. Nothing is written to `config.toml` for a skipped source.
+  When a run both skips a source for want of approval and fails to install some
+  other tool, the needs-approval code is what the command returns, so a script
+  reading it as "approve and re-run" will meet the unrelated failure on the next
+  run. The failure is still named on stderr and in the structured output, and the
+  summary distinguishes a skipped tool from a failed one rather than reporting
+  either as installed.
 - **R16.** A project-caused registration records how it was approved (an
   interactive yes or `--yes`) and the resolved absolute path of the
   declaring config, written once at registration and never updated by later
@@ -293,13 +302,30 @@ Terms used below:
   the user has not already accepted. What it can do, and what the reported defect
   did, is name a source the user has never approved and have the tool installed
   anyway without being asked. That is what this requirement stops.
+
+  **What it does not do, stated in the attacker's terms.** A configuration that
+  declares the same tool twice, once plainly and once with a source, collapses to
+  a single declaration carrying the plain key, so the rule sees no source and
+  raises. A hostile file therefore evades the question by adding one line. The
+  attacker gains nothing by it — a plain key already installs silently, and the
+  source they named could never have supplied the recipe — but the protection
+  should not be described as stopping a hostile repository. What it stops is an
+  honest repository waiving a prompt for a source the user has not approved, and
+  what it gives the user is sight of that source. The behaviour is pinned by a
+  criterion rather than left to be discovered.
 - **R19.** When a declared command is not raised, the prompt, and the message
-  shown when no terminal is attached, name the unregistered source the key
-  names and say that it is not registered, so the reader knows which decision is
-  being put to them. They also name the source the install would actually come
-  from, and when that differs from the key's, say that the named source is not
-  what `tsuku run` installs. Both facts matter to someone deciding: a repository
-  can name a source it does not get its tool from.
+  shown when no terminal is attached, name the unregistered source the key names
+  and say that it is not registered, so the reader knows which decision is being
+  put to them. They also state that `tsuku run` does not fetch recipes from the
+  source a key names: it resolves the name through the user's own configured
+  sources. That second fact is unconditional and needs no lookup. The branch is
+  reached only for a source outside the configured registries, and the resolution
+  chain is built from the configured registries plus the default and local
+  sources, so the named source is categorically not where the install would come
+  from. An earlier draft required naming the specific source that would supply
+  the recipe; that needed a provenance lookup the design has since removed, and
+  naming the class rather than the registry answers the reader's question without
+  it.
 - **R20.** The consent mode reaches the install as today's resolution and
   mode-lowering gates produce it, including the rule that
   `TSUKU_AUTO_INSTALL_MODE=auto` counts only when `config.toml` also says auto;
@@ -321,8 +347,9 @@ Terms used below:
 - **R24a.** The release notes for the version carrying this change state that
   every source already present in the user's configured registries is trusted for
   silent installs from the upgrade onward, including any a project config caused
-  to be registered before the change, and point the reader at
-  `tsuku registry list` to review them.
+  to be registered before the change. They point the reader at
+  `tsuku registry list` and specifically at the entries it marks
+  "(auto-registered)", which are the ones nobody was asked about.
 - **R24.** The documentation describes the new behavior:
   `docs/designs/current/DESIGN-shell-env-activation.md` states that
   `TSUKU_CEILING_PATHS` is opt-in and unset by default and no longer claims it
@@ -445,6 +472,10 @@ Source registration:
   consent rather than applied to `--force` generally (R12).
 - [ ] `CI=true` in the environment does not let a project install with no
   terminal register a source (R12, R22).
+- [ ] A run with one unapproved source and one tool that fails to install exits
+  the needs-approval code, names the failure on stderr, and reports the skipped
+  tool and the failed tool as distinct states in both the summary and the
+  structured output (R15).
 - [ ] Through an injected terminal and scripted input: the source prompt names
   the source and the declaring file and comes before "Proceed?"; declining it
   leaves `config.toml` unchanged, the other declared tools are still attempted,
@@ -478,9 +509,14 @@ Source registration:
 - [ ] The same declaration, after that source is registered, installs with no
   prompt (R18).
 - [ ] When not raised at a terminal, the prompt names the unregistered source the
-  key names and says it is not registered; for a key whose bare name the default
-  registry also carries, the output also states that the named source is not what
-  `tsuku run` installs (R19).
+  key names, says it is not registered, and states that `tsuku run` resolves the
+  recipe through the user's own configured sources rather than the named one. The
+  second statement is asserted unconditionally, not only for a key whose plain
+  name the default registry also carries (R19).
+- [ ] A config declaring the same tool both plainly and with an unregistered
+  source raises without prompting, because the two collapse to one declaration
+  carrying the plain key. The test asserts the raise and the absence of the
+  message, so the evasion is pinned rather than discovered later (R18).
 - [ ] With `--mode=auto`, and with `auto_install_mode = "auto"` in `config.toml`,
   a declared command naming a non-default source runs in auto; with
   `TSUKU_AUTO_INSTALL_MODE=auto` and no config key, the mode is confirm, as today;
@@ -576,14 +612,22 @@ Cross-cutting:
   because the record is part of this change. So a source that a project config
   caused to be registered with nobody asked — on a machine with no terminal,
   which is where #2552 was worst — is trusted from the upgrade onward, exactly
-  like one the user typed `tsuku registry add` for. The two are indistinguishable
-  on disk, so no rule can separate them; the alternatives were a one-time
-  confirmation of the existing list, and treating unmarked entries as untrusted,
-  which would have prompted every user who registered a source deliberately
-  before the change and broken headless runs that depend on them. The release
-  notes state plainly that anything already in the configured registries is now
-  trusted for silent installs, and recommend reviewing the list with
-  `tsuku registry list`.
+  like one the user typed `tsuku registry add` for.
+
+  The upgrade extends nobody's reach: before it, *every* declaration raised the
+  consent mode, so a silently registered source was already serving silent
+  installs for any plain name it carried. What the upgrade does is decline to
+  retract that, which is why a release note is a proportionate response and a
+  migration flow would not be.
+
+  A deliberate registration is in fact separable from an automatic one: the
+  former records the auto-registration flag as false and the latter as true, and
+  the listing already annotates it. What is genuinely indistinguishable is
+  narrower: an automatic registration caused by a project config against one
+  caused by a source named on the command line. That is why treating unmarked
+  entries as untrusted would still have prompted people who registered
+  deliberately through an install, and it is why the release note points at the
+  annotated entries specifically rather than asking for a blanket audit.
 - **Sources approved with `tsuku registry add` record no declaring file.** That
   command is the user's own action and is unchanged (R17); `tsuku install --yes`
   is the approval path that records which file asked.
@@ -606,6 +650,22 @@ Cross-cutting:
   consulted in an order that varies between runs, so which one supplies the recipe
   is not deterministic. Registering a source therefore gives it a claim on every
   plain name, decided by chance where two sources overlap.
+- **A source name that differs only in spelling reads as unregistered.** The
+  membership test compares the configured string exactly, while source names
+  admit uppercase and a registration stores what the user typed. So registering
+  `Owner/Repo` and declaring `owner/repo:tool` prompts forever, and with a
+  non-exact version pin that is every invocation. It fails in the safe direction,
+  and matching loosely would grant nothing a plain key does not already grant,
+  but the friction lands on the honest user. Normalizing both sides is the
+  recorded follow-up.
+- **A key may name a registered source that does not carry the tool.** The run
+  path resolves the plain name through the whole chain, so the recipe arrives
+  from wherever the chain serves it first, which need not be the named source.
+  Nothing tells the user, because the disclosure line reports the index's own
+  category rather than the provider that supplied the recipe. There is no
+  privilege gain — the recipe still comes from somewhere the user accepted — but
+  a reader who sees a source named in the file may believe that source vetted
+  what was installed.
 - **A declaration that is not an exact version re-decides on every run**
   (tsukumogami/tsuku#2571). `tsuku run` looks for an already-installed tool in a
   directory named for the declared version, while installs write the resolved
@@ -682,6 +742,17 @@ Cross-cutting:
   blindly is a practice to fix in that job, not a reason to withhold trust from
   every user who deliberately approves a source. The residual is recorded under
   Known Limitations as accepted rather than as something to close.
+- **Migration cost was weighted against an installed base of roughly one.** At
+  the time of writing the repository has a single star and a single fork, so the
+  machines carrying pre-change registrations are effectively the author's own.
+  That is why the standing-grant decision above could be taken plainly rather than
+  hedged with a migration flow, and why "this would break existing scripts" was
+  treated as a claim to check in the repository rather than a general risk. The
+  requirements that keep older configuration files loading are kept as cheap
+  regression guards, not as compatibility promises to an audience that does not
+  exist yet. Nothing in the discovery rule's shape follows from this: its
+  complexity comes from the layouts that have to keep working, which are the same
+  for one user as for many.
 - **#2559's first acceptance criterion is amended by this PRD.** As written it
   requires that a project-declared tool whose key names a non-default source
   never reaches the auto path and that the user is prompted, with no exception.
