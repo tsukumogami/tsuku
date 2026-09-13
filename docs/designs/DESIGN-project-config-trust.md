@@ -1,6 +1,6 @@
 ---
 schema: design/v1
-status: Proposed
+status: Accepted
 problem: |
   A `.tsuku.toml` reaches three code paths that each treat it as a file the
   invoking user wrote. Discovery walks past the checkout and applies whatever it
@@ -11,9 +11,10 @@ problem: |
   source the declaration names.
 decision: |
   Discovery applies a config outside the resolved home only when the file it
-  actually opens is owned by the invoking user, by root, or by the owner of the
-  config's own directory with no group- or other-writable ancestor belonging to
-  anyone else, refusing loudly with a typed error rather than skipping silently.
+  actually opens is owned by the invoking user, by root, or by a third party who
+  also owns every group- or other-writable directory above it, and only when
+  neither the config nor its directory is left writable by everyone. It refuses
+  loudly with a typed error rather than skipping silently.
   Registering a source a project named requires an interactive yes or --yes, is
   written only after the install proceeds, and records how it was approved and
   which file asked. tsuku run then trusts what the registries hold, asking only
@@ -36,7 +37,7 @@ user_visible_surface: true
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context and Problem Statement
 
