@@ -2,6 +2,17 @@
 schema: plan/v1
 status: Active
 execution_mode: multi-pr
+split_rationale: |
+  Incremental Value. Each recipe batch is independently useful the moment it
+  lands: it adds working recipes for a set of tools, which a user can install
+  without waiting on any other batch. As the Decomposition Strategy says, the
+  batches add files to a stable schema with no runtime coupling between them.
+  The foundation issue that introduces the schema gates every batch; the top-100
+  research issue additionally gates the backfill batches, which need its
+  prioritized list to choose which recipes to write; and two batches are
+  sequenced after a sibling (#2268 after #2266 and #2267, #2313 after #2312).
+  Those dependencies set the order batches land in, not whether each is useful
+  once it does.
 upstream: docs/designs/DESIGN-curated-recipes.md
 milestone: "Curated Recipe System"
 issue_count: 42
@@ -93,7 +104,7 @@ These issues capture infrastructure and recipe gaps surfaced while authoring the
 | Issue | Dependencies | Complexity |
 |-------|--------------|------------|
 | ~~[#2325: fix(version): treat -Mn milestone tags as pre-releases in GitHub provider](https://github.com/tsukumogami/tsuku/issues/2325)~~ | ~~None~~ | ~~testable~~ |
-| ~~_Replaces the substring-keyword `isStableVersion` filter with a SemVer-aware predicate (any non-empty prerelease component is unstable unless it matches a stable qualifier), plus a non-SemVer fallback to catch markers spliced into the version without a hyphen (e.g., jq's `1.8.2rc1`). Default stable qualifiers `["release", "final", "lts", "ga", "stable"]` admit the common JVM RELEASE/FINAL conventions; the `[version] stable_qualifiers` recipe field overrides for exotic upstreams. Designed in `docs/designs/DESIGN-prerelease-detection.md`._~~ | | |
+| ~~_Replaces the substring-keyword `isStableVersion` filter with a SemVer-aware predicate (any non-empty prerelease component is unstable unless it matches a stable qualifier), plus a non-SemVer fallback to catch markers spliced into the version without a hyphen (e.g., jq's `1.8.2rc1`). Default stable qualifiers `["release", "final", "lts", "ga", "stable"]` admit the common JVM RELEASE/FINAL conventions; the `[version] stable_qualifiers` recipe field overrides for exotic upstreams. Designed in `docs/designs/current/DESIGN-prerelease-detection.md`._~~ | | |
 | ~~[#2327: feat(recipes): add curated openjdk family (openjdk, temurin, corretto, microsoft-openjdk)](https://github.com/tsukumogami/tsuku/issues/2327)~~ | ~~tsuku release containing [#2368](https://github.com/tsukumogami/tsuku/issues/2368)~~ | ~~testable~~ |
 | ~~_Scope expanded from a single openjdk recipe to four cross-platform JDK distribution recipes. `openjdk` is the Homebrew + apk fallback; `temurin`, `corretto`, and `microsoft-openjdk` are vendor-specific recipes that pull from each project's own infrastructure (Adoptium API, corretto.aws, aka.ms). All share Adoptium's `most_recent_lts` integer as the LTS-major source. Both prerequisite blockers shipped — #2365 (multi-pattern verify) in v0.11.3 and #2368 (multi-recipe alias picker) in v0.11.4 — and this PR ships the four recipes plus `aliases = ["java"]` declarations on each, fulfilling R12 of `PRD-multi-satisfier-picker.md`. `tsuku install java` now presents the four-vendor picker on a TTY (or the structured ambiguous-alias error under `-y`/non-TTY)._~~ |
 | ~~[#2365: feat(recipe): support multi-pattern verify checks](https://github.com/tsukumogami/tsuku/issues/2365)~~ | ~~None~~ | ~~testable~~ |
@@ -101,7 +112,7 @@ These issues capture infrastructure and recipe gaps surfaced while authoring the
 | ~~[#2368: feat(install): present a picker when multiple recipes satisfy an alias](https://github.com/tsukumogami/tsuku/issues/2368)~~ | ~~None~~ | ~~testable~~ |
 | ~~_The OpenJDK family in #2327 ships four valid answers to "give me Java." Today's satisfies index is 1-to-many at the type level (`map[string]satisfiesEntry`), so a virtual alias like `java` can map to at most one recipe and `tsuku install java` either silently picks one or errors. Extends the schema to support multi-satisfier aliases and adds an interactive picker (with non-TTY error+`--from` fallback) so users see and choose among all eligible recipes. Shipped in v0.11.4 via PR #2369._~~ | | |
 | ~~[#2328: feat(version): add a version source for Google Cloud SDK to enable gcloud recipe](https://github.com/tsukumogami/tsuku/issues/2328)~~ | ~~None~~ | ~~testable~~ |
-| ~~_Expanded scope from "gcloud_dist custom source" to a generic `http_json` version source per `docs/designs/DESIGN-http-json-version-source.md`. Adds `[version] source = "http_json"` with `url` and `version_path` fields supporting dotted access plus `[N]` array indexing. Authors `recipes/g/gcloud.toml` as the first consumer in the same PR. Deprecates `source = "hashicorp"` (kept for one release window with a runtime warning); removal tracked in #2349. Unblocks Adoptium-based openjdk in #2327 and HashiCorp checkpoint adoption in #2350-style follow-ups when needed._~~ | | |
+| ~~_Expanded scope from "gcloud_dist custom source" to a generic `http_json` version source per `docs/designs/current/DESIGN-http-json-version-source.md`. Adds `[version] source = "http_json"` with `url` and `version_path` fields supporting dotted access plus `[N]` array indexing. Authors `recipes/g/gcloud.toml` as the first consumer in the same PR. Deprecates `source = "hashicorp"` (kept for one release window with a runtime warning); removal tracked in #2349. Unblocks Adoptium-based openjdk in #2327 and HashiCorp checkpoint adoption in #2350-style follow-ups when needed._~~ | | |
 | ~~[#2330: feat(recipes): author a working curated bazel recipe](https://github.com/tsukumogami/tsuku/issues/2330)~~ | ~~None~~ | ~~testable~~ |
 | ~~_The bare `bazel-{version}-{os}-{arch}` binary self-extracts an embedded JDK and spawns a long-lived server on first run; the prior bare-binary attempt (commit dcb34719, deferred in ed8fc646) failed across the matrix. Resolved by routing through the Homebrew bottle on both linux+glibc and darwin (mirrors the openjdk recipe shape from #2327); Alpine documented as unsupported via `supported_libc = ["glibc"]` because the embedded JDK is glibc-linked._~~ | | |
 | ~~[#2331: feat(recipes): allow pipx_install recipes to pin a PyPI version constraint](https://github.com/tsukumogami/tsuku/issues/2331)~~ | ~~None~~ | ~~testable~~ |
