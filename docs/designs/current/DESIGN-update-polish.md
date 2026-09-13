@@ -36,7 +36,7 @@ Second, there's no proactive notification when a newer version exists outside th
 
 Third, `tsuku update` takes exactly one tool name. Updating all tools requires running the command once per tool. `tsuku update --all` (R14) is a simple batch operation that iterates installed tools and updates each within its pin boundary.
 
-This is Feature 6 of the [auto-update roadmap](../roadmaps/ROADMAP-auto-update.md), implementing PRD requirements R13, R14, and R15b. All dependencies are complete: Feature 1 (version resolution), Feature 3 (auto-apply), and Feature 5 (notification system).
+This is Feature 6 of the auto-update work, implementing [PRD-auto-update](../../prds/PRD-auto-update.md) requirements R13, R14, and R15b. All dependencies are complete: Feature 1 (version resolution), Feature 3 (auto-apply), and Feature 5 (notification system).
 
 ## Decision Drivers
 

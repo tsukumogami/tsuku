@@ -44,7 +44,7 @@ The auto-update system (Features 1-6) handles the happy path well, but three rea
 
 **Offline noise.** When the network is unavailable, the background checker writes error entries to cache files. These errors are harmless (auto-apply skips entries with non-empty `Error` fields), but `tsuku doctor` should detect stale notices and orphaned staging directories left behind by interrupted operations.
 
-This is Feature 7 of the [auto-update roadmap](../roadmaps/ROADMAP-auto-update.md), implementing PRD requirements R11 (consecutive-failure suppression), R18 (old version retention with GC), and R20 (graceful offline degradation).
+This is Feature 7 of the auto-update work, implementing [PRD-auto-update](../../prds/PRD-auto-update.md) requirements R11 (consecutive-failure suppression), R18 (old version retention with GC), and R20 (graceful offline degradation).
 
 ## Decision Drivers
 

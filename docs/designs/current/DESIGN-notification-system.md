@@ -44,7 +44,7 @@ Three gaps exist:
 
 3. **No shared framework.** Self-update success, self-update failure, tool update failure, and tool update available are four distinct notification types with different formatting needs. They're currently handled by ad-hoc `fmt.Fprintf` calls with no common structure.
 
-This is Feature 5 of the [auto-update roadmap](../roadmaps/ROADMAP-auto-update.md), implementing PRD requirements R12 (update notifications) and R16 (CI environment detection). It depends on Feature 2 (check infrastructure, done) and Feature 3 (auto-apply with rollback, done).
+This is Feature 5 of the auto-update work, implementing [PRD-auto-update](../../prds/PRD-auto-update.md) requirements R12 (update notifications) and R16 (CI environment detection). It depends on Feature 2 (check infrastructure, done) and Feature 3 (auto-apply with rollback, done).
 
 ## Decision Drivers
 
