@@ -242,3 +242,88 @@ file, and neither can one added later.
 - **Printing at each call site, or from inside the library.** The first reverses
   the property the shared helper exists for; the second puts gating decisions
   (the quiet flag, the entry check) in the wrong layer.
+
+## Security Considerations
+
+A `.tsuku.toml` is attacker-controlled by construction in this threat model, and
+a recipe served by a source a project named becomes attacker-controlled once that
+source is registered. Four dimensions apply.
+
+**Handling the file itself.** The read discipline is the load-bearing part:
+`lstat` the entry, open with `O_NOFOLLOW|O_NONBLOCK` (following the link only
+after checking the link's own owner), compare device and inode against the
+`lstat`, `fstat` the descriptor, require a regular file, decide, and only then
+read the bytes from that same descriptor. The decision and the bytes therefore
+concern one object, which a stat-then-open pair cannot guarantee; the same idiom
+and reasoning already exist in `internal/actions/install_program_files.go`. Two
+live denial-of-service paths close as a side effect. A named pipe at
+`.tsuku.toml` currently hangs every shell prompt for anyone who can create a file
+in an ancestor directory, because the stat succeeds and the read blocks; the
+regular-file requirement and the non-blocking open end that. And a planted config
+is currently read and decoded on every prompt, where a refusal now reads nothing.
+
+One pre-existing exposure is not closed: nothing caps the byte size of a config
+before it is read and decoded, and inside `$HOME` the rule returns early without
+any check, so an oversized file in a cloned repository is read on every prompt.
+`MaxTools` is a post-decode count and documented as not being a defense against a
+large file. A byte cap is cheap and independent of the trust rule; it is recorded
+here rather than folded in, because it belongs to the parse path.
+
+**What the rule may read, and what it trusts.** Discovery reads metadata only:
+the entry, the opened descriptor, the config's directory, the owners and modes of
+that directory's ancestors when a third party's claim is in question, the kernel's
+hardlink-protection setting when the directory is writable by others and not
+sticky, and the resolution of `$HOME` and the ceilings. It writes nothing. The
+trusted set is the invoking user and root, plus the config directory's owner when
+no group- or other-writable ancestor above it belongs to anyone else. Three limits
+are stated rather than defended: a symlink pointing out of the tree is judged on
+its target's owner but not on its target's directory; the in-tree test is a path
+comparison the descriptor cannot confirm, which is exploitable only by someone
+already trusted; and a bind mount can present a parent chain that differs from the
+real one, which is unreachable because such a mount is not visible in the victim's
+namespace rather than because it cannot be created.
+
+**Source trust and consent.** No consent input comes from the project file: the
+approval decision takes flags, a terminal check and a prompt function, reads no
+environment, and the file's unknown keys are dropped by the decoder with a
+diagnostic. A detected CI environment grants nothing. The escalation rule takes
+one input derived from the file — whether the declaration's key names a source —
+and that input can only withhold the raise. The sufficient half comes from the
+loader, which reflects the user's own configuration. Stated as an invariant,
+because it is what keeps the rule honest under later edits: **a `.tsuku.toml` can
+narrow consent and can never widen it.**
+
+Two consent gaps remain open by decision and are recorded in the PRD's Known
+Limitations: a blanket approval flag in CI approves whatever source a fork's pull
+request adds, and a key with no source component still installs from an
+already-registered source with no consent step. A third is the user's own choice:
+setting auto mode globally bypasses the escalation narrowing entirely, which
+matters because that setting is the remedy offered to anyone who relied on silent
+installs from a source they registered. A per-source allow list is the recorded
+follow-up for both the first and the third.
+
+A dry run still contacts the network: resolving a preview builds a session
+provider for each named source, which probes the source's repository before any
+consent. The destination is constrained to a known host by the source-name
+validation, so this is a signal to the attacker that a specific machine ran the
+command rather than a general request forgery.
+
+**What the new output discloses.** The one stream a shell evaluates carries only
+the exports, every value quoted per dialect by the existing shell-quoting helper,
+including the tracking variable that now records an attacker-chosen directory
+under a refusal. Refusals go to stderr as a single line with the path quoted, so
+control characters in a hostile directory name render visibly instead of reaching
+the terminal; owners are reported as numeric ids rather than resolved through the
+name service, which would be a network call on the prompt path. Nothing from a
+refused file's contents can appear anywhere, because the file is never read.
+
+**Residual risks, in one place.** A config the invoking user owns but leaves
+writable by a shared group can be rewritten in place with no change any ownership
+check can see; the file-mode clause covers the world-writable case only, because a
+group check would refuse ordinary repositories on distributions that use
+user-private groups. A checkout owned by another user is applied when the user
+works in it, and with root invoking, that means an unprivileged user chooses what
+root installs. Ownership means nothing where the filesystem does not implement it
+or where uids are supplied by a mount option. And a project file can still pin an
+old version of a default-registry tool, which `tsuku run` installs and executes
+without asking, because default-registry declarations deliberately stay silent.
