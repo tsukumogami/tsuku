@@ -347,6 +347,16 @@ this feature exercisable in process.
 - The write primitive is the only place on any install path that saves
   `config.toml`. It writes the source URL and `AutoRegistered: true` and prints
   the "Auto-registered source" line to stderr, matching today's output.
+- An AST lint pins that claim rather than leaving it as prose, following the
+  `TestLoadProjectConfigReportingIsTheOnlyCaller` precedent: it walks the
+  non-test `.go` files and flags any call to the user config's `Save` outside the
+  four sites that may hold one — the write primitive, `tsuku registry add`,
+  `tsuku registry remove` and `tsuku config set`. Gating the one install-path
+  write is sufficient for #2552's validation scripts only while no fifth site
+  exists, and today nothing would fail if someone added one. The lint carries a
+  canary of its own, asserting the walk reaches real files and that at least one
+  permitted site still matches, so a wrong skip predicate cannot make it pass by
+  examining nothing.
 - The session-provider primitive keeps `addDistributedProvider`'s current
   behavior, including its no-op when a provider for the source already exists.
 - `ensureDistributedSource` keeps its signature and composes the primitives in
@@ -496,6 +506,13 @@ registration; nothing later updates them. Entries written before this change kee
 loading, keep `auto_registered = true` and its "(auto-registered)" annotation, and
 list exactly as they do today.
 
+This unit edits the write issue 5 just added, which looks like the wrong order
+until you try the other one. Landing the fields first and populating them later
+leaves this unit's end-to-end criterion — that an interactive yes and a `--yes`
+record different approvals against the same declaring path — unwritable until
+issue 5 exists anyway, so the dependency is real rather than an artifact of the
+numbering.
+
 **Acceptance Criteria**:
 - The registry entry type gains two flat `omitempty` string fields, one for how
   the registration was approved and one for the declaring config's path, alongside
@@ -622,6 +639,14 @@ no-terminal messages gain the fact the reader needs to answer the question.
   loads, testing membership by exact string comparison of the configured key. It
   does not read the loader's live provider list, and it adds no provider and
   writes nothing (R23).
+- A test pins that the comparison is exact rather than case-folded: with
+  `Owner/Repo` in the configured registries and a declaration keyed
+  `owner/repo:tool`, the raise is withheld and the message names the source as not
+  registered. GitHub treats the two as one repository, so an implementation that
+  normalizes case would raise for a key the user's configuration does not contain
+  — the wrong direction — and this test is what makes exact comparison deliberate
+  rather than incidental. The friction it costs the honest user is recorded in the
+  PRD's Known Limitations, where normalizing both sides is the follow-up.
 - A table test on `elevate` asserts the returned mode and origin — not the
   presence of a prompt — over: declared with an unregistered source and the unset
   default (not raised); declared with a registered source and the unset default
@@ -748,7 +773,10 @@ that need them.
 **Commit shape.** Nine units, one pull request (the design's D9). The
 intermediate states are visible in the branch and never in a shipped version: the
 window between issue 2 and issue 3, where a refusal has a type but no renderer, is
-the one worth knowing about.
+the one worth knowing about. Issue 5 is not divisible into units — its criteria
+are end-to-end — but it lands as two commits so the diff stays reviewable: the
+mechanical plan object first, then the behaviour that reorders the prompts and
+defers the write.
 
 ## References
 
