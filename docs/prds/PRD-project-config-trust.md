@@ -245,10 +245,12 @@ Terms used below:
   registration. On stderr it lists each source that is not already registered,
   with the declaring file for project-named sources.
 - **R12.** A project-named source that is not already registered is registered
-  only with explicit consent: a yes at an interactive prompt, `--yes`, or
-  `--force`. A source already present in `config.toml`, however it got there,
-  needs no new consent. The absence of a terminal is never consent, and neither
-  is a detected CI environment.
+  only with explicit consent: a yes at an interactive prompt, or `--yes`. A
+  source already present in `config.toml`, however it got there, needs no new
+  consent. `--force` does not consent to a registration: it keeps its other
+  meanings, including suppressing security warnings and replacing a tool already
+  installed from a different source. The absence of a terminal is never consent,
+  and neither is a detected CI environment.
 - **R13.** The interactive prompt for a project-named source names the source and
   the declaring file, and is asked before the existing "Proceed?" confirmation.
 - **R14.** Registration is written only once the install proceeds. Declining at
@@ -261,8 +263,8 @@ Terms used below:
   ways to approve it: `tsuku install --yes` and `tsuku registry add <source>`.
   The exit code distinguishes "needs approval" from an install failure; the
   design names it. Nothing is written to `config.toml` for a skipped source.
-- **R16.** A project-caused registration records how it was approved (one of an
-  interactive yes, `--yes`, or `--force`) and the resolved absolute path of the
+- **R16.** A project-caused registration records how it was approved (an
+  interactive yes or `--yes`) and the resolved absolute path of the
   declaring config, written once at registration and never updated by later
   installs. It keeps `auto_registered = true` and the "(auto-registered)"
   annotation. `tsuku registry list` shows the approval and the path. Entries
@@ -277,26 +279,37 @@ Terms used below:
 ### Functional: `tsuku run` escalation (#2559)
 
 - **R18.** `tsuku run` raises the unset default consent mode to auto for a
-  declared command only when both hold: the declaration's key is bare, and the
-  recipe the run would install comes from the default registry or the local
-  recipes. A recipe from any registered distributed source does not qualify,
-  whether the source was added with `tsuku registry add` or registered by a
-  project. In every other case the command gets the mode it would have had if
-  undeclared.
-- **R19.** When a declared command is not raised because of its source, the
-  prompt, and the message shown when no terminal is attached, name the source the
-  install would actually come from. When the declaration's key names a different
-  source from that one, the output says the named source is not what `tsuku run`
-  installs.
+  declared command unless the declaration's key names a recipe source that is not
+  present in the user's configured registries. A key with no source component
+  always qualifies, and so does one naming a source the user has registered, by
+  any route: `tsuku registry add`, an interactive approval, or `--yes` during a
+  project install. When the key names an unregistered source, the command gets
+  the mode it would have had if undeclared.
+
+  The rule is "ask only about a source you have not registered". It is worth
+  saying why that is sufficient, since it is the claim doing the work: a recipe
+  can only be resolved from the default registry, the user's local recipes, or a
+  registered source, so a declaration can never cause an install from anywhere
+  the user has not already accepted. What it can do, and what the reported defect
+  did, is name a source the user has never approved and have the tool installed
+  anyway without being asked. That is what this requirement stops.
+- **R19.** When a declared command is not raised, the prompt, and the message
+  shown when no terminal is attached, name the unregistered source the key
+  names and say that it is not registered, so the reader knows which decision is
+  being put to them. They also name the source the install would actually come
+  from, and when that differs from the key's, say that the named source is not
+  what `tsuku run` installs. Both facts matter to someone deciding: a repository
+  can name a source it does not get its tool from.
 - **R20.** The consent mode reaches the install as today's resolution and
   mode-lowering gates produce it, including the rule that
   `TSUKU_AUTO_INSTALL_MODE=auto` counts only when `config.toml` also says auto;
   this change removes only the declaration-caused raise for commands that don't
   meet R18. Running an already-installed declared version without consent (the
   existing fast path) is unchanged.
-- **R21.** A declared command with a bare key whose recipe comes from the default
-  registry or the local recipes behaves exactly as today: no new prompt, and the
-  same disclosure line.
+- **R21.** A declared command that qualifies under R18 behaves exactly as today:
+  no new prompt, and the same disclosure line. That covers a key with no source
+  component, whatever registry its recipe resolves from, and a key naming a
+  source the user has registered.
 
 ### Functional: cross-cutting
 
@@ -410,16 +423,21 @@ Source registration:
 - [ ] Dry-run output on stderr lists each unregistered project-named source with
   its declaring file (R11).
 - [ ] With a config declaring a default-registry tool, two unregistered sources
-  and one registered source, run with no terminal and no `--yes`/`--force`: the
+  and one registered source, run with no terminal and no `--yes`: the
   default-registry tool and the registered source's tool are attempted, the two
   unregistered sources and their tools are named on stderr with the declaring
   file, `tsuku install --yes` and `tsuku registry add <source>`, the exit is the
   needs-approval code, and `config.toml` is byte-for-byte unchanged (R12, R15).
-- [ ] With `--yes`, with `--force`, and with the source already registered, a
-  project install with no terminal produces no consent error and its exit is not
-  the needs-approval code. With `--yes` and `--force`, `config.toml` gains the
-  entry; with the source already registered, `config.toml` is unchanged. None of
-  these depends on the recipe fetch succeeding (R12).
+- [ ] With `--yes`, and with the source already registered, a project install
+  with no terminal produces no consent error and its exit is not the
+  needs-approval code. With `--yes`, `config.toml` gains the entry; with the
+  source already registered, `config.toml` is unchanged. Neither depends on the
+  recipe fetch succeeding (R12).
+- [ ] With `--force` but no `--yes` and no terminal, a project install naming an
+  unregistered source exits the needs-approval code with `config.toml` unchanged,
+  while the same run still replaces a tool installed from a different source
+  without prompting. That pairing is what shows the narrowing is scoped to
+  consent rather than applied to `--force` generally (R12).
 - [ ] `CI=true` in the environment does not let a project install with no
   terminal register a source (R12, R22).
 - [ ] Through an injected terminal and scripted input: the source prompt names
@@ -427,8 +445,8 @@ Source registration:
   leaves `config.toml` unchanged, the other declared tools are still attempted,
   and the exit is the needs-approval code; a yes to the source followed by a no
   at "Proceed?" leaves `config.toml` unchanged (R13, R14, R15).
-- [ ] After a project-caused registration via an interactive yes, via `--yes`,
-  and via `--force`, `config.toml` records the matching approval and the resolved
+- [ ] After a project-caused registration via an interactive yes and via `--yes`,
+  `config.toml` records the matching approval and the resolved
   absolute declaring path, keeps `auto_registered = true`, and `tsuku registry
   list` shows the approval, the path and the "(auto-registered)" annotation. A
   later install from a second project naming the same source doesn't change the
@@ -442,17 +460,22 @@ Source registration:
 `tsuku run`:
 
 - [ ] A unit test asserts the escalation decision directly, not the presence of a
-  prompt, for each case: an org-scoped key naming a non-default source is not
-  raised; a bare key whose recipe comes from a registry-added source, and one from
-  a project-registered source, are not raised; a bare key whose recipe comes from
-  the central registry, the embedded recipes, or the local recipes is raised
-  (R18, R26).
+  prompt, for each case: a key naming a source absent from the configured
+  registries is not raised; a key naming a source present in them is raised,
+  whether it was added by `tsuku registry add` or by a consented project install;
+  a key with no source component is raised, including when its recipe resolves
+  from a registered distributed source; and a key naming a source that is removed
+  from the registries between two runs is raised on the first and not on the
+  second (R18, R26).
 - [ ] With no terminal, the #2559 reproduction (an `evil-owner/evil-repo:<tool>`
-  key, mode unset) installs and executes nothing, exits non-zero, and prints a
-  message naming the source the install would come from (R18, R19).
-- [ ] When not raised at a terminal, the prompt names the source the install
-  comes from; for an org key whose bare name the default registry also carries,
-  the output states that the named source is not what `tsuku run` installs (R19).
+  key with that source not registered, mode unset) installs and executes nothing,
+  exits non-zero, and prints a message naming the unregistered source (R18, R19).
+- [ ] The same declaration, after that source is registered, installs with no
+  prompt (R18).
+- [ ] When not raised at a terminal, the prompt names the unregistered source the
+  key names and says it is not registered; for a key whose bare name the default
+  registry also carries, the output also states that the named source is not what
+  `tsuku run` installs (R19).
 - [ ] With `--mode=auto`, and with `auto_install_mode = "auto"` in `config.toml`,
   a declared command naming a non-default source runs in auto; with
   `TSUKU_AUTO_INSTALL_MODE=auto` and no config key, the mode is confirm, as today;
@@ -523,11 +546,16 @@ Cross-cutting:
   install owner/repo:tool` with no terminal registers the source as it does
   today (R17). The user typed the source, which is why it is treated differently
   from a project-named one.
-- **`--yes` in CI approves whatever a pull request's config names.** A job that
-  runs `tsuku install --yes` on a fork's pull request registers any source that
-  pull request adds to `.tsuku.toml`. #2552 accepts `--yes` as consent, so this
-  stays. A flag that approves only named sources would close it and is a
-  candidate follow-up.
+- **`--yes` in CI approves whatever a pull request's config names, and that is
+  accepted deliberately.** A job that runs `tsuku install --yes` on a fork's pull
+  request registers any source that pull request adds to `.tsuku.toml`, and under
+  R18 later runs then install from it without asking. #2552 names `--yes` as
+  consent, and the alternative was considered and rejected on the merits: a job
+  that passes `--yes` blindly is a CI practice to fix in that job, and withholding
+  trust from every user who deliberately approves a source is the wrong price for
+  it. A pipeline that does not want this should not pass `--yes`; `tsuku registry
+  add` in the image is the explicit form. A flag approving only named sources
+  remains a candidate follow-up.
 - **Dry-run still populates the distributed recipe cache** under
   `$TSUKU_HOME/cache/distributed/`. It grants no trust, since sources are loaded
   from `config.toml` only, and the broader dry-run write problem is #2549.
@@ -536,21 +564,32 @@ Cross-cutting:
 - **Sources approved with `tsuku registry add` record no declaring file.** That
   command is the user's own action and is unchanged (R17); `tsuku install --yes`
   is the approval path that records which file asked.
-- **Registered sources no longer get silent installs from `tsuku run`.** A user
-  who registered a source and relied on a declared command installing from it
-  without a prompt now gets a prompt, or sets `--mode=auto` or
-  `auto_install_mode`.
+- **Registering a source is a standing decision, not a per-project one.** Once a
+  source is in the configured registries, any project may declare tools from it
+  and `tsuku run` installs them without asking again, including a repository the
+  user has not read. This is the intended shape: the decision the user is asked
+  to make is about the source, once, and R18's rule is "ask only about a source
+  you have not registered". A per-source allow list scoped to a project would be
+  narrower and remains the recorded follow-up.
 - **A config inside a checkout owned by another user is applied when the user
   works in it** (L3). Discovery bounds which files are reachable; what a
   reachable file may do is bounded by the consent rules above.
-- **`tsuku install` over a plain key still installs from an already-registered
-  source, with no consent step.** The consent rules above cover a source a project
-  *names*. A key with no source component is resolved down the loader chain, which
-  includes every registered distributed source, so a project file can still cause
-  an install from a source the user did not deliberately approve for that project.
-  This is the natural misreading of R18, which narrows `tsuku run` only. Two
-  registered sources carrying the same tool name compose badly with it: the order
-  among them is not fixed, so which one supplies the recipe can vary between runs.
+- **A plain key resolves through every registered source, and the order among
+  them is not fixed.** A key with no source component is resolved down the loader
+  chain, so a project file can cause an install from any registered distributed
+  source without naming it. That follows from the same decision as R18 — a
+  registered source is trusted — and is consistent rather than a gap. What is a
+  defect is the ordering: two registered sources carrying the same tool name are
+  consulted in an order that varies between runs, so which one supplies the recipe
+  is not deterministic. Registering a source therefore gives it a claim on every
+  plain name, decided by chance where two sources overlap.
+- **A declaration that is not an exact version re-decides on every run**
+  (tsukumogami/tsuku#2571). `tsuku run` looks for an already-installed tool in a
+  directory named for the declared version, while installs write the resolved
+  version, so `latest` or a prefix never matches and the consent decision is
+  reached on every invocation. Where R18 asks, it therefore asks every time
+  rather than once. Measured, not inferred. Until #2571 lands, a project that
+  wants a single prompt has to pin an exact version.
 - **A plain key still chooses the version installed and executed, unprompted.**
   R18 stops a project file deciding *where* a tool comes from without asking; it
   does not stop one pinning an old, known-vulnerable version of a default-registry
@@ -579,9 +618,22 @@ Cross-cutting:
   command-line-named sources, which are otherwise unchanged. A dry run that
   writes global configuration breaks the flag's one promise, and #2552's
   criterion is not limited to project installs.
-- **`--yes` and `--force` both count as consent.** #2552 names `--yes`; `--force`
-  is documented as proceeding without prompts and is typed by the user, and
-  narrowing it would break scripts. The residual CI exposure is listed above.
+- **Only `--yes` counts as consent; `--force` keeps its other meanings.**
+  Considered and rejected: keeping both, on the grounds that `--force` is
+  documented as proceeding without prompts and that narrowing it would break
+  scripts. Neither ground survived inspection. The documented meaning is already
+  untrue on this path, since `--force` does not skip the install confirmation;
+  the design that introduced project-driven registration propagates `--yes`
+  alone, so `--force` granting consent here is drift rather than a promise; and
+  nothing in the repository relies on it — no test, functional scenario or user
+  document pairs `--force` with a project-named registration. The reasoning that
+  decided it is about what the flags mean rather than about distrusting anyone:
+  `--yes` answers a consent question, `--force` forces an operation through, and
+  acquiring a permanent entry in the user's global configuration is not what
+  someone forcing an install asked for. Also considered and rejected: making
+  `--force` imply `--yes` everywhere, which would enlarge blanket approval at the
+  moment this work exists to narrow it and would silently change `--force` for
+  every current user.
 - **A skipped source doesn't stop the rest of the install.** Considered: failing
   the whole install when any source lacks consent. Installing what can be
   installed matches today's per-source failure handling and the unfamiliar-repository journey in Absorbed Brief,
@@ -591,13 +643,29 @@ Cross-cutting:
   refused config as absent. For `tsuku install` that would say "no
   `.tsuku.toml` found" about a file that exists, which is the silent
   disappearance the problem statement warns about.
-- **Registered sources don't qualify for `tsuku run`'s raise.** Considered:
-  treating sources added with `tsuku registry add` as approved for silent
-  installs. #2559 requires a prompt for any org-scoped key, so that treatment
-  would help only bare keys and split the rule; org-scoped run elevation shipped
-  only in v0.14.0; and qualifying registered sources can be added later. The
-  design records this as a decision and confirms it with the user; if the user
-  chooses otherwise, this PRD is amended before the plan.
+- **A registered source is trusted, whichever route registered it.** Considered
+  and rejected: excluding registered sources from the raise, so that every
+  org-scoped key prompts; and a middle position admitting `tsuku registry add`
+  but not an approval given through `--yes`. Both were recommended at one point
+  and both were withdrawn. The evidence against them is the workspace's own
+  configs: every repository in this organization declares tools from the
+  organization's own distributed source, one of them as `latest`, and a rule that
+  excludes registered sources makes those declarations prompt on every invocation
+  forever and fail on every agent and CI run, with no proportionate remedy short
+  of turning auto mode on globally. A control whose only workaround is a larger
+  one gets bypassed with the larger one. The narrower argument for excluding an
+  approval given via `--yes` — that a CI job passes it blindly, including on a
+  fork's pull request — was rejected on the ground that a job passing `--yes`
+  blindly is a practice to fix in that job, not a reason to withhold trust from
+  every user who deliberately approves a source. The residual is recorded under
+  Known Limitations as accepted rather than as something to close.
+- **#2559's first acceptance criterion is amended by this PRD.** As written it
+  requires that a project-declared tool whose key names a non-default source
+  never reaches the auto path and that the user is prompted, with no exception.
+  R18 deliberately makes that false for a source the user has registered. The
+  criterion is met for every unregistered source, which is the case the issue
+  reproduces; the amendment is called out in the pull request rather than left as
+  a criterion silently unmet.
 - **The discovery rule and the escalation predicate are chosen in the design.**
   This PRD fixes the outcomes (R2's table, R18) and leaves the mechanisms to the
   design, where each is settled as a recorded decision and confirmed with the
