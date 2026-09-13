@@ -128,15 +128,17 @@ Terms used below:
 - **Project-named source:** an `owner/repo` source that reaches `tsuku install`
   only through a `.tsuku.toml` key, that is, `tsuku install` with no tool
   arguments. A source given as a command-line argument is **command-line-named**.
-- **Resolved `$HOME`:** `$HOME` resolved through symlinks, used for R1 only when
-  it resolves, is not `/`, and is owned by the invoking user. Otherwise there is
-  no resolved `$HOME` and every path counts as outside it.
+- **Resolved `$HOME`:** `$HOME` resolved through symlinks, when it resolves, is
+  not `/`, and is owned by the invoking user. When `$HOME` fails any of these,
+  there is no resolved `$HOME`: it does not stop the walk, and every path counts
+  as outside it.
 
 ### Functional: discovery (#2555)
 
-- **R1.** A `.tsuku.toml` whose directory is at or below the resolved `$HOME` is
-  found and applied exactly as today, including when it is a symlink. The checks
-  in R2 through R4 apply only outside the resolved `$HOME`.
+- **R1.** A `.tsuku.toml` in a directory strictly below the resolved `$HOME` is
+  found and applied exactly as today, including when it is a symlink. As today,
+  the walk stops at the resolved `$HOME` itself without reading a config there.
+  The checks in R2 through R4 apply only outside the resolved `$HOME`.
 - **R2.** Outside the resolved `$HOME`, discovery applies a config only when the
   invoking user can be held to have chosen it. The rule that decides this is
   chosen in the design, and must produce the outcomes in this table. "Owner" is
@@ -157,8 +159,9 @@ Terms used below:
   | L10 | A `.tsuku.toml` symlink and its target both owned by a uid the rule accepts for that location (for example inside L3's checkout) | any | found |
 
   The table is the minimum. For a layout it doesn't list, the design states the
-  outcome. When the design's rule cannot give two listed layouts their required
-  outcomes, the refusal wins and the design records the conflict.
+  outcome. If the design finds that no rule can give two listed layouts their
+  required outcomes, the refusal wins, the design records the conflict and the
+  changed row, and this PRD is amended before the plan.
 - **R3.** When discovery refuses a config, the walk stops there. It does not
   continue to directories above the refused file, and the refused file's
   contents are not parsed, so a refused file that would also fail to parse
@@ -169,22 +172,26 @@ Terms used below:
 - **R5.** `$HOME` and every `TSUKU_CEILING_PATHS` entry are compared against the
   walk on symlink-resolved paths, as the start directory already is. A ceiling
   entry that cannot be resolved is compared as written, as today. A directory the
-  walk cannot examine ends the walk with no config found.
+  walk cannot examine ends the walk with no config found and no message, as
+  today; nothing was found, so there is nothing to refuse.
 
 ### Functional: refusal reporting
 
 - **R6.** A refused config produces exactly one line on stderr naming the file
   (quoted, since the path may be attacker-chosen), the reason, and what the user
   can do about it. Nothing about the refusal is written to stdout by any command.
-- **R7.** `tsuku hook-env` exits 0 under a refused config. Its stdout makes no
-  change to `PATH`; it may set only the tracking variables a no-op activation
-  sets. It prints the refusal on the first prompt after the refused file changes
-  from the previous prompt's (including after leaving and re-entering), and not
-  on later prompts while the same file is refused, including after moving to a
-  subdirectory. Entering a refused location from an active project deactivates
-  that project. `--quiet` suppresses the line for `tsuku hook-env` only.
+- **R7.** `tsuku hook-env` exits 0 under a refused config and handles it the way
+  it handles a config that fails to parse today: its stdout adds nothing to
+  `PATH` and records the refused file's directory in the tracking variables, so
+  later prompts know it was reported. Entering a refused location from an active
+  project deactivates that project, restoring the `PATH` it had before; that is
+  the only `PATH` change. The refusal prints on the first prompt after the
+  refused file changes from the previous prompt's (including after leaving and
+  re-entering, and on the prompt that deactivates a project), and not on later
+  prompts while the same file is refused, including after moving to a
+  subdirectory. `--quiet` suppresses the line for `tsuku hook-env` only.
 - **R8.** `tsuku shell` exits 0 under a refused config, prints the refusal on
-  every invocation, and its stdout makes no change to `PATH`.
+  every invocation, and its stdout adds nothing to `PATH`.
 - **R9.** `tsuku run` prints the refusal on every invocation and then behaves as
   though no config were present.
 - **R10.** `tsuku install` and `tsuku shim install` with no arguments fail with a
@@ -203,10 +210,10 @@ Terms used below:
   needs no new consent. The absence of a terminal is never consent, and neither
   is a detected CI environment.
 - **R13.** The interactive prompt for a project-named source names the source and
-  the declaring file.
+  the declaring file, and is asked before the existing "Proceed?" confirmation.
 - **R14.** Registration is written only once the install proceeds. Declining at
-  any prompt in a project install, whether the source prompt or the existing
-  "Proceed?" confirmation, leaves `config.toml` unchanged.
+  any prompt in a project install, whether the source prompt or the "Proceed?"
+  confirmation, leaves `config.toml` unchanged.
 - **R15.** When a project-named source is declined, or has no consent and no
   terminal, the tools declared from that source are skipped and every other
   declared tool still installs. The command then exits non-zero and, on stderr,
@@ -271,9 +278,12 @@ Terms used below:
   directories, a config's link and target, and the resolution of `$HOME` and
   ceiling entries), read no config contents before the decision, and make no
   network calls, since `tsuku hook-env` runs on every shell prompt.
-- **R26.** Tests can substitute the invoking uid, each path's owner and mode, and
-  the terminal check, so the discovery decision (R2) and the escalation decision
-  (R18) run in `go test -short` as a non-root user with no second account.
+- **R26.** Tests can substitute the invoking uid, each path's owner and mode, the
+  filesystem access discovery performs, and the terminal check. Every acceptance
+  criterion below that involves another user's files, root, or a terminal runs
+  through these seams in `go test -short` as a non-root user with no second
+  account, including in-process tests of `cmd/tsuku` commands, since a
+  functional scenario can only create files owned by the invoking user.
 
 ### Design constraint
 
@@ -288,7 +298,9 @@ Discovery and reporting:
 - [ ] A unit test builds each R2 layout under `t.TempDir()`, reproducing the
   parent's owner and mode (a 1777 stand-in for `/tmp`, a root-owned 0755 stand-in
   for `/srv`) through the R26 seams, and asserts the discovery outcome, not only a
-  message: L1-L5 and L10 load their config, L6-L9 return a refusal (R2, R26).
+  message: every "found" row loads its config and every "refused" row returns a
+  refusal, with any row changed under R2's conflict clause asserted as amended
+  (R2, R26).
 - [ ] A test with `HOME` pointed at a directory that is not an ancestor of the
   project asserts that a config at the root of a checkout outside `$HOME` is
   found (R2).
@@ -303,25 +315,31 @@ Discovery and reporting:
   through a seam and asserts the swapped file is not parsed (R4).
 - [ ] Tests with `HOME` set to a symlinked path, and with a symlinked
   `TSUKU_CEILING_PATHS` entry, place a config above the real directory and assert
-  it is not found; with `HOME=/` and with `HOME` unset, the L6 layout is refused
-  (R1, R5).
+  it is not found. With `HOME=/`, with `HOME` unset, and with `HOME` owned by
+  another uid through the R26 seams, the L6 layout is refused (R1, R5).
+- [ ] A `TSUKU_CEILING_PATHS` entry naming a directory that doesn't exist is
+  ignored without error, and a walk that reaches a directory it cannot examine
+  (mode 000) returns no config and prints nothing (R5).
 - [ ] A config directly in the resolved `$HOME` is not applied, and a config at
   `$HOME/projects/x` is, as today (R1).
 - [ ] Existing in-`$HOME` discovery tests and the `project-config.feature`
   scenarios pass unchanged (R1).
 - [ ] A test with a directory name containing a newline, `$`, a backtick and an
   escape sequence asserts the refusal is exactly one stderr line with the path
-  quoted and no raw control characters, and that `tsuku run`, `tsuku install`,
-  `tsuku shell` and `tsuku hook-env` write no refusal text to stdout (R6).
-- [ ] Under a refused config, `tsuku hook-env` exits 0 and its stdout changes no
-  `PATH`. The test feeds each call's exported tracking variables into the next
-  call's environment and asserts: the refusal prints on the first call, not on a
-  second call in the same directory, not on a third call from a subdirectory, and
-  again after a call from an unrelated directory (R7).
-- [ ] Moving from an activated project into a refused location restores the
-  previous `PATH` (R7).
+  quoted and no raw control characters, that the line states a reason and an
+  action the user can take, and that `tsuku run`, `tsuku install`, `tsuku shell`
+  and `tsuku hook-env` write no refusal text to stdout (R6).
+- [ ] Under a refused config, `tsuku hook-env` exits 0 and its stdout adds
+  nothing to `PATH`. The test feeds each call's exported tracking variables into
+  the next call's environment and asserts: the refusal prints on the first call,
+  not on a second call in the same directory, not on a third call from a
+  subdirectory, and again after a call from an unrelated directory. With
+  `--quiet`, no call prints it (R7).
+- [ ] Starting from an activated project, a `tsuku hook-env` call from a refused
+  location restores the previous `PATH` and prints the refusal, and the next call
+  from the same location prints nothing (R7).
 - [ ] Under a refused config, `tsuku shell` exits 0, prints the refusal on each
-  of two invocations, and its stdout changes no `PATH` (R8).
+  of two invocations, and its stdout adds nothing to `PATH` (R8).
 - [ ] Under a refused config, `tsuku run` prints the refusal on stderr and
   resolves the command as it would with no config (R9).
 - [ ] Under a refused config, `tsuku install` and `tsuku shim install` with no
@@ -346,8 +364,8 @@ Source registration:
   and one registered source, run with no terminal and no `--yes`/`--force`: the
   default-registry tool and the registered source's tool are attempted, the two
   unregistered sources and their tools are named on stderr with the declaring
-  file, `tsuku install --yes` and `tsuku registry add <source>`, the exit is
-  non-zero, and `config.toml` is byte-for-byte unchanged (R12, R15).
+  file, `tsuku install --yes` and `tsuku registry add <source>`, the exit is the
+  needs-approval code, and `config.toml` is byte-for-byte unchanged (R12, R15).
 - [ ] With `--yes`, with `--force`, and with the source already registered, a
   project install with no terminal produces no consent error and its exit is not
   the needs-approval code. With `--yes` and `--force`, `config.toml` gains the
@@ -355,10 +373,11 @@ Source registration:
   these depends on the recipe fetch succeeding (R12).
 - [ ] `CI=true` in the environment does not let a project install with no
   terminal register a source (R12, R22).
-- [ ] Through an injected terminal and scripted input: the prompt names the
-  source and the declaring file; declining leaves `config.toml` unchanged; a yes
-  to the source followed by a no at "Proceed?" leaves `config.toml` unchanged
-  (R13, R14).
+- [ ] Through an injected terminal and scripted input: the source prompt names
+  the source and the declaring file and comes before "Proceed?"; declining it
+  leaves `config.toml` unchanged, the other declared tools are still attempted,
+  and the exit is the needs-approval code; a yes to the source followed by a no
+  at "Proceed?" leaves `config.toml` unchanged (R13, R14, R15).
 - [ ] After a project-caused registration via an interactive yes, via `--yes`,
   and via `--force`, `config.toml` records the matching approval and the resolved
   absolute declaring path, keeps `auto_registered = true`, and `tsuku registry
@@ -387,7 +406,7 @@ Source registration:
   the output states that the named source is not what `tsuku run` installs (R19).
 - [ ] With `--mode=auto`, and with `auto_install_mode = "auto"` in `config.toml`,
   a declared command naming a non-default source runs in auto; with
-  `TSUKU_AUTO_INSTALL_MODE=auto` and no config key, the mode is what it is today;
+  `TSUKU_AUTO_INSTALL_MODE=auto` and no config key, the mode is confirm, as today;
   with `--mode=suggest`, a default-registry declared command stays at suggest;
   an already-installed declared version executes with no prompt (R20).
 - [ ] The existing headless test for a default-registry declared command still
@@ -403,17 +422,23 @@ Cross-cutting:
   consent decision, and that those keys produce the existing
   "ignoring unrecognized key" diagnostic, so the test can't pass merely because
   they weren't decoded (R22).
-- [ ] No code path under `tsuku run`, the command-not-found hook, or activation
-  calls the source-registration routine; a test drives each with an
-  unregistered org-scoped key and asserts `config.toml` is unchanged (R23).
+- [ ] A test drives `tsuku run`, the command-not-found path, and activation with
+  an unregistered org-scoped key and asserts `config.toml` is unchanged (R23).
 - [ ] `DESIGN-shell-env-activation.md` no longer contains "prevents traversal"
   about `TSUKU_CEILING_PATHS` and states it is opt-in and unset by default (R24).
 - [ ] The `tsuku-user` skill no longer contains the sentence saying discovery
   stops at `$HOME`, and contains the refusal message text and
-  `tsuku registry add` in its project-install section (R24).
-- [ ] A unit test with counting metadata seams asserts that discovery examines
-  only the walk's directories, the config's link and target, and `$HOME` and
-  ceiling resolution, and reads no config contents before the decision (R25).
+  `tsuku registry add` in its project-install section. Review item: its
+  description of the discovery rule and of the narrowed escalation matches the
+  implementation (R24).
+- [ ] A unit test routes all of discovery's filesystem access (open, stat, lstat,
+  readlink, directory reads and path resolution) through the R26 seam, fails on
+  any access that bypasses it, and asserts that discovery examines only the
+  walk's directories, the config's link and target, and `$HOME` and ceiling
+  resolution, and reads no config contents before the decision (R25, R26).
+- [ ] `tsuku hook-env` under a refused config and under an accepted config exits
+  0 with the expected output when `HTTP_PROXY` and `HTTPS_PROXY` point at an
+  unreachable address (R25).
 
 ## Out of Scope
 
