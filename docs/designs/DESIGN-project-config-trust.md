@@ -119,3 +119,126 @@ consent (`DESIGN-shell-env-activation.md` and the `tsuku-user` skill) has to mat
 - **Supported platforms are Linux and macOS.** `syscall.Stat_t` is available on
   both; the binary does not build for Windows today.
 - **One reviewable PR** covering #2555, #2552 and #2559.
+
+## Considered Options
+
+Five decisions were evaluated independently. Decisions 1, 2 and 5 are
+user-visible and are recorded here once confirmed; decisions 3 and 4 follow.
+
+### Decision 3: How project install gates, defers and records a source registration
+
+Today one function validates a source, checks whether it is registered, applies
+`strict_registries`, prompts, writes `config.toml` and builds a session provider,
+and both callers run it before their `--dry-run` branch
+(`cmd/tsuku/install.go:243`, `cmd/tsuku/install_project.go:107`). A missing
+terminal falls through to the write. The project install's "Proceed?" gate comes
+after that write, so declining it cannot undo the registration.
+
+Key assumptions: the registration write is the only `config.toml` write on any
+install path, so gating it is sufficient for #2552's two validation scripts; a
+project install reads one `.tsuku.toml`, so every project-named source in a run
+shares a declaring file.
+
+#### Chosen: split primitives, with the write deferred to a commit step after "Proceed?"
+
+The function is rebuilt from three primitives: classify a source (validate, look
+it up, apply the strict refusal; no network, no write), add a session-only
+provider, and write the entry. The command-line path composes them in today's
+order, so its behavior, including its non-terminal registration, is unchanged.
+
+The project install gets a plan object that classifies each unique source, asks
+about each unregistered one after the tool list and before "Proceed?", and writes
+every approved source in a single save immediately after "Proceed?" and before
+any recipe fetch. Declining at either prompt leaves `config.toml` untouched. A
+source without consent has its tools skipped while the rest of the install
+proceeds, and the command exits with a new code, 16, that outranks the
+install-failure codes. A dry run classifies, notes each unregistered source on
+stderr and writes nothing, whatever the terminal and flags.
+
+Each project-caused entry records how it was approved and the resolved absolute
+path of the declaring config, as two optional string fields alongside the
+existing auto-registration flag, written once and never updated.
+
+Deferring the write is the only change the feature actually requires, and
+separating the write from the check turns "write after the user proceeds" into an
+ordering in the caller rather than a flag inside a shared function. A new exit
+code is used because every existing one is either claimed or misleading: one
+advertises a flag this command does not have, one already means a complete abort,
+one is a security block taken by decision 4, and one cannot be told apart from an
+install failure.
+
+#### Alternatives Considered
+
+- **A mode or origin parameter on the existing function.** One call cannot
+  express "decide now, write after a later prompt" without returning a pending
+  token, and the gap spans the tool list, the dry-run branch and the "Proceed?"
+  gate. It also folds a five-way flag matrix into the one function whose
+  non-terminal branch an existing test pins.
+- **A separate project-mode entry point.** Duplicates validation, the
+  registration lookup and the strict refusal whose exact message a functional
+  scenario asserts, and the command-line path has to change anyway to stop
+  writing under `--dry-run`.
+- **Register during the pre-scan and roll back on decline or dry run.** Saving
+  re-encodes the whole file from a residue-free decode, so a restore cannot be
+  byte-identical and drops unknown keys; it races concurrent writers; and a dry
+  run that writes and then undoes has still written.
+- **Gate only the write with a boolean.** The write is not the only thing that
+  moves: the question relocates in the output, and per-source bookkeeping needs
+  more than the existing per-tool failure flag can carry.
+- **A real terminal pair in tests, with no production change.** The requirement
+  is that the terminal check itself be substitutable; and because each prompt
+  builds its own buffered reader, scripted input loses its second answer whatever
+  the fixture does.
+- **A nested table or a coarse origin enum for provenance, or a side file.** The
+  nested table writes a bare empty header into every pre-existing entry on the
+  first save; an enum records neither fact the requirement asks for; a side file
+  is a second source of truth that `tsuku registry remove` lets drift.
+
+### Decision 4: How a refused config is represented and reported
+
+Five callers have to report a refusal, and their existing error paths differ:
+`tsuku run` discards the load error entirely (`cmd/tsuku/cmd_run.go:209`), while
+the shell hook and `tsuku shell` already give the existing parse error exactly
+the treatment the requirements ask for here.
+
+#### Chosen: a typed refusal error, carried on activation's existing unusable-config path
+
+`internal/project` gains a `RefusedError` alongside `ParseError`, carrying the
+refused path, the directory holding it, the reason and the remedy. Discovery
+returns it instead of a config, having read no bytes. The shared loader helper
+prints the single stderr line, because `tsuku run` discards the error and would
+otherwise lose it silently; `tsuku install` and `tsuku shim install` then only
+choose an exit code, 14, so the line appears exactly once and never alongside
+"no `.tsuku.toml` found".
+
+Activation treats a refusal and a parse failure as one case: stdout adds nothing
+to `PATH`, the refused file's directory goes into the existing tracking variable,
+and the report fires when the refused file differs from the previous prompt's or
+when the refusal changes `PATH`. That second term covers a config that becomes
+refused in place while its tools are active, which directory comparison alone
+cannot see. No new tracking variable is introduced.
+
+A typed error is the only representation that fails closed: every caller already
+treats a non-nil load error as "no usable config", so none can act on a refused
+file, and neither can one added later.
+
+#### Alternatives Considered
+
+- **A variant of the existing parse error.** Every renderer would still have to
+  tell the two apart to avoid reporting a file as unparseable when it was never
+  read, and `tsuku install` would exit as it does for a syntax error.
+- **A refused state on the result type.** Two callers dereference the config
+  immediately after the nil check, so this panics; with an empty config instead
+  they print "No tools declared" on stdout and exit 0.
+- **The existing diagnostics channel.** It is written straight to stderr with no
+  quiet-flag check and sits outside the entry gate, so a refusal would reprint on
+  every prompt anywhere below the refused file.
+- **A second discovery entry point returning found, absent or refused.** The lint
+  that keeps loading centralized matches the existing function's name, so a new
+  entry point is invisible to it while existing callers keep compiling against
+  the old one.
+- **A new tracking variable for the refused path.** It records what the existing
+  directory variable already holds, at the cost of an export on every prompt.
+- **Printing at each call site, or from inside the library.** The first reverses
+  the property the shared helper exists for; the second puts gating decisions
+  (the quiet flag, the entry check) in the wrong layer.
