@@ -385,7 +385,11 @@ Exit codes for project install:
 
 func init() {
 	installCmd.Flags().BoolVar(&installDryRun, "dry-run", false, "Show what would be installed without making changes")
-	installCmd.Flags().BoolVar(&installForce, "force", false, "Skip security warnings and proceed without prompts")
+	// Not "proceed without prompts": it never skipped the install confirmation,
+	// and it no longer approves registering a source that only a project
+	// .tsuku.toml named. Use --yes to answer consent questions.
+	installCmd.Flags().BoolVar(&installForce, "force", false,
+		"Skip security warnings and replace a tool installed from another source")
 	installCmd.Flags().BoolVar(&installFresh, "fresh", false, "Force fresh plan generation, bypassing cached plans")
 	installCmd.Flags().BoolVar(&installReinstall, "reinstall", false, "Re-run the installation even if the version is already installed, replacing the files on disk")
 	installCmd.Flags().BoolVar(&installJSON, "json", false, "Emit structured JSON error output on failure")
