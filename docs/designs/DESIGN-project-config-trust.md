@@ -84,7 +84,8 @@ write is the only one any install path makes to `config.toml`, so gating it is
 sufficient rather than merely necessary.
 
 **Run escalation.** `autoinstall.Runner.Run` (`internal/autoinstall/run.go:175`)
-calls `elevate(mode, origin, declaration != nil)`, which turns an unset default
+calls `elevate(mode, origin, declaration != nil)`
+(`internal/autoinstall/run.go:239`), which turns an unset default
 into auto for any declared command. The declaration reduces every key to a bare
 recipe name (`internal/project/declaration.go`), and the recipe is matched
 against the binary index, whose `Source` is `"registry"` or `"installed"` keyed
