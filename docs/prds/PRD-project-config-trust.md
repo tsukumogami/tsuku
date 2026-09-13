@@ -15,7 +15,8 @@ goals: |
   tsuku refuses, or a source it needs approval for, is reported on stderr
   rather than acted on or dropped silently, and neither a missing terminal nor
   a dry run lets a project file make a lasting change.
-upstream: docs/briefs/BRIEF-project-config-trust.md
+absorbed:
+  - docs/briefs/BRIEF-project-config-trust.md
 ---
 
 # PRD: Project Config Trust
@@ -23,6 +24,41 @@ upstream: docs/briefs/BRIEF-project-config-trust.md
 ## Status
 
 Accepted
+
+Absorbed [BRIEF: Project Config Trust](docs/briefs/BRIEF-project-config-trust.md); carried in Absorbed Brief.
+
+## Absorbed Brief
+
+**Problem.** Since v0.14.0 a `.tsuku.toml` decides whether `tsuku run` installs a
+declared tool without asking and which recipe sources `tsuku install` registers
+globally, and tsuku applies whatever file it finds as though the user wrote it. A
+file planted above a checkout outside `$HOME`, or shipped in a cloned repository,
+can choose where a user's tools come from, and the user is never asked. Refusing
+such files quietly is only half a fix, because a config tsuku ignores without
+saying so looks like tools that stopped working for no reason.
+
+**Outcome.** A developer working in a cloned repository, a shared host's scratch
+directory, or a container volume can trust that a project file changes their
+tools only in ways they would agree to. Default-registry tools behave as today
+with no new question, and checkouts outside `$HOME` still find their own config.
+Anything tsuku declines or needs approval for is reported on stderr, naming the
+file and the source, and neither a missing terminal nor a dry run lets a project
+file make a lasting change.
+
+**Journeys and boundary.** Five journeys framed the feature and are carried as
+User Stories below: a developer on a shared host with a config planted above
+them; a developer evaluating an unfamiliar repository; a CI pipeline with nobody
+to ask; a developer running a declared command; and a container user with a
+checkout outside `$HOME`. The last pulls against the first, since a file the
+developer didn't create can be legitimate on a volume and hostile in `/tmp`,
+which is why R2 is stated as a table of layouts. The scope boundary is carried in
+Requirements and Out of Scope. The framing builds on
+`docs/designs/current/DESIGN-org-scoped-project-config.md` (config-driven source
+registration and the trust boundary it shifted),
+`docs/designs/current/DESIGN-shell-env-activation.md` (the activation design
+carrying the ceiling-variable claim), and
+`docs/designs/current/DESIGN-autoinstall-mode-resolution.md` (the consent-mode
+model `tsuku run` uses).
 
 ## Problem Statement
 
@@ -511,7 +547,7 @@ Cross-cutting:
   narrowing it would break scripts. The residual CI exposure is listed above.
 - **A skipped source doesn't stop the rest of the install.** Considered: failing
   the whole install when any source lacks consent. Installing what can be
-  installed matches today's per-source failure handling and the brief's journey
+  installed matches today's per-source failure handling and the unfamiliar-repository journey in Absorbed Brief,
   where declining one source still installs the other tools; the non-zero exit
   keeps CI honest.
 - **An explicit command fails on a refused config.** Considered: treating a
