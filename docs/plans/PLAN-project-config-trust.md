@@ -710,7 +710,8 @@ and carries the release-note text the requirements ask for (R24, R24a).
   `.goreleaser.yaml`, and the release-prepare workflow pulls the tag's notes from
   the draft release — so the PR body is where the text has to live for whoever
   cuts the release.
-- No committed file references a `wip/` path.
+- No file this change touches carries a reference to a non-durable scratch path,
+  and none of the branch's scratch artifacts remain before merge.
 
 **Dependencies**: <<ISSUE:3>>, <<ISSUE:5>>, <<ISSUE:6>>, <<ISSUE:7>>, <<ISSUE:8>>
 
