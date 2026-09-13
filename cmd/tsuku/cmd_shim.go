@@ -64,6 +64,11 @@ Refuses to overwrite existing non-shim files in $TSUKU_HOME/bin/.`,
 			}
 			result, loadErr := loadProjectConfigReporting(cwd)
 			if loadErr != nil {
+				if isRefusal(loadErr) {
+					// The helper already printed the line. Repeating it here
+					// would say it twice; all this branch owes is the code.
+					exitWithCode(ExitForbidden)
+				}
 				fmt.Fprintf(os.Stderr, "tsuku shim install: %v\n", loadErr)
 				exitWithCode(ExitGeneral)
 			}

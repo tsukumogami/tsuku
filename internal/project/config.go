@@ -5,8 +5,10 @@
 package project
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -104,47 +106,210 @@ func (r *ConfigResult) FprintDiagnostics(w io.Writer) {
 
 // LoadProjectConfig finds the nearest .tsuku.toml by walking up from startDir.
 // Returns nil if no config file is found. Returns an error only if a config
-// file exists but cannot be parsed or exceeds MaxTools.
+// file exists but cannot be read or parsed, or exceeds MaxTools.
 //
-// startDir is resolved via filepath.EvalSymlinks before traversal to prevent
-// symlink-based misdirection. Traversal stops at $HOME unconditionally;
-// TSUKU_CEILING_PATHS (colon-separated) adds additional ceilings but cannot
-// remove the $HOME boundary.
+// startDir is resolved via symlinks before traversal to prevent symlink-based
+// misdirection. Traversal stops at $HOME unconditionally; TSUKU_CEILING_PATHS
+// (colon-separated) adds additional ceilings but cannot remove the $HOME
+// boundary. Both are compared resolved, as the walk is.
 func LoadProjectConfig(startDir string) (*ConfigResult, error) {
-	resolved, err := filepath.EvalSymlinks(startDir)
+	return LoadProjectConfigIn(OSDiscoveryEnv(), startDir)
+}
+
+// LoadProjectConfigIn is LoadProjectConfig with its filesystem and identity
+// access supplied explicitly.
+//
+// The one-argument form above is what production calls; this form exists
+// because the cases that decide the rule -- another user's files, files owned
+// by root, a directory only an administrator could have created -- have to be
+// reachable from a test running as an unprivileged user with no second account,
+// and from the command package as well as from here.
+func LoadProjectConfigIn(env DiscoveryEnv, startDir string) (*ConfigResult, error) {
+	resolved, err := env.EvalSymlinks(startDir)
 	if err != nil {
 		return nil, fmt.Errorf("resolving symlinks for %s: %w", startDir, err)
 	}
 
-	ceilings := buildCeilings()
+	ceilings := buildCeilings(env)
 
-	dir := filepath.Clean(resolved)
-	for {
+	for _, dir := range env.Ancestors(resolved) {
 		if isCeiling(dir, ceilings) {
 			return nil, nil
 		}
 
 		configPath := filepath.Join(dir, ConfigFileName)
-		if _, err := os.Stat(configPath); err == nil {
-			cfg, diags, parseErr := parseConfigFile(configPath)
-			if parseErr != nil {
-				return nil, &ParseError{Dir: dir, Path: configPath, Err: parseErr}
+		meta, statErr := env.Lstat(configPath)
+		if statErr != nil {
+			if errors.Is(statErr, fs.ErrNotExist) {
+				continue
 			}
-			return &ConfigResult{
-				Config:      cfg,
-				Path:        configPath,
-				Dir:         dir,
-				Diagnostics: diags,
-			}, nil
-		}
-
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			// Reached filesystem root.
+			// The directory cannot be examined. End the walk here rather than
+			// treating it as one holding no config and continuing past it:
+			// nothing was found, so there is nothing to name, and stopping is
+			// the fail-closed direction. This is the one place unreadable
+			// metadata ends the walk quietly instead of reporting.
 			return nil, nil
 		}
-		dir = parent
+
+		trusted := belowResolvedHome(env, configPath)
+
+		cfg, diags, readErr := readConfig(env, configPath, dir, meta, trusted)
+		if readErr != nil {
+			var refused *RefusedError
+			if errors.As(readErr, &refused) {
+				// The walk stops here. It does not continue to directories
+				// above a refused file: a config that was refused is an answer,
+				// and walking past it would apply a different file than the one
+				// nearest the working directory without saying so.
+				return nil, refused
+			}
+			return nil, &ParseError{Dir: dir, Path: configPath, Err: readErr}
+		}
+		return &ConfigResult{
+			Config:      cfg,
+			Path:        configPath,
+			Dir:         dir,
+			Diagnostics: diags,
+		}, nil
 	}
+	return nil, nil
+}
+
+// readConfig judges the entry, opens it, and decodes it.
+//
+// The decision and the read concern one object rather than one path: the open
+// comes first and the check is made on the descriptor, because a stat-then-read
+// pair leaves a window in which the file the decision was made about is not the
+// file whose bytes are parsed.
+//
+// trusted skips the three clauses. It is true only below a home directory that
+// meets the preconditions in belowResolvedHome; nothing else turns the rule off.
+func readConfig(env DiscoveryEnv, path, dir string, meta FileMeta, trusted bool) (*ProjectConfig, []string, error) {
+	// Decided from the metadata the walk already read, not from the error the
+	// open would return. The open does refuse a symlink, and reading that
+	// refusal as the signal would work -- but it would make the branch depend
+	// on which errno each platform chooses for it, on the one path no macOS
+	// test exercises. A mode bit says the same thing and says it the same way
+	// everywhere.
+	if meta.IsSymlink() {
+		return readThroughSymlink(env, path, dir, meta, trusted)
+	}
+	if !trusted {
+		if d := judge(env, meta, dir, true); d != nil {
+			return nil, nil, refuse(dir, path, d)
+		}
+	}
+	f, err := env.OpenNoFollow(path)
+	if err != nil {
+		return nil, nil, fmt.Errorf("reading: %w", err)
+	}
+	return decodeOpened(f, dir, path, meta)
+}
+
+// readThroughSymlink handles the entry that is itself a symlink.
+//
+// The clauses run twice, at the link's own location and again at the target's,
+// because the link's surroundings say who could have pointed it somewhere and
+// the target's say who could have written what it points at. Judging only the
+// link would accept a repository checked out somewhere acceptable that ships
+// .tsuku.toml as a link into a directory anybody can plant in.
+//
+// The mode clause runs at the target alone. A symlink's own mode is not a
+// permission: Linux reports 0777 for every link and macOS derives it from the
+// umask, so testing it at the link would refuse every symlinked config on one
+// platform and accept the same repository on the other. It belongs to the
+// object whose bytes are parsed.
+//
+// A chain of more than one link is refused rather than walked, because each
+// additional hop is another object nothing checked. A symlinked directory
+// component of the target's path is resolved rather than refused, the way the
+// start directory already is: refusing one would refuse every absolute target
+// under /tmp or /var on macOS, where both are links into /private.
+func readThroughSymlink(env DiscoveryEnv, path, dir string, linkMeta FileMeta, trusted bool) (*ProjectConfig, []string, error) {
+	if !trusted {
+		if d := judge(env, linkMeta, dir, false); d != nil {
+			return nil, nil, refuse(dir, path, d)
+		}
+	}
+
+	raw, err := env.Readlink(path)
+	if err != nil {
+		return nil, nil, fmt.Errorf("reading link: %w", err)
+	}
+	target := raw
+	if !filepath.IsAbs(target) {
+		target = filepath.Join(filepath.Dir(path), target)
+	}
+
+	immediate, err := env.Lstat(target)
+	if err != nil {
+		return nil, nil, fmt.Errorf("reading link target: %w", err)
+	}
+	if immediate.IsSymlink() {
+		return nil, nil, refuse(dir, path, &trustDecision{
+			reason: "is a symlink to another symlink",
+			remedy: "Point it directly at the file it should read.",
+		})
+	}
+
+	resolved, err := env.EvalSymlinks(target)
+	if err != nil {
+		return nil, nil, fmt.Errorf("resolving link target: %w", err)
+	}
+	targetMeta, err := env.Lstat(resolved)
+	if err != nil {
+		return nil, nil, fmt.Errorf("reading link target: %w", err)
+	}
+
+	if !trusted {
+		if d := judge(env, targetMeta, filepath.Dir(resolved), true); d != nil {
+			// Named by the link, because that is the path the user's working
+			// directory leads to and the one they can act on.
+			return nil, nil, refuse(dir, path, d)
+		}
+	}
+
+	f, err := env.OpenNoFollow(resolved)
+	if err != nil {
+		return nil, nil, fmt.Errorf("reading: %w", err)
+	}
+	return decodeOpened(f, dir, path, targetMeta)
+}
+
+// decodeOpened checks the handle against the metadata the decision was made on
+// and decodes its bytes. It closes the handle.
+func decodeOpened(f File, dir, path string, expect FileMeta) (*ProjectConfig, []string, error) {
+	defer f.Close()
+
+	opened, err := f.Meta()
+	if err != nil {
+		return nil, nil, fmt.Errorf("reading: %w", err)
+	}
+	if opened.Dev != expect.Dev || opened.Ino != expect.Ino {
+		return nil, nil, refuse(dir, path, &trustDecision{
+			reason: "changed between the check and the read",
+			remedy: "Try again. If it keeps happening, something else is writing to that path.",
+		})
+	}
+	if !opened.IsRegular() {
+		// A named pipe here blocks every shell prompt; a directory or a device
+		// node is not a config either. Judged on the object whose bytes would
+		// be parsed, so a symlink to an ordinary file still loads.
+		return nil, nil, refuse(dir, path, &trustDecision{
+			reason: "is not a regular file",
+			remedy: "Replace it with an ordinary file, or remove it.",
+		})
+	}
+
+	data, err := io.ReadAll(f)
+	if err != nil {
+		return nil, nil, fmt.Errorf("reading: %w", err)
+	}
+	return decodeConfig(data)
+}
+
+func refuse(dir, path string, d *trustDecision) error {
+	return &RefusedError{Dir: dir, Path: path, Reason: d.reason, Remedy: d.remedy}
 }
 
 // FindProjectDir returns the directory containing the nearest .tsuku.toml,
@@ -160,20 +325,39 @@ func FindProjectDir(startDir string) string {
 
 // buildCeilings returns the set of directories that stop traversal.
 // $HOME is always included. TSUKU_CEILING_PATHS adds extras.
-func buildCeilings() map[string]struct{} {
+//
+// Every entry is resolved through symlinks before it enters the set, because
+// the walk it is compared against is resolved. Comparing one resolved path
+// against one unresolved one is a test that never matches: a symlinked $HOME,
+// or a ceiling naming a path through a link, silently stops nothing.
+//
+// An entry that cannot be resolved is kept as written. It names a directory
+// that does not exist, or one the process cannot reach, and either way it stops
+// nothing -- keeping it costs a string comparison and dropping it would differ
+// only in hiding a typo.
+func buildCeilings(env DiscoveryEnv) map[string]struct{} {
 	ceilings := make(map[string]struct{})
+
+	add := func(p string) {
+		p = filepath.Clean(p)
+		if resolved, err := env.EvalSymlinks(p); err == nil {
+			ceilings[resolved] = struct{}{}
+			return
+		}
+		ceilings[p] = struct{}{}
+	}
 
 	// $HOME is unconditional.
 	if home, err := os.UserHomeDir(); err == nil {
-		ceilings[filepath.Clean(home)] = struct{}{}
+		add(home)
 	}
 
 	// Additional ceilings from environment.
-	if env := os.Getenv(EnvCeilingPaths); env != "" {
-		for p := range strings.SplitSeq(env, ":") {
+	if raw := os.Getenv(EnvCeilingPaths); raw != "" {
+		for p := range strings.SplitSeq(raw, ":") {
 			p = strings.TrimSpace(p)
 			if p != "" {
-				ceilings[filepath.Clean(p)] = struct{}{}
+				add(p)
 			}
 		}
 	}
@@ -187,25 +371,23 @@ func isCeiling(dir string, ceilings map[string]struct{}) bool {
 	return ok
 }
 
-// parseConfigFile reads and validates a .tsuku.toml file.
-// parseConfigFile reads and decodes one .tsuku.toml.
+// decodeConfig decodes and validates one .tsuku.toml's bytes.
+//
+// It takes bytes rather than a path because the caller has already opened the
+// object the decision was made on; handing this function a path would reopen it
+// and reintroduce the gap the open-then-check sequence closes.
 //
 // It returns diagnostics alongside the config: things wrong with the file that
 // do not justify refusing to load it. An error is reserved for the case where
 // nothing about the file's contents is known -- it could not be read, or it is
 // not TOML -- because there is then no per-entry judgement to make.
 //
-// Its errors are unwrapped causes; LoadProjectConfig wraps them in a
+// Its errors are unwrapped causes; LoadProjectConfigIn wraps them in a
 // ParseError carrying the directory and the path. The path is deliberately
 // absent from these messages: adding it here renders it twice in the
 // diagnostic, which is the duplicated-error half of the defect that work
 // removed. TestHookEnv_ParseFailure asserts the path appears exactly once.
-func parseConfigFile(path string) (*ProjectConfig, []string, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, nil, fmt.Errorf("reading: %w", err)
-	}
-
+func decodeConfig(data []byte) (*ProjectConfig, []string, error) {
 	var cfg ProjectConfig
 	md, err := toml.Decode(string(data), &cfg)
 	if err != nil {

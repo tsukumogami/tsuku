@@ -165,18 +165,7 @@ func confirmSkipSandbox() bool {
 
 // confirmWithUser prompts the user with a message and waits for y/N response.
 func confirmWithUser(prompt string) bool {
-	if !isInteractive() {
-		return false
-	}
-
-	fmt.Fprintf(os.Stderr, "%s (y/N) ", prompt)
-	reader := bufio.NewReader(os.Stdin)
-	response, err := reader.ReadString('\n')
-	if err != nil {
-		return false
-	}
-	response = strings.TrimSpace(strings.ToLower(response))
-	return response == "y" || response == "yes"
+	return askYesNo(prompt)
 }
 
 // confirmLLMDiscovery prompts the user to confirm an LLM-discovered tool source.

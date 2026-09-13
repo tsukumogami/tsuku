@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -19,18 +18,29 @@ import (
 
 // projectToolResult tracks the outcome of installing a single tool.
 type projectToolResult struct {
-	Name   string
-	Status string // "installed", "current", "failed", "dry-run"
+	Name string
+	// Status is one of "installed", "current", "failed", "dry-run", or
+	// "needs-approval" -- the last meaning the tool was never attempted
+	// because nobody approved registering the source that declares it.
+	Status string
 	Error  error
 }
 
 // toolEntry represents a tool declared in the project config, with parsed
 // metadata for version and distributed source information.
 type toolEntry struct {
-	Name         string
-	Version      string
-	Distributed  *distributedInstallArgs // non-nil for org-scoped tools
-	SourceFailed bool                    // true if source bootstrap failed
+	Name        string
+	Version     string
+	Distributed *distributedInstallArgs // non-nil for org-scoped tools
+
+	// SourceFailed means the source could not be used at all: an invalid name,
+	// or strict_registries. The tool failed.
+	SourceFailed bool
+
+	// SourceNeedsApproval means the source is usable but nobody approved
+	// registering it. The tool was skipped, which is not the same as failing
+	// and is reported differently: the user can approve and re-run.
+	SourceNeedsApproval bool
 }
 
 // runProjectInstall handles the no-args install path: discover the nearest
@@ -54,6 +64,12 @@ func runProjectInstall(cmd *cobra.Command) {
 
 	result, err := loadProjectConfigReporting(cwd)
 	if err != nil {
+		if isRefusal(err) {
+			// The helper already printed the line, with the reason and the
+			// remedy. Printing the error again here would say it twice, and
+			// this command's job on this path is only to choose the code.
+			exitWithCode(ExitForbidden)
+		}
 		printError(err)
 		exitWithCode(ExitGeneral)
 	}
@@ -84,38 +100,32 @@ func runProjectInstall(cmd *cobra.Command) {
 		return tools[i].Name < tools[j].Name
 	})
 
-	// Pre-scan: batch-bootstrap distributed sources
+	// Pre-scan: classify every source the project named. Nothing is written
+	// here -- classification is not an action, and the question of whether to
+	// register anything is not asked until the reader has seen the tool list.
 	var sysCfg *config.Config
-	uniqueSources := make(map[string]bool)
-	failedSources := make(map[string]error)
-
+	plan := newProjectSourcePlan(result.Path)
 	for _, t := range tools {
 		if t.Distributed != nil {
-			uniqueSources[t.Distributed.Source] = true
+			plan.add(t.Distributed.Source, t.Name)
 		}
 	}
 
-	if len(uniqueSources) > 0 {
+	if !plan.empty() {
 		var cfgErr error
 		sysCfg, cfgErr = config.DefaultConfig()
 		if cfgErr != nil {
 			printError(fmt.Errorf("failed to load config: %w", cfgErr))
 			exitWithCode(ExitGeneral)
 		}
+		plan.classify()
 
-		for source := range uniqueSources {
-			if err := ensureDistributedSource(source, installYes || installForce, sysCfg); err != nil {
-				failedSources[source] = err
-				printWarning(fmt.Sprintf("Warning: failed to register source %q: %v", source, err))
-			}
-		}
-
-		// Mark tools from failed sources
 		for i := range tools {
-			if tools[i].Distributed != nil {
-				if _, failed := failedSources[tools[i].Distributed.Source]; failed {
-					tools[i].SourceFailed = true
-				}
+			if tools[i].Distributed == nil {
+				continue
+			}
+			if st, ok := plan.state(tools[i].Distributed.Source); ok && st == sourceFailed {
+				tools[i].SourceFailed = true
 			}
 		}
 	}
@@ -154,20 +164,75 @@ func runProjectInstall(cmd *cobra.Command) {
 			strings.Join(unpinned, ", "), pluralVerb(len(unpinned))))
 	}
 
-	// Dry-run mode: show what would be installed without making changes
+	// Dry-run mode: show what would be installed without making changes.
+	//
+	// It classifies and reports, and never asks or writes. A dry run
+	// deliberately asks nothing, so it cannot have consent, so it must not take
+	// the action consent is for -- whatever the terminal and whatever --yes or
+	// --force say.
 	if installDryRun {
+		plan.each(func(s *projectSource) {
+			if s.State == sourceNeedsApproval {
+				fmt.Fprintf(os.Stderr, "Source %q, declared in %q, is not registered. A dry run does not register it.\n",
+					s.Name, plan.DeclaredIn)
+			}
+		})
+		if sysCfg != nil {
+			plan.activate(sysCfg)
+		}
 		runProjectDryRun(tools)
 		return
+	}
+
+	// Ask about each unregistered source, after the tool list and before
+	// "Proceed?". Nothing is written yet: declining either prompt has to leave
+	// config.toml untouched, which it cannot if the write already happened.
+	plan.decideConsent(consentInputs{
+		AutoApprove: installYes,
+		Interactive: isInteractive,
+		Ask:         askYesNo,
+	})
+
+	// When every declared tool belongs to a source nobody approved, there is
+	// nothing left to proceed with. Asking would be asking about an empty list.
+	if plan.anyNeedsApproval() && allToolsBlocked(tools, plan) {
+		plan.reportSkipped()
+		exitWithCode(ExitNeedsApproval)
 	}
 
 	// Interactive confirmation unless --yes or non-TTY
 	if !installYes && isInteractive() {
 		fmt.Print("Proceed? [Y/n] ")
-		reader := bufio.NewReader(os.Stdin)
-		line, _ := reader.ReadString('\n')
+		line, _ := readPromptLine()
 		line = strings.TrimSpace(strings.ToLower(line))
 		if line != "" && line != "y" && line != "yes" {
 			exitWithCode(ExitUserDeclined)
+		}
+	}
+
+	// The user has proceeded. This is the first and only moment anything is
+	// written, and it happens before any recipe is fetched.
+	if err := plan.commit(); err != nil {
+		printError(fmt.Errorf("failed to register approved sources: %w", err))
+		exitWithCode(ExitGeneral)
+	}
+	if sysCfg != nil {
+		plan.activate(sysCfg)
+	}
+
+	// Tools whose source nobody approved are skipped, not attempted. The rest
+	// install.
+	for i := range tools {
+		if tools[i].Distributed == nil {
+			continue
+		}
+		if st, ok := plan.state(tools[i].Distributed.Source); ok {
+			switch st {
+			case sourceFailed:
+				tools[i].SourceFailed = true
+			case sourceNeedsApproval:
+				tools[i].SourceNeedsApproval = true
+			}
 		}
 	}
 
@@ -179,10 +244,25 @@ func runProjectInstall(cmd *cobra.Command) {
 	for _, t := range tools {
 		// Skip tools from failed sources
 		if t.SourceFailed {
+			var cause error
+			if s, ok := plan.sources[t.Distributed.Source]; ok {
+				cause = s.Err
+			}
 			results = append(results, projectToolResult{
 				Name:   t.Name,
 				Status: "failed",
-				Error:  fmt.Errorf("source %q failed to register: %v", t.Distributed.Source, failedSources[t.Distributed.Source]),
+				Error:  fmt.Errorf("source %q failed to register: %v", t.Distributed.Source, cause),
+			})
+			continue
+		}
+
+		// A source nobody approved is not a failure. Its tools were never
+		// attempted, and saying "failed" would send the reader looking for a
+		// broken install rather than for the approval they did not give.
+		if t.SourceNeedsApproval {
+			results = append(results, projectToolResult{
+				Name:   t.Name,
+				Status: "needs-approval",
 			})
 			continue
 		}
@@ -269,10 +349,13 @@ func runProjectInstall(cmd *cobra.Command) {
 	}
 
 	// Determine exit code
-	failCount := 0
+	failCount, skipCount := 0, 0
 	for _, r := range results {
-		if r.Status == "failed" {
+		switch r.Status {
+		case "failed":
 			failCount++
+		case "needs-approval":
+			skipCount++
 		}
 	}
 
@@ -283,6 +366,16 @@ func runProjectInstall(cmd *cobra.Command) {
 		exitCode = ExitPartialFailure
 	}
 
+	// A skipped source outranks an install failure. The two say different
+	// things to a script: an install failure is "something broke", and this is
+	// "approve this and run again". Returning the failure code would send a
+	// script to retry logic that cannot succeed, since nothing about the
+	// missing approval changes on a retry. The failure is still named on stderr
+	// and in the structured output, and the script meets it on the next run.
+	if skipCount > 0 {
+		exitCode = ExitNeedsApproval
+	}
+
 	// Print summary
 	if installJSON {
 		printProjectSummaryJSON(results, exitCode)
@@ -290,16 +383,23 @@ func runProjectInstall(cmd *cobra.Command) {
 		printProjectSummary(results)
 	}
 
+	plan.reportSkipped()
+
 	exitWithCode(exitCode)
 }
 
 // printProjectSummary prints the batch install summary.
 func printProjectSummary(results []projectToolResult) {
-	var installed, failed []projectToolResult
+	var installed, failed, skipped []projectToolResult
 	for _, r := range results {
 		switch r.Status {
 		case "failed":
 			failed = append(failed, r)
+		case "needs-approval":
+			// Its own bucket. Folding it into installed would report a tool
+			// that was never attempted as present, which is the reading that
+			// makes a skipped source invisible.
+			skipped = append(skipped, r)
 		default:
 			installed = append(installed, r)
 		}
@@ -311,6 +411,15 @@ func printProjectSummary(results []projectToolResult) {
 			names[i] = r.Name
 		}
 		fmt.Printf("\nInstalled: %d %s (%s)\n", len(installed), pluralTool(len(installed)), strings.Join(names, ", "))
+	}
+
+	if len(skipped) > 0 {
+		names := make([]string, len(skipped))
+		for i, r := range skipped {
+			names[i] = r.Name
+		}
+		fmt.Printf("Skipped: %d %s awaiting source approval (%s)\n",
+			len(skipped), pluralTool(len(skipped)), strings.Join(names, ", "))
 	}
 
 	if len(failed) > 0 {
@@ -419,10 +528,16 @@ type projectSummaryJSON struct {
 // install results. Separated from printProjectSummaryJSON for testability.
 func buildProjectSummaryJSON(results []projectToolResult, exitCode int) projectSummaryJSON {
 	status := "success"
-	if exitCode == ExitInstallFailed {
+	switch exitCode {
+	case ExitInstallFailed:
 		status = "error"
-	} else if exitCode == ExitPartialFailure {
+	case ExitPartialFailure:
 		status = "partial"
+	case ExitNeedsApproval:
+		// Its own status, not "error" and not "partial". A consumer reading
+		// this has one action available that the other two do not: approve the
+		// source and run again.
+		status = "needs-approval"
 	}
 
 	tools := make([]projectToolJSON, len(results))

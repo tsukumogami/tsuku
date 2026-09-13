@@ -25,7 +25,39 @@ type RegistryEntry struct {
 	// during install (not manually by the user). Auto-registered entries
 	// can be cleaned up without user confirmation.
 	AutoRegistered bool `toml:"auto_registered,omitempty"`
+
+	// ApprovedVia records how a project-caused registration was approved:
+	// ApprovedViaPrompt for a yes at the interactive source prompt, or
+	// ApprovedViaYesFlag for --yes.
+	//
+	// Empty for an entry added by `tsuku registry add`, for one added by an
+	// install naming the source on the command line, and for every entry
+	// written before this field existed. Written once at registration and
+	// never updated by a later install, so it records how the source first got
+	// in rather than the most recent time somebody happened to declare it.
+	//
+	// Nothing reads it to make a decision. It exists to audit an honest
+	// history: anyone who can write this file can fabricate it.
+	ApprovedVia string `toml:"approved_via,omitempty"`
+
+	// DeclaredIn is the absolute, symlink-resolved path of the .tsuku.toml
+	// that named this source, for a project-caused registration. Empty for
+	// every other route, and written once alongside ApprovedVia.
+	DeclaredIn string `toml:"declared_in,omitempty"`
 }
+
+// The vocabulary for RegistryEntry.ApprovedVia.
+//
+// Flat strings with omitempty rather than a nested table: a nested table
+// without omitempty writes a bare empty header into every pre-existing entry
+// the first time the file is saved, so upgrading would rewrite config.toml for
+// people who registered nothing.
+const (
+	// ApprovedViaPrompt is a yes at the interactive source prompt.
+	ApprovedViaPrompt = "prompt"
+	// ApprovedViaYesFlag is `tsuku install --yes`.
+	ApprovedViaYesFlag = "yes"
+)
 
 // Config represents user-configurable settings.
 type Config struct {

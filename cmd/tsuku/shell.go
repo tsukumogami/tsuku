@@ -46,13 +46,22 @@ stdout carries only the shell code. Use --quiet to suppress the reasons.`,
 
 		output, err := runShell(cwd, prevPath, shell, cfg)
 		if err != nil {
-			// An unparseable .tsuku.toml is a diagnostic, not a command
-			// failure: one line, no usage block, exit 0. tsuku shell records
-			// nothing on this path -- it is one-shot and does not own the
-			// prompt hook's tracking variables -- so it emits no shell code
+			// An unparseable or refused .tsuku.toml is a diagnostic, not a
+			// command failure: one line, no usage block, exit 0. tsuku shell
+			// records nothing on this path -- it is one-shot and does not own
+			// the prompt hook's tracking variables -- so it emits no shell code
 			// either, and must not fall through to the no-project branch below.
-			if line := parseDiagnostic(err); line != "" {
-				printWarning(line)
+			//
+			// A refusal goes out unconditionally. --quiet belongs to the prompt
+			// hook, which fires on every prompt and would otherwise repeat
+			// itself; tsuku shell is invoked deliberately, once, and a silent
+			// exit 0 that activates nothing is the confusing outcome.
+			if line := configDiagnostic(err); line != "" {
+				if isRefusal(err) {
+					fmt.Fprintln(os.Stderr, line)
+				} else {
+					printWarning(line)
+				}
 				return nil
 			}
 			return err
@@ -97,7 +106,7 @@ func runShell(cwd, prevPath, shell string, cfg *config.Config) (string, error) {
 	// stamp, ComputeActivation would return nil, runShell would turn that into
 	// an empty string, and the command would report no .tsuku.toml found and
 	// exit non-zero for a project that exists and is perfectly valid.
-	result, err := activation.ComputeActivation(cwd, prevPath, "", "", cfg, install.NewStateManager(cfg))
+	result, err := activation.ComputeActivationIn(discoveryEnv(), cwd, prevPath, "", "", cfg, install.NewStateManager(cfg))
 	if err != nil {
 		// The caller distinguishes a parse failure, which is a diagnostic, from
 		// a real error. Reporting it here would put the message on stderr even

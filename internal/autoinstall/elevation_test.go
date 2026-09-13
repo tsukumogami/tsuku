@@ -44,7 +44,12 @@ func TestElevate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mode, origin := elevate(tt.mode, tt.origin, tt.declared)
+			// The existing table predates the source input and says nothing
+			// about it, so it runs with a qualifying declaration: the cases it
+			// covers are about mode and origin, and a non-qualifying one would
+			// change every expectation for a reason the table is not about.
+			// The withheld-raise cases have a table of their own.
+			mode, origin := elevate(tt.mode, tt.origin, tt.declared, true)
 			if mode != tt.wantMode || origin != tt.wantOrigin {
 				t.Errorf("elevate(%v, %v, %v) = %v, %v; want %v, %v",
 					tt.mode, tt.origin, tt.declared, mode, origin, tt.wantMode, tt.wantOrigin)

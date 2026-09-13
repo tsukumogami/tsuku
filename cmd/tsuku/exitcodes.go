@@ -63,6 +63,20 @@ const (
 	// during a batch install from project configuration.
 	ExitPartialFailure = 15
 
+	// ExitNeedsApproval indicates a project's .tsuku.toml named a recipe source
+	// the user has not registered, nobody approved it on this run, and the
+	// tools declared from it were skipped. Nothing was written to config.toml.
+	//
+	// A code of its own rather than one of the existing ones, because every
+	// existing one is claimed or misleading: 12 advertises a flag this command
+	// does not have, 13 already means a complete abort, 14 is the security
+	// block a refused config takes, and 15 cannot be told apart from an install
+	// failure. This one says something a script can act on -- approve and
+	// re-run -- and it outranks the failure codes for that reason: a run that
+	// both skips a source and fails an unrelated tool returns this, and the
+	// script meets the unrelated failure on the next run.
+	ExitNeedsApproval = 16
+
 	// ExitCancelled indicates the operation was canceled by the user (Ctrl+C)
 	ExitCancelled = 130
 )

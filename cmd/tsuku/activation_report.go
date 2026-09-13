@@ -101,14 +101,42 @@ func parseDiagnostic(err error) string {
 		parseErr.Path, parseErr.Err)
 }
 
-// reportParseFailure writes the parse diagnostic through printWarning, so
+// configDiagnostic renders the one line for a config that produced no usable
+// result, whichever way it failed.
+//
+// The two cases stay distinct in the wording because they say different things
+// to the person reading: a parse failure means the file was read and its
+// contents are wrong, and a refusal means nothing was read at all and the
+// problem is who owns the file or what can be written where it sits. Reporting
+// a refused file as unparseable would send someone looking for a syntax error
+// in a file they may not have written.
+//
+// They share one function because every renderer of the parse case has to
+// render this one too, and a parallel set would leave whichever one was added
+// later missing from somewhere.
+func configDiagnostic(err error) string {
+	var refused *project.RefusedError
+	if errors.As(err, &refused) {
+		return "tsuku: " + refused.Error()
+	}
+	return parseDiagnostic(err)
+}
+
+// isRefusal reports whether err is a refused config rather than an unparseable
+// one. The two differ in one place beyond their wording: --quiet.
+func isRefusal(err error) bool {
+	var refused *project.RefusedError
+	return errors.As(err, &refused)
+}
+
+// reportUnusableConfig writes the one-line diagnostic through printWarning, so
 // --quiet suppresses it exactly as it suppresses the five reasons.
 //
-// Like those, it is gated on Entered: a prompt hook in a project whose file will
-// not parse says its piece on arrival, not on every prompt for as long as the
-// developer stays there.
-func reportParseFailure(result *activation.ActivationResult, err error) {
-	line := parseDiagnostic(err)
+// Like those, it is gated on Entered: a prompt hook in a project whose file
+// will not parse, or whose file was refused, says its piece on arrival, not on
+// every prompt for as long as the developer stays there.
+func reportUnusableConfig(result *activation.ActivationResult, err error) {
+	line := configDiagnostic(err)
 	if line == "" {
 		return
 	}
