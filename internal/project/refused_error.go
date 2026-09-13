@@ -29,6 +29,12 @@ type RefusedError struct {
 	Remedy string
 }
 
+// Error renders the whole refusal as one sentence: what was not applied, why,
+// and what to do. The three parts are the message; splitting them across lines
+// would put the remedy where a reader scanning for the failure stops looking.
+//
+// The path is quoted. It comes from a directory the invoking user may not
+// control, so a control character in it would otherwise reach the terminal raw.
 func (e *RefusedError) Error() string {
-	return fmt.Sprintf("%q: %s. %s", e.Path, e.Reason, e.Remedy)
+	return fmt.Sprintf("%q was not applied: %s. %s", e.Path, e.Reason, e.Remedy)
 }

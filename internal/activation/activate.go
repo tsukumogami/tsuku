@@ -115,6 +115,18 @@ func basePathFrom(prevPath string) string {
 // installed supplies the recorded versions and is read at most once per call.
 // stamp is the caller's _TSUKU_STATE_STAMP, empty when there is none.
 func ComputeActivation(cwd, prevPath, curDir, stamp string, cfg *config.Config, installed InstalledSet) (*ActivationResult, error) {
+	return ComputeActivationIn(project.OSDiscoveryEnv(), cwd, prevPath, curDir, stamp, cfg, installed)
+}
+
+// ComputeActivationIn is ComputeActivation with discovery's filesystem and
+// identity access supplied explicitly.
+//
+// The shell hook is one of the two ways a project config is reached, so the
+// layouts the discovery rule decides -- another user's files, files owned by
+// root -- have to be reachable through this entry point as well as through the
+// project package directly. A test running as an unprivileged user with no
+// second account cannot create any of them.
+func ComputeActivationIn(env project.DiscoveryEnv, cwd, prevPath, curDir, stamp string, cfg *config.Config, installed InstalledSet) (*ActivationResult, error) {
 	// The stat is taken before installation state is read, and this same value
 	// is what the result records. Stating afterwards is stable-looking and
 	// broken: read at T1, an install commits at T2, stat at T3, and the shell
@@ -136,8 +148,32 @@ func ComputeActivation(cwd, prevPath, curDir, stamp string, cfg *config.Config, 
 		return nil, nil
 	}
 
-	result, err := project.LoadProjectConfig(cwd)
+	result, err := project.LoadProjectConfigIn(env, cwd)
 	if err != nil {
+		var refused *project.RefusedError
+		if errors.As(err, &refused) {
+			// A refused config is the same shape of outcome as one that will
+			// not parse: no tools activate, the directory is still the project
+			// the developer is standing in, and it has to be recorded or the
+			// prompt hook re-reports the same refusal on every prompt. It is a
+			// separate branch only because the error carries different fields.
+			base := basePathFrom(prevPath)
+			return &ActivationResult{
+				PATH:     base,
+				Dir:      refused.Dir,
+				PrevPath: base,
+				Active:   true,
+				Stamp:    currentStamp,
+				// Two disjuncts, and both are needed. The first is arrival:
+				// a first entry changes no PATH and must still report. The
+				// second covers a file that becomes refused in place while its
+				// tools are active -- the directory has not changed, so
+				// comparing directories alone would never report it, and the
+				// developer would be left with a PATH that quietly lost its
+				// project.
+				Entered: refused.Dir != curDir || base != prevPath,
+			}, err
+		}
 		var parseErr *project.ParseError
 		if errors.As(err, &parseErr) {
 			// A non-nil result AND a non-nil error. This is unusual enough in

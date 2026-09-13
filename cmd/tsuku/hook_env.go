@@ -35,15 +35,15 @@ var hookEnvCmd = &cobra.Command{
 		curDir := os.Getenv("_TSUKU_DIR")
 		stamp := os.Getenv("_TSUKU_STATE_STAMP")
 
-		result, err := activation.ComputeActivation(cwd, prevPath, curDir, stamp, cfg, install.NewStateManager(cfg))
+		result, err := activation.ComputeActivationIn(discoveryEnv(), cwd, prevPath, curDir, stamp, cfg, install.NewStateManager(cfg))
 		if err != nil {
 			// A parse failure comes back with a usable result alongside the
 			// error. Returning the error instead would make cobra print it a
 			// second time with a full usage block, and main would exit
 			// non-zero -- on every prompt, in a directory the developer cannot
 			// leave without fixing the file.
-			if line := parseDiagnostic(err); line != "" {
-				reportParseFailure(result, err)
+			if line := configDiagnostic(err); line != "" {
+				reportUnusableConfig(result, err)
 				fmt.Print(activation.FormatExports(result, shell))
 				return nil
 			}

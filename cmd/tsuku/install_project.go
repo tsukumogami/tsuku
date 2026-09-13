@@ -54,6 +54,12 @@ func runProjectInstall(cmd *cobra.Command) {
 
 	result, err := loadProjectConfigReporting(cwd)
 	if err != nil {
+		if isRefusal(err) {
+			// The helper already printed the line, with the reason and the
+			// remedy. Printing the error again here would say it twice, and
+			// this command's job on this path is only to choose the code.
+			exitWithCode(ExitForbidden)
+		}
 		printError(err)
 		exitWithCode(ExitGeneral)
 	}
