@@ -192,7 +192,7 @@ Terms used below:
   | L7 | As L6 | root | refused |
   | L8 | `/tmp/build` pre-created by another user with a config inside, then entered by the invoking user, `/tmp` root-owned 1777 | non-root or root | refused |
   | L9 | A `.tsuku.toml` symlink whose link fails the rule at the link's own location, or whose target fails it at the target's own location | any | refused |
-  | L10 | A `.tsuku.toml` symlink and its target both owned by a uid the rule accepts for that location (for example inside L3's checkout) | any | found |
+  | L10 | An ordinary `.tsuku.toml` symlink where the link and its target each pass the rule at their own location (for example a link and its target both inside L3's checkout) | any | found |
   | L11 | A config at mode 0664 in a 0775 directory the invoking user owns (the ordinary result of a umask of 002) | non-root | found |
   | L12 | A config owned by a third uid inside a root-owned 0755 directory, for example files copied into a container image with a different owner than the directory | any | found |
   | L13 | A config in a world-writable directory without the sticky bit | any | refused |
@@ -406,8 +406,10 @@ Discovery and reporting:
   the refusal and no parse diagnostic (R3).
 - [ ] Tests cover the L9 symlink cases (foreign-owned link, foreign-owned target,
   and a link from an acceptable location to a target in a world-writable
-  directory) and the L10 case, and a test swaps the file between the check and the
-  read through a seam and asserts the swapped file is not parsed (R4).
+  directory) and the L10 case, including a plain `ln -s` inside an accepted
+  checkout on both Linux and macOS, since a symlink's own mode differs between
+  them. A test swaps the file between the check and the read through a seam and
+  asserts the swapped file is not parsed (R4).
 - [ ] Tests with `HOME` set to a symlinked path, and with a symlinked
   `TSUKU_CEILING_PATHS` entry, place a config above the real directory and assert
   it is not found. With `HOME=/`, with `HOME` unset, and with `HOME` owned by
@@ -423,7 +425,11 @@ Discovery and reporting:
   escape sequence asserts the refusal is exactly one stderr line with the path
   quoted and no raw control characters, that the line states a reason and an
   action the user can take, and that `tsuku run`, `tsuku install`, `tsuku shell`
-  and `tsuku hook-env` write no refusal text to stdout (R6).
+  and `tsuku hook-env` write no refusal text to stdout (R6). The same test shape
+  covers the two new renderers that carry strings a project file chose: the
+  needs-approval message, which names the declaring file and the tools a skipped
+  source declared (R15), and the `tsuku registry list` provenance line, which
+  prints the declaring config's path (R16).
 - [ ] Under a refused config, `tsuku hook-env` exits 0 and its stdout adds
   nothing to `PATH`. The test feeds each call's exported tracking variables into
   the next call's environment and asserts: the refusal prints on the first call,

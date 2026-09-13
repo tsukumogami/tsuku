@@ -163,11 +163,13 @@ off for the whole filesystem; it fails to meet the preconditions and the clauses
 apply.
 
 Outside a qualifying home, three clauses decide, all judged on the file the walk
-actually opens rather than on a path.
+actually opens rather than on a path. **All three must pass.** They are not
+alternatives and none of them short-circuits the others: the ownership clause has
+an internal shortcut, and it is a shortcut past the ancestor chain only.
 
 **Ownership.** Accept when the config's owner is the invoking user or root, with
-no further test. Otherwise — and only then — accept when every group- or
-other-writable directory on the chain from the config's own directory up to the
+no further *ownership* test. Otherwise — and only then — accept when every group-
+or other-writable directory on the chain from the config's own directory up to the
 filesystem root is owned by *that config's owner*. Owned by the config's owner
 specifically, not by anyone the rule would otherwise trust: `/tmp` is root-owned
 and world-writable, so a chain test that accepted a root-owned writable ancestor
@@ -194,8 +196,12 @@ is exactly the gap: in a world-writable non-sticky directory an attacker can
 remove the user's config and put something else at the path, including a hard link
 to one of the user's own files, which every ownership check then accepts because
 the owner is genuinely the user. With the sticky bit set the attacker cannot
-remove the user's file, and anything they create instead carries their own
-ownership, which the first clause judges. The clause is unconditional, so it
+remove the user's file, so the file found at that path is either one the user put
+there or one the attacker created under their own ownership, which the first
+clause judges. The residual the sticky bit leaves — a hard link the attacker
+creates to a file the user owns — is recorded under Security Considerations, and
+it is why this clause narrows the exposure rather than closing it. The clause is
+unconditional, so it
 applies identically on both supported platforms (D8) — gating it on the Linux
 kernel setting that forbids the link half of the attack would have to define what
 an absent reading means, and macOS has no such setting, so failing open would
@@ -211,17 +217,22 @@ mounted without the metadata option, where the reported mode is translated from
 Windows permissions; the refusal names the mount options that fix it as well as
 `chmod`, because `chmod` alone cannot (D3).
 
-The walk never stops on ownership, so every refusal names a file (D3). The file
-is opened without following symlinks and without blocking, checked on the
-descriptor, and read from that same descriptor, so the bytes parsed belong to the
-object the decision was made on (R4).
+A clause that fails produces a refusal naming the file, never a silent decision to
+keep walking (D3); the walk then stops there, as R3 requires. The file is opened
+without following symlinks and without blocking, checked on the descriptor, and
+read from that same descriptor, so the bytes parsed belong to the object the
+decision was made on (R4). The symlink branch is the exception the sequence in
+Data Flow spells out: there the clauses are applied to `lstat` results rather than
+to a descriptor, because the object has to be resolved before it can be opened.
 
 **Layouts the requirement does not list.** The three clauses give every row of
-R2's table the outcome it asks for, so no row is contested and none changes. For
-anything the table does not list, the clauses decide, and two cases are worth
-naming because a reader will meet them. A config the invoking user wrote inside a
-directory somebody else created is found: clause 1 accepts on the owner and asks
-nothing further, which is right, because the user authored the file. And a
+R2's table the outcome it asks for, so no row is contested and none changes; L9's
+wording is sharpened to say the rule is applied at each object's own location,
+which the design exceeds rather than contradicts. For anything the table does not
+list, the clauses decide, and two cases are worth naming because a reader will
+meet them. A config the invoking user wrote inside a directory somebody else
+created is found when that directory is not world-writable: clause 1 accepts on
+the owner, and clauses 2 and 3 still run. And a
 foreign-owned checkout on a macOS mounted volume is refused, because `/Volumes` is
 world-writable and root-owned, so the chain fails. That is the container-volume
 layout with a worse parent, and there is no opt-out (R27); the remedy the refusal
@@ -513,17 +524,21 @@ The five decisions answer one question at four different points, and they compos
 in one direction: **a project file may narrow what happens, never widen it.**
 
 Discovery decides which file is read at all. Inside a resolved home directory an
-early return skips the whole decision. Outside it, three clauses judge the file
+early return skips the whole decision, and that return has preconditions of its
+own, since `HOME` is attacker-settable. Outside it, three clauses judge the file
 the walk actually opens, and all three must pass:
 
 1. **Ownership.** Accept when the config's owner is the invoking user or root.
    Otherwise accept only when every group- or other-writable directory from the
-   config's own directory up to the filesystem root is owned by that same owner.
-   An unreadable directory counts as writable.
+   config's own directory up to the filesystem root is owned by that config's
+   owner — not by anyone else the rule trusts, since `/tmp` is root-owned and
+   world-writable. An unreadable directory counts as writable.
 2. **The config's directory.** Refuse when it is world-writable and does not carry
    the sticky bit. Unconditional, and it reads the world bit only.
 3. **The config's own mode.** Refuse when the file itself is world-writable. The
-   refusal names mount options as well as `chmod`.
+   refusal names mount options as well as `chmod`. For a symlinked config this
+   clause is applied to the target alone; the other two are applied at the link's
+   location and again at the target's.
 
 The walk never stops on ownership, so every refusal names a file, and discovery
 refuses loudly rather than skipping quietly — a config that vanishes without
@@ -550,7 +565,8 @@ skipped and the command exits 16. Each project-caused entry records how it was
 approved and the absolute path of the declaring config, as two optional string
 fields beside the existing auto-registration flag. `--yes` is the flag that
 answers the consent question; `--force` forces an operation through and no longer
-acquires a registry entry on the way.
+acquires a registry entry for a source only a project file named. A source the
+user typed on the command line still registers as it does today (R17).
 
 Escalation then trusts what consent produced. `tsuku run` asks only about a source
 the user has not registered, so the configured registries are the trust boundary,
@@ -609,23 +625,26 @@ defaulting a skipped tool to success.
 `loadProjectConfigReporting` prints the refusal line itself, because `tsuku run`
 discards the load error. It prints unconditionally rather than through the
 quiet-aware helper, because `tsuku install`'s exit code is meaningless without
-the line. It also takes discovery's environment, defaulted to production, so an
-in-process test of `tsuku install` or `tsuku shim install` can drive a
-foreign-owned layout (R26).
-
-**`internal/activation` — the refusal branch and the hook's report.**
-`ComputeActivation` gains a `RefusedError` branch alongside the existing
-`ParseError` one: `PATH` gains nothing, the refused file's directory goes into
-the existing tracking variable, and `Entered` widens to mean "report this one",
-covering a file that becomes refused in place while its tools are active.
-`tsuku hook-env` honors `--quiet` for that line; `tsuku shell` prints it on every
-invocation regardless (R7, R8). `ComputeActivation` takes discovery's environment
-the same way, defaulted to production, because the shell-hook layouts have to run
-in process too.
+the line. It gains a second form taking discovery's environment, the way
+`LoadProjectConfig` does, with the existing one-argument form calling it with the
+production environment, so an in-process test of `tsuku install` or `tsuku shim
+install` can drive a foreign-owned layout without every call site changing (R26).
 
 One exit code is new, for a source needing approval; the refused-config case
 reuses the existing "blocked for security reasons" code rather than adding a
 second name for the same number.
+
+**`internal/activation` — the refusal branch and the hook's report.**
+`ComputeActivation` gains a `RefusedError` branch alongside the existing
+`ParseError` one: `PATH` gains nothing, the refused file's directory goes into the
+existing tracking variable, and `Entered` is set on that branch when the refusal
+changes `PATH`, covering a file that becomes refused in place while its tools are
+active. The widening is confined to the refusal branch, because `Entered` is also
+read by the activation reporter and the found-config path must keep its present
+meaning. `tsuku hook-env` honors `--quiet` for the refusal line; `tsuku shell`
+prints it on every invocation regardless (R7, R8). `ComputeActivation` takes
+discovery's environment through the same second-form pattern, because the
+shell-hook layouts have to run in process too.
 
 **`internal/autoinstall` — the escalation predicate.** The elevation gains one
 input: whether the declaration's key names a source outside the configured
@@ -677,7 +696,10 @@ command package, which R26 requires, since the layouts involving another user's
 files have to be driven through `tsuku install` and the shell hook as well as
 through discovery directly. The lint that keeps loading centralized matches the
 exported name, so it must be extended to match both forms, or the second one is
-invisible to it.
+invisible to it. Its canary, which asserts the helper file still contains a
+literal direct call, has to be extended with it: the helper's call changes shape
+when it starts passing an environment, and a canary that no longer matches makes
+the lint pass by examining nothing.
 
 The terminal check is not yet substitutable: it is a plain function with several
 call sites, and the replaceable-variable precedent that looks like it applies
@@ -694,26 +716,35 @@ resolved ceilings, then the entry: absent, continue; unexaminable, stop the walk
 with no config and no message (R5); present, decide. The middle case is a change
 from today, where a directory the walk cannot read is indistinguishable from one
 holding no config and the walk continues past it; ending there is the fail-closed
-direction and matches how the clauses treat metadata they cannot read. The
-decision
+direction. It is silent rather than a refusal, and deliberately so: nothing was
+found, so there is no file to name. That is the one place unreadable metadata ends
+the walk quietly instead of refusing loudly. The decision
 reads the link metadata, opens the entry without following symlinks and without
 blocking, compares device and inode against what the link metadata reported,
 applies the three clauses to the descriptor, and either reads the bytes from that
 same descriptor or returns a refusal that stops the walk.
 
 A symlinked config needs its own sequence, because opening without following fails
-on a link rather than succeeding. On that failure: read the link, apply the three
-clauses at the link's own location, resolve the target, apply the three clauses
-again at the *target's* location, then open the target without following and
-compare device and inode against the target's own metadata before reading. A
-chain of more than one link is refused rather than walked.
+on a link rather than succeeding. On that failure: read the link, apply the
+ownership and directory clauses at the link's own location, resolve the target,
+apply all three clauses at the *target's* location, then open the target without
+following and compare device and inode against the target's own metadata before
+reading. A chain of more than one link is refused rather than walked, and so is a
+target reached through a symlinked directory component.
 
-Judging the target at its own location, rather than at the link's, is what the
-requirement's symlink row (R2's L9) leaves open and what closes the obvious
-bypass: a repository checked out somewhere the rule accepts, shipping
-`.tsuku.toml` as a link to a path in a world-writable directory that anybody can
-plant. The link's chain says nothing about where the bytes come from, so both
-locations have to pass.
+The mode clause runs at the target only, and deliberately: a symlink's own mode is
+not a permission on Linux, where `lstat` reports `0777` for every link, so testing
+it there would refuse every symlinked config on Linux and accept the same
+repository on macOS, where the mode comes from the umask. The clause belongs to
+the object whose bytes are parsed. The ownership and directory clauses do run at
+both locations, because both say something about who could have put the link
+there.
+
+Judging the target at its own location, rather than only at the link's, closes the
+bypass R2's L9 leaves open: a repository checked out somewhere the rule accepts,
+shipping `.tsuku.toml` as a link to a path in a world-writable directory that
+anybody can plant. The link's own chain says nothing about where the bytes come
+from.
 
 Callers receive a config, nothing, or a refusal; the refusal reaches stderr once,
 through the shared helper for commands and through activation's existing
@@ -759,7 +790,10 @@ computation the ceiling set performs unresolved today, and splitting them would
 leave two notions of home in one file for a phase. Deliverables: the decision and
 its unit tests over the layout table, including the cases needing a foreign owner
 and a root invoker; the read discipline, which also refuses anything that is not a
-regular file; the type and its message construction.
+regular file; `LoadProjectConfig`'s second exported form taking the environment,
+with the existing form calling it with the production one; the centralization lint
+and its canary extended to match both forms; the type and its message
+construction.
 
 ### Phase 2: refusal reporting across the five callers
 
@@ -770,19 +804,24 @@ report helper, and the two branch conditions in the shell hook and `tsuku shell`
 `tsuku shell` is the one most easily missed — it has its own branch, and without
 the generalization a refusal falls through to a usage block and a non-zero exit,
 breaking its requirement to exit 0. Deliverables: one stderr line with the path
-quoted; the shell hook reporting once per refused file; `tsuku shell` reporting on
-every invocation; `tsuku run` reporting and continuing; the two commands exiting
-on it.
+quoted; the shell hook reporting once per refused file, honoring `--quiet`;
+`tsuku shell` reporting on every invocation regardless of it; `tsuku run`
+reporting and continuing; the two commands exiting on it; second forms of
+`loadProjectConfigReporting` and `ComputeActivation` taking the environment, which
+is what lets the layout table be exercised through the commands and the hook in
+process (R26).
 
 ### Phase 3: consent primitives and the project source plan
 
 The split of the registration path, the plan object, the deferred write, the
 needs-approval exit code, and the dry-run behavior for both callers. Deliverables:
 the three primitives with the command-line path recomposed in today's order for a
-real install and the dry-run branch moved above the source handling; the plan; the
-messages; the shared line reader; the terminal check converted to a substitutable
-value in the command package, which covers the existing prompts as well as the new
-one; the skipped-source state in both the summary and the structured output.
+real install, and composing classify plus session provider without the write under
+`--dry-run`, leaving the dry-run branch where it is so the preview can still
+resolve; the plan; the messages; the shared line reader; the terminal check
+converted to a substitutable value in the command package, which covers the
+existing prompts as well as the new one; the skipped-source state in both the
+summary and the structured output.
 
 ### Phase 4: the provenance record
 
@@ -822,10 +861,13 @@ and its reasoning already exist in `internal/actions/install_program_files.go`.
 Two live denial-of-service paths close as a side effect outside the home tree,
 described under Consequences.
 
-The symlink case carries a real limit, stated rather than implied: a link whose
-target resolves outside the directory holding it is judged on the target's owner
-alone, and the target's own directory is never examined. The sequence that
-produces that is in Data Flow.
+A symlinked config is judged twice, at the link's location and at the target's, so
+a link from an acceptable path to a plantable one is refused on the target's own
+directory rather than accepted on the link's. The sequence is in Data Flow. What
+this does not cover is the resolution itself: the target is found by resolving the
+path, and only the opened target is pinned by device and inode, so a component of
+the target's path renamed between the resolution and the open is outside what the
+check can see.
 
 Two pre-existing exposures below a resolved `$HOME` are not closed, both because
 R1 holds that path unchanged. Nothing caps the byte size of a config before it is
