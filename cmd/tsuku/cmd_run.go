@@ -120,21 +120,7 @@ Exit codes:
 		// needs a prompt; here it could only ask whether the configuration
 		// declared anything at all.
 		runner.IsTerminal = func() bool { return term.IsTerminal(int(os.Stdin.Fd())) }
-		// From the user config this command already loaded, and from the
-		// configured registries rather than the loader's live provider list:
-		// providers are built at startup under a shared timeout and a failure
-		// only warns, so reading that list would make a registered source read
-		// as unregistered whenever its repository was briefly unreachable, and
-		// consent would depend on network conditions.
-		//
-		// The comparison is exact. A spelling variant reads as unregistered and
-		// prompts, which fails in the safe direction; matching loosely would
-		// grant nothing a plain key does not already grant, and would raise for
-		// a key the user's configuration does not contain.
-		runner.SourceRegistered = func(source string) bool {
-			_, ok := userCfg.Registries[source]
-			return ok
-		}
+		runner.SourceRegistered = sourceRegisteredIn(userCfg)
 		runner.Installer = &runInstaller{}
 		runner.Exec = func(binary string, execArgs []string, env []string) error {
 			return syscall.Exec(binary, execArgs, env)
@@ -302,4 +288,32 @@ func resolveMode(flagMode string, cfg *userconfig.Config) (autoinstall.Mode, aut
 
 func init() {
 	runCmd.Flags().StringVar(&runModeFlag, "mode", "", "Consent mode: suggest, confirm, or auto")
+}
+
+// sourceRegisteredIn answers "has the user registered this source?" from the
+// user config already loaded.
+//
+// From the configured registries rather than the loader's live provider list:
+// providers are built at startup under a shared timeout and a failure only
+// warns, so reading that list would make a registered source read as
+// unregistered whenever its repository was briefly unreachable, and consent
+// would depend on network conditions.
+//
+// The comparison is exact, and that is a decision rather than an accident.
+// GitHub treats Owner/Repo and owner/repo as one repository, so matching
+// case-insensitively is the tempting change -- and it is the wrong direction
+// here: it would waive the prompt for a key the user's configuration does not
+// contain. Exact matching fails closed, costing somebody who typed a different
+// case a prompt they can answer. Normalizing both sides at the point sources
+// are written would be the correct fix; folding case at the point they are
+// compared is not.
+//
+// A named function rather than a closure at the call site because the exactness
+// is the property worth testing, and a closure inside a cobra RunE cannot be
+// reached by a test. TestWiredSourceRegisteredIsExact holds it.
+func sourceRegisteredIn(userCfg *userconfig.Config) func(string) bool {
+	return func(source string) bool {
+		_, ok := userCfg.Registries[source]
+		return ok
+	}
 }

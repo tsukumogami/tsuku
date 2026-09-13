@@ -481,6 +481,16 @@ func TestSymlinkBranchIsTakenFromMetadataNotFromTheOpenError(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("TSUKU_CEILING_PATHS", root)
 
+	// The link is presented at 0755 rather than the 0777 Linux really reports.
+	// Without this the guard below is unreachable: an implementation that
+	// dropped the metadata branch would judge the link with the mode clause and
+	// be refused on its 0777 before it ever reached the open, so the test would
+	// fail for the wrong reason and the guard would stay unproven. At 0755 the
+	// clauses pass and the only thing left to catch a dropped branch is the
+	// guard.
+	f.modeOf[filepath.Clean(link)] = 0o755
+	f.ownerOf[filepath.Clean(link)] = f.uid
+
 	env := f.env()
 	inner := env.OpenNoFollow
 	env.OpenNoFollow = func(path string) (File, error) {

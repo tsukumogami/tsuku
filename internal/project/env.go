@@ -88,7 +88,7 @@ type DiscoveryEnv struct {
 	// metadata it already read, before it opens anything. Nothing here depends
 	// on which errno a platform returns for the refused open, which is what
 	// keeps this portable in the one place a portability bug would be invisible
-	// -- the symlink path is the least-travelled branch, and it is the one no
+	// -- the symlink path is the least-traveled branch, and it is the one no
 	// macOS test exercises.
 	OpenNoFollow func(path string) (File, error)
 }
