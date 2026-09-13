@@ -318,6 +318,11 @@ Terms used below:
   example `CI=true`) never grants consent or raises the consent mode.
 - **R23.** `tsuku run`, the command-not-found path, and shell activation never
   register a source.
+- **R24a.** The release notes for the version carrying this change state that
+  every source already present in the user's configured registries is trusted for
+  silent installs from the upgrade onward, including any a project config caused
+  to be registered before the change, and point the reader at
+  `tsuku registry list` to review them.
 - **R24.** The documentation describes the new behavior:
   `docs/designs/current/DESIGN-shell-env-activation.md` states that
   `TSUKU_CEILING_PATHS` is opt-in and unset by default and no longer claims it
@@ -495,7 +500,12 @@ Cross-cutting:
   "ignoring unrecognized key" diagnostic, so the test can't pass merely because
   they weren't decoded (R22).
 - [ ] A test drives `tsuku run`, the command-not-found path, and activation with
-  an unregistered org-scoped key and asserts `config.toml` is unchanged (R23).
+  an unregistered org-scoped key and asserts `config.toml` is unchanged, and
+  separately that the run path adds no provider to the loader during the run. The
+  second assertion carries R18's whole rule: the configured registries are the
+  trust boundary only while a run cannot enlarge them mid-flight, and this test
+  replaces the provenance invariant the simplified predicate no longer needs
+  (R18, R23).
 - [ ] `DESIGN-shell-env-activation.md` no longer contains "prevents traversal"
   about `TSUKU_CEILING_PATHS` and states it is opt-in and unset by default (R24).
 - [ ] The `tsuku-user` skill no longer contains the sentence saying discovery
@@ -559,8 +569,21 @@ Cross-cutting:
 - **Dry-run still populates the distributed recipe cache** under
   `$TSUKU_HOME/cache/distributed/`. It grants no trust, since sources are loaded
   from `config.toml` only, and the broader dry-run write problem is #2549.
-- **Entries registered before this change carry no approval record.** They keep
-  working and are listed without one.
+- **Every source already registered becomes trusted, including any the defect
+  registered silently.** This is the decision, taken deliberately, not an
+  oversight. Under R18 a registered source authorizes silent installs, and
+  entries written before this change carry no record of how they were approved,
+  because the record is part of this change. So a source that a project config
+  caused to be registered with nobody asked — on a machine with no terminal,
+  which is where #2552 was worst — is trusted from the upgrade onward, exactly
+  like one the user typed `tsuku registry add` for. The two are indistinguishable
+  on disk, so no rule can separate them; the alternatives were a one-time
+  confirmation of the existing list, and treating unmarked entries as untrusted,
+  which would have prompted every user who registered a source deliberately
+  before the change and broken headless runs that depend on them. The release
+  notes state plainly that anything already in the configured registries is now
+  trusted for silent installs, and recommend reviewing the list with
+  `tsuku registry list`.
 - **Sources approved with `tsuku registry add` record no declaring file.** That
   command is the user's own action and is unchanged (R17); `tsuku install --yes`
   is the approval path that records which file asked.
