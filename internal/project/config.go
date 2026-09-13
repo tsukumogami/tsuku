@@ -151,8 +151,18 @@ func LoadProjectConfigIn(env DiscoveryEnv, startDir string) (*ConfigResult, erro
 			return nil, nil
 		}
 
-		cfg, diags, readErr := readConfig(env, configPath, meta)
+		trusted := belowResolvedHome(env, configPath)
+
+		cfg, diags, readErr := readConfig(env, configPath, dir, meta, trusted)
 		if readErr != nil {
+			var refused *RefusedError
+			if errors.As(readErr, &refused) {
+				// The walk stops here. It does not continue to directories
+				// above a refused file: a config that was refused is an answer,
+				// and walking past it would apply a different file than the one
+				// nearest the working directory without saying so.
+				return nil, refused
+			}
 			return nil, &ParseError{Dir: dir, Path: configPath, Err: readErr}
 		}
 		return &ConfigResult{
@@ -165,31 +175,57 @@ func LoadProjectConfigIn(env DiscoveryEnv, startDir string) (*ConfigResult, erro
 	return nil, nil
 }
 
-// readConfig opens the entry and decodes it, deciding and reading on one
-// object rather than on a path.
+// readConfig judges the entry, opens it, and decodes it.
 //
-// The open comes first and the check is made on the descriptor: a stat-then-read
+// The decision and the read concern one object rather than one path: the open
+// comes first and the check is made on the descriptor, because a stat-then-read
 // pair leaves a window in which the file the decision was made about is not the
 // file whose bytes are parsed.
-func readConfig(env DiscoveryEnv, path string, meta FileMeta) (*ProjectConfig, []string, error) {
-	f, err := env.OpenNoFollow(path)
-	if errors.Is(err, ErrIsSymlink) {
-		return readThroughSymlink(env, path)
+//
+// trusted skips the three clauses. It is true only below a home directory that
+// meets the preconditions in belowResolvedHome; nothing else turns the rule off.
+func readConfig(env DiscoveryEnv, path, dir string, meta FileMeta, trusted bool) (*ProjectConfig, []string, error) {
+	if meta.IsSymlink() {
+		return readThroughSymlink(env, path, dir, meta, trusted)
 	}
+	if !trusted {
+		if d := judge(env, meta, dir, true); d != nil {
+			return nil, nil, refuse(dir, path, d)
+		}
+	}
+	f, err := env.OpenNoFollow(path)
 	if err != nil {
 		return nil, nil, fmt.Errorf("reading: %w", err)
 	}
-	return decodeOpened(f, meta)
+	return decodeOpened(f, dir, path, meta)
 }
 
 // readThroughSymlink handles the entry that is itself a symlink.
 //
-// Opening without following fails on a link rather than succeeding, so this is
-// reached by that failure. The target's directory components are resolved, the
-// way the start directory already is; a chain of more than one link is refused
-// rather than walked, because each additional hop is another object nothing
-// checked.
-func readThroughSymlink(env DiscoveryEnv, path string) (*ProjectConfig, []string, error) {
+// The clauses run twice, at the link's own location and again at the target's,
+// because the link's surroundings say who could have pointed it somewhere and
+// the target's say who could have written what it points at. Judging only the
+// link would accept a repository checked out somewhere acceptable that ships
+// .tsuku.toml as a link into a directory anybody can plant in.
+//
+// The mode clause runs at the target alone. A symlink's own mode is not a
+// permission: Linux reports 0777 for every link and macOS derives it from the
+// umask, so testing it at the link would refuse every symlinked config on one
+// platform and accept the same repository on the other. It belongs to the
+// object whose bytes are parsed.
+//
+// A chain of more than one link is refused rather than walked, because each
+// additional hop is another object nothing checked. A symlinked directory
+// component of the target's path is resolved rather than refused, the way the
+// start directory already is: refusing one would refuse every absolute target
+// under /tmp or /var on macOS, where both are links into /private.
+func readThroughSymlink(env DiscoveryEnv, path, dir string, linkMeta FileMeta, trusted bool) (*ProjectConfig, []string, error) {
+	if !trusted {
+		if d := judge(env, linkMeta, dir, false); d != nil {
+			return nil, nil, refuse(dir, path, d)
+		}
+	}
+
 	raw, err := env.Readlink(path)
 	if err != nil {
 		return nil, nil, fmt.Errorf("reading link: %w", err)
@@ -204,7 +240,10 @@ func readThroughSymlink(env DiscoveryEnv, path string) (*ProjectConfig, []string
 		return nil, nil, fmt.Errorf("reading link target: %w", err)
 	}
 	if immediate.IsSymlink() {
-		return nil, nil, errors.New("is a symlink to another symlink")
+		return nil, nil, refuse(dir, path, &trustDecision{
+			reason: "is a symlink to another symlink",
+			remedy: "Point it directly at the file it should read.",
+		})
 	}
 
 	resolved, err := env.EvalSymlinks(target)
@@ -216,16 +255,24 @@ func readThroughSymlink(env DiscoveryEnv, path string) (*ProjectConfig, []string
 		return nil, nil, fmt.Errorf("reading link target: %w", err)
 	}
 
+	if !trusted {
+		if d := judge(env, targetMeta, filepath.Dir(resolved), true); d != nil {
+			// Named by the link, because that is the path the user's working
+			// directory leads to and the one they can act on.
+			return nil, nil, refuse(dir, path, d)
+		}
+	}
+
 	f, err := env.OpenNoFollow(resolved)
 	if err != nil {
 		return nil, nil, fmt.Errorf("reading: %w", err)
 	}
-	return decodeOpened(f, targetMeta)
+	return decodeOpened(f, dir, path, targetMeta)
 }
 
 // decodeOpened checks the handle against the metadata the decision was made on
 // and decodes its bytes. It closes the handle.
-func decodeOpened(f File, expect FileMeta) (*ProjectConfig, []string, error) {
+func decodeOpened(f File, dir, path string, expect FileMeta) (*ProjectConfig, []string, error) {
 	defer f.Close()
 
 	opened, err := f.Meta()
@@ -233,13 +280,19 @@ func decodeOpened(f File, expect FileMeta) (*ProjectConfig, []string, error) {
 		return nil, nil, fmt.Errorf("reading: %w", err)
 	}
 	if opened.Dev != expect.Dev || opened.Ino != expect.Ino {
-		return nil, nil, errors.New("changed between the check and the read")
+		return nil, nil, refuse(dir, path, &trustDecision{
+			reason: "changed between the check and the read",
+			remedy: "Try again. If it keeps happening, something else is writing to that path.",
+		})
 	}
 	if !opened.IsRegular() {
 		// A named pipe here blocks every shell prompt; a directory or a device
 		// node is not a config either. Judged on the object whose bytes would
 		// be parsed, so a symlink to an ordinary file still loads.
-		return nil, nil, errors.New("is not a regular file")
+		return nil, nil, refuse(dir, path, &trustDecision{
+			reason: "is not a regular file",
+			remedy: "Replace it with an ordinary file, or remove it.",
+		})
 	}
 
 	data, err := io.ReadAll(f)
@@ -247,6 +300,10 @@ func decodeOpened(f File, expect FileMeta) (*ProjectConfig, []string, error) {
 		return nil, nil, fmt.Errorf("reading: %w", err)
 	}
 	return decodeConfig(data)
+}
+
+func refuse(dir, path string, d *trustDecision) error {
+	return &RefusedError{Dir: dir, Path: path, Reason: d.reason, Remedy: d.remedy}
 }
 
 // FindProjectDir returns the directory containing the nearest .tsuku.toml,
