@@ -454,3 +454,49 @@ func timeoutAfterSeconds(n int) <-chan time.Time {
 func mkfifo(path string) error {
 	return syscall.Mkfifo(path, 0o644)
 }
+
+// TestSymlinkBranchIsTakenFromMetadataNotFromTheOpenError pins the property
+// that keeps the symlink path portable.
+//
+// Opening a symlink without following it fails, and reading that failure as the
+// signal to run the symlink sequence would work on Linux. It would also make
+// the branch depend on which errno each platform picks for a refused
+// O_NOFOLLOW open -- on the one path no macOS test exercises, since the Go
+// tests run on Linux only. The walk decides from the mode bit instead.
+//
+// The fake's OpenNoFollow fails the test if it is reached for the link at all,
+// which is what distinguishes "decided before opening" from "decided from the
+// open's error".
+func TestSymlinkBranchIsTakenFromMetadataNotFromTheOpenError(t *testing.T) {
+	root := t.TempDir()
+	work := filepath.Join(root, "repo")
+	target := filepath.Join(work, "shared.toml")
+	writeFile(t, target, "[tools]\nnode = \"20.0.0\"\n")
+	link := filepath.Join(work, ConfigFileName)
+	if err := os.Symlink("shared.toml", link); err != nil {
+		t.Skipf("cannot create a symlink here: %v", err)
+	}
+
+	f := newFakeEnv(t, root)
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("TSUKU_CEILING_PATHS", root)
+
+	env := f.env()
+	inner := env.OpenNoFollow
+	env.OpenNoFollow = func(path string) (File, error) {
+		if filepath.Clean(path) == filepath.Clean(link) {
+			t.Errorf("the walk opened the link itself; the symlink branch is "+
+				"being entered from the open's error rather than from the "+
+				"metadata, which makes it depend on a platform's errno (%s)", path)
+		}
+		return inner(path)
+	}
+
+	result, err := LoadProjectConfigIn(env, work)
+	if err != nil {
+		t.Fatalf("load: %v", err)
+	}
+	if result == nil || result.Config.Tools["node"].Version != "20.0.0" {
+		t.Fatalf("the symlinked config was not read through its target: %+v", result)
+	}
+}

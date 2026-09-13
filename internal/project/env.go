@@ -9,16 +9,6 @@ import (
 	"syscall"
 )
 
-// ErrIsSymlink is returned by a DiscoveryEnv's OpenNoFollow when the final
-// component of the path is a symlink.
-//
-// Opening without following a symlink fails rather than succeeding, and the
-// failure is the signal that the symlink sequence applies. The production
-// environment translates the platform errno into this sentinel so callers
-// compare against one value instead of against ELOOP on one platform and
-// something else on another.
-var ErrIsSymlink = errors.New("path is a symlink")
-
 // FileMeta is the metadata discovery reads about one path.
 //
 // It is a value rather than an fs.FileInfo because the two fields an
@@ -91,9 +81,15 @@ type DiscoveryEnv struct {
 	Ancestors func(dir string) []string
 
 	// OpenNoFollow opens path for reading without following a final symlink
-	// and without blocking. It returns ErrIsSymlink when the final component
-	// is a link, which is the signal to run the symlink sequence rather than
-	// an error to report.
+	// and without blocking.
+	//
+	// A symlink at path makes this fail, and no caller distinguishes that
+	// failure from any other: the walk decides a config is a symlink from the
+	// metadata it already read, before it opens anything. Nothing here depends
+	// on which errno a platform returns for the refused open, which is what
+	// keeps this portable in the one place a portability bug would be invisible
+	// -- the symlink path is the least-travelled branch, and it is the one no
+	// macOS test exercises.
 	OpenNoFollow func(path string) (File, error)
 }
 
@@ -153,9 +149,10 @@ func osOpenNoFollow(path string) (File, error) {
 	// internal/actions/install_program_files.go.
 	f, err := os.OpenFile(path, os.O_RDONLY|syscall.O_NOFOLLOW|syscall.O_NONBLOCK, 0)
 	if err != nil {
-		if errors.Is(err, syscall.ELOOP) || errors.Is(err, syscall.EMLINK) {
-			return nil, ErrIsSymlink
-		}
+		// Returned as-is, including the refusal a symlink produces. Translating
+		// that one into a sentinel would make this depend on which errno each
+		// platform picks, and nothing needs it to: the walk knows a config is a
+		// symlink from its metadata and takes that branch before opening.
 		return nil, err
 	}
 	return osFile{f}, nil

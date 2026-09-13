@@ -185,6 +185,12 @@ func LoadProjectConfigIn(env DiscoveryEnv, startDir string) (*ConfigResult, erro
 // trusted skips the three clauses. It is true only below a home directory that
 // meets the preconditions in belowResolvedHome; nothing else turns the rule off.
 func readConfig(env DiscoveryEnv, path, dir string, meta FileMeta, trusted bool) (*ProjectConfig, []string, error) {
+	// Decided from the metadata the walk already read, not from the error the
+	// open would return. The open does refuse a symlink, and reading that
+	// refusal as the signal would work -- but it would make the branch depend
+	// on which errno each platform chooses for it, on the one path no macOS
+	// test exercises. A mode bit says the same thing and says it the same way
+	// everywhere.
 	if meta.IsSymlink() {
 		return readThroughSymlink(env, path, dir, meta, trusted)
 	}
