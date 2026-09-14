@@ -315,20 +315,62 @@ func sanitizeEnvForHelper(tsukuHome string) []string {
 		"DYLD_PRINT_LIBRARIES": true, "DYLD_PRINT_LIBRARIES_POST_LAUNCH": true,
 	}
 
+	// The two loader search paths are composed below, so the inherited copies
+	// are skipped here rather than copied and then contradicted. Emitting the
+	// key twice is not harmless-but-untidy: os/exec resolves cmd.Env last-wins
+	// so the child was always getting the composed value, but the returned
+	// slice said two different things, and anything reading it -- a test, a log
+	// line, a future caller -- had to know that rule to read it correctly
+	// (tsukumogami/tsuku#2585).
+	composed := map[string]bool{"LD_LIBRARY_PATH": true, "DYLD_LIBRARY_PATH": true}
+
 	var env []string
 	for _, e := range os.Environ() {
 		key := strings.SplitN(e, "=", 2)[0]
-		if !dangerous[key] {
+		if !dangerous[key] && !composed[key] {
 			env = append(env, e)
 		}
 	}
 
-	// Prepend tsuku libs to library search paths
+	// Every installed library's own lib/ directory, then the libs directory
+	// itself, then whatever the caller had.
+	//
+	// The libraries are what the helper is verifying, so their directories have
+	// to come first. Adding only $TSUKU_HOME/libs was the defect in
+	// tsukumogami/tsuku#1090: libraries live at $TSUKU_HOME/libs/<name>-<version>/lib,
+	// so that directory holds no .so file at all and the system copy won --
+	// tsuku's openssl failed to verify against the system libcrypto. The
+	// enumeration is install.LibraryPaths, the same function the wrapper
+	// scripts use, so the two cannot drift apart.
 	libsDir := filepath.Join(tsukuHome, "libs")
-	env = append(env, fmt.Sprintf("LD_LIBRARY_PATH=%s:%s", libsDir, os.Getenv("LD_LIBRARY_PATH")))
-	env = append(env, fmt.Sprintf("DYLD_LIBRARY_PATH=%s:%s", libsDir, os.Getenv("DYLD_LIBRARY_PATH")))
+	search := append(install.LibraryPaths(libsDir), libsDir)
+
+	env = append(env, "LD_LIBRARY_PATH="+loaderPath(search, os.Getenv("LD_LIBRARY_PATH")))
+	env = append(env, "DYLD_LIBRARY_PATH="+loaderPath(search, os.Getenv("DYLD_LIBRARY_PATH")))
 
 	return env
+}
+
+// loaderPath joins tsuku's search directories with the caller's inherited
+// value, which may be empty.
+//
+// An empty inherited value contributes nothing rather than a trailing colon.
+// Measured on glibc's ld.so: an empty entry means the current working
+// directory, so "<libs>:" put whatever directory tsuku happened to be run from
+// on the search path of a process whose whole job is to report which library
+// loaded. Where that directory is writable by someone else, a planted .so can
+// satisfy a lookup and the verdict then describes that file.
+//
+// DYLD_LIBRARY_PATH is composed the same way here, but dyld's handling of an
+// empty entry has not been measured and its rules differ. Emitting nothing is
+// correct either way: an empty trailing entry can only add a search location
+// nobody asked for.
+func loaderPath(dirs []string, inherited string) string {
+	joined := strings.Join(dirs, ":")
+	if inherited == "" {
+		return joined
+	}
+	return joined + ":" + inherited
 }
 
 // validateLibraryPaths ensures all paths are within the allowed libs directory.
