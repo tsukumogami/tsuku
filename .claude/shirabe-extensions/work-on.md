@@ -11,7 +11,8 @@ GitHub 403 rate limit is cannot-verify, not a failed change. Paths that carry be
 command here checks what they do have their own entry at the end, which makes the gate
 cannot-verify rather than letting another entry pass them; this file is knowingly left to the
 default. This file is `@`-imported on every `/work-on` run, so it stays short; the reasons are
-in its commit history.
+in its commit history. Copying a CI step means running what it runs: a green CI run is not
+evidence that any check here executed.
 
 ## Verification map
 
@@ -37,15 +38,20 @@ in its commit history.
   - `for p in tsuku-recipes tsuku-user; do [ ! -f "plugins/$p/hooks.json" ] || exit 1; done`
   - `T=$(mktemp -d) && go build -o "$T/tsuku" ./cmd/tsuku && P=$(grep -oE 'recipes/[^[:space:]]+\.toml' plugins/tsuku-recipes/skills/recipe-author/references/exemplar-recipes.md | sort -u) && [ -n "$P" ] && for p in $P; do [ -f "$p" ] && TSUKU_HOME="$T" TSUKU_NO_TELEMETRY=1 TSUKU_REGISTRY_URL="$PWD" "$T/tsuku" validate "$p" >/dev/null || { echo "failed: $p"; exit 1; }; done`
     (unlike CI: resolves against this checkout, and an empty exemplar list fails)
-- `telemetry/**` -> `(cd telemetry && npm ci && npm run typecheck && npm run test:coverage)` (telemetry-ci.yml)
-- `website/pipeline/*.html`, `scripts/check-pipeline-links.sh` -> `bash scripts/check-pipeline-links.sh` (website-ci.yml)
+- `telemetry/**` -> `(cd telemetry && npm ci && npm run typecheck && npm run test:coverage)`
+  (telemetry-ci.yml; `npm ci` needs the npm registry, so on a disconnected machine this cannot
+  run at all: that is cannot-verify, not a passing change)
+- `website/pipeline/*.html`, `scripts/check-pipeline-links.sh` -> `ls website/pipeline/*.html >/dev/null 2>&1 && bash scripts/check-pipeline-links.sh`
+  (website-ci.yml; unlike CI, fails when there are no pages to check: the script loops over a
+  glob, so with the pages gone it would pass having examined nothing)
 - `container-images.json`, `internal/containerimages/**` -> `cmp container-images.json internal/containerimages/container-images.json`
   (drift-check.yml; unlike CI, compares instead of regenerating, since the `go:generate` step is a plain copy)
 - `testdata/golden/exclusions.json`, `testdata/golden/code-validation-exclusions.json`,
   `scripts/validate-golden-exclusions.sh` ->
   `./scripts/validate-golden-exclusions.sh && ./scripts/validate-golden-exclusions.sh --file testdata/golden/code-validation-exclusions.json`
   (the golden-file workflows, without `--check-issues`, which needs a token; the golden-plan
-  comparison itself needs credentials and is left out)
+  comparison itself needs credentials and is left out. A malformed or missing exclusions file
+  fails; an empty exclusion list passes, since having no exclusions is a valid state)
 - `**/*.rs`, `**/Cargo.toml`, `**/rust-toolchain.toml` -> `(cd tsuku-llm && cargo fmt --all --check) && (cd cmd/tsuku-dltest && cargo fmt --all --check)` (check-rustfmt.yml)
 - `.github/workflows/**` -> `.github/scripts/checks/retired-runners.sh` and `.github/scripts/checks/ci-patterns-lint.sh` (lint-workflows.yml)
 - `.github/**`, `website/**` (except `website/pipeline/*.html`), `blog/**`, `scripts/**` (except
