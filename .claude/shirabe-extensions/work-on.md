@@ -128,12 +128,14 @@ The Linux steps of the Unit Tests and Lint Tests jobs in `.github/workflows/test
   per-binary wrapper scripts that do export one (`internal/install/manager.go:717-726`) are
   process-local and exec their tool immediately. So the suite fails on a developed machine and
   passes in CI, the reverse of the usual reading that a red local run means a broken machine.
-  The sanitiser does emit the variable twice -- it copies the inherited value
-  and then appends its own -- but that reaches no child: `os/exec` de-duplicates `cmd.Env` and
-  the last entry wins, so the helper sees tsuku's libs first. Only code reading the slice sees
-  both, which is what those tests do. The separate defect in tsukumogami/tsuku#1090, where a
-  system library wins over tsuku's, has a different cause: the path added is `$TSUKU_HOME/libs`
-  while libraries live at `$TSUKU_HOME/libs/<name>-<version>/lib`, so the directory named
-  contains no `.so` files at all.
+  The sanitiser used to emit the variable twice -- copying the inherited value and then
+  appending its own -- which reached no child, since `os/exec` de-duplicates `cmd.Env`
+  last-wins, but did mislead anything reading the slice, which is what those tests do. It now
+  emits each loader variable once and the tests set their own value, so clearing here is belt
+  and braces rather than the thing standing between you and a false red. The separate defect in
+  tsukumogami/tsuku#1090, where a system library wins over tsuku's, had a different cause: the
+  path added was `$TSUKU_HOME/libs` while libraries live at
+  `$TSUKU_HOME/libs/<name>-<version>/lib`, so the directory named contained no `.so` files at
+  all.
   CI's govulncheck step is left out:
   it passes having checked nothing when it cannot fetch.)
