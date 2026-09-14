@@ -32,6 +32,7 @@ jobs:
       - name: Regenerate embedded copy
         run: go generate ./internal/containerimages/...
 
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Check for drift
         run: |
           if ! git diff --exit-code internal/containerimages/container-images.json; then

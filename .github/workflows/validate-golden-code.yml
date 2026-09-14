@@ -90,6 +90,7 @@ jobs:
       - name: Build tsuku
         run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
 
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Validate code-validation exclusions
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
