@@ -125,7 +125,8 @@ The Linux steps of the Unit Tests and Lint Tests jobs in `.github/workflows/test
   profile script, CUDA, Conda, Nix, an IDE -- reaches `internal/verify`'s helper-sanitiser
   tests, which then fail on a value the change never set (tsukumogami/tsuku#2585). Not tsuku's
   doing: nothing in tsuku exports either loader variable into an interactive shell, and the
-  per-binary wrapper scripts that do export one (`internal/install/manager.go:717-726`) are
+  per-binary wrapper scripts that do export one (`generateWrapperScript` in
+  `internal/install/manager.go`) are
   process-local and exec their tool immediately. So the suite fails on a developed machine and
   passes in CI, the reverse of the usual reading that a red local run means a broken machine.
   The sanitiser used to emit the variable twice -- copying the inherited value and then
