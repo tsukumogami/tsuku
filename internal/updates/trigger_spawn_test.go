@@ -16,7 +16,7 @@ import (
 // the test and returns a pointer to the commands it would have started.
 //
 // The recorder never starts a process. That matters for this file in
-// particular: the behaviour under test is one that, unguarded, re-execs the
+// particular: the behavior under test is one that, unguarded, re-execs the
 // test binary, and a test that verified it by really forking would be the
 // fork bomb rather than a test for it.
 func recordSpawns(t *testing.T) *[]string {

@@ -19,7 +19,7 @@ import (
 // that run spawns more of them.
 //
 // internal/updates refuses to re-exec a test binary at all, which is what
-// closes the hole. This is the second line of defence: if some future path
+// closes the hole. This is the second line of defense: if some future path
 // spawns one anyway, it dies here with a diagnostic instead of quietly
 // becoming another generation.
 func TestMain(m *testing.M) {
