@@ -33,26 +33,34 @@ evidence that any check here executed.
   - `T=$(mktemp -d) && go build -o "$T/tsuku" ./cmd/tsuku && for r in internal/recipe/recipes/*.toml; do o=$("$T/tsuku" validate --check-libc-coverage --json "$r" 2>/dev/null); e=$(printf '%s' "$o" | jq -er '[.errors[]?.message] | join("; ")') && [ -z "$e" ] || { echo "$r: ${e:-unreadable output}"; exit 1; }; done`
     (unlike CI: output jq cannot parse fails instead of passing)
   - `T=$(mktemp -d) && go build -o "$T/tsuku" ./cmd/tsuku && for r in internal/recipe/recipes/*.toml recipes/*/*.toml; do TSUKU_HOME="$T" TSUKU_NO_TELEMETRY=1 TSUKU_REGISTRY_URL="$PWD" "$T/tsuku" validate --strict "$r" >/dev/null || { echo "failed: $r"; exit 1; }; done`
-    (unlike CI: dependencies resolve against this checkout's recipes, not the live registry)
+    (unlike CI: dependencies resolve against this checkout's recipes, not the live registry, so a
+    branch is checked against itself and the command needs no network; nothing is installed, so a
+    download URL or checksum change still passes)
   - `TSUKU_NO_TELEMETRY=1 go test -count=1 ./internal/recipe/ ./internal/sonameindex/ ./internal/indexfixture/` (the Go tests that read the recipe tree)
 - `plugins/**` -> both of (validate-skill-content.yml):
   - `for p in tsuku-recipes tsuku-user; do [ ! -f "plugins/$p/hooks.json" ] || exit 1; done`
   - `T=$(mktemp -d) && go build -o "$T/tsuku" ./cmd/tsuku && P=$(grep -oE 'recipes/[^[:space:]]+\.toml' plugins/tsuku-recipes/skills/recipe-author/references/exemplar-recipes.md | sort -u) && [ -n "$P" ] && for p in $P; do [ -f "$p" ] && TSUKU_HOME="$T" TSUKU_NO_TELEMETRY=1 TSUKU_REGISTRY_URL="$PWD" "$T/tsuku" validate "$p" >/dev/null || { echo "failed: $p"; exit 1; }; done`
-    (unlike CI: resolves against this checkout, and an empty exemplar list fails)
+    (unlike CI: resolves against this checkout rather than the live registry, for the same reason
+    as the recipe entry; an empty exemplar list fails rather than passing over nothing)
 - `telemetry/**` -> `(cd telemetry && npm ci && npm run typecheck && npm run test:coverage)`
   (telemetry-ci.yml; `npm ci` needs the npm registry, so on a disconnected machine this cannot
   run at all: that is cannot-verify, not a passing change)
 - `website/pipeline/*.html`, `scripts/check-pipeline-links.sh` -> `ls website/pipeline/*.html >/dev/null 2>&1 && bash scripts/check-pipeline-links.sh`
   (website-ci.yml; unlike CI, fails when there are no pages to check: the script loops over a
   glob, so with the pages gone it would pass having examined nothing)
-- `container-images.json`, `internal/containerimages/**` -> `cmp container-images.json internal/containerimages/container-images.json`
-  (drift-check.yml; unlike CI, compares instead of regenerating, since the `go:generate` step is a plain copy)
+- `container-images.json`, `internal/containerimages/**` -> `jq -e 'length > 0 and all(.[]; has("image"))' container-images.json >/dev/null && cmp container-images.json internal/containerimages/container-images.json`
+  (drift-check.yml; unlike CI, compares instead of regenerating, because the `go:generate` step
+  is a plain `cp`, so comparing proves the same thing without writing into the tree. The `jq`
+  check is the subject guard: `cmp` alone passes when both copies are empty or `{}`, which is
+  identical and checks nothing)
 - `testdata/golden/exclusions.json`, `testdata/golden/code-validation-exclusions.json`,
   `scripts/validate-golden-exclusions.sh` ->
-  `./scripts/validate-golden-exclusions.sh && ./scripts/validate-golden-exclusions.sh --file testdata/golden/code-validation-exclusions.json`
+  `for f in testdata/golden/exclusions.json testdata/golden/code-validation-exclusions.json; do jq -e '.exclusions | type == "array"' "$f" >/dev/null || exit 1; done && ./scripts/validate-golden-exclusions.sh && ./scripts/validate-golden-exclusions.sh --file testdata/golden/code-validation-exclusions.json`
   (the golden-file workflows, without `--check-issues`, which needs a token; the golden-plan
-  comparison itself needs credentials and is left out. A malformed or missing exclusions file
-  fails; an empty exclusion list passes, since having no exclusions is a valid state)
+  comparison itself needs credentials and is left out. The `jq` loop is the subject guard: the
+  script treats a file with no `exclusions` key, or a mistyped one, as having nothing to check
+  and exits 0, so `{}` would pass. A malformed or missing file fails either way; an empty
+  exclusion list still passes, since having no exclusions is a valid state)
 - `**/*.rs`, `**/Cargo.toml`, `**/rust-toolchain.toml` -> `(cd tsuku-llm && cargo fmt --all --check) && (cd cmd/tsuku-dltest && cargo fmt --all --check)` (check-rustfmt.yml)
 - `.github/workflows/**` -> `.github/scripts/checks/retired-runners.sh` and `.github/scripts/checks/ci-patterns-lint.sh` (lint-workflows.yml)
 - `.github/**`, `website/**` (except `website/pipeline/*.html`), `blog/**`, `scripts/**` (except
@@ -66,6 +74,24 @@ evidence that any check here executed.
   shell, where shell-specific breakage lives. CI's queue-data check watches a path the queue
   no longer lives at (tsukumogami/tsuku#2578). (shirabe's schema has no form for such an entry
   yet: tsukumogami/shirabe#373.)
+
+### Checks this map leaves out, and why
+
+- The sandbox and multi-family container jobs, the platform matrix and the macOS legs: they need
+  Docker, several distributions or a macOS host.
+- The install jobs: they write a real `$TSUKU_HOME`. The website deploy and the GPU and LLM
+  suites: credentials or hardware this does not have.
+- The functional suite: it installs real tools over the network.
+- The golden-plan comparison: needs credentials. The structural exclusion checks above do not
+  replace it.
+- CI's govulncheck step: it passes having checked nothing whenever it cannot fetch its data.
+- CI's queue-data check: it watches a path the queue no longer lives at, so it examines nothing
+  today (tsukumogami/tsuku#2578).
+- CI's intermediate-artifact check: a `/work-on` run still holds its staging directory when this
+  gate runs, so copying that check would fail runs whose correct verdict is passed. It stays a
+  pre-merge check.
+- The PR-context checks (PR body, closing issues, diagram status): they read a pull request, not
+  a file a change touches.
 
 ### Default verification command (when no map entry matches; all must pass)
 
