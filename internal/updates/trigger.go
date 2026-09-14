@@ -4,11 +4,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/log"
+	"github.com/tsukumogami/tsuku/internal/selfexec"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
 
@@ -79,30 +79,16 @@ var spawnDetached = func(cmd *exec.Cmd) error {
 // selfBinaryForSpawn resolves the tsuku binary to re-exec for a detached
 // background process, or reports that no spawn should happen.
 //
-// It refuses to hand back a Go test binary. Under `go test`, os.Executable()
-// resolves to the package test binary (something like
-// /tmp/go-build123/b001/tsuku.test) rather than to tsuku, and re-execing that
-// is far worse than merely useless. A test binary accepts only -test.* flags,
-// and flag.Parse stops at the first non-flag argument, so a positional
-// subcommand such as "check-updates" is not rejected: it silently discards
-// every -test.* flag that follows and the binary runs its whole package suite
-// unfiltered. That suite reaches this function again, and because each test
-// uses its own temporary directory as $TSUKU_HOME, every generation gets a
-// distinct lock path and the flock deduplication above never engages. The
-// result is unbounded process growth with nothing to reap it.
-//
-// The guard does not touch the real binary. testing.Testing() is false in a
-// normally built tsuku, including the one an end-to-end test builds and then
-// execs, so background checks still spawn exactly as before.
+// The decision belongs to internal/selfexec, which refuses a Go test binary
+// and a binary built from a sibling command; its doc comment carries the
+// reasoning. This wrapper adds the debug line naming which trigger declined,
+// and pins the response: no PATH fallback. A system-installed tsuku may be an
+// older release that lacks the features under test, and spawning it would be a
+// different program writing this $TSUKU_HOME.
 func selfBinaryForSpawn(context string) (string, bool) {
-	if testing.Testing() {
-		log.Default().Debug(context + ": refusing to re-exec a test binary")
-		return "", false
-	}
-
-	binary, err := os.Executable()
-	if err != nil {
-		log.Default().Debug(context+": resolve binary path", "error", err)
+	binary, ok := selfexec.Binary()
+	if !ok {
+		log.Default().Debug(context + ": refusing to re-exec: not a runnable tsuku CLI")
 		return "", false
 	}
 	return binary, true
