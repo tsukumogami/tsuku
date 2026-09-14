@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
@@ -62,12 +63,49 @@ func CheckAndSpawnUpdateCheck(cfg *config.Config, userCfg *userconfig.Config) {
 // terminal, then starts the process. The error from cmd.Start() is returned
 // without swallowing -- callers decide how to handle it.
 // Do not call cmd.Wait() after spawnDetached; the process runs independently.
-func spawnDetached(cmd *exec.Cmd) error {
+//
+// It is a variable, not a plain function, so that tests can substitute a
+// recorder and assert on what would have been spawned without starting a
+// process. Nothing in production reassigns it. Tests that do must not run in
+// parallel, which matches the rest of this package.
+var spawnDetached = func(cmd *exec.Cmd) error {
 	setSysProcAttr(cmd)
 	cmd.Stdin = nil
 	cmd.Stdout = nil
 	cmd.Stderr = nil
 	return cmd.Start()
+}
+
+// selfBinaryForSpawn resolves the tsuku binary to re-exec for a detached
+// background process, or reports that no spawn should happen.
+//
+// It refuses to hand back a Go test binary. Under `go test`, os.Executable()
+// resolves to the package test binary (something like
+// /tmp/go-build123/b001/tsuku.test) rather than to tsuku, and re-execing that
+// is far worse than merely useless. A test binary accepts only -test.* flags,
+// and flag.Parse stops at the first non-flag argument, so a positional
+// subcommand such as "check-updates" is not rejected: it silently discards
+// every -test.* flag that follows and the binary runs its whole package suite
+// unfiltered. That suite reaches this function again, and because each test
+// uses its own temporary directory as $TSUKU_HOME, every generation gets a
+// distinct lock path and the flock deduplication above never engages. The
+// result is unbounded process growth with nothing to reap it.
+//
+// The guard does not touch the real binary. testing.Testing() is false in a
+// normally built tsuku, including the one an end-to-end test builds and then
+// execs, so background checks still spawn exactly as before.
+func selfBinaryForSpawn(context string) (string, bool) {
+	if testing.Testing() {
+		log.Default().Debug(context + ": refusing to re-exec a test binary")
+		return "", false
+	}
+
+	binary, err := os.Executable()
+	if err != nil {
+		log.Default().Debug(context+": resolve binary path", "error", err)
+		return "", false
+	}
+	return binary, true
 }
 
 // MaybeSpawnAutoApply spawns a detached tsuku apply-updates process if auto-apply
@@ -118,9 +156,8 @@ func MaybeSpawnAutoApply(cfg *config.Config, userCfg *userconfig.Config) {
 	// Release probe lock immediately -- the background process manages its own locking
 	_ = lock.Unlock()
 
-	binary, err := os.Executable()
-	if err != nil {
-		log.Default().Debug("auto-apply trigger: resolve binary path", "error", err)
+	binary, ok := selfBinaryForSpawn("auto-apply trigger")
+	if !ok {
 		return
 	}
 
@@ -133,9 +170,8 @@ func MaybeSpawnAutoApply(cfg *config.Config, userCfg *userconfig.Config) {
 // spawnChecker launches a detached tsuku check-updates process.
 // The process survives parent exit and runs independently.
 func spawnChecker() {
-	binary, err := os.Executable()
-	if err != nil {
-		log.Default().Debug("update check: resolve binary path", "error", err)
+	binary, ok := selfBinaryForSpawn("update check")
+	if !ok {
 		return
 	}
 

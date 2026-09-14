@@ -106,6 +106,16 @@ func runCommandOutcome(t *testing.T, fn func() error) (outcome commandOutcome) {
 
 func runHookEnv(t *testing.T, shell string) (stdout, stderr string, err error) {
 	t.Helper()
+
+	// The hook-env path triggers a background update check, which re-execs
+	// the running binary. Under `go test` that binary is this test binary,
+	// so leaving the check enabled would have every hook-env test spawn a
+	// detached copy of the suite. internal/updates refuses to re-exec a test
+	// binary, so this is belt and braces -- but it also keeps these tests
+	// off a code path they are not about, and it is set here rather than in
+	// each test so a new hook-env test inherits it.
+	t.Setenv("TSUKU_NO_UPDATE_CHECK", "1")
+
 	return runCommand(t, func() error {
 		return hookEnvCmd.RunE(hookEnvCmd, []string{shell})
 	})
