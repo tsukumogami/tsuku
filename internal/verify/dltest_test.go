@@ -890,7 +890,7 @@ func TestSanitizeEnvForHelper_AddsLibraryPaths(t *testing.T) {
 	for _, key := range []string{"LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH"} {
 		got := loaderEntries(env, key)
 		if len(got) != 1 {
-			t.Fatalf("%s appears %d times in the sanitised environment, want exactly 1: %v.\n"+
+			t.Fatalf("%s appears %d times in the sanitized environment, want exactly 1: %v.\n"+
 				"os/exec resolves duplicates last-wins, so a second entry changes "+
 				"nothing for the child and misleads everything else that reads "+
 				"the slice.", key, len(got), got)
@@ -905,10 +905,15 @@ func TestSanitizeEnvForHelper_AddsLibraryPaths(t *testing.T) {
 // TestSanitizeEnvForHelper_NoInheritedValue pins the empty case, which decides
 // whether the working directory lands on the loader path.
 func TestSanitizeEnvForHelper_NoInheritedValue(t *testing.T) {
-	t.Setenv("LD_LIBRARY_PATH", "")
-	t.Setenv("DYLD_LIBRARY_PATH", "")
-	os.Unsetenv("LD_LIBRARY_PATH")
-	os.Unsetenv("DYLD_LIBRARY_PATH")
+	// t.Setenv first so the values are restored afterwards, then unset: an
+	// empty value and an absent one reach os.Getenv identically, but only the
+	// unset case proves the composition handles a caller who never set it.
+	for _, key := range []string{"LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH"} {
+		t.Setenv(key, "")
+		if err := os.Unsetenv(key); err != nil {
+			t.Fatalf("unset %s: %v", key, err)
+		}
+	}
 
 	env := sanitizeEnvForHelper("/fake/tsuku")
 
