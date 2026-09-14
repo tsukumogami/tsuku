@@ -26,15 +26,38 @@ func withSeams(t *testing.T, isTest bool, buildPath string, buildOK bool, exePat
 	executable = func() (string, error) { return exePath, exeErr }
 }
 
+// withBuildOnly seams the build info and the executable path but leaves
+// isTestBinary alone, so the real testing.Testing() decides. Used where the
+// point of the test is that the test-binary half is what refuses.
+func withBuildOnly(t *testing.T, buildPath string, exePath string) {
+	t.Helper()
+
+	origInfo, origExe := readBuildInfo, executable
+	t.Cleanup(func() { readBuildInfo, executable = origInfo, origExe })
+
+	readBuildInfo = func() (*debug.BuildInfo, bool) {
+		return &debug.BuildInfo{Path: buildPath}, true
+	}
+	executable = func() (string, error) { return exePath, nil }
+}
+
 const (
 	cli     = "github.com/tsukumogami/tsuku/cmd/tsuku"
 	sibling = "github.com/tsukumogami/tsuku/cmd/seed-queue"
 )
 
-// TestBinaryRefusesATestBinary is the regression test for tsuku#2580. It needs
-// no seams: this suite is a test binary, so testing.Testing() reports true
-// exactly as it would in any other package's suite.
+// TestBinaryRefusesATestBinary is the regression test for tsuku#2580, and it
+// pins the test-binary half specifically.
+//
+// The build info is seamed to the CLI's own package so the identity half
+// cannot do the work: without that, this test passes on its own because the
+// suite's build path is internal/selfexec rather than cmd/tsuku, and a test
+// named for the fork bomb would survive removal of the guard that prevents it.
+// testing.Testing() is deliberately not seamed here -- the real one runs, as it
+// would in any package's suite -- so this fails if that half is removed.
 func TestBinaryRefusesATestBinary(t *testing.T) {
+	withBuildOnly(t, cli, "/usr/local/bin/tsuku")
+
 	if path, ok := Binary(); ok {
 		t.Fatalf("Binary() approved %q from inside a test binary.\n"+
 			"Running a test binary as tsuku is what took a host to 70,004 tasks: "+
