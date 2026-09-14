@@ -350,9 +350,16 @@ func sanitizeEnvForHelper(tsukuHome string) []string {
 // value, which may be empty.
 //
 // An empty inherited value contributes nothing rather than a trailing colon.
-// To the dynamic linker an empty entry means the current working directory, so
-// "<libs>:" would put whatever directory tsuku happens to be run from on the
-// search path of a process whose whole job is to report which library loaded.
+// Measured on glibc's ld.so: an empty entry means the current working
+// directory, so "<libs>:" put whatever directory tsuku happened to be run from
+// on the search path of a process whose whole job is to report which library
+// loaded. Where that directory is writable by someone else, a planted .so can
+// satisfy a lookup and the verdict then describes that file.
+//
+// DYLD_LIBRARY_PATH is composed the same way here, but dyld's handling of an
+// empty entry has not been measured and its rules differ. Emitting nothing is
+// correct either way: an empty trailing entry can only add a search location
+// nobody asked for.
 func loaderPath(dirs []string, inherited string) string {
 	joined := strings.Join(dirs, ":")
 	if inherited == "" {

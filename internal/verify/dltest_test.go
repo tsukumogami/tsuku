@@ -918,9 +918,11 @@ func TestSanitizeEnvForHelper_NoInheritedValue(t *testing.T) {
 			t.Fatalf("%s appears %d times, want exactly 1: %v", key, len(got), got)
 		}
 		if strings.HasSuffix(got[0], ":") {
-			t.Errorf("%s = %q ends in a colon, which the dynamic linker reads as "+
-				"the current working directory. A verification helper must not "+
-				"search whatever directory tsuku happened to be run from.", key, got[0])
+			t.Errorf("%s = %q ends in a colon. On glibc's ld.so an empty entry "+
+				"means the current working directory, measured; dyld's handling "+
+				"is unverified but no loader needs a trailing empty entry. A "+
+				"verification helper must not search whatever directory tsuku "+
+				"happened to be run from.", key, got[0])
 		}
 		if got[0] != "/fake/tsuku/libs" {
 			t.Errorf("%s = %q, want %q", key, got[0], "/fake/tsuku/libs")
