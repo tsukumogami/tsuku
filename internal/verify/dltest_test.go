@@ -864,30 +864,67 @@ func TestSanitizeEnvForHelper_PreservesSafeVars(t *testing.T) {
 	}
 }
 
+// loaderEntries returns every entry in env carrying the given key. Both loader
+// variables should appear exactly once, and this returns all matches so a test
+// can say so rather than reading the first and hoping.
+func loaderEntries(env []string, key string) []string {
+	var found []string
+	for _, e := range env {
+		if strings.HasPrefix(e, key+"=") {
+			found = append(found, strings.TrimPrefix(e, key+"="))
+		}
+	}
+	return found
+}
+
 func TestSanitizeEnvForHelper_AddsLibraryPaths(t *testing.T) {
+	// The caller's value is set here rather than inherited: with it unset this
+	// test used to pass only because the emitted value ended in a colon, and
+	// with it set it used to fail on the machine of anyone whose system puts
+	// something there (tsukumogami/tsuku#2585).
+	t.Setenv("LD_LIBRARY_PATH", "/opt/caller")
+	t.Setenv("DYLD_LIBRARY_PATH", "/opt/caller")
+
 	env := sanitizeEnvForHelper("/fake/tsuku")
 
-	var foundLDPath, foundDYLDPath bool
-	for _, e := range env {
-		if strings.HasPrefix(e, "LD_LIBRARY_PATH=") {
-			foundLDPath = true
-			if !strings.Contains(e, "/fake/tsuku/libs:") {
-				t.Errorf("LD_LIBRARY_PATH should contain /fake/tsuku/libs: got %s", e)
-			}
+	for _, key := range []string{"LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH"} {
+		got := loaderEntries(env, key)
+		if len(got) != 1 {
+			t.Fatalf("%s appears %d times in the sanitised environment, want exactly 1: %v.\n"+
+				"os/exec resolves duplicates last-wins, so a second entry changes "+
+				"nothing for the child and misleads everything else that reads "+
+				"the slice.", key, len(got), got)
 		}
-		if strings.HasPrefix(e, "DYLD_LIBRARY_PATH=") {
-			foundDYLDPath = true
-			if !strings.Contains(e, "/fake/tsuku/libs:") {
-				t.Errorf("DYLD_LIBRARY_PATH should contain /fake/tsuku/libs: got %s", e)
-			}
+		if want := "/fake/tsuku/libs:/opt/caller"; got[0] != want {
+			t.Errorf("%s = %q, want %q: tsuku's directories first, then the caller's value",
+				key, got[0], want)
 		}
 	}
+}
 
-	if !foundLDPath {
-		t.Error("LD_LIBRARY_PATH should have been added")
-	}
-	if !foundDYLDPath {
-		t.Error("DYLD_LIBRARY_PATH should have been added")
+// TestSanitizeEnvForHelper_NoInheritedValue pins the empty case, which decides
+// whether the working directory lands on the loader path.
+func TestSanitizeEnvForHelper_NoInheritedValue(t *testing.T) {
+	t.Setenv("LD_LIBRARY_PATH", "")
+	t.Setenv("DYLD_LIBRARY_PATH", "")
+	os.Unsetenv("LD_LIBRARY_PATH")
+	os.Unsetenv("DYLD_LIBRARY_PATH")
+
+	env := sanitizeEnvForHelper("/fake/tsuku")
+
+	for _, key := range []string{"LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH"} {
+		got := loaderEntries(env, key)
+		if len(got) != 1 {
+			t.Fatalf("%s appears %d times, want exactly 1: %v", key, len(got), got)
+		}
+		if strings.HasSuffix(got[0], ":") {
+			t.Errorf("%s = %q ends in a colon, which the dynamic linker reads as "+
+				"the current working directory. A verification helper must not "+
+				"search whatever directory tsuku happened to be run from.", key, got[0])
+		}
+		if got[0] != "/fake/tsuku/libs" {
+			t.Errorf("%s = %q, want %q", key, got[0], "/fake/tsuku/libs")
+		}
 	}
 }
 

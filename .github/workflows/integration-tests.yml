@@ -155,8 +155,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: |
-          # openssl excluded: system libcrypto.so.3 conflicts with tsuku-installed version (see #1090)
-          LIBRARIES=(zlib libyaml gcc-libs)
+          # openssl included again: its verification failed because only $TSUKU_HOME/libs
+          # reached the loader path, where no .so lives, so the system libcrypto won (#1090).
+          LIBRARIES=(zlib libyaml gcc-libs openssl)
           FAILED=()
           for lib in "${LIBRARIES[@]}"; do
             echo "::group::dlopen: $lib (glibc)"
@@ -254,8 +255,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: |
-          # openssl excluded: system libcrypto conflicts with tsuku-installed version (see #1090)
-          LIBRARIES=(zlib libyaml gcc-libs)
+          # openssl included again: its verification failed because only $TSUKU_HOME/libs
+          # reached the loader path, where no .so lives, so the system libcrypto won (#1090).
+          LIBRARIES=(zlib libyaml gcc-libs openssl)
           FAILED=()
           for lib in "${LIBRARIES[@]}"; do
             echo "::group::dlopen: $lib (darwin)"

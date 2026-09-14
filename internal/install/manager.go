@@ -651,7 +651,34 @@ func (m *Manager) createBinaryWrapper(ctx context.Context, toolName, version, bi
 // ctx is accepted for future cancellation hooks.
 func (m *Manager) collectLibraryPaths(ctx context.Context) []string {
 	_ = ctx
-	libsDir := m.config.LibsDir
+
+	// The shell-safety filter stays here rather than moving into LibraryPaths.
+	// These paths are interpolated into a generated /bin/sh wrapper, so a path
+	// carrying a quote or a `$` would break or subvert that script. That is a
+	// property of this consumer, not of where libraries live: the verification
+	// helper passes the same paths to execve as an environment value, where no
+	// shell ever sees them, and silently dropping a directory there would
+	// weaken a verdict rather than protect a script.
+	all := LibraryPaths(m.config.LibsDir)
+	safe := make([]string, 0, len(all))
+	for _, p := range all {
+		if validateShellSafePath(p) == nil {
+			safe = append(safe, p)
+		}
+	}
+	return safe
+}
+
+// LibraryPaths returns the lib/ subdirectory of every library installed under
+// libsDir, sorted, for use as a dynamic linker search path.
+//
+// It is exported because more than one caller needs the same answer and they
+// must not diverge: the wrapper scripts this package generates, and the dlopen
+// verification helper in internal/verify, which runs a library against the same
+// linker. When that helper computed its own path it used libsDir itself, where
+// no .so file lives -- libraries are a level deeper -- so the system copy won
+// and verification failed (tsukumogami/tsuku#1090).
+func LibraryPaths(libsDir string) []string {
 	entries, err := os.ReadDir(libsDir)
 	if err != nil {
 		return nil
@@ -673,9 +700,7 @@ func (m *Manager) collectLibraryPaths(ctx context.Context) []string {
 		}
 		libLibDir := filepath.Join(libsDir, entry.Name(), "lib")
 		if info, err := os.Stat(libLibDir); err == nil && info.IsDir() {
-			if validateShellSafePath(libLibDir) == nil {
-				paths = append(paths, libLibDir)
-			}
+			paths = append(paths, libLibDir)
 		}
 	}
 	sort.Strings(paths) // Deterministic order

@@ -115,12 +115,19 @@ The Linux steps of the Unit Tests and Lint Tests jobs in `.github/workflows/test
   where fish is not installed, since `TSUKU_REQUIRE_FISH` is not set; telemetry is off, so no
   run posts events. `TSUKU_REGISTRY_URL` is not set here, because the loader tests in
   `internal/recipe` and `internal/registry` expect it unset. `LD_LIBRARY_PATH` is cleared, which
-  CI gets for free by never setting it: with tsuku's own shell integration active it points at
-  the developer's installed libraries, and `internal/verify`'s helper-sanitiser tests then fail
-  on a value the change never set (tsukumogami/tsuku#2585). So the suite fails for people
-  running tsuku and passes in CI, the reverse of the usual reading that a red local run means a
-  broken machine. The sanitiser copies the inherited variable and then appends its own, so the
-  helper gets it twice and tsuku's libs are not at the effective front of the path; that is the
-  behaviour reported in tsukumogami/tsuku#1090, where a system library wins over tsuku's.
+  CI gets for free by never setting it: whatever a developer's own system put there -- a distro
+  profile script, CUDA, Conda, Nix, an IDE -- reaches `internal/verify`'s helper-sanitiser
+  tests, which then fail on a value the change never set (tsukumogami/tsuku#2585). Not tsuku's
+  doing: nothing in tsuku exports either loader variable into an interactive shell, and the
+  per-binary wrapper scripts that do export one (`internal/install/manager.go:717-726`) are
+  process-local and exec their tool immediately. So the suite fails on a developed machine and
+  passes in CI, the reverse of the usual reading that a red local run means a broken machine.
+  The sanitiser does emit the variable twice -- it copies the inherited value
+  and then appends its own -- but that reaches no child: `os/exec` de-duplicates `cmd.Env` and
+  the last entry wins, so the helper sees tsuku's libs first. Only code reading the slice sees
+  both, which is what those tests do. The separate defect in tsukumogami/tsuku#1090, where a
+  system library wins over tsuku's, has a different cause: the path added is `$TSUKU_HOME/libs`
+  while libraries live at `$TSUKU_HOME/libs/<name>-<version>/lib`, so the directory named
+  contains no `.so` files at all.
   CI's govulncheck step is left out:
   it passes having checked nothing when it cannot fetch.)
