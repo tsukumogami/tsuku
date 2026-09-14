@@ -11,6 +11,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/buildinfo"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/selfexec"
 	"github.com/tsukumogami/tsuku/internal/updates"
 	"github.com/tsukumogami/tsuku/internal/version"
 )
@@ -69,10 +70,12 @@ var selfUpdateCmd = &cobra.Command{
 		}
 		defer func() { _ = lock.Unlock() }()
 
-		// Resolve binary path
-		exePath, err := os.Executable()
-		if err != nil {
-			return fmt.Errorf("resolve executable path: %w", err)
+		// Resolve binary path, refusing anything that is not the tsuku CLI --
+		// this overwrites the file in place, so a test binary or a sibling
+		// command must never reach ApplySelfUpdate.
+		exePath, ok := selfexec.Binary()
+		if !ok {
+			return fmt.Errorf("refusing to self-update: not running as the tsuku CLI")
 		}
 		exePath, err = filepath.EvalSymlinks(exePath)
 		if err != nil {

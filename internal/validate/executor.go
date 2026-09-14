@@ -13,6 +13,7 @@ import (
 	planexec "github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/selfexec"
 )
 
 // DefaultValidationImage is the container image used for validation.
@@ -20,21 +21,23 @@ import (
 const DefaultValidationImage = "debian:bookworm-slim"
 
 // findTsukuBinary locates a valid tsuku binary for container execution.
-// It first checks os.Executable(), verifying the binary name looks correct.
-// If running in a test context (binary ends in .test), it looks for tsuku in PATH.
+//
+// The binary is mounted at /usr/local/bin/tsuku and invoked as `tsuku install
+// --plan ...`, so it has to be the tsuku CLI. internal/selfexec answers that,
+// and the filename is not consulted. The check here used to match the basename
+// exactly against "tsuku"/"tsuku.exe", which correctly rejected tsuku.test but
+// also rejected the QA binary tsuku-test, an un-renamed release artifact such
+// as tsuku-linux-amd64, and any binary a user renamed -- all of them real.
+//
 // Returns empty string if no valid binary is found.
 func findTsukuBinary() string {
-	// Try the current executable first
-	if exePath, err := os.Executable(); err == nil {
-		baseName := filepath.Base(exePath)
-		// Check if this looks like the real tsuku binary (not a test binary)
-		if baseName == "tsuku" || baseName == "tsuku.exe" {
-			return exePath
-		}
+	if exePath, ok := selfexec.Binary(); ok {
+		return exePath
 	}
 
-	// Current executable is not tsuku (likely a test binary)
-	// Try to find tsuku in PATH
+	// Not the CLI -- a test binary, or a sibling command such as seed-queue.
+	// Fall back to a tsuku on PATH: for a containerised install a slightly
+	// different tsuku is an acceptable stand-in.
 	if tsukuPath, err := exec.LookPath("tsuku"); err == nil {
 		return tsukuPath
 	}

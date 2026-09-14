@@ -15,6 +15,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/platform"
+	"github.com/tsukumogami/tsuku/internal/selfexec"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
@@ -129,13 +130,20 @@ func NewExecutor(detector *validate.RuntimeDetector, opts ...ExecutorOption) *Ex
 }
 
 // findTsukuBinary locates a valid tsuku binary for container execution.
+//
+// The binary is mounted at /usr/local/bin/tsuku and invoked as `tsuku install
+// --plan ...`, so it has to be the tsuku CLI. internal/selfexec answers that;
+// the filename cannot. This function used to accept any basename starting with
+// "tsuku", which accepted the test binary tsuku.test -- and no name rule could
+// have done better, since `go test -c -o tsuku` produces a test binary called
+// exactly "tsuku" while the QA binary tsuku-test is entirely real.
+//
+// A refusal degrades to PATH on purpose: for a containerised install a
+// slightly different tsuku is an acceptable stand-in, which is not true of the
+// update triggers.
 func findTsukuBinary() string {
-	// Try the current executable first (accepts tsuku, tsuku-test, etc.)
-	if exePath, err := os.Executable(); err == nil {
-		baseName := filepath.Base(exePath)
-		if strings.HasPrefix(baseName, "tsuku") {
-			return exePath
-		}
+	if exePath, ok := selfexec.Binary(); ok {
+		return exePath
 	}
 
 	// Try to find tsuku in PATH

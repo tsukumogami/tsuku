@@ -14,6 +14,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/selfexec"
 )
 
 var (
@@ -160,14 +161,18 @@ func EnsureDltest(cfg *config.Config) (string, error) {
 // Returns ErrChecksumMismatch if checksum verification fails (security-critical).
 // Returns ErrHelperUnavailable for other installation failures (network, etc.).
 func installDltest(version string) error {
-	// Find tsuku binary - should be in PATH or we can use os.Executable
-	tsukuPath, err := os.Executable()
-	if err != nil {
-		// Fall back to looking in PATH
-		tsukuPath, err = exec.LookPath("tsuku")
-		if err != nil {
-			return fmt.Errorf("%w: cannot find tsuku binary to install helper: %v", ErrHelperUnavailable, err)
-		}
+	// Re-exec this process's own binary, and only if it really is the tsuku
+	// CLI. internal/selfexec refuses a Go test binary and a sibling command;
+	// its doc comment carries the reasoning.
+	//
+	// A refusal is terminal here, and deliberately does not fall through to a
+	// tsuku on PATH. Under `go test` on a developer machine that fallback would
+	// find the real tsuku and run a genuine `install tsuku-dltest` against the
+	// developer's actual $TSUKU_HOME -- quieter than the bug it would be
+	// fixing, and outside every temporary directory the test set up.
+	tsukuPath, ok := selfexec.Binary()
+	if !ok {
+		return fmt.Errorf("%w: not running as the tsuku CLI, so the helper cannot be installed", ErrHelperUnavailable)
 	}
 
 	// Build install command - use version spec if provided, otherwise install latest
