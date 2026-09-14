@@ -79,10 +79,16 @@ The Linux steps of the Unit Tests and Lint Tests jobs in `.github/workflows/test
   cache, since a shared one replays findings from other checkouts; the test fetches its tool
   through `go run`. "parallel golangci-lint is running" means another run holds the tool's
   host-wide lock, which the private cache does not isolate: cannot-verify, not a failed change)
-- `H=$(git rev-parse HEAD) && S=$(git status --porcelain) && DOCKER_HOST=unix:///nonexistent TSUKU_NO_TELEMETRY=1 go test -short ./... && [ "$(git rev-parse HEAD)" = "$H" ] && [ "$(git status --porcelain)" = "$S" ]`
+- `go test -count=1 -run '^TestNoStdlibLog$' .` (the one lint gate `-short` skips that no other
+  command here covers; gofmt, tidy, vet and golangci-lint are declared separately above, and
+  govulncheck is left out because it passes having checked nothing when it cannot fetch)
+- `H=$(git rev-parse HEAD) && S=$(git status --porcelain) && env -u LD_LIBRARY_PATH DOCKER_HOST=unix:///nonexistent TSUKU_NO_TELEMETRY=1 go test -short ./... && [ "$(git rev-parse HEAD)" = "$H" ] && [ "$(git status --porcelain)" = "$S" ]`
   (the unit suite inside CI's test-artifact tripwire. Unlike CI: Docker is hidden, because the
   hook container tests install packages from the network and take minutes; fish cases skip
   where fish is not installed, since `TSUKU_REQUIRE_FISH` is not set; telemetry is off, so no
   run posts events. `TSUKU_REGISTRY_URL` is not set here, because the loader tests in
-  `internal/recipe` and `internal/registry` expect it unset. CI's govulncheck step is left out:
+  `internal/recipe` and `internal/registry` expect it unset. `LD_LIBRARY_PATH` is cleared, which
+  CI gets for free: with tsuku's shell integration active it points at the developer's own
+  installed libraries, and `internal/verify`'s helper-sanitiser tests then fail on a value the
+  change never set. CI's govulncheck step is left out:
   it passes having checked nothing when it cannot fetch.)
