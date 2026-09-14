@@ -48,6 +48,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Check pipeline cross-page links
         run: bash scripts/check-pipeline-links.sh
 

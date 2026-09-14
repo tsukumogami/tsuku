@@ -30,6 +30,7 @@ jobs:
       - name: Build tsuku
         run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
 
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Validate exemplar recipes
         run: |
           EXEMPLAR_FILE="plugins/tsuku-recipes/skills/recipe-author/references/exemplar-recipes.md"
@@ -74,6 +75,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Verify hooks.json files do not exist
         run: |
           failed=0

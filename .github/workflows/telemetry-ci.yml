@@ -29,12 +29,15 @@ jobs:
           cache: "npm"
           cache-dependency-path: telemetry/package-lock.json
 
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Install dependencies
         run: npm ci
 
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Type check
         run: npm run typecheck
 
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Run tests with coverage
         run: npm run test:coverage
 

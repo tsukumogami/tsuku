@@ -17,6 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Validate embedded recipes are flat
         run: |
           # Embedded recipes must be directly in internal/recipe/recipes/
@@ -48,6 +49,7 @@ jobs:
 
           echo "Found $toml_count embedded recipes in flat structure"
 
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Validate registry recipes use letter directories
         run: |
           # Registry recipes must be in recipes/<letter>/<name>.toml
@@ -82,6 +84,7 @@ jobs:
           recipe_count=$(find recipes -mindepth 2 -maxdepth 2 -name "*.toml" | wc -l)
           echo "Found $recipe_count registry recipes in letter directories"
 
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Validate recipes are in correct letter directory
         run: |
           # Each recipe must be in the directory matching its first letter
@@ -111,6 +114,7 @@ jobs:
 
           echo "All recipes are in correct letter directories"
 
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Check for duplicate recipes
         run: |
           # No recipe should exist in both embedded and registry
@@ -156,6 +160,7 @@ jobs:
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku
 
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Check libc coverage for embedded recipes
         run: |
           echo "Checking libc coverage for embedded library recipes..."

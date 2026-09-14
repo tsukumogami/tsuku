@@ -72,10 +72,12 @@ jobs:
             echo "::endgroup::"
           done
 
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Cargo fmt (tsuku-llm)
         working-directory: tsuku-llm
         run: cargo fmt --all --check
 
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Cargo fmt (cmd/tsuku-dltest)
         working-directory: cmd/tsuku-dltest
         run: cargo fmt --all --check

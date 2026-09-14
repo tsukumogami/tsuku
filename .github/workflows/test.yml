@@ -54,6 +54,7 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Verify go.mod is tidy
         run: |
           go mod tidy
@@ -75,6 +76,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends fish
 
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Run tests
         # PRs: fast feedback without race detector or coverage
         # Push to main: full validation with race detector and coverage
@@ -92,6 +94,7 @@ jobs:
           # the fish tests go back to passing without running.
           TSUKU_REQUIRE_FISH: "1"
 
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Check for test artifacts
         run: |
           # Fail if tests left any files in the source tree
@@ -136,6 +139,7 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Run lint tests
         run: go test -v -run 'Test(GolangCILint|GoFmt|GoModTidy|GoVet|Govulncheck)' .
 
@@ -447,6 +451,7 @@ jobs:
       - name: Build tsuku
         run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
 
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Validate all recipes
         run: |
           failed=0
