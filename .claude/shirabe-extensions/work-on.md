@@ -22,7 +22,10 @@ evidence that any check here executed.
 - `docs/**` -> all of:
   - `B=$(git merge-base origin/main HEAD) && git diff --name-only --diff-filter=ACMR "$B" -- :/docs/ | grep -vE "(^|/)(evals|tests)/fixtures/" | xargs -r shirabe validate --visibility=public` (errors out when `origin/main` is missing: that is cannot-verify, not a failed change)
   - `shirabe validate --visibility=public --lifecycle . --mode=draft` (not `ready`: an in-flight `/execute` chain keeps its PLAN, which the ready posture rejects)
-  - `go test -count=1 -run 'TestGatesTableMatchesTheRecord|TestDerivation' .` (the only Go tests that read `docs/`)
+  - `go test -count=1 -run 'TestGatesTableMatchesTheRecord|TestDerivation' .` (the only Go tests
+    that read `docs/`. They pin one document's tables and fail on every way of breaking it, but
+    that is their whole scope: another doc emptied or deleted is caught by the changed-docs
+    `shirabe validate` above, not by this command)
 - `recipes/**`, `internal/recipe/recipes/**` -> all of (validate-recipe-structure.yml and the
   Validate Recipes job in test.yml; nothing is installed, so a download URL or checksum change
   passes):
@@ -36,7 +39,10 @@ evidence that any check here executed.
     (unlike CI: dependencies resolve against this checkout's recipes, not the live registry, so a
     branch is checked against itself and the command needs no network; nothing is installed, so a
     download URL or checksum change still passes)
-  - `TSUKU_NO_TELEMETRY=1 go test -count=1 ./internal/recipe/ ./internal/sonameindex/ ./internal/indexfixture/` (the Go tests that read the recipe tree)
+  - `TSUKU_NO_TELEMETRY=1 go test -count=1 ./internal/recipe/ ./internal/sonameindex/ ./internal/indexfixture/`
+    (the Go tests that read the recipe tree. They check name collisions and the tree's shape, so a
+    stub, empty or gutted recipe file passes them; the strict validation above is what catches
+    those. This entry holds because that sibling command holds, not on its own)
 - `plugins/**` -> both of (validate-skill-content.yml):
   - `for p in tsuku-recipes tsuku-user; do [ ! -f "plugins/$p/hooks.json" ] || exit 1; done`
   - `T=$(mktemp -d) && go build -o "$T/tsuku" ./cmd/tsuku && P=$(grep -oE 'recipes/[^[:space:]]+\.toml' plugins/tsuku-recipes/skills/recipe-author/references/exemplar-recipes.md | sort -u) && [ -n "$P" ] && for p in $P; do [ -f "$p" ] && TSUKU_HOME="$T" TSUKU_NO_TELEMETRY=1 TSUKU_REGISTRY_URL="$PWD" "$T/tsuku" validate "$p" >/dev/null || { echo "failed: $p"; exit 1; }; done`
