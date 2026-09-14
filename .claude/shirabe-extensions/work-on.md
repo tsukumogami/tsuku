@@ -32,7 +32,7 @@ in its commit history.
     (unlike CI: output jq cannot parse fails instead of passing)
   - `T=$(mktemp -d) && go build -o "$T/tsuku" ./cmd/tsuku && for r in internal/recipe/recipes/*.toml recipes/*/*.toml; do TSUKU_HOME="$T" TSUKU_NO_TELEMETRY=1 TSUKU_REGISTRY_URL="$PWD" "$T/tsuku" validate --strict "$r" >/dev/null || { echo "failed: $r"; exit 1; }; done`
     (unlike CI: dependencies resolve against this checkout's recipes, not the live registry)
-  - `TSUKU_NO_TELEMETRY=1 TSUKU_REGISTRY_URL="$PWD" go test -count=1 ./internal/recipe/ ./internal/sonameindex/ ./internal/indexfixture/` (the Go tests that read the recipe tree)
+  - `TSUKU_NO_TELEMETRY=1 go test -count=1 ./internal/recipe/ ./internal/sonameindex/ ./internal/indexfixture/` (the Go tests that read the recipe tree)
 - `plugins/**` -> both of (validate-skill-content.yml):
   - `for p in tsuku-recipes tsuku-user; do [ ! -f "plugins/$p/hooks.json" ] || exit 1; done`
   - `T=$(mktemp -d) && go build -o "$T/tsuku" ./cmd/tsuku && P=$(grep -oE 'recipes/[^[:space:]]+\.toml' plugins/tsuku-recipes/skills/recipe-author/references/exemplar-recipes.md | sort -u) && [ -n "$P" ] && for p in $P; do [ -f "$p" ] && TSUKU_HOME="$T" TSUKU_NO_TELEMETRY=1 TSUKU_REGISTRY_URL="$PWD" "$T/tsuku" validate "$p" >/dev/null || { echo "failed: $p"; exit 1; }; done`
@@ -72,9 +72,10 @@ The Linux steps of the Unit Tests and Lint Tests jobs in `.github/workflows/test
 - `GOLANGCI_LINT_CACHE=$(mktemp -d) go test -count=1 -run '^TestGolangCILint$' .` (a private
   cache, since a shared one replays findings from other checkouts; the test fetches its tool
   through `go run`)
-- `H=$(git rev-parse HEAD) && S=$(git status --porcelain) && DOCKER_HOST=unix:///nonexistent TSUKU_NO_TELEMETRY=1 TSUKU_REGISTRY_URL="$PWD" go test -short ./... && [ "$(git rev-parse HEAD)" = "$H" ] && [ "$(git status --porcelain)" = "$S" ]`
+- `H=$(git rev-parse HEAD) && S=$(git status --porcelain) && DOCKER_HOST=unix:///nonexistent TSUKU_NO_TELEMETRY=1 go test -short ./... && [ "$(git rev-parse HEAD)" = "$H" ] && [ "$(git status --porcelain)" = "$S" ]`
   (the unit suite inside CI's test-artifact tripwire. Unlike CI: Docker is hidden, because the
   hook container tests install packages from the network and take minutes; fish cases skip
-  where fish is not installed, since `TSUKU_REQUIRE_FISH` is not set; telemetry is off and
-  recipes resolve against this checkout, so no run posts events or depends on the live registry.
-  CI's govulncheck step is left out: it passes having checked nothing when it cannot fetch.)
+  where fish is not installed, since `TSUKU_REQUIRE_FISH` is not set; telemetry is off, so no
+  run posts events. `TSUKU_REGISTRY_URL` is not set here, because the loader tests in
+  `internal/recipe` and `internal/registry` expect it unset. CI's govulncheck step is left out:
+  it passes having checked nothing when it cannot fetch.)
