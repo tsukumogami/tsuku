@@ -71,7 +71,8 @@ The Linux steps of the Unit Tests and Lint Tests jobs in `.github/workflows/test
 - `go vet ./...`
 - `GOLANGCI_LINT_CACHE=$(mktemp -d) go test -count=1 -run '^TestGolangCILint$' .` (a private
   cache, since a shared one replays findings from other checkouts; the test fetches its tool
-  through `go run`)
+  through `go run`. "parallel golangci-lint is running" means another run holds the tool's
+  host-wide lock, which the private cache does not isolate: cannot-verify, not a failed change)
 - `H=$(git rev-parse HEAD) && S=$(git status --porcelain) && DOCKER_HOST=unix:///nonexistent TSUKU_NO_TELEMETRY=1 go test -short ./... && [ "$(git rev-parse HEAD)" = "$H" ] && [ "$(git status --porcelain)" = "$S" ]`
   (the unit suite inside CI's test-artifact tripwire. Unlike CI: Docker is hidden, because the
   hook container tests install packages from the network and take minutes; fish cases skip
