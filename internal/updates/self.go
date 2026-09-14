@@ -22,6 +22,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/installevents"
 	"github.com/tsukumogami/tsuku/internal/log"
+	"github.com/tsukumogami/tsuku/internal/selfexec"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 	"github.com/tsukumogami/tsuku/internal/version"
 )
@@ -141,9 +142,16 @@ func CheckAndApplySelf(ctx context.Context, cfg *config.Config, userCfg *usercon
 	}
 	defer func() { _ = lock.Unlock() }()
 
-	exePath, err := os.Executable()
-	if err != nil {
-		return fmt.Errorf("get executable path: %w", err)
+	// Overwriting the running binary is the most destructive thing in this
+	// package, so it asks the same question the spawners ask: is this process
+	// the tsuku CLI? A test binary or a sibling command must never have a
+	// release written over it. IsDevBuild above happens to cover the test case
+	// today, but only because test builds report a dev version -- a mechanism
+	// with nothing to do with what this binary is, and one that stops holding
+	// the moment someone builds a test binary with release ldflags.
+	exePath, ok := selfexec.Binary()
+	if !ok {
+		return fmt.Errorf("refusing to self-update: not running as the tsuku CLI")
 	}
 	exePath, err = filepath.EvalSymlinks(exePath)
 	if err != nil {
