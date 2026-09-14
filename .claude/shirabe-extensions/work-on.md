@@ -3,7 +3,8 @@
 tsuku's verification map for shirabe's `/work-on` definition-of-done gate. Schema:
 `skills/work-on/references/verification-map.md` in the shirabe repo. The default runs only when
 no entry matches any changed file. Commands copy the PR CI steps they name, which point back
-here: change both together. Deliberate differences are marked. Run every command from the repo
+here: change both together. Every deliberate difference from CI is annotated where it appears,
+with its reason and, where one exists, its issue. Run every command from the repo
 root. The unit suite, the recipe-tree tests and telemetry's `npm ci` reach read-only public
 endpoints (GitHub, the npm registry) with no credentials, as CI does: a deliberate exception,
 approved by the maintainer, to keeping these commands offline. An unreachable network or a
@@ -88,7 +89,12 @@ The Linux steps of the Unit Tests and Lint Tests jobs in `.github/workflows/test
   where fish is not installed, since `TSUKU_REQUIRE_FISH` is not set; telemetry is off, so no
   run posts events. `TSUKU_REGISTRY_URL` is not set here, because the loader tests in
   `internal/recipe` and `internal/registry` expect it unset. `LD_LIBRARY_PATH` is cleared, which
-  CI gets for free: with tsuku's shell integration active it points at the developer's own
-  installed libraries, and `internal/verify`'s helper-sanitiser tests then fail on a value the
-  change never set. CI's govulncheck step is left out:
+  CI gets for free by never setting it: with tsuku's own shell integration active it points at
+  the developer's installed libraries, and `internal/verify`'s helper-sanitiser tests then fail
+  on a value the change never set (tsukumogami/tsuku#2585). So the suite fails for people
+  running tsuku and passes in CI, the reverse of the usual reading that a red local run means a
+  broken machine. The sanitiser copies the inherited variable and then appends its own, so the
+  helper gets it twice and tsuku's libs are not at the effective front of the path; that is the
+  behaviour reported in tsukumogami/tsuku#1090, where a system library wins over tsuku's.
+  CI's govulncheck step is left out:
   it passes having checked nothing when it cannot fetch.)
