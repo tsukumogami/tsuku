@@ -114,7 +114,9 @@ For example, with version `3.46.0` and `tag_prefix = "version-"`:
 - No gcc or cc found in system PATH
 - Build actions (configure_make, cmake_build) automatically use zig as compiler
 
-**Cross-platform support:** Linux x86_64, macOS Intel, macOS ARM
+**Cross-platform support:** Linux x86_64, macOS Intel, macOS ARM. This is where the zig
+fallback is expected to work, not where it is checked -- see Platform Support below for
+what CI actually validates, which no longer includes Intel macOS.
 
 **Recipe:** `internal/recipe/recipes/z/zig.toml`
 
@@ -185,10 +187,21 @@ Build actions automatically configure PKG_CONFIG_PATH to include all dependency 
 
 Build essentials are validated on:
 - Linux x86_64 (ubuntu-latest)
-- macOS Intel (macos-13)
 - macOS Apple Silicon (macos-14)
 
 Note: arm64 Linux is not currently supported for Homebrew bottles due to upstream availability limitations.
+
+Intel macOS is no longer validated. Homebrew withdrew Intel macOS bottles for `pkg-config`,
+`ninja` and `sqlite-source`, and sampling found no Intel macOS bottle at any version for
+those formulae -- so there was no tag the resolver could have asked for. The leg failed in
+every retained run from 2026-09-06 onward, on three branches including the default one,
+rather than intermittently. (When the withdrawal actually happened is not recorded here --
+that is when the failure first appears in run history GitHub still retains.) Building those formulae
+from source on Intel was the alternative, and it was rejected as a standing cost for a
+shrinking platform.
+
+What this costs: nothing verifies that build essentials work on Intel macOS any more. The
+decision is recorded in #2614.
 
 ## Usage Examples
 
