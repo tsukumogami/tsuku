@@ -1,6 +1,6 @@
 ---
 schema: design/v1
-status: Accepted
+status: Planned
 upstream: docs/prds/PRD-scheduled-workflow-health.md
 problem: |
   Ten of tsuku's twenty-one scheduled workflows fail and none of the failures reach a
@@ -29,7 +29,7 @@ rationale: |
 
 ## Status
 
-Accepted
+Planned
 
 ## Context and Problem Statement
 
