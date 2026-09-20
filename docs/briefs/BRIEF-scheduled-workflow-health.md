@@ -15,8 +15,8 @@ motivating_context: |
   A survey of all twenty-one scheduled workflows on 2026-09-20 found ten
   substantially red. Three have open write-ups (#2593, #2448, and #667 against a
   failure mode Build Essentials no longer exhibits); the other seven have nothing.
-  Eight label names referenced across the corpus do not exist, and four of those have
-  never fired, so they are armed rather than fixed. The defect
+  Nine label names referenced across fifteen call sites do not exist, and five of those
+  have never fired, so they are armed rather than fixed. The defect
   class is already catalogued against non-scheduled checks too — #2590 and #2578
   are both cases of a check that reports success, or reports nothing, when it has
   not run.
@@ -40,6 +40,11 @@ guarantee. The DESIGN owns how the chosen shape is built, how a label reference 
 being a latent failure, and whether the macOS bottle-decomposition failures are one
 defect or several. The open questions this brief carried in Draft were handed to those
 two documents on acceptance; each is recorded there rather than here.
+
+Edited after acceptance to correct the label counts to nine names across fifteen call
+sites, and to correct the count of workflows carrying both faults from three to four.
+The earlier figure of eight across thirteen missed the `actions/github-script` `labels:`
+string form in Weekly Coverage Report and miscounted the rest.
 
 ## Problem Statement
 
@@ -84,41 +89,42 @@ Repairing its escalation path would make it reliably announce a result that mean
 nothing, which is a reminder that a working failure path is necessary here and not
 sufficient.
 
-The clearest cost so far sits with Discovery Registry Freshness. Its most recent run
-reports nine invalid registry entries, it has failed every scheduled run since February,
-and because its own report never escalated, nobody acted on any of them. Whether those
-same nine have been sitting there the whole time cannot be shown — the logs from
-February have aged out of retention — which is itself part of the problem. Everywhere
-else the cost is risk rather than damage anyone can point to: a regression could have
-slipped through unseen for seven months and nobody can now demonstrate that none did.
-That is the honest shape of the harm, and it bears on how much mechanism the repair
-deserves.
+The clearest cost sits with Discovery Registry Freshness. Across its last twelve weekly
+runs — 2026-06-29 through 2026-09-14 — every one died on `could not add label:
+'discovery-registry' not found`, and every one had something to say first. The count of
+invalid registry entries it found rose steadily across those weeks: six, then seven,
+then eight, then nine. The check worked perfectly. It detected real drift every week,
+watched that drift grow by half, and failed to tell anyone twelve times in a row.
+Everywhere else the cost is risk rather than damage anyone can point to: a regression
+could have slipped through unseen for seven months and nobody can now demonstrate that
+none did. That is the honest shape of the harm, and it bears on how much mechanism the
+repair deserves.
 
-Underneath the escalation failures sit two independent defects that stack. Eight label
-names, referenced across thirteen call sites in the workflow corpus, do not exist in the
+Underneath the escalation failures sit two independent defects that stack. Nine label
+names, referenced across fifteen call sites in the workflow corpus, do not exist in the
 repository, and five workflows that file issues — R2 Health Monitor, R2 Cleanup, Nightly
 Registry Validation, Discovery Registry Freshness and R2 Cost Monitoring — declare no
 `permissions:` block at any level, so the default token carries no `issues: write`.
 Because `gh issue create --label X` resolves the label before it calls `createIssue`, a
 workflow missing both shows only the label error; the permission error is hidden behind
-it. Repairing the labels alone would therefore look like a complete fix and leave three
-of those workflows exactly as red, which is why the two defects have to be established
-as independent rather than patched together.
+it. Four workflows carry both faults at once, and three of those four are red today.
+Repairing the labels alone would therefore look like a complete fix and leave those
+three exactly as red, which is why the two defects have to be established as independent
+rather than patched together.
 
-Four of the eight have never fired, because the workflow dies earlier or the escalation
+Five of the nine have never fired, because the workflow dies earlier or the escalation
 condition has not yet been met. Those are not working code. They are failures armed for
 the day they first matter, which is the day someone needs the report. The clearest case
 is Checksum Drift: it runs daily, has passed every recent run, correctly declares
 `issues: write`, and files its issue with a `security` label that does not exist. A
 daily check for tampering with recipe downloads is green every day and will fail to
-report the first drift it ever finds. A ninth label, used by R2 Cost Monitoring, is also
-absent, and that workflow is the one place someone saw the problem coming: it runs `gh
-label create` before using the label. The attempt is defeated twice over — creating a
-label needs the same `issues: write` the file never declares, and the call ends in
-`2>/dev/null || true`, so its failure is discarded rather than reported. Nothing else in
-the repository connects a `--label` argument to the set of labels that exist, and
-nothing checks before a workflow merges, so the gap stays invisible until a real failure
-walks into it.
+report the first drift it ever finds. One of the five, used by R2 Cost Monitoring, sits
+in the one place someone saw the problem coming: that workflow runs `gh label create`
+before using the label. The attempt is defeated twice over — creating a label needs the
+same `issues: write` the file never declares, and the call ends in `2>/dev/null ||
+true`, so its failure is discarded rather than reported. Nothing else in the repository
+connects a `--label` argument to the set of labels that exist, and nothing checks before
+a workflow merges, so the gap stays invisible until a real failure walks into it.
 
 The failures in the monitored thing — some of them sitting underneath the reporting
 failures above rather than alongside them — are a mixed set: a Go toolchain pinned to
