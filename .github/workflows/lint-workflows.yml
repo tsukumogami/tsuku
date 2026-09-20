@@ -1,16 +1,15 @@
 name: Lint Workflows
 
+# No `paths:` filter, deliberately. This workflow carries checks that are required, and a
+# required check that a path filter skips never reports at all: the pull request waits
+# forever on a run that will not happen. The steps are seconds long, so running them on
+# every pull request costs less than the branch-protection deadlock would.
+
 on:
   push:
     branches: [main]
-    paths:
-      - '.github/**'
-      - 'test-matrix.json'
   pull_request:
     branches: [main]
-    paths:
-      - '.github/**'
-      - 'test-matrix.json'
 
 jobs:
   lint-workflows:
@@ -27,3 +26,11 @@ jobs:
       # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Check matrix recipe passthrough
         run: .github/scripts/checks/matrix-recipe-passthrough.sh
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
+      - name: Check label references resolve
+        run: .github/scripts/checks/label-references.py
+      # The check's own self-test. A check nobody has seen fail is a check nobody knows
+      # works, so its failure modes are verified on every run rather than once in a pull
+      # request description.
+      - name: Check label reference check can fail
+        run: .github/scripts/checks/label-references_test.sh

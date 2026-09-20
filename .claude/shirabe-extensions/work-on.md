@@ -68,12 +68,21 @@ evidence that any check here executed.
   and exits 0, so `{}` would pass. A malformed or missing file fails either way; an empty
   exclusion list still passes, since having no exclusions is a valid state)
 - `**/*.rs`, `**/Cargo.toml`, `**/rust-toolchain.toml` -> `(cd tsuku-llm && cargo fmt --all --check) && (cd cmd/tsuku-dltest && cargo fmt --all --check)` (check-rustfmt.yml)
-- `.github/workflows/**`, `test-matrix.json` -> `.github/scripts/checks/retired-runners.sh`,
-  `.github/scripts/checks/ci-patterns-lint.sh` and
-  `.github/scripts/checks/matrix-recipe-passthrough.sh` (lint-workflows.yml). The last one
-  reads the jq projections out of `scheduled-tests.yml` rather than restating them, so it
-  cannot drift from what runs, and it pins the set of tests that declare a `recipe` so a
-  deleted declaration fails instead of silently leaving the comparison.
+- `.github/workflows/**`, `test-matrix.json`, `.github/labels.yml` ->
+  `.github/scripts/checks/retired-runners.sh`, `.github/scripts/checks/ci-patterns-lint.sh`,
+  `.github/scripts/checks/matrix-recipe-passthrough.sh`,
+  `.github/scripts/checks/label-references.py` and
+  `.github/scripts/checks/label-references_test.sh` (lint-workflows.yml).
+  `matrix-recipe-passthrough.sh` reads the jq projections out of `scheduled-tests.yml`
+  rather than restating them, so it cannot drift from what runs, and it pins the set of
+  tests that declare a `recipe` so a deleted declaration fails instead of silently leaving
+  the comparison. `label-references.py` resolves every label a workflow names against
+  `.github/labels.yml`, including labels reached through a shell variable, and fails on any
+  reference it cannot reduce to a literal rather than skipping it.
+  `label-references_test.sh` is that check's self-test: it runs the frozen pre-repair
+  fixture and four mutations, and voids any mutation row whose target did not change.
+  Note that lint-workflows.yml carries no `paths:` filter, so these run on every pull
+  request regardless of what it touches.
 - `.github/**`, `website/**` (except `website/pipeline/*.html`), `blog/**`, `scripts/**` (except
   the two scripts above), `sandbox/**`, `Dockerfile*`, `test/scripts/**`,
   `test/functional/**`, `internal/hooks/**`, `**/*.fish`, `tsuku-llm/**`, `cmd/tsuku-dltest/**`,
