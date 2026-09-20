@@ -284,9 +284,10 @@ per-account setting that defaults to off.
 
 Two distinct failures, two distinct answers:
 
-- **The sweeper runs and fails.** It is a registered workflow, so the listener escalates
-  it exactly as it would any other. This is genuine mutual coverage rather than a loop:
-  each is covered by the other's independent mechanism.
+- **Either escalation workflow runs and fails.** Both are registered, so a failure of one
+  is escalated on the next run of the other — the sweeper covers the listener on its next
+  hourly pass, and the sweeper's own failures are escalated by its following pass, since
+  a failed run is a non-success run like any other. This covers failure, not silence.
 - **The sweeper stops running at all** — disabled, unscheduled, or silently dropped.
   Nothing detects absence by waiting for a failure, because there is no failure. An
   earlier draft put this freshness assertion in the listener, which does not work: the
@@ -301,10 +302,17 @@ Two distinct failures, two distinct answers:
 
   It does **not** ask the sweeper how it is doing. It queries the Actions API itself for
   non-success runs of registered workflows within a stated window and asserts that each
-  has an open tracked item — the sweeper's own assertion, performed read-only and
-  implemented independently of `escalate.sh` and of the escalator's token. That
-  independence is what lets it cover the common-mode delivery failure rather than only
-  the trigger failure.
+  was tracked — read-only, and implemented independently of `escalate.sh` and of the
+  escalator's token. That independence is what lets it cover the common-mode delivery
+  failure rather than only the trigger failure.
+
+  Two qualifications keep the assertion true in the healthy state, and both were wrong in
+  a previous draft. It applies the same `escalation-only-on` scoping as the other two
+  enforcement points, because the six dual-trigger workflows have ordinary failed
+  pull-request runs that are not meant to be tracked at all. And it accepts a **closed**
+  tracked item as satisfying the assertion, because a tracked item closes when its
+  condition clears — so demanding an open one would fail for every run that has since
+  been fixed, which is the outcome the repair is aiming at.
 
   Two earlier drafts of this check were wrong in instructive ways. Asserting that the
   escalator *delivered* something within a window has no ground truth: a healthy
@@ -421,15 +429,21 @@ and `display_title`, and any receipt artifact it uploads, are attacker-authored.
 An earlier draft asserted that receipt content originates in this repository's own
 workflows and not from forks. That is false, and the consequences follow directly:
 
-- **Both escalation paths filter on the run's triggering event, not just the listener.**
-  The listener checks `github.event.workflow_run.event == 'schedule'`. That expression
-  does not exist in the sweeper, which reaches the same runs through the Actions API
-  where no `workflow_run` context is present — so the sweeper filters on the API's own
-  `event` field on each run it considers. Specifying the filter only in the listener
-  would leave the sweeper filing assigned issues for every failed fork pull-request run
-  of the six dual-trigger workflows, which is precisely the issue-spam primitive this
-  section exists to prevent. One mitigation, two enforcement points, because the design
-  has two paths to the same data.
+- **The event filter is a per-workflow property, enforced at three points.** Six
+  registered workflows also declare `pull_request`. For those six — and only those six —
+  a run is escalated only when its triggering event is `schedule`. The declaration block
+  carries it as `escalation-only-on: schedule`, and three components enforce it: the
+  listener via `github.event.workflow_run.event`, the sweeper via the Actions API's
+  `event` field (no `workflow_run` context exists there), and the pull-request backstop,
+  which would otherwise demand a tracked item for every ordinary failed pull-request run
+  of those six.
+
+  Scoping it per workflow rather than applying it globally is load-bearing. A blanket
+  `event == 'schedule'` filter would discard the listener's own runs, which carry
+  `event: workflow_run`, so the sweeper would stop covering the listener and one of the
+  two escalation workflows would be watched by nothing. Enforcing it at only one or two
+  of the three points leaves the others filing or demanding issues for fork
+  pull-request runs — the issue-spam primitive this section exists to prevent.
 - **Receipt content is parsed defensively** — size-capped, schema-validated, and a
   parse failure is a loud failure rather than a skipped assertion.
 - **A fork pull request must not be able to open an assigned issue.** Without the event
@@ -457,22 +471,16 @@ way.
 the interpolated value produced by tooling over the default-branch checkout. Reaching it
 requires write access. That is hardening.
 
-`release-finalize.yml:29` is **not established as unreachable**, and an earlier draft of
-this section wrongly said it was. That draft reasoned from how the Release workflow is
-intended to fire — a `v*` tag push — but `workflow_run` does not match on how a run was
-triggered. It matches on the recorded workflow *name*, and for a fork pull request the
-executing workflow files come from the merge ref, so a fork chooses that name. The only
-guard on the listener is `conclusion == 'success'`; there is no check on the triggering
-event, the head repository, or fork status. Downstream, `secrets.RELEASE_PAT` is passed
-to a reusable workflow.
-
-Two things would close it and neither could be verified here: whether GitHub fires
-`workflow_run` for fork-pull-request-triggered runs, and whether this repository
-requires approval for fork workflow runs — both `actions/permissions` endpoints return
-403 to the available credentials. Until those are settled it is treated as unresolved
-rather than as either safe or exploitable, and it is not described further in a public
-artifact. The same event-filter this design applies to its own escalator is what that
-listener is missing.
+A second pre-existing site is **under assessment and is not characterised here**. An
+earlier draft asserted it was unreachable by outside contributors; that assertion was
+withdrawn because it reasoned from how a workflow is intended to be triggered rather
+than from the rule by which the trigger actually matches. The re-assessment is happening
+outside this document. The general lesson it produced is recorded above and is why this
+design applies an event filter to its own escalator: `workflow_run` matches a recorded
+workflow name, not the manner in which the run was triggered. It is treated as
+unresolved rather than as either safe or exploitable, and it is not described further in
+a public artifact. The same event-filter this design applies to its own escalator is
+what that listener is missing.
 
 ### Token scope
 
@@ -519,8 +527,11 @@ workflow's own declared name and a fixed prefix, never from run-supplied text.
 
 ### Action pinning
 
-Every action the new workflows use is pinned to a full commit SHA, matching the
-convention already visible across this repository's workflows.
+Every action the new workflows use is pinned to a full commit SHA. This is a rule for
+what this design adds, not a description of existing practice: a substantial minority of
+`uses:` references in this repository carry mutable refs, including reusable workflows
+at `@main` and toolchain actions at `@master`. Bringing those into line is worth doing
+and is not part of this work.
 
 ## Consequences
 
@@ -557,8 +568,10 @@ ones that are easy to lose, named here so a reader can check rather than assume:
   This is the intended end state. Saying so is not optional: if the design does not state
   it, the first week of noise buys exactly the `continue-on-error` the requirements
   forbid.
-- The escalator is a new single point of failure for reporting. Mutual coverage plus the
-  backstop narrows it, but if both escalation workflows stop running at the
+- The escalator is a new single point of failure for reporting. The backstop narrows this
+  considerably — it shares neither trigger, script nor token with the escalation
+  workflows — but it depends on pull requests happening. If both escalation workflows
+  stop running at the
   same time, nothing inside the repository notices. That residual is real and is not
   designed away.
 - The design carries two triggers where one might do. If step 1 settles the `workflow_run`
