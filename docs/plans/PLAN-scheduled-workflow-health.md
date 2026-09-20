@@ -267,7 +267,7 @@ gained. The count of proposals is stated, so "none were proposed" is distinguish
 | _Run receipts written as work proceeds, asserted by a job that runs with if always. Retrofits Nightly Registry Validation first._ | | |
 | [#2609: fix(ci): four diagnosed repairs behind four failing scheduled workflows](https://github.com/tsukumogami/tsuku/issues/2609) | None | testable |
 | _The Go version pin, the seeding audit directory, the cask verification environment, and the Homebrew rebuild counter._ | | |
-| [#2596: ci: scheduled tests install registry recipes instead of the fixtures they declare](https://github.com/tsukumogami/tsuku/issues/2596) | None | testable |
+| [#2596: ci: scheduled tests install registry recipes instead of the fixtures they declare, and six of seven pass anyway](https://github.com/tsukumogami/tsuku/issues/2596) | None | testable |
 | _Six of seven tests pass while exercising a different code path. The fix asserts the identity of the recipe resolved, not the run's colour._ | | |
 | [#2610: decision needed: does anyone intend to close Recipe Validation's corpus shortfall?](https://github.com/tsukumogami/tsuku/issues/2610) | [#2601](https://github.com/tsukumogami/tsuku/issues/2601), [#2608](https://github.com/tsukumogami/tsuku/issues/2608) | simple |
 | _Does anyone intend to close it. If yes it stays red, known and owned; if no it is retired with the reason recorded._ | | |
@@ -288,31 +288,38 @@ milestone acts on them.
 
 ```mermaid
 graph TD
-    I1[1 Settle unknowns]
-    I2[2 Probe both defects]
-    I3[3 Consumer record]
-    I4[4 Label manifest + nine repairs]
-    I5[5 Label check + lint wiring]
-    I6[6 Make check required]
-    I7[7 Declarations + policy parser]
-    I8[8 Escalator]
-    I9[9 Backstop]
-    I10[10 Coverage contract]
-    I11[11 Four repairs]
-    I12[12 Matrix identity]
-    I13[13 Decision requests]
+    I2596["#2596 Matrix recipe identity"]
+    I2599["#2599 Settle two unknowns"]
+    I2600["#2600 Probe both defects"]
+    I2601["#2601 Consumer record"]
+    I2602["#2602 Label manifest + nine repairs"]
+    I2603["#2603 Label check + lint wiring"]
+    I2604["#2604 Make check required"]
+    I2605["#2605 Declarations + policy parser"]
+    I2606["#2606 Escalator"]
+    I2607["#2607 Backstop"]
+    I2608["#2608 Coverage contract"]
+    I2609["#2609 Four diagnosed repairs"]
+    I2610["#2610 Decision: Recipe Validation"]
+    I2611["#2611 Decision: Curated Nightly"]
+    I2612["#2612 Decision: Weekly Coverage"]
+    I2613["#2613 Decision: macOS Sonoma"]
+    I2614["#2614 Decision: Intel macOS"]
 
-    I2 --> I4
-    I4 --> I5
-    I5 --> I6
-    I3 --> I7
-    I1 --> I8
-    I2 --> I8
-    I7 --> I8
-    I8 --> I9
-    I7 --> I10
-    I3 --> I13
-    I10 --> I13
+    I2600 --> I2602
+    I2602 --> I2603
+    I2603 --> I2604
+    I2601 --> I2605
+    I2599 --> I2606
+    I2600 --> I2606
+    I2605 --> I2606
+    I2606 --> I2607
+    I2605 --> I2608
+    I2601 --> I2610
+    I2608 --> I2610
+    I2601 --> I2611
+    I2608 --> I2611
+    I2601 --> I2612
 ```
 
 ## Implementation Sequence
