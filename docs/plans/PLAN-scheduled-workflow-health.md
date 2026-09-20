@@ -269,19 +269,20 @@ gained. The count of proposals is stated, so "none were proposed" is distinguish
 | _The Go version pin, the seeding audit directory, the cask verification environment, and the Homebrew rebuild counter._ | | |
 | [#2596: ci: scheduled tests install registry recipes instead of the fixtures they declare](https://github.com/tsukumogami/tsuku/issues/2596) | None | testable |
 | _Six of seven tests pass while exercising a different code path. The fix asserts the identity of the recipe resolved, not the run's colour._ | | |
-| [#2610: decision needed: Recipe Validation cannot finish its corpus](https://github.com/tsukumogami/tsuku/issues/2610) | [#2601](https://github.com/tsukumogami/tsuku/issues/2601), [#2608](https://github.com/tsukumogami/tsuku/issues/2608) | simple |
-| _Decision request. Split the corpus, reduce scope, leave red, or retire, with the cost of each stated._ | | |
-| [#2611: decision needed: Curated Recipe Nightly validates 1256 recipes but declares 109](https://github.com/tsukumogami/tsuku/issues/2611) | [#2601](https://github.com/tsukumogami/tsuku/issues/2601), [#2608](https://github.com/tsukumogami/tsuku/issues/2608) | simple |
-| _Decision request. Narrow to the discovered set, complete the full scope, leave red, or retire._ | | |
-| [#2612: decision needed: Weekly Coverage Report's output reaches nobody](https://github.com/tsukumogami/tsuku/issues/2612) | [#2601](https://github.com/tsukumogami/tsuku/issues/2601) | simple |
-| _Decision request. Give it a consumer or retire it; leaving it green and unread is the default and the worst option._ | | |
-| [#2613: decision needed: Homebrew has withdrawn arm64 Sonoma bottles](https://github.com/tsukumogami/tsuku/issues/2613) | None | simple |
-| _Decision request. Moving the runner buys green and costs Sonoma coverage that tsuku users still run._ | | |
-| [#2614: decision needed: Intel macOS bottles no longer exist upstream](https://github.com/tsukumogami/tsuku/issues/2614) | None | simple |
-| _Decision request. Build from source, drop Intel coverage, or accept a standing red._ | | |
+| [#2610: decision needed: does anyone intend to close Recipe Validation's corpus shortfall?](https://github.com/tsukumogami/tsuku/issues/2610) | [#2601](https://github.com/tsukumogami/tsuku/issues/2601), [#2608](https://github.com/tsukumogami/tsuku/issues/2608) | simple |
+| _Does anyone intend to close it. If yes it stays red, known and owned; if no it is retired with the reason recorded._ | | |
+| [#2611: decision needed: does anyone intend to close Curated Recipe Nightly's scope mismatch?](https://github.com/tsukumogami/tsuku/issues/2611) | [#2601](https://github.com/tsukumogami/tsuku/issues/2601), [#2608](https://github.com/tsukumogami/tsuku/issues/2608) | simple |
+| _Does anyone intend to narrow it to its discovered set. Retirement is the default if not; it has never once been green._ | | |
+| [#2612: decision needed: does anyone intend to give Weekly Coverage Report a consumer?](https://github.com/tsukumogami/tsuku/issues/2612) | [#2601](https://github.com/tsukumogami/tsuku/issues/2601) | simple |
+| _Does anyone want a coverage signal. If not it is retired, which is more honest than green and unread._ | | |
+| [#2613: decision needed: does tsuku intend to keep testing macOS Sonoma?](https://github.com/tsukumogami/tsuku/issues/2613) | None | simple |
+| _Is Sonoma a platform tsuku intends to keep verifying. A supported-platform question, not a CI one._ | | |
+| [#2614: decision needed: does tsuku intend to keep supporting Intel macOS?](https://github.com/tsukumogami/tsuku/issues/2614) | None | simple |
+| _Is Intel macOS a platform tsuku intends to keep verifying. If not, the supported-platform list is updated to match._ | | |
 
-Issues #2610 through #2614 are decision requests for the repository owner. No pull
-request in this milestone acts on them.
+Issues #2610 through #2614 each ask whether anyone intends to close a shortfall.
+Retirement is the recorded outcome where the answer is no. No pull request in this
+milestone acts on them.
 
 ## Dependency Graph
 
@@ -328,11 +329,17 @@ code.
 **Parallelisable from the start.** Units 1, 2, 3, 11 and 12 have no dependencies. Units
 11 and 12 touch none of the escalation machinery and can land at any point.
 
-**Expected end state, stated so it is not mistaken for a regression.** After unit 10,
-roughly ten workflows are loudly and permanently red, reporting true shortfalls they
-cannot close — Recipe Validation reporting `declared=1256 attempted=1193` is a working
-check reporting a real problem. That is intended. Those workflows declare
-`escalation-policy: none` with the shortfall as the recorded reason, so they stay
-visibly red without filing nightly. Unit 13 is what turns each into a decision. Without
-this paragraph agreed up front, the first week of noise buys a `continue-on-error`, which
-is the outcome the whole plan exists to prevent.
+**Expected end state: red only where someone intends to fix.** After the coverage
+contract lands, five workflows report true shortfalls they cannot currently close —
+Recipe Validation reporting `declared=1256 attempted=1193` is a working check reporting a
+real problem. What happens to each is not "stay red with an issue attached". For each,
+someone answers whether anyone actually intends to close the shortfall.
+
+Where intent exists, the workflow stays red and the red means known, owned and coming;
+the issue names what closes it. Where no intent exists, the workflow is **retired**, and
+the reason is recorded in its issue so the knowledge outlives the workflow.
+
+That is the rule rather than five separate verdicts, and it is why units 13 through 17
+ask "does anyone intend to close this, yes or no" rather than offering a menu. Retirement
+is the default when the answer is no. Permanent red with nobody acting is the outcome
+this milestone exists to remove, not a resting state it settles into.
