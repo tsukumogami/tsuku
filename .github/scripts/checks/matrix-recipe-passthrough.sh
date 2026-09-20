@@ -83,6 +83,7 @@ fi
 
 FAILED=0
 EXAMINED=0
+REACHABLE_IDS=""
 
 for prog in "${PROGRAMS[@]}"; do
   PROJECTED=$(jq -c "$prog" "$MATRIX") || {
@@ -95,6 +96,7 @@ for prog in "${PROGRAMS[@]}"; do
   # the identities differ, which is exactly why counting would not catch this.
   while IFS=$'\t' read -r id declared got; do
     EXAMINED=$((EXAMINED + 1))
+    REACHABLE_IDS="${REACHABLE_IDS}${id}"$'\n'
     if [ "$declared" != "$got" ]; then
       echo "::error file=${WORKFLOW}::test '${id}' declares recipe '${declared}' but the matrix projection emits '${got}'. The declared recipe is not reaching the install step." >&2
       FAILED=1
@@ -115,6 +117,36 @@ done
 if [ "$EXAMINED" -eq 0 ]; then
   echo "::error::no declaring test appeared in any matrix projection; this check examined nothing" >&2
   exit 1
+fi
+
+# Carrying the field through the projection is only half of it. The install
+# step has to consume it, and an earlier version of this check proved only the
+# projection while its own message claimed the value reached the install step --
+# deleting `--recipe` from the step left it green. Assert the consumption too.
+INSTALL_STEPS=$(grep -cE '^\s*\./tsuku install' "$WORKFLOW" || true)
+if [ "${INSTALL_STEPS:-0}" -eq 0 ]; then
+  echo "::error file=${WORKFLOW}::found no './tsuku install' invocation; this check examined nothing on the consumption side" >&2
+  exit 1
+fi
+
+RECIPE_AWARE=$(grep -cE '^\s*\./tsuku install .*--recipe' "$WORKFLOW" || true)
+if [ "${RECIPE_AWARE:-0}" -eq 0 ]; then
+  echo "::error file=${WORKFLOW}::no './tsuku install' invocation passes --recipe, so a declared recipe never reaches the install step" >&2
+  FAILED=1
+fi
+
+# Every install invocation must sit in a branch that can use the declared
+# recipe. A recipe-aware branch plus a plain fallback is the expected shape, so
+# require at least one of each per install site pair rather than demanding
+# --recipe on every line.
+UNGUARDED=$(awk '
+  /^[[:space:]]*\.\/tsuku install/ { total++ }
+  /^[[:space:]]*\.\/tsuku install .*--recipe/ { aware++ }
+  END { print (total - (aware * 2) > 0) ? (total - aware * 2) : 0 }
+' "$WORKFLOW")
+if [ "${UNGUARDED:-0}" -gt 0 ]; then
+  echo "::error file=${WORKFLOW}::${UNGUARDED} './tsuku install' invocation(s) are not paired with a --recipe branch, so a declared recipe would be ignored there" >&2
+  FAILED=1
 fi
 
 # A test that declares a recipe but appears nowhere under `.ci` is never run by
@@ -144,7 +176,8 @@ if [ -n "$ORPHANS" ]; then
 fi
 
 if [ "$FAILED" -eq 0 ]; then
-  echo "Matrix recipe passthrough: ${EXAMINED} declared recipe(s) reach the install step across ${#PROGRAMS[@]} projection(s); ${DECLARING} test(s) declare one."
+  REACHABLE=$(printf '%s\n' "$REACHABLE_IDS" | sort -u | grep -c . || true)
+  echo "Matrix recipe passthrough: ${DECLARING} test(s) declare a recipe; ${REACHABLE:-0} are reachable by the ${#PROGRAMS[@]} projection(s) and carry it through; ${RECIPE_AWARE} install invocation(s) consume it."
 fi
 
 exit $FAILED
