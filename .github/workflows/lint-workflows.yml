@@ -5,10 +5,12 @@ on:
     branches: [main]
     paths:
       - '.github/**'
+      - 'test-matrix.json'
   pull_request:
     branches: [main]
     paths:
       - '.github/**'
+      - 'test-matrix.json'
 
 jobs:
   lint-workflows:
@@ -22,3 +24,6 @@ jobs:
       # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Check CI consolidation patterns
         run: .github/scripts/checks/ci-patterns-lint.sh
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
+      - name: Check matrix recipe passthrough
+        run: .github/scripts/checks/matrix-recipe-passthrough.sh
