@@ -222,7 +222,7 @@ so the failure is reported accurately, and the two platforms become separate pro
 | Escalation listener | `.github/workflows/escalate.yml` | Reacts to `workflow_run` completion for registered workflows; opens, comments on, or closes a tracked item |
 | Escalation sweeper | `.github/workflows/escalate-sweep.yml` | Hourly; asserts every non-success run of a registered workflow has an open item; files gaps; notices listener silence |
 | Shared escalation logic | `.github/scripts/escalate.sh` | Title-keyed dedup, assignee pre-flight and read-back, open/comment/close |
-| Policy parser | `.github/scripts/checks/workflow-policy.sh` | Reads the comment blocks; enforces declaration presence and registry agreement |
+| Policy parser | `.github/scripts/checks/workflow-policy.sh` | Reads the comment blocks, including `escalation-only-on`; enforces declaration presence, registry agreement, and that `escalation-only-on` is present on every workflow declaring both `schedule` and `pull_request` |
 | Label check | `.github/scripts/checks/workflow-labels.sh` | Resolves every label reference against the manifest |
 | Label manifest | `.github/labels.yml` | The declared label set |
 | Coverage assertion | `.github/scripts/checks/assert-coverage.sh` | Compares a run receipt against its declaration |
@@ -241,8 +241,14 @@ comments near the top:
 ```
 # escalation-policy: issue
 # escalation-assignee: <login>
+# escalation-only-on: schedule     # optional; present on the six dual-trigger workflows
 # coverage: items
 ```
+
+`escalation-only-on` is the key the three enforcement points in Security Considerations
+read. It is absent from most workflows, and present only where a workflow declares
+`pull_request` alongside `schedule`; when absent, every conclusion is eligible for
+escalation.
 
 or, where escalation is deliberately not wanted:
 
@@ -252,6 +258,15 @@ or, where escalation is deliberately not wanted:
 # coverage: none
 # coverage-reason: <one line>
 ```
+
+### Every check this design adds carries a zero-floor
+
+Each of the checks named above — the label check, the policy parser, the suppression
+check, the label drift check, the coverage assertion and the backstop — reports what it
+scanned and what it found, and fails when it scanned nothing or found no subjects to
+examine. The rule binds all of them without exception. A check that reports success
+having examined nothing is the defect this work exists to remove, and an exemption is
+where it comes back.
 
 ### The escalator is subject to its own contracts
 
@@ -477,10 +492,9 @@ withdrawn because it reasoned from how a workflow is intended to be triggered ra
 than from the rule by which the trigger actually matches. The re-assessment is happening
 outside this document. The general lesson it produced is recorded above and is why this
 design applies an event filter to its own escalator: `workflow_run` matches a recorded
-workflow name, not the manner in which the run was triggered. It is treated as
-unresolved rather than as either safe or exploitable, and it is not described further in
-a public artifact. The same event-filter this design applies to its own escalator is
-what that listener is missing.
+workflow name, not the manner in which the run was triggered. That site is treated as
+unresolved rather than as either safe or exploitable, and is not characterised further
+here.
 
 ### Token scope
 
