@@ -49,6 +49,32 @@ RESOLVING A VARIABLE
 `VAR=<literal>`. Zero assignments means the reference is unresolvable. More than one
 means the value depends on which branch ran, which this check will not guess at. Both
 are reported with file and line.
+
+WHAT THIS CHECK DOES NOT CATCH
+
+Stated because an undocumented limit is how the next reader concludes a check covers more
+than it does. None of the three is hit by any workflow in this repository today, which is
+why they are recorded rather than fixed. Tracked in #2629.
+
+1. **Inline conditional reassignment -- a FALSE NEGATIVE, not a skip.** The assignment
+   pattern matches a whole line, so a reassignment sharing a line with other code is
+   invisible:
+
+       LABEL="maintenance"
+       if [ "$x" = "1" ]; then LABEL="does-not-exist"; fi
+       gh issue create --label "$LABEL"
+
+   The check sees one assignment, resolves to `maintenance`, and exits 0 -- reporting
+   success about a value the workflow may not use. This is worse than the other two: a
+   skip declines to answer, and this answers wrongly. The same reassignment written across
+   its own lines IS caught, and reported as assigned twice.
+
+2. **The short `-l` flag is not matched.** Only `--label` and `--add-label` are. `gh issue
+   create -l "name"` contributes no reference and is passed over in silence.
+
+3. **A wholly-`${{ }}` `labels:` value is skipped by design**, to exclude OCI image labels
+   fed to a container build. If a genuine issue-label list ever arrives that way, it is
+   excluded by the same rule and never checked.
 """
 
 import argparse

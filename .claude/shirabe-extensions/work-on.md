@@ -80,7 +80,9 @@ evidence that any check here executed.
   `.github/labels.yml`, including labels reached through a shell variable, and fails on any
   reference it cannot reduce to a literal rather than skipping it.
   `label-references_test.sh` is that check's self-test: it runs the frozen pre-repair
-  fixture and four mutations, and voids any mutation row whose target did not change.
+  fixture and six mutations, and voids any mutation row whose target did not change. Its
+  header records three cases it does not catch, one of which is a false negative rather
+  than a skip.
   Note that lint-workflows.yml carries no `paths:` filter, so these run on every pull
   request regardless of what it touches.
 - `.github/**`, `website/**` (except `website/pipeline/*.html`), `blog/**`, `scripts/**` (except
