@@ -55,6 +55,19 @@ func WriteAuditEntry(dir string, entry AuditEntry) error {
 	// root, not the leaf. Confine the result to the audit root first: nothing
 	// constrains entry.Tool, so a name containing ".." would otherwise write
 	// outside it.
+	//
+	// This check is LEXICAL. It compares cleaned absolute paths and does not
+	// resolve symlinks, so it stops a traversing name and nothing else. A
+	// symlink that already exists inside the audit root and points out of it
+	// redirects the write, and this function returns nil -- the caller is told
+	// the entry was recorded while the file landed elsewhere. Verified, not
+	// assumed: with `<root>/esc` symlinked outside, a tool named "esc/pwned"
+	// writes to the symlink target and WriteAuditEntry reports success.
+	//
+	// That is acceptable here because the audit root is created by tsuku in a
+	// path it controls, so a symlink under it implies write access to that
+	// directory already. It is recorded rather than silently accepted, because
+	// the word "guard" invites the assumption that it covers the symlink case.
 	absDir, err := filepath.Abs(dir)
 	if err != nil {
 		return fmt.Errorf("resolve audit dir: %w", err)
