@@ -128,9 +128,13 @@ workflow proves it did its work, and how Homebrew platform tags are resolved.
   reviewed. Rejected, and the existing instances are removed.
 - **A third-party label-sync action as the check.** The candidates apply a manifest but
   none fails CI on drift, so the check half is missing.
-- **A YAML-parsing linter.** Every label reference in this repository lives inside a
-  `run:` or `script:` block scalar, which a parser sees as an opaque string. Buys no
-  coverage.
+- **A YAML-parsing linter.** Almost every label reference here lives inside a `run:` or
+  `script:` block scalar, which a parser sees as an opaque string, so parsing buys very
+  little. It is not quite none: `container-build.yml:78` carries a genuine YAML
+  `labels:` key. That key is a Docker image label, not a GitHub issue label, and its
+  value is `${{ steps.meta.outputs.labels }}` — so it is a **false positive the text
+  scanner must exclude**, not coverage a parser would gain. An earlier draft asserted no
+  real `labels:` key existed; it does, and the check must know about it.
 - **Chosen: a text-scanning script in the existing checks directory, against a committed
   manifest, reconciled by scripted `gh label` calls with no delete code path.** An
   absent delete path beats a disabled flag.
@@ -156,10 +160,27 @@ workflow proves it did its work, and how Homebrew platform tags are resolved.
   failing formulae carry no Intel macOS bottle at any version, so no constructed tag
   resolves.
 - **Chosen: select from the manifest rather than construct.** Filter the GHCR manifest
-  entries tsuku already fetches by OS and architecture and take the newest that is not
+  entries tsuku already fetches by OS and architecture, and take the newest that is not
   newer than the target. This removes the hardcoded codename table entirely and cannot
-  go stale. It does not make either macOS leg green — nothing in this design does — but
-  it makes the failure report what is actually wrong.
+  go stale as new macOS releases ship.
+
+  Two honest qualifications. Selection still needs to know the target's macOS major
+  version, which is the same input the rejected alternative needed — what changes is that
+  the version is compared against values the manifest supplies rather than against a
+  table this repository maintains, so the failure mode is "no entry matches" rather than
+  "the table is out of date". And selecting by the resolving machine's version makes a
+  resolved digest depend on where resolution happened, which would break golden-file
+  reproducibility across runners; the selected tag is therefore pinned into the generated
+  plan rather than re-resolved by each consumer.
+
+  It does not make either macOS leg green — nothing in this design does — but it makes
+  the failure report what is actually wrong.
+
+Separately, and independent of tag selection, the decomposition path ignores Homebrew's
+`rebuild` counter, so a formula published with `rebuild >= 1` is looked up at a manifest
+reference that does not exist. This mis-resolves on Linux as well as macOS, it is the
+one measured code defect in this family, and it is the only part of it this work
+repairs.
 
 ## Decision Outcome
 
@@ -256,16 +277,29 @@ Two distinct failures, two distinct answers:
   it exactly as it would any other. This is genuine mutual coverage rather than a loop:
   each is covered by the other's independent mechanism.
 - **The sweeper stops running at all** — disabled, unscheduled, or silently dropped.
-  Nothing detects absence by waiting for a failure, because there is no failure. The
-  listener therefore asserts sweeper *freshness*: on every invocation it checks the most
-  recent sweeper run's timestamp and escalates if it is older than a stated threshold.
-  This is the one assertion in the design whose subject is the absence of an event, and
-  it exists because GitHub disables scheduled workflows in repositories that go quiet —
-  a documented behaviour that would otherwise remove this entire mechanism without
-  producing a single red run.
+  Nothing detects absence by waiting for a failure, because there is no failure. An
+  earlier draft put this freshness assertion in the listener, which does not work: the
+  listener's only trigger is a registered workflow completing, so GitHub's repository-wide
+  inactivity disablement — the exact behaviour the assertion exists to catch — stops the
+  sweeper and the listener's trigger in the same instant, and the check never runs.
 
-If both stop, nothing internal catches it. That residual is accepted and recorded in
-Consequences rather than papered over.
+  **The freshness assertion therefore lives in the pull-request lint job**, alongside the
+  label check, where its trigger is someone opening a pull request. That trigger shares
+  no failure mode with cron scheduling, is not subject to inactivity disablement, and
+  fires when a human is already present to read the result. It asserts that the escalator
+  has *successfully delivered* within the window — filed, commented on or closed
+  something — rather than merely that it ran, because the failure worth catching is
+  silent non-delivery rather than absence of invocation.
+
+**The residual, stated precisely.** Both escalation workflows share one script, one
+permission grant and one assignee pre-flight. Mutual coverage is therefore genuine for
+*trigger* failure — one path firing when the other does not — and not for *delivery*
+failure, where a defect in the shared script or a revoked permission silences both at
+once. The pull-request freshness assertion is the answer to that case, and it is the
+only control here that is independent of both escalation workflows. If the repository
+has neither scheduled runs nor pull requests, nothing fires — but a repository with
+neither is dormant, which is the condition under which the disablement happens in the
+first place.
 
 ### Data flow
 
@@ -353,15 +387,22 @@ still beats no check, but the limitation is recorded rather than assumed away.
 
 Six scheduled workflows also declare `pull_request`: `build-essentials.yml`,
 `cargo-builder-tests.yml`, `gem-builder-tests.yml`, `npm-builder-tests.yml`,
-`pypi-builder-tests.yml` and `test.yml`. On a pull request from a fork, the workflow file
-and everything it produces come from the fork. So the run's `name`, `head_branch` and
-`display_title`, and any receipt artifact it uploads, are attacker-authored.
+`pypi-builder-tests.yml` and `test.yml`. On a pull request from a fork, the workflow
+file and everything it produces come from the fork. So the run's `name`, `head_branch`
+and `display_title`, and any receipt artifact it uploads, are attacker-authored.
 
 An earlier draft asserted that receipt content originates in this repository's own
 workflows and not from forks. That is false, and the consequences follow directly:
 
-- **The escalator filters on `github.event.workflow_run.event == 'schedule'`** and
-  ignores everything else. A scheduled run cannot be triggered from a fork.
+- **Both escalation paths filter on the run's triggering event, not just the listener.**
+  The listener checks `github.event.workflow_run.event == 'schedule'`. That expression
+  does not exist in the sweeper, which reaches the same runs through the Actions API
+  where no `workflow_run` context is present — so the sweeper filters on the API's own
+  `event` field on each run it considers. Specifying the filter only in the listener
+  would leave the sweeper filing assigned issues for every failed fork pull-request run
+  of the six dual-trigger workflows, which is precisely the issue-spam primitive this
+  section exists to prevent. One mitigation, two enforcement points, because the design
+  has two paths to the same data.
 - **Receipt content is parsed defensively** — size-capped, schema-validated, and a
   parse failure is a loud failure rather than a skipped assertion.
 - **A fork pull request must not be able to open an assigned issue.** Without the event
@@ -370,27 +411,41 @@ workflows and not from forks. That is false, and the consequences follow directl
 
 ### `${{ }}` interpolation cannot be made safe by quoting
 
-An earlier draft said quoting is required at every interpolation. That is wrong.
-`${{ }}` is substituted textually into the script *before* a shell parses it, so a
-quote character in the substituted value terminates the quoting the author wrote. The
-only mitigation is to pass the value through the `env:` block and reference it as a
-shell variable.
+An earlier draft said quoting is required at every interpolation. That is wrong. `${{
+}}` is substituted textually into the script *before* a shell parses it, so a quote
+character in the substituted value terminates the quoting the author wrote. The only
+mitigation is to pass the value through the `env:` block and reference it as a shell
+variable.
 
 This is not hypothetical here. `release-finalize.yml:29` interpolates `head_branch`
 directly into a `run:` block in the repository's existing `workflow_run` listener, and
 `weekly-coverage-report.yml:109` places a `${{ }}` inside a JavaScript template literal.
-`r2-health-monitor.yml` shows the correct pattern, passing values through `env:`, and the
-escalator follows it.
+`r2-health-monitor.yml` shows the correct pattern, passing values through `env:`, and
+the escalator follows it.
 
-Both existing sites were checked for reachability rather than assumed dangerous. Neither
-is reachable by an outside contributor. The first is triggered by a workflow that runs on
-`push:` of a `v*` tag, so the interpolated value is a tag name and setting it requires
-push access. The second runs only on `schedule` and `workflow_dispatch`, with the
-interpolated value produced by tooling over the default-branch checkout. Both are
-therefore hardening rather than an exposure, and they are proposed as a separate issue
-rather than fixed here — with the caveat that "requires write access" is a weaker
-statement in this repository than it appears, given that no review requirement is
-actually enforced.
+Both existing sites were checked for reachability, and they did not come out the same
+way.
+
+`weekly-coverage-report.yml:109` runs only on `schedule` and `workflow_dispatch`, with
+the interpolated value produced by tooling over the default-branch checkout. Reaching it
+requires write access. That is hardening.
+
+`release-finalize.yml:29` is **not established as unreachable**, and an earlier draft of
+this section wrongly said it was. That draft reasoned from how the Release workflow is
+intended to fire — a `v*` tag push — but `workflow_run` does not match on how a run was
+triggered. It matches on the recorded workflow *name*, and for a fork pull request the
+executing workflow files come from the merge ref, so a fork chooses that name. The only
+guard on the listener is `conclusion == 'success'`; there is no check on the triggering
+event, the head repository, or fork status. Downstream, `secrets.RELEASE_PAT` is passed
+to a reusable workflow.
+
+Two things would close it and neither could be verified here: whether GitHub fires
+`workflow_run` for fork-pull-request-triggered runs, and whether this repository
+requires approval for fork workflow runs — both `actions/permissions` endpoints return
+403 to the available credentials. Until those are settled it is treated as unresolved
+rather than as either safe or exploitable, and it is not described further in a public
+artifact. The same event-filter this design applies to its own escalator is what that
+listener is missing.
 
 ### Token scope
 
