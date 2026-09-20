@@ -142,7 +142,7 @@ go build -o tsuku ./cmd/tsuku
 ./test/scripts/verify-no-system-deps.sh zlib
 ```
 
-See `.github/workflows/build-essentials.yml` for the complete validation matrix (3 platforms: Linux x86_64, macOS Intel, macOS ARM).
+See `.github/workflows/build-essentials.yml` for the complete validation matrix (2 platforms: Linux x86_64, macOS ARM).
 
 ## Code Style
 
