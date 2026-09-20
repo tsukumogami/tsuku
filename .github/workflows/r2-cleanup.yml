@@ -234,5 +234,5 @@ jobs:
             gh issue create \
               --title "$TITLE" \
               --body "$BODY" \
-              --label "automation"
+              --label "maintenance"
           fi

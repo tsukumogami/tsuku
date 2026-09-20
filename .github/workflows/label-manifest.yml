@@ -1,0 +1,48 @@
+# escalation-policy: none
+# escalation-reason: runs on pull requests and on demand; a failure is a red check on the PR that caused it
+name: Label Manifest
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/labels.yml'
+      - '.github/scripts/checks/label-manifest.sh'
+      - '.github/workflows/label-manifest.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Reporting drift only reads labels, so it never holds write. Split from the
+  # apply job rather than gating one job's permissions on an input: a
+  # permissions block is the wrong place for a conditional, and a pull request
+  # has no business holding issues: write.
+  check:
+    name: Check label manifest
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Report drift
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: .github/scripts/checks/label-manifest.sh --check
+
+  apply:
+    name: Apply label manifest
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Create missing labels and update changed ones
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: .github/scripts/checks/label-manifest.sh --apply
