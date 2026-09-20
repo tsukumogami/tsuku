@@ -269,20 +269,19 @@ gained. The count of proposals is stated, so "none were proposed" is distinguish
 | _The Go version pin, the seeding audit directory, the cask verification environment, and the Homebrew rebuild counter._ | | |
 | [#2596: ci: scheduled tests install registry recipes instead of the fixtures they declare, and six of seven pass anyway](https://github.com/tsukumogami/tsuku/issues/2596) | None | testable |
 | _Six of seven tests pass while exercising a different code path. The fix asserts the identity of the recipe resolved, not the run's colour._ | | |
-| [#2610: decision needed: does anyone intend to close Recipe Validation's corpus shortfall?](https://github.com/tsukumogami/tsuku/issues/2610) | [#2601](https://github.com/tsukumogami/tsuku/issues/2601), [#2608](https://github.com/tsukumogami/tsuku/issues/2608) | simple |
-| _Does anyone intend to close it. If yes it stays red, known and owned; if no it is retired with the reason recorded._ | | |
-| [#2611: decision needed: does anyone intend to close Curated Recipe Nightly's scope mismatch?](https://github.com/tsukumogami/tsuku/issues/2611) | [#2601](https://github.com/tsukumogami/tsuku/issues/2601), [#2608](https://github.com/tsukumogami/tsuku/issues/2608) | simple |
-| _Does anyone intend to narrow it to its discovered set. Retirement is the default if not; it has never once been green._ | | |
-| [#2612: decision needed: does anyone intend to give Weekly Coverage Report a consumer?](https://github.com/tsukumogami/tsuku/issues/2612) | [#2601](https://github.com/tsukumogami/tsuku/issues/2601) | simple |
-| _Does anyone want a coverage signal. If not it is retired, which is more honest than green and unread._ | | |
-| [#2613: decision needed: does tsuku intend to keep testing macOS Sonoma?](https://github.com/tsukumogami/tsuku/issues/2613) | None | simple |
-| _Is Sonoma a platform tsuku intends to keep verifying. A supported-platform question, not a CI one._ | | |
-| [#2614: decision needed: does tsuku intend to keep supporting Intel macOS?](https://github.com/tsukumogami/tsuku/issues/2614) | None | simple |
-| _Is Intel macOS a platform tsuku intends to keep verifying. If not, the supported-platform list is updated to match._ | | |
+| [#2610: Recipe Validation dies at 1193 of 1256 recipes — split the corpus across jobs or retire it](https://github.com/tsukumogami/tsuku/issues/2610) | [#2601](https://github.com/tsukumogami/tsuku/issues/2601), [#2608](https://github.com/tsukumogami/tsuku/issues/2608) | simple |
+| _Splitting the corpus keeps the signal and adds a shard step that itself needs a floor; retiring loses the broad recipe signal._ | | |
+| [#2611: Curated Recipe Nightly validates 1256 recipes but declares 109 — narrow its scope or retire it](https://github.com/tsukumogami/tsuku/issues/2611) | [#2601](https://github.com/tsukumogami/tsuku/issues/2601), [#2608](https://github.com/tsukumogami/tsuku/issues/2608) | simple |
+| _Narrowing gives reliable coverage of 109 over unreliable coverage of 1256 that has never completed._ | | |
+| [#2612: Weekly Coverage Report's output has no reader — give it a consumer or retire it](https://github.com/tsukumogami/tsuku/issues/2612) | [#2601](https://github.com/tsukumogami/tsuku/issues/2601) | simple |
+| _Nothing reads the report. A consumer has to be genuinely wanted, or retiring is the cheaper truth._ | | |
+| [#2613: arm64 Sonoma bottles withdrawn upstream — move the runner and drop Sonoma from verified platforms, or build from source](https://github.com/tsukumogami/tsuku/issues/2613) | None | simple |
+| _Decides whether Sonoma stays a verified target; the documented platform list follows the answer._ | | |
+| [#2614: Intel macOS bottles no longer published — build from source or drop Intel from supported platforms](https://github.com/tsukumogami/tsuku/issues/2614) | None | simple |
+| _Decides whether Intel macOS stays a supported target; usage data should decide it, not the bottle situation._ | | |
 
-Issues #2610 through #2614 each ask whether anyone intends to close a shortfall.
-Retirement is the recorded outcome where the answer is no. No pull request in this
-milestone acts on them.
+Issues #2610 through #2614 record untaken decisions: what is broken, what each way
+costs, and where the lean sits. No pull request in this milestone acts on them.
 
 ## Dependency Graph
 
