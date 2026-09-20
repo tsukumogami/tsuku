@@ -7,12 +7,16 @@ not providing coverage, whatever colour it reports.
 **A status check is not a consumer.** A check on a page someone has to visit is exactly
 what this record exists to distinguish from a signal that arrives.
 
-**A green run is not a consumer either.** Several workflows below run green and deliver
-nothing, and one of them was miscategorised in the first draft of this record for exactly
-that reason. Each row is placed by what arrived, checked against run history and against
-the commit log, not by what the workflow file declares.
+**A green run is not a consumer either.** Four workflows here run green and deliver
+nothing, and the first draft of this record miscategorised one of them for exactly that
+reason. Every row is placed by what arrived, checked against run history and against the
+commit log, not by what the workflow file declares.
 
-Counted 2026-09-20: **21** scheduled workflows, across both `.yml` and `.yaml`.
+**Observed 2026-09-20, 21:50 UTC.** Label existence is repository state and changes
+without a commit, so the observation time matters as much as the count. The dated events
+at the end of this document record the changes made to that state so far.
+
+Counted at that time: **21** scheduled workflows, across both `.yml` and `.yaml`.
 
 ## Summary
 
@@ -24,6 +28,33 @@ Counted 2026-09-20: **21** scheduled workflows, across both `.yml` and `.yaml`.
 | Scheduled run reaches nobody, and nothing else runs it | 2 |
 
 4 + 9 + 6 + 2 = 21. Every workflow is counted once; none appears in two rows.
+
+## One symptom, four causes
+
+The nine workflows in the second row all present identically: a workflow that says it will
+tell somebody, and nobody hears anything. That single symptom has four separate causes,
+and they are not variations on a theme — each needs a different fix, and two of them are
+untouched by the repair that fixes the other two.
+
+| Cause | Workflows | What would fix it |
+|---|---|---|
+| The label it names does not exist | `r2-cleanup` (still); seven others repaired 2026-09-20 | create the label |
+| No `permissions:` block, so the token cannot write issues | `discovery-freshness`, `nightly-registry-validation`, `r2-cleanup`, `r2-cost-monitoring`, `r2-health-monitor` | declare `issues: write` |
+| The job dies before the reporting step runs | `seed-queue`, `weekly-coverage-report` | fix the failure upstream of the step |
+| The reporting step has never been triggered | `checksum-drift`, `r2-cost-monitoring` | nothing yet — the defect is latent |
+
+Two things follow that a cause-blind reading misses.
+
+**Nothing about labels or permissions fixes `seed-queue` or `weekly-coverage-report.`**
+Both already declare `issues: write`, and both die before reaching the step that would use
+it. A pass that fixed every label and every permission in this repository would leave both
+exactly as broken as they are now, while reporting that the escalation problem was solved.
+
+**Some workflows carry two causes at once, and the first hides the second.** `gh issue
+create --label X` resolves the label before it calls the API, so a missing label fails
+first and a missing permission is never reached. `r2-cleanup` carries both. Repairing one
+and observing continued failure is the only way to see the other, which is why the repair
+is staged rather than done in one sweep.
 
 ## Consumer works today
 
@@ -41,9 +72,9 @@ already existed.
 Three of these four deliver less than the table suggests, and the qualification belongs
 beside the row rather than in a footnote:
 
-**`batch-generate` has produced nothing since 2026-08-17.** Its first step checks for
-open pull requests from `batch/` branches and skips the whole run if any exist. Two are
-open, #2426 since 2026-06-26 and #2534 since 2026-08-17, so every scheduled run since has
+**`batch-generate` has produced nothing since 2026-08-17.** Its first step checks for open
+pull requests from `batch/` branches and skips the whole run if any exist. Two are open,
+#2426 since 2026-06-26 and #2534 since 2026-08-17, so every scheduled run since has
 reported success with every subsequent step skipped. The guard is deliberate and the
 consumer is not broken; the workflow is idling behind pull requests it opened itself and
 cannot merge. Its output resumes when those merge or close.
@@ -54,16 +85,14 @@ the file says it is kept for backwards compatibility during the transition (#353
 deployment succeeds and the consumer is real. Whether that consumer should still exist is
 the retirement question this record feeds, not one it answers.
 
-**`batch-operations` commits rarely by design.** Its `Persist control file` step runs
-green on every scheduled run and exits early when `batch-control.json` is unchanged, so
-one commit reaching main (2026-03-03) reflects a circuit breaker that rarely trips rather
-than a path that does not work.
+**`batch-operations` commits rarely by design.** Its `Persist control file` step runs green
+on every scheduled run and exits early when `batch-control.json` is unchanged, so one
+commit reaching main (2026-03-03) reflects a circuit breaker that rarely trips rather than
+a path that does not work.
 
 ## Consumer declared but does not arrive
 
-Nine workflows name a consumer that does not receive their output. They do not share a
-cause, and the difference decides what would fix them, so they are grouped by where
-delivery stops.
+The nine, grouped by the cause table above.
 
 ### The escalation step runs and fails
 
@@ -75,10 +104,10 @@ delivery stops.
 | `r2-cleanup` | issue | no `permissions:` block, **and** label `automation` still does not exist |
 | `r2-health-monitor` | issue | no `permissions:` block; its label `r2-degradation` has always existed |
 
-Each of these has a failing step whose name is the escalation itself: `Create curated
-recipe failure issue`, `Create failure issue`, `Create R2 unavailable issue`, `Create
-summary`, `Handle health status`. A workflow that cannot report its own failure is a
-defect separate from whatever it was watching.
+Each has a failing step whose name is the escalation itself: `Create curated recipe failure
+issue`, `Create failure issue`, `Create R2 unavailable issue`, `Create summary`, `Handle
+health status`. A workflow that cannot report its own failure is a defect separate from
+whatever it was watching.
 
 `r2-health-monitor` is the control case for the permission defect. Its label exists and
 always has, so nothing about a label can explain why it fails.
@@ -90,8 +119,8 @@ always has, so nothing about a label can explain why it fails.
 | `seed-queue` | queue commits **and** review issues | fails at `Run seeding` |
 | `weekly-coverage-report` | issue | fails at `Build tsuku` |
 
-Neither reaches its consumer step at all, so no label and no permission would fix either.
-Both declare `issues: write`, and `seed-queue` additionally declares `contents: write`.
+Neither reaches its consumer step at all. Both declare `issues: write`, and `seed-queue`
+additionally declares `contents: write`.
 
 `seed-queue` is the row this record got wrong the first time. It was listed as a working
 consumer because its commit-and-push step exists. That step does not run. Every scheduled
@@ -119,28 +148,39 @@ catch finally happens, which is the worst available day to discover them.
 `issues: write` the workflow does not declare, so it cannot stand in for the missing
 permission.
 
-## What the label bootstrap changed, and what it did not
+## Outstanding evidence
 
-Eight label names were created on 2026-09-20. Before that, nine names referenced across
-these workflows did not exist; afterwards only `automation` does not, and `r2-cleanup` is
-the single workflow still referencing it.
+Three workflows declare `issues: write` and were blocked only by a label that now exists.
+Their only known blocker is gone and **none of them has been observed filing an issue.**
+Each has a specific outstanding test, named here rather than left implied:
 
-That removes the first of two stacked defects. It does not by itself make any of these
-workflows file an issue, and this record does not claim it does:
+| Workflow | The test | When it can run |
+|---|---|---|
+| `curated-nightly` | its next scheduled run files instead of failing at `Create curated recipe failure issue` | the next nightly run — the soonest real evidence available |
+| `checksum-drift` | its escalation fires and files | only when checksum drift actually occurs; cannot be forced without manufacturing drift |
+| `weekly-coverage-report` | its escalation is reached at all | only after `Build tsuku` is repaired; the label was never its binding constraint |
 
-- Five workflows declare no `permissions:` block. For them the label was never the binding
-  constraint, and nothing has changed.
-- Three — `curated-nightly`, `checksum-drift`, `weekly-coverage-report` — declare
-  `issues: write` and were blocked only by the missing label. Whether they now file is
-  **unproven**. `checksum-drift` will not say until drift occurs,
-  `weekly-coverage-report` dies before reaching the step, and `curated-nightly` fires
-  nightly, so its next run is the first real test.
-- `seed-queue` has both the label and the permission and still delivers nothing, because
-  it never gets that far.
+Until those land, the count of workflows that *can* file an issue remains one:
+`r2-credential-rotation-reminder`. Green runs do not raise that count, and a single pass
+would not either.
 
-Of the ten workflows that try to file an issue, exactly one, `r2-credential-rotation-reminder`,
-has been observed doing it. How many *can* is not knowable from green runs, and one pass
-would not establish it either.
+## Dated events
+
+Changes to repository state that this record depends on, so a reader can reconstruct the
+picture at any point rather than only the latest one.
+
+**2026-09-20 — eight labels created.** `coverage-regression`, `curated-recipe-failure`,
+`discovery-registry`, `nightly-failure`, `r2-cost-alert`, `r2-unavailable`, `security` and
+`seeding:review` were applied from the manifest in `.github/labels.yml` by
+`.github/scripts/checks/label-manifest.sh --apply` (#2602). Before: 34 labels on the
+repository, 8 of the manifest's 42 missing. After: 42, none missing, none differing. No
+label was removed or modified; the script has no delete path.
+
+Before that event, nine label names referenced across these workflows did not exist.
+Afterwards only `automation` does not, and `r2-cleanup` is the single workflow still
+referencing it. The event removed one of the two stacked causes. It did not make any
+workflow file an issue, and the Outstanding evidence section above says what would show
+that it had.
 
 ## Scheduled run reaches nobody; the same check does reach a PR author
 
