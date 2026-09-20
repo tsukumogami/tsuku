@@ -1,6 +1,6 @@
 ---
 schema: prd/v1
-status: Draft
+status: Accepted
 problem: |
   Ten of tsuku's twenty-one scheduled workflows are failing, five of them since
   February, and no failure reaches a person. Five fail inside their own escalation
@@ -29,7 +29,7 @@ motivating_context: |
 
 ## Status
 
-Draft
+Accepted
 
 ## Problem Statement
 
