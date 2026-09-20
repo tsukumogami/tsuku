@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/batch"
@@ -48,6 +49,27 @@ func WriteAuditEntry(dir string, entry AuditEntry) error {
 	data = append(data, '\n')
 
 	path := filepath.Join(dir, entry.Tool+".json")
+
+	// A scoped package name such as "@scope/pkg" puts the entry in a
+	// subdirectory, which MkdirAll above does not create -- it makes the audit
+	// root, not the leaf. Confine the result to the audit root first: nothing
+	// constrains entry.Tool, so a name containing ".." would otherwise write
+	// outside it.
+	absDir, err := filepath.Abs(dir)
+	if err != nil {
+		return fmt.Errorf("resolve audit dir: %w", err)
+	}
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return fmt.Errorf("resolve audit path: %w", err)
+	}
+	if absPath != absDir && !strings.HasPrefix(absPath, absDir+string(os.PathSeparator)) {
+		return fmt.Errorf("audit entry for %q would write outside the audit directory", entry.Tool)
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return fmt.Errorf("create audit entry dir: %w", err)
+	}
+
 	if err := os.WriteFile(path, data, 0644); err != nil {
 		return fmt.Errorf("write audit entry: %w", err)
 	}
