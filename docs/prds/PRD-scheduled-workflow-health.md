@@ -76,12 +76,12 @@ reliably announce a verdict that means nothing.
 
 There is a fourth problem that only appears once the first is fixed. R2 Health Monitor's
 `degraded` verdict comes from a 2000 ms threshold measured around an entire `aws s3api`
-process invocation, interpreter startup included. Its recorded latencies are strictly bimodal.
-Across the last thirty scheduled runs, twelve samples fall between 1097 ms and 1306 ms
-and eighteen between 3054 ms and 5692 ms, with nothing in between; the 2000 ms threshold
-sits in that gap. No run has ever recorded an actual failure to reach R2. Granting it the permission it lacks, and nothing
-else, would have it raising and closing issues against a verdict that does not track the
-service.
+process invocation, interpreter startup included. Its recorded latencies are strictly
+bimodal. Across the last thirty scheduled runs, twelve samples fall between 1097 ms and
+1306 ms and eighteen between 3054 ms and 5692 ms, with nothing in between; the 2000 ms
+threshold sits in that gap. No run has ever recorded an actual failure to reach R2.
+Granting it the permission it lacks, and nothing else, would have it raising and closing
+issues against a verdict that does not track the service.
 
 Five of the nine missing labels have never fired at all, because the workflow dies
 earlier or the escalation condition has not yet been met. Checksum Drift is the clearest
@@ -205,13 +205,13 @@ blocking.
 
 ### Functional — honest verdicts
 
-**R11.** No scheduled workflow concludes `success` on a run whose attempted-item count is
-zero. A run that processed its full declared input set and found no problems concludes
-`success` normally; a run that processed nothing concludes as a failure, or as a skip
-that is itself visible as a non-success conclusion.
+**R11.** No scheduled workflow concludes `success` on a run whose attempted-item count
+is zero. A run that processed its full declared input set and found no problems
+concludes `success` normally; a run that processed nothing concludes as a failure, or as
+a skip that is itself visible as a non-success conclusion.
 
-**R12.** A run that does not cover its full declared input set fails, naming the count it
-reached and the count it declared. This applies whether the shortfall comes from disk
+**R12.** A run that does not cover its full declared input set fails, naming the count
+it reached and the count it declared. This applies whether the shortfall comes from disk
 exhaustion, a `timeout-minutes` cap, or an early exit. For the workflows that cannot
 currently cover their input set, this requirement is satisfied by the shortfall becoming
 visible and reported — not by the shortfall being eliminated, which R17 places outside
@@ -219,11 +219,11 @@ this work.
 
 **R13.** A workflow's declared scope matches the set its own discovery step produces.
 
-**R14.** A health verdict reflects the service being measured rather than the measurement
-apparatus. Widening a threshold so that existing measurements fall under it does not
-satisfy this; measuring the operation rather than the surrounding process does. A
-workflow whose measurement is not corrected within this work does not escalate from the
-uncorrected verdict: its escalation policy becomes `none` with that as its reason.
+**R14.** A health verdict reflects the service being measured rather than the
+measurement apparatus. Widening a threshold so that existing measurements fall under it
+does not satisfy this; measuring the operation rather than the surrounding process does.
+A workflow whose measurement is not corrected within this work does not escalate from
+the uncorrected verdict: its escalation policy becomes `none` with that as its reason.
 
 **R15.** Every scheduled workflow has a named consumer, or is proposed for retirement
 under R17.
@@ -243,15 +243,18 @@ workflow checks:
   tool-home variable the check reads.
 - Seed Queue's audit writer creating its root directory but not the directory implied by
   a scoped package name, so every scoped package fails.
-- Homebrew bottle resolution for the Intel macOS runner, which asks for a Sonoma tag
-  against a Sequoia runner.
+- The Homebrew decomposition path ignoring Homebrew's `rebuild` counter, so a formula
+  published with `rebuild >= 1` is looked up at the wrong manifest reference. This
+  affects Linux as well as macOS and is a correctness defect independent of any
+  platform-tag question.
 
-The arm64 bottle failures, the manifest 404s, and the uncharacterised decomposition
-failures are **diagnosed but not repaired here**. This is a deliberate narrowing of the
-upstream BRIEF, which placed the macOS bottle repair in scope as repair rather than
-diagnosis. The narrowing is recorded in D5: those failures do not share a cause with the
-Intel one, their cause is not yet established, and committing to repair an undiagnosed
-defect would be committing to unknown work.
+The macOS bottle failures are **diagnosed here and not repaired**, and the diagnosis is
+that they are not repairable by this work at all: the bottles these formulae need no
+longer exist upstream, so no change to tag selection reaches one. This is a deliberate
+narrowing of the upstream BRIEF, which placed the macOS bottle repair in scope as repair
+rather than diagnosis. D5 records the evidence. What follows from it — moving a runner,
+or dropping a platform, or accepting a standing red — is a proposal under R17, and the
+two platforms are separate proposals because they are not the same decision.
 
 ### Governance
 
@@ -268,8 +271,8 @@ where doing so would change what a workflow checks.
 **R18.** Every check introduced or relied on by this work is proved by removing its
 subject, not merely by changing it. A check that cannot fail is not evidence.
 
-**R19.** Every check reports what it scanned and what it found, and fails when it scanned
-zero files or found zero references to check.
+**R19.** Every check reports what it scanned and what it found, and fails when it
+scanned zero files or found zero references to check.
 
 **R20.** The two stacked escalation defects are established independently, each by a
 single-variable experiment with a control, and the method admits a disconfirming
@@ -483,66 +486,97 @@ workflow.
 
 This section closes the open questions the upstream BRIEF deferred.
 
-**D1. What makes a signal actually reach someone: assignment, not artifact type.**
-The BRIEF's gate question was whether filing an issue is any better than the Actions
-tab, given that both are pages nobody reads. The answer turns on notification behaviour,
-and the deciding fact is that repository watching does not cover workflow runs at any
-level — GitHub's custom watch settings cover issues, pull requests, releases, security
-alerts and discussions, and not Actions. So an issue genuinely is subscribable where a
-workflow run is not. But subscription alone still requires someone to have opted in.
-Assignment is the one mechanism documented to notify a person independently of their
-watch level, and it has the property of being visible from inside the repository: an
-assignee is greppable in the workflow file and reviewable under CODEOWNERS.
-*Alternatives considered:* team `@`-mention, rejected because a team mention posted by
-`GITHUB_TOKEN` renders as plain text and notifies nobody — a fourth instance of the same
-silent no-op family as the missing labels; the native scheduled-failure email, rejected
-as a sole path because the Actions notification setting defaults to not notifying; a
-required status check, rejected because GitHub cannot evaluate a scheduled run as a PR
-check.
+**D1. What makes a signal actually reach someone: assignment, not artifact type.** The
+BRIEF's gate question was whether filing an issue is any better than the Actions tab,
+given that both are pages nobody reads. The answer turns on notification behaviour, and
+the deciding fact is that repository watching does not cover workflow runs at any level
+— GitHub's custom watch settings cover issues, pull requests, releases, security alerts
+and discussions, and not Actions. So an issue genuinely is subscribable where a workflow
+run is not. But subscription alone still requires someone to have opted in. Assignment
+is the one mechanism documented to notify a person independently of their watch level,
+and it has the property of being visible from inside the repository: an assignee is
+greppable in the workflow file and reviewable under CODEOWNERS. *Alternatives
+considered:* team `@`-mention, rejected because a team mention posted by `GITHUB_TOKEN`
+renders as plain text and notifies nobody — a fourth instance of the same silent no-op
+family as the missing labels; the native scheduled-failure email, rejected as a sole
+path because the Actions notification setting defaults to not notifying; a required
+status check, rejected because GitHub cannot evaluate a scheduled run as a PR check.
 
-**D2. Escalation lives outside the workflow it monitors.**
-A workflow that fails in its first step cannot report its own failure from a later step,
-and the five failures in this repository that die inside their own escalation step are
-the evidence. Escalation therefore fires on a run's conclusion from outside.
-*Trade-off:* one component holding the permission to file issues is a concentration of
-privilege, and it becomes a single point of failure for reporting. That is accepted
-because the alternative — the permission spread across every workflow that might need it
-— is the arrangement that produced five broken escalation paths and five more latent
-ones.
+**D2. Escalation lives outside the workflow it monitors.** A workflow that fails in its
+first step cannot report its own failure from a later step, and the five failures in
+this repository that die inside their own escalation step are the evidence. Escalation
+therefore fires on a run's conclusion from outside. *Trade-off:* one component holding
+the permission to file issues is a concentration of privilege, and it becomes a single
+point of failure for reporting. That is accepted because the alternative — the
+permission spread across every workflow that might need it — is the arrangement that
+produced five broken escalation paths and five more latent ones.
 
-**D3. Missing labels fail before merge, not at runtime.**
-Runtime self-healing is already present in this repository in two workflows and neither
-instance demonstrates that it works. Both discard the result with `2>/dev/null || true`,
-so neither has ever reported whether the label was created. One of the two also lacks
-the permission that creating a label requires; the other declares it but creates a label
-that already exists, so its attempt has never had to do anything. The pattern's defect
-is therefore not only the missing permission — it is that the outcome is unobservable by
+**D3. Missing labels fail before merge, not at runtime.** Runtime self-healing is
+already present in this repository in two workflows and neither instance demonstrates
+that it works. Both discard the result with `2>/dev/null || true`, so neither has ever
+reported whether the label was created. One of the two also lacks the permission that
+creating a label requires; the other declares it but creates a label that already
+exists, so its attempt has never had to do anything. The pattern's defect is therefore
+not only the missing permission — it is that the outcome is unobservable by
 construction, and that a label created at three in the morning is one nobody reviewed.
 The check therefore runs in CI against a declared label set committed to the repository.
 *Trade-off:* a committed manifest can drift from the repository's real labels, so a
 reconciliation job and a drift check are required, and deletion is disabled so that
 reconciliation cannot strip labels off live issues.
 
-**D4. Unresolvable label references fail the check.**
-The two dynamic references in this repository point in opposite directions: one resolves
-to a label that exists and one to a label that does not. A checker that skipped what it
-could not parse would pass this repository while missing a real gap — reproducing the
-exact defect class this work exists to remove. Simple single-assignment variables are
-resolved; anything else fails loudly.
+**D4. Unresolvable label references fail the check.** The two dynamic references in this
+repository point in opposite directions: one resolves to a label that exists and one to
+a label that does not. A checker that skipped what it could not parse would pass this
+repository while missing a real gap — reproducing the exact defect class this work
+exists to remove. Simple single-assignment variables are resolved; anything else fails
+loudly.
 
-**D5. The macOS bottle failures are at least two defects, not one.**
-An earlier reading treated them as a single defect because they share an error string.
-They do not share a cause. The Intel leg runs on a Sequoia runner while the code
-asks for the Sonoma tag. Two distinct things are wrong there, and naming only the first
-would send an implementer to the wrong line. The decomposition path calls a singular
-`getPlatformTag` returning one tag with no alternatives. A plural `getPlatformTags` with
-an ordered fallback chain already exists elsewhere in the tree, but it is passed a macOS
-version of `0` behind a TODO that was never done, so it defaults to Sonoma and walks
-backwards from there. Neither path can reach a Sequoia tag. Adopting the existing chain
-is necessary and not sufficient; the version has to arrive too. The arm64 leg runs on a Sonoma runner and asks for the Sonoma tag, so its
-failures are not a version mismatch and a fallback chain would not address them. The
-remaining arm64 failures, the manifest 404s, and a set of uncharacterised decomposition
-failures need their own diagnosis, which the DESIGN owns.
+**D5. The macOS bottle failures are not a tag-resolution defect, and are not repairable
+by this work.** Three readings of these failures preceded this one, each corrected by
+measurement: one defect, then two split by runner version, and now neither. Sampled live
+against the formulae that actually fail, `readline` 8.3.6 and `glib` 2.90.0 carry
+`arm64_sequoia` and `arm64_tahoe` but **no `arm64_sonoma`, and no Intel macOS tag of any
+kind**. `pkgconf` 3.0.7, the Build Essentials failure, is the same.
+
+So the arm64 job runs on `macos-14`, which is Sonoma, asks for `arm64_sonoma` correctly,
+and the bottle has simply been withdrawn upstream. Adopting the existing fallback chain
+would make this case **worse**: it walks backwards, sonoma to ventura to monterey, away
+from the `arm64_sequoia` that exists. A change that moves in the wrong direction while
+appearing to address the error string is the same defect family as everything else here.
+On Intel there is no macOS bottle at all for these formulae, so no tag the resolver
+could choose would succeed.
+
+**A note on method, because the shortcut that misled us is easy to repeat.** The first
+three formulae sampled — `ninja`, `sqlite`, `pkgconf` — were chosen for convenience, and
+two of them still carry `sonoma` and `sequoia`. That sample suggested tag selection was
+the problem. Sampling the formulae that actually appear in the failure logs shows it is
+not. Anyone re-deriving this should sample the failing population, not a convenient one;
+the convenient sample is precisely what makes the defect look fixable.
+
+The two platforms need separate decisions, each with its own cost:
+
+- **arm64** — moving the runner off `macos-14` is a one-line change and buys a green
+  job. The price is losing coverage of macOS Sonoma, which is a supported target for
+  tsuku's users even where Homebrew no longer ships bottles for it.
+- **Intel macOS** — a genuine three-way choice with no cheap option: build these
+  formulae from source on Intel, drop Intel macOS coverage from this workflow, or accept
+  a standing red on that leg. Each trades away something real, and this work does not
+  pick between them.
+
+An earlier draft of this section said the Intel leg fails because it asks for the Sonoma
+tag on a Sequoia runner. That was wrong: the runner is Sequoia, the requested tag is
+`sonoma`, and correcting the tag to `sequoia` would not help, because neither tag has a
+bottle. Two distinct things are wrong there, and naming only the first would send an
+implementer to the wrong line. The decomposition path calls a singular `getPlatformTag`
+returning one tag with no alternatives. A plural `getPlatformTags` with an ordered
+fallback chain already exists elsewhere in the tree, but it is passed a macOS version of
+`0` behind a TODO that was never done, so it defaults to Sonoma and walks backwards from
+there. Neither path can reach a Sequoia tag. Adopting the existing chain is necessary
+and not sufficient; the version has to arrive too. The arm64 leg runs on a Sonoma runner
+and asks for the Sonoma tag, so its failures are not a version mismatch and a fallback
+chain would not address them. The remaining arm64 failures, the manifest 404s, and a set
+of uncharacterised decomposition failures need their own diagnosis, which the DESIGN
+owns.
 
 **D6. Three workflows cannot reach an honest green inside this work. What is repairable
 in them is repaired; what is not becomes a proposal.** Recipe Validation dies on disk
@@ -560,26 +594,26 @@ Recipe Nightly to the recipes its own discovery step identifies is a reduction i
 runs, and is not a weakening: the workflow is currently not running the check its name
 advertises, and the reduction makes its verdict mean what it says.
 
-**D6b. The R2 latency threshold is pulled back into scope, reversing the BRIEF.**
-The BRIEF placed the threshold's validity out of scope as a question about what the
-workflow checks. That was right in isolation and is wrong once escalation works. The
-recorded latencies are bimodal: across the last thirty scheduled runs, twelve samples
-fall between 1097 ms and 1306 ms and eighteen between 3054 ms and 5692 ms, with nothing
-in between, and the 2000 ms threshold sits in that gap. No run has ever recorded an
-actual failure to reach R2. The window is named because the clusters move, and a claim
-about their extremes is only checkable against a stated set of runs. Granting this
-workflow the permission it lacks, and nothing else, would have it raising and closing an
-issue against a verdict that does not track the service. Its own dedup logic holds that
-to one open issue at a time, so the cost is churn and false signal rather than volume. R14 and AC28 therefore
-bring the threshold in, with AC28 offering an escape: if the measurement is not fixed
-within this work, the workflow's escalation policy becomes `none` with that as its
-stated reason, so it does not file from a verdict known to be unreliable.
+**D6b. The R2 latency threshold is pulled back into scope, reversing the BRIEF.** The
+BRIEF placed the threshold's validity out of scope as a question about what the workflow
+checks. That was right in isolation and is wrong once escalation works. The recorded
+latencies are bimodal: across the last thirty scheduled runs, twelve samples fall
+between 1097 ms and 1306 ms and eighteen between 3054 ms and 5692 ms, with nothing in
+between, and the 2000 ms threshold sits in that gap. No run has ever recorded an actual
+failure to reach R2. The window is named because the clusters move, and a claim about
+their extremes is only checkable against a stated set of runs. Granting this workflow
+the permission it lacks, and nothing else, would have it raising and closing an issue
+against a verdict that does not track the service. Its own dedup logic holds that to one
+open issue at a time, so the cost is churn and false signal rather than volume. R14 and
+AC28 therefore bring the threshold in, with AC28 offering an escape: if the measurement
+is not fixed within this work, the workflow's escalation policy becomes `none` with that
+as its stated reason, so it does not file from a verdict known to be unreliable.
 
-**D7. Consumers are settled before escalation is switched on.**
-R15 is ordered before the escalation work rather than after it. Filing issues that
-nobody reads is not an improvement on filing none, and turning on escalation for a
-workflow whose verdict is meaningless — R2 Health Monitor's threshold, Nightly Registry
-Validation's empty runs — would convert a silent problem into a noisy one.
+**D7. Consumers are settled before escalation is switched on.** R15 is ordered before
+the escalation work rather than after it. Filing issues that nobody reads is not an
+improvement on filing none, and turning on escalation for a workflow whose verdict is
+meaningless — R2 Health Monitor's threshold, Nightly Registry Validation's empty runs —
+would convert a silent problem into a noisy one.
 
 ## Known Limitations
 
