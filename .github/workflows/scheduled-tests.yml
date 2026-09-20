@@ -23,8 +23,8 @@ jobs:
         id: matrix
         run: |
           # Include both regular CI tests and scheduled slow tests
-          LINUX=$(jq -c '[(.ci.linux + .ci.scheduled)[] as $id | {id: $id, tool: .tests[$id].tool, desc: .tests[$id].desc}]' test-matrix.json)
-          MACOS=$(jq -c '[(.ci.macos + .ci.scheduled)[] as $id | {id: $id, tool: .tests[$id].tool, desc: .tests[$id].desc}]' test-matrix.json)
+          LINUX=$(jq -c '[(.ci.linux + .ci.scheduled)[] as $id | {id: $id, tool: .tests[$id].tool, desc: .tests[$id].desc, recipe: .tests[$id].recipe}]' test-matrix.json)
+          MACOS=$(jq -c '[(.ci.macos + .ci.scheduled)[] as $id | {id: $id, tool: .tests[$id].tool, desc: .tests[$id].desc, recipe: .tests[$id].recipe}]' test-matrix.json)
           echo "linux=$LINUX" >> $GITHUB_OUTPUT
           echo "macos=$MACOS" >> $GITHUB_OUTPUT
 
@@ -55,7 +55,18 @@ jobs:
       - name: "Install ${{ matrix.test.tool }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install --force ${{ matrix.test.tool }}
+          TEST_TOOL: ${{ matrix.test.tool }}
+          TEST_RECIPE: ${{ matrix.test.recipe }}
+        run: |
+          # A test may name the recipe it should install. Honour it: resolving
+          # the tool from the registry instead exercises a different code path
+          # and still passes wherever a same-named registry recipe exists
+          # (tsukumogami/tsuku#2596).
+          if [ -n "$TEST_RECIPE" ]; then
+            ./tsuku install --force --recipe "$TEST_RECIPE" "$TEST_TOOL"
+          else
+            ./tsuku install --force "$TEST_TOOL"
+          fi
 
   integration-macos:
     name: "macOS: ${{ matrix.test.tool }}"
@@ -84,4 +95,15 @@ jobs:
       - name: "Install ${{ matrix.test.tool }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install --force ${{ matrix.test.tool }}
+          TEST_TOOL: ${{ matrix.test.tool }}
+          TEST_RECIPE: ${{ matrix.test.recipe }}
+        run: |
+          # A test may name the recipe it should install. Honour it: resolving
+          # the tool from the registry instead exercises a different code path
+          # and still passes wherever a same-named registry recipe exists
+          # (tsukumogami/tsuku#2596).
+          if [ -n "$TEST_RECIPE" ]; then
+            ./tsuku install --force --recipe "$TEST_RECIPE" "$TEST_TOOL"
+          else
+            ./tsuku install --force "$TEST_TOOL"
+          fi
