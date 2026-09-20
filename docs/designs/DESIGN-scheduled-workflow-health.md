@@ -100,7 +100,10 @@ workflow proves it did its work, and how Homebrew platform tags are resolved.
   defect in this document.
 - **Chosen: both, provisionally.** The sweeper is the load-bearing mechanism: it covers
   the case the listener may be blind to, and it does not depend on an unsettled event
-  behaviour. The listener buys promptness and watches the sweeper. If step 1 shows
+  behaviour. The listener's justification is **latency and nothing else** — an earlier
+  draft also credited it with watching the sweeper, which does not hold, because the
+  sweeper is itself registered and its next hourly run files the gap for its own prior
+  failure. If step 1 shows
   `workflow_run` does fire for job-less runs and the filter can be widened, the listener
   becomes sufficient on its own and the sweeper reduces to a watchdog — that is a
   legitimate simplification and the design should be revisited rather than defended.
@@ -130,11 +133,15 @@ workflow proves it did its work, and how Homebrew platform tags are resolved.
   none fails CI on drift, so the check half is missing.
 - **A YAML-parsing linter.** Almost every label reference here lives inside a `run:` or
   `script:` block scalar, which a parser sees as an opaque string, so parsing buys very
-  little. It is not quite none: `container-build.yml:78` carries a genuine YAML
-  `labels:` key. That key is a Docker image label, not a GitHub issue label, and its
-  value is `${{ steps.meta.outputs.labels }}` — so it is a **false positive the text
-  scanner must exclude**, not coverage a parser would gain. An earlier draft asserted no
-  real `labels:` key existed; it does, and the check must know about it.
+  little. It is not quite none: at least one genuine YAML
+  `labels:` key exists, as an input to a container-build action. It is a Docker image
+  label rather than a GitHub issue label, so it is a **false positive the scanner must
+  exclude**, not coverage a parser would gain.
+
+  The exclusion is stated as a rule, never a path allowlist: a `labels:` value that is
+  wholly a `${{ }}` expression naming a step output is not an issue-label reference. An
+  allowlist keyed to a file and line would silently stop covering that file the moment it
+  moved, which is the defect the dynamic-reference rule already forbids.
 - **Chosen: a text-scanning script in the existing checks directory, against a committed
   manifest, reconciled by scripted `gh label` calls with no delete code path.** An
   absent delete path beats a disabled flag.
@@ -222,10 +229,14 @@ so the failure is reported accurately, and the two platforms become separate pro
 | Suppression check | `.github/scripts/checks/escalation-hygiene.sh` | Enumerates every step that files or edits an issue and fails on suppressed errors or an undeclared token permission |
 | Label drift check | `.github/scripts/checks/label-drift.sh` | Fails when the manifest and the repository's labels disagree |
 | Consumer record | `docs/ci-consumers.md` | Names, per scheduled workflow, who or what consumes its output |
+| Escalation backstop | `.github/scripts/checks/escalation-backstop.sh` | In the pull-request lint job; queries the Actions API for unescalated non-success runs, independently of the escalator's script and token |
 
 ### The declaration block
 
-Each scheduled workflow carries, in comments near the top:
+The policy parser reads declaration blocks from the default branch, not from a pull
+request's head, so a pull request cannot register itself with the escalator or change
+another workflow's assignee by editing a comment. Each scheduled workflow carries, in
+comments near the top:
 
 ```
 # escalation-policy: issue
@@ -283,23 +294,36 @@ Two distinct failures, two distinct answers:
   inactivity disablement — the exact behaviour the assertion exists to catch — stops the
   sweeper and the listener's trigger in the same instant, and the check never runs.
 
-  **The freshness assertion therefore lives in the pull-request lint job**, alongside the
-  label check, where its trigger is someone opening a pull request. That trigger shares
-  no failure mode with cron scheduling, is not subject to inactivity disablement, and
-  fires when a human is already present to read the result. It asserts that the escalator
-  has *successfully delivered* within the window — filed, commented on or closed
-  something — rather than merely that it ran, because the failure worth catching is
-  silent non-delivery rather than absence of invocation.
+  **The backstop therefore lives in the pull-request lint job**, alongside the label
+  check, where its trigger is someone opening a pull request. That trigger shares no
+  failure mode with cron scheduling, is not subject to inactivity disablement, and fires
+  when a human is already present to read the result.
+
+  It does **not** ask the sweeper how it is doing. It queries the Actions API itself for
+  non-success runs of registered workflows within a stated window and asserts that each
+  has an open tracked item — the sweeper's own assertion, performed read-only and
+  implemented independently of `escalate.sh` and of the escalator's token. That
+  independence is what lets it cover the common-mode delivery failure rather than only
+  the trigger failure.
+
+  Two earlier drafts of this check were wrong in instructive ways. Asserting that the
+  escalator *delivered* something within a window has no ground truth: a healthy
+  repository has nothing to file, so the check would hold only while the system was
+  broken and go red on every pull request the moment the repair succeeded — under
+  merge-blocking pressure, which is how a `continue-on-error` gets added. Asserting
+  against the sweeper's own receipt is better, but still trusts the component being
+  checked. Querying the API has ground truth in both directions, and it reports how many
+  runs it examined so that "nothing to check" is distinguishable from "did not look".
 
 **The residual, stated precisely.** Both escalation workflows share one script, one
 permission grant and one assignee pre-flight. Mutual coverage is therefore genuine for
 *trigger* failure — one path firing when the other does not — and not for *delivery*
 failure, where a defect in the shared script or a revoked permission silences both at
-once. The pull-request freshness assertion is the answer to that case, and it is the
-only control here that is independent of both escalation workflows. If the repository
-has neither scheduled runs nor pull requests, nothing fires — but a repository with
-neither is dormant, which is the condition under which the disablement happens in the
-first place.
+once. The pull-request backstop is the answer to that case, and it is the only control
+here independent of both escalation workflows: it shares neither their trigger, their
+script, nor their token. If the repository has neither scheduled runs nor pull requests
+nothing fires — but a repository with neither is dormant, which is the condition under
+which the disablement happens in the first place.
 
 ### Data flow
 
@@ -337,7 +361,10 @@ The order matters and is not arbitrary; several steps are unsafe in the wrong se
 4. **Remove the path filter from the linting workflow**, then add the label check, then
    make it required. In that order.
 5. **Add the declaration blocks and the policy check.**
-6. **Build the escalator and the sweeper**, register workflows incrementally.
+6. **Build the escalator and the sweeper**, register workflows incrementally, and add
+   the escalation backstop to the pull-request lint job. The backstop is not optional
+   follow-up: it is the only control independent of both escalation workflows, so
+   shipping the escalator without it leaves the independent-path requirement unmet.
 7. **Add the coverage contract**, starting with the workflows whose shortfall is already
    understood.
 8. **Land the individual repairs** — they are independent of everything above and can
@@ -417,11 +444,11 @@ character in the substituted value terminates the quoting the author wrote. The 
 mitigation is to pass the value through the `env:` block and reference it as a shell
 variable.
 
-This is not hypothetical here. `release-finalize.yml:29` interpolates `head_branch`
-directly into a `run:` block in the repository's existing `workflow_run` listener, and
-`weekly-coverage-report.yml:109` places a `${{ }}` inside a JavaScript template literal.
-`r2-health-monitor.yml` shows the correct pattern, passing values through `env:`, and
-the escalator follows it.
+This is not hypothetical here. Two existing workflows interpolate `${{ }}` directly into
+an issue-writing step — one into a `run:` block, one inside a JavaScript template
+literal — while `r2-health-monitor.yml` shows the correct pattern, passing values
+through `env:`. The escalator follows the latter. One of the two is a hardening fix
+tracked separately; the other is under assessment, as below.
 
 Both existing sites were checked for reachability, and they did not come out the same
 way.
@@ -449,33 +476,40 @@ listener is missing.
 
 ### Token scope
 
-The escalator needs `issues: write` **and `actions: read`**. The second is easy to miss
-and fatal: declaring a `permissions:` block drops every unlisted scope to none, and
-downloading another run's artifact requires `actions: read`. Without it the escalator
-cannot read the receipt it exists to report.
+The escalator needs `issues: write`, `actions: read` **and `contents: read`**. The
+second is easy to miss and fatal: declaring a `permissions:` block drops every unlisted
+scope to none, and downloading another run's artifact requires `actions: read`. Without
+it the escalator cannot read the receipt it exists to report. `contents: read` is listed
+for the same reason and is the same mistake one step further on: declaring the block
+drops it too, and the escalation script has to be checked out before it can run.
 
 Concentrating `issues: write` in one component means a defect there silences reporting
 repository-wide. That is accepted knowingly — the alternative is the permission spread
 across every workflow that might need it, which is the arrangement that produced five
-broken escalation paths and five latent ones — and the sweeper plus the freshness
+broken escalation paths and five latent ones — and the sweeper plus the backstop
 assertion are the compensating controls.
 
 ### Artifact semantics are load-bearing and default to silence
 
 - `actions/upload-artifact` defaults to `if-no-files-found: warn`, so a missing receipt
   uploads nothing and the step still passes. The design sets `error`.
-- Matrix legs writing to one artifact name collide. Receipts are named per leg.
+- Matrix legs writing to one artifact name collide. Under the current artifact action
+  that collision fails loudly rather than silently, because uploaded artifacts are
+  immutable — but receipts are still named per leg, so the loud failure never arises.
 - Artifacts expire. The assertion runs in the same workflow run as the upload, so
   retention does not affect it; the escalator reading a receipt from an older run must
   treat absence as unknown rather than as zero.
 
 ### Label reconciliation
 
-Reconciliation applies the manifest and never deletes. A label renamed in the UI
-therefore appears as a new undeclared label rather than a rename, and the drift check
-reports it; the operator decides. A label removed from the manifest stays on the
-repository and is reported. Colour and description changes in the manifest are applied,
-so the manifest is authoritative for presentation but never for existence.
+Reconciliation runs from the pull-request lint workflow on changes to the manifest, and
+on manual dispatch. It needs `issues: write`, which is the same permission the escalator
+holds and is granted to that job alone rather than workflow-wide. It applies the
+manifest and never deletes. A label renamed in the UI therefore appears as a new
+undeclared label rather than a rename, and the drift check reports it; the operator
+decides. A label removed from the manifest stays on the repository and is reported.
+Colour and description changes in the manifest are applied, so the manifest is
+authoritative for presentation but never for existence.
 
 ### Dedup key integrity
 
@@ -524,7 +558,7 @@ ones that are easy to lose, named here so a reader can check rather than assume:
   it, the first week of noise buys exactly the `continue-on-error` the requirements
   forbid.
 - The escalator is a new single point of failure for reporting. Mutual coverage plus the
-  freshness assertion narrows it, but if both escalation workflows stop running at the
+  backstop narrows it, but if both escalation workflows stop running at the
   same time, nothing inside the repository notices. That residual is real and is not
   designed away.
 - The design carries two triggers where one might do. If step 1 settles the `workflow_run`
