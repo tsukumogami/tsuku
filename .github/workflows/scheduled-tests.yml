@@ -1,3 +1,7 @@
+# escalation-policy: issue
+# escalation-assignee: dangazineu
+# coverage: items
+
 name: Scheduled Tests
 
 on:

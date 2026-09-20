@@ -1,3 +1,7 @@
+# escalation-policy: issue
+# escalation-assignee: dangazineu
+# coverage: items
+
 # Weekly freshness check for discovery registry entries.
 #
 # Validates that all entries in recipes/discovery/ still resolve to valid

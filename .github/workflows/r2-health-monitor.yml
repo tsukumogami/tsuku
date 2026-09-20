@@ -1,3 +1,12 @@
+# escalation-policy: issue
+# escalation-assignee: dangazineu
+# coverage: items
+# coverage-note: this workflow runs one availability script that reports a verdict,
+#   not a count. Declaring `items` is a debt owed by #2608: r2-health-check.sh must
+#   emit how many checks it performed. Declaring `none` instead would exempt the
+#   availability monitor from proving it checked anything, and a probe that ran zero
+#   checks is indistinguishable from a healthy one.
+
 # R2 Health Monitoring Workflow
 #
 # Periodically checks R2 storage health and creates/updates GitHub issues

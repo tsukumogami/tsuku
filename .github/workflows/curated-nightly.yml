@@ -1,3 +1,7 @@
+# escalation-policy: issue
+# escalation-assignee: dangazineu
+# coverage: items
+
 name: Curated Recipe Nightly
 # Nightly cross-platform validation for all recipes with curated = true in
 # their [metadata] section. Calls recipe-validation-core.yml (full validation

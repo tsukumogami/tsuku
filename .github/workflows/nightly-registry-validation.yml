@@ -1,3 +1,7 @@
+# escalation-policy: issue
+# escalation-assignee: dangazineu
+# coverage: items
+
 # Nightly validation of registry recipe golden files.
 #
 # This workflow validates all registry recipes by downloading golden files

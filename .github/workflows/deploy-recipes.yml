@@ -1,3 +1,11 @@
+# escalation-policy: issue
+# escalation-assignee: dangazineu
+# coverage: items
+# escalation-note: deprecated in favour of deploy-website.yml (#353), and still
+#   serving registry.tsuku.dev until that retirement happens. It escalates because a
+#   silent failure here is a live outage; intending to remove something is not the
+#   same as having removed it.
+
 name: Deploy Recipes (Deprecated)
 
 # DEPRECATED: registry.tsuku.dev is deprecated in favor of tsuku.dev/recipes.json
