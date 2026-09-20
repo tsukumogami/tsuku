@@ -272,13 +272,24 @@ func runAdditionalVerifications(additional []recipe.AdditionalVerify, version, i
 // the install directories to ensure the installed tool's binaries are
 // found before system binaries.
 func makeVerifyEnv(installDir string, cfg *config.Config) []string {
-	// Filter out existing PATH to avoid duplicate entries
+	// Filter out existing PATH and TSUKU_HOME to avoid duplicate entries; both
+	// are set explicitly below.
 	env := make([]string, 0)
 	for _, e := range os.Environ() {
-		if !strings.HasPrefix(e, "PATH=") {
+		if !strings.HasPrefix(e, "PATH=") && !strings.HasPrefix(e, "TSUKU_HOME=") {
 			env = append(env, e)
 		}
 	}
+
+	// Recipes are documented to refer to the install root as $TSUKU_HOME, and a
+	// verify command is the one place that convention is evaluated by a shell.
+	// Without this the variable expands to empty and a command such as
+	// `test -d $TSUKU_HOME/apps/x.app` silently tests `/apps/x.app` instead --
+	// which is how the macOS cask leg of the scheduled tests failed
+	// (tsukumogami/tsuku#2609). Setting it from cfg also means the verify
+	// environment agrees with the home this run actually used, rather than
+	// whatever the ambient shell happened to export.
+	env = append(env, "TSUKU_HOME="+cfg.HomeDir)
 
 	// Build PATH with all possible bin directories:
 	// 1. cfg.CurrentDir - symlinks to current tool versions
