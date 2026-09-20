@@ -114,7 +114,9 @@ For example, with version `3.46.0` and `tag_prefix = "version-"`:
 - No gcc or cc found in system PATH
 - Build actions (configure_make, cmake_build) automatically use zig as compiler
 
-**Cross-platform support:** Linux x86_64, macOS Intel, macOS ARM
+**Cross-platform support:** Linux x86_64, macOS Intel, macOS ARM. This is where the zig
+fallback is expected to work, not where it is checked -- see Platform Support below for
+what CI actually validates, which no longer includes Intel macOS.
 
 **Recipe:** `internal/recipe/recipes/z/zig.toml`
 
