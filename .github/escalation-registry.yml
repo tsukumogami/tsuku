@@ -32,7 +32,6 @@ registered:
   - "R2 Cleanup"
   - "R2 Cost Monitoring"
   - "R2 Credential Rotation Reminder"
-  - "R2 Health Monitor"
   - "Recipe Validation"
   - "Scheduled Tests"
   - "Seed Queue"

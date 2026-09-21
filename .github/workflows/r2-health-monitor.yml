@@ -1,11 +1,31 @@
-# escalation-policy: issue
-# escalation-assignee: dangazineu
+# escalation-policy: none
+# escalation-reason: its verdict does not track the service, so escalating would file
+#   issues about the measurement rather than about R2 -- see the note below and #2593.
 # coverage: items
 # coverage-note: this workflow runs one availability script that reports a verdict,
 #   not a count. Declaring `items` is a debt owed by #2608: r2-health-check.sh must
 #   emit how many checks it performed. Declaring `none` instead would exempt the
 #   availability monitor from proving it checked anything, and a probe that ran zero
 #   checks is indistinguishable from a healthy one.
+#
+# escalation-note: the `degraded` verdict comes from a 2000 ms threshold measured around
+#   an entire `aws s3api` process invocation, interpreter startup included, rather than
+#   around the storage request. Recorded latencies are strictly bimodal: across thirty
+#   scheduled runs, twelve samples fall between 1097 ms and 1306 ms and eighteen between
+#   3054 ms and 5692 ms, with nothing in between, and the 2000 ms threshold sits in that
+#   gap. No run has ever recorded an actual failure to reach R2 -- the object was fetched
+#   successfully every time, and the script's own `unavailable` status has never been
+#   returned. So the verdict measures the runner at least as much as the service.
+#
+#   This is not a permanent exemption and the threshold is not closed by it. Recalibration
+#   is tracked in #2593, which carries it as an acceptance criterion: the health verdict
+#   must reflect R2's behaviour rather than the measuring process's startup cost. When that
+#   lands, this policy becomes `issue`.
+#
+#   The cost of declaring `none` meanwhile is stated rather than hidden: a genuine R2
+#   outage produces no issue from this workflow. That is the lesser harm against filing
+#   and closing issues about interpreter startup roughly 85% of runs, which is what
+#   granting the permission alone would produce.
 
 # R2 Health Monitoring Workflow
 #

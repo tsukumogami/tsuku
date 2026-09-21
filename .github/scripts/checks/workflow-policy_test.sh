@@ -143,6 +143,29 @@ else
   report VOID "--ref reads the ref, not the working tree" "target not clean/tracked; cannot mutate safely"
 fi
 
+# The registry must come from the ref too. Reading declarations from the ref while taking
+# the registry off disk would let a pull request register itself by editing the half that
+# was still read locally, which is the substitution --ref exists to prevent.
+reg="$REPO_ROOT/.github/escalation-registry.yml"
+if git -C "$REPO_ROOT" diff --quiet -- "$reg"; then
+  before=$(sha256sum "$reg" | cut -d' ' -f1)
+  printf '  - "A Workflow Registered Only In The Working Tree"\n' >> "$reg"
+  after=$(sha256sum "$reg" | cut -d' ' -f1)
+  if [ "$before" = "$after" ]; then
+    report VOID "--ref reads the registry from the ref, not from disk" "mutation changed nothing"
+  else
+    out=$(python3 "$CHECK" --registry "$reg" --workflows "$WORKFLOWS" --ref HEAD 2>&1); rc=$?
+    if [ $rc -eq 0 ] && ! printf '%s' "$out" | grep -q 'Working Tree'; then
+      report PASS "--ref reads the registry from the ref, not from disk"
+    else
+      report FAIL "--ref reads the registry from the ref, not from disk" "exit $rc; working-tree entry leaked into a ref run"
+    fi
+  fi
+  git -C "$REPO_ROOT" checkout -- "$reg"
+else
+  report VOID "--ref reads the registry from the ref, not from disk" "registry not clean; cannot mutate safely"
+fi
+
 echo
 echo "workflow-policy self-test: $pass passed, $fail failed, $void void."
 [ "$fail" -eq 0 ] && [ "$void" -eq 0 ]
