@@ -28,7 +28,9 @@ head. Otherwise a pull request could register itself with the escalator, or redi
 another workflow's assignee, by editing a comment in its own diff -- the declaration would
 be trusted before anyone reviewed it.
 
-`--ref` reads every file from a git ref instead of the working tree, and the escalator is
+`--ref` reads every file from a git ref instead of the working tree -- the workflows **and
+the registry**, because reading one from the ref and the other from disk would let a pull
+request register itself by editing whichever half was still read locally. The escalator is
 required to pass it. The CI check deliberately does NOT: a check exists to validate the
 changes in front of it, and reading from the default branch would make it impossible to
 add a workflow or correct a declaration. The two callers want opposite things from the
@@ -71,6 +73,22 @@ DECLARATION_KEYS = {
 VALID_POLICY = {"issue", "none"}
 
 
+def _repo_relative(path: Path) -> str:
+    """A path git can resolve in `ref:path` form.
+
+    `git show ref:/absolute/path` does not resolve, so an absolute path handed to --ref
+    would fail as a missing file rather than as the caller error it is. Rebasing it on the
+    repository root turns that into the lookup the caller meant.
+    """
+    if not path.is_absolute():
+        return path.as_posix()
+    root = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        capture_output=True, text=True, check=True,
+    ).stdout.strip()
+    return path.resolve().relative_to(root).as_posix()
+
+
 def read_tree(workflows: Path, ref: str | None):
     """Yield (name, text) for every workflow file, from `ref` or from the working tree."""
     if ref is None:
@@ -80,12 +98,12 @@ def read_tree(workflows: Path, ref: str | None):
         return
 
     listing = subprocess.run(
-        ["git", "ls-tree", "--name-only", f"{ref}:{workflows.as_posix()}"],
+        ["git", "ls-tree", "--name-only", f"{ref}:{_repo_relative(workflows)}"],
         capture_output=True, text=True, check=True,
     ).stdout.split()
     for name in sorted(n for n in listing if n.endswith((".yml", ".yaml"))):
         blob = subprocess.run(
-            ["git", "show", f"{ref}:{workflows.as_posix()}/{name}"],
+            ["git", "show", f"{ref}:{_repo_relative(workflows)}/{name}"],
             capture_output=True, text=True, check=True,
         ).stdout
         yield name, blob
@@ -123,11 +141,27 @@ def main():
     workflows = Path(args.workflows)
     registry_path = Path(args.registry)
 
-    if not registry_path.is_file():
-        print(f"::error::registry not found: {registry_path}", file=sys.stderr)
-        return EXIT_ERROR
+    # The registry is read from the same place as the declarations. Reading declarations
+    # from a ref while taking the registry off disk would defeat the point of --ref
+    # entirely: a pull request could register itself with the escalator by editing the
+    # registry alone, which is the exact substitution --ref exists to prevent.
+    if args.ref is None:
+        if not registry_path.is_file():
+            print(f"::error::registry not found: {registry_path}", file=sys.stderr)
+            return EXIT_ERROR
+        registry_text = registry_path.read_text()
+    else:
+        try:
+            registry_text = subprocess.run(
+                ["git", "show", f"{args.ref}:{_repo_relative(registry_path)}"],
+                capture_output=True, text=True, check=True,
+            ).stdout
+        except subprocess.CalledProcessError:
+            print(f"::error::registry not found at {args.ref}:{registry_path}",
+                  file=sys.stderr)
+            return EXIT_ERROR
     try:
-        registry_doc = yaml.safe_load(registry_path.read_text()) or {}
+        registry_doc = yaml.safe_load(registry_text) or {}
     except yaml.YAMLError as e:
         print(f"::error file={registry_path}::registry is not valid YAML: {e}",
               file=sys.stderr)
