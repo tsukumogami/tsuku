@@ -15,6 +15,13 @@ on:
     - cron: '0 6 * * 1'  # Weekly Monday 6 AM UTC
   workflow_dispatch: {}
 
+# Without this block the default token has no `issues` scope, so the escalation step has
+# died at createIssue on every run since at least 2026-06-29. Declaring a block drops every
+# unlisted scope to none, so `contents: read` is listed explicitly.
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   validate:
     name: Validate Discovery Entries
@@ -44,7 +51,20 @@ jobs:
       - name: Check validation result
         id: check
         run: |
-          if grep -q "0 failed" validation.log; then
+          # The verdict is parsed, not pattern-matched. `grep -q "0 failed"` was a
+          # SUBSTRING test, and "0 failed" occurs inside "10 failed", "20 failed" and
+          # "100 failed" -- so every count that is a multiple of ten was read as zero,
+          # the issue step was skipped by its own condition, and a failing registry
+          # reported healthy with no artifact to inspect.
+          SUMMARY=$(grep -oE 'Validated [0-9]+ entries: [0-9]+ valid, [0-9]+ failed' validation.log | tail -1 || true)
+          if [ -z "$SUMMARY" ]; then
+            echo "::error::validation.log carries no summary line; the run cannot be judged" >&2
+            exit 1
+          fi
+          FAILED=$(printf '%s' "$SUMMARY" | sed -E 's/.*, ([0-9]+) failed/\1/')
+          echo "Summary: $SUMMARY"
+          echo "declared_failures=$FAILED" >> $GITHUB_OUTPUT
+          if [ "$FAILED" -eq 0 ]; then
             echo "passed=true" >> $GITHUB_OUTPUT
           else
             echo "passed=false" >> $GITHUB_OUTPUT
@@ -54,11 +74,23 @@ jobs:
         if: steps.check.outputs.passed == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DECLARED: ${{ steps.check.outputs.declared_failures }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          # Extract failure lines from log
-          FAILURES=$(grep -A1 "Failures:" validation.log | tail -n +2 || true)
-          if [ -z "$FAILURES" ]; then
-            FAILURES="See workflow run for details."
+          # Take the WHOLE Failures section. The previous extraction was
+          # `grep -A1 "Failures:" | tail -n +2`, which returns exactly one line however
+          # many entries follow -- against a real run listing nine stale entries it named
+          # one and silently dropped eight.
+          FAILURES=$(awk '/^Failures:/{f=1;next} f && /^[[:space:]]+[^[:space:]]/{print;next} f{exit}' validation.log)
+
+          # Assert identity, not presence. The log states its own count, so the report can
+          # be checked against it: a truncation, an off-by-one or a format change all show
+          # up as a disagreement here rather than as a plausible-looking issue.
+          FOUND=$(printf '%s\n' "$FAILURES" | grep -c . || true)
+          if [ "${FOUND:-0}" -ne "$DECLARED" ]; then
+            echo "::error::extracted $FOUND failure line(s) but the log declares $DECLARED." \
+                 "Refusing to file a report that does not match what was found." >&2
+            exit 1
           fi
 
           BODY="$(cat <<EOF
@@ -66,7 +98,7 @@ jobs:
 
           The weekly freshness check found stale entries in the discovery registry.
 
-          **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          **Run:** $RUN_URL
 
           ### Stale Entries
 
