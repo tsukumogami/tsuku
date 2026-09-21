@@ -1,6 +1,8 @@
 # escalation-policy: none
 # escalation-reason: its verdict does not track the service, so escalating would file
 #   issues about the measurement rather than about R2 -- see the note below and #2593.
+# escalation-none-kind: deferred
+# escalation-tracking-issue: 2593
 # coverage: items
 # coverage-note: this workflow runs one availability script that reports a verdict,
 #   not a count. Declaring `items` is a debt owed by #2608: r2-health-check.sh must

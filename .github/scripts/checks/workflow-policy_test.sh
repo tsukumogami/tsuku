@@ -92,6 +92,35 @@ run_mutation "registered but not declared is reported" \
 run_mutation "an empty registry is an operational error, not a pass" \
   2 "declares no workflows" empty_registry
 
+# --- the `none` kinds, and the expiry that makes a deferral a deferral ---
+
+drop_none_kind() { sed -i '/^# escalation-none-kind:/d' "$1/workflows/r2-health-monitor.yml"; }
+bogus_none_kind() { sed -i 's/^# escalation-none-kind: deferred$/# escalation-none-kind: maybe/' "$1/workflows/r2-health-monitor.yml"; }
+deferred_without_issue() { sed -i '/^# escalation-tracking-issue:/d' "$1/workflows/r2-health-monitor.yml"; }
+# #2633 is closed. A deferred `none` pointing at it is an exemption whose condition has
+# resolved, which is the state the expiry rule exists to catch.
+deferred_on_closed_issue() { sed -i 's/^# escalation-tracking-issue: 2593$/# escalation-tracking-issue: 2633/' "$1/workflows/r2-health-monitor.yml"; }
+# A permanent `none` needs no issue: it is not waiting for anything.
+make_permanent() {
+  sed -i 's/^# escalation-none-kind: deferred$/# escalation-none-kind: permanent/' "$1/workflows/r2-health-monitor.yml"
+  sed -i '/^# escalation-tracking-issue:/d' "$1/workflows/r2-health-monitor.yml"
+}
+
+run_mutation "a none that does not say which kind it is is reported" \
+  1 "escalation-none-kind" drop_none_kind
+
+run_mutation "an unrecognised none kind is reported" \
+  1 "is not one of" bogus_none_kind
+
+run_mutation "a deferred none with no tracking issue is reported" \
+  1 "naming the issue number" deferred_without_issue
+
+run_mutation "a deferred none whose tracking issue is closed is reported" \
+  1 "condition that justified not escalating has resolved" deferred_on_closed_issue
+
+run_mutation "a permanent none needs no tracking issue" \
+  0 "" make_permanent
+
 run_mutation "a registry without the registered key is an operational error" \
   2 "declares no workflows" registry_without_key
 
@@ -120,8 +149,17 @@ echo "Ref isolation"
 # --ref must read the ref, not the working tree. Mutate a tracked workflow, then assert a
 # --ref run is unaffected while a working-tree run is. This is what stops a pull request
 # registering itself by editing a comment in its own diff.
+# Both ref rows compare HEAD against a deliberately mutated working tree, so their premise
+# is that the tree otherwise MATCHES HEAD. Any unrelated uncommitted change to a
+# declaration makes `--ref HEAD` read a different set than the tree for reasons that have
+# nothing to do with the property under test. That must VOID the row rather than fail it:
+# a row whose premise does not hold has not tested anything, and reporting failure would
+# be as wrong as reporting success.
 target="$WORKFLOWS/seed-queue.yml"
-if git -C "$REPO_ROOT" diff --quiet -- "$target" && git -C "$REPO_ROOT" ls-files --error-unmatch "$target" >/dev/null 2>&1; then
+if ! git -C "$REPO_ROOT" diff --quiet -- "$WORKFLOWS"; then
+  report VOID "--ref reads the ref, not the working tree" "workflows dir has uncommitted changes; premise does not hold"
+  report VOID "--ref reads the registry from the ref, not from disk" "workflows dir has uncommitted changes; premise does not hold"
+elif git -C "$REPO_ROOT" diff --quiet -- "$target" && git -C "$REPO_ROOT" ls-files --error-unmatch "$target" >/dev/null 2>&1; then
   before=$(sha256sum "$target" | cut -d' ' -f1)
   sed -i '/^# escalation-policy:/d' "$target"
   after=$(sha256sum "$target" | cut -d' ' -f1)
@@ -147,7 +185,9 @@ fi
 # the registry off disk would let a pull request register itself by editing the half that
 # was still read locally, which is the substitution --ref exists to prevent.
 reg="$REPO_ROOT/.github/escalation-registry.yml"
-if git -C "$REPO_ROOT" diff --quiet -- "$reg"; then
+if ! git -C "$REPO_ROOT" diff --quiet -- "$WORKFLOWS"; then
+  : # already voided above with the workflow row; do not report twice
+elif git -C "$REPO_ROOT" diff --quiet -- "$reg"; then
   before=$(sha256sum "$reg" | cut -d' ' -f1)
   printf '  - "A Workflow Registered Only In The Working Tree"\n' >> "$reg"
   after=$(sha256sum "$reg" | cut -d' ' -f1)

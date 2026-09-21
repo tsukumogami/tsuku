@@ -11,6 +11,13 @@ on:
   pull_request:
     branches: [main]
 
+# Read-only, and only what is needed. The policy check resolves the state of the tracking
+# issue behind any deferred `escalation-policy: none`, so it needs to read issues. Nothing
+# here writes.
+permissions:
+  contents: read
+  issues: read
+
 jobs:
   lint-workflows:
     name: Lint Workflows
@@ -36,9 +43,13 @@ jobs:
         run: .github/scripts/checks/label-references_test.sh
       # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Check escalation declarations and registry agree
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: .github/scripts/checks/workflow-policy.py
       # The parser's own self-test. A check nobody has seen fail is a check nobody knows
       # works, and this one's whole value is the two-way comparison, which is exactly the
       # part that would silently become one-way.
       - name: Check workflow policy check can fail
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: .github/scripts/checks/workflow-policy_test.sh
