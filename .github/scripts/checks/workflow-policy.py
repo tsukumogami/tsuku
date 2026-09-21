@@ -67,10 +67,14 @@ DECLARATION_KEYS = {
     "escalation-assignee",
     "escalation-only-on",
     "escalation-reason",
+    "escalation-none-kind",
+    "escalation-tracking-issue",
     "coverage",
     "coverage-reason",
 }
 VALID_POLICY = {"issue", "none"}
+VALID_NONE_KIND = {"deferred", "permanent"}
+ISSUE_REF = re.compile(r"^#?(?P<number>[0-9]+)$")
 
 
 def _repo_relative(path: Path) -> str:
@@ -175,6 +179,7 @@ def main():
 
     scheduled = {}   # workflow name -> (filename, declaration, dual_trigger)
     failures = []
+    deferred = []    # (filename, workflow name, tracking issue number)
 
     for filename, text in read_tree(workflows, args.ref):
         try:
@@ -229,6 +234,31 @@ def main():
                                            "`escalation-reason:`; declining to escalate "
                                            "has to be said out loud"))
 
+            # A `none` must say WHICH KIND it is. Neglect and intent otherwise produce an
+            # identical file: someone writes a prose `none` meaning "for now", nobody
+            # revisits it, and a month later it is indistinguishable from a deliberate
+            # permanent exemption. Naming the kind costs the author nothing at the moment
+            # they already know the answer.
+            kind = decl.get("escalation-none-kind")
+            if not kind:
+                failures.append((filename, "`escalation-policy: none` with no "
+                                           "`escalation-none-kind:`; say whether this is "
+                                           "`deferred` (name the issue that owns the "
+                                           "condition) or `permanent` (say why it will "
+                                           "never escalate)"))
+            elif kind not in VALID_NONE_KIND:
+                failures.append((filename, f"`escalation-none-kind: {kind}` is not one of "
+                                           f"{sorted(VALID_NONE_KIND)}"))
+            elif kind == "deferred":
+                ref = decl.get("escalation-tracking-issue", "")
+                m = ISSUE_REF.match(ref.strip())
+                if not m:
+                    failures.append((filename, "`escalation-none-kind: deferred` needs "
+                                               "`escalation-tracking-issue:` naming the "
+                                               "issue number that owns the condition"))
+                else:
+                    deferred.append((filename, wf_name, int(m.group("number"))))
+
         coverage = decl.get("coverage")
         if coverage is None:
             failures.append((filename, "no `coverage:` declared"))
@@ -240,6 +270,37 @@ def main():
         if dual and decl.get("escalation-only-on") != "schedule":
             failures.append((filename, "declares both `schedule` and `pull_request` but "
                                        "not `escalation-only-on: schedule`"))
+
+    # A deferred `none` is valid only while the issue that owns its condition is open.
+    #
+    # This is what makes `none` a deferral rather than a disposal. An exemption that
+    # outlives its reason is indistinguishable from an exemption nobody revisited, and
+    # prose cannot tell those apart -- "until X lands" is only true while something reads
+    # X. When the tracking issue closes, the condition that justified the exemption is
+    # gone, so the declaration stops validating and says so loudly.
+    #
+    # It fails closed. If the issue state cannot be resolved -- no `gh`, no credentials,
+    # no network -- that is an operational error, never a pass. A check that could not
+    # look has not looked, and reporting success would be the defect this repository has
+    # spent this milestone removing.
+    for filename, wf_name, number in deferred:
+        try:
+            result = subprocess.run(
+                ["gh", "issue", "view", str(number), "--json", "state", "-q", ".state"],
+                capture_output=True, text=True, check=True, timeout=30,
+            )
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError) as e:
+            print(f"::error file={workflows.as_posix()}/{filename}::cannot resolve the "
+                  f"state of tracking issue #{number}, so the deferred `none` in "
+                  f"\"{wf_name}\" could not be validated: {e}", file=sys.stderr)
+            return EXIT_ERROR
+        state = result.stdout.strip().upper()
+        if state != "OPEN":
+            failures.append((filename, f"`escalation-none-kind: deferred` names tracking "
+                                       f"issue #{number}, which is {state.lower()}. The "
+                                       f"condition that justified not escalating has "
+                                       f"resolved -- restore `escalation-policy: issue`, "
+                                       f"or record a new reason."))
 
     # The two-way comparison. Each direction catches a different mistake, which is why
     # neither alone is enough: a workflow declaring `issue` that the escalator does not
