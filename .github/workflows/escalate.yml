@@ -1,0 +1,107 @@
+# escalation-policy: issue
+# escalation-assignee: dangazineu
+# coverage: items
+# coverage-note: this workflow's items are the runs it was notified about, which is one
+#   per invocation. A run that was notified about nothing attempted zero and fails, which
+#   is the behaviour wanted -- a listener that woke up and examined no run has not
+#   succeeded, it has failed to read its own trigger.
+
+# Escalation listener.
+#
+# Reacts to a registered workflow completing and opens, updates or closes its tracked item.
+# Shares .github/scripts/escalate.sh with the hourly sweeper so the two paths cannot
+# disagree about what escalation means; they differ only in how they learn a run happened.
+#
+# The `workflows:` list below duplicates .github/escalation-registry.yml, because
+# `on.workflow_run.workflows` cannot read a file. That duplication is checked rather than
+# trusted: workflow-policy.py compares this list against the registry in both directions
+# and fails on any difference. Two places that can drift, and a check that exists because
+# they can.
+#
+# KNOWN BLIND SPOT. A run rejected before job creation is recorded under its file path
+# rather than its declared name, so a name-filtered listener cannot match exactly the case
+# that most needs reporting. The hourly sweeper sees such runs through the Actions API and
+# is the load-bearing path; this listener exists for latency, not for coverage.
+name: Escalate
+
+on:
+  workflow_run:
+    workflows:
+      - "Batch Recipe Generation"
+      - "Batch Operations"
+      - "Build Essentials"
+      - "Cargo Builder Tests"
+      - "Checksum Drift Monitoring"
+      - "Curated Recipe Nightly"
+      - "Deploy Recipes (Deprecated)"
+      - "Discovery Registry Freshness"
+      - "Gem Builder Tests"
+      - "Nightly Registry Validation"
+      - "npm Builder Tests"
+      - "PyPI Builder Tests"
+      - "R2 Cleanup"
+      - "R2 Cost Monitoring"
+      - "R2 Credential Rotation Reminder"
+      - "Recipe Validation"
+      - "Scheduled Tests"
+      - "Seed Queue"
+      - "Tests"
+      - "Weekly Coverage Report"
+      - "Escalate Sweep"
+    types: [completed]
+
+permissions:
+  contents: read
+  issues: write
+  actions: read
+
+concurrency:
+  # Serialised per workflow so three runs of the same failing workflow cannot race into
+  # three separate issues. Never cancel: a cancelled escalation is a silent one.
+  group: escalate-${{ github.event.workflow_run.name }}
+  cancel-in-progress: false
+
+jobs:
+  escalate:
+    name: Escalate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          # Declarations are read from the default branch, never from the triggering run's
+          # ref, so a pull request cannot register itself or redirect an assignee by
+          # editing a comment in its own diff.
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Escalate the run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          WF_NAME: ${{ github.event.workflow_run.name }}
+          WF_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          WF_RUN_ID: ${{ github.event.workflow_run.id }}
+          WF_RUN_URL: ${{ github.event.workflow_run.html_url }}
+          WF_EVENT: ${{ github.event.workflow_run.event }}
+        run: |
+          # Every value reaches the script through env: rather than ${{ }} interpolation.
+          # ${{ }} is substituted before the shell parses the line, so quoting cannot
+          # make a workflow name containing shell metacharacters safe.
+          .github/scripts/escalate.sh \
+            --workflow "$WF_NAME" \
+            --conclusion "$WF_CONCLUSION" \
+            --run-id "$WF_RUN_ID" \
+            --run-url "$WF_RUN_URL" \
+            --event "$WF_EVENT"
+
+      - name: Emit receipt
+        env:
+          WF_NAME: ${{ github.event.workflow_run.name }}
+        run: |
+          # One item per invocation: the run this listener was notified about. A receipt
+          # declaring zero is a listener that could not read its own trigger.
+          if [ -z "$WF_NAME" ]; then
+            echo "::error::notified about no run; attempted 0 of a declared 1" >&2
+            exit 1
+          fi
+          printf '{"declared":1,"attempted":1,"subject":"%s"}\n' "$WF_NAME" > receipt.ndjson
+          echo "receipt: declared 1, attempted 1, subject $WF_NAME"

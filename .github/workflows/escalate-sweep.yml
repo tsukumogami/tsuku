@@ -1,0 +1,74 @@
+# escalation-policy: issue
+# escalation-assignee: dangazineu
+# coverage: items
+# coverage-note: this sweeper's items are the REGISTERED WORKFLOWS IT CHECKED, not the
+#   problems it found. The naive reading is that a healthy run has nothing to report and
+#   therefore processes zero, which would force `coverage: none` and reintroduce silent
+#   success in the component everything else depends on. Finding zero problems is an
+#   ordinary green with a non-zero attempted count; a sweep that checked nothing, because
+#   its registry failed to load or the API returned empty, attempts zero and fails.
+
+# Escalation sweeper.
+#
+# The load-bearing half of escalation. The listener is filtered by workflow name, and a run
+# rejected before job creation is recorded under its file path rather than its declared
+# name -- so a name-filtered listener cannot match exactly the case that most needs
+# reporting. This path reads the Actions API, which reports such runs like any other.
+#
+# It is also what notices the listener has gone quiet: the listener is registered, so a
+# failure of it is a non-success run like any other and is escalated on the next pass.
+#
+# What it does NOT cover is stated in the design and repeated here: both paths share one
+# script, one permission grant and one assignee pre-flight, so mutual coverage is genuine
+# for trigger failure and not for delivery failure. A defect in escalate.sh or a revoked
+# permission silences both at once. The pull-request backstop is the answer to that case
+# and is the only control independent of both.
+name: Escalate Sweep
+
+on:
+  schedule:
+    - cron: '17 * * * *'  # hourly, off the hour to avoid the scheduling crush
+  workflow_dispatch:
+    inputs:
+      window_hours:
+        description: 'How far back to look'
+        default: '2'
+      dry_run:
+        description: 'Report gaps without filing'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+  actions: read
+
+concurrency:
+  group: escalate-sweep
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    name: Sweep for unescalated runs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Sweep
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          WINDOW_HOURS: ${{ inputs.window_hours || '2' }}
+          DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: |
+          # Values reach the script through env: rather than ${{ }} interpolation, which is
+          # substituted before the shell parses and cannot be made safe by quoting.
+          .github/scripts/escalate-sweep.sh --window-hours "$WINDOW_HOURS" $DRY_RUN
+
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: escalate-sweep-receipt
+          path: receipt.ndjson
+          if-no-files-found: error
