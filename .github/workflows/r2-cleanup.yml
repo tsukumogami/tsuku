@@ -1,3 +1,7 @@
+# escalation-policy: issue
+# escalation-assignee: dangazineu
+# coverage: items
+
 # R2 Golden File Cleanup Workflow
 #
 # Performs automated cleanup of orphaned and excess golden files in R2 storage.

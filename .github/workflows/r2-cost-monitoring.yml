@@ -1,3 +1,7 @@
+# escalation-policy: issue
+# escalation-assignee: dangazineu
+# coverage: items
+
 # R2 Cost Monitoring Workflow
 #
 # Monitors R2 storage usage and creates GitHub issues when approaching

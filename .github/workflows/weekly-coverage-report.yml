@@ -1,3 +1,11 @@
+# escalation-policy: issue
+# escalation-assignee: dangazineu
+# coverage: items
+# escalation-note: this workflow currently fails at `Build tsuku`, before it produces
+#   any coverage figure. So the item escalation files will describe a broken build,
+#   not missing coverage. That is worth knowing and is not what the workflow is for;
+#   whether it keeps a reader at all is the open decision in #2612.
+
 name: Weekly Coverage Report
 
 on:

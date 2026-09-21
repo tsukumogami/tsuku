@@ -34,3 +34,11 @@ jobs:
       # request description.
       - name: Check label reference check can fail
         run: .github/scripts/checks/label-references_test.sh
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
+      - name: Check escalation declarations and registry agree
+        run: .github/scripts/checks/workflow-policy.py
+      # The parser's own self-test. A check nobody has seen fail is a check nobody knows
+      # works, and this one's whole value is the two-way comparison, which is exactly the
+      # part that would silently become one-way.
+      - name: Check workflow policy check can fail
+        run: .github/scripts/checks/workflow-policy_test.sh

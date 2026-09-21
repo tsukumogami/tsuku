@@ -1,0 +1,40 @@
+# Workflows the escalation listener and sweeper watch.
+#
+# This is the escalator's source of truth. The per-workflow comment blocks in
+# .github/workflows/ are the other one, and `workflow-policy.sh` compares them in both
+# directions and fails on any difference.
+#
+# The two are deliberately separate FILES WITH SEPARATE AUTHORS, which is the only thing
+# that makes the comparison mean anything: a single file holding both would be compared
+# against itself and could never fail. This file is authored here, in #2605, and consumed
+# by the escalator in #2606 rather than being written by it -- an escalator that defined
+# its own list and was then checked against it would be one source wearing two names.
+#
+# Entries are workflow NAMES, not paths. `on.workflow_run.workflows` matches the `name:`
+# a workflow declares, so a path here would silently register nothing.
+#
+# Adding a scheduled workflow means adding it in both places. That is the cost of two
+# sources, and the check exists because the cost is real.
+
+registered:
+  - "Batch Recipe Generation"
+  - "Batch Operations"
+  - "Build Essentials"
+  - "Cargo Builder Tests"
+  - "Checksum Drift Monitoring"
+  - "Curated Recipe Nightly"
+  - "Deploy Recipes (Deprecated)"
+  - "Discovery Registry Freshness"
+  - "Gem Builder Tests"
+  - "Nightly Registry Validation"
+  - "npm Builder Tests"
+  - "PyPI Builder Tests"
+  - "R2 Cleanup"
+  - "R2 Cost Monitoring"
+  - "R2 Credential Rotation Reminder"
+  - "R2 Health Monitor"
+  - "Recipe Validation"
+  - "Scheduled Tests"
+  - "Seed Queue"
+  - "Tests"
+  - "Weekly Coverage Report"

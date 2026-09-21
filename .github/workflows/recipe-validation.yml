@@ -1,3 +1,7 @@
+# escalation-policy: issue
+# escalation-assignee: dangazineu
+# coverage: items
+
 name: Recipe Validation
 # Validates all recipes across 11 platforms (no auto-constraint).
 # Use this for Phase 1: reviewing which recipes fail on which platforms.

@@ -1,3 +1,10 @@
+# escalation-policy: issue
+# escalation-assignee: dangazineu
+# escalation-only-on: schedule
+# coverage: items
+# escalation-only-on is present because this workflow also runs on pull_request;
+#   without it a contributor's failing branch would file an issue against them.
+
 name: Build Essentials
 
 on:
