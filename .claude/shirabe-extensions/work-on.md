@@ -68,20 +68,31 @@ evidence that any check here executed.
   and exits 0, so `{}` would pass. A malformed or missing file fails either way; an empty
   exclusion list still passes, since having no exclusions is a valid state)
 - `**/*.rs`, `**/Cargo.toml`, `**/rust-toolchain.toml` -> `(cd tsuku-llm && cargo fmt --all --check) && (cd cmd/tsuku-dltest && cargo fmt --all --check)` (check-rustfmt.yml)
-- `.github/workflows/**`, `test-matrix.json`, `.github/escalation-registry.yml` ->
-  `.github/scripts/checks/retired-runners.sh`, `.github/scripts/checks/ci-patterns-lint.sh`,
+- `.github/workflows/**`, `test-matrix.json`, `.github/labels.yml`,
+  `.github/escalation-registry.yml` -> `.github/scripts/checks/retired-runners.sh`,
+  `.github/scripts/checks/ci-patterns-lint.sh`,
   `.github/scripts/checks/matrix-recipe-passthrough.sh`,
+  `.github/scripts/checks/label-references.py`,
+  `.github/scripts/checks/label-references_test.sh`,
   `.github/scripts/checks/workflow-policy.py` and
   `.github/scripts/checks/workflow-policy_test.sh` (lint-workflows.yml).
   `matrix-recipe-passthrough.sh` reads the jq projections out of `scheduled-tests.yml`
   rather than restating them, so it cannot drift from what runs, and it pins the set of
   tests that declare a `recipe` so a deleted declaration fails instead of silently leaving
-  the comparison. `workflow-policy.py` checks every scheduled workflow declares an
-  escalation policy and compares the set declaring `issue` against
-  `.github/escalation-registry.yml` in both directions; it pins the number of scheduled
-  workflows, so adding one is a deliberate edit rather than a silent change.
-  `workflow-policy_test.sh` is its self-test and pins both directions of that comparison
-  separately, since a two-way check silently becoming one-way still passes.
+  the comparison. `label-references.py` resolves every label a workflow names against
+  `.github/labels.yml`, including labels reached through a shell variable, and fails on any
+  reference it cannot reduce to a literal rather than skipping it.
+  `label-references_test.sh` is that check's self-test: it runs the frozen pre-repair
+  fixture and six mutations, and voids any mutation row whose target did not change. Its
+  header records three cases it does not catch, one of which is a false negative rather
+  than a skip. `workflow-policy.py` checks every scheduled workflow declares an escalation
+  policy and compares the set declaring `issue` against `.github/escalation-registry.yml`
+  in both directions; it pins the number of scheduled workflows, so adding one is a
+  deliberate edit rather than a silent change. `workflow-policy_test.sh` is its self-test
+  and pins both directions of that comparison separately, since a two-way check silently
+  becoming one-way still passes.
+  Note that lint-workflows.yml carries no `paths:` filter, so these run on every pull
+  request regardless of what it touches.
 - `.github/**`, `website/**` (except `website/pipeline/*.html`), `blog/**`, `scripts/**` (except
   the two scripts above), `sandbox/**`, `Dockerfile*`, `test/scripts/**`,
   `test/functional/**`, `internal/hooks/**`, `**/*.fish`, `tsuku-llm/**`, `cmd/tsuku-dltest/**`,
