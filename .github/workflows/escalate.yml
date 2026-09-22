@@ -83,9 +83,14 @@ jobs:
           WF_RUN_URL: ${{ github.event.workflow_run.html_url }}
           WF_EVENT: ${{ github.event.workflow_run.event }}
         run: |
-          # Every value reaches the script through env: rather than ${{ }} interpolation.
-          # ${{ }} is substituted before the shell parses the line, so quoting cannot
-          # make a workflow name containing shell metacharacters safe.
+          # Every value reaches the script through env: rather than GitHub expression
+          # interpolation. An expression is substituted before the shell parses the line,
+          # so quoting cannot make a workflow name containing shell metacharacters safe.
+          #
+          # This comment deliberately does not write an expression literally. GitHub
+          # evaluates expressions ANYWHERE in the file, including inside a run: block, and
+          # an empty one is a syntax error that rejects the workflow before job creation --
+          # which is exactly how this file first failed.
           .github/scripts/escalate.sh \
             --workflow "$WF_NAME" \
             --conclusion "$WF_CONCLUSION" \

@@ -61,8 +61,10 @@ jobs:
           WINDOW_HOURS: ${{ inputs.window_hours || '2' }}
           DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
         run: |
-          # Values reach the script through env: rather than ${{ }} interpolation, which is
-          # substituted before the shell parses and cannot be made safe by quoting.
+          # Values reach the script through env: rather than GitHub expression
+          # interpolation, which is substituted before the shell parses and cannot be made
+          # safe by quoting. The comment avoids writing an expression literally: an empty
+          # one is a syntax error anywhere in the file, run: blocks included.
           .github/scripts/escalate-sweep.sh --window-hours "$WINDOW_HOURS" $DRY_RUN
 
       - name: Upload receipt
