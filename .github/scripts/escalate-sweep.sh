@@ -22,6 +22,7 @@ set -euo pipefail
 WINDOW_HOURS=2
 DRY_RUN=""
 WORKFLOWS_DIR="${WORKFLOWS_DIR:-.github/workflows}"
+ESCALATION_LABEL="${ESCALATION_LABEL:-maintenance}"
 REGISTRY="${REGISTRY:-.github/escalation-registry.yml}"
 
 while [ $# -gt 0 ]; do
@@ -75,7 +76,7 @@ for wf in "${REGISTERED[@]}"; do
   # call itself is caught by the emptiness check below, which cannot distinguish them --
   # so the zero-floor at the end is what makes a broken query visible.
   runs=$(gh run list --workflow "$(basename "$file")" --limit 50 \
-           --json conclusion,event,databaseId,url,createdAt \
+           --json conclusion,event,databaseId,url,createdAt,workflowName \
            --jq "[.[] | select(.createdAt > \"$SINCE\") | select(.conclusion != \"success\" and .conclusion != \"\" and .conclusion != null)] | .[] | @base64" || true)
 
   for encoded in $runs; do
@@ -88,6 +89,15 @@ for wf in "${REGISTERED[@]}"; do
     if [ -n "$only_on" ] && [ "$only_on" != "$event" ]; then
       continue
     fi
+
+    # A run rejected before job creation is reported under its file path, and the
+    # startup-failure pass below handles it. Reporting it here too would produce two
+    # tracked items for one run, and the less accurate of the two: this run did not fail,
+    # it was never allowed to start.
+    reported_name=$(printf '%s' "$row" | jq -r .workflowName)
+    case "$reported_name" in
+      .github/*) continue ;;
+    esac
     examined=$((examined + 1))
 
     title="Scheduled workflow failing: $wf"
@@ -113,6 +123,41 @@ for wf in "${REGISTERED[@]}"; do
     fi
   done
 done
+
+# --- runs rejected before job creation --------------------------------------------------
+#
+# A workflow rejected at startup creates no jobs, and GitHub records the run under the
+# file's PATH rather than its declared name. Every loop above matches on name, so this
+# class is structurally invisible to them -- and to the listener, whose trigger is a name
+# filter. It is the one failure mode this repository has established it cannot see.
+#
+# It is detectable, though, and cheaply: a run whose workflow name begins with `.github/`
+# is one whose name could not be read. Both escalation workflows failed exactly this way
+# on their first push and nothing reported it.
+
+startup_failures=0
+startup_report=""
+while IFS=$'\t' read -r sf_name sf_id sf_url; do
+  [ -n "$sf_name" ] || continue
+  case "$sf_name" in
+    .github/*) ;;
+    *) continue ;;
+  esac
+  startup_failures=$((startup_failures + 1))
+  startup_report="${startup_report}    $sf_name (run $sf_id)\n"
+  title="Workflow rejected before job creation: $sf_name"
+  existing=$(gh issue list --search "\"$title\" in:title" --state open \
+               --json number --jq '.[0].number // empty' || true)
+  [ -n "$existing" ] && continue
+  if [ -n "$DRY_RUN" ]; then
+    echo "[dry-run] would file \"$title\""
+  else
+    body="[Run]($sf_url) was rejected before any job was created, so it is recorded under its file path rather than its declared name. Nothing that matches on workflow name can see it -- including this repository's escalation listener. Common causes: invalid YAML, an unknown key, or an empty \`\${{ }}\` expression anywhere in the file."
+    gh issue create --title "$title" --body "$body" --label "$ESCALATION_LABEL" >/dev/null
+    echo "filed a startup-failure report for $sf_name"
+  fi
+done < <(gh run list --limit 100 --json workflowName,databaseId,url,createdAt,conclusion \
+           --jq "[.[] | select(.createdAt > \"$SINCE\") | select(.conclusion == \"failure\")] | .[] | [.workflowName, (.databaseId|tostring), .url] | @tsv" || true)
 
 # --- what is deliberately not being escalated -------------------------------------------
 #
@@ -150,6 +195,12 @@ else
   echo "Deferred escalation-policy: none with failing runs: none."
 fi
 echo "Permanent escalation-policy: none (not a gap, the policy working): $permanent_count."
+if [ "$startup_failures" -gt 0 ]; then
+  echo "Runs rejected before job creation (invisible to every name-matching path):"
+  printf "$startup_report"
+else
+  echo "Runs rejected before job creation: none."
+fi
 
 # Zero-floor. The sweeper's items are the registered workflows it CHECKED, not the problems
 # it found. Finding zero problems is an ordinary green with a non-zero attempted count; a
