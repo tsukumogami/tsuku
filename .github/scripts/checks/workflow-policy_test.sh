@@ -116,13 +116,31 @@ run_mutation "a deferred none with no tracking issue is reported" \
   1 "naming the issue number" deferred_without_issue
 
 run_mutation "a deferred none whose tracking issue is closed is reported" \
-  1 "condition that justified not escalating has resolved" deferred_on_closed_issue
+  1 "condition that justified the deferred \`none\` has resolved" deferred_on_closed_issue
 
 run_mutation "a permanent none needs no tracking issue" \
   0 "" make_permanent
 
 run_mutation "a registry without the registered key is an operational error" \
   2 "declares no workflows" registry_without_key
+
+echo "The listener's trigger list"
+
+# The rule is: the listener's workflow_run list is the registry MINUS its own name. Not
+# equality, and the asymmetry is structural -- naming itself would wake it on its own
+# completion, and the design does not depend on knowing whether the platform prevents that.
+listener_drops_one() { sed -i '0,/^      - "/{s/^      - "[^"]*"$//}' "$1/workflows/escalate.yml"; }
+listener_names_itself() { sed -i 's/^    types: \[completed\]$/      - "Escalate"\n    types: [completed]/' "$1/workflows/escalate.yml"; }
+listener_has_a_stranger() { sed -i 's/^    types: \[completed\]$/      - "A Workflow Nobody Registered"\n    types: [completed]/' "$1/workflows/escalate.yml"; }
+
+run_mutation "a registered workflow missing from the listener list is reported" \
+  1 "absent from the listener" listener_drops_one
+
+run_mutation "the listener naming itself is reported" \
+  1 "names itself" listener_names_itself
+
+run_mutation "a listener entry that is not registered is reported" \
+  1 "not in the registry" listener_has_a_stranger
 
 echo "Floor and pin"
 
@@ -137,8 +155,8 @@ fi
 rm -rf "$empty_dir"
 
 # The pinned count is a real assertion, not decoration.
-out=$(python3 "$CHECK" --registry "$REGISTRY" --workflows "$WORKFLOWS" --expect-scheduled 22 2>&1); rc=$?
-if [ $rc -eq 1 ] && printf '%s' "$out" | grep -qF "expected 22"; then
+out=$(python3 "$CHECK" --registry "$REGISTRY" --workflows "$WORKFLOWS" --expect-scheduled 23 2>&1); rc=$?
+if [ $rc -eq 1 ] && printf '%s' "$out" | grep -qF "expected 23"; then
   report PASS "a count differing from the pin is reported"
 else
   report FAIL "a count differing from the pin is reported" "exit $rc"

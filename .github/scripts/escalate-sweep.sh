@@ -63,7 +63,8 @@ file_for_name() {  # file_for_name <workflow name>
   return 1
 }
 
-examined=0 gaps=0 filed=0 failed=0
+examined=0 gaps=0 filed=0 failed=0 self_filed=0
+self_report=""
 
 for wf in "${REGISTERED[@]}"; do
   file=$(file_for_name "$wf") || {
@@ -71,6 +72,7 @@ for wf in "${REGISTERED[@]}"; do
     exit 2
   }
   only_on=$(decl_value "$file" "escalation-only-on")
+  self_files=$(decl_value "$file" "escalation-self-files")
 
   # `|| true` on the read only: an empty result is a real answer here. A failure of the API
   # call itself is caught by the emptiness check below, which cannot distinguish them --
@@ -99,6 +101,15 @@ for wf in "${REGISTERED[@]}"; do
       .github/*) continue ;;
     esac
     examined=$((examined + 1))
+
+    # A workflow that still files its own issue is skipped because it SAID SO. Counted
+    # and named below, never silently: from here, "escalated by the workflow itself" and
+    # "escalated by nobody" are the same signal.
+    if [ -n "$self_files" ]; then
+      self_filed=$((self_filed + 1))
+      self_report="${self_report}    \"$wf\": non-success run $run_id, not escalated because it files its own issue, migration tracked in #$self_files\n"
+      continue
+    fi
 
     title="Scheduled workflow failing: $wf"
     # OPEN, not all. A closed item tracked the failure it was opened for and was closed
@@ -195,6 +206,12 @@ else
   echo "Deferred escalation-policy: none with failing runs: none."
 fi
 echo "Permanent escalation-policy: none (not a gap, the policy working): $permanent_count."
+if [ -n "$self_report" ]; then
+  echo "Not escalated because the workflow files its own issue:"
+  printf "$self_report"
+else
+  echo "Workflows filing their own issues, with failing runs: none."
+fi
 if [ "$startup_failures" -gt 0 ]; then
   echo "Runs rejected before job creation (invisible to every name-matching path):"
   printf "$startup_report"
