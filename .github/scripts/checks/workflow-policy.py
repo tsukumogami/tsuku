@@ -74,6 +74,7 @@ DECLARATION_KEYS = {
     "escalation-reason",
     "escalation-none-kind",
     "escalation-tracking-issue",
+    "escalation-self-files",
     "coverage",
     "coverage-reason",
 }
@@ -185,7 +186,7 @@ def main():
     scheduled = {}   # scheduled workflows: name -> (filename, declaration, dual)
     declared = {}    # every workflow carrying a declaration, scheduled or not
     failures = []
-    deferred = []    # (filename, workflow name, tracking issue number)
+    deferred = []    # (filename, workflow name, issue number, what declared it)
 
     # Every workflow is scanned for a declaration; only scheduled ones are REQUIRED to
     # carry one. A declaration is a statement about a workflow's escalation behaviour and
@@ -243,6 +244,27 @@ def main():
 
         if policy == "issue":
             declaring_issue.add(wf_name)
+
+            # A workflow that still files its own issues says so, and names the issue
+            # tracking its migration. The escalator then skips it because it was TOLD to,
+            # not because it inferred anything from behaviour -- and the state is visible
+            # in the tree, countable, and expires like any other deferral.
+            #
+            # Declare this only where self-filing is DEMONSTRATED to work. A workflow whose
+            # own escalation is broken must not claim to handle itself: the escalator would
+            # skip it and nothing would escalate it at all.
+            self_files = decl.get("escalation-self-files", "")
+            if self_files:
+                m = ISSUE_REF.match(self_files.strip())
+                if not m:
+                    failures.append((filename, "`escalation-self-files:` must name the "
+                                               "issue number tracking this workflow's "
+                                               "migration to the escalator"))
+                else:
+                    deferred.append((filename, wf_name, int(m.group("number")),
+                                     "escalation-self-files", "self-filing declaration",
+                                     "remove the workflow's own issue-filing step and the "
+                                     "declaration, or record why the migration is still open"))
             if not decl.get("escalation-assignee"):
                 failures.append((filename, "`escalation-policy: issue` with no "
                                            "`escalation-assignee:`"))
@@ -275,7 +297,9 @@ def main():
                                                "`escalation-tracking-issue:` naming the "
                                                "issue number that owns the condition"))
                 else:
-                    deferred.append((filename, wf_name, int(m.group("number"))))
+                    deferred.append((filename, wf_name, int(m.group("number")),
+                                     "escalation-tracking-issue", "deferred `none`",
+                                     "restore `escalation-policy: issue`, or record a new reason"))
 
         coverage = decl.get("coverage")
         if coverage is None:
@@ -335,7 +359,7 @@ def main():
     # no network -- that is an operational error, never a pass. A check that could not
     # look has not looked, and reporting success would be the defect this repository has
     # spent this milestone removing.
-    for filename, wf_name, number in deferred:
+    for filename, wf_name, number, key, what, remedy in deferred:
         try:
             result = subprocess.run(
                 ["gh", "issue", "view", str(number), "--json", "state", "-q", ".state"],
@@ -343,16 +367,14 @@ def main():
             )
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError) as e:
             print(f"::error file={workflows.as_posix()}/{filename}::cannot resolve the "
-                  f"state of tracking issue #{number}, so the deferred `none` in "
+                  f"state of issue #{number} named by `{key}`, so the {what} in "
                   f"\"{wf_name}\" could not be validated: {e}", file=sys.stderr)
             return EXIT_ERROR
         state = result.stdout.strip().upper()
         if state != "OPEN":
-            failures.append((filename, f"`escalation-none-kind: deferred` names tracking "
-                                       f"issue #{number}, which is {state.lower()}. The "
-                                       f"condition that justified not escalating has "
-                                       f"resolved -- restore `escalation-policy: issue`, "
-                                       f"or record a new reason."))
+            failures.append((filename, f"`{key}` names issue #{number}, which is "
+                                       f"{state.lower()}. The condition that justified the "
+                                       f"{what} has resolved -- {remedy}."))
 
     # The two-way comparison. Each direction catches a different mistake, which is why
     # neither alone is enough: a workflow declaring `issue` that the escalator does not

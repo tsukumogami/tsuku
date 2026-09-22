@@ -89,6 +89,16 @@ if [ -n "$ONLY_ON" ] && [ "$ONLY_ON" != "$EVENT" ]; then
   exit 0
 fi
 
+SELF_FILES=$(decl_value "escalation-self-files")
+if [ -n "$SELF_FILES" ]; then
+  # Skipped because it SAID SO, not because anything was inferred. A run-level conclusion
+  # cannot distinguish a workflow that failed and reported itself correctly from one that
+  # failed and reported nothing; only the declaration separates them. The sweeper names
+  # these in its summary so the skip is visible rather than silent.
+  echo "self-files: \"$WORKFLOW\" files its own issue, migration tracked in #$SELF_FILES"
+  exit 0
+fi
+
 if [ "$POLICY" = "none" ]; then
   # Reported rather than skipped in silence. The sweeper counts these; see its summary.
   echo "policy-none: \"$WORKFLOW\" declares escalation-policy: none, not filing"
