@@ -1,5 +1,12 @@
 # escalation-policy: issue
 # escalation-assignee: dangazineu
+# escalation-self-files: 2643
+# escalation-self-files-note: this workflow files its own failure issue and is the only
+#   delivery path here with production evidence -- run 35597744183 fired on its own
+#   schedule on 2026-09-21 and filed #2640 naming all nine stale entries. The escalator
+#   skips it because it was TOLD to, not because it inferred anything from run
+#   conclusions, which cannot distinguish "reported itself" from "reported nothing".
+#   #2643 tracks the migration; this declaration is valid only while that issue is open.
 # coverage: items
 
 # Weekly freshness check for discovery registry entries.

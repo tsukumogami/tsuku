@@ -59,7 +59,12 @@ EXIT_PASS, EXIT_FAIL, EXIT_ERROR = 0, 1, 2
 # derived: a check that counts what it finds and compares it to what it found cannot
 # notice that it found nothing. Changing this number is a deliberate act that says a
 # scheduled workflow was added or removed.
-EXPECTED_SCHEDULED = 21
+EXPECTED_SCHEDULED = 22
+
+# The listener's own name. It is registered, so the sweeper covers it, but it must not
+# appear in its own `workflow_run` trigger list -- see the rule below.
+LISTENER_NAME = "Escalate"
+LISTENER_FILE = "escalate.yml"
 
 KEY = re.compile(r'^#\s*(?P<key>[a-z-]+):\s*(?P<value>.*?)\s*$')
 DECLARATION_KEYS = {
@@ -69,6 +74,7 @@ DECLARATION_KEYS = {
     "escalation-reason",
     "escalation-none-kind",
     "escalation-tracking-issue",
+    "escalation-self-files",
     "coverage",
     "coverage-reason",
 }
@@ -177,10 +183,16 @@ def main():
         return EXIT_ERROR
     registered = set(registered)
 
-    scheduled = {}   # workflow name -> (filename, declaration, dual_trigger)
+    scheduled = {}   # scheduled workflows: name -> (filename, declaration, dual)
+    declared = {}    # every workflow carrying a declaration, scheduled or not
     failures = []
-    deferred = []    # (filename, workflow name, tracking issue number)
+    deferred = []    # (filename, workflow name, issue number, what declared it)
 
+    # Every workflow is scanned for a declaration; only scheduled ones are REQUIRED to
+    # carry one. A declaration is a statement about a workflow's escalation behaviour and
+    # nothing about it is inherently scheduled -- the escalation listener is not scheduled
+    # and declares one, because the sweeper covers it and therefore it must be registered.
+    # Conflating "must declare" with "may declare" made that workflow read as an error.
     for filename, text in read_tree(workflows, args.ref):
         try:
             doc = yaml.safe_load(text)
@@ -190,14 +202,20 @@ def main():
             continue
         # `on:` is the YAML 1.1 boolean True. Reading doc["on"] alone finds nothing.
         on = doc.get("on", doc.get(True))
-        if not (isinstance(on, dict) and "schedule" in on):
+        is_scheduled = isinstance(on, dict) and "schedule" in on
+        decl = declaration_of(text)
+        if not is_scheduled and not decl:
             continue
         wf_name = doc.get("name")
         if not wf_name:
-            failures.append((filename, "scheduled workflow declares no `name:`, so it "
-                                       "cannot be registered with the escalator"))
+            if is_scheduled:
+                failures.append((filename, "scheduled workflow declares no `name:`, so it "
+                                           "cannot be registered with the escalator"))
             continue
-        scheduled[wf_name] = (filename, declaration_of(text), "pull_request" in on)
+        dual = is_scheduled and isinstance(on, dict) and "pull_request" in on
+        declared[wf_name] = (filename, decl, dual)
+        if is_scheduled:
+            scheduled[wf_name] = declared[wf_name]
 
     # Zero-floor, and the pinned count. Both, because they catch different things: zero
     # means the scan broke, and a mismatch means the set changed without anyone saying so.
@@ -213,10 +231,11 @@ def main():
         failures.append(("(count)", f"{len(scheduled)} != {args.expect_scheduled}"))
 
     declaring_issue = set()
-    for wf_name, (filename, decl, dual) in sorted(scheduled.items()):
+    for wf_name, (filename, decl, dual) in sorted(declared.items()):
         policy = decl.get("escalation-policy")
         if policy is None:
-            failures.append((filename, "no `escalation-policy:` declared"))
+            if wf_name in scheduled:
+                failures.append((filename, "no `escalation-policy:` declared"))
             continue
         if policy not in VALID_POLICY:
             failures.append((filename, f"`escalation-policy: {policy}` is not one of "
@@ -225,6 +244,27 @@ def main():
 
         if policy == "issue":
             declaring_issue.add(wf_name)
+
+            # A workflow that still files its own issues says so, and names the issue
+            # tracking its migration. The escalator then skips it because it was TOLD to,
+            # not because it inferred anything from behaviour -- and the state is visible
+            # in the tree, countable, and expires like any other deferral.
+            #
+            # Declare this only where self-filing is DEMONSTRATED to work. A workflow whose
+            # own escalation is broken must not claim to handle itself: the escalator would
+            # skip it and nothing would escalate it at all.
+            self_files = decl.get("escalation-self-files", "")
+            if self_files:
+                m = ISSUE_REF.match(self_files.strip())
+                if not m:
+                    failures.append((filename, "`escalation-self-files:` must name the "
+                                               "issue number tracking this workflow's "
+                                               "migration to the escalator"))
+                else:
+                    deferred.append((filename, wf_name, int(m.group("number")),
+                                     "escalation-self-files", "self-filing declaration",
+                                     "remove the workflow's own issue-filing step and the "
+                                     "declaration, or record why the migration is still open"))
             if not decl.get("escalation-assignee"):
                 failures.append((filename, "`escalation-policy: issue` with no "
                                            "`escalation-assignee:`"))
@@ -257,11 +297,14 @@ def main():
                                                "`escalation-tracking-issue:` naming the "
                                                "issue number that owns the condition"))
                 else:
-                    deferred.append((filename, wf_name, int(m.group("number"))))
+                    deferred.append((filename, wf_name, int(m.group("number")),
+                                     "escalation-tracking-issue", "deferred `none`",
+                                     "restore `escalation-policy: issue`, or record a new reason"))
 
         coverage = decl.get("coverage")
         if coverage is None:
-            failures.append((filename, "no `coverage:` declared"))
+            if wf_name in scheduled:
+                failures.append((filename, "no `coverage:` declared"))
         elif coverage == "none" and not decl.get("coverage-reason"):
             failures.append((filename, "`coverage: none` with no `coverage-reason:`"))
 
@@ -270,6 +313,39 @@ def main():
         if dual and decl.get("escalation-only-on") != "schedule":
             failures.append((filename, "declares both `schedule` and `pull_request` but "
                                        "not `escalation-only-on: schedule`"))
+
+    # The listener's trigger list is the registry MINUS the listener's own name.
+    #
+    # Not plain equality, and the asymmetry is structural rather than an exception.
+    # `on.workflow_run.workflows` cannot read a file, so the registry is duplicated there
+    # and the duplication is checked rather than trusted. But the listener must not name
+    # itself: that would make it wake on its own completion, and whether the platform
+    # prevents a recursive workflow_run chain is a question this design does not need an
+    # answer to. The condition is never created, so nothing depends on knowing.
+    listener_path = workflows / LISTENER_FILE
+    if listener_path.is_file() or args.ref is not None:
+        try:
+            listener_text = dict(read_tree(workflows, args.ref)).get(LISTENER_FILE)
+        except subprocess.CalledProcessError:
+            listener_text = None
+        if listener_text:
+            ldoc = yaml.safe_load(listener_text) or {}
+            lon = ldoc.get("on", ldoc.get(True)) or {}
+            triggered = set((lon.get("workflow_run") or {}).get("workflows") or [])
+            expected = registered - {LISTENER_NAME}
+            for missing in sorted(expected - triggered):
+                failures.append((LISTENER_FILE, f'"{missing}" is registered but absent '
+                                                f"from the listener's workflow_run list, "
+                                                f"so the listener never wakes for it"))
+            for extra in sorted(triggered - expected):
+                if extra == LISTENER_NAME:
+                    failures.append((LISTENER_FILE, "the listener names itself in its own "
+                                                    "workflow_run list, which would wake it "
+                                                    "on its own completion"))
+                else:
+                    failures.append((LISTENER_FILE, f'"{extra}" is in the listener\'s '
+                                                    f"workflow_run list but not in the "
+                                                    f"registry"))
 
     # A deferred `none` is valid only while the issue that owns its condition is open.
     #
@@ -283,7 +359,7 @@ def main():
     # no network -- that is an operational error, never a pass. A check that could not
     # look has not looked, and reporting success would be the defect this repository has
     # spent this milestone removing.
-    for filename, wf_name, number in deferred:
+    for filename, wf_name, number, key, what, remedy in deferred:
         try:
             result = subprocess.run(
                 ["gh", "issue", "view", str(number), "--json", "state", "-q", ".state"],
@@ -291,16 +367,14 @@ def main():
             )
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError) as e:
             print(f"::error file={workflows.as_posix()}/{filename}::cannot resolve the "
-                  f"state of tracking issue #{number}, so the deferred `none` in "
+                  f"state of issue #{number} named by `{key}`, so the {what} in "
                   f"\"{wf_name}\" could not be validated: {e}", file=sys.stderr)
             return EXIT_ERROR
         state = result.stdout.strip().upper()
         if state != "OPEN":
-            failures.append((filename, f"`escalation-none-kind: deferred` names tracking "
-                                       f"issue #{number}, which is {state.lower()}. The "
-                                       f"condition that justified not escalating has "
-                                       f"resolved -- restore `escalation-policy: issue`, "
-                                       f"or record a new reason."))
+            failures.append((filename, f"`{key}` names issue #{number}, which is "
+                                       f"{state.lower()}. The condition that justified the "
+                                       f"{what} has resolved -- {remedy}."))
 
     # The two-way comparison. Each direction catches a different mistake, which is why
     # neither alone is enough: a workflow declaring `issue` that the escalator does not
@@ -310,7 +384,7 @@ def main():
     registered_not_declared = registered - declaring_issue
 
     for wf_name in sorted(declared_not_registered):
-        filename = scheduled[wf_name][0]
+        filename = declared[wf_name][0]
         print(f"::error file={workflows.as_posix()}/{filename}::\"{wf_name}\" declares "
               f"`escalation-policy: issue` but is not in {registry_path}, so nothing "
               "escalates it", file=sys.stderr)

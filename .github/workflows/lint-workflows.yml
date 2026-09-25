@@ -53,3 +53,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: .github/scripts/checks/workflow-policy_test.sh
+      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
+      - name: Check escalation hygiene
+        run: .github/scripts/checks/escalation-hygiene.py
+      # Its own self-test. Every assertion in the hygiene check has a row that proves it
+      # can fail, because a hygiene check that cannot fail would be a fitting end to a
+      # milestone about checks that cannot fail.
+      - name: Check escalation hygiene check can fail
+        run: .github/scripts/checks/escalation-hygiene_test.sh

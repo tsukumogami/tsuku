@@ -1,5 +1,6 @@
 # escalation-policy: none
 # escalation-reason: runs on pull requests and on demand; a failure is a red check on the PR that caused it
+# escalation-none-kind: permanent
 name: Label Manifest
 
 on:
