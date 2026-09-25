@@ -54,11 +54,18 @@ YML
 args="\$*"
 case "\$args" in
   *"actions/workflows/escalate-sweep.yml/runs"*)
-      printf '%s' '${last_sweep}' ;;
+      # Two different answers, so the row fails if the success filter is ever dropped.
+      # A real repository would return the FAILED sweep as the most recent run; only
+      # filtering on status=success reaches back to the one that did its work.
+      case "\$args" in
+        *status=success*) printf '%s' '${last_sweep}' ;;
+        *)                printf '%s' '2026-09-25T18:00:00Z' ;;
+      esac ;;
   *"--limit 30"*)
       # the current-state gate's question: what did the latest run conclude?
       printf '%s' '${latest}' ;;
   *"--limit 50"*)
+      if [ -n "\${STUB_RUNLIST_FAILS:-}" ]; then exit 1; fi
       # runs inside the window: one older run with the fixture's conclusion
       printf '%s' "\$(printf '{"conclusion":"${older}","event":"schedule","databaseId":111,"url":"http://x","createdAt":"2099-01-01T00:00:00Z","workflowName":"Demo Workflow"}' | base64 -w0)" ;;
   *"issue list"*) : ;;
@@ -125,6 +132,28 @@ if printf '%s' "$out" | grep -qF 'Window: explicit, 3h'; then
   report PASS "--window-hours overrides the derived window"
 else
   report FAIL "--window-hours overrides the derived window" "$(printf '%s' "$out" | grep -i window | head -1)"
+fi
+rm -rf "$s"
+
+echo "Case 6: the previous sweep FAILED — the window must reach past it"
+echo "  (a broken sweep must not advance the window, or its whole window is never examined)"
+s=$(make_sandbox "failure" "failure" "2026-08-01T00:00:00Z")
+out=$(run_sweep "$s")
+if printf '%s' "$out" | grep -qF 'since the last completed sweep at 2026-08-01T00:00:00Z'; then
+  report PASS "a failed previous sweep does not advance the window"
+else
+  report FAIL "a failed previous sweep does not advance the window" "$(printf '%s' "$out" | grep -i window | head -1)"
+fi
+rm -rf "$s"
+
+echo "Case 7: a workflow that cannot be queried must fail the sweep"
+echo "  (an unreachable workflow is not an examined one, and the receipt must not say it was)"
+s=$(make_sandbox "failure" "failure" "2026-09-25T18:36:36Z")
+out=$(STUB_RUNLIST_FAILS=1 PATH="$s/bin:$PATH" GITHUB_REPOSITORY=o/r         WORKFLOWS_DIR="$s/workflows" REGISTRY="$s/registry.yml"         bash "$SWEEP" --dry-run 2>&1); rc=$?
+if [ $rc -ne 0 ] && printf '%s' "$out" | grep -qF 'was NOT examined'; then
+  report PASS "an unreachable workflow fails the sweep rather than being counted"
+else
+  report FAIL "an unreachable workflow fails the sweep rather than being counted" "exit $rc"
 fi
 rm -rf "$s"
 

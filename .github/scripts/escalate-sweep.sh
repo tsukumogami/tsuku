@@ -87,7 +87,7 @@ file_for_name() {  # file_for_name <workflow name>
   return 1
 }
 
-examined=0 gaps=0 filed=0 failed=0 self_filed=0 recovered=0
+examined=0 gaps=0 filed=0 failed=0 self_filed=0 recovered=0 attempted=0 unreachable=0
 recovered_report=""
 self_report=""
 
@@ -125,12 +125,19 @@ for wf in "${REGISTERED[@]}"; do
     continue
   fi
 
-  # `|| true` on the read only: an empty result is a real answer here. A failure of the API
-  # call itself is caught by the emptiness check below, which cannot distinguish them --
-  # so the zero-floor at the end is what makes a broken query visible.
-  runs=$(gh run list --workflow "$(basename "$file")" --limit 50 \
-           --json conclusion,event,databaseId,url,createdAt,workflowName \
-           --jq "[.[] | select(.createdAt > \"$SINCE\") | select(.conclusion != \"success\" and .conclusion != \"\" and .conclusion != null)] | .[] | @base64" || true)
+  # The exit status is kept, not discarded. An empty result and a failed query are
+  # different facts: the first means this workflow had no non-success runs in the window,
+  # the second means we do not know. Collapsing them is how a receipt comes to say it
+  # examined a population it never reached.
+  if runs=$(gh run list --workflow "$(basename "$file")" --limit 50 \
+              --json conclusion,event,databaseId,url,createdAt,workflowName \
+              --jq "[.[] | select(.createdAt > \"$SINCE\") | select(.conclusion != \"success\" and .conclusion != \"\" and .conclusion != null)] | .[] | @base64" 2>/dev/null); then
+    attempted=$((attempted + 1))
+  else
+    unreachable=$((unreachable + 1))
+    echo "::error::could not query runs for \"$wf\"; this workflow was NOT examined" >&2
+    continue
+  fi
 
   for encoded in $runs; do
     row=$(printf '%s' "$encoded" | base64 -d)
@@ -280,12 +287,27 @@ fi
 # it found. Finding zero problems is an ordinary green with a non-zero attempted count; a
 # sweep that checked nothing -- registry unreadable, API returning empty -- attempted zero
 # and must fail.
-if [ "${#REGISTERED[@]}" -eq 0 ]; then
-  echo "::error::checked no workflows" >&2
+# `attempted` is COUNTED, not restated. An earlier version wrote the registry's size into
+# both fields, so the receipt could not express "attempted 0 of 22" -- the one thing it
+# exists to be able to say. The floor below then guarded a number that could not be zero
+# whenever the registry loaded, which is a floor that cannot fire.
+if [ "$attempted" -eq 0 ]; then
+  echo "::error::examined none of the ${#REGISTERED[@]} registered workflow(s); this sweep" \
+       "establishes nothing and must not be treated as a completed one" >&2
   exit 1
 fi
 
-printf '{"declared":%d,"attempted":%d,"gaps":%d,"filed":%d}\n' \
-  "${#REGISTERED[@]}" "${#REGISTERED[@]}" "$gaps" "$filed" > receipt.ndjson
+printf '{"declared":%d,"attempted":%d,"unreachable":%d,"gaps":%d,"filed":%d}\n' \
+  "${#REGISTERED[@]}" "$attempted" "$unreachable" "$gaps" "$filed" > receipt.ndjson
+echo "Receipt: declared ${#REGISTERED[@]}, attempted $attempted, unreachable $unreachable."
+
+# A sweep that could not reach part of its population did not do its job, and must not
+# advance the window for the next one. Failing here is what keeps that true, because the
+# window lookup filters on a successful conclusion.
+if [ "$unreachable" -gt 0 ]; then
+  echo "::error::$unreachable of ${#REGISTERED[@]} registered workflow(s) could not be" \
+       "examined; failing so the next sweep's window reaches back past this one" >&2
+  exit 1
+fi
 
 [ "$failed" -eq 0 ]
