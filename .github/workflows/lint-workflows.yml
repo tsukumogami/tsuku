@@ -61,3 +61,8 @@ jobs:
       # milestone about checks that cannot fail.
       - name: Check escalation hygiene check can fail
         run: .github/scripts/checks/escalation-hygiene_test.sh
+      # The sweeper's regression cases. Hermetic: `gh` is replaced on PATH by a stub, which
+      # is what makes "failed then recovered" and "previous sweep older than any fixed
+      # lookback" constructible rather than approximated.
+      - name: Check the sweeper's selection logic
+        run: .github/scripts/checks/escalate-sweep_test.sh
