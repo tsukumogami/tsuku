@@ -186,6 +186,53 @@ else
 fi
 rm -rf "$s"
 
+echo "Case 9: the receipt must count a gated workflow as examined"
+echo "  (none of the cases above asserts on \`attempted\` — they check what got escalated,"
+echo "   never what got counted, which is how the field understated coverage by half)"
+s9=$(mktemp -d); mkdir -p "$s9/bin" "$s9/workflows"
+for n in one two; do
+  cat > "$s9/workflows/demo-$n.yml" <<YML
+# escalation-policy: issue
+# escalation-assignee: someone
+# coverage: items
+name: Demo $n
+on:
+  schedule:
+    - cron: '0 * * * *'
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    steps:
+      - run: gh issue create --title x --body y --label maintenance
+YML
+done
+printf 'registered:\n  - "Demo one"\n  - "Demo two"\n' > "$s9/registry.yml"
+cat > "$s9/bin/gh" <<'STUB'
+#!/usr/bin/env bash
+args="$*"
+case "$args" in
+  *"actions/runs?"*) printf '%s' '{"workflow_runs":[]}' ;;
+  *"actions/workflows/escalate-sweep.yml/runs"*) printf '%s' '2026-09-25T18:36:36Z' ;;
+  *"--limit 30"*)
+      # demo-one is failing; demo-two has recovered. Both are examined.
+      case "$args" in *demo-one*) printf 'failure' ;; *) printf 'success' ;; esac ;;
+  *"--limit 50"*)
+      printf '%s' "$(printf '{"conclusion":"failure","event":"schedule","databaseId":222,"url":"http://x","createdAt":"2099-01-01T00:00:00Z","workflowName":"Demo one"}' | base64 -w0)" ;;
+  *) : ;;
+esac
+STUB
+chmod +x "$s9/bin/gh"
+out=$(PATH="$s9/bin:$PATH" GITHUB_REPOSITORY=o/r WORKFLOWS_DIR="$s9/workflows" \
+        REGISTRY="$s9/registry.yml" bash "$SWEEP" --dry-run 2>&1)
+if printf '%s' "$out" | grep -qF 'Receipt: declared 2, attempted 2, unreachable 0' \
+   && printf '%s' "$out" | grep -q 'Recovered'; then
+  report PASS "a workflow gated as recovered still counts as examined"
+else
+  report FAIL "a workflow gated as recovered still counts as examined" \
+    "$(printf '%s' "$out" | grep -E '^Receipt:' | head -1)"
+fi
+rm -rf "$s9"
+
 echo
 echo "escalate-sweep self-test: $pass passed, $fail failed, $void void."
 [ "$fail" -eq 0 ] && [ "$void" -eq 0 ]
