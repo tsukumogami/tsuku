@@ -19,7 +19,8 @@ set -euo pipefail
 #   1  a gap was found and could not be filed, or the sweep examined nothing
 #   2  operational error
 
-WINDOW_HOURS=2
+WINDOW_HOURS=""          # empty means derive from the last completed sweep
+DEFAULT_FIRST_WINDOW_HOURS=24
 DRY_RUN=""
 WORKFLOWS_DIR="${WORKFLOWS_DIR:-.github/workflows}"
 ESCALATION_LABEL="${ESCALATION_LABEL:-maintenance}"
@@ -41,7 +42,30 @@ if [ "${#REGISTERED[@]}" -eq 0 ]; then
   exit 2
 fi
 
-SINCE=$(date -u -d "${WINDOW_HOURS} hours ago" +%Y-%m-%dT%H:%M:%SZ)
+# The window starts where the last COMPLETED sweep started, not a fixed number of hours
+# ago. Sizing it to the nominal cron interval assumes the schedule fires on time, and it
+# does not: this repository's hourly crons fire roughly every five hours (#2652), so a
+# two-hour window examined about 40% of the clock and the rest was never looked at by
+# anything. R2 Health Monitor failed at 2026-09-25T16:12:45Z and fell in one of those holes
+# permanently.
+#
+# Deriving it from the previous sweep makes lateness free: however long the gap, the next
+# run covers all of it. An explicit --window-hours still overrides, for a deliberate wide
+# sweep.
+if [ -n "$WINDOW_HOURS" ]; then
+  SINCE=$(date -u -d "${WINDOW_HOURS} hours ago" +%Y-%m-%dT%H:%M:%SZ)
+  echo "Window: explicit, ${WINDOW_HOURS}h"
+else
+  # `status=success` already excludes the run doing the asking, which is in progress.
+  SINCE=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/escalate-sweep.yml/runs?status=success&per_page=1" \
+            --jq '.workflow_runs[0].created_at // empty' 2>/dev/null || true)
+  if [ -z "$SINCE" ]; then
+    SINCE=$(date -u -d "${DEFAULT_FIRST_WINDOW_HOURS} hours ago" +%Y-%m-%dT%H:%M:%SZ)
+    echo "Window: no previous successful sweep found; falling back to ${DEFAULT_FIRST_WINDOW_HOURS}h"
+  else
+    echo "Window: since the last completed sweep at $SINCE"
+  fi
+fi
 echo "Sweeping ${#REGISTERED[@]} registered workflow(s) for non-success runs since $SINCE"
 
 # Read one declaration key out of a workflow's leading comment block.
@@ -63,7 +87,8 @@ file_for_name() {  # file_for_name <workflow name>
   return 1
 }
 
-examined=0 gaps=0 filed=0 failed=0 self_filed=0
+examined=0 gaps=0 filed=0 failed=0 self_filed=0 recovered=0 attempted=0 unreachable=0
+recovered_report=""
 self_report=""
 
 for wf in "${REGISTERED[@]}"; do
@@ -74,12 +99,45 @@ for wf in "${REGISTERED[@]}"; do
   only_on=$(decl_value "$file" "escalation-only-on")
   self_files=$(decl_value "$file" "escalation-self-files")
 
-  # `|| true` on the read only: an empty result is a real answer here. A failure of the API
-  # call itself is caught by the emptiness check below, which cannot distinguish them --
-  # so the zero-floor at the end is what makes a broken query visible.
-  runs=$(gh run list --workflow "$(basename "$file")" --limit 50 \
-           --json conclusion,event,databaseId,url,createdAt,workflowName \
-           --jq "[.[] | select(.createdAt > \"$SINCE\") | select(.conclusion != \"success\" and .conclusion != \"\" and .conclusion != null)] | .[] | @base64" || true)
+  # --- the current-state gate -------------------------------------------------------------
+  #
+  # Escalate only what is failing NOW. Without this the sweep files on any non-success run
+  # inside the window regardless of what happened since, so a workflow that failed and then
+  # recovered gets an issue announcing a condition that has already cleared. Measured on
+  # 2026-09-25: seven of the fourteen workflows a wide sweep would have escalated were green
+  # at the time, Scheduled Tests among them — the escalator would have announced it broken on
+  # the day #2596's repair made it pass.
+  #
+  # Recovered workflows are COUNTED AND NAMED rather than silently skipped, because a
+  # deliberate skip and a missed workflow look identical in an absence.
+  if [ -n "$only_on" ]; then
+    latest=$(gh run list --workflow "$(basename "$file")" --limit 30 \
+               --json conclusion,event,createdAt \
+               --jq "[.[] | select(.event == \"$only_on\") | select(.conclusion != \"\" and .conclusion != null)] | .[0].conclusion // empty" || true)
+  else
+    latest=$(gh run list --workflow "$(basename "$file")" --limit 30 \
+               --json conclusion,createdAt \
+               --jq '[.[] | select(.conclusion != "" and .conclusion != null)] | .[0].conclusion // empty' || true)
+  fi
+  if [ "$latest" = "success" ]; then
+    recovered=$((recovered + 1))
+    recovered_report="${recovered_report}    \"$wf\": latest run succeeded; nothing escalated for earlier failures in the window\n"
+    continue
+  fi
+
+  # The exit status is kept, not discarded. An empty result and a failed query are
+  # different facts: the first means this workflow had no non-success runs in the window,
+  # the second means we do not know. Collapsing them is how a receipt comes to say it
+  # examined a population it never reached.
+  if runs=$(gh run list --workflow "$(basename "$file")" --limit 50 \
+              --json conclusion,event,databaseId,url,createdAt,workflowName \
+              --jq "[.[] | select(.createdAt > \"$SINCE\") | select(.conclusion != \"success\" and .conclusion != \"\" and .conclusion != null)] | .[] | @base64" 2>/dev/null); then
+    attempted=$((attempted + 1))
+  else
+    unreachable=$((unreachable + 1))
+    echo "::error::could not query runs for \"$wf\"; this workflow was NOT examined" >&2
+    continue
+  fi
 
   for encoded in $runs; do
     row=$(printf '%s' "$encoded" | base64 -d)
@@ -205,6 +263,12 @@ if [ -n "$deferred_report" ]; then
 else
   echo "Deferred escalation-policy: none with failing runs: none."
 fi
+if [ -n "$recovered_report" ]; then
+  echo "Recovered — failed in the window, green now, deliberately not escalated:"
+  printf "$recovered_report"
+else
+  echo "Recovered workflows skipped: none."
+fi
 echo "Permanent escalation-policy: none (not a gap, the policy working): $permanent_count."
 if [ -n "$self_report" ]; then
   echo "Not escalated because the workflow files its own issue:"
@@ -223,12 +287,27 @@ fi
 # it found. Finding zero problems is an ordinary green with a non-zero attempted count; a
 # sweep that checked nothing -- registry unreadable, API returning empty -- attempted zero
 # and must fail.
-if [ "${#REGISTERED[@]}" -eq 0 ]; then
-  echo "::error::checked no workflows" >&2
+# `attempted` is COUNTED, not restated. An earlier version wrote the registry's size into
+# both fields, so the receipt could not express "attempted 0 of 22" -- the one thing it
+# exists to be able to say. The floor below then guarded a number that could not be zero
+# whenever the registry loaded, which is a floor that cannot fire.
+if [ "$attempted" -eq 0 ]; then
+  echo "::error::examined none of the ${#REGISTERED[@]} registered workflow(s); this sweep" \
+       "establishes nothing and must not be treated as a completed one" >&2
   exit 1
 fi
 
-printf '{"declared":%d,"attempted":%d,"gaps":%d,"filed":%d}\n' \
-  "${#REGISTERED[@]}" "${#REGISTERED[@]}" "$gaps" "$filed" > receipt.ndjson
+printf '{"declared":%d,"attempted":%d,"unreachable":%d,"gaps":%d,"filed":%d}\n' \
+  "${#REGISTERED[@]}" "$attempted" "$unreachable" "$gaps" "$filed" > receipt.ndjson
+echo "Receipt: declared ${#REGISTERED[@]}, attempted $attempted, unreachable $unreachable."
+
+# A sweep that could not reach part of its population did not do its job, and must not
+# advance the window for the next one. Failing here is what keeps that true, because the
+# window lookup filters on a successful conclusion.
+if [ "$unreachable" -gt 0 ]; then
+  echo "::error::$unreachable of ${#REGISTERED[@]} registered workflow(s) could not be" \
+       "examined; failing so the next sweep's window reaches back past this one" >&2
+  exit 1
+fi
 
 [ "$failed" -eq 0 ]
