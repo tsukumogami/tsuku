@@ -21,6 +21,8 @@ set -euo pipefail
 
 WINDOW_HOURS=""          # empty means derive from the last completed sweep
 DEFAULT_FIRST_WINDOW_HOURS=24
+STARTUP_MAX_PAGES=20   # 2000 runs; the cap is reported rather than silently truncating
+startup_query_failed=0
 DRY_RUN=""
 WORKFLOWS_DIR="${WORKFLOWS_DIR:-.github/workflows}"
 ESCALATION_LABEL="${ESCALATION_LABEL:-maintenance}"
@@ -67,6 +69,48 @@ else
   fi
 fi
 echo "Sweeping ${#REGISTERED[@]} registered workflow(s) for non-success runs since $SINCE"
+
+# --- runs rejected before job creation, identified once ------------------------------------
+#
+# Such a run has no readable `name:`, so GitHub records it under the workflow's FILE PATH.
+# That is the only signal, and reading it needs care: `gh run list --json workflowName`
+# resolves to the workflow's CURRENT name, so once a broken workflow is fixed the evidence
+# that it was ever rejected disappears from that field. Only the REST API keeps the name as
+# recorded (#2651).
+#
+# One query serves both readings: the report below, and the skip in the loop that would
+# otherwise escalate these as ordinary failures under a name they never had.
+# Paginated deliberately. One page is a horizon, not a window: this repository produced 508
+# runs in five days, so `per_page=100` reaches back about a day and silently omits anything
+# older -- which is how the first version of this query returned nothing while both runs it
+# was looking for sat two pages back. Walk until the page is older than SINCE.
+STARTUP_IDS=""
+startup_rest=""
+page=1
+while [ "$page" -le "$STARTUP_MAX_PAGES" ]; do
+  if ! body=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?per_page=100&page=${page}&created=>=${SINCE%%T*}" 2>/dev/null); then
+    echo "::error::could not page the run list at page ${page}; startup failures may be" \
+         "unreported for this sweep" >&2
+    startup_query_failed=1
+    break
+  fi
+  count=$(printf '%s' "$body" | jq '.workflow_runs | length')
+  [ "${count:-0}" -eq 0 ] && break
+  startup_rest="${startup_rest}$(printf '%s' "$body" | jq -r '.workflow_runs[] | select(.conclusion == "failure") | select(.name | startswith(".github/")) | [(.id|tostring), .name, .html_url] | @tsv')
+"
+  oldest=$(printf '%s' "$body" | jq -r '[.workflow_runs[].created_at] | min')
+  [[ "$oldest" < "$SINCE" ]] && break
+  page=$((page + 1))
+done
+if [ "$page" -gt "$STARTUP_MAX_PAGES" ]; then
+  echo "::error::run-list pagination hit its ${STARTUP_MAX_PAGES}-page cap before reaching" \
+       "$SINCE; startup failures older than that are unexamined" >&2
+  startup_query_failed=1
+fi
+while IFS=$'\t' read -r sid sname surl; do
+  [ -n "$sid" ] || continue
+  STARTUP_IDS="$STARTUP_IDS $sid"
+done <<< "$startup_rest"
 
 # Read one declaration key out of a workflow's leading comment block.
 decl_value() {  # decl_value <file> <key>
@@ -150,13 +194,15 @@ for wf in "${REGISTERED[@]}"; do
       continue
     fi
 
-    # A run rejected before job creation is reported under its file path, and the
-    # startup-failure pass below handles it. Reporting it here too would produce two
-    # tracked items for one run, and the less accurate of the two: this run did not fail,
-    # it was never allowed to start.
-    reported_name=$(printf '%s' "$row" | jq -r .workflowName)
-    case "$reported_name" in
-      .github/*) continue ;;
+    # A run rejected before job creation is handled by the startup pass below. Reporting it
+    # here too would produce two tracked items for one run, and the less accurate of the
+    # two: this run did not fail, it was never allowed to start.
+    #
+    # Membership of the id set, not a name test. `gh run list`'s workflowName is resolved,
+    # so it says "Escalate" for a run recorded as ".github/workflows/escalate.yml" and the
+    # name test silently stopped matching the moment the workflow was fixed (#2651).
+    case " $STARTUP_IDS " in
+      *" $run_id "*) continue ;;
     esac
     examined=$((examined + 1))
 
@@ -225,8 +271,7 @@ while IFS=$'\t' read -r sf_name sf_id sf_url; do
     gh issue create --title "$title" --body "$body" --label "$ESCALATION_LABEL" >/dev/null
     echo "filed a startup-failure report for $sf_name"
   fi
-done < <(gh run list --limit 100 --json workflowName,databaseId,url,createdAt,conclusion \
-           --jq "[.[] | select(.createdAt > \"$SINCE\") | select(.conclusion == \"failure\")] | .[] | [.workflowName, (.databaseId|tostring), .url] | @tsv" || true)
+done <<< "$(printf '%s' "$startup_rest" | awk -F'\t' 'NF{print $2"\t"$1"\t"$3}')"
 
 # --- what is deliberately not being escalated -------------------------------------------
 #
@@ -279,6 +324,8 @@ fi
 if [ "$startup_failures" -gt 0 ]; then
   echo "Runs rejected before job creation (invisible to every name-matching path):"
   printf "$startup_report"
+elif [ "$startup_query_failed" -eq 1 ]; then
+  echo "Runs rejected before job creation: UNKNOWN -- the query did not complete."
 else
   echo "Runs rejected before job creation: none."
 fi
