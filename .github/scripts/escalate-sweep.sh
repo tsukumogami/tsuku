@@ -21,7 +21,15 @@ set -euo pipefail
 
 WINDOW_HOURS=""          # empty means derive from the last completed sweep
 DEFAULT_FIRST_WINDOW_HOURS=24
-STARTUP_MAX_PAGES=20   # 2000 runs; the cap is reported rather than silently truncating
+# A runaway guard, not a horizon. The real bound is the window: paging stops as soon as a
+# page predates SINCE, so how far back it reaches follows from what the sweep claims to
+# cover rather than from a number chosen in advance. A fixed page count would be the same
+# kind of nominal figure as the two-hour lookback this sweeper just stopped using -- fine
+# at today's rate, silently short on a busier week.
+#
+# Safe because the API returns runs newest-first, verified across a page boundary: once a
+# page's oldest run predates the window, no later page can contain a newer one.
+STARTUP_PAGE_GUARD=200
 startup_query_failed=0
 DRY_RUN=""
 WORKFLOWS_DIR="${WORKFLOWS_DIR:-.github/workflows}"
@@ -87,7 +95,7 @@ echo "Sweeping ${#REGISTERED[@]} registered workflow(s) for non-success runs sin
 STARTUP_IDS=""
 startup_rest=""
 page=1
-while [ "$page" -le "$STARTUP_MAX_PAGES" ]; do
+while [ "$page" -le "$STARTUP_PAGE_GUARD" ]; do
   if ! body=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?per_page=100&page=${page}&created=>=${SINCE%%T*}" 2>/dev/null); then
     echo "::error::could not page the run list at page ${page}; startup failures may be" \
          "unreported for this sweep" >&2
@@ -102,9 +110,10 @@ while [ "$page" -le "$STARTUP_MAX_PAGES" ]; do
   [[ "$oldest" < "$SINCE" ]] && break
   page=$((page + 1))
 done
-if [ "$page" -gt "$STARTUP_MAX_PAGES" ]; then
-  echo "::error::run-list pagination hit its ${STARTUP_MAX_PAGES}-page cap before reaching" \
-       "$SINCE; startup failures older than that are unexamined" >&2
+if [ "$page" -gt "$STARTUP_PAGE_GUARD" ]; then
+  echo "::error::could not reach the start of my own window ($SINCE) within" \
+       "${STARTUP_PAGE_GUARD} pages, so this sweep did not examine the period it claims" \
+       "to cover" >&2
   startup_query_failed=1
 fi
 while IFS=$'\t' read -r sid sname surl; do
@@ -154,15 +163,30 @@ for wf in "${REGISTERED[@]}"; do
   #
   # Recovered workflows are COUNTED AND NAMED rather than silently skipped, because a
   # deliberate skip and a missed workflow look identical in an absence.
+  # The exit status is kept here too. A failed query leaves `latest` empty, which is not
+  # "not successful" -- it is "unknown", and treating it as the former would escalate a
+  # workflow whose state was never read.
   if [ -n "$only_on" ]; then
     latest=$(gh run list --workflow "$(basename "$file")" --limit 30 \
                --json conclusion,event,createdAt \
-               --jq "[.[] | select(.event == \"$only_on\") | select(.conclusion != \"\" and .conclusion != null)] | .[0].conclusion // empty" || true)
+               --jq "[.[] | select(.event == \"$only_on\") | select(.conclusion != \"\" and .conclusion != null)] | .[0].conclusion // empty" 2>/dev/null)
   else
     latest=$(gh run list --workflow "$(basename "$file")" --limit 30 \
                --json conclusion,createdAt \
-               --jq '[.[] | select(.conclusion != "" and .conclusion != null)] | .[0].conclusion // empty' || true)
+               --jq '[.[] | select(.conclusion != "" and .conclusion != null)] | .[0].conclusion // empty' 2>/dev/null)
   fi
+  if [ $? -ne 0 ]; then
+    unreachable=$((unreachable + 1))
+    echo "::error::could not read the latest conclusion for \"$wf\"; NOT examined" >&2
+    continue
+  fi
+
+  # Examined: its state was read and a decision made. That includes deciding not to
+  # escalate it. An earlier version counted only workflows that reached the second query,
+  # so the receipt reported 8 of 22 on a sweep that had assessed all 22 -- understating its
+  # own coverage, in the field that exists to state it.
+  attempted=$((attempted + 1))
+
   if [ "$latest" = "success" ]; then
     recovered=$((recovered + 1))
     recovered_report="${recovered_report}    \"$wf\": latest run succeeded; nothing escalated for earlier failures in the window\n"
@@ -176,8 +200,9 @@ for wf in "${REGISTERED[@]}"; do
   if runs=$(gh run list --workflow "$(basename "$file")" --limit 50 \
               --json conclusion,event,databaseId,url,createdAt,workflowName \
               --jq "[.[] | select(.createdAt > \"$SINCE\") | select(.conclusion != \"success\" and .conclusion != \"\" and .conclusion != null)] | .[] | @base64" 2>/dev/null); then
-    attempted=$((attempted + 1))
+    :
   else
+    attempted=$((attempted - 1))
     unreachable=$((unreachable + 1))
     echo "::error::could not query runs for \"$wf\"; this workflow was NOT examined" >&2
     continue
