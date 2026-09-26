@@ -20,9 +20,6 @@ on:
     - cron: '0 2 * * *'
   # Allow manual trigger
   workflow_dispatch:
-  # TEMPORARY: lets the pull-request proof run this file's real jobs under another
-  # workflow's name, so the escalator never sees those runs. Removed before merge.
-  workflow_call:
 
 jobs:
   # Check R2 availability before validation
@@ -392,7 +389,7 @@ jobs:
   create-skip-issue:
     name: Create Skip Issue
     needs: health-check
-    if: needs.health-check.outputs.r2_available == 'false' && github.event_name != 'pull_request'
+    if: needs.health-check.outputs.r2_available == 'false'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -445,7 +442,7 @@ jobs:
   create-failure-issue:
     name: Create Failure Issue
     needs: [health-check, validate-plans-linux, validate-plans-macos, execute-sample-linux]
-    if: failure() && needs.health-check.outputs.r2_available == 'true' && github.event_name != 'pull_request'
+    if: failure() && needs.health-check.outputs.r2_available == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
