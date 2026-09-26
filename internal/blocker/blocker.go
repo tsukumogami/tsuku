@@ -55,6 +55,78 @@ func LoadBlockerMap(dir string) (map[string][]string, error) {
 	return blockers, nil
 }
 
+// BlockerIndex maps each failed package to the dependencies that blocked it,
+// keeping the two record formats apart so a queue entry can be matched the way
+// each format identifies it.
+type BlockerIndex struct {
+	// BySource holds legacy batch records, keyed by their full package_id,
+	// which is the queue entry's source.
+	BySource map[string][]string
+
+	// ByRecipe holds per-recipe records, keyed by recipe name, which is the
+	// queue entry's name. These records carry no source.
+	ByRecipe map[string][]string
+}
+
+// For returns the deduplicated dependencies recorded as blocking a queue
+// entry with the given source and name.
+func (x *BlockerIndex) For(source, name string) []string {
+	var deps []string
+	for _, dep := range append(append([]string{}, x.BySource[source]...), x.ByRecipe[name]...) {
+		if !containsDep(deps, dep) {
+			deps = append(deps, dep)
+		}
+	}
+	return deps
+}
+
+func containsDep(deps []string, dep string) bool {
+	for _, d := range deps {
+		if d == dep {
+			return true
+		}
+	}
+	return false
+}
+
+// LoadBlockerIndex reads all JSONL files in a directory and builds a
+// BlockerIndex. Unlike LoadBlockerMap it does not synthesize a package ID for
+// per-recipe records, so nothing is matched on an ID that is not a real
+// source. Like LoadBlockerMap, it returns an error when the directory holds
+// no failure files.
+func LoadBlockerIndex(dir string) (*BlockerIndex, error) {
+	files, err := filepath.Glob(filepath.Join(dir, "*.jsonl"))
+	if err != nil {
+		return nil, fmt.Errorf("glob failures: %w", err)
+	}
+	if len(files) == 0 {
+		return nil, fmt.Errorf("no failure files found in %s", dir)
+	}
+	idx := &BlockerIndex{BySource: map[string][]string{}, ByRecipe: map[string][]string{}}
+	for _, path := range files {
+		file, err := os.Open(path)
+		if err != nil {
+			continue // Skip files that can't be read
+		}
+		scanner := bufio.NewScanner(file)
+		scanner.Buffer(make([]byte, 0, 64*1024), 1<<20)
+		for scanner.Scan() {
+			var record FailureRecord
+			if err := json.Unmarshal(scanner.Bytes(), &record); err != nil {
+				continue // Skip malformed lines
+			}
+			for _, f := range record.Failures {
+				idx.BySource[f.PackageID] = append(idx.BySource[f.PackageID], f.BlockedBy...)
+			}
+			if record.Recipe != "" {
+				idx.ByRecipe[record.Recipe] = append(idx.ByRecipe[record.Recipe], record.BlockedBy...)
+			}
+		}
+		file.Close()
+	}
+	return idx, nil
+}
+
 // loadBlockersFromFile reads a single JSONL file and populates the blocker map.
 // Uses bufio.Scanner with an increased buffer (1MB max) to handle failure records
 // that can exceed the default 64KB line limit for large batches.

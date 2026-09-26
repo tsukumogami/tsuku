@@ -397,66 +397,30 @@ func TestRun_ChangeDetailsPopulated(t *testing.T) {
 	}
 }
 
-// TestBuildReverseIndex verifies the blocker map inversion.
-func TestBuildReverseIndex(t *testing.T) {
-	blockerMap := map[string][]string{
-		"gmp":     {"homebrew:ffmpeg", "homebrew:coreutils"},
-		"openssl": {"homebrew:curl", "homebrew:ffmpeg"},
+// A legacy record's package_id is the entry's source. A blocked entry whose
+// name differs from its source's identifier must still find its blockers.
+func TestRun_BlockersMatchedBySource(t *testing.T) {
+	dir := t.TempDir()
+	writeJSONL(t, dir, "github-1.jsonl", []string{
+		`{"schema_version":1,"ecosystem":"github","failures":[{"package_id":"github:github/hub","category":"missing_dep","blocked_by":["git"]}]}`})
+
+	queue := &batch.UnifiedQueue{Entries: []batch.QueueEntry{
+		{Name: "hub", Source: "github:github/hub", Priority: 1, Status: batch.StatusBlocked, Confidence: "curated"},
+		{Name: "git", Source: "homebrew:git", Priority: 1, Status: batch.StatusSuccess, Confidence: "auto"},
+		// Named after the identifier in the record, but not its source.
+		{Name: "github/hub", Source: "homebrew:hub", Priority: 3, Status: batch.StatusBlocked, Confidence: "auto"},
+	}}
+	result, err := Run(queue, dir)
+	if err != nil {
+		t.Fatal(err)
 	}
-
-	reverse := buildReverseIndex(blockerMap)
-
-	// ffmpeg is blocked by both gmp and openssl
-	if len(reverse["ffmpeg"]) != 2 {
-		t.Errorf("ffmpeg blockers: got %d, want 2", len(reverse["ffmpeg"]))
+	if queue.Entries[0].Status != batch.StatusPending {
+		t.Errorf("hub status = %s, want pending (its blocker git is resolved)", queue.Entries[0].Status)
 	}
-
-	// curl is blocked by openssl only
-	if len(reverse["curl"]) != 1 {
-		t.Errorf("curl blockers: got %d, want 1", len(reverse["curl"]))
+	if queue.Entries[2].Status != batch.StatusBlocked {
+		t.Errorf("github/hub (homebrew:hub) status = %s, want blocked: the record is for github:github/hub", queue.Entries[2].Status)
 	}
-	if reverse["curl"][0] != "openssl" {
-		t.Errorf("curl blocker: got %q, want openssl", reverse["curl"][0])
-	}
-
-	// coreutils is blocked by gmp only
-	if len(reverse["coreutils"]) != 1 {
-		t.Errorf("coreutils blockers: got %d, want 1", len(reverse["coreutils"]))
-	}
-}
-
-// TestBuildReverseIndex_DeduplicatesDeps verifies that duplicate dependencies
-// are not added to the reverse index.
-func TestBuildReverseIndex_DeduplicatesDeps(t *testing.T) {
-	blockerMap := map[string][]string{
-		// gmp blocks ffmpeg twice (from multiple failure records)
-		"gmp": {"homebrew:ffmpeg", "homebrew:ffmpeg"},
-	}
-
-	reverse := buildReverseIndex(blockerMap)
-
-	// Should have gmp only once for ffmpeg
-	if len(reverse["ffmpeg"]) != 1 {
-		t.Errorf("ffmpeg blockers: got %v, want [gmp]", reverse["ffmpeg"])
-	}
-}
-
-// TestBareName verifies extraction of bare names from package IDs.
-func TestBareName(t *testing.T) {
-	tests := []struct {
-		input string
-		want  string
-	}{
-		{"homebrew:ffmpeg", "ffmpeg"},
-		{"cargo:ripgrep", "ripgrep"},
-		{"ffmpeg", "ffmpeg"},
-		{"a:b:c", "b:c"},
-	}
-
-	for _, tt := range tests {
-		got := bareName(tt.input)
-		if got != tt.want {
-			t.Errorf("bareName(%q): got %q, want %q", tt.input, got, tt.want)
-		}
+	if result.Requeued != 1 || result.Remaining != 1 {
+		t.Errorf("Requeued = %d, Remaining = %d; want 1, 1", result.Requeued, result.Remaining)
 	}
 }
