@@ -67,7 +67,7 @@ case "\$args" in
   *"actions/workflows/escalate-sweep.yml/runs"*) printf '%s' '2026-09-25T00:00:00Z' ;;
   *"--limit 30"*) printf '%s' '${latest}' ;;
   *"--limit 50"*)
-      printf '%s' "\$(printf '{"conclusion":"failure","event":"schedule","databaseId":111,"url":"http://x","createdAt":"2099-01-01T00:00:00Z","workflowName":"Demo Workflow"}' | base64 -w0)" ;;
+      printf '%s' "\$(printf '{"conclusion":"failure","event":"schedule","databaseId":111,"url":"http://x","createdAt":"2099-01-01T00:00:00Z","workflowName":"Demo Workflow","headBranch":"main"}' | base64 -w0)" ;;
   *) : ;;
 esac
 STUB
@@ -77,9 +77,9 @@ STUB
 
 run_escalate() {  # run_escalate <sandbox> <conclusion>
   local s="$1"
-  (cd "$s" && PATH="$s/bin:$PATH" GITHUB_REPOSITORY=o/r WORKFLOWS_DIR="$s/workflows" \
+  (cd "$s" && PATH="$s/bin:$PATH" GITHUB_REPOSITORY=o/r DEFAULT_BRANCH=main WORKFLOWS_DIR="$s/workflows" \
     bash "$ESCALATE" --workflow "Demo Workflow" --conclusion "$2" --run-id 111 \
-      --run-url http://x --event schedule --outcome-file "$s/outcome.tsv" 2>&1)
+      --run-url http://x --event schedule --branch main --outcome-file "$s/outcome.tsv" 2>&1)
 }
 
 # The listener's receipt step, run as written in escalate.yml rather than restated here,
@@ -102,7 +102,7 @@ PY
 
 run_sweep() {  # run_sweep <sandbox>
   local s="$1"
-  (cd "$REPO_ROOT" && PATH="$s/bin:$PATH" GITHUB_REPOSITORY=o/r WORKFLOWS_DIR="$s/workflows" \
+  (cd "$REPO_ROOT" && PATH="$s/bin:$PATH" GITHUB_REPOSITORY=o/r DEFAULT_BRANCH=main WORKFLOWS_DIR="$s/workflows" \
     REGISTRY="$s/registry.yml" bash "$SWEEP" --dry-run 2>&1)
 }
 
