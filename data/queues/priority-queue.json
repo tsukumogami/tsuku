@@ -146,7 +146,7 @@
       "name": "task",
       "source": "homebrew:go-task",
       "priority": 1,
-      "status": "pending",
+      "status": "excluded",
       "confidence": "curated",
       "disambiguated_at": null,
       "failure_count": 3,
