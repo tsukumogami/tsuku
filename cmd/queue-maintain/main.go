@@ -1,5 +1,7 @@
-// Command queue-maintain performs queue maintenance in three steps:
+// Command queue-maintain performs queue maintenance in four steps:
 //
+//  0. Reconcile: mark open entries success when an existing recipe already
+//     covers them (by name, source, alias or [metadata.satisfies] key).
 //  1. Mark failures: read failure JSONL data and set queue entry statuses
 //     to failed/blocked; expire backoffs on failed entries past next_retry_at.
 //  2. Requeue: flip blocked entries to pending when their blocking
@@ -7,13 +9,14 @@
 //  3. Reorder: sort entries within each priority level by transitive
 //     blocking impact.
 //
-// All steps run by default; use --skip-mark-failures, --skip-requeue, or
-// --skip-reorder to skip individual steps.
+// All steps run by default; use --skip-reconcile, --skip-mark-failures,
+// --skip-requeue, or --skip-reorder to skip individual steps.
 //
 // Usage:
 //
-//	queue-maintain [-queue path] [-failures-dir path] [-output path] [-dry-run] [-json]
-//	               [-skip-mark-failures] [-skip-requeue] [-skip-reorder]
+//	queue-maintain [-queue path] [-failures-dir path] [-recipes-dir path] [-embedded-dir path]
+//	               [-output path] [-dry-run] [-json]
+//	               [-skip-reconcile] [-skip-mark-failures] [-skip-requeue] [-skip-reorder]
 package main
 
 import (
@@ -30,17 +33,21 @@ import (
 
 // maintainResult holds the combined results from all steps for JSON output.
 type maintainResult struct {
-	MarkFailures *markfailures.Result `json:"mark_failures,omitempty"`
-	Requeue      *requeue.Result      `json:"requeue,omitempty"`
-	Reorder      *reorder.Result      `json:"reorder,omitempty"`
+	Reconcile    *batch.ReconcileResult `json:"reconcile,omitempty"`
+	MarkFailures *markfailures.Result   `json:"mark_failures,omitempty"`
+	Requeue      *requeue.Result        `json:"requeue,omitempty"`
+	Reorder      *reorder.Result        `json:"reorder,omitempty"`
 }
 
 func main() {
 	queueFile := flag.String("queue", "data/queues/priority-queue.json", "path to unified priority queue file")
 	failuresDir := flag.String("failures-dir", "data/failures", "directory containing failures JSONL files")
+	recipesDir := flag.String("recipes-dir", "recipes", "registry recipes directory")
+	embeddedDir := flag.String("embedded-dir", "internal/recipe/recipes", "embedded recipes directory")
 	output := flag.String("output", "", "output file path (default: overwrite queue file)")
 	dryRun := flag.Bool("dry-run", false, "compute and report changes without writing")
 	jsonOutput := flag.Bool("json", false, "output result as JSON")
+	skipReconcile := flag.Bool("skip-reconcile", false, "skip the reconcile step")
 	skipMarkFailures := flag.Bool("skip-mark-failures", false, "skip the mark-failures step")
 	skipRequeue := flag.Bool("skip-requeue", false, "skip the requeue step")
 	skipReorder := flag.Bool("skip-reorder", false, "skip the reorder step")
@@ -54,6 +61,24 @@ func main() {
 	}
 
 	var combined maintainResult
+
+	// Step 0: Reconcile with recipes on disk
+	if !*skipReconcile {
+		recipes, warnings, err := batch.ScanRecipeIdentities(*recipesDir, *embeddedDir)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: reconcile: scan recipes: %v\n", err)
+			os.Exit(1)
+		}
+		for _, w := range warnings {
+			fmt.Fprintf(os.Stderr, "warning: reconcile: skipping %s\n", w)
+		}
+		if len(recipes) == 0 {
+			// Reconciling against nothing would silently report zero changes.
+			fmt.Fprintf(os.Stderr, "error: reconcile: no recipes found in %s or %s\n", *recipesDir, *embeddedDir)
+			os.Exit(1)
+		}
+		combined.Reconcile = batch.Reconcile(queue, recipes)
+	}
 
 	// Step 1: Mark failures
 	if !*skipMarkFailures {
@@ -116,6 +141,17 @@ func main() {
 }
 
 func printHumanOutput(combined maintainResult, dryRun bool) {
+	if combined.Reconcile != nil {
+		r := combined.Reconcile
+		fmt.Fprintf(os.Stderr, "Reconcile complete\n")
+		fmt.Fprintf(os.Stderr, "  Recipes compared: %d\n", r.Recipes)
+		fmt.Fprintf(os.Stderr, "  Open entries: %d\n", r.Open)
+		fmt.Fprintf(os.Stderr, "  Entries marked success: %d\n", r.Reconciled)
+		for _, c := range r.Changes {
+			fmt.Fprintf(os.Stderr, "  - %s (%s): %s -> success, covered by %s (%s)\n", c.Name, c.Source, c.FromStatus, c.Recipe, c.Rule)
+		}
+	}
+
 	if combined.MarkFailures != nil {
 		fmt.Fprintf(os.Stderr, "Mark failures complete\n")
 		fmt.Fprintf(os.Stderr, "  Entries marked failed: %d\n", combined.MarkFailures.MarkedFailed)
