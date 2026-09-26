@@ -41,12 +41,25 @@ jobs:
           fi
 
           echo "Checking R2 health..."
-          if ./scripts/r2-health-check.sh; then
-            echo "r2_available=true" >> $GITHUB_OUTPUT
-          else
-            echo "::warning::R2 health check failed"
-            echo "r2_available=false" >> $GITHUB_OUTPUT
-          fi
+          # Only "unavailable" (exit 1) counts as unavailable. "degraded" (exit 2) means R2
+          # answered 200, slowly, so execution validation can still fetch golden files.
+          set +e
+          ./scripts/r2-health-check.sh
+          EXIT_CODE=$?
+          set -e
+          case $EXIT_CODE in
+            0)
+              echo "r2_available=true" >> $GITHUB_OUTPUT
+              ;;
+            2)
+              echo "::warning::R2 health check reported degraded; validating anyway, since R2 answered"
+              echo "r2_available=true" >> $GITHUB_OUTPUT
+              ;;
+            *)
+              echo "::warning::R2 health check failed"
+              echo "r2_available=false" >> $GITHUB_OUTPUT
+              ;;
+          esac
 
   detect-changes:
     name: Detect Changes

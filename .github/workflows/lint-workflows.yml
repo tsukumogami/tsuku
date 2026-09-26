@@ -71,3 +71,9 @@ jobs:
       # issue" is also what an escalator that does nothing produces.
       - name: Check failures route to the issue that owns them
         run: .github/scripts/checks/escalate-owned_test.sh
+      # The R2 health check gates Nightly Registry Validation, R2 Cleanup and the golden
+      # file workflows, and R2 Health Monitor reports its verdict. These cases pin that the
+      # verdict times the storage request rather than the start-up of the program making
+      # it (#2593), against a local stand-in for R2 that only accepts signed requests.
+      - name: Check the R2 health check times the request
+        run: scripts/r2-health-check_test.sh
