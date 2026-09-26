@@ -84,7 +84,8 @@ type recipeMinimal struct {
 }
 
 type recipeMetadataMinimal struct {
-	Name string `toml:"name"`
+	Name      string              `toml:"name"`
+	Satisfies map[string][]string `toml:"satisfies"`
 }
 
 type recipeVersionMinimal struct {
@@ -212,50 +213,17 @@ func scanRecipes(recipesDir string) ([]QueueEntry, error) {
 // recipeToEntry parses a recipe TOML file and creates a QueueEntry.
 // Returns nil if no source can be extracted from the recipe steps.
 func recipeToEntry(path string) (*QueueEntry, error) {
-	data, err := os.ReadFile(path)
+	id, err := ReadRecipeIdentity(path)
 	if err != nil {
-		return nil, fmt.Errorf("read file: %w", err)
+		return nil, err
 	}
-
-	var meta toml.MetaData
-	var raw recipeMinimal
-	meta, err = toml.Decode(string(data), &raw)
-	if err != nil {
-		return nil, fmt.Errorf("parse TOML: %w", err)
-	}
-
-	name := raw.Metadata.Name
-	if name == "" {
-		return nil, fmt.Errorf("recipe has no name")
-	}
-
-	// Extract source from the first ecosystem-indicating step
-	source := ""
-	for _, prim := range raw.Steps {
-		var step recipeStepMinimal
-		if err := meta.PrimitiveDecode(prim, &step); err != nil {
-			continue
-		}
-		source = sourceFromStep(step)
-		if source != "" {
-			break
-		}
-	}
-
-	// Fallback: if no ecosystem step found, use the version section's github_repo.
-	// This covers recipes that use generic download/extract steps but resolve
-	// versions from GitHub releases (e.g., HashiCorp tools, Go SDK).
-	if source == "" && raw.Version.GitHubRepo != "" {
-		source = "github:" + raw.Version.GitHubRepo
-	}
-
-	if source == "" {
+	if id.Source == "" {
 		return nil, fmt.Errorf("no source found in steps")
 	}
 
 	return &QueueEntry{
-		Name:       name,
-		Source:     source,
+		Name:       id.Name,
+		Source:     id.Source,
 		Priority:   3, // Default; will be overridden by homebrew data if available
 		Status:     StatusSuccess,
 		Confidence: ConfidenceCurated,
