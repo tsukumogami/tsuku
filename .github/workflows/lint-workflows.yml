@@ -76,3 +76,9 @@ jobs:
       # the cases assert both the keys and each tool's own count of what it compared.
       - name: Check the R2 golden layout and its readers
         run: scripts/lib/r2-layout_test.sh
+      # The R2 health check gates Nightly Registry Validation, R2 Cleanup and the golden
+      # file workflows, and R2 Health Monitor reports its verdict. These cases pin that the
+      # verdict times the storage request rather than the start-up of the program making
+      # it (#2593), against a local stand-in for R2 that only accepts signed requests.
+      - name: Check the R2 health check times the request
+        run: scripts/r2-health-check_test.sh
