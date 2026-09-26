@@ -1,7 +1,7 @@
 # escalation-policy: issue
 # escalation-assignee: dangazineu
-# escalation-owned-by: 2448
-# escalation-owned-by-reason: #2448 is why every night fails coverage: R2 golden files sit under a layout no consumer reads, so nothing is validated
+# escalation-owned-by: 2695
+# escalation-owned-by-reason: #2695 is what NRV fails on once it compares anything: 297 registry golden plans in R2 have drifted from what the code generates
 # coverage: items
 
 # Nightly validation of registry recipe golden files.
