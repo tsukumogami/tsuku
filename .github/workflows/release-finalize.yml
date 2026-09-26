@@ -10,6 +10,13 @@
 #   4 Go (goreleaser)  +  4 Rust glibc  +  2 Rust musl  +  6 LLM
 #
 # Requires: RELEASE_PAT secret with release edit permission.
+#
+# The tag comes from the triggering run, so it is treated as untrusted input.
+# extract-tag only proceeds for a tag push in this repository (the only way
+# release.yml is triggered), reads the branch name through an environment
+# variable rather than expanding it into the script, and refuses anything that
+# is not vMAJOR.MINOR.PATCH. That job holds no secret and no token, so a bad
+# value is rejected before the job carrying RELEASE_PAT is ever started.
 
 name: Finalize Release
 
@@ -20,13 +27,24 @@ on:
 
 jobs:
   extract-tag:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
+    permissions: {}
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
     steps:
       - id: tag
-        run: echo "tag=${{ github.event.workflow_run.head_branch }}" >> "$GITHUB_OUTPUT"
+        env:
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          if [[ ! "$HEAD_BRANCH" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Triggering run's ref is not a vMAJOR.MINOR.PATCH release tag; refusing to finalize."
+            exit 1
+          fi
+          echo "tag=$HEAD_BRANCH" >> "$GITHUB_OUTPUT"
 
   finalize:
     needs: extract-tag
