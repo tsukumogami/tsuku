@@ -7,9 +7,17 @@
 # This workflow validates all registry recipes by downloading golden files
 # from R2 storage and comparing freshly generated plans against them.
 #
-# Two-tier degradation:
-# - R2 available: download golden files, run validation
-# - R2 unavailable: skip validation, create tracking issue
+# R2 health gates the run:
+# - healthy: download golden files, run validation
+# - degraded (R2 answered, but slowly): validate anyway, with a warning. R2 answered, so
+#   there is nothing to skip for.
+# - unavailable (R2 did not answer): skip validation, and fail the run on purpose so a
+#   night that validated nothing is not reported as a green one.
+#
+# The skip path does not file its own issue. This workflow is registered with the
+# escalator (escalate.yml / escalate-sweep.yml), which carries a failed run to its tracked
+# item. A skipped night reaches that item by failing; a filing step that succeeded would
+# instead turn the run green, and the escalator reads green as recovery (#2657).
 #
 # See docs/designs/DESIGN-r2-golden-storage.md for architecture details.
 name: Nightly Registry Validation
@@ -42,19 +50,27 @@ jobs:
         run: |
           echo "Checking R2 health..."
 
-          # Run health check script
-          if ./scripts/r2-health-check.sh; then
-            echo "r2_available=true" >> $GITHUB_OUTPUT
-            echo "health_status=healthy" >> $GITHUB_OUTPUT
-          else
-            EXIT_CODE=$?
-            echo "r2_available=false" >> $GITHUB_OUTPUT
-            if [ $EXIT_CODE -eq 2 ]; then
+          # Only "unavailable" skips validation. "degraded" means R2 answered 200, slowly,
+          # so the downloads that follow can still work.
+          set +e
+          ./scripts/r2-health-check.sh
+          EXIT_CODE=$?
+          set -e
+          case $EXIT_CODE in
+            0)
+              echo "r2_available=true" >> $GITHUB_OUTPUT
+              echo "health_status=healthy" >> $GITHUB_OUTPUT
+              ;;
+            2)
+              echo "::warning::R2 health check reported degraded; validating anyway, since R2 answered"
+              echo "r2_available=true" >> $GITHUB_OUTPUT
               echo "health_status=degraded" >> $GITHUB_OUTPUT
-            else
+              ;;
+            *)
+              echo "r2_available=false" >> $GITHUB_OUTPUT
               echo "health_status=unavailable" >> $GITHUB_OUTPUT
-            fi
-          fi
+              ;;
+          esac
 
   # Download golden files from R2 when available
   download-golden-files:
@@ -330,58 +346,28 @@ jobs:
           echo "failed=false" >> $GITHUB_OUTPUT
           echo "Sample execution completed successfully"
 
-  # Create issue when R2 is unavailable (validation skipped)
-  create-skip-issue:
-    name: Create Skip Issue
+  # Fail the run when validation was skipped. Nothing was validated, so the run must not
+  # conclude success; the escalator carries the failure to this workflow's tracked item.
+  report-skipped-validation:
+    name: Report Skipped Validation
     needs: health-check
     if: needs.health-check.outputs.r2_available == 'false'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Create R2 unavailable issue
+      - name: Fail because no validation ran
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEALTH_STATUS: ${{ needs.health-check.outputs.health_status }}
         run: |
-          HEALTH_STATUS="${{ needs.health-check.outputs.health_status }}"
-
-          BODY="## Nightly Validation Skipped - R2 Unavailable
-
-          The nightly validation workflow was skipped because R2 storage is unavailable.
-
-          **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
-          ### Health Check Result
-
-          - **Status:** $HEALTH_STATUS
-          - **Time:** $(date -u +"%Y-%m-%dT%H:%M:%SZ")
-
-          ### Impact
-
-          - Registry golden file validation was not performed
-          - Recipe execution tests were not performed
-
-          ### Next Steps
-
-          1. Check Cloudflare R2 status: https://www.cloudflarestatus.com/
-          2. Verify R2 credentials are correctly configured
-          3. Re-run workflow manually once R2 is available
-          "
-
-          # Check if similar issue already exists
-          EXISTING=$(gh issue list --label "r2-unavailable" --state open --json number --limit 1 | jq -r '.[0].number // empty')
-
-          if [ -n "$EXISTING" ]; then
-            echo "Adding comment to existing issue #$EXISTING"
-            gh issue comment "$EXISTING" --body "$BODY"
-          else
-            echo "Creating new issue"
-            gh issue create \
-              --title "chore: nightly validation skipped - R2 unavailable ($(date +%Y-%m-%d))" \
-              --body "$BODY" \
-              --label "r2-unavailable"
-          fi
+          MESSAGE="Validation did not run: the R2 health check reported '$HEALTH_STATUS', so golden files could not be fetched. No recipe was validated."
+          {
+            echo "## Nightly validation skipped"
+            echo
+            echo "$MESSAGE"
+            echo
+            echo "The R2 Health Check job's log has the request timings and the error."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::error::$MESSAGE"
+          exit 1
 
   # Create issue on validation failure (when R2 is available)
   create-failure-issue:
