@@ -182,6 +182,14 @@ referencing it. The event removed one of the two stacked causes. It did not make
 workflow file an issue, and the Outstanding evidence section above says what would show
 that it had.
 
+**2026-09-26 — `curated-nightly` stops filing its own issue.** Its `Create failure issue`
+job opened a new dated issue on every failing night, each listing the whole curated set
+rather than what failed (#2641). The shared escalator had by then filed for the same
+failure (#2659, 14 seconds after the workflow's own #2658), so the job was removed along
+with `issues: write`. A failed run now reaches its assignee through the escalator alone.
+The `curated-recipe-failure` label stays in the manifest: issues already carry it, and
+the manifest has no delete path.
+
 ## Scheduled run reaches nobody; the same check does reach a PR author
 
 These also run on `pull_request`, where the check is consumed by whoever opened the pull
