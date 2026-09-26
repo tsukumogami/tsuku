@@ -5,8 +5,8 @@
 name: Curated Recipe Nightly
 # Nightly cross-platform validation for all recipes with curated = true in
 # their [metadata] section. Calls recipe-validation-core.yml (full validation
-# suite) and creates a GitHub issue labeled curated-recipe-failure when any
-# job fails.
+# suite). A failed run is escalated by the shared escalator (escalate.yml),
+# which files one issue per failing workflow rather than one per night.
 #
 # Recipes are discovered dynamically — setting curated = true in a recipe's
 # [metadata] is sufficient to enroll it in nightly CI.
@@ -19,16 +19,14 @@ on:
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
-  # Discover all recipes with curated = true and expose the list for use in
-  # the failure issue body
+  # Discover all recipes with curated = true; validation is skipped when there
+  # are none
   setup:
     name: Discover curated recipes
     runs-on: ubuntu-latest
     outputs:
-      curated_recipes: ${{ steps.discover.outputs.curated_recipes }}
       has_recipes: ${{ steps.discover.outputs.has_recipes }}
     steps:
       - uses: actions/checkout@v6
@@ -38,7 +36,6 @@ jobs:
         run: |
           RECIPES=$(grep -rl 'curated = true' recipes/ internal/recipe/recipes/ | sort | jq -R . | jq -sc .)
           COUNT=$(echo "$RECIPES" | jq 'length')
-          echo "curated_recipes=$RECIPES" >> "$GITHUB_OUTPUT"
 
           if [ "$COUNT" -gt 0 ]; then
             echo "has_recipes=true" >> "$GITHUB_OUTPUT"
@@ -59,36 +56,3 @@ jobs:
       auto_constrain: false
     secrets: inherit
 
-  # Create a GitHub issue when validation fails
-  notify-on-failure:
-    name: Create failure issue
-    needs: [setup, validate]
-    if: failure() && needs.setup.outputs.has_recipes == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create curated recipe failure issue
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CURATED_RECIPES: ${{ needs.setup.outputs.curated_recipes }}
-        run: |
-          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
-          RECIPE_LIST=$(echo "$CURATED_RECIPES" | jq -r '.[]' | sed 's/^/- /')
-
-          BODY="## Curated Recipe Nightly Validation Failed"
-          BODY+=$'\n\n'
-          BODY+="The nightly validation run failed. One or more curated recipes may have broken download URLs, renamed binaries, or other installation issues."
-          BODY+=$'\n\n'
-          BODY+="**Monitored recipes:**"
-          BODY+=$'\n\n'
-          BODY+="$RECIPE_LIST"
-          BODY+=$'\n\n'
-          BODY+="**Workflow run:** $RUN_URL"
-          BODY+=$'\n\n'
-          BODY+="Review the failing jobs in the workflow run to identify which recipe and platform are affected."
-
-          gh issue create \
-            --title "Curated recipe validation failed ($(date +%Y-%m-%d))" \
-            --body "$BODY" \
-            --label "curated-recipe-failure" \
-            --repo "${{ github.repository }}"
