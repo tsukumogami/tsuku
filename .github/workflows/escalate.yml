@@ -32,7 +32,6 @@ on:
       - "Build Essentials"
       - "Cargo Builder Tests"
       - "Checksum Drift Monitoring"
-      - "Curated Recipe Nightly"
       - "Deploy Recipes (Deprecated)"
       - "Discovery Registry Freshness"
       - "Gem Builder Tests"
