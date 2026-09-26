@@ -77,6 +77,13 @@ jobs:
       - name: Check the escalation backstop can fail, and says why
         run: .github/scripts/checks/escalation-backstop_test.py
 
+      # The R2 health check gates Nightly Registry Validation, R2 Cleanup and the golden
+      # file workflows, and R2 Health Monitor reports its verdict. These cases pin that the
+      # verdict times the storage request rather than the start-up of the program making
+      # it (#2593), against a local stand-in for R2 that only accepts signed requests.
+      - name: Check the R2 health check times the request
+        run: scripts/r2-health-check_test.sh
+
   # The escalation backstop (#2607): was every recent failure of a registered workflow told
   # to someone? Its own job, so its verdict is its own check and neither hides nor is hidden
   # by the lint results above.
