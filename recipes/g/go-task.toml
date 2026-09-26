@@ -7,7 +7,10 @@
   tier = 0
   type = ""
   llm_validation = "skipped"
-supported_os = ["darwin"]
+supported_libc = ["glibc"]
+
+[metadata.satisfies]
+aliases = ["task"]
 
 [[steps]]
   action = "homebrew"
