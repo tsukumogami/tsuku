@@ -1,30 +1,33 @@
 {
-  "generated_at": "2026-09-26T14:49:54Z",
+  "generated_at": "2026-09-26T21:54:42Z",
   "queue": {
     "total": 5305,
     "by_status": {
-      "blocked": 22,
+      "blocked": 23,
       "excluded": 7,
-      "pending": 3902,
-      "success": 1374
+      "failed": 6,
+      "pending": 3881,
+      "success": 1388
     },
     "by_tier": {
       "1": {
         "blocked": 2,
         "excluded": 1,
-        "pending": 3,
-        "success": 12
+        "pending": 2,
+        "success": 13
       },
       "2": {
-        "blocked": 4,
-        "pending": 11,
-        "success": 12
+        "blocked": 5,
+        "failed": 1,
+        "pending": 7,
+        "success": 14
       },
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "pending": 3888,
-        "success": 1350
+        "failed": 5,
+        "pending": 3872,
+        "success": 1361
       }
     },
     "by_ecosystem": {
@@ -38,13 +41,14 @@
       },
       "crates.io": {
         "excluded": 5,
-        "pending": 76,
+        "failed": 2,
+        "pending": 74,
         "success": 24,
         "total": 105
       },
       "github": {
-        "pending": 3,
-        "success": 108,
+        "pending": 2,
+        "success": 109,
         "total": 111
       },
       "go": {
@@ -52,10 +56,11 @@
         "total": 8
       },
       "homebrew": {
-        "blocked": 22,
+        "blocked": 23,
         "excluded": 1,
-        "pending": 3726,
-        "success": 1134,
+        "failed": 1,
+        "pending": 3711,
+        "success": 1147,
         "total": 4883
       },
       "manual": {
@@ -67,18 +72,21 @@
         "total": 1
       },
       "npm": {
-        "pending": 20,
+        "failed": 1,
+        "pending": 19,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "pending": 3,
+        "failed": 1,
+        "pending": 2,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "pending": 74,
+        "failed": 1,
+        "pending": 73,
         "success": 14,
         "total": 89
       }
@@ -110,6 +118,17 @@
             "python@3.14"
           ],
           "failure_count": 4
+        },
+        {
+          "id": "homebrew:ffmpeg",
+          "name": "ffmpeg",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "missing_dep",
+          "blocked_by": [
+            "sdl2-compat"
+          ],
+          "failure_count": 15
         },
         {
           "id": "homebrew:gemini-cli",
@@ -407,6 +426,62 @@
           "failure_count": 0
         }
       ],
+      "failed": [
+        {
+          "id": "homebrew:python@3.14",
+          "name": "python@3.14",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-09-28T02:22:27Z"
+        },
+        {
+          "id": "rubygems:arturo",
+          "name": "arturo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 23,
+          "next_retry_at": "1734-06-17T22:06:43Z"
+        },
+        {
+          "id": "crates.io:ascii",
+          "name": "ascii",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 23,
+          "next_retry_at": "1734-06-17T22:06:43Z"
+        },
+        {
+          "id": "npm:chainsaw",
+          "name": "chainsaw",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 22,
+          "next_retry_at": "2026-10-03T21:53:59Z"
+        },
+        {
+          "id": "crates.io:numpy",
+          "name": "numpy",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 22,
+          "next_retry_at": "2026-10-03T18:22:27Z"
+        },
+        {
+          "id": "pypi:tctl",
+          "name": "tctl",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 22,
+          "next_retry_at": "2026-10-03T21:53:59Z"
+        }
+      ],
       "pending": [
         {
           "id": "github:github/hub",
@@ -416,15 +491,6 @@
           "category": "generation_failed",
           "failure_count": 3,
           "next_retry_at": "2026-02-24T06:13:36Z"
-        },
-        {
-          "id": "github:BurntSushi/ripgrep",
-          "name": "rg",
-          "ecosystem": "github",
-          "priority": 1,
-          "category": "generation_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-02-24T06:13:42Z"
         },
         {
           "id": "github:lotabout/skim",
@@ -454,23 +520,6 @@
           "next_retry_at": "2026-03-04T04:57:16Z"
         },
         {
-          "id": "homebrew:ffmpeg",
-          "name": "ffmpeg",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "install_failed",
-          "failure_count": 14
-        },
-        {
-          "id": "homebrew:gcc",
-          "name": "gcc",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T17:44:08Z"
-        },
-        {
           "id": "homebrew:jless",
           "name": "jless",
           "ecosystem": "homebrew",
@@ -487,15 +536,6 @@
           "category": "generation_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-04T06:05:38Z"
-        },
-        {
-          "id": "homebrew:openssl@3",
-          "name": "openssl@3",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-04T12:08:12Z"
         },
         {
           "id": "homebrew:python@3.11",
@@ -523,15 +563,6 @@
           "category": "generation_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-04T22:05:38Z"
-        },
-        {
-          "id": "homebrew:python@3.14",
-          "name": "python@3.14",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-03T20:08:12Z"
         },
         {
           "id": "homebrew:0xjacky/tools/nginx-ui",
@@ -1042,8 +1073,8 @@
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 22,
-          "next_retry_at": "2026-06-27T19:28:13Z"
+          "failure_count": 23,
+          "next_retry_at": "1734-06-17T18:35:10Z"
         },
         {
           "id": "homebrew:amplitude/ampli/ampli",
@@ -1597,29 +1628,11 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:arturo",
-          "name": "arturo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 22,
-          "next_retry_at": "2026-06-27T23:12:10Z"
-        },
-        {
           "id": "homebrew:arxiv_latex_cleaner",
           "name": "arxiv_latex_cleaner",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "crates.io:ascii",
-          "name": "ascii",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 22,
-          "next_retry_at": "2026-06-27T23:12:10Z"
         },
         {
           "id": "homebrew:asciidoc",
@@ -2238,8 +2251,8 @@
           "ecosystem": "npm",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 611,
-          "next_retry_at": "1734-03-17T21:04:51Z"
+          "failure_count": 612,
+          "next_retry_at": "1734-06-17T18:35:10Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -2592,13 +2605,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:beads_viewer",
-          "name": "beads_viewer",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
         },
         {
           "id": "homebrew:beancount",
@@ -3206,13 +3212,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:bulk_extractor",
-          "name": "bulk_extractor",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
-        },
-        {
           "id": "rubygems:bullet",
           "name": "bullet",
           "ecosystem": "rubygems",
@@ -3732,15 +3731,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:chainsaw",
-          "name": "chainsaw",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 21,
-          "next_retry_at": "2026-06-28T14:11:17Z"
         },
         {
           "id": "homebrew:changie",
@@ -4671,13 +4661,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:console_bridge",
-          "name": "console_bridge",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
         },
         {
           "id": "homebrew:container",
@@ -6278,13 +6261,6 @@
         {
           "id": "homebrew:dovi_convert",
           "name": "dovi_convert",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
-        },
-        {
-          "id": "homebrew:dovi_tool",
-          "name": "dovi_tool",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
@@ -12904,8 +12880,8 @@
           "ecosystem": "pypi",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 893,
-          "next_retry_at": "1734-03-17T21:04:51Z"
+          "failure_count": 894,
+          "next_retry_at": "1734-06-17T18:35:10Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -13311,13 +13287,6 @@
           "failure_count": 1
         },
         {
-          "id": "homebrew:libpg_query",
-          "name": "libpg_query",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
-        },
-        {
           "id": "homebrew:libphonenumber",
           "name": "libphonenumber",
           "ecosystem": "homebrew",
@@ -13526,13 +13495,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:libspatialite",
-          "name": "libspatialite",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
         },
         {
           "id": "homebrew:libspelling",
@@ -16620,13 +16582,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:nghttp2",
-          "name": "nghttp2",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
-        },
-        {
           "id": "homebrew:nginx",
           "name": "nginx",
           "ecosystem": "homebrew",
@@ -17007,15 +16962,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "crates.io:numpy",
-          "name": "numpy",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 21,
-          "next_retry_at": "2026-06-27T19:28:13Z"
         },
         {
           "id": "homebrew:nuonco/tap/nuon",
@@ -18779,13 +18725,6 @@
         {
           "id": "homebrew:pg_cron",
           "name": "pg_cron",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
-        },
-        {
-          "id": "homebrew:pg_partman",
-          "name": "pg_partman",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
@@ -22319,13 +22258,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:scw",
-          "name": "scw",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:sdb",
           "name": "sdb",
           "ecosystem": "homebrew",
@@ -22366,13 +22298,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:sdl2_net",
-          "name": "sdl2_net",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
         },
         {
           "id": "homebrew:sdl2_ttf",
@@ -24695,15 +24620,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:tctl",
-          "name": "tctl",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 21,
-          "next_retry_at": "2026-06-28T14:11:17Z"
-        },
-        {
           "id": "homebrew:tdlib",
           "name": "tdlib",
           "ecosystem": "homebrew",
@@ -25499,15 +25415,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:tree-sitter@0.25",
-          "name": "tree-sitter@0.25",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T11:49:01Z"
         },
         {
           "id": "homebrew:treefrog",
@@ -28130,6 +28037,15 @@
           "failure_count": 4
         },
         {
+          "id": "github:BurntSushi/ripgrep",
+          "name": "rg",
+          "ecosystem": "github",
+          "priority": 1,
+          "category": "generation_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-02-24T06:13:42Z"
+        },
+        {
           "id": "homebrew:shellcheck",
           "name": "shellcheck",
           "ecosystem": "homebrew",
@@ -28186,6 +28102,15 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:gcc",
+          "name": "gcc",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T17:44:08Z"
+        },
+        {
           "id": "homebrew:grex",
           "name": "grex",
           "ecosystem": "homebrew",
@@ -28215,6 +28140,15 @@
           "priority": 2,
           "category": "missing_dep",
           "failure_count": 1
+        },
+        {
+          "id": "homebrew:openssl@3",
+          "name": "openssl@3",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-04T12:08:12Z"
         },
         {
           "id": "homebrew:pnpm",
@@ -28866,6 +28800,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:beads_viewer",
+          "name": "beads_viewer",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
+        },
+        {
           "id": "homebrew:bedops",
           "name": "bedops",
           "ecosystem": "homebrew",
@@ -29039,6 +28980,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:bulk_extractor",
+          "name": "bulk_extractor",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
         },
         {
           "id": "npm:bumpp",
@@ -29713,6 +29661,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:console_bridge",
+          "name": "console_bridge",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
+        },
+        {
           "id": "homebrew:consul-template",
           "name": "consul-template",
           "ecosystem": "homebrew",
@@ -30220,6 +30175,13 @@
         {
           "id": "homebrew:double-conversion",
           "name": "double-conversion",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
+        },
+        {
+          "id": "homebrew:dovi_tool",
+          "name": "dovi_tool",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
@@ -33404,6 +33366,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:libpg_query",
+          "name": "libpg_query",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
+        },
+        {
           "id": "homebrew:libplist",
           "name": "libplist",
           "ecosystem": "homebrew",
@@ -33486,6 +33455,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:libspatialite",
+          "name": "libspatialite",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
         },
         {
           "id": "homebrew:libssh",
@@ -34526,6 +34502,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:nghttp2",
+          "name": "nghttp2",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
+        },
+        {
           "id": "homebrew:ngspice",
           "name": "ngspice",
           "ecosystem": "homebrew",
@@ -35122,6 +35105,13 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:pg_partman",
+          "name": "pg_partman",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
         },
         {
           "id": "homebrew:pgstream",
@@ -35979,6 +35969,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:scw",
+          "name": "scw",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:sd",
           "name": "sd",
           "ecosystem": "homebrew",
@@ -36005,6 +36002,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:sdl2_net",
+          "name": "sdl2_net",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
         },
         {
           "id": "homebrew:sdl3",
@@ -36908,6 +36912,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:tree-sitter@0.25",
+          "name": "tree-sitter@0.25",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T11:49:01Z"
         },
         {
           "id": "github:aquasecurity/trivy",
@@ -37849,13 +37862,125 @@
     }
   ],
   "failures": {
-    "generation_failed": 1356,
-    "install_failed": 5125,
-    "missing_dep": 68,
+    "generation_failed": 1359,
+    "install_failed": 5133,
+    "missing_dep": 69,
     "network_error": 8,
     "recipe_not_found": 74
   },
   "failure_details": [
+    {
+      "id": "pypi-2026-09-26T21-51-41Z-tctl",
+      "package": "tctl",
+      "ecosystem": "pypi",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\n✅ python-standalone@20260924\nInstalled python-standalone\nFailed to generate plan: failed to resolve step pipx_install: failed to decompose pipx_install: failed to decompose \"pipx_install\": failed to generate locked requirements: pip download failed: exit status 1\nOutput: Collecting tctl==0.0.46\n  Downloading tctl-0.0.46-py3-none-any.whl.metadata (3.0 kB)\nCollecting click\u003e=7.0.0 (from tctl==0.0.46)\n  Download",
+      "batch_id": "2026-09-26T21-51-41Z",
+      "timestamp": "2026-09-26T21:51:41.222799808Z"
+    },
+    {
+      "id": "npm-2026-09-26T21-51-34Z-chainsaw",
+      "package": "chainsaw",
+      "ecosystem": "npm",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\n✅ patchelf@0.19.1\n✅ gcc-libs@16.2.0\n✅ nodejs@26.10.0\nInstalled nodejs\n   Package: chainsaw@0.1.0\n   Executables: [chainsaw]\n   Using npm: /home/runner/.tsuku/tools/nodejs-26.10.0/bin/npm\n   Installing: npm install chainsaw@0.1.0 in /tmp/action-validator-161285422/.install\n❌ chainsaw@0.1.0\nInstallation failed: step 1 (npm_exec) failed: expected executable chainsaw not found at /tmp/action-validator-161285422/.install/node_mo",
+      "batch_id": "2026-09-26T21-51-41Z",
+      "timestamp": "2026-09-26T21:51:34.699817541Z"
+    },
+    {
+      "id": "crates.io-2026-09-26T21-51-10Z-ascii",
+      "package": "ascii",
+      "ecosystem": "crates.io",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\n   Output: install: creating uninstall script at /tmp/action-validator-1864893850/.install/lib/rustlib/uninstall.sh\ninstall: installing component 'rustc'\ninstall: installing component 'rust-std-x86_64-unknown-linux-gnu'\ninstall: installing component 'rust-docs'\ninstall: installing component 'rust-docs-json-preview'\ninstall: installing component 'cargo'\ninstall: installing component 'rustfmt-preview'\ninstall: installing component 'rust-",
+      "batch_id": "2026-09-26T21-51-41Z",
+      "timestamp": "2026-09-26T21:51:10.047461534Z"
+    },
+    {
+      "id": "rubygems-2026-09-26T21-49-38Z-arturo",
+      "package": "arturo",
+      "ecosystem": "rubygems",
+      "category": "install_failed",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\nError: recipe validation failed for 'arturo'\n  - metadata.homepage: homepage must start with https:// (got: http://github.com/zendesk/arturo)",
+      "batch_id": "2026-09-26T21-51-41Z",
+      "timestamp": "2026-09-26T21:49:38.520162214Z"
+    },
+    {
+      "id": "homebrew-2026-09-26T21-49-31Z-ffmpeg",
+      "package": "ffmpeg",
+      "ecosystem": "homebrew",
+      "category": "missing_dep",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for ffmpeg from homebrew:ffmpeg...\nFetching formula metadata... done (v9.0.2)\nInspecting bottle contents... failed\ndeterministic generation failed: [missing_dep] missing dependencies: recipe sdl2-compat not found in registry",
+      "batch_id": "2026-09-26T21-51-41Z",
+      "timestamp": "2026-09-26T21:49:31.795126547Z"
+    },
+    {
+      "id": "github-2026-09-26T21-49-27Z-hub",
+      "package": "hub",
+      "ecosystem": "github",
+      "category": "generation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'hub' resolved to github (github/hub), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "2026-09-26T21-51-41Z",
+      "timestamp": "2026-09-26T21:49:27.76791564Z"
+    },
+    {
+      "id": "pypi-2026-09-26T18-19-42Z-lib3mf",
+      "package": "lib3mf",
+      "ecosystem": "pypi",
+      "category": "install_failed",
+      "subcategory": "rate_limited",
+      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\nwarning: version resolution failed: GitHub API rate limit exceeded while resolving tool versions from GitHub: 60/60 requests used (unauthenticated), resets at 6:33PM, using 'dev'\nFailed to generate plan: failed to resolve step github_archive: failed to decompose github_archive: failed to decompose \"github_archive\": failed to fetch release assets: GitHub API rate limit exhausted (0 remaining). Resets at 2026-09",
+      "batch_id": "2026-09-26T18-19-42Z",
+      "timestamp": "2026-09-26T18:19:42.74085154Z"
+    },
+    {
+      "id": "npm-2026-09-26T18-19-41Z-azion",
+      "package": "azion",
+      "ecosystem": "npm",
+      "category": "install_failed",
+      "subcategory": "rate_limited",
+      "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\n✅ patchelf@0.19.1\n✅ gcc-libs@16.2.0\nwarning: version resolution failed: GitHub API rate limit exceeded while resolving tool versions from GitHub: 60/60 requests used (unauthenticated), resets at 6:33PM, using 'dev'\nFailed to generate plan: failed to resolve step download: failed to decompose download: failed to decompose \"download\": failed to download for checksum computation: bad status: 404 Not Found\nFailed to generate plan: ",
+      "batch_id": "2026-09-26T18-19-42Z",
+      "timestamp": "2026-09-26T18:19:41.449098838Z"
+    },
+    {
+      "id": "rubygems-2026-09-26T18-19-32Z-amp",
+      "package": "amp",
+      "ecosystem": "rubygems",
+      "category": "install_failed",
+      "message": "Error: recipe validation failed for 'amp'\n  - metadata.homepage: homepage must start with https:// (got: http://amp.carboni.ca/)",
+      "batch_id": "2026-09-26T18-19-42Z",
+      "timestamp": "2026-09-26T18:19:32.657140848Z"
+    },
+    {
+      "id": "crates.io-2026-09-26T18-19-26Z-numpy",
+      "package": "numpy",
+      "ecosystem": "crates.io",
+      "category": "install_failed",
+      "subcategory": "rate_limited",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\nInstalling eval-time dependencies: [rust]\nInstalling rust...\nwarning: version resolution failed: GitHub API rate limit exceeded while resolving tool versions from GitHub: 60/60 requests used (unauthenticated), resets at 6:33PM, using 'dev'\nFailed to generate plan: failed to resol",
+      "batch_id": "2026-09-26T18-19-42Z",
+      "timestamp": "2026-09-26T18:19:26.22703995Z"
+    },
+    {
+      "id": "homebrew-2026-09-26T18-19-24Z-python@3.14",
+      "package": "python@3.14",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "api_error",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for python@3.14 from homebrew:python@3.14...\nFetching formula metadata... done (v3.14.7)\nInspecting bottle contents... failed\ndeterministic generation failed: [api_error] failed to fetch bottle data for formula python@3.14",
+      "batch_id": "2026-09-26T18-19-42Z",
+      "timestamp": "2026-09-26T18:19:24.509644356Z"
+    },
+    {
+      "id": "github-2026-09-26T18-19-23Z-hub",
+      "package": "hub",
+      "ecosystem": "github",
+      "category": "generation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'hub' resolved to github (github/hub), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "2026-09-26T18-19-42Z",
+      "timestamp": "2026-09-26T18:19:23.193492084Z"
+    },
     {
       "id": "rubygems-2026-06-26T20-49-32Z-neo4j",
       "package": "neo4j",
@@ -39581,125 +39706,15 @@
       "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\n✅ gcc-libs@16.1.0\n✅ nodejs@26.3.1\nInstalled nodejs\n   Package: got@15.0.6\n   Executables: [got]\n   Using npm: /home/runner/.tsuku/tools/nodejs-26.3.1/bin/npm\n   Installing: npm install got@15.0.6 in /tmp/action-validator-2350924131/.install\n❌ got@15.0.6\nInstallation failed: step 1 (npm_exec) failed: expected executable got not found at /tmp/action-validator-2350924131/.install/node_modules/.bin/got",
       "batch_id": "2026-06-23T05-02-55Z",
       "timestamp": "2026-06-23T05:02:43.670039547Z"
-    },
-    {
-      "id": "rubygems-2026-06-23T05-02-21Z-gitingest",
-      "package": "gitingest",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [ruby]\nInstalling ruby...\n✅ libyaml@0.2.5\n✅ ruby@4.0.5\nInstalled ruby\n   Gem: gitingest@1.0.0\n   Executables: [gitingest]\n   Using bundler: /home/runner/.tsuku/tools/ruby-4.0.5/bin/bundle\n   Installing 14 gem(s) with lockfile enforcement\n   Lockfile bundler version: 4.0.10\n   Running: bundle config set --local path /tmp/action-validator-2471206446/.install \u0026\u0026 bundle install\n   Gem installed successfully\n   Created 1 self-contained wrapper(s)",
-      "batch_id": "2026-06-23T05-02-55Z",
-      "timestamp": "2026-06-23T05:02:21.393705868Z"
-    },
-    {
-      "id": "crates.io-2026-06-23T05-01-59Z-bindgen",
-      "package": "bindgen",
-      "ecosystem": "crates.io",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\n   Output: install: creating uninstall script at /tmp/action-validator-1905543567/.install/lib/rustlib/uninstall.sh\ninstall: installing component 'rustc'\ninstall: installing component 'rust-std-x86_64-unknown-linux-gnu'\ninstall: installing component 'rust-docs'\ninstall: installing component 'rust-docs-json-preview'\ninstall: installing component 'cargo'\ninstall: installing component 'rustfmt-preview'\ninstall: installing component 'rust-",
-      "batch_id": "2026-06-23T05-02-55Z",
-      "timestamp": "2026-06-23T05:01:59.140172405Z"
-    },
-    {
-      "id": "homebrew-2026-06-23T05-00-17Z-task",
-      "package": "task",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\n✅ patchelf@0.18.0",
-      "batch_id": "2026-06-23T05-02-55Z",
-      "timestamp": "2026-06-23T05:00:17.273939012Z"
-    },
-    {
-      "id": "github-2026-06-23T05-00-11Z-hub",
-      "package": "hub",
-      "ecosystem": "github",
-      "category": "generation_failed",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'hub' resolved to github (github/hub), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
-      "batch_id": "2026-06-23T05-02-55Z",
-      "timestamp": "2026-06-23T05:00:11.440603729Z"
-    },
-    {
-      "id": "pypi-2026-06-23T00-08-06Z-lib3mf",
-      "package": "lib3mf",
-      "ecosystem": "pypi",
-      "category": "install_failed",
-      "subcategory": "verify_pattern_mismatch",
-      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\n✅ python-standalone@20260610\nInstalled python-standalone\n   Package: lib3mf@2.5.0\n   Executables: [lib3mf]\n   Using python: /home/runner/.tsuku/tools/python-standalone-20260610/bin/python3\nwarning:    Package contains native addons (may have platform-specific behavior)\n   Creating venv: /tmp/action-validator-3942295096/.install/venvs/lib3mf\n   Installing 1 packages with hash verification\n❌ lib3mf@2.5.0\nIns",
-      "batch_id": "2026-06-23T00-08-06Z",
-      "timestamp": "2026-06-23T00:08:06.070423415Z"
-    },
-    {
-      "id": "rubygems-2026-06-23T00-07-54Z-flash",
-      "package": "flash",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Error: recipe validation failed for 'flash'\n  - metadata.homepage: homepage must start with https:// (got: http://github.com/colmarius/flash)",
-      "batch_id": "2026-06-23T00-08-06Z",
-      "timestamp": "2026-06-23T00:07:54.833821287Z"
-    },
-    {
-      "id": "crates.io-2026-06-23T00-07-48Z-bindgen",
-      "package": "bindgen",
-      "ecosystem": "crates.io",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\n   Output: install: creating uninstall script at /tmp/action-validator-3573508231/.install/lib/rustlib/uninstall.sh\ninstall: installing component 'rustc'\ninstall: installing component 'rust-std-x86_64-unknown-linux-gnu'\ninstall: installing component 'rust-docs'\ninstall: installing component 'rust-docs-json-preview'\ninstall: installing component 'cargo'\ninstall: installing component 'rustfmt-preview'\ninstall: installing component 'rust-",
-      "batch_id": "2026-06-23T00-08-06Z",
-      "timestamp": "2026-06-23T00:07:48.202440456Z"
-    },
-    {
-      "id": "npm-2026-06-23T00-06-22Z-azion",
-      "package": "azion",
-      "ecosystem": "npm",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\n✅ gcc-libs@16.1.0\n✅ nodejs@26.3.1\nInstalled nodejs\n   Package: azion@3.1.3\n   Executables: [azion]\n   Using npm: /home/runner/.tsuku/tools/nodejs-26.3.1/bin/npm\n   Installing: npm install azion@3.1.3 in /tmp/action-validator-2618527539/.install\n❌ azion@3.1.3\nInstallation failed: step 1 (npm_exec) failed: expected executable azion not found at /tmp/action-validator-2618527539/.install/node_modules/.bin/azion",
-      "batch_id": "2026-06-23T00-08-06Z",
-      "timestamp": "2026-06-23T00:06:22.895322681Z"
-    },
-    {
-      "id": "homebrew-2026-06-23T00-05-28Z-task",
-      "package": "task",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\n✅ patchelf@0.18.0",
-      "batch_id": "2026-06-23T00-08-06Z",
-      "timestamp": "2026-06-23T00:05:28.792947242Z"
-    },
-    {
-      "id": "github-2026-06-23T00-05-24Z-hub",
-      "package": "hub",
-      "ecosystem": "github",
-      "category": "generation_failed",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'hub' resolved to github (github/hub), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
-      "batch_id": "2026-06-23T00-08-06Z",
-      "timestamp": "2026-06-23T00:05:24.17364063Z"
-    },
-    {
-      "id": "pypi-2026-06-22T22-49-45Z-lib3mf",
-      "package": "lib3mf",
-      "ecosystem": "pypi",
-      "category": "install_failed",
-      "subcategory": "verify_pattern_mismatch",
-      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\n✅ python-standalone@20260610\nInstalled python-standalone\n   Package: lib3mf@2.5.0\n   Executables: [lib3mf]\n   Using python: /home/runner/.tsuku/tools/python-standalone-20260610/bin/python3\nwarning:    Package contains native addons (may have platform-specific behavior)\n   Creating venv: /tmp/action-validator-2761688040/.install/venvs/lib3mf\n   Installing 1 packages with hash verification\n❌ lib3mf@2.5.0\nIns",
-      "batch_id": "2026-06-22T22-49-45Z",
-      "timestamp": "2026-06-22T22:49:45.290891445Z"
-    },
-    {
-      "id": "rubygems-2026-06-22T22-49-35Z-exiv2",
-      "package": "exiv2",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [ruby]\nInstalling ruby...\n✅ libyaml@0.2.5\n✅ ruby@4.0.5\nInstalled ruby\n   Gem: exiv2@0.1.2\n   Executables: [exiv2]\n   Using bundler: /home/runner/.tsuku/tools/ruby-4.0.5/bin/bundle\n   Installing 1 gem(s) with lockfile enforcement\n   Lockfile bundler version: 4.0.10\n   Running: bundle config set --local path /tmp/action-validator-2259441397/.install \u0026\u0026 bundle install\n❌ exiv2@0.1.2\nInstallation failed: step 1 (gem_exec) failed: bundle install failed: exit st",
-      "batch_id": "2026-06-22T22-49-45Z",
-      "timestamp": "2026-06-22T22:49:35.089384434Z"
     }
   ],
   "health": {
     "ecosystems": {
       "crates.io": {
         "breaker_state": "open",
-        "failures": 993,
-        "last_failure": "2026-06-26T20:51:01Z",
-        "opens_at": "2026-06-26T21:51:01Z"
+        "failures": 995,
+        "last_failure": "2026-09-26T21:53:26Z",
+        "opens_at": "2026-09-26T22:53:26Z"
       },
       "default": {
         "breaker_state": "closed",
@@ -39707,37 +39722,37 @@
       },
       "github": {
         "breaker_state": "open",
-        "failures": 996,
-        "last_failure": "2026-06-26T20:51:01Z",
-        "opens_at": "2026-06-26T21:51:01Z"
+        "failures": 998,
+        "last_failure": "2026-09-26T21:53:26Z",
+        "opens_at": "2026-09-26T22:53:26Z"
       },
       "homebrew": {
-        "breaker_state": "open",
-        "failures": 957,
-        "last_failure": "2026-06-26T20:51:01Z",
-        "opens_at": "2026-06-26T21:51:01Z"
+        "breaker_state": "closed",
+        "failures": 0,
+        "last_failure": "2026-09-26T18:21:55Z",
+        "opens_at": "2026-09-26T19:21:55Z"
       },
       "npm": {
         "breaker_state": "open",
-        "failures": 696,
-        "last_failure": "2026-06-26T20:51:01Z",
-        "opens_at": "2026-06-26T21:51:01Z"
+        "failures": 698,
+        "last_failure": "2026-09-26T21:53:26Z",
+        "opens_at": "2026-09-26T22:53:26Z"
       },
       "pypi": {
         "breaker_state": "open",
-        "failures": 964,
-        "last_failure": "2026-06-26T20:51:01Z",
-        "opens_at": "2026-06-26T21:51:01Z"
+        "failures": 966,
+        "last_failure": "2026-09-26T21:53:26Z",
+        "opens_at": "2026-09-26T22:53:26Z"
       },
       "rubygems": {
         "breaker_state": "open",
-        "failures": 413,
-        "last_failure": "2026-06-26T20:51:01Z",
-        "opens_at": "2026-06-26T21:51:01Z"
+        "failures": 415,
+        "last_failure": "2026-09-26T21:53:27Z",
+        "opens_at": "2026-09-26T22:53:27Z"
       }
     },
     "last_run": {
-      "batch_id": "2026-06-26T20-51-08Z",
+      "batch_id": "2026-09-26T21-53-31Z",
       "ecosystems": {
         "crates.io": 1,
         "github": 1,
@@ -39746,7 +39761,7 @@
         "pypi": 1,
         "rubygems": 1
       },
-      "timestamp": "2026-06-26T20:51:08Z",
+      "timestamp": "2026-09-26T21:53:31Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39767,7 +39782,7 @@
       "total": 1,
       "recipes_merged": 1
     },
-    "runs_since_last_success": 436
+    "runs_since_last_success": 438
   },
   "runs": [
     {
