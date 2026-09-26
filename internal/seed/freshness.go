@@ -94,10 +94,13 @@ func IsNewAuditCandidate(entry batch.QueueEntry, auditEntry *AuditEntry, discove
 }
 
 // ShouldSkip returns true if the entry should be excluded from freshness
-// checking entirely. Entries with status "success" or confidence "curated"
-// are skipped from re-disambiguation.
+// checking entirely: entries with status "success", and entries with status
+// "excluded". An exclusion is a deliberate decision recorded in the queue, and
+// re-disambiguation would reset it to pending through ApplySelectionResult, so
+// un-excluding an entry has to be an explicit edit, never a refresh side
+// effect. Curated entries are handled separately (see IsCurated).
 func ShouldSkip(entry batch.QueueEntry) bool {
-	return entry.Status == batch.StatusSuccess
+	return entry.Status == batch.StatusSuccess || entry.Status == batch.StatusExcluded
 }
 
 // IsCurated returns true if the entry has curated confidence and should
@@ -108,7 +111,7 @@ func IsCurated(entry batch.QueueEntry) bool {
 
 // NeedsRedisambiguation determines whether a queue entry should be
 // re-disambiguated. It checks all three triggers and returns true if
-// any trigger fires. The entry must not be skipped (success) or curated.
+// any trigger fires. The entry must not be skipped (success or excluded) or curated.
 //
 // The auditEntry and discoveredSource parameters are optional -- pass nil
 // and "" respectively when trigger 3 (new audit candidate) is not applicable.

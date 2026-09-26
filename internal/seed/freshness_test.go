@@ -171,6 +171,31 @@ func TestShouldSkip_SuccessEntry(t *testing.T) {
 	}
 }
 
+// An excluded entry must never be re-disambiguated: ApplySelectionResult
+// would set it back to pending and silently undo the exclusion. This is the
+// shape of the entries that are actually excluded today -- auto confidence,
+// disambiguated long before the freshness threshold.
+func TestNeedsRedisambiguation_ExcludedEntry(t *testing.T) {
+	old := time.Date(2026, 2, 17, 0, 10, 1, 0, time.UTC)
+	entry := batch.QueueEntry{
+		Name:            "conduit",
+		Source:          "rubygems:conduit",
+		Priority:        3,
+		Status:          batch.StatusExcluded,
+		Confidence:      batch.ConfidenceAuto,
+		FailureCount:    3,
+		DisambiguatedAt: &old,
+	}
+	cfg := FreshnessConfig{ThresholdDays: 30, Now: time.Date(2026, 9, 27, 3, 0, 0, 0, time.UTC)}
+
+	if !ShouldSkip(entry) {
+		t.Error("entries with status excluded should be skipped")
+	}
+	if NeedsRedisambiguation(entry, cfg, nil, "rubygems:conduit-new") {
+		t.Error("excluded entries should never be re-disambiguated, whatever the trigger")
+	}
+}
+
 func TestShouldSkip_PendingEntry(t *testing.T) {
 	entry := batch.QueueEntry{
 		Name:       "tool",
