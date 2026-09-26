@@ -438,6 +438,8 @@ Examples:
 - plans/f/fzf/v0.60.0/linux-debian-amd64.json
 ```
 
+`{category}` is `embedded` for embedded recipes and the recipe's first letter for registry recipes. The convention is implemented once, in `scripts/lib/r2-layout.sh`, and every script and workflow that writes, reads, lists or prunes plan objects sources it rather than building keys itself. Until #2448, publishing passed the word `registry` as the category while every reader expected a letter, so nothing it published was ever compared; the objects written that way are copied to the letter layout by `r2-migrate-registry-layout.yml`.
+
 **Object Metadata:**
 ```json
 {

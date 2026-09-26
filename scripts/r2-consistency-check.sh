@@ -175,8 +175,7 @@ check_registry() {
 
             for file in "$recipe_dir"/*.json; do
                 [[ -f "$file" ]] || continue
-                local letter="${recipe:0:1}"
-                compare_file "$file" "$recipe" "$letter"
+                compare_file "$file" "$recipe" "registry"
             done
         done
     done

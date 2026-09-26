@@ -242,6 +242,11 @@ jobs:
           RECIPES='${{ toJson(matrix.batch.recipes) }}'
           FAIL_FILE="${{ runner.temp }}/failed-recipes.txt"
           : > "$FAIL_FILE"
+          # Every recipe lands in exactly one of: compared, failed, not compared. A recipe
+          # that was not compared is never counted as passing.
+          COMPARED=0
+          NOT_COMPARED=()
+          UNREACHABLE=()
 
           COUNT=$(echo "$RECIPES" | jq 'length')
           for i in $(seq 0 $((COUNT - 1))); do
@@ -259,24 +264,42 @@ jobs:
               # Registry recipes use R2 when available
               export TSUKU_GOLDEN_SOURCE=r2
 
-              # Check if golden files exist in R2 for this recipe
-              # New recipes won't have golden files yet - skip validation with notice
-              if ! ./scripts/check-golden-exists.sh "$RECIPE" --category "$CATEGORY"; then
-                echo "::notice::Skipping validation for new recipe '$RECIPE' - golden files will be generated after merge"
+              # Check if golden files exist in R2 for this recipe. A recipe with none
+              # has never been published (new recipe), so there is nothing to compare.
+              # Exit 2 means R2 could not be listed, which is not the same answer.
+              exists_rc=0
+              ./scripts/check-golden-exists.sh "$RECIPE" --category "$CATEGORY" || exists_rc=$?
+              if [ "$exists_rc" -eq 1 ]; then
+                echo "::warning::Not compared: '$RECIPE' has no golden files in R2 yet (they are published after merge)"
+                NOT_COMPARED+=("$RECIPE (no golden files in R2 yet)")
+                echo "::endgroup::"
+                continue
+              elif [ "$exists_rc" -ne 0 ]; then
+                echo "::error::Not compared: could not check R2 for '$RECIPE' golden files"
+                UNREACHABLE+=("$RECIPE")
                 echo "::endgroup::"
                 continue
               fi
             else
-              # R2 unavailable - skip registry recipe validation with warning
-              echo "::warning::Skipping $RECIPE validation - R2 unavailable (registry recipes require R2 golden files)"
-              echo "Registry recipe validation will be performed by nightly workflow when R2 is available"
+              # R2 unavailable: the comparison cannot run, and the job must not read as
+              # passing. It fails below, naming the recipes it could not compare.
+              echo "::error::Not compared: R2 is unavailable, and registry golden files live only in R2"
+              UNREACHABLE+=("$RECIPE")
               echo "::endgroup::"
               continue
             fi
 
             echo "Using TSUKU_GOLDEN_SOURCE=$TSUKU_GOLDEN_SOURCE"
 
-            if ! ./scripts/validate-golden.sh "$RECIPE" --category "$CATEGORY"; then
+            validate_rc=0
+            ./scripts/validate-golden.sh "$RECIPE" --category "$CATEGORY" || validate_rc=$?
+            if [ "$validate_rc" -eq 0 ]; then
+              COMPARED=$((COMPARED + 1))
+            elif [ "$validate_rc" -eq 3 ]; then
+              echo "::warning::Not compared: '$RECIPE' has no golden-checked platform"
+              NOT_COMPARED+=("$RECIPE (no golden-checked platform)")
+            else
+              COMPARED=$((COMPARED + 1))
               echo ""
               echo "::error::Golden files are out of date for recipe '$RECIPE'."
               if [[ "$CATEGORY" == "embedded" ]]; then
@@ -291,6 +314,13 @@ jobs:
             echo "::endgroup::"
           done
 
+          FAILED_COUNT=$(grep -c . "$FAIL_FILE" || true)
+          {
+            echo "Batch ${{ matrix.batch.batch_id }}: $COUNT recipes, $COMPARED compared ($FAILED_COUNT failed), ${#NOT_COMPARED[@]} not compared, ${#UNREACHABLE[@]} could not be checked"
+            for item in "${NOT_COMPARED[@]+"${NOT_COMPARED[@]}"}"; do echo "- not compared: $item"; done
+            for item in "${UNREACHABLE[@]+"${UNREACHABLE[@]}"}"; do echo "- could not be checked: $item"; done
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
           # Report failures at end (don't fail fast)
           if [ -s "$FAIL_FILE" ]; then
             FAILED=$(cat "$FAIL_FILE" | tr '\n' ' ')
@@ -298,4 +328,13 @@ jobs:
             exit 1
           fi
 
-          echo "All batch recipes passed"
+          if [ ${#UNREACHABLE[@]} -gt 0 ]; then
+            echo "::error::Golden files were not compared for: ${UNREACHABLE[*]}. Re-run once R2 is reachable."
+            exit 1
+          fi
+
+          if [ "$COMPARED" -eq 0 ]; then
+            echo "::warning::No recipe in this batch had golden files to compare"
+          else
+            echo "All $COMPARED compared recipes passed"
+          fi

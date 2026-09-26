@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Validate all golden files
-# Usage: ./scripts/validate-all-golden.sh [--os <linux|darwin>] [--category <embedded|registry>] [--golden-dir <path>]
+# Usage: ./scripts/validate-all-golden.sh [--os <linux|darwin>] [--category <embedded|registry>] [--golden-dir <path>] [--shard <i>/<n>]
 #
 # Runs validate-golden.sh for each recipe with golden files.
 # Reports which recipes failed so you can investigate and selectively regenerate.
@@ -16,6 +16,9 @@
 #                      If not specified, validates both categories.
 #   --golden-dir <dir> Use custom golden files directory instead of testdata/golden/plans
 #                      Useful for validating against R2-downloaded golden files.
+#   --shard <i>/<n>    Only validate every n-th recipe starting at index i (0-based), in
+#                      the order the recipes are found. Shards 0/n..(n-1)/n together
+#                      cover every recipe exactly once.
 #
 # Environment Variables:
 #   TSUKU_GOLDEN_SOURCE  Select golden file source (passed to validate-golden.sh):
@@ -28,8 +31,13 @@
 #   R2_SECRET_ACCESS_KEY Required for r2/both modes
 #
 # Exit codes:
-#   0: All golden files match
+#   0: Every recipe checked matched, and at least one was compared
 #   1: One or more recipes have mismatches
+#   3: Nothing was compared (no golden files found, or none applied to --os). A run
+#      that compared nothing is not a pass.
+#
+# The last line of output is always the summary, in this fixed form:
+#   Checked <T> recipes: <P> matched, <F> failed, <N> not compared
 
 set -euo pipefail
 
@@ -37,13 +45,24 @@ set -euo pipefail
 FILTER_OS=""
 FILTER_CATEGORY=""
 CUSTOM_GOLDEN_DIR=""
+SHARD_INDEX=0
+SHARD_COUNT=1
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --os)         FILTER_OS="$2"; shift 2 ;;
         --category)   FILTER_CATEGORY="$2"; shift 2 ;;
         --golden-dir) CUSTOM_GOLDEN_DIR="$2"; shift 2 ;;
+        --shard)
+            if [[ ! "$2" =~ ^([0-9]+)/([1-9][0-9]*)$ ]] || (( BASH_REMATCH[1] >= BASH_REMATCH[2] )); then
+                echo "Invalid --shard: $2 (expected <i>/<n> with 0 <= i < n)" >&2
+                exit 1
+            fi
+            SHARD_INDEX="${BASH_REMATCH[1]}"
+            SHARD_COUNT="${BASH_REMATCH[2]}"
+            shift 2
+            ;;
         -h|--help)
-            echo "Usage: $0 [--os <linux|darwin>] [--category <embedded|registry>] [--golden-dir <path>]"
+            echo "Usage: $0 [--os <linux|darwin>] [--category <embedded|registry>] [--golden-dir <path>] [--shard <i>/<n>]"
             echo ""
             echo "Validate all golden files."
             echo ""
@@ -51,6 +70,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --os <os>          Only validate golden files for the specified OS"
             echo "  --category <cat>   Only validate embedded or registry recipes"
             echo "  --golden-dir <dir> Use custom golden files directory"
+            echo "  --shard <i>/<n>    Only validate recipes whose index modulo n is i"
             exit 0
             ;;
         *)         echo "Unknown argument: $1" >&2; exit 1 ;;
@@ -81,12 +101,44 @@ fi
 
 # Check golden directory exists
 if [[ ! -d "$GOLDEN_BASE" ]]; then
-    echo "No golden files directory found: $GOLDEN_BASE"
-    exit 0
+    echo "NOTHING COMPARED: no golden files directory found: $GOLDEN_BASE"
+    echo "Checked 0 recipes: 0 matched, 0 failed, 0 not compared"
+    exit 3
 fi
 
 FAILED=()
+NOT_COMPARED=()
 TOTAL=0
+MATCHED=0
+FOUND=0
+
+# in_shard: counts every recipe found, and succeeds for the ones this shard owns.
+in_shard() {
+    local index=$FOUND
+    FOUND=$((FOUND + 1))
+    (( index % SHARD_COUNT == SHARD_INDEX ))
+}
+
+# Run validate-golden.sh for one recipe and file the result. Exit 3 from it means no
+# platform applied, which is counted on its own rather than as a match.
+run_validation() {
+    local recipe="$1"
+    shift
+    local rc=0
+    "$SCRIPT_DIR/validate-golden.sh" "$@" || rc=$?
+    case $rc in
+        0) MATCHED=$((MATCHED + 1)) ;;
+        3) NOT_COMPARED+=("$recipe") ;;
+        *) FAILED+=("$recipe") ;;
+    esac
+}
+
+print_summary() {
+    if [[ $SHARD_COUNT -gt 1 ]]; then
+        echo "Shard $SHARD_INDEX/$SHARD_COUNT owns $TOTAL of $FOUND recipes found"
+    fi
+    echo "Checked $TOTAL recipes: $MATCHED matched, ${#FAILED[@]} failed, ${#NOT_COMPARED[@]} not compared"
+}
 
 # Validate embedded recipes (flat structure: embedded/<recipe>/)
 validate_embedded() {
@@ -99,6 +151,7 @@ validate_embedded() {
         [[ -d "$recipe_dir" ]] || continue
 
         recipe=$(basename "$recipe_dir")
+        in_shard || continue
         TOTAL=$((TOTAL + 1))
 
         echo "Validating $recipe (embedded)..."
@@ -110,9 +163,7 @@ validate_embedded() {
             VALIDATE_ARGS+=("--golden-dir" "$CUSTOM_GOLDEN_DIR")
         fi
 
-        if ! "$SCRIPT_DIR/validate-golden.sh" "${VALIDATE_ARGS[@]}"; then
-            FAILED+=("$recipe")
-        fi
+        run_validation "$recipe" "${VALIDATE_ARGS[@]}"
     done
 }
 
@@ -126,6 +177,7 @@ validate_registry() {
             [[ -d "$recipe_dir" ]] || continue
 
             recipe=$(basename "$recipe_dir")
+            in_shard || continue
             TOTAL=$((TOTAL + 1))
 
             echo "Validating $recipe (registry)..."
@@ -146,9 +198,7 @@ validate_registry() {
                 VALIDATE_ARGS+=("--recipe" "$TESTDATA_RECIPE")
             fi
 
-            if ! "$SCRIPT_DIR/validate-golden.sh" "${VALIDATE_ARGS[@]}"; then
-                FAILED+=("$recipe")
-            fi
+            run_validation "$recipe" "${VALIDATE_ARGS[@]}"
         done
     done
 }
@@ -165,8 +215,9 @@ elif [[ "$FILTER_CATEGORY" == "registry" ]]; then
 fi
 
 if [[ $TOTAL -eq 0 ]]; then
-    echo "No recipes with golden files found."
-    exit 0
+    echo "NOTHING COMPARED: no recipes with golden files found under $GOLDEN_BASE."
+    print_summary
+    exit 3
 fi
 
 if [[ ${#FAILED[@]} -gt 0 ]]; then
@@ -188,9 +239,23 @@ if [[ ${#FAILED[@]} -gt 0 ]]; then
     echo "To regenerate with constraints:"
     echo "  ./scripts/regenerate-golden.sh <recipe> --os linux --arch amd64"
     echo "  ./scripts/regenerate-golden.sh <recipe> --version v1.2.3"
+    echo ""
+    print_summary
     exit 1
 fi
 
+if [[ ${#NOT_COMPARED[@]} -gt 0 ]]; then
+    echo ""
+    echo "Not compared (no golden-checked platform${FILTER_OS:+ for --os $FILTER_OS}): ${NOT_COMPARED[*]}"
+fi
+
+if [[ $MATCHED -eq 0 ]]; then
+    echo ""
+    echo "NOTHING COMPARED: $TOTAL recipes found, none had a platform to compare."
+    print_summary
+    exit 3
+fi
+
 echo ""
-echo "All $TOTAL recipes validated successfully."
+print_summary
 exit 0

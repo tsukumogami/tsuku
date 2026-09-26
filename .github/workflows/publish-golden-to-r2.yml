@@ -23,10 +23,6 @@ on:
         description: 'Comma-separated list of recipe names (e.g., fzf,ripgrep,bat)'
         required: true
         type: string
-      force:
-        description: 'Force regenerate even if version already exists in R2'
-        type: boolean
-        default: false
 
 # Prevent concurrent runs for the same trigger type
 concurrency:
@@ -234,14 +230,15 @@ jobs:
           R2_BUCKET_URL: ${{ secrets.R2_BUCKET_URL }}
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_WRITE }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_WRITE }}
-          FORCE: ${{ inputs.force || 'false' }}
         run: |
+          # Every upload overwrites its key in place; the bucket has no versioning.
           UPLOADED=0
           FAILED=0
-          SKIPPED=0
 
-          # Process each golden file in artifacts
-          find artifacts/ -name "*.json" -type f | while read -r file; do
+          # Process each golden file in artifacts. The loop reads from process
+          # substitution, not a pipe: a piped loop runs in a subshell and its counters
+          # are gone by the time the summary below reads them.
+          while read -r file; do
             # Parse path: artifacts/<category>/<recipe>/<version>-<platform>.json
             rel_path="${file#artifacts/}"
             category=$(echo "$rel_path" | cut -d'/' -f1)
@@ -280,7 +277,8 @@ jobs:
               platform="darwin-${after_darwin}"
               version="${filename%-darwin-*}"
             else
-              echo "::warning::Could not parse platform from filename: $filename"
+              echo "::error::Could not parse platform from filename: $filename"
+              FAILED=$((FAILED + 1))
               continue
             fi
 
@@ -289,23 +287,28 @@ jobs:
 
             echo "Processing: $recipe @ $version_no_v ($platform) [$category]"
 
-            # Upload to R2
+            # Upload to R2. The category (embedded or registry) becomes the key's segment
+            # in scripts/lib/r2-layout.sh; registry plans land under plans/<first-letter>/.
             if ./scripts/r2-upload.sh --category "$category" "$recipe" "$version_no_v" "$platform" "$file"; then
               echo "  Uploaded successfully"
               UPLOADED=$((UPLOADED + 1))
             else
-              echo "::warning::Failed to upload $file"
+              echo "::error::Failed to upload $file"
               FAILED=$((FAILED + 1))
             fi
-          done
+          done < <(find artifacts/ -name "*.json" -type f)
 
           echo ""
           echo "Upload summary:"
           echo "  Uploaded: $UPLOADED"
           echo "  Failed: $FAILED"
+          echo "Uploaded $UPLOADED golden files, $FAILED failed" >> "$GITHUB_STEP_SUMMARY"
 
-          # Fail if all uploads failed
-          if [ "$UPLOADED" -eq 0 ] && [ "$FAILED" -gt 0 ]; then
-            echo "::error::All uploads failed"
+          if [ "$FAILED" -gt 0 ]; then
+            echo "::error::$FAILED golden file uploads failed"
+            exit 1
+          fi
+          if [ "$UPLOADED" -eq 0 ]; then
+            echo "::error::Recipes were detected but no golden file was uploaded"
             exit 1
           fi

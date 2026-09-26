@@ -704,15 +704,17 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_READONLY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_READONLY }}
           AWS_ENDPOINT_URL: ${{ secrets.R2_BUCKET_URL }}
+          RECIPE: ${{ matrix.recipe }}
         run: |
-          RECIPE="${{ matrix.recipe }}"
-          FIRST_LETTER="${RECIPE:0:1}"
+          # The key layout comes from the shared definition, never spelled here.
+          source scripts/lib/r2-layout.sh
+          PREFIX=$(r2_plan_prefix "$RECIPE" registry)
 
           mkdir -p r2-golden
 
           # Find and download the latest linux-amd64 golden file
           # List versions available for this recipe
-          VERSIONS=$(aws s3 ls "s3://tsuku-golden-registry/plans/$FIRST_LETTER/$RECIPE/" | grep 'PRE v' | awk '{print $2}' | sed 's|/$||' | sort -V | tail -1)
+          VERSIONS=$(aws s3 ls "s3://tsuku-golden-registry/$PREFIX" | grep 'PRE v' | awk '{print $2}' | sed 's|/$||' | sort -V | tail -1)
 
           if [ -z "$VERSIONS" ]; then
             echo "::warning::No golden files found in R2 for $RECIPE, skipping execution"
@@ -724,7 +726,7 @@ jobs:
           # Download linux-amd64 golden file (prefer debian variant)
           GOLDEN_FILE=""
           for platform in "linux-debian-amd64" "linux-amd64"; do
-            KEY="plans/$FIRST_LETTER/$RECIPE/$VERSIONS/$platform.json"
+            KEY=$(r2_plan_key "$RECIPE" registry "$VERSIONS" "$platform")
             if aws s3 cp "s3://tsuku-golden-registry/$KEY" "r2-golden/$platform.json" 2>/dev/null; then
               GOLDEN_FILE="r2-golden/$platform.json"
               echo "Downloaded: $KEY"

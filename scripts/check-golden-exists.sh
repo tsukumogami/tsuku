@@ -16,17 +16,21 @@
 # Exit Codes:
 #   0 - Golden files exist in R2
 #   1 - Golden files do not exist in R2 (new recipe)
-#   2 - Error (missing environment variables, invalid arguments)
+#   2 - Error (missing environment variables, invalid arguments, or R2 could not be
+#       listed). Could-not-look is not the same answer as not-found: treating a failed
+#       listing as "new recipe" would skip the comparison and report success.
 
 set -euo pipefail
 
 # Configuration
 BUCKET_NAME="${R2_BUCKET_NAME:-tsuku-golden-registry}"
-PLANS_PREFIX="plans"
 
 # Script location for relative paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# shellcheck source=lib/r2-layout.sh
+source "$SCRIPT_DIR/lib/r2-layout.sh"
 
 # Parse arguments
 RECIPE=""
@@ -85,19 +89,11 @@ if [[ -z "$CATEGORY" ]]; then
     fi
 fi
 
-# Build the golden directory path
-# Embedded: plans/embedded/<recipe>/
-# Registry: plans/<letter>/<recipe>/
-FIRST_LETTER="${RECIPE:0:1}"
-if [[ "$CATEGORY" == "embedded" ]]; then
-    GOLDEN_PREFIX="$PLANS_PREFIX/embedded/$RECIPE/"
-else
-    GOLDEN_PREFIX="$PLANS_PREFIX/$FIRST_LETTER/$RECIPE/"
-fi
+GOLDEN_PREFIX=$(r2_plan_prefix "$RECIPE" "$CATEGORY") || exit 2
 
 # Check if any objects exist with this prefix using AWS CLI
 # We use list-objects-v2 with max-keys=1 to minimize data transfer
-if AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID" \
+if ! FIRST_KEY=$(AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID" \
    AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY" \
    AWS_ENDPOINT_URL="$R2_BUCKET_URL" \
    aws s3api list-objects-v2 \
@@ -105,7 +101,12 @@ if AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID" \
        --prefix "$GOLDEN_PREFIX" \
        --max-keys 1 \
        --query "Contents[0].Key" \
-       --output text 2>/dev/null | grep -q -v "^None$"; then
+       --output text); then
+    echo "Error: could not list R2 objects under $GOLDEN_PREFIX" >&2
+    exit 2
+fi
+
+if [[ -n "$FIRST_KEY" && "$FIRST_KEY" != "None" ]]; then
     echo "Golden files exist for $RECIPE at $GOLDEN_PREFIX"
     exit 0
 else
