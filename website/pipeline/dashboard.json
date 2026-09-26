@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-09-26T21:53:55Z",
+  "generated_at": "2026-09-26T21:54:42Z",
   "queue": {
     "total": 5305,
     "by_status": {
-      "blocked": 22,
+      "blocked": 23,
       "excluded": 7,
-      "failed": 5,
-      "pending": 3883,
+      "failed": 6,
+      "pending": 3881,
       "success": 1388
     },
     "by_tier": {
@@ -17,16 +17,16 @@
         "success": 13
       },
       "2": {
-        "blocked": 4,
+        "blocked": 5,
         "failed": 1,
-        "pending": 8,
+        "pending": 7,
         "success": 14
       },
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 4,
-        "pending": 3873,
+        "failed": 5,
+        "pending": 3872,
         "success": 1361
       }
     },
@@ -41,8 +41,8 @@
       },
       "crates.io": {
         "excluded": 5,
-        "failed": 1,
-        "pending": 75,
+        "failed": 2,
+        "pending": 74,
         "success": 24,
         "total": 105
       },
@@ -56,10 +56,10 @@
         "total": 8
       },
       "homebrew": {
-        "blocked": 22,
+        "blocked": 23,
         "excluded": 1,
         "failed": 1,
-        "pending": 3712,
+        "pending": 3711,
         "success": 1147,
         "total": 4883
       },
@@ -118,6 +118,17 @@
             "python@3.14"
           ],
           "failure_count": 4
+        },
+        {
+          "id": "homebrew:ffmpeg",
+          "name": "ffmpeg",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "missing_dep",
+          "blocked_by": [
+            "sdl2-compat"
+          ],
+          "failure_count": 15
         },
         {
           "id": "homebrew:gemini-cli",
@@ -426,31 +437,31 @@
           "next_retry_at": "2026-09-28T02:22:27Z"
         },
         {
-          "id": "rubygems:amp",
-          "name": "amp",
+          "id": "rubygems:arturo",
+          "name": "arturo",
           "ecosystem": "rubygems",
           "priority": 3,
           "category": "install_failed",
           "failure_count": 23,
-          "next_retry_at": "1734-06-17T18:35:10Z"
+          "next_retry_at": "1734-06-17T22:06:43Z"
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
+          "id": "crates.io:ascii",
+          "name": "ascii",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 23,
+          "next_retry_at": "1734-06-17T22:06:43Z"
+        },
+        {
+          "id": "npm:chainsaw",
+          "name": "chainsaw",
           "ecosystem": "npm",
           "priority": 3,
           "category": "install_failed",
-          "failure_count": 612,
-          "next_retry_at": "1734-06-17T18:35:10Z"
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 894,
-          "next_retry_at": "1734-06-17T18:35:10Z"
+          "failure_count": 22,
+          "next_retry_at": "2026-10-03T21:53:59Z"
         },
         {
           "id": "crates.io:numpy",
@@ -460,6 +471,15 @@
           "category": "install_failed",
           "failure_count": 22,
           "next_retry_at": "2026-10-03T18:22:27Z"
+        },
+        {
+          "id": "pypi:tctl",
+          "name": "tctl",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 22,
+          "next_retry_at": "2026-10-03T21:53:59Z"
         }
       ],
       "pending": [
@@ -498,14 +518,6 @@
           "category": "recipe_not_found",
           "failure_count": 5,
           "next_retry_at": "2026-03-04T04:57:16Z"
-        },
-        {
-          "id": "homebrew:ffmpeg",
-          "name": "ffmpeg",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "missing_dep",
-          "failure_count": 14
         },
         {
           "id": "homebrew:jless",
@@ -1054,6 +1066,15 @@
           "priority": 3,
           "category": "generation_failed",
           "failure_count": 1
+        },
+        {
+          "id": "rubygems:amp",
+          "name": "amp",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 23,
+          "next_retry_at": "1734-06-17T18:35:10Z"
         },
         {
           "id": "homebrew:amplitude/ampli/ampli",
@@ -1607,29 +1628,11 @@
           "failure_count": 0
         },
         {
-          "id": "rubygems:arturo",
-          "name": "arturo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 22,
-          "next_retry_at": "2026-06-27T23:12:10Z"
-        },
-        {
           "id": "homebrew:arxiv_latex_cleaner",
           "name": "arxiv_latex_cleaner",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "crates.io:ascii",
-          "name": "ascii",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 22,
-          "next_retry_at": "2026-06-27T23:12:10Z"
         },
         {
           "id": "homebrew:asciidoc",
@@ -2241,6 +2244,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 612,
+          "next_retry_at": "1734-06-17T18:35:10Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -3719,15 +3731,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:chainsaw",
-          "name": "chainsaw",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 21,
-          "next_retry_at": "2026-06-28T14:11:17Z"
         },
         {
           "id": "homebrew:changie",
@@ -12870,6 +12873,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 894,
+          "next_retry_at": "1734-06-17T18:35:10Z"
         },
         {
           "id": "homebrew:libaacs",
@@ -24606,15 +24618,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:tctl",
-          "name": "tctl",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 21,
-          "next_retry_at": "2026-06-28T14:11:17Z"
         },
         {
           "id": "homebrew:tdlib",
