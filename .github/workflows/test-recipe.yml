@@ -691,7 +691,7 @@ jobs:
     name: "macOS arm64 (batch ${{ matrix.batch.batch_id }}/${{ needs.build.outputs.darwin_batch_count }})"
     needs: build
     if: needs.build.outputs.has_darwin_batches == 'true'
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 60
     strategy:
       fail-fast: false
