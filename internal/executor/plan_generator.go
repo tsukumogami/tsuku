@@ -99,6 +99,57 @@ type PlanConfig struct {
 	Reporter progress.Reporter
 }
 
+// pinnedTagProvider returns the version provider used to look up the release
+// tag of a pinned version. A variable so tests can substitute a stub.
+var pinnedTagProvider = func(resolver *version.Resolver, r *recipe.Recipe) (version.VersionResolver, error) {
+	return version.NewProviderFactory().ProviderFromRecipe(resolver, r)
+}
+
+// pinnedVersionInfo builds the VersionInfo for a pinned version. The version
+// string is kept exactly as pinned, since plans and golden files record it in
+// that form; only the release tag is derived.
+//
+// The tag comes from, in order:
+//  1. the recipe's declared [version] tag_prefix, applied locally with no
+//     network call;
+//  2. the version provider's lookup of that exact version, which knows
+//     whether upstream tags carry a "v" (GitHub tags "v2.37.1" for "2.37.1");
+//  3. the pinned version itself, with a warning. This is the old behaviour,
+//     and it is wrong for any upstream whose tags differ from the version, so
+//     it is never taken silently: a download that 404s after this warning is
+//     a tag that could not be resolved, not a missing asset.
+func (e *Executor) pinnedVersionInfo(ctx context.Context, resolver *version.Resolver, cfg PlanConfig) *version.VersionInfo {
+	pinned := cfg.PinnedVersion
+	info := &version.VersionInfo{Version: pinned, Tag: pinned}
+
+	if e.recipe != nil && e.recipe.Version.TagPrefix != "" {
+		if !strings.HasPrefix(pinned, e.recipe.Version.TagPrefix) {
+			info.Tag = e.recipe.Version.TagPrefix + pinned
+		}
+		return info
+	}
+
+	var lookupErr error
+	if e.recipe == nil {
+		lookupErr = fmt.Errorf("no recipe")
+	} else if provider, err := pinnedTagProvider(resolver, e.recipe); err != nil {
+		lookupErr = err
+	} else if resolved, err := provider.ResolveVersion(ctx, pinned); err != nil {
+		lookupErr = err
+	} else if strings.TrimPrefix(resolved.Version, "v") != strings.TrimPrefix(pinned, "v") {
+		lookupErr = fmt.Errorf("provider resolved %s to version %s", pinned, resolved.Version)
+	} else {
+		info.Tag = resolved.Tag
+		info.Metadata = resolved.Metadata
+		return info
+	}
+
+	if cfg.OnWarning != nil {
+		cfg.OnWarning("version", fmt.Sprintf("could not look up the release tag for pinned version %s (%v); using %q as the tag", pinned, lookupErr, pinned))
+	}
+	return info
+}
+
 // GeneratePlan evaluates a recipe and produces an installation plan.
 // The plan captures fully-resolved URLs, computed checksums, and all steps
 // needed to reproduce the installation.
@@ -173,12 +224,11 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 	// Resolve version from recipe (or use pinned version if provided)
 	var versionInfo *version.VersionInfo
 	if cfg.PinnedVersion != "" {
-		// Use pinned version directly, bypassing version resolution
-		// This is used for constrained evaluation of dependencies
-		versionInfo = &version.VersionInfo{
-			Version: cfg.PinnedVersion,
-			Tag:     cfg.PinnedVersion, // Use version as tag when pinned
-		}
+		// Use the pinned version directly, bypassing version resolution. This is
+		// used for constrained evaluation of dependencies and for golden-file
+		// validation (--pin-from). The version is fixed; only its release tag
+		// still has to be found, since "2.37.1" is often published as "v2.37.1".
+		versionInfo = e.pinnedVersionInfo(ctx, resolver, cfg)
 	} else {
 		var err error
 		versionInfo, err = e.resolveVersionWith(ctx, resolver)
