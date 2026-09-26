@@ -71,3 +71,9 @@ jobs:
       # issue" is also what an escalator that does nothing produces.
       - name: Check failures route to the issue that owns them
         run: .github/scripts/checks/escalate-owned_test.sh
+      # Only default-branch runs escalate, in both directions: a failing branch run files
+      # nothing, and a green one neither closes an item nor reads as recovery. The stub `gh`
+      # answers differently with and without the branch filter, so dropping the filter at
+      # any one query site turns its row red.
+      - name: Check branch runs neither file nor hide a failure
+        run: .github/scripts/checks/escalate-branch_test.sh

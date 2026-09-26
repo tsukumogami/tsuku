@@ -46,6 +46,22 @@ done
 
 [ -f "$REGISTRY" ] || { echo "::error::registry not found: $REGISTRY" >&2; exit 2; }
 
+# Only runs on the default branch are escalated (#2686), and every run query below is
+# filtered to it -- the window start, the recovery gate, the gap scan, the startup pass and
+# the deferred count. A branch run left in any one of them either files a failure main does
+# not have or, worse, reads as a recovery main has not made. Asked of the API rather than
+# taken from the event, which for a schedule does not carry the repository; DEFAULT_BRANCH
+# overrides it for the self-tests. Could-not-look stops the sweep rather than sweeping
+# every branch.
+if [ -z "${DEFAULT_BRANCH:-}" ]; then
+  if ! DEFAULT_BRANCH=$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.default_branch') || [ -z "$DEFAULT_BRANCH" ]; then
+    echo "::error::could not read the repository's default branch; not sweeping every branch instead" >&2
+    exit 2
+  fi
+fi
+export DEFAULT_BRANCH
+echo "Branch: only runs on '$DEFAULT_BRANCH' are examined"
+
 mapfile -t REGISTERED < <(awk '/^  - "/{gsub(/^  - "|"$/,""); print}' "$REGISTRY")
 if [ "${#REGISTERED[@]}" -eq 0 ]; then
   echo "::error file=${REGISTRY}::registry lists no workflows; this sweep would examine nothing" >&2
@@ -66,8 +82,10 @@ if [ -n "$WINDOW_HOURS" ]; then
   SINCE=$(date -u -d "${WINDOW_HOURS} hours ago" +%Y-%m-%dT%H:%M:%SZ)
   echo "Window: explicit, ${WINDOW_HOURS}h"
 else
-  # `status=success` already excludes the run doing the asking, which is in progress.
-  SINCE=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/escalate-sweep.yml/runs?status=success&per_page=1" \
+  # `status=success` already excludes the run doing the asking, which is in progress. The
+  # branch filter keeps a green sweep dispatched from a branch from moving the window past
+  # failures no sweep on the default branch has examined.
+  SINCE=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/escalate-sweep.yml/runs?status=success&branch=${DEFAULT_BRANCH}&per_page=1" \
             --jq '.workflow_runs[0].created_at // empty' 2>/dev/null || true)
   if [ -z "$SINCE" ]; then
     SINCE=$(date -u -d "${DEFAULT_FIRST_WINDOW_HOURS} hours ago" +%Y-%m-%dT%H:%M:%SZ)
@@ -104,7 +122,7 @@ while [ "$page" -le "$STARTUP_PAGE_GUARD" ]; do
   fi
   count=$(printf '%s' "$body" | jq '.workflow_runs | length')
   [ "${count:-0}" -eq 0 ] && break
-  startup_rest="${startup_rest}$(printf '%s' "$body" | jq -r '.workflow_runs[] | select(.conclusion == "failure") | select(.name | startswith(".github/")) | [(.id|tostring), .name, .html_url] | @tsv')
+  startup_rest="${startup_rest}$(printf '%s' "$body" | jq -r --arg b "$DEFAULT_BRANCH" '.workflow_runs[] | select(.head_branch == $b) | select(.conclusion == "failure") | select(.name | startswith(".github/")) | [(.id|tostring), .name, .html_url] | @tsv')
 "
   oldest=$(printf '%s' "$body" | jq -r '[.workflow_runs[].created_at] | min')
   [[ "$oldest" < "$SINCE" ]] && break
@@ -170,11 +188,11 @@ for wf in "${REGISTERED[@]}"; do
   # "not successful" -- it is "unknown", and treating it as the former would escalate a
   # workflow whose state was never read.
   if [ -n "$only_on" ]; then
-    latest=$(gh run list --workflow "$(basename "$file")" --limit 30 \
+    latest=$(gh run list --workflow "$(basename "$file")" --branch "$DEFAULT_BRANCH" --limit 30 \
                --json conclusion,event,createdAt \
                --jq "[.[] | select(.event == \"$only_on\") | select(.conclusion != \"\" and .conclusion != null)] | .[0].conclusion // empty" 2>/dev/null)
   else
-    latest=$(gh run list --workflow "$(basename "$file")" --limit 30 \
+    latest=$(gh run list --workflow "$(basename "$file")" --branch "$DEFAULT_BRANCH" --limit 30 \
                --json conclusion,createdAt \
                --jq '[.[] | select(.conclusion != "" and .conclusion != null)] | .[0].conclusion // empty' 2>/dev/null)
   fi
@@ -200,8 +218,8 @@ for wf in "${REGISTERED[@]}"; do
   # different facts: the first means this workflow had no non-success runs in the window,
   # the second means we do not know. Collapsing them is how a receipt comes to say it
   # examined a population it never reached.
-  if runs=$(gh run list --workflow "$(basename "$file")" --limit 50 \
-              --json conclusion,event,databaseId,url,createdAt,workflowName \
+  if runs=$(gh run list --workflow "$(basename "$file")" --branch "$DEFAULT_BRANCH" --limit 50 \
+              --json conclusion,event,databaseId,url,createdAt,workflowName,headBranch \
               --jq "[.[] | select(.createdAt > \"$SINCE\") | select(.conclusion != \"success\" and .conclusion != \"\" and .conclusion != null)] | .[] | @base64" 2>/dev/null); then
     :
   else
@@ -217,6 +235,7 @@ for wf in "${REGISTERED[@]}"; do
     event=$(printf '%s' "$row" | jq -r .event)
     run_id=$(printf '%s' "$row" | jq -r .databaseId)
     run_url=$(printf '%s' "$row" | jq -r .url)
+    branch=$(printf '%s' "$row" | jq -r .headBranch)
 
     if [ -n "$only_on" ] && [ "$only_on" != "$event" ]; then
       continue
@@ -280,7 +299,7 @@ for wf in "${REGISTERED[@]}"; do
     gaps=$((gaps + 1))
     echo "gap: \"$wf\" run $run_id concluded $conclusion with no tracked item"
     if .github/scripts/escalate.sh --workflow "$wf" --conclusion "$conclusion" \
-         --run-id "$run_id" --run-url "$run_url" --event "$event" $DRY_RUN; then
+         --run-id "$run_id" --run-url "$run_url" --event "$event" --branch "$branch" $DRY_RUN; then
       filed=$((filed + 1))
     else
       failed=$((failed + 1))
@@ -335,7 +354,7 @@ for f in "$WORKFLOWS_DIR"/*.yml "$WORKFLOWS_DIR"/*.yaml; do
   [ "$(decl_value "$f" "escalation-policy")" = "none" ] || continue
   wf=$(awk '/^name:/{sub(/^name:[[:space:]]*/,""); gsub(/^["'"'"']|["'"'"']$/,""); print; exit}' "$f")
   kind=$(decl_value "$f" "escalation-none-kind")
-  recent=$(gh run list --workflow "$(basename "$f")" --limit 50 \
+  recent=$(gh run list --workflow "$(basename "$f")" --branch "$DEFAULT_BRANCH" --limit 50 \
              --json conclusion,createdAt \
              --jq "[.[] | select(.createdAt > \"$SINCE\") | select(.conclusion != \"success\" and .conclusion != \"\" and .conclusion != null)] | length" || echo 0)
   if [ "$kind" = "permanent" ]; then
