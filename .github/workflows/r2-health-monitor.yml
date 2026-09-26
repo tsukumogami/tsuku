@@ -21,8 +21,11 @@
 #
 #   This is not a permanent exemption and the threshold is not closed by it. Recalibration
 #   is tracked in #2593, which carries it as an acceptance criterion: the health verdict
-#   must reflect R2's behaviour rather than the measuring process's startup cost. When that
-#   lands, this policy becomes `issue`.
+#   must reflect R2's behaviour rather than the measuring process's startup cost. The
+#   script now times the request itself (curl's own timings), but a changed measurement
+#   is not yet evidence: this stays `none` until several days of scheduled runs show a
+#   healthy R2 producing healthy verdicts and the threshold has been re-derived from them.
+#   Then this policy becomes `issue`.
 #
 #   The cost of declaring `none` meanwhile is stated rather than hidden: a genuine R2
 #   outage produces no issue from this workflow. That is the lesser harm against filing
