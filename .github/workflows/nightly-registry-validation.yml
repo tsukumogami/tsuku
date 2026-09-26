@@ -51,13 +51,7 @@ jobs:
             echo "health_status=healthy" >> $GITHUB_OUTPUT
           else
             EXIT_CODE=$?
-            # TEMPORARY for the pull-request proof: treat degraded as available, the same
-            # change #2677 makes. Removed with the proof before merge.
-            if [ $EXIT_CODE -eq 2 ]; then
-              echo "r2_available=true" >> $GITHUB_OUTPUT
-            else
-              echo "r2_available=false" >> $GITHUB_OUTPUT
-            fi
+            echo "r2_available=false" >> $GITHUB_OUTPUT
             if [ $EXIT_CODE -eq 2 ]; then
               echo "health_status=degraded" >> $GITHUB_OUTPUT
             else
