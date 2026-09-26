@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-26T18:23:09Z",
+  "generated_at": "2026-09-26T21:53:55Z",
   "queue": {
     "total": 5305,
     "by_status": {
@@ -504,7 +504,7 @@
           "name": "ffmpeg",
           "ecosystem": "homebrew",
           "priority": 2,
-          "category": "install_failed",
+          "category": "missing_dep",
           "failure_count": 14
         },
         {
@@ -37859,13 +37859,67 @@
     }
   ],
   "failures": {
-    "generation_failed": 1358,
-    "install_failed": 5129,
-    "missing_dep": 68,
+    "generation_failed": 1359,
+    "install_failed": 5133,
+    "missing_dep": 69,
     "network_error": 8,
     "recipe_not_found": 74
   },
   "failure_details": [
+    {
+      "id": "pypi-2026-09-26T21-51-41Z-tctl",
+      "package": "tctl",
+      "ecosystem": "pypi",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\n✅ python-standalone@20260924\nInstalled python-standalone\nFailed to generate plan: failed to resolve step pipx_install: failed to decompose pipx_install: failed to decompose \"pipx_install\": failed to generate locked requirements: pip download failed: exit status 1\nOutput: Collecting tctl==0.0.46\n  Downloading tctl-0.0.46-py3-none-any.whl.metadata (3.0 kB)\nCollecting click\u003e=7.0.0 (from tctl==0.0.46)\n  Download",
+      "batch_id": "2026-09-26T21-51-41Z",
+      "timestamp": "2026-09-26T21:51:41.222799808Z"
+    },
+    {
+      "id": "npm-2026-09-26T21-51-34Z-chainsaw",
+      "package": "chainsaw",
+      "ecosystem": "npm",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\n✅ patchelf@0.19.1\n✅ gcc-libs@16.2.0\n✅ nodejs@26.10.0\nInstalled nodejs\n   Package: chainsaw@0.1.0\n   Executables: [chainsaw]\n   Using npm: /home/runner/.tsuku/tools/nodejs-26.10.0/bin/npm\n   Installing: npm install chainsaw@0.1.0 in /tmp/action-validator-161285422/.install\n❌ chainsaw@0.1.0\nInstallation failed: step 1 (npm_exec) failed: expected executable chainsaw not found at /tmp/action-validator-161285422/.install/node_mo",
+      "batch_id": "2026-09-26T21-51-41Z",
+      "timestamp": "2026-09-26T21:51:34.699817541Z"
+    },
+    {
+      "id": "crates.io-2026-09-26T21-51-10Z-ascii",
+      "package": "ascii",
+      "ecosystem": "crates.io",
+      "category": "install_failed",
+      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\n   Output: install: creating uninstall script at /tmp/action-validator-1864893850/.install/lib/rustlib/uninstall.sh\ninstall: installing component 'rustc'\ninstall: installing component 'rust-std-x86_64-unknown-linux-gnu'\ninstall: installing component 'rust-docs'\ninstall: installing component 'rust-docs-json-preview'\ninstall: installing component 'cargo'\ninstall: installing component 'rustfmt-preview'\ninstall: installing component 'rust-",
+      "batch_id": "2026-09-26T21-51-41Z",
+      "timestamp": "2026-09-26T21:51:10.047461534Z"
+    },
+    {
+      "id": "rubygems-2026-09-26T21-49-38Z-arturo",
+      "package": "arturo",
+      "ecosystem": "rubygems",
+      "category": "install_failed",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\nError: recipe validation failed for 'arturo'\n  - metadata.homepage: homepage must start with https:// (got: http://github.com/zendesk/arturo)",
+      "batch_id": "2026-09-26T21-51-41Z",
+      "timestamp": "2026-09-26T21:49:38.520162214Z"
+    },
+    {
+      "id": "homebrew-2026-09-26T21-49-31Z-ffmpeg",
+      "package": "ffmpeg",
+      "ecosystem": "homebrew",
+      "category": "missing_dep",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for ffmpeg from homebrew:ffmpeg...\nFetching formula metadata... done (v9.0.2)\nInspecting bottle contents... failed\ndeterministic generation failed: [missing_dep] missing dependencies: recipe sdl2-compat not found in registry",
+      "batch_id": "2026-09-26T21-51-41Z",
+      "timestamp": "2026-09-26T21:49:31.795126547Z"
+    },
+    {
+      "id": "github-2026-09-26T21-49-27Z-hub",
+      "package": "hub",
+      "ecosystem": "github",
+      "category": "generation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'hub' resolved to github (github/hub), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "2026-09-26T21-51-41Z",
+      "timestamp": "2026-09-26T21:49:27.76791564Z"
+    },
     {
       "id": "pypi-2026-09-26T18-19-42Z-lib3mf",
       "package": "lib3mf",
@@ -39649,70 +39703,15 @@
       "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\n✅ gcc-libs@16.1.0\n✅ nodejs@26.3.1\nInstalled nodejs\n   Package: got@15.0.6\n   Executables: [got]\n   Using npm: /home/runner/.tsuku/tools/nodejs-26.3.1/bin/npm\n   Installing: npm install got@15.0.6 in /tmp/action-validator-2350924131/.install\n❌ got@15.0.6\nInstallation failed: step 1 (npm_exec) failed: expected executable got not found at /tmp/action-validator-2350924131/.install/node_modules/.bin/got",
       "batch_id": "2026-06-23T05-02-55Z",
       "timestamp": "2026-06-23T05:02:43.670039547Z"
-    },
-    {
-      "id": "rubygems-2026-06-23T05-02-21Z-gitingest",
-      "package": "gitingest",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [ruby]\nInstalling ruby...\n✅ libyaml@0.2.5\n✅ ruby@4.0.5\nInstalled ruby\n   Gem: gitingest@1.0.0\n   Executables: [gitingest]\n   Using bundler: /home/runner/.tsuku/tools/ruby-4.0.5/bin/bundle\n   Installing 14 gem(s) with lockfile enforcement\n   Lockfile bundler version: 4.0.10\n   Running: bundle config set --local path /tmp/action-validator-2471206446/.install \u0026\u0026 bundle install\n   Gem installed successfully\n   Created 1 self-contained wrapper(s)",
-      "batch_id": "2026-06-23T05-02-55Z",
-      "timestamp": "2026-06-23T05:02:21.393705868Z"
-    },
-    {
-      "id": "crates.io-2026-06-23T05-01-59Z-bindgen",
-      "package": "bindgen",
-      "ecosystem": "crates.io",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\n   Output: install: creating uninstall script at /tmp/action-validator-1905543567/.install/lib/rustlib/uninstall.sh\ninstall: installing component 'rustc'\ninstall: installing component 'rust-std-x86_64-unknown-linux-gnu'\ninstall: installing component 'rust-docs'\ninstall: installing component 'rust-docs-json-preview'\ninstall: installing component 'cargo'\ninstall: installing component 'rustfmt-preview'\ninstall: installing component 'rust-",
-      "batch_id": "2026-06-23T05-02-55Z",
-      "timestamp": "2026-06-23T05:01:59.140172405Z"
-    },
-    {
-      "id": "homebrew-2026-06-23T05-00-17Z-task",
-      "package": "task",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\n✅ patchelf@0.18.0",
-      "batch_id": "2026-06-23T05-02-55Z",
-      "timestamp": "2026-06-23T05:00:17.273939012Z"
-    },
-    {
-      "id": "github-2026-06-23T05-00-11Z-hub",
-      "package": "hub",
-      "ecosystem": "github",
-      "category": "generation_failed",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'hub' resolved to github (github/hub), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
-      "batch_id": "2026-06-23T05-02-55Z",
-      "timestamp": "2026-06-23T05:00:11.440603729Z"
-    },
-    {
-      "id": "pypi-2026-06-23T00-08-06Z-lib3mf",
-      "package": "lib3mf",
-      "ecosystem": "pypi",
-      "category": "install_failed",
-      "subcategory": "verify_pattern_mismatch",
-      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\n✅ python-standalone@20260610\nInstalled python-standalone\n   Package: lib3mf@2.5.0\n   Executables: [lib3mf]\n   Using python: /home/runner/.tsuku/tools/python-standalone-20260610/bin/python3\nwarning:    Package contains native addons (may have platform-specific behavior)\n   Creating venv: /tmp/action-validator-3942295096/.install/venvs/lib3mf\n   Installing 1 packages with hash verification\n❌ lib3mf@2.5.0\nIns",
-      "batch_id": "2026-06-23T00-08-06Z",
-      "timestamp": "2026-06-23T00:08:06.070423415Z"
-    },
-    {
-      "id": "rubygems-2026-06-23T00-07-54Z-flash",
-      "package": "flash",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Error: recipe validation failed for 'flash'\n  - metadata.homepage: homepage must start with https:// (got: http://github.com/colmarius/flash)",
-      "batch_id": "2026-06-23T00-08-06Z",
-      "timestamp": "2026-06-23T00:07:54.833821287Z"
     }
   ],
   "health": {
     "ecosystems": {
       "crates.io": {
         "breaker_state": "open",
-        "failures": 994,
-        "last_failure": "2026-09-26T18:21:55Z",
-        "opens_at": "2026-09-26T19:21:55Z"
+        "failures": 995,
+        "last_failure": "2026-09-26T21:53:26Z",
+        "opens_at": "2026-09-26T22:53:26Z"
       },
       "default": {
         "breaker_state": "closed",
@@ -39720,37 +39719,37 @@
       },
       "github": {
         "breaker_state": "open",
-        "failures": 997,
-        "last_failure": "2026-09-26T18:21:55Z",
-        "opens_at": "2026-09-26T19:21:55Z"
+        "failures": 998,
+        "last_failure": "2026-09-26T21:53:26Z",
+        "opens_at": "2026-09-26T22:53:26Z"
       },
       "homebrew": {
-        "breaker_state": "open",
-        "failures": 958,
+        "breaker_state": "closed",
+        "failures": 0,
         "last_failure": "2026-09-26T18:21:55Z",
         "opens_at": "2026-09-26T19:21:55Z"
       },
       "npm": {
         "breaker_state": "open",
-        "failures": 697,
-        "last_failure": "2026-09-26T18:21:55Z",
-        "opens_at": "2026-09-26T19:21:55Z"
+        "failures": 698,
+        "last_failure": "2026-09-26T21:53:26Z",
+        "opens_at": "2026-09-26T22:53:26Z"
       },
       "pypi": {
         "breaker_state": "open",
-        "failures": 965,
-        "last_failure": "2026-09-26T18:21:55Z",
-        "opens_at": "2026-09-26T19:21:55Z"
+        "failures": 966,
+        "last_failure": "2026-09-26T21:53:26Z",
+        "opens_at": "2026-09-26T22:53:26Z"
       },
       "rubygems": {
         "breaker_state": "open",
-        "failures": 414,
-        "last_failure": "2026-09-26T18:21:55Z",
-        "opens_at": "2026-09-26T19:21:55Z"
+        "failures": 415,
+        "last_failure": "2026-09-26T21:53:27Z",
+        "opens_at": "2026-09-26T22:53:27Z"
       }
     },
     "last_run": {
-      "batch_id": "2026-09-26T18-22-00Z",
+      "batch_id": "2026-09-26T21-53-31Z",
       "ecosystems": {
         "crates.io": 1,
         "github": 1,
@@ -39759,7 +39758,7 @@
         "pypi": 1,
         "rubygems": 1
       },
-      "timestamp": "2026-09-26T18:22:00Z",
+      "timestamp": "2026-09-26T21:53:31Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39780,7 +39779,7 @@
       "total": 1,
       "recipes_merged": 1
     },
-    "runs_since_last_success": 437
+    "runs_since_last_success": 438
   },
   "runs": [
     {
