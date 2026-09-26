@@ -14,7 +14,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -236,12 +235,16 @@ func expireBackoff(entry *batch.QueueEntry, now time.Time, result *Result) {
 
 // computeRetryAt returns the next retry time using exponential backoff.
 // Formula: now + min(base * 2^(failures-1), maxBackoff)
+//
+// The delay doubles in integer steps and stops at the cap, so it never
+// exceeds maxBackoff on the way there. Computing base * 2^n in floating
+// point and converting afterwards overflows time.Duration from 23 failures
+// on, which produced a negative delay and a retry time in the past.
 func computeRetryAt(now time.Time, failureCount int) time.Time {
-	exp := failureCount - 1
-	if exp < 0 {
-		exp = 0
+	delay := backoffBase
+	for i := 1; i < failureCount && delay < maxBackoff; i++ {
+		delay *= 2
 	}
-	delay := time.Duration(float64(backoffBase) * math.Pow(2, float64(exp)))
 	if delay > maxBackoff {
 		delay = maxBackoff
 	}
