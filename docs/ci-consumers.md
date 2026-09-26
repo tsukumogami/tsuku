@@ -150,13 +150,14 @@ permission.
 
 ## Outstanding evidence
 
-Three workflows declare `issues: write` and were blocked only by a label that now exists.
+Three workflows declared `issues: write` on 2026-09-20 and were blocked only by a label that
+now exists (`curated-nightly` has since dropped the permission along with its filing step).
 Their only known blocker is gone and **none of them has been observed filing an issue.**
 Each has a specific outstanding test, named here rather than left implied:
 
 | Workflow | The test | When it can run |
 |---|---|---|
-| `curated-nightly` | its next scheduled run files instead of failing at `Create curated recipe failure issue` | the next nightly run — the soonest real evidence available |
+| `curated-nightly` | superseded 2026-09-26: the step this test watched was removed, and failures now reach the escalator instead (see Dated events) | no longer applies |
 | `checksum-drift` | its escalation fires and files | only when checksum drift actually occurs; cannot be forced without manufacturing drift |
 | `weekly-coverage-report` | its escalation is reached at all | only after `Build tsuku` is repaired; the label was never its binding constraint |
 
@@ -189,6 +190,13 @@ failure (#2659, 14 seconds after the workflow's own #2658), so the job was remov
 with `issues: write`. A failed run now reaches its assignee through the escalator alone.
 The `curated-recipe-failure` label stays in the manifest: issues already carry it, and
 the manifest has no delete path.
+
+**2026-09-26 — `curated-nightly` routes its failures to #2611.** The workflow now declares
+`escalation-owned-by: 2611`. #2611 is the open decision on this workflow's scope, and every
+failing night is evidence for that decision, not a new problem. So the escalator comments
+there, and stops opening or commenting on an item of its own (#2659). The declaration expires
+when #2611 closes: the policy check goes red, and the escalator falls back to filing its own
+item for the workflow.
 
 ## Scheduled run reaches nobody; the same check does reach a PR author
 
