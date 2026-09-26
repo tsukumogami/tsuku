@@ -71,3 +71,48 @@ jobs:
       # issue" is also what an escalator that does nothing produces.
       - name: Check failures route to the issue that owns them
         run: .github/scripts/checks/escalate-owned_test.sh
+      # The backstop's own regression cases (#2607). Hermetic: `gh` is a stub that filters
+      # by the query's own parameters, and declarations come from a sandbox git repository,
+      # so a pull request trying to exempt a workflow in its own diff is a real case.
+      - name: Check the escalation backstop can fail, and says why
+        run: .github/scripts/checks/escalation-backstop_test.py
+
+  # The escalation backstop (#2607): was every recent failure of a registered workflow told
+  # to someone? Its own job, so its verdict is its own check and neither hides nor is hidden
+  # by the lint results above.
+  #
+  # Its red is about the REPOSITORY, not the pull request it appears on. The job name and
+  # the first line of its output say so in a fixed form, so a pull request whose only red is
+  # this job can be recognised as not being at fault:
+  #   "Escalation backstop (repository health): FINDING, not a fault in this pull request"
+  #   "Escalation backstop (repository health): COULD NOT CHECK, ..." (an API error after
+  #   retries; never reported as a finding)
+  #
+  # Independent of the escalator by construction: a different trigger (pull_request and
+  # push, not workflow_run or schedule), a different script (it never calls escalate.sh),
+  # and its own job-scoped token with no write scope. Declarations are read from the default
+  # branch, fetched below, not from the pull request's head.
+  escalation-backstop:
+    name: Escalation Backstop (repository health)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      actions: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Fetch the default branch's declarations
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: git fetch --no-tags --depth=1 origin "+refs/heads/${DEFAULT_BRANCH}:refs/remotes/origin/${DEFAULT_BRANCH}"
+      - name: Check every recent failure reached someone
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -o pipefail
+          .github/scripts/checks/escalation-backstop.py --ref "origin/${DEFAULT_BRANCH}" | tee backstop.txt
+          status=${PIPESTATUS[0]}
+          { echo '## Escalation backstop (repository health)'; echo '```'; cat backstop.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"

@@ -229,7 +229,7 @@ so the failure is reported accurately, and the two platforms become separate pro
 | Suppression check | `.github/scripts/checks/escalation-hygiene.sh` | Enumerates every step that files or edits an issue and fails on suppressed errors or an undeclared token permission |
 | Label drift check | `.github/scripts/checks/label-drift.sh` | Fails when the manifest and the repository's labels disagree |
 | Consumer record | `docs/ci-consumers.md` | Names, per scheduled workflow, who or what consumes its output |
-| Escalation backstop | `.github/scripts/checks/escalation-backstop.sh` | In the pull-request lint job; queries the Actions API for unescalated non-success runs, independently of the escalator's script and token |
+| Escalation backstop | `.github/scripts/checks/escalation-backstop.py` | Its own job in the pull-request lint workflow; queries the Actions API for non-success runs no issue was open for, independently of the escalator's script and token. Its red is a repository-health finding, stated as such in its first line (#2607) |
 
 ### The declaration block
 
