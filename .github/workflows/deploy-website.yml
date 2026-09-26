@@ -55,12 +55,23 @@ jobs:
           python3 scripts/generate-registry.py
           cp _site/recipes.json website/
 
+      # Pages treats a deploy to the project's production branch as production
+      # and any other branch name as a preview, so pull requests deploy to a
+      # preview named after their head branch. The name is reduced to a safe
+      # character set before it reaches the wrangler command line.
+      - name: Resolve deploy branch
+        id: branch
+        env:
+          RAW_BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          name=$(printf '%s' "$RAW_BRANCH" | tr -c 'A-Za-z0-9._/-' '-')
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "Deploying to Pages branch: $name"
+
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@f0a1cd58cd66095dee69bfa18fa5efd1dde93bca  # v1
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd  # v3.15.0
         with:
           apiToken: ${{ secrets.CLOUDFLARE_PAGES_DEPLOYER_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: tsuku-dev
-          directory: website
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.head_ref || github.ref_name }}
+          command: pages deploy website --project-name=tsuku-dev --branch=${{ steps.branch.outputs.name }}
