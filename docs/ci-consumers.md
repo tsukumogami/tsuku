@@ -209,6 +209,19 @@ describe it as observed on 2026-09-20 and are left as history. Curated recipes a
 install-tested at pull-request time by `test-recipe.yml`. Nothing checks them for upstream
 drift between changes.
 
+**2026-09-26 — `weekly-coverage-report` retired (#2612).** The workflow and its
+registrations are gone: the escalator registry entry, the listener's `workflow_run` entry,
+and one from the policy check's pinned count of scheduled workflows. Its libc coverage check
+is enforced elsewhere, more often and more strictly, over the same embedded recipes.
+`validate-recipe-structure.yml` runs the identical command on every push and pull request
+that changes a recipe, and fails on errors. `TestTransitiveDepsHavePlatformCoverage` in
+`internal/recipe/coverage_test.go` fails on coverage errors and warnings, and runs in
+`test.yml` on every pull request that changes Go code and on its daily schedule, which is
+registered with the escalator. Coverage is a function of committed files, so a weekly re-run
+had nothing to find between commits. In 34 scheduled runs, its issue-filing step never
+fired. The rows above describe it as observed on 2026-09-20 and are left as history. The
+`coverage-regression` label stays in the manifest, which has no delete path.
+
 ## Scheduled run reaches nobody; the same check does reach a PR author
 
 These also run on `pull_request`, where the check is consumed by whoever opened the pull
