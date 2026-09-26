@@ -280,7 +280,7 @@ For packages already in the queue with a fresh `disambiguated_at` (within 30 day
 2. **Repeated failures**: `failure_count >= 3` AND `disambiguated_at` is stale. This conjunction is an intentional refinement of the pipeline dashboard's `failure_count >= 3` trigger -- it avoids re-disambiguating packages that were recently checked but fail due to builder bugs rather than wrong source selection.
 3. **New source discovery**: A source discovers a package already in the queue, and the discovering ecosystem is not present in the package's audit candidates (`data/disambiguations/audit/<name>.json`). This handles the case where a new ecosystem is onboarded and existing entries should be re-evaluated against it, without waiting for the 30-day freshness window.
 
-Entries with `status: "success"` are excluded from freshness checking since they already have working recipes. Entries with `confidence: "curated"` are never re-disambiguated but are validated: the seeding command checks whether the curated source still exists (HTTP HEAD against the ecosystem API). Broken curated sources (404s, timeouts) are reported in the stdout summary under a `curated_invalid` field and create GitHub issues, but the queue entry is left unchanged. This provides the data the pipeline dashboard's curated validation page needs.
+Entries with `status: "success"` are excluded from freshness checking since they already have working recipes. Entries with `status: "excluded"` are skipped too: an exclusion is a deliberate decision, and re-disambiguation would reset the entry to `pending`, so reversing one takes an explicit queue edit. Entries with `confidence: "curated"` are never re-disambiguated but are validated: the seeding command checks whether the curated source still exists (HTTP HEAD against the ecosystem API). Broken curated sources (404s, timeouts) are reported in the stdout summary under a `curated_invalid` field and create GitHub issues, but the queue entry is left unchanged. This provides the data the pipeline dashboard's curated validation page needs.
 
 The seeding command calls `discover.NewEcosystemProbe()` directly (reusing existing builder infrastructure) rather than going through the full `ChainResolver`. This avoids the registry lookup and LLM stages, which aren't relevant for batch seeding.
 
@@ -425,7 +425,7 @@ cmd/seed-queue/main.go
   |     2. Find entries with failure_count >= 3 AND stale disambiguated_at
   |     3. Find entries where discovered source not in audit candidates
   |     4. Skip curated entries (confidence: "curated")
-  |     5. Skip success entries (status: "success")
+  |     5. Skip success and excluded entries (status: "success" or "excluded")
   |     6. Validate curated sources exist (HTTP HEAD), report broken ones
   |     7. Re-disambiguate triggered entries, update source if changed
   |     8. Reset failure_count/next_retry_at on source change
@@ -494,7 +494,7 @@ queue.Merge() -> add to priority-queue.json with resolved sources
   v
 FreshnessCheck() -> for stale/failing/new-source entries:
   |   Triggers: stale (null or >30d), failures+stale, new audit candidate
-  |   Skip curated (but validate source exists) + success entries
+  |   Skip curated (but validate source exists) + success + excluded entries
   |   Re-disambiguate triggered entries, flag source changes
   |   Reset failure_count on source change
   |
@@ -834,7 +834,7 @@ The `GITHUB_TOKEN` secret is used for creating issues (source change alerts) and
 - The 10x threshold with secondary signals (version_count >= 3, has_repository) makes gaming harder than manipulating downloads alone
 - Priority 1-2 source changes require manual review via GitHub issues
 - Curated entries are never auto-updated
-- Success entries are excluded from re-disambiguation
+- Success and excluded entries are never re-disambiguated
 - Audit logs record all probe data for post-incident analysis
 - The seeding command doesn't auto-install anything; it only updates queue sources
 
