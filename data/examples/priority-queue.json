@@ -1,43 +1,46 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-01-27T10:00:00Z",
-  "tiers": {
-    "1": "Critical - manually curated high-impact tools",
-    "2": "Popular - >10K weekly downloads or >1K GitHub stars",
-    "3": "Standard - all other packages"
-  },
-  "packages": [
+  "updated_at": "2026-09-26T10:00:00Z",
+  "entries": [
     {
-      "id": "homebrew:ripgrep",
-      "source": "homebrew",
       "name": "ripgrep",
-      "tier": 1,
-      "status": "pending",
-      "added_at": "2026-01-20T10:00:00Z",
-      "metadata": {
-        "formula": "ripgrep",
-        "tap": "homebrew/core"
-      }
+      "source": "homebrew:ripgrep",
+      "priority": 1,
+      "status": "success",
+      "confidence": "curated",
+      "disambiguated_at": null,
+      "failure_count": 0,
+      "next_retry_at": null
     },
     {
-      "id": "homebrew:fd",
-      "source": "homebrew",
+      "name": "bat",
+      "source": "github:sharkdp/bat",
+      "priority": 2,
+      "status": "pending",
+      "confidence": "auto",
+      "disambiguated_at": "2026-09-01T00:00:00Z",
+      "failure_count": 0,
+      "next_retry_at": null
+    },
+    {
       "name": "fd",
-      "tier": 2,
-      "status": "pending",
-      "added_at": "2026-01-20T10:00:00Z",
-      "metadata": {
-        "formula": "fd",
-        "tap": "homebrew/core"
-      }
+      "source": "cargo:fd-find",
+      "priority": 3,
+      "status": "failed",
+      "confidence": "auto",
+      "disambiguated_at": "2026-09-01T00:00:00Z",
+      "failure_count": 2,
+      "next_retry_at": "2026-09-02T00:00:00Z"
     },
     {
-      "id": "homebrew:tree",
-      "source": "homebrew",
-      "name": "tree",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-01-25T14:30:00Z"
+      "name": "conduit",
+      "source": "rubygems:conduit",
+      "priority": 3,
+      "status": "excluded",
+      "confidence": "auto",
+      "disambiguated_at": "2026-02-17T00:00:00Z",
+      "failure_count": 0,
+      "next_retry_at": null
     }
   ]
 }

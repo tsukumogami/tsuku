@@ -1,9 +1,9 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Priority Queue",
-  "description": "Packages awaiting recipe generation, ordered by tier",
+  "title": "Unified Priority Queue",
+  "description": "Tools awaiting recipe generation, each with a pre-resolved source. Mirrors batch.UnifiedQueue and batch.QueueEntry in internal/batch/queue_entry.go.",
   "type": "object",
-  "required": ["schema_version", "updated_at", "packages"],
+  "required": ["schema_version", "updated_at", "entries"],
   "properties": {
     "schema_version": {
       "type": "integer",
@@ -13,57 +13,51 @@
       "type": "string",
       "format": "date-time"
     },
-    "tiers": {
-      "type": "object",
-      "description": "Human-readable tier descriptions",
-      "properties": {
-        "1": { "type": "string" },
-        "2": { "type": "string" },
-        "3": { "type": "string" }
-      }
-    },
-    "packages": {
+    "entries": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "source", "name", "tier", "status", "added_at"],
+        "required": ["name", "source", "priority", "status", "confidence", "disambiguated_at", "failure_count", "next_retry_at"],
         "properties": {
-          "id": {
+          "name": {
             "type": "string",
-            "pattern": "^[a-z0-9_-]+:[a-z0-9_@.+-]+$",
-            "description": "Globally unique identifier: {source}:{name}"
+            "minLength": 1,
+            "description": "Tool name, used as the recipe name (e.g., ripgrep)"
           },
           "source": {
             "type": "string",
-            "description": "Ecosystem builder name (e.g., homebrew, cargo, npm)"
+            "pattern": "^[a-z0-9_.-]+:.+$",
+            "description": "Pre-resolved source in ecosystem:identifier format (e.g., homebrew:ripgrep, github:sharkdp/bat)"
           },
-          "name": {
-            "type": "string",
-            "description": "Package name within ecosystem"
-          },
-          "tier": {
+          "priority": {
             "type": "integer",
             "minimum": 1,
             "maximum": 3,
-            "description": "Priority tier: 1 (critical), 2 (popular), 3 (standard)"
+            "description": "Processing priority: 1 (critical), 2 (popular), 3 (standard)"
           },
           "status": {
             "type": "string",
-            "enum": ["pending", "in_progress", "success", "failed", "blocked", "skipped"],
-            "description": "Current processing status. Blocked means validation failed due to missing dependencies that don't have recipes yet."
+            "enum": ["pending", "success", "failed", "blocked", "requires_manual", "excluded"],
+            "description": "Queue processing state. excluded is permanent until edited by hand."
           },
-          "added_at": {
+          "confidence": {
             "type": "string",
+            "enum": ["auto", "curated"],
+            "description": "How the source was selected: by the disambiguation algorithm, or by hand"
+          },
+          "disambiguated_at": {
+            "type": ["string", "null"],
             "format": "date-time",
-            "description": "ISO 8601 timestamp when added to queue"
+            "description": "When disambiguation last ran for this entry; null if never"
           },
-          "metadata": {
-            "type": "object",
-            "description": "Source-specific data (optional)"
+          "failure_count": {
+            "type": "integer",
+            "minimum": 0
           },
-          "force_override": {
-            "type": "boolean",
-            "description": "When true, allows overwriting an existing recipe during batch generation"
+          "next_retry_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "Earliest retry time under backoff; null if no backoff is active"
           }
         },
         "additionalProperties": false
