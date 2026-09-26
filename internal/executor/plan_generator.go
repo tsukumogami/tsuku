@@ -114,7 +114,7 @@ var pinnedTagProvider = func(resolver *version.Resolver, r *recipe.Recipe) (vers
 //     network call;
 //  2. the version provider's lookup of that exact version, which knows
 //     whether upstream tags carry a "v" (GitHub tags "v2.37.1" for "2.37.1");
-//  3. the pinned version itself, with a warning. This is the old behaviour,
+//  3. the pinned version itself, with a warning. This is the old behavior,
 //     and it is wrong for any upstream whose tags differ from the version, so
 //     it is never taken silently: a download that 404s after this warning is
 //     a tag that could not be resolved, not a missing asset.
