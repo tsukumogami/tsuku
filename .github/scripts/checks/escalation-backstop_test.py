@@ -170,6 +170,10 @@ def main():
         fx["issues"] = [issue(700, "Scheduled workflow failing: Demo", "2026-09-30T06:00:20Z", login="somebody")]
         expect("an item a PERSON filed under the exact title tracks the run: filing it is the remedy offered",
                check(tmp, repo, fx), 0, OK, "item #700")
+        fx["issues"] = [issue(700, "Demo is slow on Sundays", "2026-09-30T06:00:20Z", login="somebody",
+                              body="Scheduled workflow failing: Demo -- see run 10")]
+        expect("a person's issue that mentions the workflow in passing (title and body) does not track it",
+               check(tmp, repo, fx), 1, FINDING + "untracked: Demo run 10")
         fx["issues"] = [issue(700, "Scheduled workflow failing: Demo (again)", "2026-09-30T06:00:20Z", login="somebody")]
         expect("a person's issue whose title only contains the item's title does not", check(tmp, repo, fx), 1,
                FINDING + "untracked: Demo run 10")

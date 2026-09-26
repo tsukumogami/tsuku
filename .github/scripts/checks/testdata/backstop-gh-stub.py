@@ -61,7 +61,10 @@ elif p.startswith(repo + "/actions/workflows/"):
 elif p == "search/issues":
     # Fuzzy, like the real index: any issue whose title CONTAINS the quoted phrase.
     phrase = q["q"].split('"')[1]
-    doc = {"items": [i for i in fx.get("issues", []) if phrase in i["title"]]}
+    # Without in:title the real search also matches bodies, so this does too.
+    in_title = "in:title" in q["q"]
+    doc = {"items": [i for i in fx.get("issues", [])
+                     if phrase in i["title"] or (not in_title and phrase in (i.get("body") or ""))]}
 elif p == repo + "/issues":
     out = []
     for i in fx.get("issues", []):
