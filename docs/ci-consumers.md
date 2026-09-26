@@ -198,6 +198,17 @@ there, and stops opening or commenting on an item of its own (#2659). The declar
 when #2611 closes: the policy check goes red, and the escalator falls back to filing its own
 item for the workflow.
 
+**2026-09-26 — `curated-nightly` retired (#2611).** The workflow and its registrations are
+gone: the escalator registry entry, the listener's `workflow_run` entry, and the policy
+check's pinned count, which drops from 22 to 21 scheduled workflows. Its owner declaration
+went with the file. It never validated the curated set it discovered. It called the shared
+validation core with no recipe list, so it ran the same full-registry job as Recipe
+Validation, daily. In 162 runs it never completed, and the core never fails on a failing
+recipe, so its verdict couldn't have tracked the recipes even if it had. The rows above
+describe it as observed on 2026-09-20 and are left as history. Curated recipes are still
+install-tested at pull-request time by `test-recipe.yml`. Nothing checks them for upstream
+drift between changes.
+
 ## Scheduled run reaches nobody; the same check does reach a PR author
 
 These also run on `pull_request`, where the check is consumed by whoever opened the pull
