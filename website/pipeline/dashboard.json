@@ -1,17 +1,18 @@
 {
-  "generated_at": "2026-08-13T20:40:46Z",
+  "generated_at": "2026-09-26T14:49:54Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
-      "excluded": 6,
-      "pending": 3903,
+      "excluded": 7,
+      "pending": 3902,
       "success": 1374
     },
     "by_tier": {
       "1": {
         "blocked": 2,
-        "pending": 4,
+        "excluded": 1,
+        "pending": 3,
         "success": 12
       },
       "2": {
@@ -52,7 +53,8 @@
       },
       "homebrew": {
         "blocked": 22,
-        "pending": 3727,
+        "excluded": 1,
+        "pending": 3726,
         "success": 1134,
         "total": 4883
       },
@@ -354,6 +356,15 @@
       ],
       "excluded": [
         {
+          "id": "homebrew:go-task",
+          "name": "task",
+          "ecosystem": "homebrew",
+          "priority": 1,
+          "category": "install_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-02-24T06:13:51Z"
+        },
+        {
           "id": "crates.io:bitcoin",
           "name": "bitcoin",
           "ecosystem": "crates.io",
@@ -423,15 +434,6 @@
           "category": "generation_failed",
           "failure_count": 3,
           "next_retry_at": "2026-02-24T06:13:44Z"
-        },
-        {
-          "id": "homebrew:go-task",
-          "name": "task",
-          "ecosystem": "homebrew",
-          "priority": 1,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-02-24T06:13:51Z"
         },
         {
           "id": "homebrew:anomalyco/tap/opencode",
@@ -40114,7 +40116,7 @@
     {
       "name": "task",
       "source": "homebrew:go-task",
-      "validation_status": "valid"
+      "validation_status": "unknown"
     },
     {
       "name": "awscli",
