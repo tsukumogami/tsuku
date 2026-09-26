@@ -1,12 +1,15 @@
 # escalation-policy: issue
 # escalation-assignee: dangazineu
+# escalation-owned-by: 2611
+# escalation-owned-by-reason: #2611 decides this workflow's scope; it validates the full registry, not the curated set, and has never completed
 # coverage: items
 
 name: Curated Recipe Nightly
 # Nightly cross-platform validation for all recipes with curated = true in
 # their [metadata] section. Calls recipe-validation-core.yml (full validation
-# suite). A failed run is escalated by the shared escalator (escalate.yml),
-# which files one issue per failing workflow rather than one per night.
+# suite). A failed run is escalated by the shared escalator (escalate.yml).
+# While #2611 is open it is delivered there as a comment; once #2611 closes,
+# the escalator files its own item for this workflow again.
 #
 # Recipes are discovered dynamically — setting curated = true in a recipe's
 # [metadata] is sufficient to enroll it in nightly CI.
