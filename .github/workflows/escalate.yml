@@ -96,7 +96,8 @@ jobs:
             --conclusion "$WF_CONCLUSION" \
             --run-id "$WF_RUN_ID" \
             --run-url "$WF_RUN_URL" \
-            --event "$WF_EVENT"
+            --event "$WF_EVENT" \
+            --outcome-file outcome.tsv
 
       - name: Emit receipt
         env:
@@ -108,5 +109,14 @@ jobs:
             echo "::error::notified about no run; attempted 0 of a declared 1" >&2
             exit 1
           fi
-          printf '{"declared":1,"attempted":1,"subject":"%s"}\n' "$WF_NAME" > receipt.ndjson
-          echo "receipt: declared 1, attempted 1, subject $WF_NAME"
+          # What was done with the run, as the escalator recorded it. A run routed to the
+          # issue that owns its failure is named as routed there; "nothing new was filed"
+          # would read the same whether it was delivered or dropped.
+          if [ ! -s outcome.tsv ]; then
+            echo "::error::the escalator recorded no outcome for $WF_NAME" >&2
+            exit 1
+          fi
+          IFS=$'\t' read -r OUTCOME DESTINATION < outcome.tsv
+          jq -nc --arg s "$WF_NAME" --arg o "$OUTCOME" --arg d "$DESTINATION" \
+            '{declared:1, attempted:1, subject:$s, outcome:$o, destination:$d}' > receipt.ndjson
+          echo "receipt: declared 1, attempted 1, subject $WF_NAME, outcome $OUTCOME${DESTINATION:+ #$DESTINATION}"

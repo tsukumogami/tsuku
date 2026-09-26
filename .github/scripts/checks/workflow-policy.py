@@ -75,6 +75,8 @@ DECLARATION_KEYS = {
     "escalation-none-kind",
     "escalation-tracking-issue",
     "escalation-self-files",
+    "escalation-owned-by",
+    "escalation-owned-by-reason",
     "coverage",
     "coverage-reason",
 }
@@ -265,10 +267,53 @@ def main():
                                      "escalation-self-files", "self-filing declaration",
                                      "remove the workflow's own issue-filing step and the "
                                      "declaration, or record why the migration is still open"))
+
+            # A workflow whose failure is already tracked by an open issue names that
+            # issue, and the escalator comments there instead of opening a second item for
+            # the same problem. Declared, never inferred: nothing in a workflow's name or
+            # an issue's title says one owns the other, and a heuristic would be wrong in
+            # both directions. It expires through the same path as a deferral, so
+            # ownership cannot outlive the issue that held it.
+            owned_by = decl.get("escalation-owned-by", "")
+            if owned_by:
+                m = ISSUE_REF.match(owned_by.strip())
+                if not m:
+                    failures.append((filename, "`escalation-owned-by:` must name the "
+                                               "number of the open issue that tracks "
+                                               "this workflow's failure"))
+                else:
+                    deferred.append((filename, wf_name, int(m.group("number")),
+                                     "escalation-owned-by", "ownership declaration",
+                                     "remove `escalation-owned-by:` so the escalator files "
+                                     "its own item, or name the issue that owns the "
+                                     "failure now"))
+                if not decl.get("escalation-owned-by-reason"):
+                    failures.append((filename, "`escalation-owned-by:` with no "
+                                               "`escalation-owned-by-reason:`; say why that "
+                                               "issue owns this workflow's failure"))
+
+                # Rejected, not resolved by precedence. Ownership redirects only the
+                # escalator; a workflow that files its own issue keeps doing so whatever
+                # this says, so carrying both would still produce two streams while
+                # reading as settled. The order migration happens in is therefore
+                # enforced: the workflow's own filing step goes first, then the owner
+                # is declared.
+                if self_files:
+                    failures.append((filename, "declares both `escalation-owned-by:` and "
+                                               "`escalation-self-files:`. Ownership only "
+                                               "redirects the escalator; the workflow's "
+                                               "own filing step would keep running. "
+                                               "Remove that step and "
+                                               "`escalation-self-files:` first."))
             if not decl.get("escalation-assignee"):
                 failures.append((filename, "`escalation-policy: issue` with no "
                                            "`escalation-assignee:`"))
         else:
+            if decl.get("escalation-owned-by"):
+                failures.append((filename, "`escalation-owned-by:` on a workflow declaring "
+                                           "`escalation-policy: none`. Nothing is "
+                                           "escalated, so there is nothing to route to "
+                                           "an owner."))
             if not decl.get("escalation-reason"):
                 failures.append((filename, "`escalation-policy: none` with no "
                                            "`escalation-reason:`; declining to escalate "
