@@ -124,6 +124,47 @@ run_mutation "a permanent none needs no tracking issue" \
 run_mutation "a registry without the registered key is an operational error" \
   2 "declares no workflows" registry_without_key
 
+# --- ownership: a failure already tracked by an open issue ---
+
+# No real workflow declares an owner yet, so each case adds one to a sandbox copy. Seed
+# Queue is a plain `issue` workflow with no self-filing. #2593 is open (R2 Health
+# Monitor's deferral already depends on it); #2633 is closed.
+declare_owner() {  # declare_owner <file> <owner value> [reason]
+  local line="# escalation-owned-by: $2"
+  [ -n "${3:-}" ] && line="$line\n# escalation-owned-by-reason: $3"
+  sed -i "s/^# escalation-assignee: \(.*\)$/# escalation-assignee: \1\n$line/" "$1"
+}
+owner_open() { declare_owner "$1/workflows/seed-queue.yml" 2593 fixture; }
+# Ownership held by a closed issue has expired, like a deferral.
+owner_closed() { declare_owner "$1/workflows/seed-queue.yml" 2633 fixture; }
+owner_malformed() { declare_owner "$1/workflows/seed-queue.yml" soon fixture; }
+owner_without_reason() { declare_owner "$1/workflows/seed-queue.yml" 2593; }
+# Discovery Registry Freshness declares self-filing. Ownership would redirect only the
+# escalator while its own filing step kept running, so the pair is rejected outright.
+owner_and_self_files() { declare_owner "$1/workflows/discovery-freshness.yml" 2593 fixture; }
+owner_on_none() {
+  sed -i 's/^# escalation-policy: none$/# escalation-policy: none\n# escalation-owned-by: 2593\n# escalation-owned-by-reason: fixture/' \
+    "$1/workflows/r2-health-monitor.yml"
+}
+
+run_mutation "an open owner with a reason passes" \
+  0 "" owner_open
+
+run_mutation "an owner that is closed is reported as expired" \
+  1 "condition that justified the ownership declaration has resolved" owner_closed
+
+run_mutation "an owner that is not an issue number is reported" \
+  1 "must name the number of the open issue" owner_malformed
+
+run_mutation "an owner with no reason is reported" \
+  1 "escalation-owned-by-reason" owner_without_reason
+
+run_mutation "an owner alongside self-filing is rejected, not resolved by precedence" \
+  1 "declares both \`escalation-owned-by:\` and \`escalation-self-files:\`" owner_and_self_files
+
+run_mutation "an owner on a workflow that escalates nothing is reported" \
+  1 "nothing to route to an owner" owner_on_none
+
 echo "The listener's trigger list"
 
 # The rule is: the listener's workflow_run list is the registry MINUS its own name. Not

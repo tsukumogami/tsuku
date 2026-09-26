@@ -9,7 +9,12 @@ set -euo pipefail
 #
 # Usage:
 #   escalate.sh --workflow <name> --conclusion <c> --run-id <id> --run-url <url> \
-#               --event <event> [--dry-run]
+#               --event <event> [--dry-run] [--outcome-file <path>]
+#
+# --outcome-file receives one line, `<outcome>\t<issue number or empty>`, saying what was
+# done with the run: filed, commented, closed, owned, owned-healthy, healthy, self-files,
+# policy-none or not-eligible. The listener's receipt reports it, so a run routed to an
+# owner is named as routed there rather than inferred from nothing new being filed.
 #
 # Exit codes:
 #   0  handled: filed, commented, closed, or deliberately not escalated
@@ -24,7 +29,7 @@ set -euo pipefail
 # emptiness is a legitimate answer, and it is commented as such.
 
 DRY_RUN=0
-WORKFLOW="" CONCLUSION="" RUN_ID="" RUN_URL="" EVENT=""
+WORKFLOW="" CONCLUSION="" RUN_ID="" RUN_URL="" EVENT="" OUTCOME_FILE=""
 WORKFLOWS_DIR="${WORKFLOWS_DIR:-.github/workflows}"
 
 while [ $# -gt 0 ]; do
@@ -35,6 +40,7 @@ while [ $# -gt 0 ]; do
     --run-url)    RUN_URL="$2"; shift 2 ;;
     --event)      EVENT="$2"; shift 2 ;;
     --dry-run)    DRY_RUN=1; shift ;;
+    --outcome-file) OUTCOME_FILE="$2"; shift 2 ;;
     *) echo "::error::unknown argument: $1" >&2; exit 2 ;;
   esac
 done
@@ -45,6 +51,10 @@ for required in WORKFLOW CONCLUSION RUN_ID RUN_URL EVENT; do
     exit 2
   fi
 done
+
+outcome() {  # outcome <what> [issue number]
+  if [ -n "$OUTCOME_FILE" ]; then printf '%s\t%s\n' "$1" "${2:-}" > "$OUTCOME_FILE"; fi
+}
 
 # --- the declaration -------------------------------------------------------------------
 #
@@ -86,6 +96,7 @@ fi
 
 if [ -n "$ONLY_ON" ] && [ "$ONLY_ON" != "$EVENT" ]; then
   echo "not eligible: \"$WORKFLOW\" escalates only on '$ONLY_ON' and this run was '$EVENT'"
+  outcome not-eligible
   exit 0
 fi
 
@@ -96,13 +107,55 @@ if [ -n "$SELF_FILES" ]; then
   # failed and reported nothing; only the declaration separates them. The sweeper names
   # these in its summary so the skip is visible rather than silent.
   echo "self-files: \"$WORKFLOW\" files its own issue, migration tracked in #$SELF_FILES"
+  outcome self-files "${SELF_FILES#\#}"
   exit 0
 fi
 
 if [ "$POLICY" = "none" ]; then
   # Reported rather than skipped in silence. The sweeper counts these; see its summary.
   echo "policy-none: \"$WORKFLOW\" declares escalation-policy: none, not filing"
+  outcome policy-none
   exit 0
+fi
+
+# --- an issue that already owns this failure ----------------------------------------------
+#
+# Declared in the workflow, never inferred: the escalator cannot tell that a decision issue
+# owns a failure when nothing in either names the other. While that issue is open the run
+# is delivered THERE, as a comment, instead of opening a second item for one problem. The
+# owner is never closed from here -- it is a decision somebody is holding, not a status.
+#
+# Once it closes the declaration has expired (the policy check reports it), and this falls
+# through to filing an item of its own, so a still-failing workflow is not left reaching a
+# closed issue nobody reads.
+
+OWNED_BY=$(decl_value "escalation-owned-by")
+if [ -n "$OWNED_BY" ]; then
+  OWNER="${OWNED_BY#\#}"
+  if ! OWNER_STATE=$(gh issue view "$OWNER" --json state --jq .state); then
+    echo "::error file=${declaration_file}::cannot read the state of #$OWNER, which" \
+         "escalation-owned-by names; not delivering anywhere rather than guessing" >&2
+    exit 1
+  fi
+  if [ "$OWNER_STATE" = "OPEN" ]; then
+    if [ "$CONCLUSION" = "success" ]; then
+      echo "owned: \"$WORKFLOW\" is healthy; #$OWNER is left to its owner"
+      outcome owned-healthy "$OWNER"
+      exit 0
+    fi
+    if [ "$DRY_RUN" = "1" ]; then
+      echo "[dry-run] would route to owner #$OWNER"
+      outcome owned "$OWNER"
+      exit 0
+    fi
+    BODY="[Run]($RUN_URL) of \"$WORKFLOW\" concluded \`$CONCLUSION\` (run id $RUN_ID, event \`$EVENT\`). Delivered here because the workflow declares \`escalation-owned-by: $OWNER\`."
+    gh issue comment "$OWNER" --body "$BODY"
+    echo "routed to owner #$OWNER for \"$WORKFLOW\""
+    outcome owned "$OWNER"
+    exit 0
+  fi
+  echo "::warning file=${declaration_file}::escalation-owned-by names #$OWNER, which is" \
+       "${OWNER_STATE,,}; the declaration has expired, escalating on its own"
 fi
 
 TITLE="Scheduled workflow failing: $WORKFLOW"
@@ -126,22 +179,25 @@ EXISTING=$(gh issue list --search "\"$TITLE\" in:title" --state open \
 if [ "$CONCLUSION" = "success" ]; then
   if [ -z "$EXISTING" ]; then
     echo "healthy, and nothing open for \"$WORKFLOW\""
+    outcome healthy
     exit 0
   fi
-  if [ "$DRY_RUN" = "1" ]; then echo "[dry-run] would close #$EXISTING"; exit 0; fi
+  if [ "$DRY_RUN" = "1" ]; then echo "[dry-run] would close #$EXISTING"; outcome closed "$EXISTING"; exit 0; fi
   BODY="Recovered. [Run]($RUN_URL) concluded \`success\`."
   gh issue comment "$EXISTING" --body "$BODY"
   gh issue close "$EXISTING" --reason completed
   echo "closed #$EXISTING for \"$WORKFLOW\""
+  outcome closed "$EXISTING"
   exit 0
 fi
 
 BODY="[Run]($RUN_URL) concluded \`$CONCLUSION\` (run id $RUN_ID, event \`$EVENT\`)."
 
 if [ -n "$EXISTING" ]; then
-  if [ "$DRY_RUN" = "1" ]; then echo "[dry-run] would comment on #$EXISTING"; exit 0; fi
+  if [ "$DRY_RUN" = "1" ]; then echo "[dry-run] would comment on #$EXISTING"; outcome commented "$EXISTING"; exit 0; fi
   gh issue comment "$EXISTING" --body "$BODY"
   echo "commented on #$EXISTING for \"$WORKFLOW\""
+  outcome commented "$EXISTING"
   exit 0
 fi
 
@@ -161,7 +217,7 @@ if ! gh api "repos/${GITHUB_REPOSITORY}/assignees/${ASSIGNEE}" --silent; then
   exit 1
 fi
 
-if [ "$DRY_RUN" = "1" ]; then echo "[dry-run] would file \"$TITLE\" assigned to $ASSIGNEE"; exit 0; fi
+if [ "$DRY_RUN" = "1" ]; then echo "[dry-run] would file \"$TITLE\" assigned to $ASSIGNEE"; outcome filed; exit 0; fi
 
 NUMBER=$(gh issue create --title "$TITLE" --body "$BODY" \
            --assignee "$ASSIGNEE" --label "$ESCALATION_LABEL" \
@@ -188,3 +244,4 @@ case ",${ACTUAL}," in
 esac
 
 echo "filed #$NUMBER for \"$WORKFLOW\", assigned to $ASSIGNEE and read back"
+outcome filed "$NUMBER"

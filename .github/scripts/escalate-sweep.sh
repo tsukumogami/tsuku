@@ -143,6 +143,7 @@ file_for_name() {  # file_for_name <workflow name>
 examined=0 gaps=0 filed=0 failed=0 self_filed=0 recovered=0 attempted=0 unreachable=0
 recovered_report=""
 self_report=""
+owned_report=""
 
 for wf in "${REGISTERED[@]}"; do
   file=$(file_for_name "$wf") || {
@@ -151,6 +152,8 @@ for wf in "${REGISTERED[@]}"; do
   }
   only_on=$(decl_value "$file" "escalation-only-on")
   self_files=$(decl_value "$file" "escalation-self-files")
+  owned_by=$(decl_value "$file" "escalation-owned-by"); owned_by="${owned_by#\#}"
+  owner_state=""
 
   # --- the current-state gate -------------------------------------------------------------
   #
@@ -238,6 +241,27 @@ for wf in "${REGISTERED[@]}"; do
       self_filed=$((self_filed + 1))
       self_report="${self_report}    \"$wf\": non-success run $run_id, not escalated because it files its own issue, migration tracked in #$self_files\n"
       continue
+    fi
+
+    # A failure already tracked by an open issue the workflow names is delivered there by
+    # the escalator, not filed as a second item. The sweep does not comment again for runs
+    # the listener already delivered; it names them, so "routed to its owner" is on the
+    # record rather than inferred from nothing having been filed. A closed owner means the
+    # declaration expired, and the run is treated like any other.
+    if [ -n "$owned_by" ]; then
+      if [ -z "$owner_state" ]; then
+        owner_state=$(gh issue view "$owned_by" --json state --jq .state) || owner_state=""
+      fi
+      if [ -z "$owner_state" ]; then
+        failed=$((failed + 1))
+        echo "::error::cannot read the state of #$owned_by, which \"$wf\" names as its owner;" \
+             "run $run_id was delivered nowhere this sweep can confirm" >&2
+        continue
+      fi
+      if [ "$owner_state" = "OPEN" ]; then
+        owned_report="${owned_report}    \"$wf\": non-success run $run_id routed to its owner #$owned_by, no item of its own\n"
+        continue
+      fi
     fi
 
     title="Scheduled workflow failing: $wf"
@@ -345,6 +369,12 @@ if [ -n "$self_report" ]; then
   printf "$self_report"
 else
   echo "Workflows filing their own issues, with failing runs: none."
+fi
+if [ -n "$owned_report" ]; then
+  echo "Routed to the open issue that owns the failure (escalation-owned-by):"
+  printf "$owned_report"
+else
+  echo "Owned workflows with failing runs: none."
 fi
 if [ "$startup_failures" -gt 0 ]; then
   echo "Runs rejected before job creation (invisible to every name-matching path):"

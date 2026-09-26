@@ -66,3 +66,8 @@ jobs:
       # lookback" constructible rather than approximated.
       - name: Check the sweeper's selection logic
         run: .github/scripts/checks/escalate-sweep_test.sh
+      # Ownership routing, through the listener and the sweeper. Each case asserts where
+      # the run went -- a comment on the owner and a receipt naming it -- because "no new
+      # issue" is also what an escalator that does nothing produces.
+      - name: Check failures route to the issue that owns them
+        run: .github/scripts/checks/escalate-owned_test.sh
