@@ -45,7 +45,6 @@ on:
       - "Scheduled Tests"
       - "Seed Queue"
       - "Tests"
-      - "Weekly Coverage Report"
       - "Escalate Sweep"
     types: [completed]
 
