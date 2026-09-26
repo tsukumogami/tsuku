@@ -53,6 +53,14 @@ YML
 # Stub gh. Answers only what escalate-sweep.sh asks, from the fixture values baked in.
 args="\$*"
 case "\$args" in
+  *"actions/runs?"*)
+      # The repository-wide run list. Its .name is the RECORDED name: a path for a run that
+      # was rejected before parsing, even though the workflow parses now.
+      if [ -n "\${STUB_STARTUP:-}" ] && [[ "\$args" == *"page=1"* ]]; then
+        printf '%s' '{"workflow_runs":[{"id":999,"name":".github/workflows/demo.yml","html_url":"http://r/999","conclusion":"failure","created_at":"2099-01-01T00:00:00Z"}]}'
+      else
+        printf '%s' '{"workflow_runs":[]}'
+      fi ;;
   *"actions/workflows/escalate-sweep.yml/runs"*)
       # Two different answers, so the row fails if the success filter is ever dropped.
       # A real repository would return the FAILED sweep as the most recent run; only
@@ -67,7 +75,12 @@ case "\$args" in
   *"--limit 50"*)
       if [ -n "\${STUB_RUNLIST_FAILS:-}" ]; then exit 1; fi
       # runs inside the window: one older run with the fixture's conclusion
-      printf '%s' "\$(printf '{"conclusion":"${older}","event":"schedule","databaseId":111,"url":"http://x","createdAt":"2099-01-01T00:00:00Z","workflowName":"Demo Workflow"}' | base64 -w0)" ;;
+      if [ -n "\${STUB_STARTUP:-}" ]; then
+        # Same run, resolved name — which is exactly what makes it invisible to a name test.
+        printf '%s' "\$(printf '{"conclusion":"failure","event":"schedule","databaseId":999,"url":"http://r/999","createdAt":"2099-01-01T00:00:00Z","workflowName":"Demo Workflow"}' | base64 -w0)"
+      else
+        printf '%s' "\$(printf '{"conclusion":"${older}","event":"schedule","databaseId":111,"url":"http://x","createdAt":"2099-01-01T00:00:00Z","workflowName":"Demo Workflow"}' | base64 -w0)"
+      fi ;;
   *"issue list"*) : ;;
   *"--limit 100"*) : ;;
   *) : ;;
@@ -156,6 +169,69 @@ else
   report FAIL "an unreachable workflow fails the sweep rather than being counted" "exit $rc"
 fi
 rm -rf "$s"
+
+echo "Case 8: a run rejected before parsing, whose workflow NOW parses"
+echo "  (the state the original detector was never tested in: it was proven only while the"
+echo "   workflow was still broken, so there was no current name to resolve to)"
+s=$(make_sandbox "failure" "failure" "2026-09-25T18:36:36Z")
+out=$(STUB_STARTUP=1 PATH="$s/bin:$PATH" GITHUB_REPOSITORY=o/r \
+        WORKFLOWS_DIR="$s/workflows" REGISTRY="$s/registry.yml" \
+        bash "$SWEEP" --dry-run 2>&1)
+if printf '%s' "$out" | grep -qF 'rejected before job creation: .github/workflows/demo.yml' \
+   && ! printf '%s' "$out" | grep -qF 'gap: "Demo Workflow" run 999'; then
+  report PASS "a rejected run is reported as rejected, not escalated as a failure"
+else
+  report FAIL "a rejected run is reported as rejected, not escalated as a failure" \
+    "$(printf '%s' "$out" | grep -E 'rejected|gap:' | head -2)"
+fi
+rm -rf "$s"
+
+echo "Case 9: the receipt must count a gated workflow as examined"
+echo "  (none of the cases above asserts on \`attempted\` — they check what got escalated,"
+echo "   never what got counted, which is how the field understated coverage by half)"
+s9=$(mktemp -d); mkdir -p "$s9/bin" "$s9/workflows"
+for n in one two; do
+  cat > "$s9/workflows/demo-$n.yml" <<YML
+# escalation-policy: issue
+# escalation-assignee: someone
+# coverage: items
+name: Demo $n
+on:
+  schedule:
+    - cron: '0 * * * *'
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    steps:
+      - run: gh issue create --title x --body y --label maintenance
+YML
+done
+printf 'registered:\n  - "Demo one"\n  - "Demo two"\n' > "$s9/registry.yml"
+cat > "$s9/bin/gh" <<'STUB'
+#!/usr/bin/env bash
+args="$*"
+case "$args" in
+  *"actions/runs?"*) printf '%s' '{"workflow_runs":[]}' ;;
+  *"actions/workflows/escalate-sweep.yml/runs"*) printf '%s' '2026-09-25T18:36:36Z' ;;
+  *"--limit 30"*)
+      # demo-one is failing; demo-two has recovered. Both are examined.
+      case "$args" in *demo-one*) printf 'failure' ;; *) printf 'success' ;; esac ;;
+  *"--limit 50"*)
+      printf '%s' "$(printf '{"conclusion":"failure","event":"schedule","databaseId":222,"url":"http://x","createdAt":"2099-01-01T00:00:00Z","workflowName":"Demo one"}' | base64 -w0)" ;;
+  *) : ;;
+esac
+STUB
+chmod +x "$s9/bin/gh"
+out=$(PATH="$s9/bin:$PATH" GITHUB_REPOSITORY=o/r WORKFLOWS_DIR="$s9/workflows" \
+        REGISTRY="$s9/registry.yml" bash "$SWEEP" --dry-run 2>&1)
+if printf '%s' "$out" | grep -qF 'Receipt: declared 2, attempted 2, unreachable 0' \
+   && printf '%s' "$out" | grep -q 'Recovered'; then
+  report PASS "a workflow gated as recovered still counts as examined"
+else
+  report FAIL "a workflow gated as recovered still counts as examined" \
+    "$(printf '%s' "$out" | grep -E '^Receipt:' | head -1)"
+fi
+rm -rf "$s9"
 
 echo
 echo "escalate-sweep self-test: $pass passed, $fail failed, $void void."
