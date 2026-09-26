@@ -1,5 +1,7 @@
 # escalation-policy: issue
 # escalation-assignee: dangazineu
+# escalation-owned-by: 2627
+# escalation-owned-by-reason: #2627 owns this workflow's report path; Create Summary Issue fails at createIssue for lack of issues: write, and granting it would publish line counts of stderr as findings
 # coverage: items
 
 # R2 Golden File Cleanup Workflow
