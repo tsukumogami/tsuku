@@ -1,30 +1,33 @@
 {
-  "generated_at": "2026-09-26T18:22:20Z",
+  "generated_at": "2026-09-26T18:23:09Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 22,
       "excluded": 7,
-      "pending": 3902,
-      "success": 1374
+      "failed": 5,
+      "pending": 3883,
+      "success": 1388
     },
     "by_tier": {
       "1": {
         "blocked": 2,
         "excluded": 1,
-        "pending": 3,
-        "success": 12
+        "pending": 2,
+        "success": 13
       },
       "2": {
         "blocked": 4,
-        "pending": 11,
-        "success": 12
+        "failed": 1,
+        "pending": 8,
+        "success": 14
       },
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "pending": 3888,
-        "success": 1350
+        "failed": 4,
+        "pending": 3873,
+        "success": 1361
       }
     },
     "by_ecosystem": {
@@ -38,13 +41,14 @@
       },
       "crates.io": {
         "excluded": 5,
-        "pending": 76,
+        "failed": 1,
+        "pending": 75,
         "success": 24,
         "total": 105
       },
       "github": {
-        "pending": 3,
-        "success": 108,
+        "pending": 2,
+        "success": 109,
         "total": 111
       },
       "go": {
@@ -54,8 +58,9 @@
       "homebrew": {
         "blocked": 22,
         "excluded": 1,
-        "pending": 3726,
-        "success": 1134,
+        "failed": 1,
+        "pending": 3712,
+        "success": 1147,
         "total": 4883
       },
       "manual": {
@@ -67,18 +72,21 @@
         "total": 1
       },
       "npm": {
-        "pending": 20,
+        "failed": 1,
+        "pending": 19,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "pending": 3,
+        "failed": 1,
+        "pending": 2,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "pending": 74,
+        "failed": 1,
+        "pending": 73,
         "success": 14,
         "total": 89
       }
@@ -407,6 +415,53 @@
           "failure_count": 0
         }
       ],
+      "failed": [
+        {
+          "id": "homebrew:python@3.14",
+          "name": "python@3.14",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-09-28T02:22:27Z"
+        },
+        {
+          "id": "rubygems:amp",
+          "name": "amp",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 23,
+          "next_retry_at": "1734-06-17T18:35:10Z"
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 612,
+          "next_retry_at": "1734-06-17T18:35:10Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 894,
+          "next_retry_at": "1734-06-17T18:35:10Z"
+        },
+        {
+          "id": "crates.io:numpy",
+          "name": "numpy",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 22,
+          "next_retry_at": "2026-10-03T18:22:27Z"
+        }
+      ],
       "pending": [
         {
           "id": "github:github/hub",
@@ -416,15 +471,6 @@
           "category": "generation_failed",
           "failure_count": 3,
           "next_retry_at": "2026-02-24T06:13:36Z"
-        },
-        {
-          "id": "github:BurntSushi/ripgrep",
-          "name": "rg",
-          "ecosystem": "github",
-          "priority": 1,
-          "category": "generation_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-02-24T06:13:42Z"
         },
         {
           "id": "github:lotabout/skim",
@@ -462,15 +508,6 @@
           "failure_count": 14
         },
         {
-          "id": "homebrew:gcc",
-          "name": "gcc",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T17:44:08Z"
-        },
-        {
           "id": "homebrew:jless",
           "name": "jless",
           "ecosystem": "homebrew",
@@ -487,15 +524,6 @@
           "category": "generation_failed",
           "failure_count": 5,
           "next_retry_at": "2026-03-04T06:05:38Z"
-        },
-        {
-          "id": "homebrew:openssl@3",
-          "name": "openssl@3",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-04T12:08:12Z"
         },
         {
           "id": "homebrew:python@3.11",
@@ -523,15 +551,6 @@
           "category": "generation_failed",
           "failure_count": 6,
           "next_retry_at": "2026-03-04T22:05:38Z"
-        },
-        {
-          "id": "homebrew:python@3.14",
-          "name": "python@3.14",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-03T20:08:12Z"
         },
         {
           "id": "homebrew:0xjacky/tools/nginx-ui",
@@ -1035,15 +1054,6 @@
           "priority": 3,
           "category": "generation_failed",
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:amp",
-          "name": "amp",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 22,
-          "next_retry_at": "2026-06-27T19:28:13Z"
         },
         {
           "id": "homebrew:amplitude/ampli/ampli",
@@ -2233,15 +2243,6 @@
           "failure_count": 1
         },
         {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 611,
-          "next_retry_at": "1734-03-17T21:04:51Z"
-        },
-        {
           "id": "homebrew:azure-storage-common-cpp",
           "name": "azure-storage-common-cpp",
           "ecosystem": "homebrew",
@@ -2592,13 +2593,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:beads_viewer",
-          "name": "beads_viewer",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
         },
         {
           "id": "homebrew:beancount",
@@ -3204,13 +3198,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:bulk_extractor",
-          "name": "bulk_extractor",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
         },
         {
           "id": "rubygems:bullet",
@@ -4671,13 +4658,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:console_bridge",
-          "name": "console_bridge",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
         },
         {
           "id": "homebrew:container",
@@ -6278,13 +6258,6 @@
         {
           "id": "homebrew:dovi_convert",
           "name": "dovi_convert",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
-        },
-        {
-          "id": "homebrew:dovi_tool",
-          "name": "dovi_tool",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
@@ -12899,15 +12872,6 @@
           "failure_count": 1
         },
         {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 893,
-          "next_retry_at": "1734-03-17T21:04:51Z"
-        },
-        {
           "id": "homebrew:libaacs",
           "name": "libaacs",
           "ecosystem": "homebrew",
@@ -13311,13 +13275,6 @@
           "failure_count": 1
         },
         {
-          "id": "homebrew:libpg_query",
-          "name": "libpg_query",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
-        },
-        {
           "id": "homebrew:libphonenumber",
           "name": "libphonenumber",
           "ecosystem": "homebrew",
@@ -13526,13 +13483,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:libspatialite",
-          "name": "libspatialite",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
         },
         {
           "id": "homebrew:libspelling",
@@ -16620,13 +16570,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:nghttp2",
-          "name": "nghttp2",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
-        },
-        {
           "id": "homebrew:nginx",
           "name": "nginx",
           "ecosystem": "homebrew",
@@ -17007,15 +16950,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "crates.io:numpy",
-          "name": "numpy",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 21,
-          "next_retry_at": "2026-06-27T19:28:13Z"
         },
         {
           "id": "homebrew:nuonco/tap/nuon",
@@ -18779,13 +18713,6 @@
         {
           "id": "homebrew:pg_cron",
           "name": "pg_cron",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
-        },
-        {
-          "id": "homebrew:pg_partman",
-          "name": "pg_partman",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
@@ -22319,13 +22246,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:scw",
-          "name": "scw",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 0
-        },
-        {
           "id": "homebrew:sdb",
           "name": "sdb",
           "ecosystem": "homebrew",
@@ -22366,13 +22286,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:sdl2_net",
-          "name": "sdl2_net",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "failure_count": 1
         },
         {
           "id": "homebrew:sdl2_ttf",
@@ -25501,15 +25414,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:tree-sitter@0.25",
-          "name": "tree-sitter@0.25",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T11:49:01Z"
-        },
-        {
           "id": "homebrew:treefrog",
           "name": "treefrog",
           "ecosystem": "homebrew",
@@ -28130,6 +28034,15 @@
           "failure_count": 4
         },
         {
+          "id": "github:BurntSushi/ripgrep",
+          "name": "rg",
+          "ecosystem": "github",
+          "priority": 1,
+          "category": "generation_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-02-24T06:13:42Z"
+        },
+        {
           "id": "homebrew:shellcheck",
           "name": "shellcheck",
           "ecosystem": "homebrew",
@@ -28186,6 +28099,15 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:gcc",
+          "name": "gcc",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-03-03T17:44:08Z"
+        },
+        {
           "id": "homebrew:grex",
           "name": "grex",
           "ecosystem": "homebrew",
@@ -28215,6 +28137,15 @@
           "priority": 2,
           "category": "missing_dep",
           "failure_count": 1
+        },
+        {
+          "id": "homebrew:openssl@3",
+          "name": "openssl@3",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-03-04T12:08:12Z"
         },
         {
           "id": "homebrew:pnpm",
@@ -28866,6 +28797,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:beads_viewer",
+          "name": "beads_viewer",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
+        },
+        {
           "id": "homebrew:bedops",
           "name": "bedops",
           "ecosystem": "homebrew",
@@ -29039,6 +28977,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:bulk_extractor",
+          "name": "bulk_extractor",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
         },
         {
           "id": "npm:bumpp",
@@ -29713,6 +29658,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:console_bridge",
+          "name": "console_bridge",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
+        },
+        {
           "id": "homebrew:consul-template",
           "name": "consul-template",
           "ecosystem": "homebrew",
@@ -30220,6 +30172,13 @@
         {
           "id": "homebrew:double-conversion",
           "name": "double-conversion",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
+        },
+        {
+          "id": "homebrew:dovi_tool",
+          "name": "dovi_tool",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
@@ -33404,6 +33363,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:libpg_query",
+          "name": "libpg_query",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
+        },
+        {
           "id": "homebrew:libplist",
           "name": "libplist",
           "ecosystem": "homebrew",
@@ -33486,6 +33452,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:libspatialite",
+          "name": "libspatialite",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
         },
         {
           "id": "homebrew:libssh",
@@ -34526,6 +34499,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:nghttp2",
+          "name": "nghttp2",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
+        },
+        {
           "id": "homebrew:ngspice",
           "name": "ngspice",
           "ecosystem": "homebrew",
@@ -35122,6 +35102,13 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:pg_partman",
+          "name": "pg_partman",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
         },
         {
           "id": "homebrew:pgstream",
@@ -35979,6 +35966,13 @@
           "failure_count": 0
         },
         {
+          "id": "homebrew:scw",
+          "name": "scw",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 0
+        },
+        {
           "id": "homebrew:sd",
           "name": "sd",
           "ecosystem": "homebrew",
@@ -36005,6 +35999,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:sdl2_net",
+          "name": "sdl2_net",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "failure_count": 1
         },
         {
           "id": "homebrew:sdl3",
@@ -36908,6 +36909,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "homebrew:tree-sitter@0.25",
+          "name": "tree-sitter@0.25",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 3,
+          "next_retry_at": "2026-03-03T11:49:01Z"
         },
         {
           "id": "github:aquasecurity/trivy",
