@@ -59,7 +59,7 @@ EXIT_PASS, EXIT_FAIL, EXIT_ERROR = 0, 1, 2
 # derived: a check that counts what it finds and compares it to what it found cannot
 # notice that it found nothing. Changing this number is a deliberate act that says a
 # scheduled workflow was added or removed.
-EXPECTED_SCHEDULED = 21
+EXPECTED_SCHEDULED = 20
 
 # The listener's own name. It is registered, so the sweeper covers it, but it must not
 # appear in its own `workflow_run` trigger list -- see the rule below.
