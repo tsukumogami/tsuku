@@ -1,5 +1,14 @@
 # Recipe Validation Workflow Guide
 
+> **Status, 2026-09-26.** The review-mode workflow this guide calls `validate-all-recipes`
+> (later `recipe-validation.yml`, "Recipe Validation") was retired in #2610, so Phase 1
+> below no longer exists. Phase 2 remains available as the dispatch-only
+> `recipe-validation-constrain.yml`. Before running it, note two open defects. The shared
+> core records a failing recipe and still succeeds, and can't finish the current corpus
+> inside the job cap (#2676). tsuku also requests the wrong Homebrew bottle tag on Apple
+> Silicon (#2675). Until #2675 is fixed, auto-constraining would write that bug into recipes
+> as macOS platform limits. The workflow names and links below are historical.
+
 This guide explains how to use the `validate-all-recipes` workflow to identify recipes that fail on specific platforms and automatically add platform constraints.
 
 ## Prerequisites

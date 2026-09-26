@@ -233,6 +233,18 @@ Whatever they find reaches a person only if someone opens the Actions tab and lo
 Both carry open questions about their future: `recipe-validation` in #2610, and
 `scheduled-tests` is the workflow whose matrix defect was #2596.
 
+**2026-09-26 — `recipe-validation` retired (#2610).** The workflow and its registrations
+are gone: the escalator registry entry, the listener's `workflow_run` entry, and one from the
+policy check's pinned count of scheduled workflows. It installed every recipe on each
+platform through the shared `recipe-validation-core.yml`, and that core can't fail on a
+broken recipe. Each platform job records `fail` and carries on, and the report job writes a
+summary and succeeds. Every red run was infrastructure: the job cap, macOS disk exhaustion,
+or cancelled siblings. Sharding the corpus to get under the cap would have produced a green
+run with the same blind spot. With `curated-nightly` also retired, tsuku has no scheduled
+recipe validation until a core that can fail exists. That gap, and what a replacement needs,
+is tracked in #2676. The row above is left as history. The core and the dispatch-only
+`recipe-validation-constrain.yml` stay in the tree.
+
 ## What this record is for
 
 The plan orders this ahead of the escalation work deliberately. Turning on escalation for a
