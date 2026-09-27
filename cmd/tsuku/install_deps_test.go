@@ -860,3 +860,37 @@ func TestCancelDuringDepWalk(t *testing.T) {
 		t.Errorf("visited[%q] = true; want false (second dep must not be reached after cancellation)", secondDep)
 	}
 }
+
+func TestChecksumDisclosureNote(t *testing.T) {
+	t.Run("dynamic recipe describes the recipe, not the upstream", func(t *testing.T) {
+		r := &recipe.Recipe{
+			Steps: []recipe.Step{
+				{Action: "download", Params: map[string]interface{}{"url": "https://example.com/file"}},
+			},
+		}
+		if got := r.GetChecksumVerification(); got != recipe.ChecksumDynamic {
+			t.Fatalf("test recipe classified %d, want ChecksumDynamic", got)
+		}
+		want := "Note: 'mytool' recipe declares no upstream checksum; integrity is pinned to the artifact fetched now."
+		if got := checksumDisclosureNote(r, "mytool"); got != want {
+			t.Errorf("checksumDisclosureNote() = %q, want %q", got, want)
+		}
+	})
+
+	t.Run("static checksum is silent", func(t *testing.T) {
+		r := &recipe.Recipe{
+			Steps: []recipe.Step{
+				{Action: "download", Params: map[string]interface{}{
+					"url":          "https://example.com/file",
+					"checksum_url": "https://example.com/file.sha256",
+				}},
+			},
+		}
+		if got := r.GetChecksumVerification(); got != recipe.ChecksumStatic {
+			t.Fatalf("test recipe classified %d, want ChecksumStatic", got)
+		}
+		if got := checksumDisclosureNote(r, "mytool"); got != "" {
+			t.Errorf("checksumDisclosureNote() = %q, want empty", got)
+		}
+	})
+}

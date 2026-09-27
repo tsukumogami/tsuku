@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/tsukumogami/tsuku/internal/bottletag"
 )
 
 // tapFormulaInfo contains parsed metadata from a Homebrew formula file
@@ -72,59 +74,17 @@ func parseFormulaFile(content string) (*tapFormulaInfo, error) {
 	return info, nil
 }
 
-// macOSCodenames maps macOS major versions to Homebrew codenames
-var macOSCodenames = map[int]string{
-	15: "sequoia",
-	14: "sonoma",
-	13: "ventura",
-	12: "monterey",
-	11: "big_sur",
-}
-
-// getPlatformTags returns a list of Homebrew platform tags for the given OS and architecture.
-// Returns multiple tags in order of preference for fallback.
-//
-// Examples:
-//   - darwin/arm64 -> ["arm64_sonoma", "arm64_ventura", "arm64_monterey"]
-//   - darwin/amd64 -> ["sonoma", "ventura", "monterey"]
-//   - linux/amd64 -> ["x86_64_linux"]
-//   - linux/arm64 -> ["arm64_linux"]
+// getPlatformTags returns the Homebrew platform tags to try for the given
+// OS and architecture, in order of preference. It uses the same selection
+// as the homebrew action (see bottletag.Candidates): on macOS, no tag newer
+// than macOSVersion, where 0 means unknown. Returns nil for an unsupported
+// platform.
 func getPlatformTags(goos, goarch string, macOSVersion int) []string {
-	if goos == "linux" {
-		if goarch == "arm64" {
-			return []string{"arm64_linux"}
-		}
-		return []string{"x86_64_linux"}
+	tags, err := bottletag.Candidates(goos, goarch, macOSVersion)
+	if err != nil {
+		return nil
 	}
-
-	if goos == "darwin" {
-		// Build fallback chain starting from current version going backwards
-		var tags []string
-
-		// Determine starting version
-		startVersion := macOSVersion
-		if startVersion == 0 {
-			startVersion = 14 // Default to Sonoma if unknown
-		}
-
-		// Add tags from current version backwards
-		for v := startVersion; v >= 11; v-- {
-			codename, ok := macOSCodenames[v]
-			if !ok {
-				continue
-			}
-			if goarch == "arm64" {
-				tags = append(tags, "arm64_"+codename)
-			} else {
-				tags = append(tags, codename)
-			}
-		}
-
-		return tags
-	}
-
-	// Unknown platform - return empty list
-	return nil
+	return tags
 }
 
 // buildBottleURL constructs the bottle download URL from formula metadata.

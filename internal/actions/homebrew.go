@@ -15,6 +15,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/tsukumogami/tsuku/internal/bottletag"
 )
 
 // ghcrHTTPClient returns an HTTP client with appropriate timeouts for GHCR requests.
@@ -85,14 +87,19 @@ func (a *HomebrewAction) Execute(ctx *ExecutionContext, params map[string]interf
 		return err
 	}
 
-	// Determine platform tag for bottle selection
-	platformTag, err := a.getPlatformTag(ctx.OS, ctx.Arch)
+	// Determine which platform tags may be used for bottle selection.
+	// Execute runs on the machine being installed to, so a darwin
+	// target is bounded by this host's macOS version.
+	macOSCeiling := 0
+	if ctx.OS == runtime.GOOS {
+		macOSCeiling = bottletag.HostMacOSVersion()
+	}
+	candidates, err := bottletag.Candidates(ctx.OS, ctx.Arch, macOSCeiling)
 	if err != nil {
 		return fmt.Errorf("unsupported platform: %w", err)
 	}
 
 	reporter := ctx.GetReporter()
-	reporter.Log("   Fetching Homebrew bottle: %s (%s)", formula, platformTag)
 
 	// Step 1: Get anonymous GHCR token
 	token, err := a.getGHCRToken(formula)
@@ -101,10 +108,11 @@ func (a *HomebrewAction) Execute(ctx *ExecutionContext, params map[string]interf
 	}
 
 	// Step 2: Get manifest and find platform-specific blob SHA
-	blobSHA, err := a.getBlobSHA(formula, ctx.VersionTag, platformTag, token)
+	blobSHA, platformTag, err := a.getBlobSHA(formula, ctx.VersionTag, candidates, token)
 	if err != nil {
 		return fmt.Errorf("failed to get blob SHA: %w", err)
 	}
+	reporter.Log("   Fetching Homebrew bottle: %s (%s)", formula, platformTag)
 
 	// Step 3: Download bottle
 	bottlePath := filepath.Join(ctx.WorkDir, fmt.Sprintf("%s.tar.gz", formula))
@@ -339,24 +347,6 @@ func (a *HomebrewAction) validateFormulaName(name string) error {
 	return nil
 }
 
-// getPlatformTag returns the Homebrew platform tag for the current OS/arch
-func (a *HomebrewAction) getPlatformTag(os, arch string) (string, error) {
-	// Homebrew uses specific platform tags in manifests
-	// Format: {os}.{codename/version}
-	switch {
-	case os == "darwin" && arch == "arm64":
-		return "arm64_sonoma", nil
-	case os == "darwin" && arch == "amd64":
-		return "sonoma", nil
-	case os == "linux" && arch == "arm64":
-		return "arm64_linux", nil
-	case os == "linux" && arch == "amd64":
-		return "x86_64_linux", nil
-	default:
-		return "", fmt.Errorf("unsupported platform: %s/%s", os, arch)
-	}
-}
-
 // ghcrTokenResponse represents the GHCR token API response
 type ghcrTokenResponse struct {
 	Token string `json:"token"`
@@ -414,15 +404,17 @@ type ghcrPlatform struct {
 	OS           string `json:"os"`
 }
 
-// getBlobSHA queries the GHCR manifest to find the platform-specific blob SHA
-func (a *HomebrewAction) getBlobSHA(formula, version, platformTag, token string) (string, error) {
+// getBlobSHA queries the GHCR manifest and returns the blob SHA of the
+// first candidate platform tag the manifest has a bottle for, along with
+// that tag.
+func (a *HomebrewAction) getBlobSHA(formula, version string, candidates []string, token string) (string, string, error) {
 	// Query the manifest index
 	ghcrPath := formulaToGHCRPath(formula)
-	url := fmt.Sprintf("https://ghcr.io/v2/homebrew/core/%s/manifests/%s", ghcrPath, version)
+	url := fmt.Sprintf("%s/v2/homebrew/core/%s/manifests/%s", ghcrBaseURL, ghcrPath, version)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return "", fmt.Errorf("failed to create request: %w", err)
+		return "", "", fmt.Errorf("failed to create request: %w", err)
 	}
 
 	req.Header.Set("Authorization", "Bearer "+token)
@@ -430,45 +422,53 @@ func (a *HomebrewAction) getBlobSHA(formula, version, platformTag, token string)
 
 	resp, err := ghcrHTTPClient().Do(req)
 	if err != nil {
-		return "", fmt.Errorf("manifest request failed: %w", err)
+		return "", "", fmt.Errorf("manifest request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("manifest request returned %d: %s", resp.StatusCode, string(body))
+		return "", "", fmt.Errorf("manifest request returned %d: %s", resp.StatusCode, string(body))
 	}
 
 	var manifest ghcrManifest
 	if err := json.NewDecoder(resp.Body).Decode(&manifest); err != nil {
-		return "", fmt.Errorf("failed to parse manifest: %w", err)
+		return "", "", fmt.Errorf("failed to parse manifest: %w", err)
 	}
 
-	// Pick the entry whose ref.name names the requested platform. The
+	return pickBottle(manifest.Manifests, version, candidates)
+}
+
+// pickBottle returns the blob SHA and tag of the first candidate
+// platform tag that has a bottle among the manifest entries.
+func pickBottle(entries []ghcrManifestEntry, version string, candidates []string) (string, string, error) {
+	// Pick the entry whose ref.name names a candidate platform. The
 	// canonical ref-name format is "<version>(_<revision>)?.<platform>"
 	// — homebrew formulas with `revision >= 1` produce entries like
 	// "2.1.12_1.arm64_sonoma" while revision-0 formulas produce
 	// "2.1.12.arm64_sonoma". Accept either; when multiple revisions
 	// match, prefer the highest.
-	matched := selectBottleEntry(manifest.Manifests, version, platformTag)
-	if matched != nil {
+	for _, platformTag := range candidates {
+		matched := selectBottleEntry(entries, version, platformTag)
+		if matched == nil {
+			continue
+		}
 		// Return the blob digest from sh.brew.bottle.digest annotation
 		if digest, ok := matched.Annotations["sh.brew.bottle.digest"]; ok {
 			// Digest format: sha256:xxx or just the hash
-			if strings.HasPrefix(digest, "sha256:") {
-				return strings.TrimPrefix(digest, "sha256:"), nil
-			}
-			return digest, nil
+			return strings.TrimPrefix(digest, "sha256:"), platformTag, nil
 		}
 		// Fall back to manifest digest if no specific bottle digest
-		if strings.HasPrefix(matched.Digest, "sha256:") {
-			return strings.TrimPrefix(matched.Digest, "sha256:"), nil
-		}
-		return matched.Digest, nil
+		return strings.TrimPrefix(matched.Digest, "sha256:"), platformTag, nil
 	}
 
-	return "", fmt.Errorf("no bottle found for platform tag: %s (expected ref: %s.%s or %s_<revision>.%s)",
-		platformTag, version, platformTag, version, platformTag)
+	if len(candidates) == 1 {
+		platformTag := candidates[0]
+		return "", "", fmt.Errorf("no bottle found for platform tag: %s (expected ref: %s.%s or %s_<revision>.%s)",
+			platformTag, version, platformTag, version, platformTag)
+	}
+	return "", "", fmt.Errorf("no compatible bottle found for %s: tried platform tags %s (expected ref: %s.<tag> or %s_<revision>.<tag>)",
+		version, strings.Join(candidates, ", "), version, version)
 }
 
 // selectBottleEntry scans manifest entries for the one matching the
@@ -589,13 +589,6 @@ var homebrewPlaceholders = [][]byte{
 	[]byte("@@HOMEBREW_CELLAR@@"),
 }
 
-// GetCurrentPlatformTag returns the platform tag for the current runtime
-// This is useful for testing and standalone usage
-func GetCurrentPlatformTag() (string, error) {
-	action := &HomebrewAction{}
-	return action.getPlatformTag(runtime.GOOS, runtime.GOARCH)
-}
-
 // Decompose resolves the Homebrew bottle metadata and returns primitive steps.
 // This enables deterministic plan generation by querying GHCR at evaluation time
 // and computing checksums before execution.
@@ -611,8 +604,10 @@ func (a *HomebrewAction) Decompose(ctx *EvalContext, params map[string]interface
 		return nil, err
 	}
 
-	// Determine platform tag for bottle selection
-	platformTag, err := a.getPlatformTag(ctx.OS, ctx.Arch)
+	// Determine which platform tags may be used for bottle selection.
+	// ctx.MacOSVersion is set only when the plan is for this machine;
+	// otherwise the cross-machine ceiling applies.
+	candidates, err := bottletag.Candidates(ctx.OS, ctx.Arch, ctx.MacOSVersion)
 	if err != nil {
 		return nil, fmt.Errorf("unsupported platform: %w", err)
 	}
@@ -634,7 +629,7 @@ func (a *HomebrewAction) Decompose(ctx *EvalContext, params map[string]interface
 	}
 
 	// Get manifest and find platform-specific blob SHA
-	blobSHA, err := a.getBlobSHA(formula, bottleVersion, platformTag, token)
+	blobSHA, platformTag, err := a.getBlobSHA(formula, bottleVersion, candidates, token)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get blob SHA: %w", err)
 	}
@@ -650,10 +645,21 @@ func (a *HomebrewAction) Decompose(ctx *EvalContext, params map[string]interface
 		apiCtx, cancel := context.WithTimeout(ctx.Context, 60*time.Second)
 		defer cancel()
 
-		// Download with authorization header (GHCR requires auth even for public images)
-		result, err := a.downloadWithAuth(apiCtx, url, token)
-		if err != nil {
-			return nil, fmt.Errorf("failed to download bottle for checksum verification: %w", err)
+		// The blob URL names its own SHA-256, so a cached copy that hashes to it is exactly
+		// the bottle; only a miss downloads (with authorization, which GHCR requires even
+		// for public images).
+		var result *DownloadResult
+		fromCache := false
+		if ctx.DownloadCache != nil {
+			if r, hit, lookupErr := ctx.DownloadCache.Lookup(url); lookupErr == nil && hit && r.Checksum == blobSHA {
+				result, fromCache = r, true
+			}
+		}
+		if result == nil {
+			result, err = a.downloadWithAuth(apiCtx, url, token)
+			if err != nil {
+				return nil, fmt.Errorf("failed to download bottle for checksum verification: %w", err)
+			}
 		}
 
 		// Verify the checksum matches what GHCR reported
@@ -665,10 +671,21 @@ func (a *HomebrewAction) Decompose(ctx *EvalContext, params map[string]interface
 		size = result.Size
 
 		// Save to cache if configured
-		if ctx.DownloadCache != nil {
+		if ctx.DownloadCache != nil && !fromCache {
 			_ = ctx.DownloadCache.Save(url, result.AssetPath, result.Checksum)
 		}
 		_ = result.Cleanup()
+	}
+
+	// A macOS bottle records the tag it was chosen for, so a plan run on
+	// another machine can refuse a bottle built for a newer macOS than
+	// that machine runs (see bottletag.CheckForHost). Linux bottles have
+	// no such floor, and their plans stay as they were.
+	relocateParams := map[string]interface{}{
+		"formula": formula,
+	}
+	if ctx.OS == "darwin" {
+		relocateParams["bottle_tag"] = platformTag
 	}
 
 	// Return primitive steps
@@ -693,9 +710,7 @@ func (a *HomebrewAction) Decompose(ctx *EvalContext, params map[string]interface
 		},
 		{
 			Action: "homebrew_relocate",
-			Params: map[string]interface{}{
-				"formula": formula,
-			},
+			Params: relocateParams,
 		},
 	}, nil
 }

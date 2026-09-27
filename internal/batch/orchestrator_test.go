@@ -510,6 +510,89 @@ func TestSelectCandidates_halfOpenMixedWithClosed(t *testing.T) {
 	}
 }
 
+// A closed ecosystem whose entries sit at the head of the queue must not fill
+// the batch before half-open ecosystems get their probe. Otherwise a
+// half-open breaker is never probed and never recovers.
+func TestSelectCandidates_halfOpenProbesNotStarvedByClosed(t *testing.T) {
+	var entries []QueueEntry
+	for i := 0; i < 12; i++ {
+		name := fmt.Sprintf("hb-%02d", i)
+		entries = append(entries, QueueEntry{Name: name, Source: "homebrew:" + name, Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto})
+	}
+	past := nowFunc().Add(-time.Hour)
+	entries = append(entries,
+		QueueEntry{Name: "amp", Source: "rubygems:amp", Priority: 3, Status: StatusPending, Confidence: ConfidenceAuto},
+		QueueEntry{Name: "azion", Source: "npm:azion", Priority: 3, Status: StatusPending, Confidence: ConfidenceAuto},
+		// Only a failed entry: must still be probed through the fallback.
+		QueueEntry{Name: "lib3mf", Source: "pypi:lib3mf", Priority: 3, Status: StatusFailed, Confidence: ConfidenceAuto, FailureCount: 894, NextRetryAt: &past},
+		// Open ecosystem: never selected.
+		QueueEntry{Name: "hub", Source: "github:github/hub", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+	)
+	queue := &UnifiedQueue{SchemaVersion: 1, Entries: entries}
+
+	orch := NewOrchestrator(Config{
+		BatchSize: 10,
+		MaxTier:   3,
+		BreakerState: map[string]string{
+			"homebrew": "closed",
+			"rubygems": "half-open",
+			"npm":      "half-open",
+			"pypi":     "half-open",
+			"github":   "open",
+		},
+	}, queue)
+
+	candidates := orch.selectCandidates()
+
+	got := map[string]bool{}
+	homebrew := 0
+	for _, idx := range candidates {
+		e := queue.Entries[idx]
+		got[e.Name] = true
+		if e.Ecosystem() == "homebrew" {
+			homebrew++
+		}
+	}
+	for _, probe := range []string{"amp", "azion", "lib3mf"} {
+		if !got[probe] {
+			t.Errorf("half-open probe %q not selected; candidates: %d homebrew of %d", probe, homebrew, len(candidates))
+		}
+	}
+	if got["hub"] {
+		t.Error("entry from an open ecosystem was selected")
+	}
+	if len(candidates) != 10 || homebrew != 7 {
+		t.Errorf("got %d candidates with %d homebrew, want 10 with 7 (three slots reserved for probes)", len(candidates), homebrew)
+	}
+	for i := 1; i < len(candidates); i++ {
+		if candidates[i] <= candidates[i-1] {
+			t.Fatalf("candidates not in queue order: %v", candidates)
+		}
+	}
+}
+
+// With more half-open ecosystems than BatchSize, the probes nearest the head
+// of the queue are taken and the batch never exceeds BatchSize.
+func TestSelectCandidates_moreHalfOpenEcosystemsThanBatchSize(t *testing.T) {
+	queue := &UnifiedQueue{SchemaVersion: 1, Entries: []QueueEntry{
+		{Name: "a", Source: "npm:a", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+		{Name: "b", Source: "pypi:b", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+		{Name: "c", Source: "rubygems:c", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+		{Name: "d", Source: "homebrew:d", Priority: 1, Status: StatusPending, Confidence: ConfidenceAuto},
+	}}
+	orch := NewOrchestrator(Config{
+		BatchSize:    2,
+		MaxTier:      3,
+		BreakerState: map[string]string{"npm": "half-open", "pypi": "half-open", "rubygems": "half-open"},
+	}, queue)
+
+	candidates := orch.selectCandidates()
+
+	if len(candidates) != 2 || queue.Entries[candidates[0]].Name != "a" || queue.Entries[candidates[1]].Name != "b" {
+		t.Errorf("candidates = %v, want [a b] (first two probes by queue position)", candidates)
+	}
+}
+
 func TestRecipeOutputPath(t *testing.T) {
 	tests := []struct {
 		name     string

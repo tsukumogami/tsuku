@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-09-27T01:56:08Z",
+  "updated_at": "2026-09-27T06:15:24Z",
   "entries": [
     {
       "name": "node",
@@ -126,11 +126,11 @@
       "name": "sk",
       "source": "github:lotabout/skim",
       "priority": 1,
-      "status": "pending",
+      "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 3,
-      "next_retry_at": "2026-02-24T06:13:44.937755087Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-09-27T14:15:23.617798958Z"
     },
     {
       "name": "step",
@@ -476,11 +476,11 @@
       "name": "openjph",
       "source": "homebrew:openjph",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-03T13:44:08.405748823Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-09-27T14:15:23.617798958Z"
     },
     {
       "name": "gmp",
@@ -506,11 +506,11 @@
       "name": "pmix",
       "source": "homebrew:pmix",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-03T14:42:48.391479525Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-09-27T14:15:23.617798958Z"
     },
     {
       "name": "jpeg-xl",
@@ -526,11 +526,11 @@
       "name": "libassuan",
       "source": "homebrew:libassuan",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-04T03:36:10.31750384Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-09-28T14:15:23.617798958Z"
     },
     {
       "name": "libuv",
@@ -556,21 +556,21 @@
       "name": "webp",
       "source": "homebrew:webp",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-03T17:44:08.405748823Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-09-27T22:15:23.617798958Z"
     },
     {
       "name": "ada-url",
       "source": "homebrew:ada-url",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-03T13:44:08.405748823Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-09-27T14:15:23.617798958Z"
     },
     {
       "name": "aom",
@@ -646,11 +646,11 @@
       "name": "p11-kit",
       "source": "homebrew:p11-kit",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-03T14:42:48.391479525Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-09-27T14:15:23.617798958Z"
     },
     {
       "name": "simdjson",
@@ -696,11 +696,11 @@
       "name": "autoconf",
       "source": "homebrew:autoconf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-03T14:42:48.391479525Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-09-27T14:15:23.617798958Z"
     },
     {
       "name": "bdw-gc",
@@ -726,11 +726,11 @@
       "name": "certifi",
       "source": "homebrew:certifi",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-03T14:42:48.391479525Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-09-27T14:15:23.617798958Z"
     },
     {
       "name": "deno",
@@ -996,11 +996,11 @@
       "name": "0xjacky/tools/nginx-ui",
       "source": "homebrew:0xjacky/tools/nginx-ui",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-03T12:51:20.38816992Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-09-27T22:15:23.617798958Z"
     },
     {
       "name": "0xjuanma/tap/golazo",

@@ -273,6 +273,44 @@ func (c *DownloadCache) Info() (*CacheInfo, error) {
 	return info, nil
 }
 
+// Lookup reports what the cache holds for url without copying it anywhere: the SHA-256
+// and size of the cached bytes, as a DownloadResult whose AssetPath is empty (so its
+// Cleanup is a no-op). It is for plan generation, which needs only the checksum and size
+// of an artifact and would otherwise download it again on every evaluation.
+//
+// The bytes are hashed again on every lookup and must match the hash recorded when they
+// were saved; an entry that does not match (including one with no recorded hash) is a miss.
+// Errors from the cache directory's security checks are returned, as Check does, so the
+// caller decides whether to fall back to the network.
+func (c *DownloadCache) Lookup(url string) (*DownloadResult, bool, error) {
+	if !c.skipSecurityChecks {
+		if hasSymlink, err := containsSymlink(c.cacheDir); err != nil {
+			return nil, false, fmt.Errorf("failed to check cache path for symlinks: %w", err)
+		} else if hasSymlink {
+			return nil, false, fmt.Errorf("refusing to read from cache: path contains symlink: %s", c.cacheDir)
+		}
+		if err := validateCacheDirPermissions(c.cacheDir); err != nil {
+			return nil, false, fmt.Errorf("cache directory security check failed: %w", err)
+		}
+	}
+
+	filePath, metaPath := c.cachePaths(url)
+	meta, err := c.readMeta(metaPath)
+	if err != nil {
+		return nil, false, nil
+	}
+	info, err := os.Stat(filePath)
+	if err != nil || info.Size() != meta.Size {
+		return nil, false, nil
+	}
+	hash, err := computeSHA256(filePath)
+	if err != nil || hash != meta.ActualHash {
+		c.invalidate(url)
+		return nil, false, nil
+	}
+	return &DownloadResult{Checksum: hash, Size: info.Size()}, true, nil
+}
+
 // invalidate removes a cache entry
 func (c *DownloadCache) invalidate(url string) {
 	filePath, metaPath := c.cachePaths(url)

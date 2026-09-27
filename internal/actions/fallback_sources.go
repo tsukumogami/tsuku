@@ -83,6 +83,30 @@ func newAllSourcesFailedError(failures []sourceFailure) error {
 	return &allSourcesFailedError{Failures: failures}
 }
 
+// ResolveFirstAvailable is DownloadFirstAvailable with the download cache consulted
+// first. Plan generation needs only an artifact's checksum and size, so when the cache
+// already holds the bytes for any of the sources (verified by DownloadCache.Lookup), no
+// request is made. fromCache reports a hit; the result then has no AssetPath, and the
+// caller must not save it back to the cache. A cache that can't be read is treated as a
+// miss, since the network can still answer.
+//
+// The cache is keyed by URL, so a hit trusts that the bytes behind a URL have not changed
+// since they were cached. Install-time lookups already make the same assumption when no
+// checksum is known.
+func ResolveFirstAvailable(
+	ctx context.Context, downloader Downloader, cache *DownloadCache, sources []string,
+) (result *DownloadResult, servingURL string, fromCache bool, err error) {
+	if cache != nil {
+		for _, source := range sources {
+			if r, hit, lookupErr := cache.Lookup(source); lookupErr == nil && hit {
+				return r, source, true, nil
+			}
+		}
+	}
+	result, servingURL, err = DownloadFirstAvailable(ctx, downloader, sources)
+	return result, servingURL, false, err
+}
+
 // DownloadFirstAvailable downloads from the first source that serves, trying
 // them in the order given. It is the plan-time half of fallback;
 // downloadFileHTTPWithFallback is the install-time half.

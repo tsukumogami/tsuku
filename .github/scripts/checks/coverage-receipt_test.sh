@@ -147,6 +147,8 @@ echo "validate-golden.sh receipt lines"
 S="$T/repo"
 mkdir -p "$S/scripts" "$S/testdata/golden" "$S/golden"
 cp "$VALIDATE" "$S/scripts/validate-golden.sh"
+mkdir -p "$S/scripts/lib"
+cp "$(dirname "$VALIDATE")/lib/r2-layout.sh" "$S/scripts/lib/"
 cat > "$S/tsuku" <<'EOF'
 #!/usr/bin/env bash
 cmd="$1"; shift
@@ -209,7 +211,7 @@ check_lines "a compared file reads match; a file for a platform the recipe dropp
 vg drift linux
 check_lines "a differing plan reads mismatch" drift 1 '{"item":"drift/v2.0.0-linux-amd64","outcome":"mismatch"} '
 vg evalfail linux
-check_lines "a plan that fails to generate reads eval-failed, though the script still exits 0" evalfail 0 \
+check_lines "a plan that fails to generate reads eval-failed, and the script exits 1" evalfail 1 \
   '{"item":"evalfail/v3.0.0-linux-amd64","outcome":"eval-failed"} '
 vg skipme linux
 check_lines "a code-validation exclusion reads excluded" skipme 0 '{"item":"skipme/v4.0.0-linux-amd64","outcome":"excluded"} '
@@ -223,7 +225,7 @@ vg fine darwin
 check_lines "a leg writes lines only for its own OS" fine 0 '{"item":"fine/v1.0.0-darwin-arm64","outcome":"match"} '
 : > "$S/receipt"
 vg drift darwin
-check_lines "a recipe with no files for the leg's OS writes nothing, so it cannot inflate the count" drift 0 ''
+check_lines "a recipe with no files for the leg's OS writes nothing, so it cannot inflate the count, and exits 3 (not compared)" drift 3 ''
 OUT=$(COVERAGE_RECEIPT="$S/receipt" GITHUB_TOKEN=stub bash "$S/scripts/validate-golden.sh" fine --golden-dir "$S/golden" 2>&1); RC=$?
 expect "a receipt without --os is refused" 2 "$RC" "$OUT" "COVERAGE_RECEIPT needs --os"
 
@@ -246,24 +248,26 @@ W="$T/ws"
 mkdir -p "$W/scripts"
 cat > "$W/scripts/validate-all-golden.sh" <<'EOF'
 #!/usr/bin/env bash
-echo "FAIL: broken-recipe"
+printf 'Failed recipes (1 of 1):\n  - broken-recipe\n\nChecked 1 recipes: 0 matched, 1 failed, 0 not compared\n'
 exit 1
 EOF
 chmod +x "$W/scripts/validate-all-golden.sh"
 step_run validate-plans-linux "Validate registry golden files" > "$W/validate.sh" || report FAIL "extract the Linux validate step"
-OUT=$(cd "$W" && GITHUB_OUTPUT="$W/out" COVERAGE_RECEIPT="$W/r.ndjson" GOLDEN_DIR=x bash -e validate.sh 2>&1); RC=$?
-if [ "$RC" != 0 ] && grep -q '^failed=true' "$W/out" 2>/dev/null; then
+rm -rf "$W/results"
+OUT=$(cd "$W" && GITHUB_OUTPUT="$W/out" GITHUB_STEP_SUMMARY="$W/summary" COVERAGE_RECEIPT="$W/r.ndjson" GOLDEN_DIR=x SHARD=0 SHARD_COUNT=8 bash -e validate.sh 2>&1); RC=$?
+if [ "$RC" != 0 ] && [ "$(cat "$W/results/failed.txt" 2>/dev/null)" = broken-recipe ]; then
   report PASS "a failing validator fails the Linux validate step (it would pass through tee without pipefail)"
 else
-  report FAIL "a failing validator fails the Linux validate step" "exit $RC; outputs: $(cat "$W/out" 2>&1)"
+  report FAIL "a failing validator fails the Linux validate step" "exit $RC; failed list: $(cat "$W/results/failed.txt" 2>&1); $OUT"
 fi
 step_run validate-plans-macos "Validate registry golden files" > "$W/validate-mac.sh" || report FAIL "extract the macOS validate step"
 rm -f "$W/out"
-OUT=$(cd "$W" && GITHUB_OUTPUT="$W/out" COVERAGE_RECEIPT="$W/r.ndjson" GOLDEN_DIR=x bash -e validate-mac.sh 2>&1); RC=$?
-if [ "$RC" != 0 ] && grep -q '^failed=true' "$W/out" 2>/dev/null; then
+rm -rf "$W/results"
+OUT=$(cd "$W" && GITHUB_OUTPUT="$W/out" GITHUB_STEP_SUMMARY="$W/summary" COVERAGE_RECEIPT="$W/r.ndjson" GOLDEN_DIR=x SHARD=0 SHARD_COUNT=8 bash -e validate-mac.sh 2>&1); RC=$?
+if [ "$RC" != 0 ] && [ "$(cat "$W/results/failed.txt" 2>/dev/null)" = broken-recipe ]; then
   report PASS "a failing validator fails the macOS validate step"
 else
-  report FAIL "a failing validator fails the macOS validate step" "exit $RC; outputs: $(cat "$W/out" 2>&1)"
+  report FAIL "a failing validator fails the macOS validate step" "exit $RC; failed list: $(cat "$W/results/failed.txt" 2>&1); $OUT"
 fi
 
 # Execute Sample over a flattened download holding eligible recipes for a and b only.
@@ -276,7 +280,7 @@ printf '#!/usr/bin/env bash\nexit 0\n' > "$E/tsuku"; chmod +x "$E/tsuku"
 step_run execute-sample-linux "Execute sample registry recipes" | sed "s#\${{ runner.temp }}#$E/tmp#g" > "$E/sample.sh" ||
   report FAIL "extract the Execute Sample step"
 if grep -q '\${{' "$E/sample.sh"; then report FAIL "Execute Sample step has an expression this row does not substitute"; fi
-OUT=$(cd "$E" && GITHUB_OUTPUT="$E/out" GITHUB_PATH="$E/path" bash -e sample.sh 2>&1); RC=$?
+OUT=$(cd "$E" && GITHUB_OUTPUT="$E/out" GITHUB_PATH="$E/path" GITHUB_STEP_SUMMARY="$E/summary" bash -e sample.sh 2>&1); RC=$?
 got=$(tr '\n' ' ' < "$E/coverage/receipt-execute-sample.ndjson" 2>/dev/null)
 want='{"item":"a","outcome":"executed"} {"item":"b","outcome":"executed"} {"item":"c","outcome":"no-eligible-recipe"}'
 if [ "$RC" = 0 ] && [ "$(wc -l < "$E/coverage/receipt-execute-sample.ndjson" 2>/dev/null)" = 26 ] && [[ "$got" == "$want"* ]]; then
@@ -295,12 +299,18 @@ OUT=$(python3 - "$NRV" <<'PY' 2>&1
 import re, sys, yaml
 wf = yaml.safe_load(open(sys.argv[1]))
 uploads = {}
+sharded = {}
 for job_id, job in wf["jobs"].items():
     for step in job.get("steps", []):
         w = step.get("with") or {}
         if "upload-artifact" in step.get("uses", "") and str(w.get("name", "")).startswith("coverage-receipt-"):
             ok = step.get("if") == "always()" and w.get("if-no-files-found") == "error"
-            uploads[w["name"]] = (w["path"], ok, job_id)
+            name = str(w["name"])
+            if name.endswith("-${{ matrix.shard }}"):
+                name = name[: -len("-${{ matrix.shard }}")]
+                shards = [str(x) for x in (job.get("strategy") or {}).get("matrix", {}).get("shard", [])]
+                sharded[name] = (job_id, shards)
+            uploads[name] = (w["path"], ok, job_id)
 run = next(s["run"] for s in wf["jobs"]["assert-coverage"]["steps"] if s.get("name") == "Assert every leg covered its declared set")
 legs = dict(re.findall(r"--leg ([\w-]+)=\S+?:coverage/(coverage-receipt-[\w-]+)/", run))
 problems = []
@@ -312,6 +322,17 @@ for name, (path, ok, job_id) in uploads.items():
 for leg, art in legs.items():
     if art not in uploads:
         problems.append(f"leg {leg} asserts {art}, which nothing uploads")
+joined = re.search(r"for shard in ([\d ]+); do", run)
+joined = joined.group(1).split() if joined else []
+for name, (job_id, shards) in sharded.items():
+    if not shards:
+        problems.append(f"{job_id}: {name} is uploaded per shard but the job has no shard matrix")
+    elif shards != joined:
+        problems.append(f"{job_id} runs shards {shards} but assert-coverage joins {joined}")
+    for step in wf["jobs"][job_id]["steps"]:
+        count = (step.get("env") or {}).get("SHARD_COUNT")
+        if count is not None and str(count) != str(len(shards)):
+            problems.append(f"{job_id}: SHARD_COUNT {count} but the matrix runs {len(shards)} shards")
 needs = set(wf["jobs"]["assert-coverage"]["needs"])
 for job_id in {j for (_, _, j) in uploads.values()}:
     if job_id not in needs:
