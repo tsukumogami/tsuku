@@ -209,6 +209,19 @@ describe it as observed on 2026-09-20 and are left as history. Curated recipes a
 install-tested at pull-request time by `test-recipe.yml`. Nothing checks them for upstream
 drift between changes.
 
+**2026-09-26 — `r2-cleanup` routes its failures to #2627.** The workflow declares
+`escalation-owned-by: 2627`. Its last failing scheduled run (35501473733) died in
+`Create Summary Issue` on the `automation` label, which has since been repointed at
+`maintenance`. The next thing that step meets is the missing `issues: write`, and #2627 is
+the issue that says why that grant must not come first: the report it would start
+publishing carries line counts of stderr as findings. So a failing run is evidence for
+#2627, not a new problem, and the escalator comments there instead of opening a second
+item. The other candidate owners were checked against the job that actually failed and not
+declared. Build Essentials' failures were all the Intel leg, dropped in #2628, and #2613 is
+about arm64 Sonoma bottles in a different workflow. Seed Queue's were all the scoped-package
+audit writer, repaired in #2617 after its last run, so #2609 no longer owns what it would
+fail on next.
+
 **2026-09-26 — `nightly-registry-validation` can no longer pass having validated nothing
 (#2608).** Every green run in its history validated zero recipes. R2 holds golden files
 under `plans/registry/`, and every reader looks under a single letter (#2448). The run now
