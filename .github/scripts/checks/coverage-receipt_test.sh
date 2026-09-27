@@ -317,6 +317,53 @@ else
   report FAIL "with nothing downloaded, Assert Coverage still names every leg and fails on the counts" "exit $RC: $(tail -5 <<< "$OUT")"
 fi
 
+# The download step, as written, over a bucket large enough to matter. The first scheduled
+# run died here on `find: write error`: the step sets pipefail for its listing, and a later
+# `find | head` then failed as soon as head stopped reading, which only happens once find
+# has more to write than the pipe holds. So the stub bucket has 2000 keys. `aws` is a stub
+# that answers the listing and fills the mirror the way `s3 sync` would.
+DL="$T/download"
+mkdir -p "$DL/bin" "$DL/.github/scripts" "$DL/scripts/lib"
+cp "$REPO_ROOT/.github/scripts/golden-declared-set.sh" "$DL/.github/scripts/"
+cp "$REPO_ROOT/scripts/r2-golden-transform.sh" "$DL/scripts/"
+cp "$REPO_ROOT/scripts/lib/r2-layout.sh" "$DL/scripts/lib/"
+python3 - "$DL/keys.json" <<'PY'
+import json, sys
+keys = [f"plans/{n[0]}/{n}/v1.{i % 7}.0/{os}.json"
+        for i in range(1000) for n in [f"recipe{i:04d}"[0:1] + f"recipe{i:04d}"] for os in ("linux-amd64", "darwin-arm64")]
+json.dump(keys, open(sys.argv[1], "w"))
+PY
+cat > "$DL/bin/aws" <<STUB
+#!/usr/bin/env bash
+case "\$1 \$2" in
+  "s3api list-objects-v2") cat "$DL/keys.json" ;;
+  "s3 sync")
+    dst="\$4"
+    python3 - "$DL/keys.json" "\$dst" <<'PY'
+import json, os, sys
+for k in json.load(open(sys.argv[1])):
+    rel = k[len("plans/"):]
+    if rel.startswith("embedded/"): continue
+    p = os.path.join(sys.argv[2], rel)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    open(p, "w").write("{}\n")
+PY
+    ;;
+  *) echo "stub aws: unsupported \$*" >&2; exit 2 ;;
+esac
+STUB
+chmod +x "$DL/bin/aws"
+step_run download-golden-files "Download from R2" > "$DL/download.sh" || report FAIL "extract the download step"
+OUT=$(cd "$DL" && PATH="$DL/bin:$PATH" GOLDEN_LISTING_PREFIX=plans/ GOLDEN_LISTING_EXCLUDE=plans/embedded/ \
+        GITHUB_STEP_SUMMARY="$DL/summary" bash -e download.sh 2>&1); RC=$?
+if [ "$RC" = 0 ] && grep -qF 'Declared set: 2000 key(s) listed' <<< "$OUT" \
+   && [ "$(wc -l < "$DL/coverage/declared-linux.txt" 2>/dev/null)" = 1000 ] \
+   && [ "$(find "$DL/r2-golden-files/plans" -name '*.json' 2>/dev/null | wc -l)" = 2000 ]; then
+  report PASS "the download step, as written, completes over 2000 keys and leaves the declared set and the tree"
+else
+  report FAIL "the download step, as written, completes over 2000 keys" "exit $RC: $(tail -4 <<< "$OUT")"
+fi
+
 OUT=$(python3 - "$NRV" <<'PY' 2>&1
 import sys, yaml
 wf = yaml.safe_load(open(sys.argv[1]))
