@@ -4,10 +4,26 @@ description = "CLI for Infisical"
 homepage = "https://infisical.com/docs/cli/overview"
 version_format = "semver"
 
+# Each release publishes sha256 manifests next to its assets, split by OS:
+# checksums.txt covers the linux (and BSD/windows) archives, and
+# checksums-darwin.txt covers only the two darwin archives. One checksum_url
+# template can't name both, so the step is split per OS.
+
 [[steps]]
 action = "github_archive"
+when = { os = ["linux"] }
 repo = "Infisical/cli"
 asset_pattern = "cli_{version}_{os}_{arch}.tar.gz"
+checksum_url = "https://github.com/Infisical/cli/releases/download/v{version}/checksums.txt"
+strip_dirs = 0
+binaries = ["infisical"]
+
+[[steps]]
+action = "github_archive"
+when = { os = ["darwin"] }
+repo = "Infisical/cli"
+asset_pattern = "cli_{version}_{os}_{arch}.tar.gz"
+checksum_url = "https://github.com/Infisical/cli/releases/download/v{version}/checksums-darwin.txt"
 strip_dirs = 0
 binaries = ["infisical"]
 
