@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"time"
+
+	"golang.org/x/net/http/httpproxy"
 )
 
 // DefaultUserAgent is the User-Agent header value for tsuku HTTP requests.
@@ -62,6 +65,10 @@ func DefaultOptions() ClientOptions {
 //   - DNS rebinding protection (resolves hostnames and validates all IPs)
 //   - HTTPS-only redirects
 //   - Configurable redirect chain limit
+//
+// The client honours HTTPS_PROXY, HTTP_PROXY and NO_PROXY. The redirect
+// checks apply to the target URL, not the proxy, so they hold unchanged
+// when a proxy is in use.
 func NewSecureClient(opts ClientOptions) *http.Client {
 	// Apply defaults for zero values
 	if opts.Timeout == 0 {
@@ -93,6 +100,7 @@ func NewSecureClient(opts ClientOptions) *http.Client {
 	return &http.Client{
 		Timeout: opts.Timeout,
 		Transport: &http.Transport{
+			Proxy:              ProxyFromEnvironment(),
 			DisableCompression: disableCompression,
 			DialContext: (&net.Dialer{
 				Timeout:   opts.DialTimeout,
@@ -105,6 +113,21 @@ func NewSecureClient(opts ClientOptions) *http.Client {
 			IdleConnTimeout:       opts.IdleConnTimeout,
 		},
 		CheckRedirect: makeRedirectChecker(opts.MaxRedirects),
+	}
+}
+
+// ProxyFromEnvironment returns a Transport.Proxy function that honours
+// HTTPS_PROXY, HTTP_PROXY and NO_PROXY (and their lowercase forms), with the
+// same rules as http.ProxyFromEnvironment. A hand-built http.Transport has no
+// proxy unless one is set, so every transport tsuku builds needs this.
+//
+// Unlike http.ProxyFromEnvironment, which reads the environment once per
+// process, this reads it when called, so each client sees the environment as
+// it was when the client was built.
+func ProxyFromEnvironment() func(*http.Request) (*url.URL, error) {
+	proxyFunc := httpproxy.FromEnvironment().ProxyFunc()
+	return func(req *http.Request) (*url.URL, error) {
+		return proxyFunc(req.URL)
 	}
 }
 
