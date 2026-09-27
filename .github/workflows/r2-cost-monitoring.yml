@@ -188,8 +188,10 @@ jobs:
           ISSUE_TITLE="R2 Storage Usage Alert"
           LABEL="r2-cost-alert"
 
-          # Ensure label exists
-          gh label create "$LABEL" --description "R2 storage cost alert" --color "d93f0b" 2>/dev/null || true
+          # The label is declared in .github/labels.yml, and Lint Workflows fails if a
+          # label named here is missing from it. There is no runtime `gh label create`:
+          # this job has no permission to create labels, and the old call hid that by
+          # discarding its own failure (#2642).
 
           # Search for existing open issue
           EXISTING_ISSUE=$(gh issue list \

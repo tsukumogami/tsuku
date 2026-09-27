@@ -143,10 +143,10 @@ Both are green because the condition they watch for has not occurred. Their defe
 armed rather than broken, and would first be discovered on the day the thing they exist to
 catch finally happens, which is the worst available day to discover them.
 
-`r2-cost-monitoring` also tries to create its own label at run time with `gh label create
-... || true`. The suppression makes a failure there invisible, and the call needs the same
-`issues: write` the workflow does not declare, so it cannot stand in for the missing
-permission.
+`r2-cost-monitoring` used to try to create its own label at run time with `gh label create
+... || true`. The suppression made a failure there invisible, and the call needed the same
+`issues: write` the workflow does not declare, so it could not stand in for the missing
+permission. The call was removed in #2642; the label is declared in `.github/labels.yml`.
 
 ## Outstanding evidence
 

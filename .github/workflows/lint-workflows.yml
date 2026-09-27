@@ -102,6 +102,11 @@ jobs:
       # uses. Rows assert on what each piece reports about its work, not only its exit code.
       - name: Check a run that validated nothing cannot pass
         run: .github/scripts/checks/coverage-receipt_test.sh
+      # gh calls that used to swallow their own failure (#2642), including the batch guard
+      # that read a failed query as "no open batch PRs". Hermetic: `gh` is a stub that fails
+      # on purpose, and each row asserts the step stops and gh's error text reaches the log.
+      - name: Check a failed gh read stops the step and shows its error
+        run: .github/scripts/checks/gh-failures_test.sh
 
   # The escalation backstop (#2607): was every recent failure of a registered workflow told
   # to someone? Its own job, so its verdict is its own check and neither hides nor is hidden
