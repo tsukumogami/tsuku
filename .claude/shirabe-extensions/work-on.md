@@ -110,6 +110,13 @@ evidence that any check here executed.
   recovery. The owned cases assert where a run went (a comment on the owner and
   a listener receipt naming it, run from the receipt step as written in `escalate.yml`)
   rather than only that nothing new was filed.
+- `.github/scripts/checks/escalation-backstop.py` ->
+  `.github/scripts/checks/escalation-backstop_test.py` (lint-workflows.yml). Its `gh` stub
+  (`testdata/backstop-gh-stub.py`) filters by the query's own parameters, and declarations
+  come from a sandbox git repository read at a ref. The rows assert the fixed first line and
+  the receipt's counts, not only the exit code. The live check itself runs as the separate
+  `Escalation Backstop (repository health)` job, and its red is about the repository, not the
+  change under test.
 - `.github/scripts/checks/assert-coverage.py`, `.github/scripts/golden-declared-set.sh`,
   `scripts/validate-golden.sh`, `.github/workflows/nightly-registry-validation.yml` ->
   `.github/scripts/checks/coverage-receipt_test.sh` (lint-workflows.yml). It asserts on the
