@@ -1,0 +1,111 @@
+name: Setup tsuku Action
+
+# Tests .github/actions/setup-tsuku, the pinned bootstrap other repositories' CI uses to
+# install tsuku. Path-filtered because nothing else in the repository changes what it does.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/actions/setup-tsuku/**'
+      - '.github/workflows/setup-tsuku.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/actions/setup-tsuku/**'
+      - '.github/workflows/setup-tsuku.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  # Every verification branch, with curl stubbed out, including a binary that doesn't
+  # match a genuine checksums.txt, which no real release can produce.
+  self-test:
+    name: Self-test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Run setup-tsuku self-test
+        run: .github/actions/setup-tsuku/setup-tsuku_test.sh
+
+  # The committed defaults against the real release, on each platform the action supports.
+  install:
+    name: Install (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Install tsuku
+        uses: ./.github/actions/setup-tsuku
+      - name: Check the pinned tsuku is on PATH
+        run: |
+          set -euo pipefail
+          expected=$(awk '/^  version:/ {f=1} f && /default:/ {gsub(/[^0-9.]/, "", $2); print $2; exit}' \
+            .github/actions/setup-tsuku/action.yml)
+          [ -n "$expected" ] || { echo "::error::could not read the version default"; exit 1; }
+          resolved=$(command -v tsuku)
+          if [ "$resolved" != "$HOME/.tsuku/bin/tsuku" ]; then
+            echo "::error::tsuku resolves to '$resolved', expected $HOME/.tsuku/bin/tsuku"
+            exit 1
+          fi
+          case ":$PATH:" in
+            *":$HOME/.tsuku/tools/current:"*) ;;
+            *) echo "::error::$HOME/.tsuku/tools/current is not on PATH"; exit 1 ;;
+          esac
+          if [ "${TSUKU_NO_TELEMETRY:-}" != "1" ]; then
+            echo "::error::TSUKU_NO_TELEMETRY is '${TSUKU_NO_TELEMETRY:-}', expected 1"
+            exit 1
+          fi
+          reported=$(tsuku --version)
+          echo "$reported"
+          if ! grep -qF "$expected" <<< "$reported"; then
+            echo "::error::tsuku reports '$reported', expected version $expected"
+            exit 1
+          fi
+
+  # A wrong committed hash against the real release: the step must fail, and nothing may
+  # be installed or put on PATH for the steps after it.
+  wrong-checksum:
+    name: Wrong checksum fails closed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Install tsuku with a wrong checksums-sha256
+        id: bad
+        continue-on-error: true
+        uses: ./.github/actions/setup-tsuku
+        with:
+          checksums-sha256: '0000000000000000000000000000000000000000000000000000000000000000'
+      - name: Check the step failed and installed nothing
+        env:
+          OUTCOME: ${{ steps.bad.outcome }}
+        run: |
+          set -euo pipefail
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "::error::the install step's outcome was '$OUTCOME', expected failure"
+            exit 1
+          fi
+          if [ -e "$HOME/.tsuku/bin/tsuku" ]; then
+            echo "::error::$HOME/.tsuku/bin/tsuku exists after a failed verification"
+            exit 1
+          fi
+          if command -v tsuku >/dev/null 2>&1; then
+            echo "::error::tsuku is on PATH at $(command -v tsuku) after a failed verification"
+            exit 1
+          fi
+          case ":$PATH:" in
+            *"/.tsuku/"*) echo "::error::a .tsuku directory was added to PATH"; exit 1 ;;
+          esac
+          if [ -n "${TSUKU_NO_TELEMETRY:-}" ]; then
+            echo "::error::TSUKU_NO_TELEMETRY was exported by a failed install"
+            exit 1
+          fi
+          echo "OK: the install step failed and left nothing behind"
