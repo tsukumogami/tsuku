@@ -27,6 +27,10 @@ jobs:
       # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Check for retired runners
         run: .github/scripts/checks/retired-runners.sh
+      # The check's own self-test, covering the matrix and JSON forms a runs-on-only match
+      # could not see.
+      - name: Check retired runner check can fail
+        run: .github/scripts/checks/retired-runners_test.sh
       # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
       - name: Check CI consolidation patterns
         run: .github/scripts/checks/ci-patterns-lint.sh
