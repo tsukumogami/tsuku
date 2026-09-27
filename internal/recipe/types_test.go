@@ -642,6 +642,36 @@ pattern = "1.0.0"
 	}
 }
 
+func TestRecipe_ExtractBinaries_AppBundle(t *testing.T) {
+	// app_bundle binaries are paths inside the .app; the action writes a
+	// bin/<basename> wrapper for each, so that is what gets linked.
+	tomlData := `
+[metadata]
+name = "ghostty"
+description = "A terminal"
+
+[[steps]]
+action = "app_bundle"
+url = "https://example.com/Ghostty.dmg"
+checksum = "sha256:abc"
+app_name = "Ghostty.app"
+binaries = ["Contents/MacOS/ghostty"]
+
+[verify]
+command = "ghostty +version"
+`
+
+	var recipe Recipe
+	if err := toml.Unmarshal([]byte(tomlData), &recipe); err != nil {
+		t.Fatalf("Unmarshal() error = %v", err)
+	}
+
+	binaries := recipe.ExtractBinaries()
+	if len(binaries) != 1 || binaries[0] != "bin/ghostty" {
+		t.Errorf("ExtractBinaries() = %v, want [bin/ghostty]", binaries)
+	}
+}
+
 func TestRecipe_ExtractBinaries_SimpleStrings(t *testing.T) {
 	// Test that simple string binaries get "bin/" prefix (github_archive)
 	// This prevents regression where symlinks pointed to wrong paths

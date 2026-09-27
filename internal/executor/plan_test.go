@@ -863,6 +863,28 @@ func TestExtractBinariesFromPlan_PerStepPrecedenceOverPlanBinaries(t *testing.T)
 	}
 }
 
+func TestExtractBinariesFromPlan_AppBundle(t *testing.T) {
+	// app_bundle writes bin/<basename> wrappers for binaries that live deep
+	// inside the .app, so the plan must name bin/<basename>, not the
+	// in-bundle path.
+	plan := &InstallationPlan{
+		Steps: []ResolvedStep{
+			{
+				Action: "app_bundle",
+				Params: map[string]interface{}{
+					"app_name": "Ghostty.app",
+					"binaries": []interface{}{"Contents/MacOS/ghostty"},
+				},
+			},
+		},
+	}
+	got := ExtractBinariesFromPlan(plan)
+	want := []string{"bin/ghostty"}
+	if len(got) != len(want) || got[0] != want[0] {
+		t.Errorf("ExtractBinariesFromPlan() = %v, want %v", got, want)
+	}
+}
+
 func TestExtractBinariesFromPlan_EmptyWhenNothingRegistered(t *testing.T) {
 	// No install_binaries step and no plan.Binaries → empty result, which
 	// triggers the install manager's bin/<toolName> fallback. Preserving the

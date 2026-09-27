@@ -73,6 +73,8 @@ type InstallOptions struct {
 	RuntimeDependencies map[string]string // Runtime deps: name -> version (for wrapper scripts)
 	RequestedVersion    string            // What user originally requested ("17", "@lts", "")
 	Plan                *Plan             // Installation plan to store (if generated)
+	AppPath             string            // Installed .app bundle, for app_bundle recipes (macOS)
+	ApplicationSymlink  string            // ~/Applications symlink to AppPath, if one was created
 }
 
 // DefaultInstallOptions returns the default installation options
@@ -254,6 +256,9 @@ func (m *Manager) InstallWithOptions(ctx context.Context, name, version, workDir
 			BinaryChecksums: binaryChecksums,
 			InstalledAt:     time.Now(),
 			Plan:            opts.Plan,
+
+			AppPath:            opts.AppPath,
+			ApplicationSymlink: opts.ApplicationSymlink,
 		}
 
 		// Set as active version

@@ -296,14 +296,14 @@ Parameters:
 - `url` (required): Download URL for the application archive (DMG or ZIP)
 - `checksum` (required): SHA256 checksum for verification
 - `app_name` (required): Name of the .app bundle inside the archive
-- `binaries` (optional): List of CLI tools to symlink to `$TSUKU_HOME/bin`
+- `binaries` (optional): Paths of CLI tools inside the .app (e.g., `Contents/MacOS/ghostty`) to expose on PATH
 - `symlink_applications` (optional, default: true): Create symlink in `~/Applications`
 
 The action:
 1. Downloads the archive (DMG or ZIP) with checksum verification
 2. Extracts or mounts the archive
 3. Copies the .app bundle to `$TSUKU_HOME/apps/<name>-<version>.app`
-4. Creates symlinks for any specified CLI binaries to `$TSUKU_HOME/bin`
+4. Writes a `bin/<name>` wrapper for each listed binary, which the install links into `$TSUKU_HOME/tools/current`
 5. Creates a symlink in `~/Applications` for Launchpad/Spotlight integration
 
 **Platform restriction**: The `app_bundle` action only runs on macOS. On other platforms, it skips with a message.
