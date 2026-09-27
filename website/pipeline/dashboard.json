@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-09-27T12:54:29Z",
+  "generated_at": "2026-09-27T12:56:24Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 23,
       "excluded": 7,
-      "failed": 24,
-      "pending": 3863,
+      "failed": 33,
+      "pending": 3854,
       "success": 1388
     },
     "by_tier": {
@@ -24,8 +24,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 14,
-        "pending": 3863,
+        "failed": 23,
+        "pending": 3854,
         "success": 1361
       }
     },
@@ -40,8 +40,8 @@
       },
       "crates.io": {
         "excluded": 5,
-        "failed": 2,
-        "pending": 74,
+        "failed": 3,
+        "pending": 73,
         "success": 24,
         "total": 105
       },
@@ -57,8 +57,8 @@
       "homebrew": {
         "blocked": 23,
         "excluded": 1,
-        "failed": 18,
-        "pending": 3694,
+        "failed": 23,
+        "pending": 3689,
         "success": 1147,
         "total": 4883
       },
@@ -71,20 +71,21 @@
         "total": 1
       },
       "npm": {
-        "failed": 1,
-        "pending": 19,
+        "failed": 2,
+        "pending": 18,
         "success": 55,
         "total": 75
       },
       "pypi": {
-        "failed": 1,
-        "pending": 2,
+        "failed": 2,
+        "pending": 1,
         "success": 4,
         "total": 7
       },
       "rubygems": {
         "excluded": 1,
-        "pending": 74,
+        "failed": 1,
+        "pending": 73,
         "success": 14,
         "total": 89
       }
@@ -525,6 +526,42 @@
           "next_retry_at": "2026-09-27T22:15:23Z"
         },
         {
+          "id": "homebrew:0xjuanma/tap/golazo",
+          "name": "0xjuanma/tap/golazo",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 5,
+          "next_retry_at": "2026-09-28T04:54:34Z"
+        },
+        {
+          "id": "homebrew:2ykwang/2ykwang/mac-cleanup-go",
+          "name": "2ykwang/2ykwang/mac-cleanup-go",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 5,
+          "next_retry_at": "2026-09-28T04:54:34Z"
+        },
+        {
+          "id": "homebrew:2ykwang/mac-cleanup-go/mac-cleanup-go",
+          "name": "2ykwang/mac-cleanup-go/mac-cleanup-go",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 5,
+          "next_retry_at": "2026-09-28T04:54:34Z"
+        },
+        {
+          "id": "homebrew:42ailab/42plugin/forty-two-plugin",
+          "name": "42ailab/42plugin/forty-two-plugin",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 5,
+          "next_retry_at": "2026-09-28T04:54:34Z"
+        },
+        {
           "id": "homebrew:ada-url",
           "name": "ada-url",
           "ecosystem": "homebrew",
@@ -534,6 +571,24 @@
           "next_retry_at": "2026-09-27T14:15:23Z"
         },
         {
+          "id": "rubygems:amp",
+          "name": "amp",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 24,
+          "next_retry_at": "2026-10-04T12:54:34Z"
+        },
+        {
+          "id": "crates.io:ascii",
+          "name": "ascii",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 24,
+          "next_retry_at": "2026-10-04T12:54:34Z"
+        },
+        {
           "id": "homebrew:autoconf",
           "name": "autoconf",
           "ecosystem": "homebrew",
@@ -541,6 +596,15 @@
           "category": "install_failed",
           "failure_count": 4,
           "next_retry_at": "2026-09-27T14:15:23Z"
+        },
+        {
+          "id": "npm:azion",
+          "name": "azion",
+          "ecosystem": "npm",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 613,
+          "next_retry_at": "2026-10-04T12:54:34Z"
         },
         {
           "id": "crates.io:bindgen-cli",
@@ -568,6 +632,24 @@
           "category": "install_failed",
           "failure_count": 22,
           "next_retry_at": "2026-10-03T21:53:59Z"
+        },
+        {
+          "id": "homebrew:icu4c@78",
+          "name": "icu4c@78",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-09-28T04:54:34Z"
+        },
+        {
+          "id": "pypi:lib3mf",
+          "name": "lib3mf",
+          "ecosystem": "pypi",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 895,
+          "next_retry_at": "2026-10-04T12:54:34Z"
         },
         {
           "id": "homebrew:libassuan",
@@ -643,42 +725,6 @@
         }
       ],
       "pending": [
-        {
-          "id": "homebrew:0xjuanma/tap/golazo",
-          "name": "0xjuanma/tap/golazo",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T13:11:37Z"
-        },
-        {
-          "id": "homebrew:2ykwang/2ykwang/mac-cleanup-go",
-          "name": "2ykwang/2ykwang/mac-cleanup-go",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T13:11:37Z"
-        },
-        {
-          "id": "homebrew:2ykwang/mac-cleanup-go/mac-cleanup-go",
-          "name": "2ykwang/mac-cleanup-go/mac-cleanup-go",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T13:11:37Z"
-        },
-        {
-          "id": "homebrew:42ailab/42plugin/forty-two-plugin",
-          "name": "42ailab/42plugin/forty-two-plugin",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T13:11:37Z"
-        },
         {
           "id": "homebrew:5ouma/tap/gh-poi",
           "name": "5ouma/tap/gh-poi",
@@ -1127,15 +1173,6 @@
           "priority": 3,
           "category": "generation_failed",
           "failure_count": 1
-        },
-        {
-          "id": "rubygems:amp",
-          "name": "amp",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 23,
-          "next_retry_at": "1734-06-17T18:35:10Z"
         },
         {
           "id": "homebrew:amplitude/ampli/ampli",
@@ -1703,15 +1740,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "crates.io:ascii",
-          "name": "ascii",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 23,
-          "next_retry_at": "1734-06-17T22:06:43Z"
         },
         {
           "id": "homebrew:asciidoc",
@@ -2314,15 +2342,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "npm:azion",
-          "name": "azion",
-          "ecosystem": "npm",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 612,
-          "next_retry_at": "1734-06-17T18:35:10Z"
         },
         {
           "id": "homebrew:azure-storage-common-cpp",
@@ -10992,15 +11011,6 @@
           "failure_count": 1
         },
         {
-          "id": "homebrew:icu4c@78",
-          "name": "icu4c@78",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-09-27T08:17:03Z"
-        },
-        {
           "id": "homebrew:id3v2",
           "name": "id3v2",
           "ecosystem": "homebrew",
@@ -12926,15 +12936,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
-        },
-        {
-          "id": "pypi:lib3mf",
-          "name": "lib3mf",
-          "ecosystem": "pypi",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 894,
-          "next_retry_at": "1734-06-17T18:35:10Z"
         },
         {
           "id": "homebrew:libaacs",
