@@ -9,7 +9,11 @@ set -euo pipefail
 #
 # Usage:
 #   escalate.sh --workflow <name> --conclusion <c> --run-id <id> --run-url <url> \
-#               --event <event> [--dry-run] [--outcome-file <path>]
+#               --event <event> --branch <head branch> [--dry-run] [--outcome-file <path>]
+#
+# DEFAULT_BRANCH must name the repository's default branch. Only runs on it are escalated
+# (#2686): a run on any other branch is refused as not-eligible, whatever it concluded, so a
+# failing branch run cannot file a false failure and a green one cannot close a true one.
 #
 # --outcome-file receives one line, `<outcome>\t<issue number or empty>`, saying what was
 # done with the run: filed, commented, closed, owned, owned-healthy, healthy, self-files,
@@ -29,7 +33,7 @@ set -euo pipefail
 # emptiness is a legitimate answer, and it is commented as such.
 
 DRY_RUN=0
-WORKFLOW="" CONCLUSION="" RUN_ID="" RUN_URL="" EVENT="" OUTCOME_FILE=""
+WORKFLOW="" CONCLUSION="" RUN_ID="" RUN_URL="" EVENT="" BRANCH="" OUTCOME_FILE=""
 WORKFLOWS_DIR="${WORKFLOWS_DIR:-.github/workflows}"
 
 while [ $# -gt 0 ]; do
@@ -39,18 +43,27 @@ while [ $# -gt 0 ]; do
     --run-id)     RUN_ID="$2"; shift 2 ;;
     --run-url)    RUN_URL="$2"; shift 2 ;;
     --event)      EVENT="$2"; shift 2 ;;
+    --branch)     BRANCH="$2"; shift 2 ;;
     --dry-run)    DRY_RUN=1; shift ;;
     --outcome-file) OUTCOME_FILE="$2"; shift 2 ;;
     *) echo "::error::unknown argument: $1" >&2; exit 2 ;;
   esac
 done
 
-for required in WORKFLOW CONCLUSION RUN_ID RUN_URL EVENT; do
+for required in WORKFLOW CONCLUSION RUN_ID RUN_URL EVENT BRANCH; do
   if [ -z "${!required}" ]; then
     echo "::error::--${required,,} is required" >&2
     exit 2
   fi
 done
+
+# Read from the caller, which takes it from the event at runtime rather than from a literal,
+# so renaming the default branch cannot quietly turn every run ineligible. Could-not-look is
+# its own answer: without it no run can be judged, so this stops rather than guessing.
+if [ -z "${DEFAULT_BRANCH:-}" ]; then
+  echo "::error::DEFAULT_BRANCH is not set; cannot tell whether this run is on the default branch" >&2
+  exit 2
+fi
 
 outcome() {  # outcome <what> [issue number]
   if [ -n "$OUTCOME_FILE" ]; then printf '%s\t%s\n' "$1" "${2:-}" > "$OUTCOME_FILE"; fi
@@ -93,6 +106,15 @@ if [ -z "$POLICY" ]; then
 fi
 
 # --- eligibility -----------------------------------------------------------------------
+
+# Branch first, before anything reads the run's conclusion. Checked for every outcome, a
+# success included: a green branch run reaching the close path below would close the item
+# for a failure that is still happening on the default branch.
+if [ "$BRANCH" != "$DEFAULT_BRANCH" ]; then
+  echo "not eligible: this run of \"$WORKFLOW\" was on branch '$BRANCH'; escalation watches only '$DEFAULT_BRANCH'"
+  outcome not-eligible
+  exit 0
+fi
 
 if [ -n "$ONLY_ON" ] && [ "$ONLY_ON" != "$EVENT" ]; then
   echo "not eligible: \"$WORKFLOW\" escalates only on '$ONLY_ON' and this run was '$EVENT'"
