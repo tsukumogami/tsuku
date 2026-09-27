@@ -212,6 +212,8 @@ func TestHomebrewBuilder_isValidPlatformTag(t *testing.T) {
 		{"x86_64_linux", "x86_64_linux", true},
 		{"arm64_ventura", "arm64_ventura", true},
 		{"ventura", "ventura", true},
+		{"arm64_sequoia", "arm64_sequoia", true},
+		{"arm64_tahoe", "arm64_tahoe", true},
 		{"invalid", "invalid_platform", false},
 		{"empty", "", false},
 		{"uppercase", "ARM64_SONOMA", false},
@@ -1955,6 +1957,53 @@ func TestHomebrewBuilder_getBlobSHAFromManifest(t *testing.T) {
 			},
 			version:     "1.0.0",
 			platformTag: "x86_64_linux",
+			wantErr:     true,
+		},
+		{
+			// Formulae rebottled after Homebrew dropped Sonoma have
+			// no arm64_sonoma bottle; another macOS release's will do.
+			name: "macOS tag falls back to another release",
+			manifest: &ghcrManifest{
+				Manifests: []ghcrManifestEntry{
+					{
+						Digest: "sha256:tahoe123",
+						Annotations: map[string]string{
+							"org.opencontainers.image.ref.name": "1.0.0.arm64_tahoe",
+						},
+					},
+					{
+						Digest: "sha256:sequoia123",
+						Annotations: map[string]string{
+							"org.opencontainers.image.ref.name": "1.0.0.arm64_sequoia",
+						},
+					},
+					{
+						Digest: "sha256:linux123",
+						Annotations: map[string]string{
+							"org.opencontainers.image.ref.name": "1.0.0.arm64_linux",
+						},
+					},
+				},
+			},
+			version:     "1.0.0",
+			platformTag: "arm64_sonoma",
+			wantSHA:     "sequoia123",
+			wantErr:     false,
+		},
+		{
+			name: "macOS tag does not fall back across architectures",
+			manifest: &ghcrManifest{
+				Manifests: []ghcrManifestEntry{
+					{
+						Digest: "sha256:intel123",
+						Annotations: map[string]string{
+							"org.opencontainers.image.ref.name": "1.0.0.sequoia",
+						},
+					},
+				},
+			},
+			version:     "1.0.0",
+			platformTag: "arm64_sonoma",
 			wantErr:     true,
 		},
 		{

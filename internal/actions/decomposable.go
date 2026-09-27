@@ -121,6 +121,13 @@ type EvalContext struct {
 	DownloadCache *DownloadCache    // For caching downloaded files (optional)
 	Constraints   *EvalConstraints  // Version constraints for constrained evaluation (optional)
 	Reporter      progress.Reporter // For emitting warnings during decomposition (optional)
+
+	// MacOSVersion is the macOS major version of the machine the plan is
+	// for, set only when the plan is generated on and for that machine.
+	// Homebrew bottle selection won't pick a bottle built for a newer
+	// macOS. 0 means the plan may run elsewhere, and selection uses
+	// bottletag.CrossMachineMacOSVersion instead.
+	MacOSVersion int
 }
 
 // GetReporter returns the Reporter, or a NoopReporter when Reporter is nil.

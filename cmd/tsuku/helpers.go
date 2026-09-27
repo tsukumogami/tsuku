@@ -236,6 +236,7 @@ func generateInstallPlan(
 	return exec.GeneratePlan(ctx, executor.PlanConfig{
 		OS:                 runtime.GOOS,
 		Arch:               runtime.GOARCH,
+		MacOSVersion:       executor.HostMacOSVersion(runtime.GOOS, runtime.GOARCH),
 		LinuxFamily:        linuxFamily,
 		RecipeSource:       recipeSource,
 		Downloader:         downloader,

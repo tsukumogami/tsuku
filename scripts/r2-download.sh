@@ -15,7 +15,7 @@
 #   output-file - Optional. Output path (default: stdout)
 #
 # Options:
-#   --category <category>  - Category for key path (default: auto-detected from first letter)
+#   --category <category>  - embedded or registry (default: registry)
 #   --skip-verify          - Skip checksum verification (not recommended)
 #   --metadata-only        - Print object metadata without downloading content
 #
@@ -26,7 +26,8 @@
 #   R2_SECRET_ACCESS_KEY   - Required. R2 secret access key
 #
 # Object Key Convention:
-#   plans/{category}/{recipe}/v{version}/{platform}.json
+#   Defined in scripts/lib/r2-layout.sh:
+#   plans/<embedded|first-letter>/{recipe}/v{version}/{platform}.json
 #
 # Checksum Validation:
 #   Downloads the file and compares SHA256 hash against x-tsuku-recipe-hash metadata.
@@ -39,6 +40,9 @@
 #   3 - Not found: object does not exist
 
 set -euo pipefail
+
+# shellcheck source=lib/r2-layout.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib/r2-layout.sh"
 
 BUCKET_NAME="${R2_BUCKET_NAME:-tsuku-golden-registry}"
 
@@ -102,13 +106,8 @@ if [[ -z "${R2_SECRET_ACCESS_KEY:-}" ]]; then
     exit 2
 fi
 
-# Auto-detect category from first letter if not specified
-if [[ -z "$CATEGORY" ]]; then
-    CATEGORY="${RECIPE:0:1}"
-fi
-
 # Build object key
-OBJECT_KEY="plans/${CATEGORY}/${RECIPE}/v${VERSION}/${PLATFORM}.json"
+OBJECT_KEY=$(r2_plan_key "$RECIPE" "${CATEGORY:-registry}" "$VERSION" "$PLATFORM") || exit 2
 
 # Export AWS credentials for subcommands
 export AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID"

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/actions"
+	"github.com/tsukumogami/tsuku/internal/bottletag"
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/platform"
 	"github.com/tsukumogami/tsuku/internal/progress"
@@ -97,6 +98,23 @@ type PlanConfig struct {
 	// Reporter receives warnings emitted during decomposition (e.g., version fallback).
 	// When nil, warnings are silently discarded.
 	Reporter progress.Reporter
+	// MacOSVersion is the macOS major version of the machine that will run
+	// the plan. Set it only when the plan is for this machine (installs);
+	// HostMacOSVersion gives the value. Homebrew bottle selection never picks
+	// a bottle built for a newer macOS. 0 leaves the plan portable: selection
+	// uses bottletag.CrossMachineMacOSVersion, as `tsuku eval` and golden
+	// files need.
+	MacOSVersion int
+}
+
+// HostMacOSVersion returns the MacOSVersion for a plan targeting os/arch
+// on this machine: the host's macOS major version when the target is the
+// host platform, and 0 otherwise.
+func HostMacOSVersion(targetOS, targetArch string) int {
+	if targetOS != runtime.GOOS || targetArch != runtime.GOARCH {
+		return 0
+	}
+	return bottletag.HostMacOSVersion()
 }
 
 // pinnedTagProvider returns the version provider used to look up the release
@@ -279,6 +297,7 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		DownloadCache: cfg.DownloadCache,
 		Constraints:   cfg.Constraints,
 		Reporter:      cfg.Reporter,
+		MacOSVersion:  cfg.MacOSVersion,
 	}
 
 	// Process each step
@@ -495,12 +514,12 @@ func (e *Executor) resolveStep(
 						// Walk any recorded fallback sources the same way
 						// Decompose does, so a step that reaches here is not
 						// single-sourced when its recipe was not.
-						result, servingURL, err := actions.DownloadFirstAvailable(ctx, downloader, actions.DownloadSources(pstep.Params))
+						result, servingURL, fromCache, err := actions.ResolveFirstAvailable(ctx, downloader, evalCtx.DownloadCache, actions.DownloadSources(pstep.Params))
 						if err != nil {
 							return nil, fmt.Errorf("failed to download for caching: %w", err)
 						}
 						// Save to cache if configured
-						if evalCtx.DownloadCache != nil {
+						if evalCtx.DownloadCache != nil && !fromCache {
 							_ = evalCtx.DownloadCache.Save(servingURL, result.AssetPath, result.Checksum)
 						}
 						rs.Checksum = result.Checksum
@@ -571,13 +590,17 @@ func (e *Executor) resolveStep(
 				// per-action shape, so it is the primary rather than
 				// expandedParams["url"]. The alternates come from params.
 				fallbacks, _ := actions.GetStringSlice(expandedParams, actions.FallbackURLsParam)
-				result, servingURL, err := actions.DownloadFirstAvailable(ctx, downloader, append([]string{url}, fallbacks...))
+				var cache *actions.DownloadCache
+				if evalCtx != nil {
+					cache = evalCtx.DownloadCache
+				}
+				result, servingURL, fromCache, err := actions.ResolveFirstAvailable(ctx, downloader, cache, append([]string{url}, fallbacks...))
 				if err != nil {
 					return nil, fmt.Errorf("failed to download for caching: %w", err)
 				}
 
 				// Save to cache if configured
-				if evalCtx != nil && evalCtx.DownloadCache != nil {
+				if cache != nil && !fromCache {
 					checksum := resolved.Checksum
 					if checksum == "" {
 						checksum = result.Checksum
@@ -897,6 +920,7 @@ func generateSingleDependencyPlan(
 		RecipeLoader:       nil,             // Don't recurse here - we handle it above
 		Constraints:        cfg.Constraints, // Propagate constraints for nested decomposition
 		PinnedVersion:      pinnedVersion,   // Bypass version resolution for pinned deps
+		MacOSVersion:       cfg.MacOSVersion,
 	}
 
 	plan, err := exec.GeneratePlan(ctx, depCfg)

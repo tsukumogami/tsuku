@@ -126,41 +126,16 @@ jobs:
 
           mkdir -p r2-raw r2-golden-files/plans
 
-          # Download all plans from R2 (excluding embedded/ for now - registry only)
-          # Use AWS CLI s3 sync for efficiency
-          aws s3 sync s3://tsuku-golden-registry/plans/ r2-raw/ \
-            --exclude "embedded/*" \
-            2>&1 || {
-              echo "::warning::Some files failed to download, continuing..."
-            }
+          # Download all plans from R2 (excluding embedded/: embedded goldens are validated
+          # from the repository). A failed sync is a failed run: a partial mirror would
+          # validate whatever happened to arrive and report it as the registry.
+          aws s3 sync s3://tsuku-golden-registry/plans/ r2-raw/ --exclude "embedded/*" --only-show-errors
 
-          # Transform R2 structure to git-compatible structure
-          # R2:  plans/<letter>/<recipe>/v<version>/<platform>.json
-          # Git: plans/<letter>/<recipe>/v<version>-<platform>.json
-          echo "Transforming R2 structure to git-compatible format..."
-          find r2-raw -name "*.json" -type f | while read -r file; do
-            # Extract path components
-            # Example: r2-raw/s/serve/v14.2.5/linux-amd64.json
-            rel_path="${file#r2-raw/}"
-            dir_part=$(dirname "$rel_path")      # s/serve/v14.2.5
-            platform=$(basename "$file" .json)   # linux-amd64
-
-            # Split dir_part into letter/recipe/version
-            letter=$(echo "$dir_part" | cut -d'/' -f1)
-            recipe=$(echo "$dir_part" | cut -d'/' -f2)
-            version=$(echo "$dir_part" | cut -d'/' -f3)
-
-            # Create target directory and filename
-            target_dir="r2-golden-files/plans/$letter/$recipe"
-            target_file="$target_dir/${version}-${platform}.json"
-
-            mkdir -p "$target_dir"
-            cp "$file" "$target_file"
-          done
-
-          echo "Downloaded and transformed files:"
-          find r2-golden-files -name "*.json" | wc -l
-          find r2-golden-files -name "*.json" | head -20
+          # Turn the mirror into the tree validate-all-golden.sh reads. Keys are parsed by
+          # scripts/lib/r2-layout.sh; the script prints what it transformed, what it read
+          # from the legacy prefix, and what it ignored, and fails if it transformed nothing.
+          ./scripts/r2-golden-transform.sh r2-raw r2-golden-files/plans | tee transform.log
+          tail -1 transform.log >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload golden files artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -183,14 +158,17 @@ jobs:
 
   # Validate all registry recipe golden files (plan generation)
   validate-plans-linux:
-    name: Validate Plans (Linux)
+    name: Validate Plans (Linux) (shard ${{ matrix.shard }})
     needs: [health-check, download-golden-files]
     if: needs.health-check.outputs.r2_available == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
-    outputs:
-      failed: ${{ steps.validate.outputs.failed }}
-      failed_recipes: ${{ steps.validate.outputs.failed_recipes }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        # Full registry validation runs one plan evaluation per golden file, which does not
+        # fit one job's time limit. Shards together cover every recipe exactly once.
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -225,44 +203,77 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GOLDEN_DIR: r2-golden-files/plans
-          COVERAGE_RECEIPT: ${{ github.workspace }}/coverage/receipt-validate-linux.ndjson
+          SHARD: ${{ matrix.shard }}
+          SHARD_COUNT: 8
+          # One receipt per shard; Assert Coverage joins them per leg before comparing
+          # against the declared set, which is taken from the full listing, so a shard
+          # that dies before uploading shows up there as a shortfall.
+          COVERAGE_RECEIPT: ${{ github.workspace }}/coverage/receipt-validate-linux-${{ matrix.shard }}.ndjson
         run: |
-          # Without pipefail the `if !` below tests `tee`, which always succeeds, and a
-          # validation failure never fails this step.
           set -o pipefail
-          mkdir -p coverage
+          mkdir -p coverage results
           : > "$COVERAGE_RECEIPT"
-          echo "Validating registry recipe golden files from R2..."
-          FAILED_RECIPES=""
+          echo "Validating registry recipe golden files from R2 (shard $SHARD of $SHARD_COUNT)..."
 
-          # Use R2 golden files instead of git-based ones
-          if ! ./scripts/validate-all-golden.sh --os linux --category registry --golden-dir "$GOLDEN_DIR" 2>&1 | tee validation.log; then
-            # Extract failed recipe names from output
-            FAILED_RECIPES=$(grep -oP '(?<=FAIL: )\S+' validation.log | sort -u | tr '\n' ' ' || true)
-            echo "failed=true" >> $GITHUB_OUTPUT
-            echo "failed_recipes=$FAILED_RECIPES" >> $GITHUB_OUTPUT
+          rc=0
+          ./scripts/validate-all-golden.sh --os linux --category registry --golden-dir "$GOLDEN_DIR" \
+            --shard "$SHARD/$SHARD_COUNT" 2>&1 | tee validation.log || rc=$?
+
+          # The script's last line is its summary. Anything else means it died before
+          # reporting, and nothing below can be trusted.
+          SUMMARY=$(tail -1 validation.log)
+          if [[ ! "$SUMMARY" =~ ^Checked\ [0-9]+\ recipes: ]]; then
+            echo "::error::validate-all-golden.sh ended without its summary line (exit $rc)"
             exit 1
           fi
-          echo "failed=false" >> $GITHUB_OUTPUT
+          echo "linux shard $SHARD/$SHARD_COUNT: $SUMMARY" | tee results/summary.txt >> "$GITHUB_STEP_SUMMARY"
+
+          # Failed recipes, checked against the count the script declares, so a format
+          # change cannot silently shrink the list.
+          awk '/^Failed recipes \(/ {f=1; next} f && /^  - / {print $2; next} f {exit}' validation.log > results/failed.txt
+          DECLARED=$(sed -n 's/^Failed recipes (\([0-9]*\) of [0-9]*):$/\1/p' validation.log)
+          EXTRACTED=$(wc -l < results/failed.txt)
+          if [ "${DECLARED:-0}" -ne "$EXTRACTED" ]; then
+            echo "::error::extracted $EXTRACTED failed recipes but the script declared ${DECLARED:-0}"
+            exit 1
+          fi
+
+          case $rc in
+            0) ;;
+            3) echo "::error::shard $SHARD/$SHARD_COUNT compared nothing"; exit 1 ;;
+            *) echo "::error::$EXTRACTED registry recipes failed golden validation on linux: $(tr '\n' ' ' < results/failed.txt)"; exit 1 ;;
+          esac
+
+      - name: Upload shard results
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: validation-linux-${{ matrix.shard }}
+          path: results/
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Upload coverage receipt
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: coverage-receipt-validate-linux
-          path: coverage/receipt-validate-linux.ndjson
+          name: coverage-receipt-validate-linux-${{ matrix.shard }}
+          path: coverage/receipt-validate-linux-${{ matrix.shard }}.ndjson
           if-no-files-found: error
           retention-days: 7
 
   validate-plans-macos:
-    name: Validate Plans (macOS)
+    name: Validate Plans (macOS) (shard ${{ matrix.shard }})
     needs: [health-check, download-golden-files]
     if: needs.health-check.outputs.r2_available == 'true'
     runs-on: macos-latest
-    timeout-minutes: 60
-    outputs:
-      failed: ${{ steps.validate.outputs.failed }}
-      failed_recipes: ${{ steps.validate.outputs.failed_recipes }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        # Full registry validation runs one plan evaluation per golden file, which does not
+        # fit one job's time limit. Shards together cover every recipe exactly once.
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -289,30 +300,62 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GOLDEN_DIR: r2-golden-files/plans
-          COVERAGE_RECEIPT: ${{ github.workspace }}/coverage/receipt-validate-darwin.ndjson
+          SHARD: ${{ matrix.shard }}
+          SHARD_COUNT: 8
+          # One receipt per shard; Assert Coverage joins them per leg before comparing
+          # against the declared set, which is taken from the full listing, so a shard
+          # that dies before uploading shows up there as a shortfall.
+          COVERAGE_RECEIPT: ${{ github.workspace }}/coverage/receipt-validate-darwin-${{ matrix.shard }}.ndjson
         run: |
-          # Without pipefail the `if !` below tests `tee`, which always succeeds, and a
-          # validation failure never fails this step.
           set -o pipefail
-          mkdir -p coverage
+          mkdir -p coverage results
           : > "$COVERAGE_RECEIPT"
-          echo "Validating registry recipe golden files from R2..."
-          FAILED_RECIPES=""
+          echo "Validating registry recipe golden files from R2 (shard $SHARD of $SHARD_COUNT)..."
 
-          if ! ./scripts/validate-all-golden.sh --os darwin --category registry --golden-dir "$GOLDEN_DIR" 2>&1 | tee validation.log; then
-            FAILED_RECIPES=$(grep -oP '(?<=FAIL: )\S+' validation.log | sort -u | tr '\n' ' ' || true)
-            echo "failed=true" >> $GITHUB_OUTPUT
-            echo "failed_recipes=$FAILED_RECIPES" >> $GITHUB_OUTPUT
+          rc=0
+          ./scripts/validate-all-golden.sh --os darwin --category registry --golden-dir "$GOLDEN_DIR" \
+            --shard "$SHARD/$SHARD_COUNT" 2>&1 | tee validation.log || rc=$?
+
+          # The script's last line is its summary. Anything else means it died before
+          # reporting, and nothing below can be trusted.
+          SUMMARY=$(tail -1 validation.log)
+          if [[ ! "$SUMMARY" =~ ^Checked\ [0-9]+\ recipes: ]]; then
+            echo "::error::validate-all-golden.sh ended without its summary line (exit $rc)"
             exit 1
           fi
-          echo "failed=false" >> $GITHUB_OUTPUT
+          echo "darwin shard $SHARD/$SHARD_COUNT: $SUMMARY" | tee results/summary.txt >> "$GITHUB_STEP_SUMMARY"
+
+          # Failed recipes, checked against the count the script declares, so a format
+          # change cannot silently shrink the list.
+          awk '/^Failed recipes \(/ {f=1; next} f && /^  - / {print $2; next} f {exit}' validation.log > results/failed.txt
+          DECLARED=$(sed -n 's/^Failed recipes (\([0-9]*\) of [0-9]*):$/\1/p' validation.log)
+          EXTRACTED=$(wc -l < results/failed.txt)
+          if [ "${DECLARED:-0}" -ne "$EXTRACTED" ]; then
+            echo "::error::extracted $EXTRACTED failed recipes but the script declared ${DECLARED:-0}"
+            exit 1
+          fi
+
+          case $rc in
+            0) ;;
+            3) echo "::error::shard $SHARD/$SHARD_COUNT compared nothing"; exit 1 ;;
+            *) echo "::error::$EXTRACTED registry recipes failed golden validation on darwin: $(tr '\n' ' ' < results/failed.txt)"; exit 1 ;;
+          esac
+
+      - name: Upload shard results
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: validation-darwin-${{ matrix.shard }}
+          path: results/
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Upload coverage receipt
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: coverage-receipt-validate-darwin
-          path: coverage/receipt-validate-darwin.ndjson
+          name: coverage-receipt-validate-darwin-${{ matrix.shard }}
+          path: coverage/receipt-validate-darwin-${{ matrix.shard }}.ndjson
           if-no-files-found: error
           retention-days: 7
 
@@ -364,6 +407,7 @@ jobs:
           # Sample execution: pick one golden file per letter directory
           # This provides coverage without running all 150+ recipes
           FAILED=()
+          EXECUTED=0
           EXCLUSIONS_FILE="testdata/golden/execution-exclusions.json"
           GOLDEN_BASE="r2-golden-files/plans"
 
@@ -401,7 +445,8 @@ jobs:
                 continue
               fi
 
-              golden_file=$(find "$recipe_dir" -maxdepth 1 \( -name 'v*-linux-amd64.json' -o -name 'v*-linux-debian-amd64.json' \) | sort | head -1)
+              # Newest version's linux-amd64 (or linux-debian-amd64) plan.
+              golden_file=$(find "$recipe_dir" -maxdepth 1 \( -name '*-linux-amd64.json' -o -name '*-linux-debian-amd64.json' \) | sort -V | tail -1)
               if [ -z "$golden_file" ]; then
                 continue
               fi
@@ -412,6 +457,7 @@ jobs:
               mkdir -p "$TSUKU_HOME/bin"
               echo "$TSUKU_HOME/bin" >> "$GITHUB_PATH"
 
+              EXECUTED=$((EXECUTED + 1))
               if ./tsuku install --plan "$golden_file" --force; then
                 outcome=executed
               else
@@ -426,6 +472,13 @@ jobs:
             printf '{"item":"%s","outcome":"%s"}\n' "$letter" "$outcome" >> "$RECEIPT"
           done
 
+          echo "Executed $EXECUTED sample recipes: $((EXECUTED - ${#FAILED[@]})) passed, ${#FAILED[@]} failed" | tee -a "$GITHUB_STEP_SUMMARY"
+
+          if [ "$EXECUTED" -eq 0 ]; then
+            echo "failed=true" >> $GITHUB_OUTPUT
+            echo "::error::Sample execution ran no recipes"
+            exit 1
+          fi
           if [ ${#FAILED[@]} -gt 0 ]; then
             echo "failed=true" >> $GITHUB_OUTPUT
             echo "failed_recipes=${FAILED[*]}" >> $GITHUB_OUTPUT
@@ -433,7 +486,6 @@ jobs:
             exit 1
           fi
           echo "failed=false" >> $GITHUB_OUTPUT
-          echo "Sample execution completed successfully"
 
       - name: Upload coverage receipt
         if: always()
@@ -477,15 +529,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - name: Download shard results
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: validation-*
+          path: shard-results/
+
       - name: Create failure issue
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LINUX_PLAN_RESULT: ${{ needs.validate-plans-linux.result }}
+          MACOS_PLAN_RESULT: ${{ needs.validate-plans-macos.result }}
         run: |
-          # Collect failure information
-          LINUX_PLAN_FAILED="${{ needs.validate-plans-linux.outputs.failed }}"
-          LINUX_PLAN_RECIPES="${{ needs.validate-plans-linux.outputs.failed_recipes }}"
-          MACOS_PLAN_FAILED="${{ needs.validate-plans-macos.outputs.failed }}"
-          MACOS_PLAN_RECIPES="${{ needs.validate-plans-macos.outputs.failed_recipes }}"
+          # Collect failure information from every shard's uploaded results. A shard that
+          # died before uploading still fails its job, so the result is checked too.
+          shard_failures() {  # shard_failures <os>
+            cat shard-results/validation-"$1"-*/failed.txt 2>/dev/null | sort -u | tr '\n' ' '
+          }
+          LINUX_PLAN_FAILED=$([ "$LINUX_PLAN_RESULT" = "failure" ] && echo true || echo false)
+          LINUX_PLAN_RECIPES=$(shard_failures linux)
+          MACOS_PLAN_FAILED=$([ "$MACOS_PLAN_RESULT" = "failure" ] && echo true || echo false)
+          MACOS_PLAN_RECIPES=$(shard_failures darwin)
           EXEC_FAILED="${{ needs.execute-sample-linux.outputs.failed }}"
           EXEC_RECIPES="${{ needs.execute-sample-linux.outputs.failed_recipes }}"
 
@@ -580,6 +644,25 @@ jobs:
           if [ "$R2_AVAILABLE" != "true" ]; then
             echo "::error::R2 ${HEALTH_STATUS:-unknown}: validation did not run, so nothing was validated"
           fi
+
+          # The validate legs run as 8 shards, each uploading its own receipt. Join them
+          # per leg. A missing shard is reported by name here, and its items are also
+          # missing from the joined receipt, so the assertion below counts them as not
+          # validated either way.
+          # The joined file is created only when at least one shard delivered a receipt, so a
+          # leg with none at all still reaches the assertion's "no receipt" case.
+          for leg in linux darwin; do
+            joined="coverage/coverage-receipt-validate-$leg/receipt-validate-$leg.ndjson"
+            for shard in 0 1 2 3 4 5 6 7; do
+              f="coverage/coverage-receipt-validate-$leg-$shard/receipt-validate-$leg-$shard.ndjson"
+              if [ -f "$f" ]; then
+                mkdir -p "$(dirname "$joined")"
+                cat "$f" >> "$joined"
+              else
+                echo "::error::no receipt from validate-$leg shard $shard"
+              fi
+            done
+          done
 
           # The sample's declared set is fixed here, not supplied by the leg it checks.
           printf '%s\n' {a..z} > coverage/declared-execute-sample.txt

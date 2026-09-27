@@ -131,6 +131,7 @@ func installLibrary(ctx context.Context, libName, reqVersion string, reinstall b
 	plan, err := exec.GeneratePlan(globalCtx, executor.PlanConfig{
 		OS:            runtime.GOOS,
 		Arch:          runtime.GOARCH,
+		MacOSVersion:  executor.HostMacOSVersion(runtime.GOOS, runtime.GOARCH),
 		RecipeSource:  "registry",
 		Downloader:    downloader,
 		DownloadCache: downloadCache,

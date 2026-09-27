@@ -35,6 +35,9 @@
 
 set -euo pipefail
 
+# shellcheck source=lib/r2-layout.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib/r2-layout.sh"
+
 BUCKET_NAME="${R2_BUCKET_NAME:-tsuku-golden-registry}"
 RECIPES_DIR="recipes"
 JSON_OUTPUT=false
@@ -180,34 +183,27 @@ echo "Found $TOTAL_OBJECTS objects in R2" >&2
 
 # Process each object key to detect orphans
 ORPHAN_COUNT=0
+OUTSIDE_LAYOUT=0
 RECIPES_CHECKED=()
 
 while IFS= read -r object_key; do
     # Skip empty lines
     [[ -z "$object_key" ]] && continue
 
-    # Parse object key: plans/{category}/{recipe}/v{version}/{platform}.json
-    # Example: plans/f/fzf/v0.60.0/linux-amd64.json
-    if [[ ! "$object_key" =~ ^plans/([^/]+)/([^/]+)/v([^/]+)/(.+)\.json$ ]]; then
-        echo "Warning: Unexpected key format: $object_key" >&2
+    # Parse with the shared layout (scripts/lib/r2-layout.sh). Keys outside it, such as
+    # the legacy plans/registry/ prefix, are counted and never become orphan candidates.
+    if ! r2_parse_plan_key "$object_key"; then
+        OUTSIDE_LAYOUT=$((OUTSIDE_LAYOUT + 1))
         continue
     fi
-
-    category="${BASH_REMATCH[1]}"
-    recipe="${BASH_REMATCH[2]}"
-    version="${BASH_REMATCH[3]}"
-    platform="${BASH_REMATCH[4]}"
 
     # Skip embedded recipes (handled separately, not orphan candidates)
-    if [[ "$category" == "embedded" ]]; then
+    if [[ "$R2_KEY_CATEGORY" == "embedded" ]]; then
         continue
     fi
 
-    # Skip if not a single letter category (registry recipes use a-z)
-    if [[ ! "$category" =~ ^[a-z]$ ]]; then
-        echo "Warning: Unexpected category format: $category (key: $object_key)" >&2
-        continue
-    fi
+    category="$R2_KEY_SEGMENT"
+    recipe="$R2_KEY_RECIPE"
 
     # Check if we've already determined this recipe's status
     recipe_id="${category}/${recipe}"
@@ -222,6 +218,9 @@ while IFS= read -r object_key; do
 done < "$OBJECTS_FILE"
 
 echo "Detected $ORPHAN_COUNT orphaned objects" >&2
+if [[ $OUTSIDE_LAYOUT -gt 0 ]]; then
+    echo "Ignored $OUTSIDE_LAYOUT objects outside the plan layout (not orphan candidates)" >&2
+fi
 
 # Output results
 if [[ "$JSON_OUTPUT" == true ]]; then

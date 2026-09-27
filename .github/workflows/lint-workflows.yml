@@ -75,6 +75,11 @@ jobs:
       # issue" is also what an escalator that does nothing produces.
       - name: Check failures route to the issue that owns them
         run: .github/scripts/checks/escalate-owned_test.sh
+      # The R2 golden-plan layout, and the tools that read it. Publishing and reading
+      # disagreed about this layout for eight months while every check stayed green, so
+      # the cases assert both the keys and each tool's own count of what it compared.
+      - name: Check the R2 golden layout and its readers
+        run: scripts/lib/r2-layout_test.sh
       # The backstop's own regression cases (#2607). Hermetic: `gh` is a stub that filters
       # by the query's own parameters, and declarations come from a sandbox git repository,
       # so a pull request trying to exempt a workflow in its own diff is a real case.

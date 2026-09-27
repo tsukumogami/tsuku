@@ -1,5 +1,6 @@
 {
   "format_version": 5,
+  "storage_version": 1,
   "tool": "make",
   "version": "4.4.1",
   "platform": {
@@ -34,6 +35,7 @@
     {
       "action": "homebrew_relocate",
       "params": {
+        "bottle_tag": "arm64_sonoma",
         "formula": "make"
       },
       "evaluable": false,

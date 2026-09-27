@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/tsukumogami/tsuku/internal/bottletag"
 	"github.com/tsukumogami/tsuku/internal/secrets"
 )
 
@@ -97,9 +98,7 @@ func (p *TapProvider) ResolveLatest(ctx context.Context) (*VersionInfo, error) {
 	// so we make this optional and still return the version.
 	goos := runtime.GOOS
 	goarch := runtime.GOARCH
-	macOSVersion := 0 // TODO: Detect actual macOS version in future enhancement
-
-	platformTags := getPlatformTags(goos, goarch, macOSVersion)
+	platformTags := getPlatformTags(goos, goarch, bottletag.HostMacOSVersion())
 	if len(platformTags) > 0 && info.RootURL != "" {
 		// Find first matching platform
 		for _, tag := range platformTags {

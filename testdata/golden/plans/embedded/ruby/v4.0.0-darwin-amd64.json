@@ -1,5 +1,6 @@
 {
   "format_version": 5,
+  "storage_version": 1,
   "tool": "ruby",
   "version": "4.0.0",
   "platform": {
@@ -38,6 +39,7 @@
         {
           "action": "homebrew_relocate",
           "params": {
+            "bottle_tag": "sonoma",
             "formula": "libyaml"
           },
           "evaluable": false,

@@ -35,6 +35,9 @@
 
 set -euo pipefail
 
+# shellcheck source=lib/r2-layout.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib/r2-layout.sh"
+
 BUCKET_NAME="${R2_BUCKET_NAME:-tsuku-golden-registry}"
 JSON_OUTPUT=false
 RECIPE_FILTER=""
@@ -174,33 +177,25 @@ done
 echo "Found $TOTAL_OBJECTS objects in R2" >&2
 
 # Build a map of recipe/platform -> versions
-# Structure: versions[category/recipe/platform] = [v1, v2, v3, ...]
+# Structure: versions[recipe/platform] = [v1, v2, v3, ...]
 declare -A VERSION_MAP
 
 while IFS= read -r object_key; do
     # Skip empty lines
     [[ -z "$object_key" ]] && continue
 
-    # Parse object key: plans/{category}/{recipe}/v{version}/{platform}.json
-    # Example: plans/f/fzf/v0.60.0/linux-amd64.json
-    if [[ ! "$object_key" =~ ^plans/([^/]+)/([^/]+)/v([^/]+)/(.+)\.json$ ]]; then
+    # Parse with the shared layout (scripts/lib/r2-layout.sh). Keys outside it, such as
+    # the legacy plans/registry/ prefix, are never retention candidates.
+    r2_parse_plan_key "$object_key" || continue
+
+    # Skip embedded recipes (their goldens are versioned in the repo, not subject to R2 retention)
+    if [[ "$R2_KEY_CATEGORY" == "embedded" ]]; then
         continue
     fi
 
-    category="${BASH_REMATCH[1]}"
-    recipe="${BASH_REMATCH[2]}"
-    version="${BASH_REMATCH[3]}"
-    platform="${BASH_REMATCH[4]}"
-
-    # Skip embedded recipes (they're in git, not subject to R2 retention)
-    if [[ "$category" == "embedded" ]]; then
-        continue
-    fi
-
-    # Skip if not a single letter category (registry recipes use a-z)
-    if [[ ! "$category" =~ ^[a-z]$ ]]; then
-        continue
-    fi
+    recipe="$R2_KEY_RECIPE"
+    version="$R2_KEY_VERSION"
+    platform="$R2_KEY_PLATFORM"
 
     # Apply recipe filter if specified
     if [[ -n "$RECIPE_FILTER" && "$recipe" != "$RECIPE_FILTER" ]]; then
@@ -208,7 +203,7 @@ while IFS= read -r object_key; do
     fi
 
     # Build key for version map
-    map_key="${category}/${recipe}/${platform}"
+    map_key="${recipe}/${platform}"
 
     # Append version to the map (comma-separated, we'll split later)
     if [[ -n "${VERSION_MAP[$map_key]:-}" ]]; then
@@ -247,13 +242,13 @@ for map_key in "${!VERSION_MAP[@]}"; do
     # Sort versions descending (newest first)
     IFS=$'\n' sorted_versions=($(printf '%s\n' "${versions[@]}" | sort -V -r))
 
-    # Extract category, recipe, platform from key
-    IFS='/' read -r category recipe platform <<< "$map_key"
+    # Extract recipe and platform from key
+    IFS='/' read -r recipe platform <<< "$map_key"
 
     # Keep first RETENTION_COUNT versions, mark rest as excess
     for ((i = RETENTION_COUNT; i < ${#sorted_versions[@]}; i++)); do
         excess_version="${sorted_versions[$i]}"
-        object_key="plans/${category}/${recipe}/v${excess_version}/${platform}.json"
+        object_key=$(r2_plan_key "$recipe" registry "$excess_version" "$platform")
         echo "$object_key" >> "$EXCESS_FILE"
         EXCESS_COUNT=$((EXCESS_COUNT + 1))
     done

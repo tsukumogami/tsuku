@@ -76,44 +76,6 @@ func TestHomebrewAction_ValidateFormulaName(t *testing.T) {
 	}
 }
 
-func TestHomebrewAction_GetPlatformTag(t *testing.T) {
-	t.Parallel()
-	action := &HomebrewAction{}
-
-	tests := []struct {
-		name        string
-		os          string
-		arch        string
-		expected    string
-		shouldError bool
-	}{
-		{"darwin arm64", "darwin", "arm64", "arm64_sonoma", false},
-		{"darwin amd64", "darwin", "amd64", "sonoma", false},
-		{"linux arm64", "linux", "arm64", "arm64_linux", false},
-		{"linux amd64", "linux", "amd64", "x86_64_linux", false},
-		{"unsupported windows", "windows", "amd64", "", true},
-		{"unsupported freebsd", "freebsd", "amd64", "", true},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			result, err := action.getPlatformTag(tc.os, tc.arch)
-			if tc.shouldError {
-				if err == nil {
-					t.Errorf("expected error for %s/%s", tc.os, tc.arch)
-				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error for %s/%s: %v", tc.os, tc.arch, err)
-				}
-				if result != tc.expected {
-					t.Errorf("got %q, want %q", result, tc.expected)
-				}
-			}
-		})
-	}
-}
-
 func TestHomebrewRelocateAction_IsBinaryFile(t *testing.T) {
 	t.Parallel()
 	action := &HomebrewRelocateAction{}
@@ -333,35 +295,6 @@ func TestHomebrewAction_PathLengthValidation(t *testing.T) {
 		if len(path) <= 19 {
 			t.Errorf("path %q should be > 19 chars, got %d", path, len(path))
 		}
-	}
-}
-
-func TestGetCurrentPlatformTag(t *testing.T) {
-	t.Parallel()
-	tag, err := GetCurrentPlatformTag()
-
-	// On supported platforms, this should succeed
-	if err != nil {
-		// Only fail if we're on a supported platform
-		t.Logf("GetCurrentPlatformTag() returned error: %v (may be expected on this platform)", err)
-		return
-	}
-
-	// Verify tag is non-empty
-	if tag == "" {
-		t.Error("GetCurrentPlatformTag() returned empty string")
-	}
-
-	// Verify tag format
-	validTags := map[string]bool{
-		"arm64_sonoma": true,
-		"sonoma":       true,
-		"arm64_linux":  true,
-		"x86_64_linux": true,
-	}
-
-	if !validTags[tag] {
-		t.Errorf("GetCurrentPlatformTag() = %q, want one of %v", tag, validTags)
 	}
 }
 
