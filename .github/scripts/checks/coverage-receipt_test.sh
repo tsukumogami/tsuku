@@ -289,6 +289,41 @@ run_assert "execute-sample=$E/declared:$E/coverage/receipt-execute-sample.ndjson
 expect "and the assertion fails the letters that had nothing to run" 1 "$RC" "$OUT" \
   "execute-sample: declared 26, attempted 26" "24 item(s) failed"
 
+# --- states the first scheduled run met (run 36304210984, 2026-09-27) ----------------------
+#
+# The download job died before it uploaded anything, so Assert Coverage started in a
+# workspace with no coverage/ directory at all. Its first write failed ("No such file or
+# directory") and the run ended red without ever naming a leg or a count. These rows run
+# the assert step as written in that state, and check the upload that would have given it
+# a declared set to report against.
+
+A="$T/assert-empty"
+mkdir -p "$A"
+cp -r "$REPO_ROOT/.github" "$A/.github"
+step_run assert-coverage "Assert every leg covered its declared set" > "$A/assert.sh" ||
+  report FAIL "extract the Assert Coverage step"
+OUT=$(cd "$A" && R2_AVAILABLE=true HEALTH_STATUS=healthy GITHUB_STEP_SUMMARY="$A/summary" bash -e assert.sh 2>&1); RC=$?
+if [ "$RC" != 0 ] && ! grep -qF 'No such file or directory' <<< "$OUT" \
+   && grep -qF 'validate-linux: no declared set' <<< "$OUT" \
+   && grep -qF 'validate-darwin: no declared set' <<< "$OUT" \
+   && grep -qF 'execute-sample: declared 26, attempted 0 -- no receipt' <<< "$OUT" \
+   && grep -qF 'NOT all covered' <<< "$OUT"; then
+  report PASS "with nothing downloaded, Assert Coverage still names every leg and fails on the counts"
+else
+  report FAIL "with nothing downloaded, Assert Coverage still names every leg and fails on the counts" "exit $RC: $(tail -5 <<< "$OUT")"
+fi
+
+OUT=$(python3 - "$NRV" <<'PY' 2>&1
+import sys, yaml
+wf = yaml.safe_load(open(sys.argv[1]))
+step = next(s for s in wf["jobs"]["download-golden-files"]["steps"] if s.get("name") == "Upload declared set")
+ok = step.get("if") == "always()" and (step.get("with") or {}).get("if-no-files-found") == "error"
+print("ok" if ok else f"if={step.get('if')!r} if-no-files-found={(step.get('with') or {}).get('if-no-files-found')!r}")
+sys.exit(0 if ok else 1)
+PY
+); RC=$?
+expect "the declared set is uploaded with always(), so a later failure in its job doesn't take it down too" 0 "$RC" "$OUT" "ok"
+
 # The assertion's legs have to be the receipts the workflow uploads. A leg renamed on one
 # side only would be reported missing every night, or never checked at all.
 OUT=$(python3 - "$NRV" <<'PY' 2>&1
