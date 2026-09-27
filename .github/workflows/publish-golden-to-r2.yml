@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
     inputs:
       recipes:
-        description: 'Comma-separated list of recipe names (e.g., fzf,ripgrep,bat)'
+        description: 'Comma-separated recipes, each optionally pinned to a version (e.g., fzf,ripgrep@14.1.1,bat). A bare name regenerates the latest version.'
         required: true
         type: string
 
@@ -54,9 +54,18 @@ jobs:
             JSON="["
             FIRST=true
             IFS=',' read -ra RECIPES <<< "$INPUT"
-            for recipe in "${RECIPES[@]}"; do
-              recipe=$(echo "$recipe" | xargs)  # Trim whitespace
-              [ -z "$recipe" ] && continue
+            for entry in "${RECIPES[@]}"; do
+              entry=$(echo "$entry" | xargs)  # Trim whitespace
+              [ -z "$entry" ] && continue
+              # recipe@version pins the version to regenerate; the same recipe may appear
+              # more than once to regenerate several versions (e.g. the two retention keeps).
+              recipe="${entry%%@*}"
+              version=""
+              [ "$entry" != "$recipe" ] && version="${entry#*@}"
+              if [[ ! "$recipe" =~ ^[a-z0-9][a-z0-9@._+-]*$ ]] || [[ -n "$version" && ! "$version" =~ ^[A-Za-z0-9._+-]+$ ]]; then
+                echo "::error::Invalid recipe entry: $entry"
+                exit 1
+              fi
 
               # Detect category from file existence
               first_letter="${recipe:0:1}"
@@ -70,7 +79,7 @@ jobs:
               fi
 
               [ "$FIRST" = true ] && FIRST=false || JSON="$JSON,"
-              JSON="$JSON{\"recipe\":\"$recipe\",\"category\":\"$category\"}"
+              JSON="$JSON{\"recipe\":\"$recipe\",\"category\":\"$category\",\"version\":\"$version\"}"
             done
             JSON="$JSON]"
           else
@@ -152,21 +161,39 @@ jobs:
           RECIPES='${{ needs.detect-recipes.outputs.recipes }}'
           echo "Processing recipes: $RECIPES"
 
-          # Process each recipe
-          echo "$RECIPES" | jq -c '.[]' | while read -r item; do
+          # Process each recipe. Every entry is attempted; any that fails to generate is
+          # named at the end and fails this job, so a batch can't publish fewer recipes
+          # than it was given and still read as done. The loop reads from process
+          # substitution so the failure list survives it.
+          FAILED_ENTRIES=()
+          GENERATED=0
+          NOT_APPLICABLE=0
+          while read -r item; do
             recipe=$(echo "$item" | jq -r '.recipe')
             category=$(echo "$item" | jq -r '.category')
+            version=$(echo "$item" | jq -r '.version // ""')
+            version_args=()
+            [ -n "$version" ] && version_args=(--version "$version")
 
-            echo "Generating golden files for $recipe ($category) on ${{ matrix.platform.os }}-${{ matrix.platform.arch }}..."
+            echo "Generating golden files for $recipe${version:+@$version} ($category) on ${{ matrix.platform.os }}-${{ matrix.platform.arch }}..."
 
-            # Generate golden files for this platform
+            # Generate golden files for this platform. Exit 2 means the recipe supports no
+            # platform this job builds (a linux-only recipe on a macOS runner): not a failure.
+            rc=0
             ./scripts/regenerate-golden.sh "$recipe" \
               --os "${{ matrix.platform.os }}" \
               --arch "${{ matrix.platform.arch }}" \
-              --category "$category" || {
-                echo "::warning::Failed to generate golden files for $recipe"
-                continue
-              }
+              --category "$category" "${version_args[@]}" || rc=$?
+            if [ "$rc" -eq 2 ]; then
+              echo "::notice::$recipe has no ${{ matrix.platform.os }}-${{ matrix.platform.arch }} platform; nothing to generate"
+              NOT_APPLICABLE=$((NOT_APPLICABLE + 1))
+              continue
+            elif [ "$rc" -ne 0 ]; then
+              echo "::error::Failed to generate golden files for $recipe${version:+@$version} (exit $rc)"
+              FAILED_ENTRIES+=("$recipe${version:+@$version}")
+              continue
+            fi
+            GENERATED=$((GENERATED + 1))
 
             # Determine golden directory based on category
             if [ "$category" = "embedded" ]; then
@@ -191,11 +218,20 @@ jobs:
                 echo "  Copied: $file"
               done
             fi
-          done
+          done < <(echo "$RECIPES" | jq -c '.[]')
+
+          echo "Generated $GENERATED entries, ${#FAILED_ENTRIES[@]} failed, $NOT_APPLICABLE not applicable on ${{ matrix.platform.os }}-${{ matrix.platform.arch }}" | tee -a "$GITHUB_STEP_SUMMARY"
+          if [ ${#FAILED_ENTRIES[@]} -gt 0 ]; then
+            echo "::error::${#FAILED_ENTRIES[@]} entries failed to generate on ${{ matrix.platform.os }}-${{ matrix.platform.arch }}: ${FAILED_ENTRIES[*]}"
+            exit 1
+          fi
 
           echo "Generation complete for ${{ matrix.platform.os }}-${{ matrix.platform.arch }}"
 
       - name: Upload artifacts
+        # Uploads whatever did generate, even when an entry failed and the step above
+        # exited 1, so one bad recipe doesn't discard the rest of the batch.
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: golden-${{ matrix.platform.os }}-${{ matrix.platform.arch }}
@@ -206,7 +242,9 @@ jobs:
   upload-to-r2:
     name: Upload to R2
     needs: [detect-recipes, generate]
-    if: needs.detect-recipes.outputs.has_recipes == 'true'
+    # always(): publish what generated even when a platform job failed on some entry. That
+    # job's failure still marks the run red, naming the entries that didn't generate.
+    if: always() && needs.detect-recipes.outputs.has_recipes == 'true'
     runs-on: ubuntu-latest
     environment: registry-write
     steps:
