@@ -1,13 +1,12 @@
 {
   "format_version": 5,
+  "storage_version": 1,
   "tool": "ninja",
   "version": "1.13.2",
   "platform": {
     "os": "darwin",
     "arch": "arm64"
   },
-  "generated_at": "2026-05-07T22:56:02.47101Z",
-  "recipe_source": "internal/recipe/recipes/ninja.toml",
   "deterministic": false,
   "dependencies": [
     {
@@ -86,6 +85,7 @@
         {
           "action": "homebrew_relocate",
           "params": {
+            "bottle_tag": "arm64_sonoma",
             "formula": "make"
           },
           "evaluable": false,
@@ -137,6 +137,7 @@
         {
           "action": "homebrew_relocate",
           "params": {
+            "bottle_tag": "arm64_sonoma",
             "formula": "pkgconf"
           },
           "evaluable": false,
@@ -273,5 +274,8 @@
   ],
   "verify": {
     "command": "ninja --version"
-  }
+  },
+  "binaries": [
+    "bin/ninja"
+  ]
 }

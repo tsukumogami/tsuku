@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/actions"
+	"github.com/tsukumogami/tsuku/internal/bottletag"
 )
 
 // PlanFormatVersion is the current version of the installation plan format.
@@ -470,10 +471,59 @@ func ValidatePlan(plan *InstallationPlan) error {
 		errors = append(errors, depErrors...)
 	}
 
+	// Refuse Homebrew bottles built for a newer macOS than this host
+	if plan.Platform.OS == "darwin" {
+		if host := hostMacOSVersion(); host > 0 {
+			errors = append(errors, bottleFloorErrors(plan.Steps, "", host)...)
+			for i := range plan.Dependencies {
+				errors = append(errors, dependencyBottleFloorErrors(&plan.Dependencies[i], plan.Tool, host)...)
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return &PlanValidationError{Errors: errors}
 	}
 	return nil
+}
+
+// hostMacOSVersion returns this machine's macOS major version, or 0 when
+// it isn't macOS. A variable so tests can stand in for a Mac.
+var hostMacOSVersion = bottletag.HostMacOSVersion
+
+// bottleFloorErrors reports each homebrew_relocate step whose recorded
+// bottle_tag names a macOS newer than host. Steps without a bottle_tag
+// come from plans written before the tag was recorded and aren't checked.
+func bottleFloorErrors(steps []ResolvedStep, prefix string, host int) []ValidationError {
+	var errors []ValidationError
+	for i, step := range steps {
+		if step.Action != "homebrew_relocate" {
+			continue
+		}
+		tag, _ := step.Params["bottle_tag"].(string)
+		if tag == "" {
+			continue
+		}
+		if err := bottletag.CheckForHost(tag, host); err != nil {
+			errors = append(errors, ValidationError{
+				Step:    i,
+				Action:  step.Action,
+				Message: prefix + err.Error(),
+			})
+		}
+	}
+	return errors
+}
+
+// dependencyBottleFloorErrors applies bottleFloorErrors to a dependency
+// plan and its own dependencies.
+func dependencyBottleFloorErrors(dep *DependencyPlan, parentTool string, host int) []ValidationError {
+	prefix := fmt.Sprintf("dependency %s (of %s): ", dep.Tool, parentTool)
+	errors := bottleFloorErrors(dep.Steps, prefix, host)
+	for i := range dep.Dependencies {
+		errors = append(errors, dependencyBottleFloorErrors(&dep.Dependencies[i], dep.Tool, host)...)
+	}
+	return errors
 }
 
 // validateDependencyPlan validates a nested dependency plan recursively.

@@ -1,5 +1,6 @@
 {
   "format_version": 5,
+  "storage_version": 1,
   "tool": "openssl",
   "version": "3.6.1",
   "platform": {
@@ -34,6 +35,7 @@
     {
       "action": "homebrew_relocate",
       "params": {
+        "bottle_tag": "sonoma",
         "formula": "openssl@3"
       },
       "evaluable": false,

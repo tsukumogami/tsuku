@@ -19,6 +19,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/tsukumogami/tsuku/internal/bottletag"
 	"github.com/tsukumogami/tsuku/internal/llm"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/sandbox"
@@ -1249,36 +1250,64 @@ func (b *HomebrewBuilder) executeToolCall(ctx context.Context, genCtx *homebrewG
 	}
 }
 
-// isValidPlatformTag validates Homebrew platform tags.
+// isValidPlatformTag validates Homebrew platform tags: the two Linux tags
+// and any macOS release tag tsuku knows.
 func isValidPlatformTag(tag string) bool {
-	validTags := map[string]bool{
-		"arm64_sonoma": true,
-		"sonoma":       true,
-		"arm64_linux":  true,
-		"x86_64_linux": true,
-		// Also support older macOS versions
-		"arm64_ventura":  true,
-		"ventura":        true,
-		"arm64_monterey": true,
-		"monterey":       true,
+	if tag == "arm64_linux" || tag == "x86_64_linux" {
+		return true
 	}
-	return validTags[tag]
+	_, _, ok := bottletag.MacOSVersion(tag)
+	return ok
+}
+
+// anyMacOSVersion is a macOS ceiling above every known release. The
+// builder only inspects a bottle's contents, which don't depend on the
+// macOS release it was built for, so any release's bottle will do.
+const anyMacOSVersion = 1 << 20
+
+// macOSPlatformTag returns the tag the builder names a macOS platform by:
+// the first tag bottle selection tries for that architecture.
+func macOSPlatformTag(arch string) string {
+	candidates, _ := bottletag.Candidates("darwin", arch, 0)
+	return candidates[0]
+}
+
+// bottleTagCandidates expands a requested platform tag into the tags to
+// try, in order. A Linux tag is tried alone; a macOS tag is tried first,
+// followed by every other known macOS tag for the same architecture, so a
+// formula that no longer ships the requested release's bottle can still
+// be inspected.
+func bottleTagCandidates(platformTag string) []string {
+	_, arch, ok := bottletag.MacOSVersion(platformTag)
+	if !ok {
+		return []string{platformTag}
+	}
+	all, _ := bottletag.Candidates("darwin", arch, anyMacOSVersion)
+	candidates := []string{platformTag}
+	for _, tag := range all {
+		if tag != platformTag {
+			candidates = append(candidates, tag)
+		}
+	}
+	return candidates
 }
 
 // targetPlatforms lists all platforms tsuku supports for Homebrew bottles.
+// A macOS platform is named by its preferred tag; a bottle for any macOS
+// release on that architecture makes it available.
 var targetPlatforms = []string{
-	"arm64_sonoma", // macOS ARM64
-	"sonoma",       // macOS x86_64
-	"x86_64_linux", // Linux x86_64
-	"arm64_linux",  // Linux ARM64
+	macOSPlatformTag("arm64"), // macOS ARM64
+	macOSPlatformTag("amd64"), // macOS x86_64
+	"x86_64_linux",            // Linux x86_64
+	"arm64_linux",             // Linux ARM64
 }
 
 // platformDisplayNames provides human-readable names for platform tags.
 var platformDisplayNames = map[string]string{
-	"arm64_sonoma": "macOS ARM64",
-	"sonoma":       "macOS x86_64",
-	"x86_64_linux": "Linux x86_64",
-	"arm64_linux":  "Linux ARM64",
+	macOSPlatformTag("arm64"): "macOS ARM64",
+	macOSPlatformTag("amd64"): "macOS x86_64",
+	"x86_64_linux":            "Linux x86_64",
+	"arm64_linux":             "Linux ARM64",
 }
 
 // BottleAvailability tracks which platforms have bottles available.
@@ -1316,9 +1345,10 @@ func (b *HomebrewBuilder) checkBottleAvailability(ctx context.Context, formula, 
 	for _, entry := range manifest.Manifests {
 		if refName, ok := entry.Annotations["org.opencontainers.image.ref.name"]; ok {
 			for _, platform := range targetPlatforms {
-				if strings.HasSuffix(refName, "."+platform) {
-					availableTags[platform] = true
-					break
+				for _, tag := range bottleTagCandidates(platform) {
+					if strings.HasSuffix(refName, "."+tag) {
+						availableTags[platform] = true
+					}
 				}
 			}
 		}
@@ -1549,8 +1579,16 @@ func (b *HomebrewBuilder) listBottleBinaries(ctx context.Context, formula, versi
 // Accepts both unrevised (<version>.<platform>) and revision-suffixed
 // (<version>_<N>.<platform>) ref-name forms. When multiple revisions
 // match, the highest is preferred. See selectBuilderBottleEntry.
+//
+// A macOS platform tag falls back to the formula's other macOS bottles
+// for the same architecture (see bottleTagCandidates).
 func (b *HomebrewBuilder) getBlobSHAFromManifest(manifest *ghcrManifest, version, platformTag string) (string, error) {
-	matched := selectBuilderBottleEntry(manifest.Manifests, version, platformTag)
+	var matched *ghcrManifestEntry
+	for _, tag := range bottleTagCandidates(platformTag) {
+		if matched = selectBuilderBottleEntry(manifest.Manifests, version, tag); matched != nil {
+			break
+		}
+	}
 	if matched != nil {
 		if digest, ok := matched.Annotations["sh.brew.bottle.digest"]; ok {
 			if strings.HasPrefix(digest, "sha256:") {
@@ -1815,22 +1853,14 @@ func (b *HomebrewBuilder) inspectBottleContents(ctx context.Context, formula, ve
 	return b.extractBottleContents(tempPath)
 }
 
-// getCurrentPlatformTag returns the platform tag for the current runtime.
+// getCurrentPlatformTag returns the platform tag for the current runtime:
+// the first tag bottle selection tries on this machine.
 func getCurrentPlatformTag() (string, error) {
-	os := runtime.GOOS
-	arch := runtime.GOARCH
-	switch {
-	case os == "darwin" && arch == "arm64":
-		return "arm64_sonoma", nil
-	case os == "darwin" && arch == "amd64":
-		return "sonoma", nil
-	case os == "linux" && arch == "arm64":
-		return "arm64_linux", nil
-	case os == "linux" && arch == "amd64":
-		return "x86_64_linux", nil
-	default:
-		return "", fmt.Errorf("unsupported platform: %s/%s", os, arch)
+	candidates, err := bottletag.Candidates(runtime.GOOS, runtime.GOARCH, bottletag.HostMacOSVersion())
+	if err != nil {
+		return "", err
 	}
+	return candidates[0], nil
 }
 
 // platformTagToOSLibc maps a Homebrew platform tag to OS and libc values for
@@ -1969,7 +1999,7 @@ func (b *HomebrewBuilder) buildBottleToolDefs() []llm.ToolDef {
 					},
 					"platform": map[string]any{
 						"type":        "string",
-						"description": "Platform tag (arm64_sonoma, sonoma, x86_64_linux, arm64_linux). Defaults to x86_64_linux.",
+						"description": "Platform tag (x86_64_linux, arm64_linux, or a macOS tag such as arm64_sonoma or arm64_sequoia; other macOS releases are tried when that one has no bottle). Defaults to x86_64_linux.",
 					},
 				},
 				"required": []string{},
@@ -2072,7 +2102,7 @@ func (b *HomebrewBuilder) scanMultiplePlatforms(
 	}
 	targets := []targetPlatform{
 		{"x86_64_linux", "linux", "glibc"},
-		{"arm64_sonoma", "darwin", ""},
+		{macOSPlatformTag("arm64"), "darwin", ""},
 	}
 
 	var result []platformContents
