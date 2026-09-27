@@ -495,12 +495,12 @@ func (e *Executor) resolveStep(
 						// Walk any recorded fallback sources the same way
 						// Decompose does, so a step that reaches here is not
 						// single-sourced when its recipe was not.
-						result, servingURL, err := actions.DownloadFirstAvailable(ctx, downloader, actions.DownloadSources(pstep.Params))
+						result, servingURL, fromCache, err := actions.ResolveFirstAvailable(ctx, downloader, evalCtx.DownloadCache, actions.DownloadSources(pstep.Params))
 						if err != nil {
 							return nil, fmt.Errorf("failed to download for caching: %w", err)
 						}
 						// Save to cache if configured
-						if evalCtx.DownloadCache != nil {
+						if evalCtx.DownloadCache != nil && !fromCache {
 							_ = evalCtx.DownloadCache.Save(servingURL, result.AssetPath, result.Checksum)
 						}
 						rs.Checksum = result.Checksum
@@ -571,13 +571,17 @@ func (e *Executor) resolveStep(
 				// per-action shape, so it is the primary rather than
 				// expandedParams["url"]. The alternates come from params.
 				fallbacks, _ := actions.GetStringSlice(expandedParams, actions.FallbackURLsParam)
-				result, servingURL, err := actions.DownloadFirstAvailable(ctx, downloader, append([]string{url}, fallbacks...))
+				var cache *actions.DownloadCache
+				if evalCtx != nil {
+					cache = evalCtx.DownloadCache
+				}
+				result, servingURL, fromCache, err := actions.ResolveFirstAvailable(ctx, downloader, cache, append([]string{url}, fallbacks...))
 				if err != nil {
 					return nil, fmt.Errorf("failed to download for caching: %w", err)
 				}
 
 				// Save to cache if configured
-				if evalCtx != nil && evalCtx.DownloadCache != nil {
+				if cache != nil && !fromCache {
 					checksum := resolved.Checksum
 					if checksum == "" {
 						checksum = result.Checksum

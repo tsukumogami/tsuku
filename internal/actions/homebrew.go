@@ -523,10 +523,21 @@ func (a *HomebrewAction) Decompose(ctx *EvalContext, params map[string]interface
 		apiCtx, cancel := context.WithTimeout(ctx.Context, 60*time.Second)
 		defer cancel()
 
-		// Download with authorization header (GHCR requires auth even for public images)
-		result, err := a.downloadWithAuth(apiCtx, url, token)
-		if err != nil {
-			return nil, fmt.Errorf("failed to download bottle for checksum verification: %w", err)
+		// The blob URL names its own SHA-256, so a cached copy that hashes to it is exactly
+		// the bottle; only a miss downloads (with authorization, which GHCR requires even
+		// for public images).
+		var result *DownloadResult
+		fromCache := false
+		if ctx.DownloadCache != nil {
+			if r, hit, lookupErr := ctx.DownloadCache.Lookup(url); lookupErr == nil && hit && r.Checksum == blobSHA {
+				result, fromCache = r, true
+			}
+		}
+		if result == nil {
+			result, err = a.downloadWithAuth(apiCtx, url, token)
+			if err != nil {
+				return nil, fmt.Errorf("failed to download bottle for checksum verification: %w", err)
+			}
 		}
 
 		// Verify the checksum matches what GHCR reported
@@ -538,7 +549,7 @@ func (a *HomebrewAction) Decompose(ctx *EvalContext, params map[string]interface
 		size = result.Size
 
 		// Save to cache if configured
-		if ctx.DownloadCache != nil {
+		if ctx.DownloadCache != nil && !fromCache {
 			_ = ctx.DownloadCache.Save(url, result.AssetPath, result.Checksum)
 		}
 		_ = result.Cleanup()
