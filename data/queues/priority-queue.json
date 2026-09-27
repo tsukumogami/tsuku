@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-09-27T15:20:54Z",
+  "updated_at": "2026-09-27T17:38:49Z",
   "entries": [
     {
       "name": "node",
@@ -126,11 +126,11 @@
       "name": "sk",
       "source": "github:lotabout/skim",
       "priority": 1,
-      "status": "pending",
+      "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 4,
-      "next_retry_at": "2026-09-27T14:15:23.617798958Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-09-28T09:38:49.154562444Z"
     },
     {
       "name": "step",
@@ -336,7 +336,7 @@
       "name": "jless",
       "source": "homebrew:jless",
       "priority": 2,
-      "status": "failed",
+      "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 5,
@@ -476,11 +476,11 @@
       "name": "openjph",
       "source": "homebrew:openjph",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-09-27T14:15:23.617798958Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-09-28T09:38:49.154562444Z"
     },
     {
       "name": "gmp",
@@ -506,11 +506,11 @@
       "name": "pmix",
       "source": "homebrew:pmix",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-09-27T14:15:23.617798958Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-09-28T09:38:49.154562444Z"
     },
     {
       "name": "jpeg-xl",
@@ -566,11 +566,11 @@
       "name": "ada-url",
       "source": "homebrew:ada-url",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-09-27T14:15:23.617798958Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-09-28T09:38:49.154562444Z"
     },
     {
       "name": "aom",
@@ -646,11 +646,11 @@
       "name": "p11-kit",
       "source": "homebrew:p11-kit",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-09-27T14:15:23.617798958Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-09-28T09:38:49.154562444Z"
     },
     {
       "name": "simdjson",
@@ -2866,11 +2866,11 @@
       "name": "arturo",
       "source": "rubygems:arturo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 23,
-      "next_retry_at": "1734-06-17T22:06:43.004045719Z"
+      "failure_count": 24,
+      "next_retry_at": "2026-10-04T17:38:49.154562444Z"
     },
     {
       "name": "arxiv_latex_cleaner",
@@ -4446,11 +4446,11 @@
       "name": "basis_universal",
       "source": "crates.io:basis_universal",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 21,
-      "next_retry_at": "2026-06-28T04:00:11.644635974Z"
+      "failure_count": 22,
+      "next_retry_at": "2026-10-04T17:38:49.154562444Z"
     },
     {
       "name": "bastet",
@@ -9116,11 +9116,11 @@
       "name": "countdown",
       "source": "npm:countdown",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 21,
-      "next_retry_at": "2026-06-28T18:28:12.440654169Z"
+      "failure_count": 22,
+      "next_retry_at": "2026-10-04T17:38:49.154562444Z"
     },
     {
       "name": "coursier",
@@ -50306,11 +50306,11 @@
       "name": "vllm",
       "source": "pypi:vllm",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 21,
-      "next_retry_at": "2026-06-28T18:28:12.440654169Z"
+      "failure_count": 22,
+      "next_retry_at": "2026-10-04T17:38:49.154562444Z"
     },
     {
       "name": "vmware-tanzu/carvel/vendir",
