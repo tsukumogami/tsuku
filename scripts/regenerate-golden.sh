@@ -14,8 +14,8 @@
 #   ./scripts/regenerate-golden.sh build-tools-system --recipe testdata/recipes/build-tools-system.toml
 #
 # Exit codes:
-#   0: Success
-#   1: Invalid arguments or recipe not found
+#   0: Success: every requested file was generated
+#   1: Invalid arguments, recipe not found, or at least one file failed to generate
 #   2: No platforms match filters
 
 set -euo pipefail
@@ -255,7 +255,13 @@ else
     VERSIONS="$LATEST"
 fi
 
-# Regenerate for each version/platform combination
+# Regenerate for each version/platform combination. A file that fails to generate is
+# counted and fails the script at the end, after the rest have been attempted; it used to
+# print "Failed" and exit 0, so callers published less than they asked for without knowing.
+GENERATED=0
+FAILED=()
+EVAL_ERR=$(mktemp)
+trap 'rm -f "$EVAL_ERR"' EXIT
 for VERSION in $VERSIONS; do
     # Remove v prefix for tsuku eval (it expects version without v)
     VERSION_NO_V="${VERSION#v}"
@@ -287,13 +293,17 @@ for VERSION in $VERSIONS; do
             eval_args+=(--linux-family "$family")
         fi
 
-        if "$TSUKU" eval "${eval_args[@]}" 2>/dev/null | \
+        if "$TSUKU" eval "${eval_args[@]}" 2>"$EVAL_ERR" | \
             jq 'del(.generated_at, .recipe_source)' > "$OUTPUT.tmp"; then
             mv "$OUTPUT.tmp" "$OUTPUT"
             echo "  Generated: $OUTPUT"
+            GENERATED=$((GENERATED + 1))
         else
             rm -f "$OUTPUT.tmp"
             echo "  Failed: $OUTPUT" >&2
+            # The reason, which used to be discarded with eval's stderr.
+            grep -v '^[[:space:]]*$' "$EVAL_ERR" | tail -3 | sed 's/^/    /' >&2
+            FAILED+=("$(basename "$OUTPUT")")
         fi
     done
 done
@@ -332,4 +342,8 @@ if [[ -z "$FILTER_OS" && -z "$FILTER_ARCH" && -z "$FILTER_VERSION" ]]; then
     fi
 fi
 
-echo "Done."
+if [[ ${#FAILED[@]} -gt 0 ]]; then
+    echo "Generated $GENERATED file(s); ${#FAILED[@]} failed: ${FAILED[*]}" >&2
+    exit 1
+fi
+echo "Done: generated $GENERATED file(s)."
