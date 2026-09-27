@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-08-13T20:39:55Z",
+  "updated_at": "2026-09-27T01:24:33Z",
   "entries": [
     {
       "name": "node",
@@ -66,11 +66,11 @@
       "name": "hub",
       "source": "github:github/hub",
       "priority": 1,
-      "status": "pending",
+      "status": "failed",
       "confidence": "curated",
       "disambiguated_at": null,
-      "failure_count": 3,
-      "next_retry_at": "2026-02-24T06:13:36.90236253Z"
+      "failure_count": 531,
+      "next_retry_at": "2026-10-04T01:24:32.993947254Z"
     },
     {
       "name": "jq",
@@ -106,7 +106,7 @@
       "name": "rg",
       "source": "github:BurntSushi/ripgrep",
       "priority": 1,
-      "status": "pending",
+      "status": "success",
       "confidence": "curated",
       "disambiguated_at": null,
       "failure_count": 3,
@@ -186,17 +186,17 @@
       "name": "python@3.14",
       "source": "homebrew:python@3.14",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-03T20:08:12.881937985Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-09-28T02:22:27.17794257Z"
     },
     {
       "name": "openssl@3",
       "source": "homebrew:openssl@3",
       "priority": 2,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 6,
@@ -206,31 +206,31 @@
       "name": "ffmpeg",
       "source": "homebrew:ffmpeg",
       "priority": 2,
-      "status": "pending",
+      "status": "blocked",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 14,
+      "failure_count": 15,
       "next_retry_at": null
     },
     {
       "name": "python@3.13",
       "source": "homebrew:python@3.13",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 6,
-      "next_retry_at": "2026-03-04T22:05:38.606601787Z"
+      "failure_count": 7,
+      "next_retry_at": "2026-09-29T16:17:03.028704999Z"
     },
     {
       "name": "anomalyco/tap/opencode",
       "source": "homebrew:anomalyco/tap/opencode",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-03T20:08:12.881937985Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-09-28T08:17:03.028704999Z"
     },
     {
       "name": "awscli",
@@ -266,17 +266,17 @@
       "name": "exa",
       "source": "homebrew:exa",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-04T04:57:16.379294181Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-09-28T08:17:03.028704999Z"
     },
     {
       "name": "gcc",
       "source": "homebrew:gcc",
       "priority": 2,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 4,
@@ -336,21 +336,21 @@
       "name": "jless",
       "source": "homebrew:jless",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-03T17:44:08.405748823Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-09-27T16:17:03.028704999Z"
     },
     {
       "name": "node@22",
       "source": "homebrew:node@22",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-04T06:05:38.606601787Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-09-28T08:17:03.028704999Z"
     },
     {
       "name": "nvm",
@@ -406,21 +406,21 @@
       "name": "python@3.11",
       "source": "homebrew:python@3.11",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-04T06:05:38.606601787Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-09-28T08:17:03.028704999Z"
     },
     {
       "name": "python@3.12",
       "source": "homebrew:python@3.12",
       "priority": 2,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-04T06:05:38.606601787Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-09-28T08:17:03.028704999Z"
     },
     {
       "name": "ripgrep",
@@ -456,21 +456,21 @@
       "name": "little-cms2",
       "source": "homebrew:little-cms2",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 5,
-      "next_retry_at": "2026-03-04T03:36:10.31750384Z"
+      "failure_count": 6,
+      "next_retry_at": "2026-09-28T08:17:03.028704999Z"
     },
     {
       "name": "icu4c@78",
       "source": "homebrew:icu4c@78",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 3,
-      "next_retry_at": "2026-03-03T11:49:01.547147527Z"
+      "failure_count": 4,
+      "next_retry_at": "2026-09-27T08:17:03.028704999Z"
     },
     {
       "name": "openjph",
@@ -636,11 +636,11 @@
       "name": "numpy",
       "source": "crates.io:numpy",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 21,
-      "next_retry_at": "2026-06-27T19:28:13.183186577Z"
+      "failure_count": 22,
+      "next_retry_at": "2026-10-03T18:22:27.17794257Z"
     },
     {
       "name": "p11-kit",
@@ -976,7 +976,7 @@
       "name": "tree-sitter@0.25",
       "source": "homebrew:tree-sitter@0.25",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 3,
@@ -1909,8 +1909,8 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 22,
-      "next_retry_at": "2026-06-27T19:28:13.183186577Z"
+      "failure_count": 23,
+      "next_retry_at": "1734-06-17T18:35:10.323166762Z"
     },
     {
       "name": "amplify",
@@ -2869,8 +2869,8 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 22,
-      "next_retry_at": "2026-06-27T23:12:10.664154042Z"
+      "failure_count": 23,
+      "next_retry_at": "1734-06-17T22:06:43.004045719Z"
     },
     {
       "name": "arxiv_latex_cleaner",
@@ -2889,8 +2889,8 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 22,
-      "next_retry_at": "2026-06-27T23:12:10.664154042Z"
+      "failure_count": 23,
+      "next_retry_at": "1734-06-17T22:06:43.004045719Z"
     },
     {
       "name": "asciidoc",
@@ -3969,8 +3969,8 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 611,
-      "next_retry_at": "1734-03-17T21:04:51.642391339Z"
+      "failure_count": 612,
+      "next_retry_at": "1734-06-17T18:35:10.323166762Z"
     },
     {
       "name": "azqr",
@@ -4656,7 +4656,7 @@
       "name": "beads_viewer",
       "source": "homebrew:beads_viewer",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -4916,11 +4916,11 @@
       "name": "bindgen",
       "source": "crates.io:bindgen-cli",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 0,
-      "next_retry_at": null
+      "failure_count": 893,
+      "next_retry_at": "2026-10-04T01:24:32.993947254Z"
     },
     {
       "name": "binsider",
@@ -5816,7 +5816,7 @@
       "name": "bulk_extractor",
       "source": "homebrew:bulk_extractor",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -7036,11 +7036,11 @@
       "name": "chainsaw",
       "source": "npm:chainsaw",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 21,
-      "next_retry_at": "2026-06-28T14:11:17.922882325Z"
+      "failure_count": 22,
+      "next_retry_at": "2026-10-03T21:53:59.858821527Z"
     },
     {
       "name": "chamber",
@@ -8836,7 +8836,7 @@
       "name": "console_bridge",
       "source": "homebrew:console_bridge",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -11826,7 +11826,7 @@
       "name": "dovi_tool",
       "source": "homebrew:dovi_tool",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -25199,8 +25199,8 @@
       "status": "pending",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 893,
-      "next_retry_at": "1734-03-17T21:04:51.642391339Z"
+      "failure_count": 894,
+      "next_retry_at": "1734-06-17T18:35:10.323166762Z"
     },
     {
       "name": "libaacs",
@@ -26206,7 +26206,7 @@
       "name": "libpg_query",
       "source": "homebrew:libpg_query",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -26626,7 +26626,7 @@
       "name": "libspatialite",
       "source": "homebrew:libspatialite",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -32396,7 +32396,7 @@
       "name": "nghttp2",
       "source": "homebrew:nghttp2",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -36226,7 +36226,7 @@
       "name": "pg_partman",
       "source": "homebrew:pg_partman",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -42436,7 +42436,7 @@
       "name": "scw",
       "source": "homebrew:scw",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 0,
@@ -42546,7 +42546,7 @@
       "name": "sdl2_net",
       "source": "homebrew:sdl2_net",
       "priority": 3,
-      "status": "pending",
+      "status": "success",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
       "failure_count": 1,
@@ -46686,11 +46686,11 @@
       "name": "tctl",
       "source": "pypi:tctl",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 21,
-      "next_retry_at": "2026-06-28T14:11:17.922882325Z"
+      "failure_count": 22,
+      "next_retry_at": "2026-10-03T21:53:59.858821527Z"
     },
     {
       "name": "tdlib",

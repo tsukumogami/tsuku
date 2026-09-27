@@ -269,9 +269,50 @@ fi
 
 GOLDEN_DIR=$(get_golden_dir "$RECIPE" "$CATEGORY")
 
+# Coverage receipt (#2608). When COVERAGE_RECEIPT names a file, this script appends one
+# line per golden file it is responsible for -- the files for --os in the recipe's golden
+# directory -- saying what happened to that file:
+#
+#   match, mismatch, eval-failed        compared, or tried to be
+#   excluded                            skipped by rule (code-validation exclusion)
+#   missing-platforms                   not compared: the recipe lacks golden files for
+#                                       platforms it supports, which stops the run first
+#   no-recipe                           not compared: no recipe file for these golden files
+#   unsupported-platform                not compared: the recipe no longer lists the platform
+#
+# The line is written where the file is handled, never inferred from this script's exit
+# status or its log. A file this script never reached gets no line, and the assertion
+# (.github/scripts/checks/assert-coverage.py) counts that as not validated.
+if [[ -n "${COVERAGE_RECEIPT:-}" && -z "$FILTER_OS" ]]; then
+    echo "COVERAGE_RECEIPT needs --os: a receipt line is per golden file per OS" >&2
+    exit 2
+fi
+
+receipt() {  # receipt <golden filename> <outcome>
+    [[ -n "${COVERAGE_RECEIPT:-}" ]] || return 0
+    printf '{"item":"%s/%s","outcome":"%s"}\n' "$RECIPE" "${1%.json}" "$2" >> "$COVERAGE_RECEIPT"
+}
+
+os_golden_files() {  # the golden filenames for FILTER_OS in GOLDEN_DIR, one per line
+    local f
+    for f in "$GOLDEN_DIR"/*-"$FILTER_OS"-*.json; do
+        [[ -f "$f" ]] && basename "$f"
+    done
+    return 0
+}
+
+receipt_all() {  # receipt_all <outcome>: one line for every golden file for FILTER_OS
+    [[ -n "${COVERAGE_RECEIPT:-}" ]] || return 0
+    local name
+    while IFS= read -r name; do
+        [[ -n "$name" ]] && receipt "$name" "$1"
+    done <<< "$(os_golden_files)"
+}
+
 # Validate recipe exists
 if [[ ! -f "$RECIPE_PATH" ]]; then
     echo "Recipe not found: $RECIPE_PATH" >&2
+    receipt_all no-recipe
     exit 2
 fi
 
@@ -470,6 +511,7 @@ if [[ ${#MISSING_PLATFORMS[@]} -gt 0 ]]; then
     echo "" >&2
     echo "  3. Add an exclusion with a tracking issue:" >&2
     echo "     Edit testdata/golden/exclusions.json" >&2
+    receipt_all missing-platforms
     exit 1
 fi
 
@@ -480,10 +522,12 @@ if is_recipe_excluded_from_code_validation "$RECIPE"; then
     echo "SKIPPED: $RECIPE is excluded from code validation"
     echo "  Reason: $reason"
     echo "  Tracking: $issue"
+    receipt_all excluded
     exit 0
 fi
 
 MISMATCH=0
+HANDLED=""  # golden filenames given a receipt line by the loop below, newline-separated
 
 for VERSION in $VERSIONS; do
     VERSION_NO_V="${VERSION#v}"
@@ -528,6 +572,8 @@ for VERSION in $VERSIONS; do
         if ! "$TSUKU" eval "${eval_args[@]}" 2>/dev/null | \
             jq 'del(.generated_at, .recipe_source, .storage_version)' > "$ACTUAL"; then
             echo "Failed to generate plan for $RECIPE@$VERSION ($filename)" >&2
+            receipt "$filename" eval-failed
+            HANDLED="$HANDLED$filename"$'\n'
             continue
         fi
 
@@ -544,9 +590,24 @@ for VERSION in $VERSIONS; do
             echo "+++ Actual (generated)"
             diff -u "$GOLDEN_NORMALIZED" "$ACTUAL" || true
             echo ""
+            receipt "$filename" mismatch
+        else
+            receipt "$filename" match
         fi
+        HANDLED="$HANDLED$filename"$'\n'
     done
 done
+
+# Golden files for this OS that the loop never reached: their platform is not one the
+# recipe lists any more, so nothing compared them. Named here rather than left silent.
+if [[ -n "${COVERAGE_RECEIPT:-}" ]]; then
+    while IFS= read -r name; do
+        [[ -z "$name" ]] && continue
+        if ! grep -Fxq -- "$name" <<< "$HANDLED"; then
+            receipt "$name" unsupported-platform
+        fi
+    done <<< "$(os_golden_files)"
+fi
 
 if [[ $MISMATCH -eq 1 ]]; then
     echo ""

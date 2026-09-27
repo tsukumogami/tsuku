@@ -15,6 +15,8 @@ rationale: |
 
 Current
 
+The `force_override` part of this design no longer exists. The unified queue (#1704) replaced the package items this design extended: `batch.QueueEntry` has no `force_override` field, and the orchestrator doesn't pass `--force` at all. The schema now rejects the field as unknown, and `scripts/validate-queue-recipes.sh` no longer reads it. The CI check this design introduced still stands: a pending queue entry whose name matches an existing recipe fails validation.
+
 ## Context and Problem Statement
 
 The batch recipe generation pipeline processes entries from `data/priority-queue.json`, generates recipes, validates them using `tsuku install --force`, and creates PRs. The `--force` flag is hardcoded in the orchestrator (`internal/batch/orchestrator.go:232`), so any generated recipe that matches an existing one in `recipes/` will overwrite it without warning.
