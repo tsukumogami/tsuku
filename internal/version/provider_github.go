@@ -2,8 +2,11 @@ package version
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/google/go-github/v57/github"
 
 	"github.com/tsukumogami/tsuku/internal/install"
 )
@@ -64,27 +67,86 @@ func buildStableQualifierSet(qualifiers []string) map[string]bool {
 	return set
 }
 
-// ListVersions returns all available versions from GitHub releases/tags (newest first)
+// ListVersions returns the repository's installable versions, newest first.
+//
+// It lists the first page of releases rather than tags, so a tag whose
+// release is still a draft, or was published before its assets were
+// uploaded, isn't offered while installing it would 404. When the
+// repository has no releases matching the tag prefix on that page (it only
+// tags, like golang/go), it falls back to the first page of tags.
 func (p *GitHubProvider) ListVersions(ctx context.Context) ([]string, error) {
-	versions, err := p.resolver.ListGitHubVersions(ctx, p.repo)
+	releases, err := p.listReleases(ctx, 1)
 	if err != nil {
 		return nil, err
 	}
-
-	// If no tag prefix, return as-is
-	if p.tagPrefix == "" {
+	if versions := p.releasedVersions(releases); len(versions) > 0 {
 		return versions, nil
 	}
 
-	// Filter by prefix and strip it
-	var filtered []string
-	for _, v := range versions {
-		if strings.HasPrefix(v, p.tagPrefix) {
-			stripped := strings.TrimPrefix(v, p.tagPrefix)
-			filtered = append(filtered, stripped)
+	tags, err := p.resolver.ListGitHubVersions(ctx, p.repo)
+	if err != nil {
+		return nil, err
+	}
+	return p.filterPrefix(tags), nil
+}
+
+// listReleases lists up to maxPages pages of releases. A rate-limit error is
+// returned, since the tag listing would hit it too. Any other failure reads
+// as "no releases", so the caller falls back to tags, which is how versions
+// were resolved before releases were consulted.
+func (p *GitHubProvider) listReleases(ctx context.Context, maxPages int) ([]*github.RepositoryRelease, error) {
+	releases, err := p.resolver.ListGitHubReleases(ctx, p.repo, maxPages)
+	var rateLimitErr *GitHubRateLimitError
+	if errors.As(err, &rateLimitErr) {
+		return nil, err
+	}
+	if err != nil {
+		return nil, nil
+	}
+	return releases, nil
+}
+
+// releasedVersions returns the versions of releases someone can install from:
+// not drafts, and, when any of the releases carries assets, only those that
+// do. Releases never carrying assets means the recipe downloads from
+// somewhere else, and then every published release counts. The result is
+// prefix-filtered like ListVersions and sorted newest first.
+func (p *GitHubProvider) releasedVersions(releases []*github.RepositoryRelease) []string {
+	var published []*github.RepositoryRelease
+	anyAssets := false
+	for _, rel := range releases {
+		if rel.TagName == nil || rel.GetDraft() {
+			continue
+		}
+		published = append(published, rel)
+		if len(rel.Assets) > 0 {
+			anyAssets = true
 		}
 	}
-	return filtered, nil
+
+	var tags []string
+	for _, rel := range published {
+		if anyAssets && len(rel.Assets) == 0 {
+			continue
+		}
+		tags = append(tags, *rel.TagName)
+	}
+	return p.filterPrefix(SortVersionsDescending(tags))
+}
+
+// filterPrefix keeps the tags that carry the provider's tag prefix and strips
+// it. Without a prefix it returns tags unchanged.
+func (p *GitHubProvider) filterPrefix(tags []string) []string {
+	if p.tagPrefix == "" {
+		return tags
+	}
+	var filtered []string
+	for _, tag := range tags {
+		if strings.HasPrefix(tag, p.tagPrefix) {
+			filtered = append(filtered, strings.TrimPrefix(tag, p.tagPrefix))
+		}
+	}
+	return filtered
 }
 
 // nonSemverUnstableMarkers names prerelease keywords that some upstreams
@@ -227,9 +289,11 @@ func (p *GitHubProvider) lookupTag(ctx context.Context, version string) (*Versio
 }
 
 // ResolveUnlisted resolves a pin that matched nothing in ListVersions, which
-// reads only the first page of tags. An exact pin is looked up directly, in
-// one or two requests; any other pin needs a listing, so it pages through
-// the full tag list.
+// reads only the first page of releases or tags. An exact pin is looked up
+// directly, in one or two requests, so a pin to a tag without a published
+// release still resolves and then fails at download rather than being
+// reported missing. Any other pin needs a listing, so it pages through the
+// releases and then the tags.
 func (p *GitHubProvider) ResolveUnlisted(ctx context.Context, requested string) (*VersionInfo, error) {
 	if install.PinLevelFromRequested(requested) == install.PinExact {
 		info, err := p.lookupTag(ctx, requested)
@@ -242,28 +306,32 @@ func (p *GitHubProvider) ResolveUnlisted(ctx context.Context, requested string) 
 		return info, nil
 	}
 
+	// A range pin prefers installable releases, the same as ListVersions,
+	// paging past the first page this time. Only when no release falls in the
+	// range, such as an old line that was tagged but never released, does it
+	// fall back to the tags.
+	releases, err := p.listReleases(ctx, maxGitHubListPages)
+	if err != nil {
+		return nil, err
+	}
+	if v, ok := matchPin(p.releasedVersions(releases), requested); ok {
+		return p.infoForVersion(v), nil
+	}
+
 	tags, err := p.resolver.ListAllGitHubVersions(ctx, p.repo)
 	if err != nil {
 		return nil, err
 	}
-	candidates := tags
-	if p.tagPrefix != "" {
-		candidates = nil
-		for _, tag := range tags {
-			if strings.HasPrefix(tag, p.tagPrefix) {
-				candidates = append(candidates, strings.TrimPrefix(tag, p.tagPrefix))
-			}
-		}
+	if v, ok := matchPin(p.filterPrefix(tags), requested); ok {
+		return p.infoForVersion(v), nil
 	}
+	return nil, fmt.Errorf("version %s not found", requested)
+}
 
-	v, ok := matchPin(candidates, requested)
-	if !ok {
-		return nil, fmt.Errorf("version %s not found", requested)
-	}
-	if p.tagPrefix != "" {
-		return p.infoForTag(p.tagPrefix + v), nil
-	}
-	return p.infoForTag(v), nil
+// infoForVersion builds the VersionInfo for an entry of a ListVersions-style
+// list, which holds tag names with the tag prefix stripped.
+func (p *GitHubProvider) infoForVersion(v string) *VersionInfo {
+	return p.infoForTag(p.tagPrefix + v)
 }
 
 // SourceDescription returns a human-readable source description
