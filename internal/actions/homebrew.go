@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -160,51 +161,170 @@ func (a *HomebrewAction) Execute(ctx *ExecutionContext, params map[string]interf
 // manifest URL and the per-platform ref-name annotation use this
 // canonical form.
 //
-// On any formulae.brew.sh fetch failure, falls back to the unrevised
-// `version` so the existing un-revisioned path still works.
-func (a *HomebrewAction) resolveBottleVersion(ctx context.Context, formula, version string) (string, error) {
-	revision, err := a.getFormulaRevision(ctx, formula)
+// formulae.brew.sh only reports the revision of the formula's current
+// version. Appending it to an older version can name a manifest that
+// never existed (gedit 49.0 becoming 49.0_2 once the formula is at
+// 50.0_2). So for an older version the formula's GHCR tags decide: the
+// tag the current revision implies is kept when it exists, which leaves
+// every older version that already resolved on the bottle it had, and
+// otherwise the highest `<version>_<N>` tag, or the bare `<version>`.
+//
+// On any lookup failure, falls back to the revision-implied version so
+// the existing path still works.
+func (a *HomebrewAction) resolveBottleVersion(ctx context.Context, formula, version, token string) (string, error) {
+	implied := version
+	info, err := a.getFormulaInfo(ctx, formula)
+	if err == nil && info.Revision > 0 {
+		implied = fmt.Sprintf("%s_%d", version, info.Revision)
+	}
+	if err == nil && info.Versions.Stable == version {
+		return implied, nil
+	}
+
+	// The formula API is unreachable, or the requested version isn't the
+	// current one: check the implied tag against the published tags.
+	tags, err := a.listGHCRTags(ctx, formula, token)
 	if err != nil {
 		// Soft-fail: callers see the raw `getBlobSHA` error if the
-		// formula's manifest doesn't have unrevised entries either.
-		return version, nil
+		// implied manifest doesn't exist either.
+		return implied, nil
 	}
-	if revision <= 0 {
-		return version, nil
+	for _, tag := range tags {
+		if tag == implied {
+			return implied, nil
+		}
 	}
-	return fmt.Sprintf("%s_%d", version, revision), nil
+	if tag, ok := selectVersionTag(tags, version); ok {
+		return tag, nil
+	}
+	return implied, nil
 }
 
-// getFormulaRevision returns the integer `revision` field for a
-// homebrew formula via formulae.brew.sh. Returns 0 when the field is
-// missing or not parseable.
-func (a *HomebrewAction) getFormulaRevision(ctx context.Context, formula string) (int, error) {
+// formulaInfo holds the fields of the formulae.brew.sh formula JSON
+// that bottle resolution needs.
+type formulaInfo struct {
+	Versions struct {
+		Stable string `json:"stable"`
+	} `json:"versions"`
+	Revision int `json:"revision"`
+}
+
+// getFormulaInfo fetches a homebrew formula's current stable version
+// and revision from formulae.brew.sh. Revision is 0 when the field is
+// missing.
+func (a *HomebrewAction) getFormulaInfo(ctx context.Context, formula string) (*formulaInfo, error) {
 	apiURL := fmt.Sprintf("%s/api/formula/%s.json", formulaeAPIBaseURL, formula)
 	req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	req.Header.Set("Accept", "application/json")
 
 	resp, err := ghcrHTTPClient().Do(req)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return 0, fmt.Errorf("formulae.brew.sh returned %d", resp.StatusCode)
+		return nil, fmt.Errorf("formulae.brew.sh returned %d", resp.StatusCode)
 	}
 
 	// Read at most 1 MiB; formula JSON is small (~tens of KB).
 	limited := io.LimitReader(resp.Body, 1024*1024)
-	var info struct {
-		Revision int `json:"revision"`
-	}
+	var info formulaInfo
 	if err := json.NewDecoder(limited).Decode(&info); err != nil {
-		return 0, err
+		return nil, err
 	}
-	return info.Revision, nil
+	return &info, nil
+}
+
+// maxGHCRTagPages bounds how many pages of a tag listing are followed.
+const maxGHCRTagPages = 20
+
+// listGHCRTags returns the tags published for a formula on GHCR,
+// following the registry's Link-header pagination.
+func (a *HomebrewAction) listGHCRTags(ctx context.Context, formula, token string) ([]string, error) {
+	next := fmt.Sprintf("%s/v2/homebrew/core/%s/tags/list", ghcrBaseURL, formulaToGHCRPath(formula))
+	var tags []string
+	for page := 0; next != "" && page < maxGHCRTagPages; page++ {
+		req, err := http.NewRequestWithContext(ctx, "GET", next, nil)
+		if err != nil {
+			return nil, err
+		}
+		req.Header.Set("Authorization", "Bearer "+token)
+
+		resp, err := ghcrHTTPClient().Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("tag list request failed: %w", err)
+		}
+		if resp.StatusCode != http.StatusOK {
+			resp.Body.Close()
+			return nil, fmt.Errorf("tag list request returned %d", resp.StatusCode)
+		}
+		var body struct {
+			Tags []string `json:"tags"`
+		}
+		err = json.NewDecoder(io.LimitReader(resp.Body, 4*1024*1024)).Decode(&body)
+		link := resp.Header.Get("Link")
+		resp.Body.Close()
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse tag list: %w", err)
+		}
+		tags = append(tags, body.Tags...)
+		next = nextPageURL(link, next)
+	}
+	return tags, nil
+}
+
+// nextPageURL extracts the rel="next" target from a registry Link
+// header (`</v2/...?last=x&n=y>; rel="next"`), resolved against the
+// current URL. Returns "" when there is no next page.
+func nextPageURL(link, current string) string {
+	if !strings.Contains(link, `rel="next"`) {
+		return ""
+	}
+	start := strings.Index(link, "<")
+	end := strings.Index(link, ">")
+	if start < 0 || end <= start {
+		return ""
+	}
+	base, err := url.Parse(current)
+	if err != nil {
+		return ""
+	}
+	ref, err := url.Parse(link[start+1 : end])
+	if err != nil {
+		return ""
+	}
+	return base.ResolveReference(ref).String()
+}
+
+// selectVersionTag picks the GHCR tag for a requested version: the
+// `<version>_<N>` tag with the highest N, or the bare `<version>` tag
+// when no revisioned one exists.
+func selectVersionTag(tags []string, version string) (string, bool) {
+	best, bestRev := "", -1
+	prefix := version + "_"
+	for _, tag := range tags {
+		if tag == version {
+			if bestRev < 0 {
+				best, bestRev = tag, 0
+			}
+			continue
+		}
+		if !strings.HasPrefix(tag, prefix) {
+			continue
+		}
+		rev, err := strconv.Atoi(tag[len(prefix):])
+		if err != nil || rev < 0 {
+			continue
+		}
+		if rev > bestRev {
+			best, bestRev = tag, rev
+		}
+	}
+	return best, bestRev >= 0
 }
 
 // validateFormulaName ensures the formula name is safe
@@ -492,20 +612,20 @@ func (a *HomebrewAction) Decompose(ctx *EvalContext, params map[string]interface
 		return nil, fmt.Errorf("unsupported platform: %w", err)
 	}
 
-	// Resolve the upstream-canonical bottle version string. Homebrew
-	// formulas with `revision >= 1` publish their bottles under
-	// "/manifests/<version>_<revision>" with ref-name entries also
-	// suffixed by "_<revision>", so we need to learn the revision
-	// from formulae.brew.sh before constructing either URL.
-	bottleVersion, err := a.resolveBottleVersion(ctx.Context, formula, ctx.VersionTag)
-	if err != nil {
-		return nil, fmt.Errorf("failed to resolve bottle version: %w", err)
-	}
-
 	// Get anonymous GHCR token
 	token, err := a.getGHCRToken(formula)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get GHCR token: %w", err)
+	}
+
+	// Resolve the upstream-canonical bottle version string. Homebrew
+	// formulas with `revision >= 1` publish their bottles under
+	// "/manifests/<version>_<revision>" with ref-name entries also
+	// suffixed by "_<revision>", so we need to learn the revision
+	// before constructing either URL.
+	bottleVersion, err := a.resolveBottleVersion(ctx.Context, formula, ctx.VersionTag, token)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve bottle version: %w", err)
 	}
 
 	// Get manifest and find platform-specific blob SHA
