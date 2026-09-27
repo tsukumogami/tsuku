@@ -128,10 +128,25 @@ The `homebrew` action (renamed from `homebrew_bottle` in issue #580) downloads a
 5. **Binary patching**: RPATH fixup via `patchelf` (Linux) or `install_name_tool` (macOS)
 
 **Platform tag mapping:**
-- `darwin/arm64` → `arm64_sonoma`
-- `darwin/amd64` → `sonoma`
 - `linux/arm64` → `arm64_linux`
 - `linux/amd64` → `x86_64_linux`
+- `darwin/arm64` → the first of `arm64_sonoma`, then newer releases (`arm64_sequoia`, `arm64_tahoe`, ...) up to a ceiling, then older ones (`arm64_ventura`, ...), that the formula's manifest has a bottle for
+- `darwin/amd64` → the same walk over the unprefixed tags (`sonoma`, `sequoia`, ...)
+
+A bottle built for a macOS release runs on that release and newer ones, so
+the ceiling is what keeps a Mac from getting a bottle it can't run. For an
+install, the ceiling is the host's macOS version. For a plan generated for
+another machine (`tsuku eval`, golden files), it's macOS 15, so those plans
+run on any macOS 15 or newer and don't depend on the machine that generated
+them. Selection starts at Sonoma, not at the ceiling, which differs from
+Homebrew's own newest-first choice: a formula that still ships a Sonoma
+bottle keeps the bottle it always had, and formulae rebottled since Homebrew
+stopped building for Sonoma move on to the oldest newer bottle.
+
+A darwin plan records the chosen tag as `bottle_tag` on its
+`homebrew_relocate` step. Before a plan runs, plan validation refuses any
+bottle built for a newer macOS than the host. Plans without the param,
+written before it existed, aren't checked.
 
 **Example recipe:**
 ```toml
@@ -161,8 +176,8 @@ Generated recipes are **platform-agnostic**. The `homebrew` action handles platf
 
 | Host Platform | Bottle Tag |
 |---------------|------------|
-| macOS ARM64 | `arm64_sonoma` (or latest available) |
-| macOS x86_64 | `sonoma` (or latest available) |
+| macOS ARM64 | `arm64_sonoma`, or the oldest newer release the host can run |
+| macOS x86_64 | `sonoma`, or the oldest newer release the host can run |
 | Linux ARM64 | `arm64_linux` |
 | Linux x86_64 | `x86_64_linux` |
 

@@ -134,6 +134,7 @@ func getOrGeneratePlanWith(
 	return generator.GeneratePlan(ctx, executor.PlanConfig{
 		OS:                 targetOS,
 		Arch:               targetArch,
+		MacOSVersion:       executor.HostMacOSVersion(targetOS, targetArch),
 		RecipeSource:       "registry",
 		Downloader:         downloader,
 		DownloadCache:      downloadCache,

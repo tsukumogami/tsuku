@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/actions"
+	"github.com/tsukumogami/tsuku/internal/bottletag"
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/platform"
 	"github.com/tsukumogami/tsuku/internal/progress"
@@ -97,6 +98,23 @@ type PlanConfig struct {
 	// Reporter receives warnings emitted during decomposition (e.g., version fallback).
 	// When nil, warnings are silently discarded.
 	Reporter progress.Reporter
+	// MacOSVersion is the macOS major version of the machine that will run
+	// the plan. Set it only when the plan is for this machine (installs);
+	// HostMacOSVersion gives the value. Homebrew bottle selection never picks
+	// a bottle built for a newer macOS. 0 leaves the plan portable: selection
+	// uses bottletag.CrossMachineMacOSVersion, as `tsuku eval` and golden
+	// files need.
+	MacOSVersion int
+}
+
+// HostMacOSVersion returns the MacOSVersion for a plan targeting os/arch
+// on this machine: the host's macOS major version when the target is the
+// host platform, and 0 otherwise.
+func HostMacOSVersion(targetOS, targetArch string) int {
+	if targetOS != runtime.GOOS || targetArch != runtime.GOARCH {
+		return 0
+	}
+	return bottletag.HostMacOSVersion()
 }
 
 // pinnedTagProvider returns the version provider used to look up the release
@@ -279,6 +297,7 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		DownloadCache: cfg.DownloadCache,
 		Constraints:   cfg.Constraints,
 		Reporter:      cfg.Reporter,
+		MacOSVersion:  cfg.MacOSVersion,
 	}
 
 	// Process each step
@@ -901,6 +920,7 @@ func generateSingleDependencyPlan(
 		RecipeLoader:       nil,             // Don't recurse here - we handle it above
 		Constraints:        cfg.Constraints, // Propagate constraints for nested decomposition
 		PinnedVersion:      pinnedVersion,   // Bypass version resolution for pinned deps
+		MacOSVersion:       cfg.MacOSVersion,
 	}
 
 	plan, err := exec.GeneratePlan(ctx, depCfg)

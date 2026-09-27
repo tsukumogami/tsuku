@@ -190,7 +190,8 @@ func TestGetPlatformTags(t *testing.T) {
 		{"darwin amd64 sonoma", "darwin", "amd64", 14, "sonoma", 4},
 		{"darwin arm64 ventura", "darwin", "arm64", 13, "arm64_ventura", 3},
 		{"darwin amd64 ventura", "darwin", "amd64", 13, "ventura", 3},
-		{"darwin arm64 default", "darwin", "arm64", 0, "arm64_sonoma", 4}, // defaults to sonoma
+		{"darwin arm64 default", "darwin", "arm64", 0, "arm64_sonoma", 5}, // unknown: up to sequoia
+		{"darwin arm64 tahoe", "darwin", "arm64", 26, "arm64_sonoma", 6},  // sonoma, sequoia, tahoe, then older
 		{"linux amd64", "linux", "amd64", 0, "x86_64_linux", 1},
 		{"linux arm64", "linux", "arm64", 0, "arm64_linux", 1},
 		{"unknown os", "windows", "amd64", 0, "", 0},
