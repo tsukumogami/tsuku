@@ -1,6 +1,7 @@
 package markfailures
 
 import (
+	"math"
 	"os"
 	"path/filepath"
 	"testing"
@@ -320,7 +321,19 @@ func TestComputeRetryAt(t *testing.T) {
 		{2, 2 * time.Hour},       // 2^1 = 2h
 		{3, 4 * time.Hour},       // 2^2 = 4h
 		{5, 16 * time.Hour},      // 2^4 = 16h
+		{8, 128 * time.Hour},     // 2^7 = 128h, last value under the cap
+		{9, 7 * 24 * time.Hour},  // 2^8 = 256h, capped at 7 days
 		{20, 7 * 24 * time.Hour}, // capped at 7 days
+		// 2^22 hours no longer fits in a time.Duration. A float-based
+		// calculation overflows here and lands about 292 years in the past.
+		{22, 7 * 24 * time.Hour},
+		{23, 7 * 24 * time.Hour},
+		{24, 7 * 24 * time.Hour},
+		{611, 7 * 24 * time.Hour},
+		{893, 7 * 24 * time.Hour},
+		{math.MaxInt32, 7 * 24 * time.Hour},
+		{0, 1 * time.Hour},  // no recorded failure: treated as the first
+		{-1, 1 * time.Hour}, // defensive: never a negative delay
 	}
 
 	for _, tt := range tests {

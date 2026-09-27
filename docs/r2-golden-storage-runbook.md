@@ -119,9 +119,14 @@ gh workflow run r2-credential-rotation-reminder.yml -f quarter="Q1 2026"
 **Schedule**: Every 6 hours
 **Issue Label**: `r2-degradation`
 
-The health monitor checks R2 availability by making a HEAD request to `health/ping.json`.
+The health monitor checks R2 availability by making a SigV4-signed HEAD request to
+`health/ping.json` with curl. The latency is the request as curl times it (connection,
+TLS and response), not the time taken to start the program making it. The output also
+prints connection, TLS and first-byte times, so a slow handshake can be told from a slow
+storage response.
 
-**Thresholds**:
+**Thresholds** (the 2000ms latency threshold is provisional, pending recorded request
+latencies under this measurement):
 - Success: HTTP 200, latency < 2000ms
 - Degraded: HTTP 200, latency >= 2000ms
 - Failure: Timeout, error, or non-200 response
