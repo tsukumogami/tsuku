@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"strings"
+
+	"github.com/tsukumogami/tsuku/internal/install"
 )
 
 // DefaultStableQualifiers names hyphenated suffixes that universally signal a
@@ -163,7 +165,13 @@ func (p *GitHubProvider) ResolveVersion(ctx context.Context, version string) (*V
 		return p.resolver.ResolveGitHubVersion(ctx, p.repo, version)
 	}
 
-	// With prefix, check if exact version exists in filtered list
+	// With prefix, an exact tag is found by direct lookup first, since the
+	// listing below covers only the first page of tags.
+	info, err := p.lookupTag(ctx, version)
+	if err != nil || info != nil {
+		return info, err
+	}
+
 	versions, err := p.ListVersions(ctx)
 	if err != nil {
 		return nil, err
@@ -190,6 +198,72 @@ func (p *GitHubProvider) ResolveVersion(ctx context.Context, version string) (*V
 	}
 
 	return nil, fmt.Errorf("version %q not found in %s (with prefix %q)", version, p.repo, p.tagPrefix)
+}
+
+// infoForTag builds the VersionInfo for a tag name, in the shape the rest of
+// the provider returns: with a tag prefix the version is the tag without it,
+// and without one the version is the normalized tag.
+func (p *GitHubProvider) infoForTag(tag string) *VersionInfo {
+	if p.tagPrefix != "" {
+		return &VersionInfo{Version: strings.TrimPrefix(tag, p.tagPrefix), Tag: tag}
+	}
+	return &VersionInfo{Tag: tag, Version: normalizeVersion(tag)}
+}
+
+// lookupTag finds version by direct tag lookup, trying each name it could be
+// tagged under (see githubTagCandidates). It returns nil, nil when none of
+// those tags exists.
+func (p *GitHubProvider) lookupTag(ctx context.Context, version string) (*VersionInfo, error) {
+	for _, candidate := range githubTagCandidates(p.tagPrefix, version) {
+		found, err := p.resolver.LookupGitHubTag(ctx, p.repo, candidate)
+		if err != nil {
+			return nil, err
+		}
+		if found {
+			return p.infoForTag(candidate), nil
+		}
+	}
+	return nil, nil
+}
+
+// ResolveUnlisted resolves a pin that matched nothing in ListVersions, which
+// reads only the first page of tags. An exact pin is looked up directly, in
+// one or two requests; any other pin needs a listing, so it pages through
+// the full tag list.
+func (p *GitHubProvider) ResolveUnlisted(ctx context.Context, requested string) (*VersionInfo, error) {
+	if install.PinLevelFromRequested(requested) == install.PinExact {
+		info, err := p.lookupTag(ctx, requested)
+		if err != nil {
+			return nil, err
+		}
+		if info == nil {
+			return nil, fmt.Errorf("version %s not found", requested)
+		}
+		return info, nil
+	}
+
+	tags, err := p.resolver.ListAllGitHubVersions(ctx, p.repo)
+	if err != nil {
+		return nil, err
+	}
+	candidates := tags
+	if p.tagPrefix != "" {
+		candidates = nil
+		for _, tag := range tags {
+			if strings.HasPrefix(tag, p.tagPrefix) {
+				candidates = append(candidates, strings.TrimPrefix(tag, p.tagPrefix))
+			}
+		}
+	}
+
+	v, ok := matchPin(candidates, requested)
+	if !ok {
+		return nil, fmt.Errorf("version %s not found", requested)
+	}
+	if p.tagPrefix != "" {
+		return p.infoForTag(p.tagPrefix + v), nil
+	}
+	return p.infoForTag(v), nil
 }
 
 // SourceDescription returns a human-readable source description
