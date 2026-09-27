@@ -115,6 +115,10 @@ func runPlanBasedInstall(planPath, toolName string) error {
 		// fallback creates bin/<toolname>, which is wrong when the binary has a
 		// different name (e.g., argo-cd installs argocd, golang installs go).
 		installOpts.Binaries = executor.ExtractBinariesFromPlan(plan)
+		if app := exec.GetAppResult(); app != nil {
+			installOpts.AppPath = app.AppPath
+			installOpts.ApplicationSymlink = app.ApplicationSymlink
+		}
 
 		// Install to permanent location.
 		// Plan-based installs are always user-initiated via `tsuku install --plan`, so tag

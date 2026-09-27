@@ -63,7 +63,7 @@ type AppBundleResult struct {
 //   - url (required): Download URL for the ZIP or DMG archive
 //   - checksum (required): SHA256 checksum in "sha256:..." format
 //   - app_name (required): Name of .app bundle to install (e.g., "iTerm.app")
-//   - binaries (optional): Paths to CLI tools within .app to symlink to $TSUKU_HOME/tools/current
+//   - binaries (optional): Paths to CLI tools within .app to expose via $TSUKU_HOME/tools/current
 //   - symlink_applications (optional): Create ~/Applications symlink (default: true)
 func (a *AppBundleAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
 	// Only run on macOS
@@ -172,33 +172,36 @@ func (a *AppBundleAction) Execute(ctx *ExecutionContext, params map[string]inter
 		Binaries: []string{},
 	}
 
-	// Create binary symlinks
+	// Expose CLI tools from the bundle as exec wrappers in the tool's bin/.
+	// The install manager links bin/<name> into tools/current like any other
+	// binary. A wrapper rather than a symlink keeps the file tsuku checksums
+	// inside the tool directory while the bundle itself lives under apps/.
 	if len(binaries) > 0 {
-		// Ensure CurrentDir exists (for binary symlinks)
-		if ctx.CurrentDir != "" {
-			if err := os.MkdirAll(ctx.CurrentDir, 0755); err != nil {
-				return fmt.Errorf("failed to create current directory: %w", err)
+		binDir := filepath.Join(ctx.InstallDir, "bin")
+		if err := os.MkdirAll(binDir, 0755); err != nil {
+			return fmt.Errorf("failed to create bin directory: %w", err)
+		}
+
+		for _, binaryPath := range binaries {
+			binaryName := filepath.Base(binaryPath)
+			targetPath := filepath.Join(destPath, binaryPath)
+
+			if _, err := os.Stat(targetPath); err != nil {
+				return fmt.Errorf("binary not found in app bundle: %s", binaryPath)
+			}
+			// The path is single-quoted in the wrapper, so it must not
+			// contain a quote or newline.
+			if strings.ContainsAny(targetPath, "'\n") {
+				return fmt.Errorf("unsupported character in binary path: %q", targetPath)
 			}
 
-			for _, binaryPath := range binaries {
-				binaryName := filepath.Base(binaryPath)
-				targetPath := filepath.Join(destPath, binaryPath)
-				symlinkPath := filepath.Join(ctx.CurrentDir, binaryName)
-
-				// Verify the binary exists in the .app bundle
-				if _, err := os.Stat(targetPath); os.IsNotExist(err) {
-					reporter.Warn("   binary not found in app bundle: %s", binaryPath)
-					continue
-				}
-
-				// Create symlink atomically
-				if err := atomicSymlink(targetPath, symlinkPath); err != nil {
-					return fmt.Errorf("failed to create symlink for %s: %w", binaryName, err)
-				}
-
-				reporter.Log("   Symlinked: %s -> %s", symlinkPath, targetPath)
-				result.Binaries = append(result.Binaries, binaryName)
+			wrapper := fmt.Sprintf("#!/bin/sh\nexec '%s' \"$@\"\n", targetPath)
+			if err := os.WriteFile(filepath.Join(binDir, binaryName), []byte(wrapper), 0755); err != nil {
+				return fmt.Errorf("failed to write wrapper for %s: %w", binaryName, err)
 			}
+
+			reporter.Log("   Linked: %s -> %s", binaryName, targetPath)
+			result.Binaries = append(result.Binaries, binaryName)
 		}
 	}
 

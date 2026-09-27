@@ -925,6 +925,7 @@ func (r *Recipe) ExtractBinaries() []string {
 			"configure_make":   true, // Uses 'executables' parameter
 			"cmake_build":      true, // Uses 'executables' parameter
 			"meson_build":      true, // Uses 'executables' parameter
+			"app_bundle":       true, // Writes bin/<name> wrappers for 'binaries'
 		}
 		if !installActions[step.Action] {
 			continue

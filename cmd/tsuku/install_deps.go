@@ -624,6 +624,10 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 		installOpts := install.DefaultInstallOptions()
 		installOpts.Binaries = binaries
 		installOpts.RequestedVersion = versionConstraint // Record what user asked for ("17", "@lts", "")
+		if app := exec.GetAppResult(); app != nil {
+			installOpts.AppPath = app.AppPath
+			installOpts.ApplicationSymlink = app.ApplicationSymlink
+		}
 
 		// Store the plan using canonical conversion
 		installOpts.Plan = executor.ToStoragePlan(plan)

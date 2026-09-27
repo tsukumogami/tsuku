@@ -298,7 +298,9 @@ func extractBinariesFromSteps(steps []ResolvedStep) []string {
 			}
 			continue
 		}
-		if step.Action != "install_binaries" {
+		// app_bundle writes bin/<name> wrappers for its binaries, so it
+		// follows the same binaries-mode normalization as install_binaries.
+		if step.Action != "install_binaries" && step.Action != "app_bundle" {
 			continue
 		}
 		// Prefer "outputs" key, fall back to "binaries" (deprecated alias)

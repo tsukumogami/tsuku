@@ -1,0 +1,25 @@
+# Ghostty via Homebrew Cask
+#
+# Ghostty publishes a signed DMG for macOS. Linux has no official prebuilt
+# binaries (distros package it from source), so this recipe is macOS-only.
+
+[metadata]
+name = "ghostty"
+description = "Fast, feature-rich, cross-platform terminal emulator (via Homebrew Cask)"
+homepage = "https://ghostty.org/"
+supported_os = ["darwin"]
+
+[version]
+source = "cask"
+cask = "ghostty"
+
+[[steps]]
+action = "app_bundle"
+url = "{version.url}"
+checksum = "{version.checksum}"
+app_name = "Ghostty.app"
+binaries = ["Contents/MacOS/ghostty"]
+
+[verify]
+command = "ghostty +version"
+pattern = "{version}"

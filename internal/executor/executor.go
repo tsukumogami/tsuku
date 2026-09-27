@@ -370,6 +370,18 @@ func (e *Executor) GetCleanupActions() []actions.CleanupAction {
 	return e.ctx.CleanupActions
 }
 
+// GetAppResult returns what an app_bundle step installed outside the tool
+// directory (the .app bundle and its ~/Applications symlink), or nil when the
+// plan has no app_bundle step. The caller records it in state so removal can
+// find those paths.
+func (e *Executor) GetAppResult() *actions.AppBundleResult {
+	if e.ctx == nil {
+		return nil
+	}
+	result, _ := e.ctx.AppResult.(*actions.AppBundleResult)
+	return result
+}
+
 // DependencyInstall describes one dependency this executor installed itself,
 // through installSingleDependency rather than through the normal install path.
 //
