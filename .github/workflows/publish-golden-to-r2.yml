@@ -132,7 +132,7 @@ jobs:
       matrix:
         platform:
           - { runner: ubuntu-latest, name: "Linux x86_64", os: linux, arch: amd64 }
-          - { runner: macos-14, name: "macOS Apple Silicon", os: darwin, arch: arm64 }
+          - { runner: macos-15, name: "macOS Apple Silicon", os: darwin, arch: arm64 }
           - { runner: macos-15-intel, name: "macOS Intel", os: darwin, arch: amd64 }
     steps:
       - name: Checkout

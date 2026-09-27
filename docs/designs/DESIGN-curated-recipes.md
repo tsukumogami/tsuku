@@ -80,7 +80,8 @@ artifact, a changed binary path — is only discovered when a user hits it.
 - **CI-enforceable**: the curation signal must be machine-readable so CI can gate on
   it (e.g., requiring `curated = true` in PRs that touch handcrafted recipes).
 - **Nightly testing cadence**: curated recipes must get cross-platform install testing
-  at least nightly, on the full platform matrix, not just on push.
+  at least nightly, on the full platform matrix, not just on push. (Not met: the
+  workflow built for it was retired on 2026-09-26. See component 4.)
 - **Discovery correctness for scoped packages**: tools where the binary name differs
   from the ecosystem package name need a separate mechanism to prevent the ecosystem
   probe from resolving to the wrong package.
@@ -409,6 +410,21 @@ Required permissions: `issues: write` (for failure issue creation), `contents: r
 If `recipe-validation-core.yml`'s PR-creation step (which auto-adds platform
 constraints after sandbox failures) is inherited, `pull-requests: write` and
 `contents: write` are also required and must be declared explicitly in the wrapper.
+
+> **Retired 2026-09-26 (#2611).** The workflow shipped without the filtered set. Its
+> `setup` job discovered the `curated = true` recipes but used the result only to decide
+> whether to run. It then called `recipe-validation-core.yml`, which has no recipe-list
+> input, so every night it validated the whole registry (about 1256 recipes). That made it a daily
+> copy of Recipe Validation. In 162 scheduled runs it never completed: the macOS arm64
+> runner ran out of disk and other jobs hit the 2-hour cap. The core also never fails a
+> run on a failing recipe, so even a completed run could not have reported one. Curated
+> recipes are still install-tested on every pull request that changes them, by
+> `test-recipe.yml`, on the same 11 platforms. Nothing checks them for upstream drift
+> between changes.
+> Rebuilding nightly coverage takes three things the retired workflow lacked. The core
+> needs a recipe-list input. The run needs a step that fails on any failing result. And
+> the core has to skip platforms a recipe declares unsupported, as `test-recipe.yml`
+> does, or alpine stays red for glibc-only recipes.
 
 **5. Lint Rule (recipe validation CI)**
 
