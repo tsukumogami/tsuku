@@ -19,8 +19,9 @@
 #
 # Exit codes:
 #   0: All golden files match
-#   1: Mismatch detected (with diff output)
+#   1: Mismatch detected (with diff output), or a plan could not be generated
 #   2: Error (missing files, invalid recipe, etc.)
+#   3: Nothing compared: no supported platform applies (e.g. --os filters them all out)
 
 set -euo pipefail
 
@@ -40,6 +41,9 @@ fi
 # Script location for relative paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# shellcheck source=lib/r2-layout.sh
+source "$SCRIPT_DIR/lib/r2-layout.sh"
 
 # Paths
 RECIPE_BASE="$REPO_ROOT/internal/recipe/recipes"
@@ -131,14 +135,6 @@ download_r2_golden_files() {
     local target_base="$3"
     local first_letter="${recipe:0:1}"
 
-    # Determine R2 category prefix (embedded or first letter)
-    local r2_category
-    if [[ "$category" == "embedded" ]]; then
-        r2_category="embedded"
-    else
-        r2_category="$first_letter"
-    fi
-
     # Create target directory
     local target_dir
     if [[ "$category" == "embedded" ]]; then
@@ -154,7 +150,8 @@ download_r2_golden_files() {
     export AWS_ENDPOINT_URL="$R2_BUCKET_URL"
 
     local bucket_name="${R2_BUCKET_NAME:-tsuku-golden-registry}"
-    local prefix="plans/${r2_category}/${recipe}/"
+    local prefix
+    prefix=$(r2_plan_prefix "$recipe" "$category") || return 1
 
     # List all objects for this recipe and download them
     local objects
@@ -527,6 +524,8 @@ if is_recipe_excluded_from_code_validation "$RECIPE"; then
 fi
 
 MISMATCH=0
+GENERATION_FAILED=0
+COMPARED=0
 HANDLED=""  # golden filenames given a receipt line by the loop below, newline-separated
 
 for VERSION in $VERSIONS; do
@@ -571,11 +570,15 @@ for VERSION in $VERSIONS; do
         # Note: missing platforms already caught by pre-check above
         if ! "$TSUKU" eval "${eval_args[@]}" 2>/dev/null | \
             jq 'del(.generated_at, .recipe_source, .storage_version)' > "$ACTUAL"; then
-            echo "Failed to generate plan for $RECIPE@$VERSION ($filename)" >&2
+            # A plan that cannot be generated is not a plan that matched. Counting it as
+            # neither would let a recipe whose every eval fails pass having compared nothing.
+            echo "FAILED: could not generate plan for $RECIPE@$VERSION ($filename)" >&2
             receipt "$filename" eval-failed
             HANDLED="$HANDLED$filename"$'\n'
+            GENERATION_FAILED=1
             continue
         fi
+        COMPARED=$((COMPARED + 1))
 
         # Fast hash comparison
         GOLDEN_NORMALIZED="$TEMP_DIR/golden-$filename"
@@ -600,6 +603,7 @@ done
 
 # Golden files for this OS that the loop never reached: their platform is not one the
 # recipe lists any more, so nothing compared them. Named here rather than left silent.
+# Written before any exit below, so every file has its receipt line.
 if [[ -n "${COVERAGE_RECEIPT:-}" ]]; then
     while IFS= read -r name; do
         [[ -z "$name" ]] && continue
@@ -607,6 +611,19 @@ if [[ -n "${COVERAGE_RECEIPT:-}" ]]; then
             receipt "$name" unsupported-platform
         fi
     done <<< "$(os_golden_files)"
+fi
+
+if [[ $GENERATION_FAILED -eq 1 && $MISMATCH -eq 0 ]]; then
+    echo "Golden file validation failed: plan generation failed for $RECIPE (see FAILED lines above)" >&2
+    exit 1
+fi
+
+# Nothing generated and nothing failed: no supported platform applies (for example a
+# linux-only recipe under --os darwin). That is not a pass, so it gets its own exit code
+# and callers count it separately from recipes that were actually compared.
+if [[ $MISMATCH -eq 0 && $COMPARED -eq 0 ]]; then
+    echo "NOT COMPARED: $RECIPE has no golden-checked platform${FILTER_OS:+ for --os $FILTER_OS}"
+    exit 3
 fi
 
 if [[ $MISMATCH -eq 1 ]]; then

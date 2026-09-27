@@ -15,8 +15,8 @@
 #   file      - Path to the golden file to upload
 #
 # Options:
-#   --category <category>  - Category for key path (default: auto-detected from first letter)
-#                            Use 'embedded' for embedded recipes
+#   --category <category>  - embedded or registry (default: registry). The key's
+#                            segment is derived from it by scripts/lib/r2-layout.sh.
 #
 # Environment Variables:
 #   R2_BUCKET_URL          - Required. R2 bucket endpoint URL
@@ -25,7 +25,8 @@
 #   R2_SECRET_ACCESS_KEY   - Required. R2 secret access key
 #
 # Object Key Convention:
-#   plans/{category}/{recipe}/v{version}/{platform}.json
+#   Defined in scripts/lib/r2-layout.sh:
+#   plans/<embedded|first-letter>/{recipe}/v{version}/{platform}.json
 #
 # Object Metadata:
 #   x-tsuku-generated-at    - ISO 8601 timestamp of upload
@@ -38,6 +39,9 @@
 #   2 - Error: invalid arguments or missing dependencies
 
 set -euo pipefail
+
+# shellcheck source=lib/r2-layout.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib/r2-layout.sh"
 
 BUCKET_NAME="${R2_BUCKET_NAME:-tsuku-golden-registry}"
 FORMAT_VERSION="4"
@@ -98,13 +102,8 @@ if [[ -z "${R2_SECRET_ACCESS_KEY:-}" ]]; then
     exit 2
 fi
 
-# Auto-detect category from first letter if not specified
-if [[ -z "$CATEGORY" ]]; then
-    CATEGORY="${RECIPE:0:1}"
-fi
-
 # Build object key
-OBJECT_KEY="plans/${CATEGORY}/${RECIPE}/v${VERSION}/${PLATFORM}.json"
+OBJECT_KEY=$(r2_plan_key "$RECIPE" "${CATEGORY:-registry}" "$VERSION" "$PLATFORM") || exit 2
 
 # Calculate file hash
 FILE_HASH="sha256:$(sha256sum "$FILE" | cut -d' ' -f1)"

@@ -1,0 +1,107 @@
+# One-off: copy registry golden plans from plans/registry/ to the current layout (#2448).
+#
+# Publishing wrote registry plans under plans/registry/<recipe>/... while every reader
+# looked under plans/<first-letter>/<recipe>/..., so nothing it published was ever compared.
+# This copies each legacy object to its current key (scripts/lib/r2-layout.sh) with a
+# server-side copy, so the plans that were published are kept exactly, at the versions
+# they were published.
+#
+# It never deletes and never overwrites. Removing plans/registry/ is a separate step.
+#
+# Dispatch only. dry_run defaults to true and produces the plan (counts, collisions,
+# unmapped keys) as an artifact without writing anything. The copy job runs only with
+# dry_run=false, and only from main, because the registry-write environment is limited
+# to main.
+#
+# Delete this workflow once plans/registry/ has been removed from the bucket.
+name: R2 Migrate Registry Layout
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Plan only: list what would be copied, write nothing'
+        type: boolean
+        default: true
+
+concurrency:
+  group: r2-migrate-registry-layout
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: Plan Copy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Plan the copy (read-only)
+        env:
+          R2_BUCKET_URL: ${{ secrets.R2_BUCKET_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_READONLY }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_READONLY }}
+        run: |
+          ./scripts/r2-migrate-registry-layout.sh --plan migration-plan
+          {
+            echo "## Registry layout migration plan"
+            echo '```'
+            cat migration-plan/summary.txt
+            echo '```'
+            if [ -s migration-plan/collisions.tsv ]; then
+              echo "Collisions (destination exists with different content; not copied):"
+              echo '```'
+              head -50 migration-plan/collisions.tsv
+              echo '```'
+            fi
+            if [ -s migration-plan/unmapped.txt ]; then
+              echo "Unmapped legacy keys (not copied):"
+              echo '```'
+              head -50 migration-plan/unmapped.txt
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload plan
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: migration-plan
+          path: migration-plan/
+          retention-days: 30
+
+  copy:
+    name: Copy Objects
+    needs: plan
+    if: inputs.dry_run == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    environment: registry-write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Download plan
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: migration-plan
+          path: migration-plan/
+
+      - name: Copy
+        env:
+          R2_BUCKET_URL: ${{ secrets.R2_BUCKET_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_WRITE }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_WRITE }}
+        # shell: bash adds pipefail, so a failed copy is not hidden behind tee's exit code.
+        shell: bash
+        run: ./scripts/r2-migrate-registry-layout.sh --execute migration-plan | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify by reading back
+        env:
+          R2_BUCKET_URL: ${{ secrets.R2_BUCKET_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_READONLY }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_READONLY }}
+        shell: bash
+        run: ./scripts/r2-migrate-registry-layout.sh --verify migration-plan --sample 50 | tee -a "$GITHUB_STEP_SUMMARY"
