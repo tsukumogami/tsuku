@@ -1,11 +1,22 @@
 name: Update Queue Status
 
 on:
+  # A change to this workflow or to the queue-maintain code it runs has to
+  # trigger it too, or a fix to either waits for unrelated recipe or
+  # failure traffic before it takes effect.
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
       - 'recipes/**'
       - 'data/failures/**'
+      - '.github/workflows/update-queue-status.yml'
+      - 'cmd/queue-maintain/**'
+      - 'internal/batch/**'
+      - 'internal/blocker/**'
+      - 'internal/markfailures/**'
+      - 'internal/requeue/**'
+      - 'internal/reorder/**'
 
 permissions:
   contents: write
