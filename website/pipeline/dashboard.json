@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-09-27T06:16:07Z",
+  "generated_at": "2026-09-27T11:33:39Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 23,
       "excluded": 7,
-      "failed": 25,
-      "pending": 3862,
+      "failed": 24,
+      "pending": 3863,
       "success": 1388
     },
     "by_tier": {
@@ -24,8 +24,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 15,
-        "pending": 3862,
+        "failed": 14,
+        "pending": 3863,
         "success": 1361
       }
     },
@@ -57,8 +57,8 @@
       "homebrew": {
         "blocked": 23,
         "excluded": 1,
-        "failed": 19,
-        "pending": 3693,
+        "failed": 18,
+        "pending": 3694,
         "success": 1147,
         "total": 4883
       },
@@ -568,15 +568,6 @@
           "category": "install_failed",
           "failure_count": 22,
           "next_retry_at": "2026-10-03T21:53:59Z"
-        },
-        {
-          "id": "homebrew:icu4c@78",
-          "name": "icu4c@78",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-09-27T08:17:03Z"
         },
         {
           "id": "homebrew:libassuan",
@@ -10999,6 +10990,15 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 1
+        },
+        {
+          "id": "homebrew:icu4c@78",
+          "name": "icu4c@78",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-09-27T08:17:03Z"
         },
         {
           "id": "homebrew:id3v2",
