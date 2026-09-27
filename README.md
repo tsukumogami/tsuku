@@ -293,11 +293,12 @@ Recipes are generated in dependency order (leaves first) to ensure validation su
 
 Homebrew recipes are platform-agnostic - a single recipe works on:
 - macOS ARM64 (Apple Silicon)
-- macOS x86_64 (Intel)
 - Linux ARM64
 - Linux x86_64
 
-The `homebrew` action automatically selects the correct bottle for your platform at install time.
+On macOS, CI verifies macOS 15 (Sequoia) and newer. Older versions may work where Homebrew still publishes bottles for them, but aren't tested.
+
+The `homebrew` action installs a pre-built bottle for your platform. On Apple Silicon it currently always requests the macOS 14 (Sonoma) bottle, whatever your macOS version, so formulae Homebrew no longer bottles for Sonoma fail to install (#2675).
 
 #### Recipe Validation
 

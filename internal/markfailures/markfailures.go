@@ -14,10 +14,8 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"math"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/batch"
@@ -73,16 +71,64 @@ type packageFailure struct {
 	BlockedBy []string `json:"blocked_by,omitempty"`
 }
 
-// LoadFailureMap reads all JSONL files in dir and builds a per-package
-// failure summary. Keys are bare package names (ecosystem prefix stripped).
-func LoadFailureMap(dir string) (map[string]*PackageFailureSummary, error) {
+// FailureMap holds failure summaries keyed the way each record format
+// identifies the package that failed.
+type FailureMap struct {
+	// BySource holds legacy batch records, keyed by their full package_id.
+	// The orchestrator writes the queue entry's source there
+	// ("homebrew:go-task", "github:github/hub"), so this is matched against
+	// entry.Source.
+	BySource map[string]*PackageFailureSummary
+
+	// ByName holds per-recipe records, keyed by the recipe name, which the
+	// orchestrator derives from entry.Name. These records carry no source.
+	ByName map[string]*PackageFailureSummary
+}
+
+// For returns the failures recorded for a queue entry: legacy records whose
+// package_id is the entry's source, combined with per-recipe records under
+// the entry's name. It returns nil when there are none.
+//
+// Matching legacy records by bare name instead (the part after the colon)
+// attributed failures to the wrong entry whenever an entry's name differed
+// from its source's identifier: "task" (homebrew:go-task) failures landed on
+// go-task, and "hub" (github:github/hub) failures, keyed "github/hub",
+// landed on nothing.
+func (m *FailureMap) For(entry batch.QueueEntry) *PackageFailureSummary {
+	a, b := m.BySource[entry.Source], m.ByName[entry.Name]
+	if a == nil {
+		return b
+	}
+	if b == nil {
+		return a
+	}
+	merged := &PackageFailureSummary{
+		TotalFailures:   a.TotalFailures + b.TotalFailures,
+		HasMissingDep:   a.HasMissingDep || b.HasMissingDep,
+		HasOtherFailure: a.HasOtherFailure || b.HasOtherFailure,
+	}
+	for _, dep := range append(append([]string{}, a.BlockedBy...), b.BlockedBy...) {
+		if !containsString(merged.BlockedBy, dep) {
+			merged.BlockedBy = append(merged.BlockedBy, dep)
+		}
+	}
+	return merged
+}
+
+// LoadFailureMap reads all JSONL files in dir and builds per-package failure
+// summaries: legacy records by full package_id, per-recipe records by recipe
+// name.
+func LoadFailureMap(dir string) (*FailureMap, error) {
 	pattern := filepath.Join(dir, "*.jsonl")
 	files, err := filepath.Glob(pattern)
 	if err != nil {
 		return nil, fmt.Errorf("glob failures: %w", err)
 	}
 
-	result := make(map[string]*PackageFailureSummary)
+	result := &FailureMap{
+		BySource: make(map[string]*PackageFailureSummary),
+		ByName:   make(map[string]*PackageFailureSummary),
+	}
 	for _, path := range files {
 		if err := loadFailuresFromFile(path, result); err != nil {
 			continue // skip files that can't be read
@@ -91,8 +137,8 @@ func LoadFailureMap(dir string) (map[string]*PackageFailureSummary, error) {
 	return result, nil
 }
 
-// loadFailuresFromFile reads a single JSONL file and populates the summary map.
-func loadFailuresFromFile(path string, summaries map[string]*PackageFailureSummary) error {
+// loadFailuresFromFile reads a single JSONL file and populates the summary maps.
+func loadFailuresFromFile(path string, summaries *FailureMap) error {
 	file, err := os.Open(path)
 	if err != nil {
 		return err
@@ -114,13 +160,12 @@ func loadFailuresFromFile(path string, summaries map[string]*PackageFailureSumma
 
 		// Legacy batch format: failures array
 		for _, f := range record.Failures {
-			name := bareName(f.PackageID)
-			addFailure(summaries, name, f.Category, f.BlockedBy)
+			addFailure(summaries.BySource, f.PackageID, f.Category, f.BlockedBy)
 		}
 
 		// Per-recipe format
 		if record.Recipe != "" && record.Category != "" {
-			addFailure(summaries, record.Recipe, record.Category, record.BlockedBy)
+			addFailure(summaries.ByName, record.Recipe, record.Category, record.BlockedBy)
 		}
 	}
 
@@ -183,9 +228,9 @@ func Run(queue *batch.UnifiedQueue, failuresDir string) (*Result, error) {
 
 // markPendingEntry checks a pending entry against failure data and marks
 // it as failed or blocked if new failures exist.
-func markPendingEntry(entry *batch.QueueEntry, failureMap map[string]*PackageFailureSummary, now time.Time, result *Result) {
-	summary, ok := failureMap[entry.Name]
-	if !ok {
+func markPendingEntry(entry *batch.QueueEntry, failureMap *FailureMap, now time.Time, result *Result) {
+	summary := failureMap.For(*entry)
+	if summary == nil {
 		return // no failure data for this entry
 	}
 
@@ -236,25 +281,20 @@ func expireBackoff(entry *batch.QueueEntry, now time.Time, result *Result) {
 
 // computeRetryAt returns the next retry time using exponential backoff.
 // Formula: now + min(base * 2^(failures-1), maxBackoff)
+//
+// The delay doubles in integer steps and stops at the cap, so it never
+// exceeds maxBackoff on the way there. Computing base * 2^n in floating
+// point and converting afterwards overflows time.Duration from 23 failures
+// on, which produced a negative delay and a retry time in the past.
 func computeRetryAt(now time.Time, failureCount int) time.Time {
-	exp := failureCount - 1
-	if exp < 0 {
-		exp = 0
+	delay := backoffBase
+	for i := 1; i < failureCount && delay < maxBackoff; i++ {
+		delay *= 2
 	}
-	delay := time.Duration(float64(backoffBase) * math.Pow(2, float64(exp)))
 	if delay > maxBackoff {
 		delay = maxBackoff
 	}
 	return now.Add(delay)
-}
-
-// bareName extracts the bare name from a fully-qualified package ID.
-// For "homebrew:ffmpeg" it returns "ffmpeg". For "ffmpeg" it returns "ffmpeg".
-func bareName(pkgID string) string {
-	if idx := strings.Index(pkgID, ":"); idx >= 0 {
-		return pkgID[idx+1:]
-	}
-	return pkgID
 }
 
 // containsString reports whether s is in the slice.

@@ -3,7 +3,11 @@ name: Validate Queue Data
 on:
   pull_request:
     paths:
-      - 'data/priority-queue.json'
+      - 'data/queues/priority-queue.json'
+      - 'data/schemas/priority-queue.schema.json'
+      - 'scripts/validate-queue.sh'
+      - 'scripts/validate-queue-recipes.sh'
+      - '.github/workflows/validate-queue-data.yml'
 
 jobs:
   validate:
