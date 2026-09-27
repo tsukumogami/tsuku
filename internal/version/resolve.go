@@ -45,9 +45,32 @@ func ResolveWithinBoundary(ctx context.Context, provider VersionResolver, reques
 				return provider.ResolveVersion(ctx, v)
 			}
 		}
+
+		// Nothing matched as spelled. Retry ignoring a leading "v" on both
+		// sides, so "2.37.1" finds the tag "v2.37.1" and "v2.37.1" finds a
+		// list the provider already stripped. This runs only after the exact
+		// pass, so a pin that matched before still resolves to the same entry
+		// even when the list holds both "1.0" and "v1.0".
+		bareRequested := trimVersionV(requested)
+		for _, v := range versions {
+			if install.VersionMatchesPin(trimVersionV(v), bareRequested) {
+				return provider.ResolveVersion(ctx, v)
+			}
+		}
 		return nil, fmt.Errorf("version %s not found", requested)
 	}
 
 	// VersionResolver-only providers: use fuzzy prefix matching
 	return provider.ResolveVersion(ctx, requested)
+}
+
+// trimVersionV strips one leading "v" when a digit follows it. Anything else
+// is left alone: "v" on its own would otherwise become "" (latest), and tags
+// such as "vim-9.0" are names rather than prefixed versions. normalizeVersion
+// is not used here because it also strips "go" and path segments.
+func trimVersionV(s string) string {
+	if len(s) > 1 && s[0] == 'v' && s[1] >= '0' && s[1] <= '9' {
+		return s[1:]
+	}
+	return s
 }

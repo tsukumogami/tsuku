@@ -41,7 +41,6 @@ on:
       - "R2 Cleanup"
       - "R2 Cost Monitoring"
       - "R2 Credential Rotation Reminder"
-      - "Recipe Validation"
       - "Scheduled Tests"
       - "Seed Queue"
       - "Tests"

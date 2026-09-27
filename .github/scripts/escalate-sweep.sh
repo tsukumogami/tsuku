@@ -31,6 +31,7 @@ DEFAULT_FIRST_WINDOW_HOURS=24
 # page's oldest run predates the window, no later page can contain a newer one.
 STARTUP_PAGE_GUARD=200
 startup_query_failed=0
+window_query_failed=0
 DRY_RUN=""
 WORKFLOWS_DIR="${WORKFLOWS_DIR:-.github/workflows}"
 ESCALATION_LABEL="${ESCALATION_LABEL:-maintenance}"
@@ -82,16 +83,34 @@ if [ -n "$WINDOW_HOURS" ]; then
   SINCE=$(date -u -d "${WINDOW_HOURS} hours ago" +%Y-%m-%dT%H:%M:%SZ)
   echo "Window: explicit, ${WINDOW_HOURS}h"
 else
-  # `status=success` already excludes the run doing the asking, which is in progress. The
-  # branch filter keeps a green sweep dispatched from a branch from moving the window past
-  # failures no sweep on the default branch has examined.
-  SINCE=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/escalate-sweep.yml/runs?status=success&branch=${DEFAULT_BRANCH}&per_page=1" \
-            --jq '.workflow_runs[0].created_at // empty' 2>/dev/null || true)
+  # The anchor is the last successful SCHEDULED sweep on the default branch (#2689). A
+  # scheduled sweep always derives its window, so it always covered back to the anchor
+  # before it. A manual one may not have: a dry run succeeds having filed nothing, and an
+  # explicit --window-hours succeeds having looked back only that far. Either, taken as the
+  # anchor, would mark as covered a stretch nobody acted on. A manual sweep can still be run
+  # at any time; it just does not move the anchor, and the worst case is that the next
+  # scheduled sweep looks at the same runs again, where the open-item check stops a second
+  # filing. `status=success` already excludes the run doing the asking, which is in
+  # progress. The branch filter keeps a green sweep on a branch from moving it (#2686).
+  #
+  # A failed read is not "no previous sweep". Both fall back to the default window, but a
+  # failed read also fails this sweep at the end, so it cannot become the next one's anchor
+  # having covered a window it guessed.
+  if ! SINCE=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/escalate-sweep.yml/runs?status=success&event=schedule&branch=${DEFAULT_BRANCH}&per_page=1" \
+                 --jq '.workflow_runs[0].created_at // empty'); then
+    echo "::error::could not read the last completed sweep; this sweep's window is a guess" >&2
+    window_query_failed=1
+    SINCE=""
+  fi
   if [ -z "$SINCE" ]; then
     SINCE=$(date -u -d "${DEFAULT_FIRST_WINDOW_HOURS} hours ago" +%Y-%m-%dT%H:%M:%SZ)
-    echo "Window: no previous successful sweep found; falling back to ${DEFAULT_FIRST_WINDOW_HOURS}h"
+    if [ "$window_query_failed" -eq 1 ]; then
+      echo "Window: UNKNOWN anchor; falling back to ${DEFAULT_FIRST_WINDOW_HOURS}h"
+    else
+      echo "Window: no previous successful scheduled sweep found; falling back to ${DEFAULT_FIRST_WINDOW_HOURS}h"
+    fi
   else
-    echo "Window: since the last completed sweep at $SINCE"
+    echo "Window: since the last completed sweep at $SINCE (scheduled sweeps only anchor the window)"
   fi
 fi
 echo "Sweeping ${#REGISTERED[@]} registered workflow(s) for non-success runs since $SINCE"
@@ -428,6 +447,16 @@ echo "Receipt: declared ${#REGISTERED[@]}, attempted $attempted, unreachable $un
 if [ "$unreachable" -gt 0 ]; then
   echo "::error::$unreachable of ${#REGISTERED[@]} registered workflow(s) could not be" \
        "examined; failing so the next sweep's window reaches back past this one" >&2
+  exit 1
+fi
+
+# The same reasoning for the two queries that bound the window rather than a workflow: a
+# sweep that could not read its own anchor, or could not page the run list for rejected
+# runs, did not examine what it claims to have, and must not become the next anchor.
+if [ "$window_query_failed" -eq 1 ] || [ "$startup_query_failed" -eq 1 ]; then
+  echo "::error::this sweep could not establish its window or read every run in it" \
+       "(anchor query failed: $window_query_failed, run list failed: $startup_query_failed);" \
+       "failing so the next sweep's window reaches back past this one" >&2
   exit 1
 fi
 

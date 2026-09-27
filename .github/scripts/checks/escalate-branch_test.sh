@@ -74,6 +74,8 @@ b64() { printf '%s' "\$1" | base64 -w0; printf ' '; }
 case "\$args" in
   *"actions/runs?"*)
       # Repository-wide list, filtered client-side: one rejected run on main, one on a branch.
+      # One page only; later pages are empty, as the real list is once it runs out.
+      if [[ "\$args" != *"page=1&"* ]]; then printf '%s' '{"workflow_runs":[]}'; exit 0; fi
       printf '%s' '{"workflow_runs":[
         {"id":999,"name":".github/workflows/demo.yml","html_url":"http://r/999","conclusion":"failure","created_at":"2099-01-01T00:00:00Z","head_branch":"main"},
         {"id":998,"name":".github/workflows/quiet.yml","html_url":"http://r/998","conclusion":"failure","created_at":"2099-01-01T00:00:00Z","head_branch":"feature"}]}' ;;

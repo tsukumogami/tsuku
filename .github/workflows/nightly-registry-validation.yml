@@ -640,13 +640,14 @@ jobs:
           # per leg. A missing shard is reported by name here, and its items are also
           # missing from the joined receipt, so the assertion below counts them as not
           # validated either way.
+          # The joined file is created only when at least one shard delivered a receipt, so a
+          # leg with none at all still reaches the assertion's "no receipt" case.
           for leg in linux darwin; do
             joined="coverage/coverage-receipt-validate-$leg/receipt-validate-$leg.ndjson"
-            mkdir -p "$(dirname "$joined")"
-            : > "$joined"
             for shard in 0 1 2 3 4 5 6 7; do
               f="coverage/coverage-receipt-validate-$leg-$shard/receipt-validate-$leg-$shard.ndjson"
               if [ -f "$f" ]; then
+                mkdir -p "$(dirname "$joined")"
                 cat "$f" >> "$joined"
               else
                 echo "::error::no receipt from validate-$leg shard $shard"

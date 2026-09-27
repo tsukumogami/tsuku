@@ -1,19 +1,20 @@
 {
-  "generated_at": "2026-09-27T00:17:52Z",
+  "generated_at": "2026-09-27T01:29:25Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 23,
       "excluded": 7,
-      "failed": 13,
-      "pending": 3874,
+      "failed": 15,
+      "pending": 3872,
       "success": 1388
     },
     "by_tier": {
       "1": {
         "blocked": 2,
         "excluded": 1,
-        "pending": 2,
+        "failed": 1,
+        "pending": 1,
         "success": 13
       },
       "2": {
@@ -24,8 +25,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 5,
-        "pending": 3872,
+        "failed": 6,
+        "pending": 3871,
         "success": 1361
       }
     },
@@ -40,13 +41,14 @@
       },
       "crates.io": {
         "excluded": 5,
-        "failed": 1,
-        "pending": 75,
+        "failed": 2,
+        "pending": 74,
         "success": 24,
         "total": 105
       },
       "github": {
-        "pending": 2,
+        "failed": 1,
+        "pending": 1,
         "success": 109,
         "total": 111
       },
@@ -426,6 +428,15 @@
       ],
       "failed": [
         {
+          "id": "github:github/hub",
+          "name": "hub",
+          "ecosystem": "github",
+          "priority": 1,
+          "category": "generation_failed",
+          "failure_count": 531,
+          "next_retry_at": "2026-10-04T01:24:32Z"
+        },
+        {
           "id": "homebrew:anomalyco/tap/opencode",
           "name": "anomalyco/tap/opencode",
           "ecosystem": "homebrew",
@@ -498,6 +509,15 @@
           "next_retry_at": "2026-09-28T02:22:27Z"
         },
         {
+          "id": "crates.io:bindgen-cli",
+          "name": "bindgen",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 893,
+          "next_retry_at": "2026-10-04T01:24:32Z"
+        },
+        {
           "id": "npm:chainsaw",
           "name": "chainsaw",
           "ecosystem": "npm",
@@ -544,15 +564,6 @@
         }
       ],
       "pending": [
-        {
-          "id": "github:github/hub",
-          "name": "hub",
-          "ecosystem": "github",
-          "priority": 1,
-          "category": "generation_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-02-24T06:13:36Z"
-        },
         {
           "id": "github:lotabout/skim",
           "name": "sk",
@@ -2755,14 +2766,6 @@
           "name": "bind",
           "ecosystem": "homebrew",
           "priority": 3,
-          "failure_count": 0
-        },
-        {
-          "id": "crates.io:bindgen-cli",
-          "name": "bindgen",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
           "failure_count": 0
         },
         {
@@ -40093,7 +40096,7 @@
     {
       "name": "hub",
       "source": "github:github/hub",
-      "validation_status": "valid"
+      "validation_status": "invalid"
     },
     {
       "name": "jq",
