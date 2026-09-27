@@ -57,6 +57,10 @@ if [[ ! -f "$EXCLUSIONS_FILE" ]]; then
     exit 2
 fi
 
+# Holds gh's stderr from the issue lookups, so a failed lookup can report its cause.
+GH_ERR=$(mktemp)
+trap 'rm -f "$GH_ERR"' EXIT
+
 # Validate JSON
 if ! jq empty "$EXCLUSIONS_FILE" 2>/dev/null; then
     echo "Invalid JSON in exclusions file" >&2
@@ -119,10 +123,10 @@ while IFS= read -r exclusion; do
         fi
 
         # Query issue state via GitHub API
-        issue_state=$(gh api "repos/$owner/$repo/issues/$issue_number" --jq '.state' 2>/dev/null || echo "error")
-
-        if [[ "$issue_state" == "error" ]]; then
-            echo "  ERROR: Could not fetch issue status" >&2
+        # A failed lookup counts as invalid (fail closed), and gh's own error is printed
+        # so the cause is on the log rather than discarded.
+        if ! issue_state=$(gh api "repos/$owner/$repo/issues/$issue_number" --jq '.state' 2>"$GH_ERR"); then
+            echo "  ERROR: Could not fetch issue status: $(cat "$GH_ERR")" >&2
             INVALID_COUNT=$((INVALID_COUNT + 1))
         elif [[ "$issue_state" == "open" ]]; then
             echo "  OK: Issue is open"

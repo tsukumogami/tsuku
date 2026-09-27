@@ -148,9 +148,10 @@ def main():
             # wolf is one people learn to override.
             #
             # STATED LIMITATION: a suppression elsewhere in a delivery step is not flagged.
-            # The two `gh label create ... 2>/dev/null || true` calls in this repository are
-            # real swallowed errors and this check does not catch them, because they are not
-            # the delivery.
+            # Two `gh label create ... 2>/dev/null || true` calls once sat in delivery steps
+            # here as real swallowed errors this check could not see, because they were not
+            # the delivery; they were removed in #2642, and the next one would be missed the
+            # same way.
             for command in delivery_commands(step.get("run", "") or ""):
                 for pattern, description in SUPPRESSIONS:
                     if pattern.search(command):

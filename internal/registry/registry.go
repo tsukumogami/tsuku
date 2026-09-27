@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/httputil"
 )
 
 const (
@@ -34,10 +35,12 @@ type Registry struct {
 // NewRegistryHTTPClient creates a secure HTTP client for registry operations with:
 // - DisableCompression: prevents decompression bomb attacks
 // - Proper timeouts
+// - HTTPS_PROXY, HTTP_PROXY and NO_PROXY honored
 func NewRegistryHTTPClient() *http.Client {
 	return &http.Client{
 		Timeout: config.GetAPITimeout(),
 		Transport: &http.Transport{
+			Proxy:              httputil.ProxyFromEnvironment(),
 			DisableCompression: true, // CRITICAL: Prevents decompression bomb attacks
 			DialContext: (&net.Dialer{
 				Timeout:   10 * time.Second,

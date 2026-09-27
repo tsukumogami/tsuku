@@ -5,31 +5,38 @@ homepage = "https://pnpm.io/"
 version_format = "semver"
 curated = true
 
+# Each archive holds the standalone pnpm binary at its root next to a dist/
+# directory (node-gyp and tar helpers) that pnpm loads at runtime, so the
+# whole tree is installed rather than the binary alone.
+
 # glibc Linux
 [[steps]]
-action = "github_file"
+action = "github_archive"
 repo = "pnpm/pnpm"
 when = { os = ["linux"], libc = ["glibc"] }
-asset_pattern = "pnpm-linux-{arch}"
-binary = "pnpm"
+asset_pattern = "pnpm-linux-{arch}.tar.gz"
+install_mode = "directory"
+binaries = ["pnpm"]
 arch_mapping = { amd64 = "x64", arm64 = "arm64" }
 
-# musl Linux (static build works on Alpine)
+# musl Linux
 [[steps]]
-action = "github_file"
+action = "github_archive"
 repo = "pnpm/pnpm"
 when = { os = ["linux"], libc = ["musl"] }
-asset_pattern = "pnpm-linuxstatic-{arch}"
-binary = "pnpm"
+asset_pattern = "pnpm-linux-{arch}-musl.tar.gz"
+install_mode = "directory"
+binaries = ["pnpm"]
 arch_mapping = { amd64 = "x64", arm64 = "arm64" }
 
 # macOS
 [[steps]]
-action = "github_file"
+action = "github_archive"
 repo = "pnpm/pnpm"
 when = { os = ["darwin"] }
-asset_pattern = "pnpm-macos-{arch}"
-binary = "pnpm"
+asset_pattern = "pnpm-darwin-{arch}.tar.gz"
+install_mode = "directory"
+binaries = ["pnpm"]
 arch_mapping = { amd64 = "x64", arm64 = "arm64" }
 
 [verify]
