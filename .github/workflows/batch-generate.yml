@@ -71,8 +71,22 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          # Query for open PRs from batch branches (using search for prefix matching)
-          OPEN_PRS=$(gh pr list --search "is:open head:batch/" --json number --jq 'length' 2>/dev/null || echo "0")
+          # Query for open PRs from batch branches (using search for prefix matching).
+          #
+          # A failed query stops the run; it never counts as zero. Substituting 0 for a
+          # failure is the one answer that disables this guard, and it is how a second
+          # batch PR was opened on 2026-08-17 while another had been open for seven weeks
+          # (#2642). gh's stderr is left on the log so the cause of a failure is visible.
+          if ! OPEN_PRS=$(gh pr list --search "is:open head:batch/" --json number --jq 'length'); then
+            echo "::error::could not determine whether batch PRs are open (gh pr list failed, see its error above); refusing to generate" >&2
+            exit 1
+          fi
+          # Anything but a count would make the -gt test below error, and an erroring test
+          # in an if condition reads as false, which would also mean "proceed".
+          if ! [[ "$OPEN_PRS" =~ ^[0-9]+$ ]]; then
+            echo "::error::gh pr list returned '$OPEN_PRS' rather than a count of open batch PRs; refusing to generate" >&2
+            exit 1
+          fi
 
           if [ "$OPEN_PRS" -gt 0 ]; then
             echo "should_skip=true" >> "$GITHUB_OUTPUT"

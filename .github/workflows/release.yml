@@ -70,8 +70,20 @@ jobs:
             dist/checksums.txt
           )
 
-          # Check if a draft release already exists (created by /release skill)
-          DRAFT=$(gh release view "$TAG" --json isDraft --jq '.isDraft' 2>/dev/null || echo "not_found")
+          # Check if a draft release already exists (created by /release skill).
+          # Only gh's "release not found" means there is no release. Any other failure
+          # (auth, rate limit, network) stops here with gh's error on the log, rather than
+          # being read as "no release" and sending the run down the create path.
+          VIEW_ERR=$(mktemp)
+          if DRAFT=$(gh release view "$TAG" --json isDraft --jq '.isDraft' 2>"$VIEW_ERR"); then
+            :
+          elif grep -qx 'release not found' "$VIEW_ERR"; then
+            DRAFT="not_found"
+          else
+            cat "$VIEW_ERR" >&2
+            echo "::error::could not determine whether a release exists for $TAG (gh release view failed, see its error above)" >&2
+            exit 1
+          fi
 
           if [ "$DRAFT" = "true" ]; then
             echo "Draft release found for $TAG, uploading assets..."
