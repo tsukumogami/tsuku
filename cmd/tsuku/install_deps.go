@@ -568,15 +568,8 @@ func installWithDependencies(ctx context.Context, args installArgs, visited map[
 	// narrating work that never ran, while the actual outcome ("already
 	// installed") was a transient spinner message the terminal then cleared.
 	if isExplicit && !quietFlag {
-		switch r.GetChecksumVerification() {
-		case recipe.ChecksumDynamic:
-			// No upstream checksum to compare against: the plan pins whatever
-			// the server served at generation time, which catches later
-			// corruption but not a substitution made before we first looked.
-			reporter.Log("Note: '%s' publishes no checksums; integrity is pinned to the artifact fetched now.", toolName)
-
-		case recipe.ChecksumEcosystem, recipe.ChecksumStatic:
-			// Ecosystem verification or an upstream-declared checksum -- silent.
+		if note := checksumDisclosureNote(r, toolName); note != "" {
+			reporter.Log("%s", note)
 		}
 	}
 
@@ -875,4 +868,24 @@ func isSystemDependencyPlan(plan *executor.InstallationPlan) bool {
 // overwrites any prior failure record — no separate clear step needed.
 func clearAndRecordInstallSuccess(toolName string) {
 	_ = toolName
+}
+
+// checksumDisclosureNote returns the note shown on an explicit install of a
+// recipe that declares no upstream checksum, or "" when the recipe's
+// verification needs no disclosure.
+//
+// The note describes the recipe, not the upstream project. ChecksumDynamic
+// means the recipe names no checksum source; the upstream may well publish
+// one that the recipe doesn't use, so the note must not claim otherwise.
+func checksumDisclosureNote(r *recipe.Recipe, toolName string) string {
+	switch r.GetChecksumVerification() {
+	case recipe.ChecksumDynamic:
+		// No upstream checksum to compare against: the plan pins whatever
+		// the server served at generation time, which catches later
+		// corruption but not a substitution made before we first looked.
+		return fmt.Sprintf("Note: '%s' recipe declares no upstream checksum; integrity is pinned to the artifact fetched now.", toolName)
+	default:
+		// Ecosystem verification or an upstream-declared checksum -- silent.
+		return ""
+	}
 }

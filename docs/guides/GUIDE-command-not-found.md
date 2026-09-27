@@ -121,7 +121,7 @@ In a project that declares `fd = "10.2.0"`, with no consent mode configured:
 ```
 $ fd --version
 project-declaration: /home/dev/myproject/.tsuku.toml declares fd@10.2.0 (recipe source: registry)
-Note: 'fd' publishes no checksums; integrity is pinned to the artifact fetched now.
+Note: 'fd' recipe declares no upstream checksum; integrity is pinned to the artifact fetched now.
     ...install progress, a success line for fd@10.2.0, and a PATH hint
        if $TSUKU_HOME/tools/current isn't on your PATH yet...
 fd 10.2.0
