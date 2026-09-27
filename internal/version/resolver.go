@@ -157,10 +157,47 @@ func (r *Resolver) ResolveGitHub(ctx context.Context, repo string) (*VersionInfo
 	}
 
 	tag := *release.TagName
-	return &VersionInfo{
+	latest := &VersionInfo{
 		Tag:     tag,
 		Version: normalizeVersion(tag),
-	}, nil
+	}
+
+	// A release can be published before its assets are uploaded, and an
+	// install of it 404s until they are. When the latest release has none,
+	// prefer the newest earlier release that does. Repositories whose
+	// releases never carry assets (the recipe downloads from elsewhere) keep
+	// the latest release.
+	if len(release.Assets) == 0 {
+		if earlier := r.newestReleaseWithAssets(ctx, repo, latest.Version); earlier != nil {
+			return earlier, nil
+		}
+	}
+	return latest, nil
+}
+
+// newestReleaseWithAssets returns the highest-versioned published, non-draft,
+// non-prerelease release on the first page of repo's releases that has
+// assets and is no newer than ceiling. It returns nil when there is none, or
+// when the listing fails, so the caller keeps its own answer.
+func (r *Resolver) newestReleaseWithAssets(ctx context.Context, repo, ceiling string) *VersionInfo {
+	releases, err := r.ListGitHubReleases(ctx, repo, 1)
+	if err != nil {
+		return nil
+	}
+	var best *VersionInfo
+	for _, rel := range releases {
+		if rel.TagName == nil || rel.GetDraft() || rel.GetPrerelease() || len(rel.Assets) == 0 {
+			continue
+		}
+		v := normalizeVersion(*rel.TagName)
+		if v == "" || !isValidVersion(v) || CompareVersions(v, ceiling) > 0 {
+			continue
+		}
+		if best == nil || CompareVersions(v, best.Version) > 0 {
+			best = &VersionInfo{Tag: *rel.TagName, Version: v}
+		}
+	}
+	return best
 }
 
 // resolveFromTags resolves version from repository tags when releases aren't available
@@ -329,10 +366,11 @@ func (r *Resolver) ListGitHubVersions(ctx context.Context, repo string) ([]strin
 	return SortVersionsDescending(versions), nil
 }
 
-// maxGitHubTagPages bounds ListAllGitHubVersions. At 100 tags per page it
-// covers 1000 tags, several times what the largest repositories tsuku's
+// maxGitHubListPages bounds the paged tag and release listings used when a
+// pin isn't found on the first page. At 100 entries per page it covers 1000
+// tags or releases, several times what the largest repositories tsuku's
 // recipes point at carry today.
-const maxGitHubTagPages = 10
+const maxGitHubListPages = 10
 
 // ListAllGitHubVersions lists a repository's tags across pages, sorted newest
 // first. ListGitHubVersions reads only the first page, and GitHub orders tags
@@ -347,7 +385,7 @@ func (r *Resolver) ListAllGitHubVersions(ctx context.Context, repo string) ([]st
 
 	var versions []string
 	opts := &github.ListOptions{PerPage: 100}
-	for page := 1; page <= maxGitHubTagPages; page++ {
+	for page := 1; page <= maxGitHubListPages; page++ {
 		opts.Page = page
 		tags, resp, err := r.client.Repositories.ListTags(ctx, owner, repoName, opts)
 		if err != nil {
@@ -367,6 +405,34 @@ func (r *Resolver) ListAllGitHubVersions(ctx context.Context, repo string) ([]st
 	}
 
 	return SortVersionsDescending(versions), nil
+}
+
+// ListGitHubReleases lists a repository's releases, 100 per page, reading at
+// most maxPages pages. The listing isn't in version order, and it includes
+// drafts when the caller has push access to the repository.
+func (r *Resolver) ListGitHubReleases(ctx context.Context, repo string, maxPages int) ([]*github.RepositoryRelease, error) {
+	owner, repoName, err := parseRepo(repo)
+	if err != nil {
+		return nil, err
+	}
+
+	var releases []*github.RepositoryRelease
+	opts := &github.ListOptions{PerPage: 100}
+	for page := 1; page <= maxPages; page++ {
+		opts.Page = page
+		batch, resp, err := r.client.Repositories.ListReleases(ctx, owner, repoName, opts)
+		if err != nil {
+			if rateLimitErr := r.wrapGitHubRateLimitError(err, GitHubContextVersionResolution); rateLimitErr != nil {
+				return nil, rateLimitErr
+			}
+			return nil, fmt.Errorf("failed to list releases: %w", err)
+		}
+		releases = append(releases, batch...)
+		if resp == nil || resp.NextPage == 0 {
+			break
+		}
+	}
+	return releases, nil
 }
 
 // LookupGitHubTag reports whether repo has a tag named exactly tag. It costs

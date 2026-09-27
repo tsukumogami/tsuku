@@ -39,8 +39,9 @@ func TestEvalPlanCacheFlow(t *testing.T) {
 		t.Skip("tsuku binary not found in PATH or as os.Executable()")
 	}
 
-	// Create a minimal recipe that downloads a small file
-	// Use serve which has a simple github_file action
+	// Create a minimal recipe that downloads a small archive. serve's newest
+	// releases carry no assets, so this resolves to the newest release that
+	// does (0.5.0 at the time of writing).
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
 			Name:          "serve-test",
@@ -55,11 +56,12 @@ func TestEvalPlanCacheFlow(t *testing.T) {
 		},
 		Steps: []recipe.Step{
 			{
-				Action: "github_file",
+				Action: "github_archive",
 				Params: map[string]interface{}{
 					"repo":          "syntaqx/serve",
 					"asset_pattern": "serve_{version}_{os}_{arch}.tar.gz",
-					"binary":        "serve",
+					"strip_dirs":    0,
+					"binaries":      []interface{}{"serve"},
 					"os_mapping":    map[string]interface{}{"darwin": "macos", "linux": "linux"},
 					"arch_mapping":  map[string]interface{}{"amd64": "x86_64", "arm64": "arm64"},
 				},
