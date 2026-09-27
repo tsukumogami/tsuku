@@ -76,9 +76,20 @@ jobs:
       # the cases assert both the keys and each tool's own count of what it compared.
       - name: Check the R2 golden layout and its readers
         run: scripts/lib/r2-layout_test.sh
+      # Only default-branch runs escalate, in both directions: a failing branch run files
+      # nothing, and a green one neither closes an item nor reads as recovery. The stub `gh`
+      # answers differently with and without the branch filter, so dropping the filter at
+      # any one query site turns its row red.
+      - name: Check branch runs neither file nor hide a failure
+        run: .github/scripts/checks/escalate-branch_test.sh
       # The R2 health check gates Nightly Registry Validation, R2 Cleanup and the golden
       # file workflows, and R2 Health Monitor reports its verdict. These cases pin that the
       # verdict times the storage request rather than the start-up of the program making
       # it (#2593), against a local stand-in for R2 that only accepts signed requests.
       - name: Check the R2 health check times the request
         run: scripts/r2-health-check_test.sh
+      # The coverage receipt: the assertion, the declared set, the lines validate-golden.sh
+      # writes, and Nightly Registry Validation's own step text run under the shell Actions
+      # uses. Rows assert on what each piece reports about its work, not only its exit code.
+      - name: Check a run that validated nothing cannot pass
+        run: .github/scripts/checks/coverage-receipt_test.sh
