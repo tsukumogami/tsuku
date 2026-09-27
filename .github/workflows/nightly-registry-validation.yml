@@ -144,7 +144,11 @@ jobs:
           path: r2-golden-files/
           retention-days: 1
 
+      # always(): the declared set is written first in this job, and a failure later in it
+      # must not take the declared set down with it. Without it Assert Coverage has
+      # nothing to report a shortfall against (run 36304210984).
       - name: Upload declared set
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: coverage-declared
@@ -630,6 +634,11 @@ jobs:
           R2_AVAILABLE: ${{ needs.health-check.outputs.r2_available }}
           HEALTH_STATUS: ${{ needs.health-check.outputs.health_status }}
         run: |
+          # coverage/ exists only if some artifact was downloaded. When nothing was, this
+          # step still has to run to the assertion and name every leg's count, so it creates
+          # the directory rather than dying on its first write (run 36304210984).
+          mkdir -p coverage
+
           # Owner routing is per workflow, so every failure of this run reaches the same
           # issue. Say which failure this is before the counts, so it can be read there.
           if [ "$R2_AVAILABLE" != "true" ]; then
