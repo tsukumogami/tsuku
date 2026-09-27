@@ -186,10 +186,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      # rustup-init is fetched at a fixed version and checked against a committed sha256
+      # before it runs, rather than piping sh.rustup.rs into sh. To bump it, change both
+      # values together; the hash is the content of
+      # https://static.rust-lang.org/rustup/archive/<version>/x86_64-unknown-linux-musl/rustup-init.sha256
+      # The toolchain rustup then installs is verified by rustup against the channel manifest.
       - name: Install bootstrap dependencies
+        env:
+          RUSTUP_VERSION: 1.29.1
+          RUSTUP_INIT_SHA256: 331228566cc931f32cd684f9bebc5956a5e5d7394c8d5de595f196a658ab98e6
         run: |
+          set -eu
           apk add --no-cache curl gcc musl-dev bash git
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+          curl --proto '=https' --tlsv1.2 -fsSL --retry 3 -o /tmp/rustup-init \
+            "https://static.rust-lang.org/rustup/archive/${RUSTUP_VERSION}/x86_64-unknown-linux-musl/rustup-init"
+          echo "${RUSTUP_INIT_SHA256}  /tmp/rustup-init" | sha256sum -c -
+          chmod +x /tmp/rustup-init
+          /tmp/rustup-init -y --default-toolchain stable
+          rm /tmp/rustup-init
 
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku

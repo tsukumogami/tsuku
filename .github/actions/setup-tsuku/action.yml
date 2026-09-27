@@ -1,0 +1,27 @@
+name: Set up tsuku
+description: >
+  Install a pinned tsuku release, verified against a committed sha256 of the
+  release's checksums.txt, and put it on PATH. See README.md in this directory.
+
+inputs:
+  version:
+    description: >
+      tsuku release to install. Change it only together with checksums-sha256.
+    required: false
+    default: '0.14.0'
+  checksums-sha256:
+    description: >
+      sha256 of the checksums.txt published with that release. The binary is
+      checked against its line in this file, so this one value pins every platform.
+    required: false
+    default: '61b4d5cfc09702702e4556c71dc6da9fa87ddf2791dda7c35169d9d0bc35b452'
+
+runs:
+  using: composite
+  steps:
+    - name: Install tsuku
+      shell: bash
+      env:
+        TSUKU_VERSION: ${{ inputs.version }}
+        TSUKU_CHECKSUMS_SHA256: ${{ inputs.checksums-sha256 }}
+      run: '"$GITHUB_ACTION_PATH/setup-tsuku.sh"'
