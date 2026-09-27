@@ -31,8 +31,8 @@ on:
   workflow_dispatch:
     inputs:
       window_hours:
-        description: 'How far back to look'
-        default: '2'
+        description: 'Hours to look back. Empty (the default) means since the last completed scheduled sweep.'
+        default: ''
       dry_run:
         description: 'Report gaps without filing'
         type: boolean
@@ -58,7 +58,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          WINDOW_HOURS: ${{ inputs.window_hours || '2' }}
+          # No fallback value (#2689). A schedule has no inputs, so this is empty and the
+          # script derives the window from the last scheduled sweep. A fallback here made
+          # every sweep explicit, and the derived window never ran in production.
+          WINDOW_HOURS: ${{ inputs.window_hours }}
           DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
         run: |
           # Values reach the script through env: rather than GitHub expression

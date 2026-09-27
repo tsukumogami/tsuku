@@ -150,7 +150,7 @@ if [ $rc -ne 0 ]; then
   report FAIL "a closed owner falls through to filing" "exit $rc: $out"
 elif called "$s" "issue comment ${OWNER}" || ! called "$s" "issue create"; then
   report FAIL "a closed owner falls through to filing" "calls: $(cat "$s/calls.log")"
-elif ! printf '%s' "$out" | grep -qF "declaration has expired"; then
+elif ! grep -qF "declaration has expired" <<< "$out"; then
   report FAIL "a closed owner falls through to filing" "no expiry warning: $out"
 elif [ "$(cat "$s/outcome.tsv" 2>/dev/null)" != "$(printf 'filed\t9001')" ]; then
   report FAIL "a closed owner falls through to filing" "outcome was: $(cat "$s/outcome.tsv" 2>/dev/null)"
@@ -186,9 +186,9 @@ s=$(make_sandbox OPEN)
 out=$(run_sweep "$s"); rc=$?
 if [ $rc -ne 0 ]; then
   report FAIL "the sweep names an owned run as routed" "exit $rc: $out"
-elif printf '%s' "$out" | grep -qF 'gap: "Demo Workflow"'; then
+elif grep -qF 'gap: "Demo Workflow"' <<< "$out"; then
   report FAIL "the sweep names an owned run as routed" "treated as a gap: $out"
-elif ! printf '%s' "$out" | grep -qF "run 111 routed to its owner #${OWNER}"; then
+elif ! grep -qF "run 111 routed to its owner #${OWNER}" <<< "$out"; then
   report FAIL "the sweep names an owned run as routed" "no routed line: $out"
 else
   report PASS "the sweep names an owned run as routed to #${OWNER}, not a gap"
@@ -198,7 +198,7 @@ rm -rf "$s"
 # 7. Owner closed: expired, so the run is a gap like any other.
 s=$(make_sandbox CLOSED)
 out=$(run_sweep "$s"); rc=$?
-if printf '%s' "$out" | grep -qF "routed to its owner" || ! printf '%s' "$out" | grep -qF 'gap: "Demo Workflow" run 111'; then
+if grep -qF "routed to its owner" <<< "$out" || ! grep -qF 'gap: "Demo Workflow" run 111' <<< "$out"; then
   report FAIL "the sweep treats an expired owner as no owner" "exit $rc: $out"
 else
   report PASS "the sweep treats an expired owner as no owner"
@@ -208,7 +208,7 @@ rm -rf "$s"
 # 8. Owner unreadable: the sweep fails rather than reporting the run as handled.
 s=$(make_sandbox UNREADABLE)
 out=$(run_sweep "$s"); rc=$?
-if [ $rc -eq 0 ] || printf '%s' "$out" | grep -qF "routed to its owner"; then
+if [ $rc -eq 0 ] || grep -qF "routed to its owner" <<< "$out"; then
   report FAIL "the sweep fails on an unreadable owner" "exit $rc: $out"
 else
   report PASS "the sweep fails on an unreadable owner"
