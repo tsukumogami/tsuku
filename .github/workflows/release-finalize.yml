@@ -2,7 +2,7 @@
 #
 # Triggered automatically when release.yml (step 2) completes successfully.
 # Delegates to shirabe's reusable finalize workflow, which:
-#   1. Verifies at least 16 binary assets are present
+#   1. Waits (bounded) for the draft release to carry at least 16 binary assets
 #   2. Promotes the draft release to published
 #   3. Runs .release/post-release.sh (generates unified checksums.txt)
 #
@@ -48,7 +48,7 @@ jobs:
 
   finalize:
     needs: extract-tag
-    uses: tsukumogami/shirabe/.github/workflows/finalize-release.yml@v0.5.1
+    uses: tsukumogami/shirabe/.github/workflows/finalize-release.yml@f5f71e581daaf88d0e45d620324d8247ce8231a2  # v0.21.0
     with:
       tag: ${{ needs.extract-tag.outputs.tag }}
       expected-assets: 16
