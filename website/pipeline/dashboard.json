@@ -1,20 +1,19 @@
 {
-  "generated_at": "2026-09-27T06:15:19Z",
+  "generated_at": "2026-09-27T06:16:07Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 23,
       "excluded": 7,
-      "failed": 15,
-      "pending": 3872,
+      "failed": 25,
+      "pending": 3862,
       "success": 1388
     },
     "by_tier": {
       "1": {
         "blocked": 2,
         "excluded": 1,
-        "failed": 1,
-        "pending": 1,
+        "failed": 2,
         "success": 13
       },
       "2": {
@@ -25,8 +24,8 @@
       "3": {
         "blocked": 16,
         "excluded": 6,
-        "failed": 6,
-        "pending": 3871,
+        "failed": 15,
+        "pending": 3862,
         "success": 1361
       }
     },
@@ -47,8 +46,7 @@
         "total": 105
       },
       "github": {
-        "failed": 1,
-        "pending": 1,
+        "failed": 2,
         "success": 109,
         "total": 111
       },
@@ -59,8 +57,8 @@
       "homebrew": {
         "blocked": 23,
         "excluded": 1,
-        "failed": 10,
-        "pending": 3702,
+        "failed": 19,
+        "pending": 3693,
         "success": 1147,
         "total": 4883
       },
@@ -437,6 +435,15 @@
           "next_retry_at": "2026-10-04T01:24:32Z"
         },
         {
+          "id": "github:lotabout/skim",
+          "name": "sk",
+          "ecosystem": "github",
+          "priority": 1,
+          "category": "generation_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-09-27T14:15:23Z"
+        },
+        {
           "id": "homebrew:anomalyco/tap/opencode",
           "name": "anomalyco/tap/opencode",
           "ecosystem": "homebrew",
@@ -509,6 +516,33 @@
           "next_retry_at": "2026-09-28T02:22:27Z"
         },
         {
+          "id": "homebrew:0xjacky/tools/nginx-ui",
+          "name": "0xjacky/tools/nginx-ui",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "recipe_not_found",
+          "failure_count": 5,
+          "next_retry_at": "2026-09-27T22:15:23Z"
+        },
+        {
+          "id": "homebrew:ada-url",
+          "name": "ada-url",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-09-27T14:15:23Z"
+        },
+        {
+          "id": "homebrew:autoconf",
+          "name": "autoconf",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-09-27T14:15:23Z"
+        },
+        {
           "id": "crates.io:bindgen-cli",
           "name": "bindgen",
           "ecosystem": "crates.io",
@@ -516,6 +550,15 @@
           "category": "install_failed",
           "failure_count": 893,
           "next_retry_at": "2026-10-04T01:24:32Z"
+        },
+        {
+          "id": "homebrew:certifi",
+          "name": "certifi",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-09-27T14:15:23Z"
         },
         {
           "id": "npm:chainsaw",
@@ -536,6 +579,15 @@
           "next_retry_at": "2026-09-27T08:17:03Z"
         },
         {
+          "id": "homebrew:libassuan",
+          "name": "libassuan",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-09-28T14:15:23Z"
+        },
+        {
           "id": "homebrew:little-cms2",
           "name": "little-cms2",
           "ecosystem": "homebrew",
@@ -554,6 +606,33 @@
           "next_retry_at": "2026-10-03T18:22:27Z"
         },
         {
+          "id": "homebrew:openjph",
+          "name": "openjph",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-09-27T14:15:23Z"
+        },
+        {
+          "id": "homebrew:p11-kit",
+          "name": "p11-kit",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-09-27T14:15:23Z"
+        },
+        {
+          "id": "homebrew:pmix",
+          "name": "pmix",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-09-27T14:15:23Z"
+        },
+        {
           "id": "pypi:tctl",
           "name": "tctl",
           "ecosystem": "pypi",
@@ -561,27 +640,18 @@
           "category": "install_failed",
           "failure_count": 22,
           "next_retry_at": "2026-10-03T21:53:59Z"
+        },
+        {
+          "id": "homebrew:webp",
+          "name": "webp",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-09-27T22:15:23Z"
         }
       ],
       "pending": [
-        {
-          "id": "github:lotabout/skim",
-          "name": "sk",
-          "ecosystem": "github",
-          "priority": 1,
-          "category": "generation_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-02-24T06:13:44Z"
-        },
-        {
-          "id": "homebrew:0xjacky/tools/nginx-ui",
-          "name": "0xjacky/tools/nginx-ui",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "recipe_not_found",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T12:51:20Z"
-        },
         {
           "id": "homebrew:0xjuanma/tap/golazo",
           "name": "0xjuanma/tap/golazo",
@@ -761,15 +831,6 @@
           "category": "install_failed",
           "failure_count": 3,
           "next_retry_at": "2026-03-03T09:11:37Z"
-        },
-        {
-          "id": "homebrew:ada-url",
-          "name": "ada-url",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T13:44:08Z"
         },
         {
           "id": "homebrew:addlicense",
@@ -1947,15 +2008,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:autoconf",
-          "name": "autoconf",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T14:42:48Z"
         },
         {
           "id": "homebrew:autoconf-archive",
@@ -3678,15 +3730,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:certifi",
-          "name": "certifi",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T14:42:48Z"
         },
         {
           "id": "homebrew:cesarferreira/tap/rip",
@@ -12922,15 +12965,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:libassuan",
-          "name": "libassuan",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-04T03:36:10Z"
-        },
-        {
           "id": "homebrew:libatomic_ops",
           "name": "libatomic_ops",
           "ecosystem": "homebrew",
@@ -17475,15 +17509,6 @@
           "failure_count": 0
         },
         {
-          "id": "homebrew:openjph",
-          "name": "openjph",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T13:44:08Z"
-        },
-        {
           "id": "homebrew:openkim-models",
           "name": "openkim-models",
           "ecosystem": "homebrew",
@@ -18322,15 +18347,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:p11-kit",
-          "name": "p11-kit",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T14:42:48Z"
         },
         {
           "id": "homebrew:packetry",
@@ -19181,15 +19197,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:pmix",
-          "name": "pmix",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T14:42:48Z"
         },
         {
           "id": "crates.io:pmtiles",
@@ -26899,15 +26906,6 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:webp",
-          "name": "webp",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T17:44:08Z"
         },
         {
           "id": "homebrew:webpack",
@@ -40119,7 +40117,7 @@
     {
       "name": "sk",
       "source": "github:lotabout/skim",
-      "validation_status": "valid"
+      "validation_status": "invalid"
     },
     {
       "name": "step",
