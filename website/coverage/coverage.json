@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-09-27T10:57:34Z",
-  "total_recipes": 1449,
+  "generated_at": "2026-09-27T15:21:02Z",
+  "total_recipes": 1450,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 886,
-        "total": 1449,
-        "pct": 61.1456176673568
+        "supported": 887,
+        "total": 1450,
+        "pct": 61.17241379310345
       },
       "glibc": {
         "supported": 1417,
-        "total": 1449,
-        "pct": 97.79158040027606
+        "total": 1450,
+        "pct": 97.72413793103448
       },
       "musl": {
         "supported": 1257,
-        "total": 1449,
-        "pct": 86.74948240165632
+        "total": 1450,
+        "pct": 86.6896551724138
       }
     },
     "by_category": {
@@ -26,7 +26,7 @@
         "glibc_support": 151
       },
       "tool": {
-        "total": 1295,
+        "total": 1296,
         "musl_support": 1106,
         "glibc_support": 1266
       }
@@ -6161,6 +6161,21 @@
       "warnings": [
         "recipe 'ghorg' has platform-specific actions without libc when clauses and no musl fallback"
       ]
+    },
+    {
+      "name": "ghostty",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": false,
+        "musl": false
+      },
+      "gaps": [
+        "glibc",
+        "musl"
+      ],
+      "errors": null,
+      "warnings": null
     },
     {
       "name": "ghostunnel",
