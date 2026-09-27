@@ -260,13 +260,23 @@ func (r *Resolver) ResolveGitHubVersion(ctx context.Context, repo, version strin
 	if len(parts) != 2 {
 		return nil, fmt.Errorf("invalid repo format: %s (expected owner/repo)", repo)
 	}
-	// owner, repoName := parts[0], parts[1]
+	// An exact tag is found with one or two ref lookups, wherever it sits in
+	// the tag listing. The listing below returns only its first page, which
+	// GitHub orders by name rather than by version.
+	for _, candidate := range githubTagCandidates("", version) {
+		found, err := r.LookupGitHubTag(ctx, repo, candidate)
+		if err != nil {
+			return nil, err
+		}
+		if found {
+			return &VersionInfo{
+				Tag:     candidate,
+				Version: normalizeVersion(candidate),
+			}, nil
+		}
+	}
 
-	// Try to find the release by tag
-	// Note: GitHub API expects "tags/v1.0.0" or just "v1.0.0" depending on how it was created
-	// We'll try to list tags and find a match if direct lookup fails or if we need to fuzzy match
-
-	// First, try to list tags to find a match
+	// No exact tag: fall back to the listing for fuzzy matches.
 	tags, err := r.ListGitHubVersions(ctx, repo)
 	if err != nil {
 		return nil, err
@@ -317,6 +327,82 @@ func (r *Resolver) ListGitHubVersions(ctx context.Context, repo string) ([]strin
 	}
 
 	return SortVersionsDescending(versions), nil
+}
+
+// maxGitHubTagPages bounds ListAllGitHubVersions. At 100 tags per page it
+// covers 1000 tags, several times what the largest repositories tsuku's
+// recipes point at carry today.
+const maxGitHubTagPages = 10
+
+// ListAllGitHubVersions lists a repository's tags across pages, sorted newest
+// first. ListGitHubVersions reads only the first page, and GitHub orders tags
+// by name rather than by version, so a repository with more than 100 tags can
+// keep its current versions off that page entirely. This costs one request
+// per 100 tags, so callers use it only after the first page failed to match.
+func (r *Resolver) ListAllGitHubVersions(ctx context.Context, repo string) ([]string, error) {
+	owner, repoName, err := parseRepo(repo)
+	if err != nil {
+		return nil, err
+	}
+
+	var versions []string
+	opts := &github.ListOptions{PerPage: 100}
+	for page := 1; page <= maxGitHubTagPages; page++ {
+		opts.Page = page
+		tags, resp, err := r.client.Repositories.ListTags(ctx, owner, repoName, opts)
+		if err != nil {
+			if rateLimitErr := r.wrapGitHubRateLimitError(err, GitHubContextVersionResolution); rateLimitErr != nil {
+				return nil, rateLimitErr
+			}
+			return nil, fmt.Errorf("failed to list tags: %w", err)
+		}
+		for _, tag := range tags {
+			if tag.Name != nil {
+				versions = append(versions, *tag.Name)
+			}
+		}
+		if resp == nil || resp.NextPage == 0 {
+			break
+		}
+	}
+
+	return SortVersionsDescending(versions), nil
+}
+
+// LookupGitHubTag reports whether repo has a tag named exactly tag. It costs
+// one request regardless of how many tags the repository has.
+func (r *Resolver) LookupGitHubTag(ctx context.Context, repo, tag string) (bool, error) {
+	owner, repoName, err := parseRepo(repo)
+	if err != nil {
+		return false, err
+	}
+
+	_, resp, err := r.client.Git.GetRef(ctx, owner, repoName, "tags/"+tag)
+	if err == nil {
+		return true, nil
+	}
+	if resp != nil && resp.StatusCode == http.StatusNotFound {
+		return false, nil
+	}
+	if rateLimitErr := r.wrapGitHubRateLimitError(err, GitHubContextVersionResolution); rateLimitErr != nil {
+		return false, rateLimitErr
+	}
+	return false, fmt.Errorf("failed to look up tag %s: %w", tag, err)
+}
+
+// githubTagCandidates returns the tag names a version could be published
+// under, most likely first. With a tag prefix that is the prefixed name, then
+// the bare one. Without one it is the version as written, then the same
+// version with its leading "v" added or removed.
+func githubTagCandidates(tagPrefix, version string) []string {
+	bare := trimVersionV(version)
+	if tagPrefix != "" {
+		return []string{tagPrefix + bare, bare}
+	}
+	if bare != version {
+		return []string{version, bare}
+	}
+	return []string{version, "v" + version}
 }
 
 // ResolveHashiCorp resolves the latest version from HashiCorp releases.
