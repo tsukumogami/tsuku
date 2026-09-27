@@ -27,21 +27,16 @@ type Change struct {
 // the queue in place and does not perform any queue I/O (the caller loads and
 // saves the queue).
 //
-// The blocker map is loaded from JSONL failure data in failuresDir using the
-// shared function in internal/blocker. The map is then inverted to build a
-// reverse index: for each blocked package, which dependencies block it.
+// An entry's blocking dependencies come from legacy failure records whose
+// package_id is the entry's source, plus per-recipe records under the entry's
+// name (blocker.LoadBlockerIndex). Matching legacy records by bare name (the
+// part of the package_id after the colon) instead would miss any entry whose
+// name differs from its source's identifier, such as hub (github:github/hub).
 func Run(queue *batch.UnifiedQueue, failuresDir string) (*Result, error) {
-	// Load blocker map: dependency_name -> []blocked_package_id
-	blockerMap, err := blocker.LoadBlockerMap(failuresDir)
+	index, err := blocker.LoadBlockerIndex(failuresDir)
 	if err != nil {
 		return nil, err
 	}
-
-	// Build reverse index: entry_name -> []dependency_names
-	// The blocker map keys are dependency names, values are package IDs
-	// like "homebrew:ffmpeg". We need to map entry names (bare names like
-	// "ffmpeg") to the dependency names that block them.
-	reverseIndex := buildReverseIndex(blockerMap)
 
 	// Build resolved set from queue entries with status "success"
 	resolved := make(map[string]bool)
@@ -59,8 +54,8 @@ func Run(queue *batch.UnifiedQueue, failuresDir string) (*Result, error) {
 			continue
 		}
 
-		deps, hasDeps := reverseIndex[entry.Name]
-		if !hasDeps {
+		deps := index.For(entry.Source, entry.Name)
+		if len(deps) == 0 {
 			// No failure record for this blocked entry. This can happen when
 			// failure data has aged out or was never recorded. The entry stays
 			// blocked since we can't determine what's blocking it.
@@ -92,45 +87,4 @@ func Run(queue *batch.UnifiedQueue, failuresDir string) (*Result, error) {
 	}
 
 	return result, nil
-}
-
-// buildReverseIndex inverts the blocker map (dependency -> []package_id) to
-// produce a map of bare_package_name -> []dependency_names. Package IDs in
-// the blocker map are fully qualified (e.g., "homebrew:ffmpeg"), so we strip
-// the ecosystem prefix to get the bare name that matches queue entry names.
-func buildReverseIndex(blockerMap map[string][]string) map[string][]string {
-	reverse := make(map[string][]string)
-	for dep, pkgIDs := range blockerMap {
-		for _, pkgID := range pkgIDs {
-			bare := bareName(pkgID)
-			// Avoid adding duplicate dependencies for the same package.
-			// This can happen when multiple failure records reference the
-			// same dep for the same package.
-			if !containsString(reverse[bare], dep) {
-				reverse[bare] = append(reverse[bare], dep)
-			}
-		}
-	}
-	return reverse
-}
-
-// bareName extracts the bare name from a fully-qualified package ID.
-// For "homebrew:ffmpeg" it returns "ffmpeg". For "ffmpeg" it returns "ffmpeg".
-func bareName(pkgID string) string {
-	for i := 0; i < len(pkgID); i++ {
-		if pkgID[i] == ':' {
-			return pkgID[i+1:]
-		}
-	}
-	return pkgID
-}
-
-// containsString reports whether s is in the slice.
-func containsString(slice []string, s string) bool {
-	for _, v := range slice {
-		if v == s {
-			return true
-		}
-	}
-	return false
 }

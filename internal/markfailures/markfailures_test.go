@@ -1,6 +1,7 @@
 package markfailures
 
 import (
+	"math"
 	"os"
 	"path/filepath"
 	"testing"
@@ -20,7 +21,7 @@ func TestLoadFailureMap_LegacyBatchFormat(t *testing.T) {
 	}
 
 	// neovim: missing_dep with blocked_by
-	neo, ok := fm["neovim"]
+	neo, ok := fm.BySource["homebrew:neovim"]
 	if !ok {
 		t.Fatal("expected neovim in failure map")
 	}
@@ -35,7 +36,7 @@ func TestLoadFailureMap_LegacyBatchFormat(t *testing.T) {
 	}
 
 	// tmux: install_failed
-	tmux, ok := fm["tmux"]
+	tmux, ok := fm.BySource["homebrew:tmux"]
 	if !ok {
 		t.Fatal("expected tmux in failure map")
 	}
@@ -61,7 +62,7 @@ func TestLoadFailureMap_PerRecipeFormat(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	gitui, ok := fm["gitui"]
+	gitui, ok := fm.ByName["gitui"]
 	if !ok {
 		t.Fatal("expected gitui in failure map")
 	}
@@ -86,7 +87,7 @@ func TestLoadFailureMap_MultipleFiles(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ff := fm["ffmpeg"]
+	ff := fm.BySource["homebrew:ffmpeg"]
 	if ff == nil {
 		t.Fatal("expected ffmpeg in failure map")
 		return
@@ -102,8 +103,8 @@ func TestLoadFailureMap_EmptyDir(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(fm) != 0 {
-		t.Errorf("expected empty map, got %d entries", len(fm))
+	if len(fm.BySource)+len(fm.ByName) != 0 {
+		t.Errorf("expected empty maps, got %d + %d entries", len(fm.BySource), len(fm.ByName))
 	}
 }
 
@@ -120,7 +121,7 @@ func TestLoadFailureMap_DeduplicatesBlockedBy(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	vim := fm["vim"]
+	vim := fm.BySource["homebrew:vim"]
 	if vim == nil {
 		t.Fatal("expected vim in failure map")
 		return
@@ -320,7 +321,19 @@ func TestComputeRetryAt(t *testing.T) {
 		{2, 2 * time.Hour},       // 2^1 = 2h
 		{3, 4 * time.Hour},       // 2^2 = 4h
 		{5, 16 * time.Hour},      // 2^4 = 16h
+		{8, 128 * time.Hour},     // 2^7 = 128h, last value under the cap
+		{9, 7 * 24 * time.Hour},  // 2^8 = 256h, capped at 7 days
 		{20, 7 * 24 * time.Hour}, // capped at 7 days
+		// 2^22 hours no longer fits in a time.Duration. A float-based
+		// calculation overflows here and lands about 292 years in the past.
+		{22, 7 * 24 * time.Hour},
+		{23, 7 * 24 * time.Hour},
+		{24, 7 * 24 * time.Hour},
+		{611, 7 * 24 * time.Hour},
+		{893, 7 * 24 * time.Hour},
+		{math.MaxInt32, 7 * 24 * time.Hour},
+		{0, 1 * time.Hour},  // no recorded failure: treated as the first
+		{-1, 1 * time.Hour}, // defensive: never a negative delay
 	}
 
 	for _, tt := range tests {
@@ -338,5 +351,70 @@ func writeJSONL(t *testing.T, dir, name, content string) {
 	err := os.WriteFile(filepath.Join(dir, name), []byte(content+"\n"), 0644)
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+// runWith writes failure records and runs markfailures over the given entries.
+func runWith(t *testing.T, records string, entries ...batch.QueueEntry) *batch.UnifiedQueue {
+	t.Helper()
+	dir := t.TempDir()
+	writeJSONL(t, dir, "failures.jsonl", records)
+	queue := &batch.UnifiedQueue{Entries: entries}
+	if _, err := Run(queue, dir); err != nil {
+		t.Fatal(err)
+	}
+	return queue
+}
+
+// A legacy record's package_id is the entry's source. An entry whose name
+// differs from its source's identifier must still receive its failures.
+func TestRun_LegacyFailureMatchedBySource(t *testing.T) {
+	q := runWith(t,
+		`{"schema_version":1,"ecosystem":"github","failures":[{"package_id":"github:github/hub","category":"generation_failed"}]}`,
+		batch.QueueEntry{Name: "hub", Source: "github:github/hub", Priority: 1, Status: batch.StatusPending, Confidence: "curated"},
+	)
+	if got := q.Entries[0].Status; got != batch.StatusFailed {
+		t.Errorf("hub status = %s, want failed", got)
+	}
+	if got := q.Entries[0].FailureCount; got != 1 {
+		t.Errorf("hub failure_count = %d, want 1", got)
+	}
+}
+
+// A failure belongs to the entry whose source produced it, not to an entry
+// that happens to be named after the source's identifier.
+func TestRun_LegacyFailureNotMatchedByBareName(t *testing.T) {
+	q := runWith(t,
+		`{"schema_version":1,"ecosystem":"homebrew","failures":[{"package_id":"homebrew:go-task","category":"install_failed"},{"package_id":"homebrew:jq","category":"install_failed"}]}`,
+		batch.QueueEntry{Name: "task", Source: "homebrew:go-task", Priority: 1, Status: batch.StatusPending, Confidence: "curated"},
+		batch.QueueEntry{Name: "go-task", Source: "github:go-task/task", Priority: 3, Status: batch.StatusPending, Confidence: "auto"},
+		// A stale record from before this entry was re-pointed to GitHub.
+		batch.QueueEntry{Name: "jq", Source: "github:jqlang/jq", Priority: 1, Status: batch.StatusPending, Confidence: "curated"},
+	)
+	if got := q.Entries[0].Status; got != batch.StatusFailed {
+		t.Errorf("task (homebrew:go-task) status = %s, want failed", got)
+	}
+	if got := q.Entries[1].Status; got != batch.StatusPending {
+		t.Errorf("go-task (github:go-task/task) status = %s, want pending: the record is for homebrew:go-task", got)
+	}
+	if got := q.Entries[2].Status; got != batch.StatusPending {
+		t.Errorf("jq (github:jqlang/jq) status = %s, want pending: the record is for homebrew:jq", got)
+	}
+}
+
+// Per-recipe records carry only the recipe name, and add to the legacy
+// records for the same entry.
+func TestRun_PerRecipeAndLegacyRecordsCombine(t *testing.T) {
+	q := runWith(t,
+		`{"schema_version":1,"ecosystem":"github","failures":[{"package_id":"github:BurntSushi/ripgrep","category":"install_failed"}]}
+{"schema_version":1,"recipe":"rg","platform":"linux-x86_64","category":"install_failed"}
+{"schema_version":1,"recipe":"rg","platform":"darwin-arm64","category":"missing_dep","blocked_by":["pcre2"]}`,
+		batch.QueueEntry{Name: "rg", Source: "github:BurntSushi/ripgrep", Priority: 1, Status: batch.StatusPending, Confidence: "curated"},
+	)
+	if got := q.Entries[0].FailureCount; got != 3 {
+		t.Errorf("rg failure_count = %d, want 3 (1 legacy + 2 per-recipe)", got)
+	}
+	if got := q.Entries[0].Status; got != batch.StatusBlocked {
+		t.Errorf("rg status = %s, want blocked (a per-recipe record names a missing dep)", got)
 	}
 }

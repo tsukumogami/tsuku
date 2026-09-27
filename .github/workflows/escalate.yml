@@ -81,6 +81,13 @@ jobs:
           WF_RUN_ID: ${{ github.event.workflow_run.id }}
           WF_RUN_URL: ${{ github.event.workflow_run.html_url }}
           WF_EVENT: ${{ github.event.workflow_run.event }}
+          # The run's branch and the repository's default branch, both from the event, so
+          # escalate.sh can refuse a run that is not on the default branch (#2686). There is
+          # deliberately no `branches:` filter on the trigger: a filter drops a run before any
+          # job exists, so nothing records it, and a renamed default branch would silence
+          # every run without a word. A refusal made here is named in the receipt.
+          WF_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           # Every value reaches the script through env: rather than GitHub expression
           # interpolation. An expression is substituted before the shell parses the line,
@@ -96,6 +103,7 @@ jobs:
             --run-id "$WF_RUN_ID" \
             --run-url "$WF_RUN_URL" \
             --event "$WF_EVENT" \
+            --branch "$WF_BRANCH" \
             --outcome-file outcome.tsv
 
       - name: Emit receipt
