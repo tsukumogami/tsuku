@@ -146,3 +146,100 @@ func TestResolveWithinBoundary_InvalidRequested(t *testing.T) {
 		t.Fatal("expected error for invalid requested string")
 	}
 }
+
+// Upstream tags often carry a leading "v" (GitHub releases, Go modules) while
+// users type the bare version, and the reverse holds for recipes whose
+// tag_prefix strips it. Either spelling must reach the same list entry.
+func TestResolveWithinBoundary_LeadingVEitherSpelling(t *testing.T) {
+	vList := []string{"v2.38.0", "v2.37.1", "v2.37.0", "v2.0.0-rc1"}
+	bareList := []string{"2.38.0", "2.37.1", "2.37.0", "2.0.0-rc1"}
+
+	tests := []struct {
+		name      string
+		versions  []string
+		requested string
+		want      string
+	}{
+		{"bare exact pin on v list", vList, "2.37.1", "v2.37.1"},
+		{"v exact pin on v list", vList, "v2.37.1", "v2.37.1"},
+		{"bare minor pin on v list", vList, "2.37", "v2.37.1"},
+		{"bare major pin on v list", vList, "2", "v2.38.0"},
+		{"bare pre-release pin on v list", vList, "2.0.0-rc1", "v2.0.0-rc1"},
+		{"v exact pin on bare list", bareList, "v2.37.1", "2.37.1"},
+		{"bare exact pin on bare list", bareList, "2.37.1", "2.37.1"},
+		{"v minor pin on bare list", bareList, "v2.37", "2.37.1"},
+		{"v pre-release pin on bare list", bareList, "v2.0.0-rc1", "2.0.0-rc1"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			provider := &mockVersionLister{versions: tt.versions}
+			info, err := ResolveWithinBoundary(context.Background(), provider, tt.requested)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			// mockVersionLister.ResolveVersion echoes its input, so this is
+			// the list entry handed to the provider.
+			if info.Version != tt.want {
+				t.Errorf("got %q, want %q", info.Version, tt.want)
+			}
+		})
+	}
+}
+
+// A pin that already matches a list entry by exact spelling must resolve to
+// that entry, even when the list also holds entries that would match once the
+// leading "v" is ignored. Otherwise a deliberate pin could move to a different
+// tag or version.
+func TestResolveWithinBoundary_ExactSpellingWins(t *testing.T) {
+	tests := []struct {
+		name      string
+		versions  []string
+		requested string
+		want      string
+	}{
+		{"v pin with both tags, v first", []string{"v1.0", "1.0"}, "v1.0", "v1.0"},
+		{"v pin with both tags, bare first", []string{"1.0", "v1.0"}, "v1.0", "v1.0"},
+		{"bare pin with both tags, v first", []string{"v1.0", "1.0"}, "1.0", "1.0"},
+		{"bare pin with both tags, bare first", []string{"1.0", "v1.0"}, "1.0", "1.0"},
+		// The repo switched from bare to v tags: pin "1" matched 1.0.0 before
+		// and must keep matching it rather than jumping to v1.2.0.
+		{"major pin on mixed-scheme list", []string{"v1.2.0", "1.0.0"}, "1", "1.0.0"},
+		{"v major pin on mixed-scheme list", []string{"1.2.0", "v1.0.0"}, "v1", "v1.0.0"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			provider := &mockVersionLister{versions: tt.versions}
+			info, err := ResolveWithinBoundary(context.Background(), provider, tt.requested)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if info.Version != tt.want {
+				t.Errorf("got %q, want %q", info.Version, tt.want)
+			}
+		})
+	}
+}
+
+// Only a "v" followed by a digit is a version prefix. A pin of "v" must not be
+// stripped to "" (which means latest), and tags such as "vim-9.0" must not be
+// read as "im-9.0".
+func TestResolveWithinBoundary_LeadingVNeedsDigit(t *testing.T) {
+	tests := []struct {
+		name      string
+		versions  []string
+		requested string
+	}{
+		{"bare v pin", []string{"1.0.0"}, "v"},
+		{"non-digit after v in list", []string{"vim-9.0"}, "im-9.0"},
+		{"non-digit after v in pin", []string{"im-9.0"}, "vim-9.0"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			provider := &mockVersionLister{versions: tt.versions}
+			info, err := ResolveWithinBoundary(context.Background(), provider, tt.requested)
+			if err == nil {
+				t.Fatalf("expected not-found error, got version %q", info.Version)
+			}
+		})
+	}
+}
