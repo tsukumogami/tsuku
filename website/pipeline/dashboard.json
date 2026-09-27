@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-09-26T21:54:42Z",
+  "generated_at": "2026-09-27T00:17:52Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 23,
       "excluded": 7,
-      "failed": 6,
-      "pending": 3881,
+      "failed": 13,
+      "pending": 3874,
       "success": 1388
     },
     "by_tier": {
@@ -18,8 +18,7 @@
       },
       "2": {
         "blocked": 5,
-        "failed": 1,
-        "pending": 7,
+        "failed": 8,
         "success": 14
       },
       "3": {
@@ -41,8 +40,8 @@
       },
       "crates.io": {
         "excluded": 5,
-        "failed": 2,
-        "pending": 74,
+        "failed": 1,
+        "pending": 75,
         "success": 24,
         "total": 105
       },
@@ -58,8 +57,8 @@
       "homebrew": {
         "blocked": 23,
         "excluded": 1,
-        "failed": 1,
-        "pending": 3711,
+        "failed": 10,
+        "pending": 3702,
         "success": 1147,
         "total": 4883
       },
@@ -85,8 +84,7 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 1,
-        "pending": 73,
+        "pending": 74,
         "success": 14,
         "total": 89
       }
@@ -428,6 +426,69 @@
       ],
       "failed": [
         {
+          "id": "homebrew:anomalyco/tap/opencode",
+          "name": "anomalyco/tap/opencode",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "recipe_not_found",
+          "failure_count": 6,
+          "next_retry_at": "2026-09-28T08:17:03Z"
+        },
+        {
+          "id": "homebrew:exa",
+          "name": "exa",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "recipe_not_found",
+          "failure_count": 6,
+          "next_retry_at": "2026-09-28T08:17:03Z"
+        },
+        {
+          "id": "homebrew:jless",
+          "name": "jless",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-09-27T16:17:03Z"
+        },
+        {
+          "id": "homebrew:node@22",
+          "name": "node@22",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-09-28T08:17:03Z"
+        },
+        {
+          "id": "homebrew:python@3.11",
+          "name": "python@3.11",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-09-28T08:17:03Z"
+        },
+        {
+          "id": "homebrew:python@3.12",
+          "name": "python@3.12",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-09-28T08:17:03Z"
+        },
+        {
+          "id": "homebrew:python@3.13",
+          "name": "python@3.13",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-09-29T16:17:03Z"
+        },
+        {
           "id": "homebrew:python@3.14",
           "name": "python@3.14",
           "ecosystem": "homebrew",
@@ -437,24 +498,6 @@
           "next_retry_at": "2026-09-28T02:22:27Z"
         },
         {
-          "id": "rubygems:arturo",
-          "name": "arturo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 23,
-          "next_retry_at": "1734-06-17T22:06:43Z"
-        },
-        {
-          "id": "crates.io:ascii",
-          "name": "ascii",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 23,
-          "next_retry_at": "1734-06-17T22:06:43Z"
-        },
-        {
           "id": "npm:chainsaw",
           "name": "chainsaw",
           "ecosystem": "npm",
@@ -462,6 +505,24 @@
           "category": "install_failed",
           "failure_count": 22,
           "next_retry_at": "2026-10-03T21:53:59Z"
+        },
+        {
+          "id": "homebrew:icu4c@78",
+          "name": "icu4c@78",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-09-27T08:17:03Z"
+        },
+        {
+          "id": "homebrew:little-cms2",
+          "name": "little-cms2",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-09-28T08:17:03Z"
         },
         {
           "id": "crates.io:numpy",
@@ -500,69 +561,6 @@
           "category": "generation_failed",
           "failure_count": 3,
           "next_retry_at": "2026-02-24T06:13:44Z"
-        },
-        {
-          "id": "homebrew:anomalyco/tap/opencode",
-          "name": "anomalyco/tap/opencode",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "recipe_not_found",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-03T20:08:12Z"
-        },
-        {
-          "id": "homebrew:exa",
-          "name": "exa",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "recipe_not_found",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-04T04:57:16Z"
-        },
-        {
-          "id": "homebrew:jless",
-          "name": "jless",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T17:44:08Z"
-        },
-        {
-          "id": "homebrew:node@22",
-          "name": "node@22",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-04T06:05:38Z"
-        },
-        {
-          "id": "homebrew:python@3.11",
-          "name": "python@3.11",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-04T06:05:38Z"
-        },
-        {
-          "id": "homebrew:python@3.12",
-          "name": "python@3.12",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-04T06:05:38Z"
-        },
-        {
-          "id": "homebrew:python@3.13",
-          "name": "python@3.13",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-04T22:05:38Z"
         },
         {
           "id": "homebrew:0xjacky/tools/nginx-ui",
@@ -1628,11 +1626,29 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:arturo",
+          "name": "arturo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 23,
+          "next_retry_at": "1734-06-17T22:06:43Z"
+        },
+        {
           "id": "homebrew:arxiv_latex_cleaner",
           "name": "arxiv_latex_cleaner",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "crates.io:ascii",
+          "name": "ascii",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 23,
+          "next_retry_at": "1734-06-17T22:06:43Z"
         },
         {
           "id": "homebrew:asciidoc",
@@ -10939,15 +10955,6 @@
           "failure_count": 1
         },
         {
-          "id": "homebrew:icu4c@78",
-          "name": "icu4c@78",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T11:49:01Z"
-        },
-        {
           "id": "homebrew:id3v2",
           "name": "id3v2",
           "ecosystem": "homebrew",
@@ -13908,15 +13915,6 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:little-cms2",
-          "name": "little-cms2",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-04T03:36:10Z"
         },
         {
           "id": "crates.io:livekit",
@@ -37862,13 +37860,108 @@
     }
   ],
   "failures": {
-    "generation_failed": 1359,
-    "install_failed": 5133,
+    "generation_failed": 1365,
+    "install_failed": 5135,
     "missing_dep": 69,
     "network_error": 8,
-    "recipe_not_found": 74
+    "recipe_not_found": 76
   },
   "failure_details": [
+    {
+      "id": "homebrew-2026-09-27T00-14-26Z-icu4c@78",
+      "package": "icu4c@78",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "api_error",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for icu4c@78 from homebrew:icu4c@78...\nFetching formula metadata... done (v78.3)\nInspecting bottle contents... failed\ndeterministic generation failed: [api_error] failed to fetch bottle data for formula icu4c@78",
+      "batch_id": "2026-09-27T00-14-26Z",
+      "timestamp": "2026-09-27T00:14:26.374204425Z"
+    },
+    {
+      "id": "homebrew-2026-09-27T00-14-24Z-little-cms2",
+      "package": "little-cms2",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "✅ jpeg-turbo@3.2.0",
+      "batch_id": "2026-09-27T00-14-26Z",
+      "timestamp": "2026-09-27T00:14:24.942247189Z"
+    },
+    {
+      "id": "homebrew-2026-09-27T00-14-21Z-python@3.12",
+      "package": "python@3.12",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "api_error",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for python@3.12 from homebrew:python@3.12...\nFetching formula metadata... done (v3.12.14)\nInspecting bottle contents... failed\ndeterministic generation failed: [api_error] failed to fetch bottle data for formula python@3.12",
+      "batch_id": "2026-09-27T00-14-26Z",
+      "timestamp": "2026-09-27T00:14:21.272501336Z"
+    },
+    {
+      "id": "homebrew-2026-09-27T00-14-19Z-python@3.11",
+      "package": "python@3.11",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "api_error",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for python@3.11 from homebrew:python@3.11...\nFetching formula metadata... done (v3.11.16)\nInspecting bottle contents... failed\ndeterministic generation failed: [api_error] failed to fetch bottle data for formula python@3.11",
+      "batch_id": "2026-09-27T00-14-26Z",
+      "timestamp": "2026-09-27T00:14:19.842107364Z"
+    },
+    {
+      "id": "homebrew-2026-09-27T00-14-18Z-node@22",
+      "package": "node@22",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "api_error",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for node@22 from homebrew:node@22...\nFetching formula metadata... done (v22.23.3)\nInspecting bottle contents... failed\ndeterministic generation failed: [api_error] failed to fetch bottle data for formula node@22",
+      "batch_id": "2026-09-27T00-14-26Z",
+      "timestamp": "2026-09-27T00:14:18.426387967Z"
+    },
+    {
+      "id": "homebrew-2026-09-27T00-14-16Z-jless",
+      "package": "jless",
+      "ecosystem": "homebrew",
+      "category": "install_failed",
+      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\n✅ patchelf@0.19.1",
+      "batch_id": "2026-09-27T00-14-26Z",
+      "timestamp": "2026-09-27T00:14:16.96877746Z"
+    },
+    {
+      "id": "homebrew-2026-09-27T00-14-13Z-exa",
+      "package": "exa",
+      "ecosystem": "homebrew",
+      "category": "recipe_not_found",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'exa' not found in homebrew",
+      "batch_id": "2026-09-27T00-14-26Z",
+      "timestamp": "2026-09-27T00:14:13.422158135Z"
+    },
+    {
+      "id": "homebrew-2026-09-27T00-14-12Z-anomalyco/tap/opencode",
+      "package": "anomalyco/tap/opencode",
+      "ecosystem": "homebrew",
+      "category": "recipe_not_found",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: package 'anomalyco/tap/opencode' not found in homebrew",
+      "batch_id": "2026-09-27T00-14-26Z",
+      "timestamp": "2026-09-27T00:14:12.066886342Z"
+    },
+    {
+      "id": "homebrew-2026-09-27T00-14-11Z-python@3.13",
+      "package": "python@3.13",
+      "ecosystem": "homebrew",
+      "category": "generation_failed",
+      "subcategory": "api_error",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for python@3.13 from homebrew:python@3.13...\nFetching formula metadata... done (v3.13.15)\nInspecting bottle contents... failed\ndeterministic generation failed: [api_error] failed to fetch bottle data for formula python@3.13",
+      "batch_id": "2026-09-27T00-14-26Z",
+      "timestamp": "2026-09-27T00:14:11.059157566Z"
+    },
+    {
+      "id": "github-2026-09-27T00-14-09Z-hub",
+      "package": "hub",
+      "ecosystem": "github",
+      "category": "generation_failed",
+      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'hub' resolved to github (github/hub), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
+      "batch_id": "2026-09-27T00-14-26Z",
+      "timestamp": "2026-09-27T00:14:09.464750007Z"
+    },
     {
       "id": "pypi-2026-09-26T21-51-41Z-tctl",
       "package": "tctl",
@@ -39614,98 +39707,6 @@
       "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\n   Output: install: creating uninstall script at /tmp/action-validator-3065931265/.install/lib/rustlib/uninstall.sh\ninstall: installing component 'rustc'\ninstall: installing component 'rust-std-x86_64-unknown-linux-gnu'\ninstall: installing component 'rust-docs'\ninstall: installing component 'rust-docs-json-preview'\ninstall: installing component 'cargo'\ninstall: installing component 'rustfmt-preview'\ninstall: installing component 'rust-",
       "batch_id": "2026-06-23T12-02-25Z",
       "timestamp": "2026-06-23T12:01:49.589578825Z"
-    },
-    {
-      "id": "homebrew-2026-06-23T12-00-33Z-task",
-      "package": "task",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\n✅ patchelf@0.18.0",
-      "batch_id": "2026-06-23T12-02-25Z",
-      "timestamp": "2026-06-23T12:00:33.117860793Z"
-    },
-    {
-      "id": "github-2026-06-23T12-00-28Z-hub",
-      "package": "hub",
-      "ecosystem": "github",
-      "category": "generation_failed",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'hub' resolved to github (github/hub), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
-      "batch_id": "2026-06-23T12-02-25Z",
-      "timestamp": "2026-06-23T12:00:28.127606614Z"
-    },
-    {
-      "id": "pypi-2026-06-23T08-35-06Z-lib3mf",
-      "package": "lib3mf",
-      "ecosystem": "pypi",
-      "category": "install_failed",
-      "subcategory": "verify_pattern_mismatch",
-      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\n✅ python-standalone@20260610\nInstalled python-standalone\n   Package: lib3mf@2.5.0\n   Executables: [lib3mf]\n   Using python: /home/runner/.tsuku/tools/python-standalone-20260610/bin/python3\nwarning:    Package contains native addons (may have platform-specific behavior)\n   Creating venv: /tmp/action-validator-373802697/.install/venvs/lib3mf\n   Installing 1 packages with hash verification\n❌ lib3mf@2.5.0\nInst",
-      "batch_id": "2026-06-23T08-35-06Z",
-      "timestamp": "2026-06-23T08:35:06.645813624Z"
-    },
-    {
-      "id": "rubygems-2026-06-23T08-34-54Z-glassfish",
-      "package": "glassfish",
-      "ecosystem": "rubygems",
-      "category": "install_failed",
-      "message": "Error: recipe validation failed for 'glassfish'\n  - metadata.homepage: homepage must start with https:// (got: http://glassfishgem.rubyforge.org/)",
-      "batch_id": "2026-06-23T08-35-06Z",
-      "timestamp": "2026-06-23T08:34:54.154471571Z"
-    },
-    {
-      "id": "crates.io-2026-06-23T08-34-47Z-bindgen",
-      "package": "bindgen",
-      "ecosystem": "crates.io",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [rust]\nInstalling rust...\n   Output: install: creating uninstall script at /tmp/action-validator-3448553300/.install/lib/rustlib/uninstall.sh\ninstall: installing component 'rustc'\ninstall: installing component 'rust-std-x86_64-unknown-linux-gnu'\ninstall: installing component 'rust-docs'\ninstall: installing component 'rust-docs-json-preview'\ninstall: installing component 'cargo'\ninstall: installing component 'rustfmt-preview'\ninstall: installing component 'rust-",
-      "batch_id": "2026-06-23T08-35-06Z",
-      "timestamp": "2026-06-23T08:34:47.555686506Z"
-    },
-    {
-      "id": "npm-2026-06-23T08-33-28Z-azion",
-      "package": "azion",
-      "ecosystem": "npm",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\n✅ gcc-libs@16.1.0\n✅ nodejs@26.3.1\nInstalled nodejs\n   Package: azion@3.1.3\n   Executables: [azion]\n   Using npm: /home/runner/.tsuku/tools/nodejs-26.3.1/bin/npm\n   Installing: npm install azion@3.1.3 in /tmp/action-validator-4106056148/.install\n❌ azion@3.1.3\nInstallation failed: step 1 (npm_exec) failed: expected executable azion not found at /tmp/action-validator-4106056148/.install/node_modules/.bin/azion",
-      "batch_id": "2026-06-23T08-35-06Z",
-      "timestamp": "2026-06-23T08:33:28.766148635Z"
-    },
-    {
-      "id": "homebrew-2026-06-23T08-32-39Z-task",
-      "package": "task",
-      "ecosystem": "homebrew",
-      "category": "install_failed",
-      "message": "tsuku collects anonymous usage statistics to improve the tool.\nNo personal information is collected. See: https://tsuku.dev/telemetry\n\nTo opt out: tsuku config set telemetry false\n         or export TSUKU_NO_TELEMETRY=1\n✅ patchelf@0.18.0",
-      "batch_id": "2026-06-23T08-35-06Z",
-      "timestamp": "2026-06-23T08:32:39.070712796Z"
-    },
-    {
-      "id": "github-2026-06-23T08-32-34Z-hub",
-      "package": "hub",
-      "ecosystem": "github",
-      "category": "generation_failed",
-      "message": "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nError: 'hub' resolved to github (github/hub), which requires LLM for recipe generation.\nRemove --deterministic-only or wait for a recipe to be contributed.",
-      "batch_id": "2026-06-23T08-35-06Z",
-      "timestamp": "2026-06-23T08:32:34.430434961Z"
-    },
-    {
-      "id": "pypi-2026-06-23T05-02-55Z-lib3mf",
-      "package": "lib3mf",
-      "ecosystem": "pypi",
-      "category": "install_failed",
-      "subcategory": "verify_pattern_mismatch",
-      "message": "Installing eval-time dependencies: [python-standalone]\nInstalling python-standalone...\n✅ python-standalone@20260610\nInstalled python-standalone\n   Package: lib3mf@2.5.0\n   Executables: [lib3mf]\n   Using python: /home/runner/.tsuku/tools/python-standalone-20260610/bin/python3\nwarning:    Package contains native addons (may have platform-specific behavior)\n   Creating venv: /tmp/action-validator-2282271200/.install/venvs/lib3mf\n   Installing 1 packages with hash verification\n❌ lib3mf@2.5.0\nIns",
-      "batch_id": "2026-06-23T05-02-55Z",
-      "timestamp": "2026-06-23T05:02:55.17342248Z"
-    },
-    {
-      "id": "npm-2026-06-23T05-02-43Z-got",
-      "package": "got",
-      "ecosystem": "npm",
-      "category": "install_failed",
-      "message": "Installing eval-time dependencies: [nodejs]\nInstalling nodejs...\n✅ gcc-libs@16.1.0\n✅ nodejs@26.3.1\nInstalled nodejs\n   Package: got@15.0.6\n   Executables: [got]\n   Using npm: /home/runner/.tsuku/tools/nodejs-26.3.1/bin/npm\n   Installing: npm install got@15.0.6 in /tmp/action-validator-2350924131/.install\n❌ got@15.0.6\nInstallation failed: step 1 (npm_exec) failed: expected executable got not found at /tmp/action-validator-2350924131/.install/node_modules/.bin/got",
-      "batch_id": "2026-06-23T05-02-55Z",
-      "timestamp": "2026-06-23T05:02:43.670039547Z"
     }
   ],
   "health": {
@@ -39722,14 +39723,14 @@
       },
       "github": {
         "breaker_state": "open",
-        "failures": 998,
-        "last_failure": "2026-09-26T21:53:26Z",
-        "opens_at": "2026-09-26T22:53:26Z"
+        "failures": 999,
+        "last_failure": "2026-09-27T00:16:29Z",
+        "opens_at": "2026-09-27T01:16:29Z"
       },
       "homebrew": {
         "breaker_state": "closed",
-        "failures": 0,
-        "last_failure": "2026-09-26T18:21:55Z",
+        "failures": 1,
+        "last_failure": "2026-09-27T00:16:29Z",
         "opens_at": "2026-09-26T19:21:55Z"
       },
       "npm": {
@@ -39752,16 +39753,12 @@
       }
     },
     "last_run": {
-      "batch_id": "2026-09-26T21-53-31Z",
+      "batch_id": "2026-09-27T00-16-35Z",
       "ecosystems": {
-        "crates.io": 1,
         "github": 1,
-        "homebrew": 1,
-        "npm": 1,
-        "pypi": 1,
-        "rubygems": 1
+        "homebrew": 9
       },
-      "timestamp": "2026-09-26T21:53:31Z",
+      "timestamp": "2026-09-27T00:16:35Z",
       "succeeded": 0,
       "failed": 0,
       "total": 0
@@ -39782,7 +39779,7 @@
       "total": 1,
       "recipes_merged": 1
     },
-    "runs_since_last_success": 438
+    "runs_since_last_success": 439
   },
   "runs": [
     {

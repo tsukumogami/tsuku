@@ -225,7 +225,7 @@ so the failure is reported accurately, and the two platforms become separate pro
 | Policy parser | `.github/scripts/checks/workflow-policy.sh` | Reads the comment blocks, including `escalation-only-on`; enforces declaration presence, registry agreement, and that `escalation-only-on` is present on every workflow declaring both `schedule` and `pull_request` |
 | Label check | `.github/scripts/checks/workflow-labels.sh` | Resolves every label reference against the manifest |
 | Label manifest | `.github/labels.yml` | The declared label set |
-| Coverage assertion | `.github/scripts/checks/assert-coverage.sh` | Compares a run receipt against its declaration |
+| Coverage assertion | `.github/scripts/checks/assert-coverage.py` | Compares each leg's run receipt against a declared set the leg did not supply; first used by Nightly Registry Validation (#2608) |
 | Suppression check | `.github/scripts/checks/escalation-hygiene.sh` | Enumerates every step that files or edits an issue and fails on suppressed errors or an undeclared token permission |
 | Label drift check | `.github/scripts/checks/label-drift.sh` | Fails when the manifest and the repository's labels disagree |
 | Consumer record | `docs/ci-consumers.md` | Names, per scheduled workflow, who or what consumes its output |
