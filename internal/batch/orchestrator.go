@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 	"unicode"
@@ -227,11 +228,15 @@ func (o *Orchestrator) SaveResults(result *BatchResult) error {
 //   - Priority filtering is skipped since any entry can serve as a health probe
 //   - If no pending entries exist, the first failed entry is used as a fallback
 func (o *Orchestrator) selectCandidates() []int {
-	var candidates []int
-	halfOpenProbed := make(map[string]bool)
-	halfOpenFallback := make(map[string]int) // eco -> first failed entry index
 	now := nowFunc()
 
+	// Pass 1: one probe per half-open ecosystem. Probes are reserved before
+	// any closed-ecosystem entry is taken, so a closed ecosystem whose
+	// entries sit early in the queue cannot fill the batch and leave a
+	// half-open ecosystem unprobed, which would keep its breaker half-open
+	// indefinitely.
+	probePending := make(map[string]int)  // eco -> first pending entry index
+	probeFallback := make(map[string]int) // eco -> first failed entry index
 	for i, entry := range o.queue.Entries {
 		if entry.Status != StatusPending && entry.Status != StatusFailed {
 			continue
@@ -240,28 +245,51 @@ func (o *Orchestrator) selectCandidates() []int {
 		if o.cfg.FilterEcosystem != "" && eco != o.cfg.FilterEcosystem {
 			continue
 		}
+		if o.cfg.BreakerState[eco] != "half-open" {
+			continue
+		}
+		if entry.Status == StatusPending {
+			if _, has := probePending[eco]; !has {
+				probePending[eco] = i
+			}
+		} else if _, has := probeFallback[eco]; !has {
+			probeFallback[eco] = i
+		}
+	}
+	var probes []int
+	for eco, idx := range probeFallback {
+		if _, has := probePending[eco]; !has {
+			probes = append(probes, idx)
+		}
+	}
+	for _, idx := range probePending {
+		probes = append(probes, idx)
+	}
+	sort.Ints(probes)
+	// With more half-open ecosystems than BatchSize, the probes nearest the
+	// head of the queue run this time; the rest stay half-open until a later
+	// run. The default batch size (10) exceeds the number of ecosystems.
+	if len(probes) > o.cfg.BatchSize {
+		probes = probes[:o.cfg.BatchSize]
+	}
+
+	// Pass 2: fill the remaining slots from closed ecosystems.
+	candidates := probes
+	for i, entry := range o.queue.Entries {
+		if len(candidates) >= o.cfg.BatchSize {
+			break
+		}
+		if entry.Status != StatusPending && entry.Status != StatusFailed {
+			continue
+		}
+		eco := entry.Ecosystem()
+		if o.cfg.FilterEcosystem != "" && eco != o.cfg.FilterEcosystem {
+			continue
+		}
 		state := o.cfg.BreakerState[eco]
-		if state == "open" {
+		if state == "open" || state == "half-open" {
 			continue
 		}
-		if state == "half-open" {
-			// Already selected a probe for this ecosystem.
-			if halfOpenProbed[eco] {
-				continue
-			}
-			if entry.Status == StatusPending {
-				// First pending entry wins as the probe.
-				candidates = append(candidates, i)
-				halfOpenProbed[eco] = true
-			} else {
-				// Failed entry: save as fallback if not already set.
-				if _, has := halfOpenFallback[eco]; !has {
-					halfOpenFallback[eco] = i
-				}
-			}
-			continue
-		}
-		// Normal selection (closed state).
 		if entry.Priority > o.cfg.MaxTier {
 			continue
 		}
@@ -269,25 +297,10 @@ func (o *Orchestrator) selectCandidates() []int {
 			continue
 		}
 		candidates = append(candidates, i)
-		if len(candidates) >= o.cfg.BatchSize {
-			break
-		}
 	}
 
-	// Second pass: for half-open ecosystems that had no pending entries,
-	// select the saved fallback (failed entry) with backoff bypassed.
-	for eco, idx := range halfOpenFallback {
-		if !halfOpenProbed[eco] {
-			candidates = append(candidates, idx)
-			halfOpenProbed[eco] = true
-		}
-	}
-
-	// Enforce batch size limit after adding fallback probes.
-	if len(candidates) > o.cfg.BatchSize {
-		candidates = candidates[:o.cfg.BatchSize]
-	}
-
+	// Process in queue order.
+	sort.Ints(candidates)
 	return candidates
 }
 
