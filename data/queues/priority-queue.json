@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-09-27T10:58:45Z",
+  "updated_at": "2026-09-27T12:54:35Z",
   "entries": [
     {
       "name": "node",
@@ -466,11 +466,11 @@
       "name": "icu4c@78",
       "source": "homebrew:icu4c@78",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-09-27T08:17:03.028704999Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-09-28T04:54:34.807712677Z"
     },
     {
       "name": "openjph",
@@ -1006,41 +1006,41 @@
       "name": "0xjuanma/tap/golazo",
       "source": "homebrew:0xjuanma/tap/golazo",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-03T13:11:37.166208706Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-09-28T04:54:34.807712677Z"
     },
     {
       "name": "2ykwang/2ykwang/mac-cleanup-go",
       "source": "homebrew:2ykwang/2ykwang/mac-cleanup-go",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-03T13:11:37.166208706Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-09-28T04:54:34.807712677Z"
     },
     {
       "name": "2ykwang/mac-cleanup-go/mac-cleanup-go",
       "source": "homebrew:2ykwang/mac-cleanup-go/mac-cleanup-go",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-03T13:11:37.166208706Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-09-28T04:54:34.807712677Z"
     },
     {
       "name": "42ailab/42plugin/forty-two-plugin",
       "source": "homebrew:42ailab/42plugin/forty-two-plugin",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 4,
-      "next_retry_at": "2026-03-03T13:11:37.166208706Z"
+      "failure_count": 5,
+      "next_retry_at": "2026-09-28T04:54:34.807712677Z"
     },
     {
       "name": "5ouma/tap/gh-poi",
@@ -1906,11 +1906,11 @@
       "name": "amp",
       "source": "rubygems:amp",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 23,
-      "next_retry_at": "1734-06-17T18:35:10.323166762Z"
+      "failure_count": 24,
+      "next_retry_at": "2026-10-04T12:54:34.807712677Z"
     },
     {
       "name": "amplify",
@@ -2886,11 +2886,11 @@
       "name": "ascii",
       "source": "crates.io:ascii",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 23,
-      "next_retry_at": "1734-06-17T22:06:43.004045719Z"
+      "failure_count": 24,
+      "next_retry_at": "2026-10-04T12:54:34.807712677Z"
     },
     {
       "name": "asciidoc",
@@ -3966,11 +3966,11 @@
       "name": "azion",
       "source": "npm:azion",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 612,
-      "next_retry_at": "1734-06-17T18:35:10.323166762Z"
+      "failure_count": 613,
+      "next_retry_at": "2026-10-04T12:54:34.807712677Z"
     },
     {
       "name": "azqr",
@@ -25196,11 +25196,11 @@
       "name": "lib3mf",
       "source": "pypi:lib3mf",
       "priority": 3,
-      "status": "pending",
+      "status": "failed",
       "confidence": "auto",
       "disambiguated_at": "2026-02-17T00:10:01.867521792Z",
-      "failure_count": 894,
-      "next_retry_at": "1734-06-17T18:35:10.323166762Z"
+      "failure_count": 895,
+      "next_retry_at": "2026-10-04T12:54:34.807712677Z"
     },
     {
       "name": "libaacs",
