@@ -102,9 +102,12 @@ evidence that any check here executed.
   request regardless of what it touches.
 - `.github/scripts/escalate.sh`, `.github/scripts/escalate-sweep.sh`,
   `.github/workflows/escalate.yml`, `.github/workflows/escalate-sweep.yml` ->
-  `.github/scripts/checks/escalate-sweep_test.sh` and
-  `.github/scripts/checks/escalate-owned_test.sh` (lint-workflows.yml). Both replace `gh`
-  on PATH with a stub. The owned cases assert where a run went (a comment on the owner and
+  `.github/scripts/checks/escalate-sweep_test.sh`,
+  `.github/scripts/checks/escalate-owned_test.sh` and
+  `.github/scripts/checks/escalate-branch_test.sh` (lint-workflows.yml). All three replace
+  `gh` on PATH with a stub. The branch cases construct both directions of #2686: a failing
+  branch run must file nothing, and a green one must neither close an item nor read as
+  recovery. The owned cases assert where a run went (a comment on the owner and
   a listener receipt naming it, run from the receipt step as written in `escalate.yml`)
   rather than only that nothing new was filed.
 - `.github/**`, `website/**` (except `website/pipeline/*.html`), `blog/**`, `scripts/**` (except
