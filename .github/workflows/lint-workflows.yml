@@ -83,3 +83,8 @@ jobs:
       # it (#2593), against a local stand-in for R2 that only accepts signed requests.
       - name: Check the R2 health check times the request
         run: scripts/r2-health-check_test.sh
+      # The coverage receipt: the assertion, the declared set, the lines validate-golden.sh
+      # writes, and Nightly Registry Validation's own step text run under the shell Actions
+      # uses. Rows assert on what each piece reports about its work, not only its exit code.
+      - name: Check a run that validated nothing cannot pass
+        run: .github/scripts/checks/coverage-receipt_test.sh

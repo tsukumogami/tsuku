@@ -209,6 +209,21 @@ describe it as observed on 2026-09-20 and are left as history. Curated recipes a
 install-tested at pull-request time by `test-recipe.yml`. Nothing checks them for upstream
 drift between changes.
 
+**2026-09-26 — `nightly-registry-validation` can no longer pass having validated nothing
+(#2608).** Every green run in its history validated zero recipes. R2 holds golden files
+under `plans/registry/`, and every reader looks under a single letter (#2448). The run now
+asserts per-leg receipts against a declared set that no leg supplies: golden files per OS
+from a bucket listing, and the letters a-z for the execution sample. A run that attempted
+nothing, or less than was declared, fails and names both numbers. So the workflow goes red
+every night until #2448 is fixed, and after that on the 297 drifted golden plans the first
+real comparison found (#2695). It declares `escalation-owned-by: 2695`, the issue whose
+resolution turns it green, so that red reaches #2695 as a comment instead of opening an
+item of its own. Until #2448's fix lands, the red that arrives there is the zero-coverage
+one, and its counts say so. A night where R2 doesn't
+answer routes there too, because ownership is per workflow. Its error line says which case
+it is. The escalator item already open for this workflow (#2657) doesn't close by itself
+once the declaration merges, and has to be closed by hand.
+
 ## Scheduled run reaches nobody; the same check does reach a PR author
 
 These also run on `pull_request`, where the check is consumed by whoever opened the pull
