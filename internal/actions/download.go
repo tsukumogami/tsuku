@@ -238,14 +238,15 @@ func (a *DownloadAction) Decompose(ctx *EvalContext, params map[string]interface
 		// first source that serves. Which source answered is deliberately not
 		// recorded: the checksum is a property of the bytes, not of the host,
 		// so the plan this produces is identical either way.
-		result, servingURL, err := DownloadFirstAvailable(ctx.Context, ctx.Downloader, append([]string{downloadURL}, fallbackURLs...))
+		// A cached copy answers without a request; see ResolveFirstAvailable.
+		result, servingURL, fromCache, err := ResolveFirstAvailable(ctx.Context, ctx.Downloader, ctx.DownloadCache, append([]string{downloadURL}, fallbackURLs...))
 		if err != nil {
 			return nil, fmt.Errorf("failed to download for checksum computation: %w", err)
 		}
 		checksum = result.Checksum
 		size = result.Size
 		// Save to cache if configured, then cleanup temp file
-		if ctx.DownloadCache != nil {
+		if ctx.DownloadCache != nil && !fromCache {
 			_ = ctx.DownloadCache.Save(servingURL, result.AssetPath, result.Checksum)
 		}
 		_ = result.Cleanup()
