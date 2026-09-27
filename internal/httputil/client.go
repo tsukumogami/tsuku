@@ -66,7 +66,7 @@ func DefaultOptions() ClientOptions {
 //   - HTTPS-only redirects
 //   - Configurable redirect chain limit
 //
-// The client honours HTTPS_PROXY, HTTP_PROXY and NO_PROXY. The redirect
+// The client honors HTTPS_PROXY, HTTP_PROXY and NO_PROXY. The redirect
 // checks apply to the target URL, not the proxy, so they hold unchanged
 // when a proxy is in use.
 func NewSecureClient(opts ClientOptions) *http.Client {
@@ -116,7 +116,7 @@ func NewSecureClient(opts ClientOptions) *http.Client {
 	}
 }
 
-// ProxyFromEnvironment returns a Transport.Proxy function that honours
+// ProxyFromEnvironment returns a Transport.Proxy function that honors
 // HTTPS_PROXY, HTTP_PROXY and NO_PROXY (and their lowercase forms), with the
 // same rules as http.ProxyFromEnvironment. A hand-built http.Transport has no
 // proxy unless one is set, so every transport tsuku builds needs this.

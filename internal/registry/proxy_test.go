@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestNewRegistryHTTPClient_HonoursProxyEnvironment(t *testing.T) {
+func TestNewRegistryHTTPClient_HonorsProxyEnvironment(t *testing.T) {
 	for _, k := range []string{"HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy", "NO_PROXY", "no_proxy", "REQUEST_METHOD"} {
 		t.Setenv(k, "")
 	}

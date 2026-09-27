@@ -48,12 +48,12 @@ func newProxyTestEnv(t *testing.T) *proxyTestEnv {
 			}
 			conn, _, err := w.(http.Hijacker).Hijack()
 			if err != nil {
-				upstream.Close()
+				_ = upstream.Close()
 				return
 			}
 			_, _ = io.WriteString(conn, "HTTP/1.1 200 Connection established\r\n\r\n")
-			go func() { _, _ = io.Copy(upstream, conn); upstream.Close() }()
-			go func() { _, _ = io.Copy(conn, upstream); conn.Close() }()
+			go func() { _, _ = io.Copy(upstream, conn); _ = upstream.Close() }()
+			go func() { _, _ = io.Copy(conn, upstream); _ = conn.Close() }()
 			return
 		}
 		// Forward proxy: a plain http request arrives with an absolute URL.
@@ -121,7 +121,7 @@ func get(t *testing.T, client *http.Client, url string) (string, error) {
 	return string(body), err
 }
 
-func TestNewSecureClient_HonoursHTTPSProxy(t *testing.T) {
+func TestNewSecureClient_HonorsHTTPSProxy(t *testing.T) {
 	env := newProxyTestEnv(t)
 
 	body, err := get(t, env.client(t), "https://proxied.test/file")
@@ -137,11 +137,11 @@ func TestNewSecureClient_HonoursHTTPSProxy(t *testing.T) {
 		t.Errorf("proxy saw %q, want exactly [CONNECT proxied.test:443]", proxied)
 	}
 	if len(direct) != 0 {
-		t.Errorf("client dialled %q directly, want no direct dials", direct)
+		t.Errorf("client dialed %q directly, want no direct dials", direct)
 	}
 }
 
-func TestNewSecureClient_HonoursHTTPProxy(t *testing.T) {
+func TestNewSecureClient_HonorsHTTPProxy(t *testing.T) {
 	env := newProxyTestEnv(t)
 
 	body, err := get(t, env.client(t), "http://proxied.test/file")
@@ -157,7 +157,7 @@ func TestNewSecureClient_HonoursHTTPProxy(t *testing.T) {
 		t.Errorf("proxy saw %q, want exactly [GET http://proxied.test/file]", proxied)
 	}
 	if len(direct) != 0 {
-		t.Errorf("client dialled %q directly, want no direct dials", direct)
+		t.Errorf("client dialed %q directly, want no direct dials", direct)
 	}
 }
 
@@ -199,6 +199,6 @@ func TestNewSecureClient_RedirectToHTTPBlockedThroughProxy(t *testing.T) {
 		t.Errorf("proxy saw %q, want exactly [CONNECT proxied.test:443]", proxied)
 	}
 	if len(direct) != 0 {
-		t.Errorf("client dialled %q directly, want no direct dials", direct)
+		t.Errorf("client dialed %q directly, want no direct dials", direct)
 	}
 }
