@@ -38,7 +38,7 @@ on:
 
 jobs:
   release:
-    uses: tsukumogami/shirabe/.github/workflows/release.yml@v0.5.1
+    uses: tsukumogami/shirabe/.github/workflows/release.yml@f5f71e581daaf88d0e45d620324d8247ce8231a2  # v0.21.0
     with:
       version: ${{ inputs.version }}
       tag: ${{ inputs.tag }}
