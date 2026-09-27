@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-09-27T00:16:57Z",
+  "generated_at": "2026-09-27T00:17:52Z",
   "queue": {
     "total": 5305,
     "by_status": {
       "blocked": 23,
       "excluded": 7,
-      "failed": 6,
-      "pending": 3881,
+      "failed": 13,
+      "pending": 3874,
       "success": 1388
     },
     "by_tier": {
@@ -18,8 +18,7 @@
       },
       "2": {
         "blocked": 5,
-        "failed": 1,
-        "pending": 7,
+        "failed": 8,
         "success": 14
       },
       "3": {
@@ -41,8 +40,8 @@
       },
       "crates.io": {
         "excluded": 5,
-        "failed": 2,
-        "pending": 74,
+        "failed": 1,
+        "pending": 75,
         "success": 24,
         "total": 105
       },
@@ -58,8 +57,8 @@
       "homebrew": {
         "blocked": 23,
         "excluded": 1,
-        "failed": 1,
-        "pending": 3711,
+        "failed": 10,
+        "pending": 3702,
         "success": 1147,
         "total": 4883
       },
@@ -85,8 +84,7 @@
       },
       "rubygems": {
         "excluded": 1,
-        "failed": 1,
-        "pending": 73,
+        "pending": 74,
         "success": 14,
         "total": 89
       }
@@ -428,6 +426,69 @@
       ],
       "failed": [
         {
+          "id": "homebrew:anomalyco/tap/opencode",
+          "name": "anomalyco/tap/opencode",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "recipe_not_found",
+          "failure_count": 6,
+          "next_retry_at": "2026-09-28T08:17:03Z"
+        },
+        {
+          "id": "homebrew:exa",
+          "name": "exa",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "recipe_not_found",
+          "failure_count": 6,
+          "next_retry_at": "2026-09-28T08:17:03Z"
+        },
+        {
+          "id": "homebrew:jless",
+          "name": "jless",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "install_failed",
+          "failure_count": 5,
+          "next_retry_at": "2026-09-27T16:17:03Z"
+        },
+        {
+          "id": "homebrew:node@22",
+          "name": "node@22",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-09-28T08:17:03Z"
+        },
+        {
+          "id": "homebrew:python@3.11",
+          "name": "python@3.11",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-09-28T08:17:03Z"
+        },
+        {
+          "id": "homebrew:python@3.12",
+          "name": "python@3.12",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-09-28T08:17:03Z"
+        },
+        {
+          "id": "homebrew:python@3.13",
+          "name": "python@3.13",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "generation_failed",
+          "failure_count": 7,
+          "next_retry_at": "2026-09-29T16:17:03Z"
+        },
+        {
           "id": "homebrew:python@3.14",
           "name": "python@3.14",
           "ecosystem": "homebrew",
@@ -437,24 +498,6 @@
           "next_retry_at": "2026-09-28T02:22:27Z"
         },
         {
-          "id": "rubygems:arturo",
-          "name": "arturo",
-          "ecosystem": "rubygems",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 23,
-          "next_retry_at": "1734-06-17T22:06:43Z"
-        },
-        {
-          "id": "crates.io:ascii",
-          "name": "ascii",
-          "ecosystem": "crates.io",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 23,
-          "next_retry_at": "1734-06-17T22:06:43Z"
-        },
-        {
           "id": "npm:chainsaw",
           "name": "chainsaw",
           "ecosystem": "npm",
@@ -462,6 +505,24 @@
           "category": "install_failed",
           "failure_count": 22,
           "next_retry_at": "2026-10-03T21:53:59Z"
+        },
+        {
+          "id": "homebrew:icu4c@78",
+          "name": "icu4c@78",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "generation_failed",
+          "failure_count": 4,
+          "next_retry_at": "2026-09-27T08:17:03Z"
+        },
+        {
+          "id": "homebrew:little-cms2",
+          "name": "little-cms2",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 6,
+          "next_retry_at": "2026-09-28T08:17:03Z"
         },
         {
           "id": "crates.io:numpy",
@@ -500,69 +561,6 @@
           "category": "generation_failed",
           "failure_count": 3,
           "next_retry_at": "2026-02-24T06:13:44Z"
-        },
-        {
-          "id": "homebrew:anomalyco/tap/opencode",
-          "name": "anomalyco/tap/opencode",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "recipe_not_found",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-03T20:08:12Z"
-        },
-        {
-          "id": "homebrew:exa",
-          "name": "exa",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "recipe_not_found",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-04T04:57:16Z"
-        },
-        {
-          "id": "homebrew:jless",
-          "name": "jless",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "install_failed",
-          "failure_count": 4,
-          "next_retry_at": "2026-03-03T17:44:08Z"
-        },
-        {
-          "id": "homebrew:node@22",
-          "name": "node@22",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-04T06:05:38Z"
-        },
-        {
-          "id": "homebrew:python@3.11",
-          "name": "python@3.11",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-04T06:05:38Z"
-        },
-        {
-          "id": "homebrew:python@3.12",
-          "name": "python@3.12",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-04T06:05:38Z"
-        },
-        {
-          "id": "homebrew:python@3.13",
-          "name": "python@3.13",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "generation_failed",
-          "failure_count": 6,
-          "next_retry_at": "2026-03-04T22:05:38Z"
         },
         {
           "id": "homebrew:0xjacky/tools/nginx-ui",
@@ -1628,11 +1626,29 @@
           "failure_count": 0
         },
         {
+          "id": "rubygems:arturo",
+          "name": "arturo",
+          "ecosystem": "rubygems",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 23,
+          "next_retry_at": "1734-06-17T22:06:43Z"
+        },
+        {
           "id": "homebrew:arxiv_latex_cleaner",
           "name": "arxiv_latex_cleaner",
           "ecosystem": "homebrew",
           "priority": 3,
           "failure_count": 0
+        },
+        {
+          "id": "crates.io:ascii",
+          "name": "ascii",
+          "ecosystem": "crates.io",
+          "priority": 3,
+          "category": "install_failed",
+          "failure_count": 23,
+          "next_retry_at": "1734-06-17T22:06:43Z"
         },
         {
           "id": "homebrew:asciidoc",
@@ -10939,15 +10955,6 @@
           "failure_count": 1
         },
         {
-          "id": "homebrew:icu4c@78",
-          "name": "icu4c@78",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "generation_failed",
-          "failure_count": 3,
-          "next_retry_at": "2026-03-03T11:49:01Z"
-        },
-        {
           "id": "homebrew:id3v2",
           "name": "id3v2",
           "ecosystem": "homebrew",
@@ -13908,15 +13915,6 @@
           "ecosystem": "crates.io",
           "priority": 3,
           "failure_count": 0
-        },
-        {
-          "id": "homebrew:little-cms2",
-          "name": "little-cms2",
-          "ecosystem": "homebrew",
-          "priority": 3,
-          "category": "install_failed",
-          "failure_count": 5,
-          "next_retry_at": "2026-03-04T03:36:10Z"
         },
         {
           "id": "crates.io:livekit",
