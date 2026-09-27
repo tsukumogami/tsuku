@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-27T01:55:32Z",
+  "generated_at": "2026-09-27T10:57:34Z",
   "total_recipes": 1449,
   "summary": {
     "by_platform": {
@@ -9,9 +9,9 @@
         "pct": 61.1456176673568
       },
       "glibc": {
-        "supported": 1416,
+        "supported": 1417,
         "total": 1449,
-        "pct": 97.72256728778468
+        "pct": 97.79158040027606
       },
       "musl": {
         "supported": 1257,
@@ -28,7 +28,7 @@
       "tool": {
         "total": 1295,
         "musl_support": 1106,
-        "glibc_support": 1265
+        "glibc_support": 1266
       }
     }
   },
@@ -7009,11 +7009,10 @@
       "type": "tool",
       "platforms": {
         "darwin": true,
-        "glibc": false,
+        "glibc": true,
         "musl": false
       },
       "gaps": [
-        "glibc",
         "musl"
       ],
       "errors": null,
