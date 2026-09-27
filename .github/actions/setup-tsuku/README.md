@@ -18,8 +18,8 @@ A mismatch at either step exits non-zero before anything is installed or added t
 shows both verification lines:
 
 ```
-Verified checksums.txt for tsuku v0.14.0: sha256 61b4d5cf...
-Verified tsuku-linux-amd64 against checksums.txt: sha256 1b95bbc3...
+Verified checksums.txt for tsuku v0.15.0: sha256 87937c40...
+Verified tsuku-linux-amd64 against checksums.txt: sha256 6e3dd6fd...
 ```
 
 The hash is committed, not read from the release, because GitHub releases can have their assets
@@ -36,7 +36,7 @@ which defeats the point.
 
 ```yaml
 - name: Install tsuku
-  uses: tsukumogami/tsuku/.github/actions/setup-tsuku@<40-character sha>  # installs tsuku 0.14.0
+  uses: tsukumogami/tsuku/.github/actions/setup-tsuku@<40-character sha>  # installs tsuku 0.15.0
 ```
 
 Later steps in the same job can run `tsuku` and anything tsuku installs.
