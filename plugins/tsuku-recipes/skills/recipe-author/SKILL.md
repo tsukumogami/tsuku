@@ -160,6 +160,14 @@ When auto-detection works, skip the `[version]` section. Override with explicit
 fields when the inferred source is wrong or you need `tag_prefix`, `github_repo`,
 or other provider-specific config.
 
+The `github` provider picks "latest" and range pins (`tool@1`, `tool@1.2`) from
+published releases, not bare tags. It skips drafts and, when the repository
+attaches assets to its releases, releases that have none, so a tag pushed before
+its binaries are uploaded isn't chosen. A repository whose releases never carry
+assets (the recipe downloads from a vendor site) counts every published release,
+and one that only tags falls back to its tags. An exact pin (`tool@1.2.3`)
+resolves to its tag directly, whether or not a release exists.
+
 ## Platform Conditionals
 
 Steps can target specific platforms with a `when` clause.
