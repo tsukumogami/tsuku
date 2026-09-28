@@ -8,13 +8,13 @@ inputs:
     description: >
       tsuku release to install. Change it only together with checksums-sha256.
     required: false
-    default: '0.15.0'
+    default: '0.15.2'
   checksums-sha256:
     description: >
       sha256 of the checksums.txt published with that release. The binary is
       checked against its line in this file, so this one value pins every platform.
     required: false
-    default: '87937c40834e04eb38959bc6790b096c41b4357675318b65729812661c892e56'
+    default: '1dadbf2bddc4788c0a5198eb642695f173bd5590b77d837da14a60893ae927d5'
 
 runs:
   using: composite
