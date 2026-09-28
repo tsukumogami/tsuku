@@ -18,8 +18,8 @@ A mismatch at either step exits non-zero before anything is installed or added t
 shows both verification lines:
 
 ```
-Verified checksums.txt for tsuku v0.15.0: sha256 87937c40...
-Verified tsuku-linux-amd64 against checksums.txt: sha256 6e3dd6fd...
+Verified checksums.txt for tsuku v0.15.2: sha256 1dadbf2b...
+Verified tsuku-linux-amd64 against checksums.txt: sha256 5475cad8...
 ```
 
 The hash is committed, not read from the release, because GitHub releases can have their assets
@@ -36,7 +36,7 @@ which defeats the point.
 
 ```yaml
 - name: Install tsuku
-  uses: tsukumogami/tsuku/.github/actions/setup-tsuku@<40-character sha>  # installs tsuku 0.15.0
+  uses: tsukumogami/tsuku/.github/actions/setup-tsuku@<40-character sha>  # installs tsuku 0.15.2
 ```
 
 Later steps in the same job can run `tsuku` and anything tsuku installs.
@@ -54,7 +54,7 @@ installs. That's also why callers pin a commit rather than a tag.
 1. After a release's assets are published, get the new hash:
 
    ```bash
-   gh release download v0.15.0 -R tsukumogami/tsuku -p checksums.txt -O - | sha256sum
+   gh release download v0.15.2 -R tsukumogami/tsuku -p checksums.txt -O - | sha256sum
    ```
 
    Check that the file lists `tsuku-linux-amd64`, `tsuku-linux-arm64`, `tsuku-darwin-amd64` and
