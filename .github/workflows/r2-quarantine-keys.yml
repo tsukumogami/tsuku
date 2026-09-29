@@ -1,0 +1,130 @@
+# Quarantine a reviewed, committed list of golden-plan keys in R2.
+#
+# The lists live in scripts/r2-delete-lists/, one R2 key per line. Each was built from a full
+# bucket listing and reviewed before being committed; the expected count below pins each
+# list's size, so an edited list is refused rather than run.
+#
+# A pull request that changes the lists, the script or this file dry-runs every list with
+# read-only credentials, so its output is on the pull request before anything can run.
+# A dispatch runs one list and defaults to a dry run. Only a dispatch with dry_run=false moves
+# anything, and only from main (the registry-write environment is limited to main).
+#
+# "Moves" means quarantine, not delete: each key is copied to quarantine/<date>/, the copy is
+# checked, and then the original is removed (scripts/r2-quarantine-keys.sh). Quarantined keys
+# are deleted for good only by R2 Cleanup's hard delete, which needs them to be 7 days old.
+name: R2 Quarantine Keys
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/r2-delete-lists/**'
+      - 'scripts/r2-quarantine-keys.sh'
+      - '.github/workflows/r2-quarantine-keys.yml'
+  workflow_dispatch:
+    inputs:
+      list:
+        description: 'Which reviewed list to run'
+        type: choice
+        options:
+          - 2026-09-29-A-stale-homebrew-versions
+          - 2026-09-29-C-removed-formulae
+          - 2026-09-29-D-unregenerable-retained-versions
+      dry_run:
+        description: 'Report only; move nothing'
+        type: boolean
+        default: true
+
+concurrency:
+  group: r2-quarantine-keys
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  dry-run-all:
+    name: Dry Run (all lists)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Self-test
+        run: scripts/r2-quarantine-keys_test.sh
+
+      - name: Dry run every list
+        shell: bash
+        env:
+          R2_BUCKET_URL: ${{ secrets.R2_BUCKET_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_READONLY }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_READONLY }}
+        run: |
+          # Expected sizes, pinned here and in the dispatch job below.
+          declare -A EXPECT=(
+            [2026-09-29-A-stale-homebrew-versions]=1752
+            [2026-09-29-C-removed-formulae]=7
+            [2026-09-29-D-unregenerable-retained-versions]=3
+          )
+          lists=(scripts/r2-delete-lists/*.txt)
+          if [ "${#lists[@]}" -ne "${#EXPECT[@]}" ]; then
+            echo "::error::${#lists[@]} list files but ${#EXPECT[@]} expected sizes; every list needs a pinned size"
+            exit 1
+          fi
+          for f in "${lists[@]}"; do
+            name=$(basename "$f" .txt)
+            if [ -z "${EXPECT[$name]:-}" ]; then echo "::error::no expected size for $name"; exit 1; fi
+            echo "::group::$name"
+            ./scripts/r2-quarantine-keys.sh --list "$f" --expect "${EXPECT[$name]}" | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "::endgroup::"
+          done
+
+  dry-run-one:
+    name: Dry Run (dispatched list)
+    if: github.event_name == 'workflow_dispatch' && inputs.dry_run
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Dry run
+        shell: bash
+        env:
+          LIST: ${{ inputs.list }}
+          R2_BUCKET_URL: ${{ secrets.R2_BUCKET_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_READONLY }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_READONLY }}
+        run: |
+          declare -A EXPECT=(
+            [2026-09-29-A-stale-homebrew-versions]=1752
+            [2026-09-29-C-removed-formulae]=7
+            [2026-09-29-D-unregenerable-retained-versions]=3
+          )
+          ./scripts/r2-quarantine-keys.sh --list "scripts/r2-delete-lists/$LIST.txt" --expect "${EXPECT[$LIST]}" \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
+  execute-one:
+    name: Quarantine (dispatched list)
+    if: github.event_name == 'workflow_dispatch' && !inputs.dry_run
+    runs-on: ubuntu-latest
+    # The registry-write environment holds this job to main.
+    environment: registry-write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Quarantine
+        shell: bash
+        env:
+          LIST: ${{ inputs.list }}
+          R2_BUCKET_URL: ${{ secrets.R2_BUCKET_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_WRITE }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_WRITE }}
+        run: |
+          declare -A EXPECT=(
+            [2026-09-29-A-stale-homebrew-versions]=1752
+            [2026-09-29-C-removed-formulae]=7
+            [2026-09-29-D-unregenerable-retained-versions]=3
+          )
+          ./scripts/r2-quarantine-keys.sh --list "scripts/r2-delete-lists/$LIST.txt" --expect "${EXPECT[$LIST]}" --execute \
+            | tee -a "$GITHUB_STEP_SUMMARY"
