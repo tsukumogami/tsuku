@@ -29,6 +29,7 @@ on:
           - 2026-09-29-A-stale-homebrew-versions
           - 2026-09-29-C-removed-formulae
           - 2026-09-29-D-unregenerable-retained-versions
+          - 2026-09-29-E-superseded-after-regeneration
       dry_run:
         description: 'Report only; move nothing'
         type: boolean
@@ -65,6 +66,7 @@ jobs:
             [2026-09-29-A-stale-homebrew-versions]=1752
             [2026-09-29-C-removed-formulae]=7
             [2026-09-29-D-unregenerable-retained-versions]=3
+            [2026-09-29-E-superseded-after-regeneration]=86
           )
           lists=(scripts/r2-delete-lists/*.txt)
           if [ "${#lists[@]}" -ne "${#EXPECT[@]}" ]; then
@@ -99,6 +101,7 @@ jobs:
             [2026-09-29-A-stale-homebrew-versions]=1752
             [2026-09-29-C-removed-formulae]=7
             [2026-09-29-D-unregenerable-retained-versions]=3
+            [2026-09-29-E-superseded-after-regeneration]=86
           )
           ./scripts/r2-quarantine-keys.sh --list "scripts/r2-delete-lists/$LIST.txt" --expect "${EXPECT[$LIST]}" \
             | tee -a "$GITHUB_STEP_SUMMARY"
@@ -125,6 +128,7 @@ jobs:
             [2026-09-29-A-stale-homebrew-versions]=1752
             [2026-09-29-C-removed-formulae]=7
             [2026-09-29-D-unregenerable-retained-versions]=3
+            [2026-09-29-E-superseded-after-regeneration]=86
           )
           ./scripts/r2-quarantine-keys.sh --list "scripts/r2-delete-lists/$LIST.txt" --expect "${EXPECT[$LIST]}" --execute \
             | tee -a "$GITHUB_STEP_SUMMARY"
