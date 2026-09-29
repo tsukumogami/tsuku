@@ -15,7 +15,7 @@ cat > "$T/bin/aws" <<'STUB'
 #!/usr/bin/env bash
 echo "$*" >> "$STUB_CALLS"
 case "$2" in
-  list-objects-v2) printf '{"Contents":[{"Key":"plans/f/fzf/v1.0/linux-amd64.json","ETag":"\\"e1\\""},{"Key":"plans/f/fzf/v0.9/linux-amd64.json","ETag":"\\"e2\\""}]}\n' ;;
+  list-objects-v2) if [ -n "${STUB_LISTING:-}" ]; then cat "$STUB_LISTING"; exit 0; fi; printf '{"Contents":[{"Key":"plans/f/fzf/v1.0/linux-amd64.json","ETag":"\\"e1\\""},{"Key":"plans/f/fzf/v0.9/linux-amd64.json","ETag":"\\"e2\\""}]}\n' ;;
   copy-object) echo '{}' ;;
   head-object) if [ -n "${STUB_BAD_ETAG:-}" ]; then echo '"zzz"'; else case "$*" in *v1.0*) echo '"e1"' ;; *) echo '"e2"' ;; esac; fi ;;
   delete-object) echo '{}' ;;
@@ -44,6 +44,14 @@ run "$two" 2
 [ "$RC" = 0 ] && grep -q "2 keys, 1 present, 1 absent" <<< "$OUT" && grep -q "absent: plans/f/fzf/v0.8" <<< "$OUT" \
   && ! grep -q "copy-object\|delete-object" "$T/calls" && ok "dry run reports present/absent and changes nothing" \
   || bad "dry run: rc=$RC out=$OUT calls=$(cat "$T/calls")"
+
+# Far more present keys than the sample, past a pipe buffer (as in the real 1752-key list):
+# cutting the sample must not break the run. Piping the list through head under pipefail did.
+big=$(for i in $(seq 1 2000); do echo "plans/f/fzf/v1.$i/linux-amd64.json"; done)
+python3 -c 'import json,sys; print(json.dumps({"Contents": [{"Key": k, "ETag": "\"e\""} for k in sys.stdin.read().split()]}))' <<< "$big" > "$T/big.json"
+STUB_LISTING="$T/big.json" run "$big"$'\n' 2000 --sample 3
+[ "$RC" = 0 ] && grep -q "2000 keys, 2000 present, 0 absent" <<< "$OUT" && [ "$(grep -c '^  plans/' <<< "$OUT")" = 3 ] \
+  && ok "a 2000-key list prints a 3-key sample and exits 0" || bad "sample cut: rc=$RC out=$(tail -3 <<< "$OUT")"
 
 run "$two" 2 --execute
 [ "$RC" = 0 ] && grep -q "Quarantined 1 of 1 present keys" <<< "$OUT" \

@@ -82,7 +82,9 @@ done
 echo "List $LIST: ${#KEYS[@]} keys, ${#present[@]} present, ${#absent[@]} absent (bucket objects listed under $R2_PLANS_ROOT/: $(grep -c . "$listing"))"
 for key in "${absent[@]+"${absent[@]}"}"; do echo "  absent: $key"; done
 echo "Sample of present keys:"
-printf '%s\n' "${present[@]+"${present[@]}"}" | head -"$SAMPLE" | sed 's/^/  /'
+# Sliced rather than piped through head: with pipefail, head closing the pipe early would kill
+# the script with a write error whenever there are more present keys than the sample size.
+for key in "${present[@]:0:$SAMPLE}"; do echo "  $key"; done
 
 if [[ "$EXECUTE" != true ]]; then
     echo "Dry run: nothing moved."
