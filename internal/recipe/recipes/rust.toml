@@ -38,7 +38,7 @@ when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
 action = "install_binaries"
-outputs = ["bin/cargo", "bin/rustc", "bin/rustdoc", "bin/rustfmt", "bin/cargo-clippy", "bin/clippy-driver", "bin/rust-analyzer"]
+outputs = ["bin/cargo", "bin/rustc", "bin/rustdoc", "bin/rustfmt", "bin/cargo-fmt", "bin/cargo-clippy", "bin/clippy-driver", "bin/rust-analyzer"]
 install_mode = "directory"
 when = { os = ["linux"], libc = ["glibc"] }
 
@@ -77,7 +77,7 @@ when = { os = ["linux"], linux_family = "alpine" }
 
 [[steps]]
 action = "install_binaries"
-outputs = ["bin/cargo", "bin/rustc", "bin/rustdoc", "bin/rustfmt", "bin/cargo-clippy", "bin/clippy-driver", "bin/rust-analyzer"]
+outputs = ["bin/cargo", "bin/rustc", "bin/rustdoc", "bin/rustfmt", "bin/cargo-fmt", "bin/cargo-clippy", "bin/clippy-driver", "bin/rust-analyzer"]
 install_mode = "directory"
 when = { os = ["linux"], linux_family = "alpine" }
 
@@ -107,7 +107,7 @@ when = { os = ["darwin"] }
 
 [[steps]]
 action = "install_binaries"
-outputs = ["bin/cargo", "bin/rustc", "bin/rustdoc", "bin/rustfmt", "bin/cargo-clippy", "bin/clippy-driver", "bin/rust-analyzer"]
+outputs = ["bin/cargo", "bin/rustc", "bin/rustdoc", "bin/rustfmt", "bin/cargo-fmt", "bin/cargo-clippy", "bin/clippy-driver", "bin/rust-analyzer"]
 install_mode = "directory"
 when = { os = ["darwin"] }
 
