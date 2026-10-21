@@ -361,6 +361,63 @@ func TestExpandPathVariables_PathLengthLimit(t *testing.T) {
 	}
 }
 
+// TestExpandPathVariables_AllowedPrefixSymlinkedRoot is #2769: under a
+// $TSUKU_HOME reached through a link, an expanded path that exists comes back
+// resolved, and comparing it with the unresolved allowed prefix refused every
+// dependency inside it. The library files exist here on purpose: a missing one
+// isn't resolved, so it never showed the bug.
+func TestExpandPathVariables_AllowedPrefixSymlinkedRoot(t *testing.T) {
+	home, _ := testutil.SymlinkedTempDir(t)
+	binaryPath := filepath.Join(home, "tools", "myapp", "bin", "app")
+	libDir := filepath.Join(home, "tools", "myapp", "lib")
+	allowedDir := filepath.Join(home, "tools")
+	outside := filepath.Join(home, "outside")
+	for _, d := range []string{filepath.Dir(binaryPath), libDir, outside} {
+		if err := os.MkdirAll(d, 0755); err != nil {
+			t.Fatalf("Failed to create directory: %v", err)
+		}
+	}
+	for _, f := range []string{filepath.Join(libDir, "libfoo.so"), filepath.Join(outside, "libevil.so")} {
+		if err := os.WriteFile(f, []byte("dummy"), 0644); err != nil {
+			t.Fatalf("Failed to create %s: %v", f, err)
+		}
+	}
+	// A library inside tools/ that links out of it.
+	if err := os.Symlink(filepath.Join(outside, "libevil.so"), filepath.Join(libDir, "libevil.so")); err != nil {
+		t.Fatalf("Failed to create symlink: %v", err)
+	}
+
+	tests := []struct {
+		name      string
+		dep       string
+		wantError bool
+	}{
+		{"existing path within allowed directory", "$ORIGIN/../lib/libfoo.so", false},
+		{"missing path within allowed directory", "$ORIGIN/../lib/libmissing.so", false},
+		{"path outside allowed directory", "$ORIGIN/../../../../etc/passwd", true},
+		{"link inside allowed directory leading out", "$ORIGIN/../lib/libevil.so", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := ExpandPathVariables(tt.dep, binaryPath, nil, allowedDir)
+			if !tt.wantError {
+				if err != nil {
+					t.Fatalf("Unexpected error: %v", err)
+				}
+				return
+			}
+			verr, ok := err.(*ValidationError)
+			if !ok {
+				t.Fatalf("Expected ValidationError, got %T (%v)", err, err)
+			}
+			if verr.Category != ErrPathOutsideAllowed {
+				t.Errorf("Category = %v, want %v", verr.Category, ErrPathOutsideAllowed)
+			}
+		})
+	}
+}
+
 func TestExpandPathVariables_AllowedPrefix(t *testing.T) {
 	tmpDir := testutil.ResolvedTempDir(t)
 	binaryPath := filepath.Join(tmpDir, "tools", "myapp", "bin", "app")

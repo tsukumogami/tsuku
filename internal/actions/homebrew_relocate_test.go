@@ -1304,10 +1304,9 @@ func TestFutureLoaderDir_RebasesBinaryOntoInstallPath(t *testing.T) {
 func TestComputeChainRpaths_UsesFutureInstallLocation(t *testing.T) {
 	t.Parallel()
 
-	// Resolved, like a default $TSUKU_HOME. The loader dir below doesn't
-	// exist yet, so it stays unresolved while the libs dir resolves; under a
-	// symlinked root (macOS's /var) the two disagree and the escape check
-	// fires. That case is #2769, whose fix adds it as its own test.
+	// Resolved, like a default $TSUKU_HOME.
+	// TestComputeChainRpaths_SymlinkedHome runs the same layout under a home
+	// reached through a link.
 	tsukuHome := testutil.ResolvedTempDir(t)
 	libsDir := filepath.Join(tsukuHome, "libs")
 	workDir := filepath.Join(tsukuHome, "work")
@@ -1360,6 +1359,89 @@ func TestComputeChainRpaths_UsesFutureInstallLocation(t *testing.T) {
 	if resolved != wantResolved {
 		t.Errorf("rpath resolves to %q from install-location loader %q, want %q",
 			resolved, loaderDir, wantResolved)
+	}
+}
+
+// TestComputeChainRpaths_SymlinkedHome is #2769: the
+// UsesFutureInstallLocation layout with $TSUKU_HOME reached through a link.
+// The loader dir doesn't exist yet at relocate time while the libs dir does,
+// so resolving only what exists put the two sides in different spaces and
+// the escape check refused a legitimate entry.
+func TestComputeChainRpaths_SymlinkedHome(t *testing.T) {
+	t.Parallel()
+
+	tsukuHome, _ := testutil.SymlinkedTempDir(t)
+	libsDir := filepath.Join(tsukuHome, "libs")
+	workDir := filepath.Join(tsukuHome, "work")
+	binDir := filepath.Join(workDir, "bin")
+	if err := os.MkdirAll(binDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(libsDir, "libevent-2.1.12", "lib"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	installPath := filepath.Join(tsukuHome, "tools", "tmux-3.6a")
+	loaderDir := futureLoaderDir(workDir, installPath, filepath.Join(binDir, "tmux"))
+
+	entries := []chainEntry{{name: "libevent", version: "2.1.12"}}
+	rpaths, err := computeChainRpathsWithPrefix(loaderDir, libsDir, entries, "tmux", "$ORIGIN")
+	if err != nil {
+		t.Fatalf("computeChainRpathsWithPrefix returned error: %v", err)
+	}
+
+	// The same answer as under a resolved home.
+	wantRpath := "$ORIGIN/" + filepath.ToSlash(filepath.Join("..", "..", "..", "libs", "libevent-2.1.12", "lib"))
+	if len(rpaths) != 1 || rpaths[0] != wantRpath {
+		t.Errorf("rpaths = %q, want [%q]", rpaths, wantRpath)
+	}
+}
+
+// TestComputeChainRpaths_SymlinkedDepEscapesLibs checks the escape check still
+// follows links: a dep directory under libs/ that is a symlink to a directory
+// outside it is refused, as is a dep name that climbs out of libs/, whether or
+// not the home itself is reached through a link. Comparing resolved paths on
+// both sides must not let either through.
+func TestComputeChainRpaths_SymlinkedDepEscapesLibs(t *testing.T) {
+	t.Parallel()
+
+	roots := map[string]func(t *testing.T) string{
+		"resolved home": testutil.ResolvedTempDir,
+		"symlinked home": func(t *testing.T) string {
+			link, _ := testutil.SymlinkedTempDir(t)
+			return link
+		},
+	}
+	for name, root := range roots {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			tsukuHome := root(t)
+			libsDir := filepath.Join(tsukuHome, "libs")
+			outside := filepath.Join(tsukuHome, "outside")
+			if err := os.MkdirAll(filepath.Join(outside, "lib"), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.MkdirAll(libsDir, 0o755); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.Symlink(outside, filepath.Join(libsDir, "evil-1.0")); err != nil {
+				t.Fatal(err)
+			}
+			loaderDir := filepath.Join(tsukuHome, "tools", "tool-1.0", "bin")
+
+			// A dep dir that links out of libs/, and a name that climbs out.
+			for _, e := range []chainEntry{{name: "evil", version: "1.0"}, {name: "../etc", version: "1.0"}} {
+				rpaths, err := computeChainRpathsWithPrefix(loaderDir, libsDir, []chainEntry{e}, "tool", "$ORIGIN")
+				if err == nil {
+					t.Errorf("entry %q: got rpaths %v, want escape error", e.name, rpaths)
+					continue
+				}
+				if !strings.Contains(err.Error(), "escapes libs dir") {
+					t.Errorf("entry %q: error = %q, want it to mention 'escapes libs dir'", e.name, err.Error())
+				}
+			}
+		})
 	}
 }
 

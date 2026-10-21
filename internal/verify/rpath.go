@@ -10,6 +10,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/tsukumogami/tsuku/internal/realpath"
 )
 
 // Security limits for RPATH processing
@@ -393,11 +395,21 @@ func ExpandPathVariables(dep, binaryPath string, rpaths []string, allowedPrefix 
 		expanded = resolved
 	}
 
-	// Validate canonical path prefix if specified
+	// Validate canonical path prefix if specified. Both sides are compared
+	// with symlinks resolved: expanded is resolved above when it exists, so an
+	// unresolved prefix under a $TSUKU_HOME reached through a link (macOS's
+	// /var, a linked ~/.tsuku) would refuse every path inside it. Where
+	// either can't be resolved, the comparison uses it as it is.
 	if allowedPrefix != "" {
-		// Clean the allowed prefix for consistent comparison
 		cleanAllowed := filepath.Clean(allowedPrefix)
-		if !strings.HasPrefix(expanded, cleanAllowed) {
+		if resolved, err := realpath.Resolve(cleanAllowed); err == nil {
+			cleanAllowed = resolved
+		}
+		compared := expanded
+		if resolved, err := realpath.Resolve(expanded); err == nil {
+			compared = resolved
+		}
+		if !strings.HasPrefix(compared, cleanAllowed) {
 			return "", &ValidationError{
 				Category: ErrPathOutsideAllowed,
 				Path:     expanded,
