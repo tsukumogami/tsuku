@@ -1,8 +1,10 @@
 name: tsuku-llm Build
 
-# Builds tsuku-llm on the same runners, with the same steps, as the build-llm
-# job in release.yml, minus the upload, whenever a pull request touches the
-# addon. Change the two together.
+# Builds tsuku-llm on the same platforms and runners, with the same toolchain,
+# installs and cargo features, as the build-llm job in release.yml, whenever a
+# pull request touches the addon. It leaves out the artifact naming and upload,
+# and adds a smoke test. Change the two together; release.yml's comments explain
+# the CUDA and Vulkan version choices copied here.
 #
 # Before this, nothing built tsuku-llm on macOS until a release tag was pushed
 # (test.yml's LLM job is Linux-only and its paths filter skips tsuku-llm/**).
@@ -122,6 +124,9 @@ jobs:
         run: codesign -s - tsuku-llm/target/release/tsuku-llm
 
       # --help, not --version: the CLI defines no version flag. release.yml's
-      # validate step runs the same check on the macOS binaries.
+      # validate step runs the same check on the macOS binaries. CUDA builds
+      # are skipped: they link the driver's libcuda.so.1, which GPU-less
+      # runners don't have, so the binary can't load there.
       - name: Smoke-test binary
+        if: matrix.backend != 'cuda'
         run: tsuku-llm/target/release/tsuku-llm --help
