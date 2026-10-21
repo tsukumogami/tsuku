@@ -1307,7 +1307,7 @@ func TestComputeChainRpaths_UsesFutureInstallLocation(t *testing.T) {
 	// Resolved, like a default $TSUKU_HOME. The loader dir below doesn't
 	// exist yet, so it stays unresolved while the libs dir resolves; under a
 	// symlinked root (macOS's /var) the two disagree and the escape check
-	// fires. That case is #2769.
+	// fires. That case is #2769, whose fix adds it as its own test.
 	tsukuHome := testutil.ResolvedTempDir(t)
 	libsDir := filepath.Join(tsukuHome, "libs")
 	workDir := filepath.Join(tsukuHome, "work")

@@ -240,10 +240,11 @@ func TestInstallShellInitAction_Execute_SourceFile(t *testing.T) {
 // outsideExecutable creates an executable in its own temp dir, outside any
 // tool directory. It has to exist, because the action resolves the binary
 // before it checks where the binary lives, and no system path is safe to
-// assume: /usr/bin/echo doesn't exist on macOS.
+// assume: /usr/bin/echo doesn't exist on macOS. It's never run. Its temp
+// dir is left unresolved on purpose: all it has to be is outside the tool.
 func outsideExecutable(t *testing.T) string {
 	t.Helper()
-	path := filepath.Join(t.TempDir(), "echo")
+	path := filepath.Join(t.TempDir(), "outside-tool")
 	if err := os.WriteFile(path, []byte("#!/bin/sh\n"), 0755); err != nil {
 		t.Fatal(err)
 	}

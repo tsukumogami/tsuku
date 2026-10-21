@@ -9,6 +9,8 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/tsukumogami/tsuku/internal/testutil"
 )
 
 // fakeEnv is a DiscoveryEnv over the real filesystem with the pieces a test
@@ -47,9 +49,10 @@ type fakeEnv struct {
 
 func newFakeEnv(t *testing.T, root string) *fakeEnv {
 	t.Helper()
-	// Discovery walks and keys metadata at resolved paths, so a root with a
-	// symlink in it (t.TempDir() on macOS) bounds and keys nothing it sees.
-	// Fail here rather than let the test run on the real filesystem.
+	// Discovery walks resolved paths. Under a root with a symlink in it
+	// (t.TempDir() on macOS), the fake's ancestor bound and its per-path
+	// metadata overrides never match a path discovery asks about, and the
+	// test silently runs on the real filesystem. Fail here instead.
 	if resolved, err := filepath.EvalSymlinks(root); err == nil && resolved != filepath.Clean(root) {
 		t.Fatalf("newFakeEnv: root %s resolves to %s; build it with resolvedTempDir", root, resolved)
 	}
@@ -165,8 +168,8 @@ func (f *fakeEnv) open(path string) (File, error) {
 	return &countingFile{File: handle, meta: meta, env: f}, nil
 }
 
-// resolvedTempDir is t.TempDir() resolved through symlinks, for a fixture that
-// presents metadata through the fake.
+// resolvedTempDir is testutil.ResolvedTempDir, named for this package's
+// fixtures that present metadata through the fake.
 //
 // Discovery resolves the start directory before it walks and reads metadata at
 // the resolved paths, and the fake's overrides are keyed by path, so they have
@@ -175,11 +178,7 @@ func (f *fakeEnv) open(path string) (File, error) {
 // on the real metadata instead of the layout it describes.
 func resolvedTempDir(t *testing.T) string {
 	t.Helper()
-	root, err := filepath.EvalSymlinks(t.TempDir())
-	if err != nil {
-		t.Fatalf("resolving the fixture root: %v", err)
-	}
-	return root
+	return testutil.ResolvedTempDir(t)
 }
 
 func writeFile(t *testing.T, path, content string) {
