@@ -199,6 +199,9 @@ jobs:
   #
   # CUDA version coupling: builds against CUDA toolkit 12.4. The cuda-runtime
   # recipe (recipes/c/cuda-runtime.toml) must provide ABI-compatible 12.x libs.
+  #
+  # llm-build.yml runs this same matrix and steps on pull requests that touch
+  # tsuku-llm, so a build break shows up before a tag. Change the two together.
   build-llm:
     name: "Build tsuku-llm (${{ matrix.platform }})"
     needs: [release]
