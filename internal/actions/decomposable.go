@@ -75,6 +75,12 @@ type EvalConstraints struct {
 	// Used during constrained evaluation to preserve the original detection result.
 	PipHasNativeAddons bool
 
+	// PipPythonVersion is the python_version param of the first pip_exec step.
+	// Used during constrained evaluation instead of the interpreter installed on
+	// the evaluating machine, which follows upstream python-standalone releases.
+	// Empty when the golden file has none.
+	PipPythonVersion string
+
 	// GoSum contains the full go.sum content for go_build steps.
 	// Extracted from go_sum param in golden files.
 	GoSum string

@@ -517,3 +517,54 @@ func TestComputeFileSHA256_MissingFile(t *testing.T) {
 		t.Error("Expected error for missing file")
 	}
 }
+
+// TestPipxInstallAction_DecomposeWithConstraints_PythonVersion pins the golden
+// file's python_version over the interpreter installed on the evaluating machine,
+// which follows upstream python-standalone releases (#2764).
+func TestPipxInstallAction_DecomposeWithConstraints_PythonVersion(t *testing.T) {
+	home := t.TempDir()
+	binDir := filepath.Join(home, "tools", "python-standalone-20990101", "bin")
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	// Stands in for a python-standalone newer than the one the golden file recorded.
+	script := "#!/bin/sh\necho 'Python 3.99.1'\n"
+	if err := os.WriteFile(filepath.Join(binDir, "python3"), []byte(script), 0755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("TSUKU_HOME", home)
+
+	tests := []struct {
+		name   string
+		pinned string
+		want   string
+	}{
+		{"golden value wins over installed interpreter", "3.10.20", "3.10.20"},
+		{"installed interpreter when golden has none", "", "3.99.1"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := &EvalContext{
+				Context: context.Background(),
+				Version: "1.9.2",
+				Constraints: &EvalConstraints{
+					PipRequirements:  "meson==1.9.2 \\\n    --hash=sha256:abc123\n",
+					PipPythonVersion: tt.pinned,
+				},
+			}
+			steps, err := (&PipxInstallAction{}).Decompose(ctx, map[string]interface{}{
+				"package":     "meson",
+				"executables": []string{"meson"},
+			})
+			if err != nil {
+				t.Fatalf("Decompose failed: %v", err)
+			}
+			if len(steps) != 1 || steps[0].Action != "pip_exec" {
+				t.Fatalf("expected one pip_exec step, got %+v", steps)
+			}
+			if got, _ := steps[0].Params["python_version"].(string); got != tt.want {
+				t.Errorf("python_version = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}

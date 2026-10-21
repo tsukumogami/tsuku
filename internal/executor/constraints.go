@@ -83,13 +83,16 @@ func extractPipConstraintsFromSteps(steps []ResolvedStep, constraints *actions.E
 			continue
 		}
 
-		// Store full requirements string and has_native_addons (first one wins)
+		// Store full requirements string, has_native_addons and python_version (first one wins)
 		if constraints.PipRequirements == "" {
 			constraints.PipRequirements = lockedReqs
 		}
 		if firstPipExec {
 			if hasNative, ok := step.Params["has_native_addons"].(bool); ok {
 				constraints.PipHasNativeAddons = hasNative
+			}
+			if pyVer, ok := step.Params["python_version"].(string); ok {
+				constraints.PipPythonVersion = pyVer
 			}
 			firstPipExec = false
 		}
