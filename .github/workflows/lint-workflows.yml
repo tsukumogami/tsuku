@@ -24,20 +24,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
-      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
+      # Copied into .claude/shirabe-extensions/verification-map.json (the /work-on verification map), with any deliberate differences noted in work-on.md beside it; change all three together.
       - name: Check for retired runners
         run: .github/scripts/checks/retired-runners.sh
       # The check's own self-test, covering the matrix and JSON forms a runs-on-only match
       # could not see.
       - name: Check retired runner check can fail
         run: .github/scripts/checks/retired-runners_test.sh
-      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
+      # Copied into .claude/shirabe-extensions/verification-map.json (the /work-on verification map), with any deliberate differences noted in work-on.md beside it; change all three together.
       - name: Check CI consolidation patterns
         run: .github/scripts/checks/ci-patterns-lint.sh
-      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
+      # Copied into .claude/shirabe-extensions/verification-map.json (the /work-on verification map), with any deliberate differences noted in work-on.md beside it; change all three together.
       - name: Check matrix recipe passthrough
         run: .github/scripts/checks/matrix-recipe-passthrough.sh
-      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
+      # Copied into .claude/shirabe-extensions/verification-map.json (the /work-on verification map), with any deliberate differences noted in work-on.md beside it; change all three together.
       - name: Check label references resolve
         run: .github/scripts/checks/label-references.py
       # The check's own self-test. A check nobody has seen fail is a check nobody knows
@@ -45,7 +45,7 @@ jobs:
       # request description.
       - name: Check label reference check can fail
         run: .github/scripts/checks/label-references_test.sh
-      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
+      # Copied into .claude/shirabe-extensions/verification-map.json (the /work-on verification map), with any deliberate differences noted in work-on.md beside it; change all three together.
       - name: Check escalation declarations and registry agree
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -57,7 +57,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: .github/scripts/checks/workflow-policy_test.sh
-      # Copied into .claude/shirabe-extensions/work-on.md (the /work-on verification map), with any deliberate differences noted there; change both together.
+      # Copied into .claude/shirabe-extensions/verification-map.json (the /work-on verification map), with any deliberate differences noted in work-on.md beside it; change all three together.
       - name: Check escalation hygiene
         run: .github/scripts/checks/escalation-hygiene.py
       # Its own self-test. Every assertion in the hygiene check has a row that proves it

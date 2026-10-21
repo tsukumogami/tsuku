@@ -1,0 +1,115 @@
+{
+  "schema": "shirabe-verification-map/v1",
+  "commands": {
+    "go-mod-tidy": {"run": ["go", "mod", "tidy", "-diff"], "network": true, "unattended": true},
+    "gofmt": {"run": ["bash", "-c", "F=$(git ls-files --cached --others --exclude-standard \"*.go\") && [ -n \"$F\" ] && out=$(printf \"%s\\n\" \"$F\" | xargs gofmt -l) && [ -z \"$out\" ]"]},
+    "go-vet": {"run": ["go", "vet", "./..."], "network": true, "unattended": true},
+    "golangci-lint": {"run": ["bash", "-c", "GOLANGCI_LINT_CACHE=$(mktemp -d) go test -count=1 -run '^TestGolangCILint$' ."], "network": true, "unattended": true},
+    "no-stdlib-log": {"run": ["go", "test", "-count=1", "-run", "^TestNoStdlibLog$", "."], "network": true, "unattended": true},
+    "unit-tests": {"run": ["bash", "-c", "H=$(git rev-parse HEAD) && S=$(git status --porcelain) && env -u LD_LIBRARY_PATH DOCKER_HOST=unix:///nonexistent TSUKU_NO_TELEMETRY=1 go test -short ./... && [ \"$(git rev-parse HEAD)\" = \"$H\" ] && [ \"$(git status --porcelain)\" = \"$S\" ]"], "timeout_secs": 3600, "network": true, "unattended": true, "max_procs": 1024},
+
+    "docs-validate-changed": {"run": ["bash", "-c", "B=$(git merge-base origin/main HEAD) && git diff --name-only --diff-filter=ACMR \"$B\" -- :/docs/ | grep -vE \"(^|/)(evals|tests)/fixtures/\" | xargs -r shirabe validate --visibility=public"]},
+    "docs-lifecycle": {"run": ["shirabe", "validate", "--visibility=public", "--lifecycle", ".", "--mode=draft"]},
+    "docs-go-tests": {"run": ["go", "test", "-count=1", "-run", "TestGatesTableMatchesTheRecord|TestDerivation", "."], "network": true, "unattended": true},
+
+    "recipes-embedded-layout": {"run": ["bash", "-c", "[ -d internal/recipe/recipes ] && [ -z \"$(find internal/recipe/recipes -mindepth 1 -maxdepth 1 -type d)\" ] && [ -n \"$(find internal/recipe/recipes -maxdepth 1 -name '*.toml')\" ]"]},
+    "recipes-registry-layout": {"run": ["bash", "-c", "[ -d recipes ] && [ -z \"$(find recipes -maxdepth 1 -name '*.toml')\" ] && [ -z \"$(find recipes -mindepth 1 -maxdepth 1 -type d ! -name '[a-z]' ! -name discovery)\" ]"]},
+    "recipes-letter-dirs": {"run": ["bash", "-c", "[ -z \"$(find recipes -mindepth 2 -maxdepth 2 -name '*.toml' | awk -F/ '{ if (substr($3, 1, 1) != $2) print }')\" ]"]},
+    "recipes-no-duplicates": {"run": ["bash", "-c", "[ -z \"$(comm -12 <(find internal/recipe/recipes -maxdepth 1 -name '*.toml' -exec basename {} .toml \\; | sort) <(find recipes -mindepth 2 -maxdepth 2 -name '*.toml' -exec basename {} .toml \\; | sort))\" ]"]},
+    "recipes-libc-coverage": {"run": ["bash", "-c", "T=$(mktemp -d) && go build -o \"$T/tsuku\" ./cmd/tsuku && for r in internal/recipe/recipes/*.toml; do o=$(\"$T/tsuku\" validate --check-libc-coverage --json \"$r\" 2>/dev/null); e=$(printf '%s' \"$o\" | jq -er '[.errors[]?.message] | join(\"; \")') && [ -z \"$e\" ] || { echo \"$r: ${e:-unreadable output}\"; exit 1; }; done"], "network": true, "unattended": true},
+    "recipes-strict": {"run": ["bash", "-c", "T=$(mktemp -d) && go build -o \"$T/tsuku\" ./cmd/tsuku && for r in internal/recipe/recipes/*.toml recipes/*/*.toml; do TSUKU_HOME=\"$T\" TSUKU_NO_TELEMETRY=1 TSUKU_REGISTRY_URL=\"$PWD\" \"$T/tsuku\" validate --strict \"$r\" >/dev/null || { echo \"failed: $r\"; exit 1; }; done"], "network": true, "unattended": true},
+    "recipes-go-tests": {"run": ["env", "TSUKU_NO_TELEMETRY=1", "go", "test", "-count=1", "./internal/recipe/", "./internal/sonameindex/", "./internal/indexfixture/"], "network": true, "unattended": true},
+
+    "plugins-no-hooks": {"run": ["bash", "-c", "for p in tsuku-recipes tsuku-user; do [ ! -f \"plugins/$p/hooks.json\" ] || exit 1; done"]},
+    "plugins-exemplars": {"run": ["bash", "-c", "T=$(mktemp -d) && go build -o \"$T/tsuku\" ./cmd/tsuku && P=$(grep -oE 'recipes/[^[:space:]]+\\.toml' plugins/tsuku-recipes/skills/recipe-author/references/exemplar-recipes.md | sort -u) && [ -n \"$P\" ] && for p in $P; do [ -f \"$p\" ] && TSUKU_HOME=\"$T\" TSUKU_NO_TELEMETRY=1 TSUKU_REGISTRY_URL=\"$PWD\" \"$T/tsuku\" validate \"$p\" >/dev/null || { echo \"failed: $p\"; exit 1; }; done"], "network": true, "unattended": true},
+
+    "telemetry": {"run": ["bash", "-c", "(cd telemetry && npm ci && npm run typecheck && npm run test:coverage)"], "network": true, "unattended": true},
+
+    "website-pipeline-links": {"run": ["bash", "-c", "ls website/pipeline/*.html >/dev/null 2>&1 && bash scripts/check-pipeline-links.sh"]},
+
+    "container-images-drift": {"run": ["bash", "-c", "jq -e 'length > 0 and all(.[]; has(\"image\"))' container-images.json >/dev/null && cmp container-images.json internal/containerimages/container-images.json"]},
+
+    "golden-exclusions": {"run": ["bash", "-c", "for f in testdata/golden/exclusions.json testdata/golden/code-validation-exclusions.json; do jq -e '.exclusions | type == \"array\"' \"$f\" >/dev/null || exit 1; done && ./scripts/validate-golden-exclusions.sh && ./scripts/validate-golden-exclusions.sh --file testdata/golden/code-validation-exclusions.json"]},
+
+    "rustfmt": {"run": ["bash", "-c", "(cd tsuku-llm && cargo fmt --all --check) && (cd cmd/tsuku-dltest && cargo fmt --all --check)"], "network": true, "unattended": true},
+
+    "retired-runners": {"run": [".github/scripts/checks/retired-runners.sh"]},
+    "ci-patterns-lint": {"run": [".github/scripts/checks/ci-patterns-lint.sh"]},
+    "matrix-recipe-passthrough": {"run": [".github/scripts/checks/matrix-recipe-passthrough.sh"]},
+    "label-references": {"run": [".github/scripts/checks/label-references.py"]},
+    "label-references-test": {"run": [".github/scripts/checks/label-references_test.sh"]},
+    "workflow-policy": {"run": [".github/scripts/checks/workflow-policy.py"], "network": true, "unattended": true},
+    "workflow-policy-test": {"run": [".github/scripts/checks/workflow-policy_test.sh"]},
+    "escalation-hygiene": {"run": [".github/scripts/checks/escalation-hygiene.py"]},
+    "escalation-hygiene-test": {"run": [".github/scripts/checks/escalation-hygiene_test.sh"]},
+
+    "escalate-sweep-test": {"run": [".github/scripts/checks/escalate-sweep_test.sh"]},
+    "escalate-owned-test": {"run": [".github/scripts/checks/escalate-owned_test.sh"]},
+    "escalate-branch-test": {"run": [".github/scripts/checks/escalate-branch_test.sh"]},
+
+    "escalation-backstop-test": {"run": [".github/scripts/checks/escalation-backstop_test.py"]},
+
+    "coverage-receipt-test": {"run": [".github/scripts/checks/coverage-receipt_test.sh"]},
+
+    "no-local-check": {"run": ["false"], "unattended": false}
+  },
+  "entries": [
+    {
+      "paths": ["*.go", "**/*.go", "go.mod", "go.sum", "Makefile", "cmd/**", "internal/**", "testdata/**", "container-images.json"],
+      "commands": ["go-mod-tidy", "gofmt", "go-vet", "golangci-lint", "no-stdlib-log", "unit-tests"]
+    },
+    {
+      "paths": ["docs/**"],
+      "commands": ["docs-validate-changed", "docs-lifecycle", "docs-go-tests"]
+    },
+    {
+      "paths": ["recipes/**", "internal/recipe/recipes/**"],
+      "commands": ["recipes-embedded-layout", "recipes-registry-layout", "recipes-letter-dirs", "recipes-no-duplicates", "recipes-libc-coverage", "recipes-strict", "recipes-go-tests"]
+    },
+    {
+      "paths": ["plugins/**"],
+      "commands": ["plugins-no-hooks", "plugins-exemplars"]
+    },
+    {
+      "paths": ["telemetry/**"],
+      "commands": ["telemetry"]
+    },
+    {
+      "paths": ["website/pipeline/*.html", "scripts/check-pipeline-links.sh"],
+      "commands": ["website-pipeline-links"]
+    },
+    {
+      "paths": ["container-images.json", "internal/containerimages/**"],
+      "commands": ["container-images-drift"]
+    },
+    {
+      "paths": ["testdata/golden/exclusions.json", "testdata/golden/code-validation-exclusions.json", "scripts/validate-golden-exclusions.sh"],
+      "commands": ["golden-exclusions"]
+    },
+    {
+      "paths": ["*.rs", "**/*.rs", "Cargo.toml", "**/Cargo.toml", "rust-toolchain.toml", "**/rust-toolchain.toml"],
+      "commands": ["rustfmt"]
+    },
+    {
+      "paths": [".github/workflows/**", "test-matrix.json", ".github/labels.yml", ".github/escalation-registry.yml"],
+      "commands": ["retired-runners", "ci-patterns-lint", "matrix-recipe-passthrough", "label-references", "label-references-test", "workflow-policy", "workflow-policy-test", "escalation-hygiene", "escalation-hygiene-test"]
+    },
+    {
+      "paths": [".github/scripts/escalate.sh", ".github/scripts/escalate-sweep.sh", ".github/workflows/escalate.yml", ".github/workflows/escalate-sweep.yml"],
+      "commands": ["escalate-sweep-test", "escalate-owned-test", "escalate-branch-test"]
+    },
+    {
+      "paths": [".github/scripts/checks/escalation-backstop.py"],
+      "commands": ["escalation-backstop-test"]
+    },
+    {
+      "paths": [".github/scripts/checks/assert-coverage.py", ".github/scripts/golden-declared-set.sh", "scripts/validate-golden.sh", ".github/workflows/nightly-registry-validation.yml"],
+      "commands": ["coverage-receipt-test"]
+    },
+    {
+      "paths": [".github/**", "website/**", "blog/**", "scripts/**", "sandbox/**", "Dockerfile*", "**/Dockerfile*", "test/scripts/**", "test/functional/**", "internal/hooks/**", "*.fish", "**/*.fish", "tsuku-llm/**", "cmd/tsuku-dltest/**", "testdata/golden/execution-exclusions.json", "data/**", "proto/**", ".goreleaser*", "codecov.yml", "renovate.json", "batch-control.json", ".claude/settings.json"],
+      "commands": ["no-local-check"]
+    }
+  ],
+  "default": ["go-mod-tidy", "gofmt", "go-vet", "golangci-lint", "no-stdlib-log", "unit-tests"]
+}
