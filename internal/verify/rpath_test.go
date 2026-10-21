@@ -6,7 +6,14 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/testutil"
 )
+
+// The ExpandPathVariables tests root their fixtures at
+// testutil.ResolvedTempDir: ExpandPathVariables returns the expanded path
+// with symlinks resolved, so on macOS, where t.TempDir() is under /var, an
+// unresolved root never equals the result.
 
 func TestExtractRpaths_ELF(t *testing.T) {
 	if runtime.GOOS != "linux" {
@@ -71,7 +78,7 @@ func TestExtractRpaths_NonExistent(t *testing.T) {
 }
 
 func TestExpandPathVariables_Origin(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 	binaryPath := filepath.Join(tmpDir, "bin", "myapp")
 
 	// Create the bin directory
@@ -127,7 +134,7 @@ func TestExpandPathVariables_Origin(t *testing.T) {
 }
 
 func TestExpandPathVariables_LoaderPath(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 	binaryPath := filepath.Join(tmpDir, "lib", "libmain.dylib")
 
 	// Create the lib directory
@@ -167,7 +174,7 @@ func TestExpandPathVariables_LoaderPath(t *testing.T) {
 }
 
 func TestExpandPathVariables_ExecutablePath(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 	binaryPath := filepath.Join(tmpDir, "Contents", "MacOS", "myapp")
 
 	// Create the directory
@@ -207,7 +214,7 @@ func TestExpandPathVariables_ExecutablePath(t *testing.T) {
 }
 
 func TestExpandPathVariables_Rpath(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 	binaryPath := filepath.Join(tmpDir, "bin", "myapp")
 	libDir := filepath.Join(tmpDir, "lib")
 
@@ -241,7 +248,7 @@ func TestExpandPathVariables_Rpath(t *testing.T) {
 }
 
 func TestExpandPathVariables_RpathWithLoaderPath(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 	binaryPath := filepath.Join(tmpDir, "bin", "myapp")
 	libDir := filepath.Join(tmpDir, "lib")
 
@@ -276,7 +283,7 @@ func TestExpandPathVariables_RpathWithLoaderPath(t *testing.T) {
 }
 
 func TestExpandPathVariables_RpathNoMatch(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 	binaryPath := filepath.Join(tmpDir, "bin", "myapp")
 
 	// Create the bin directory
@@ -302,7 +309,7 @@ func TestExpandPathVariables_RpathNoMatch(t *testing.T) {
 }
 
 func TestExpandPathVariables_RpathEmpty(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 	binaryPath := filepath.Join(tmpDir, "bin", "myapp")
 
 	// Create the bin directory
@@ -355,7 +362,7 @@ func TestExpandPathVariables_PathLengthLimit(t *testing.T) {
 }
 
 func TestExpandPathVariables_AllowedPrefix(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 	binaryPath := filepath.Join(tmpDir, "tools", "myapp", "bin", "app")
 	allowedDir := filepath.Join(tmpDir, "tools")
 
@@ -611,7 +618,7 @@ func TestDetectFormatForRpath_AllFormats(t *testing.T) {
 }
 
 func TestExpandPathVariables_RpathWithExecutablePath(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 	binaryPath := filepath.Join(tmpDir, "bin", "myapp")
 	libDir := filepath.Join(tmpDir, "lib")
 
@@ -644,7 +651,7 @@ func TestExpandPathVariables_RpathWithExecutablePath(t *testing.T) {
 }
 
 func TestExpandPathVariables_RpathWithBareLoaderPath(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 	binaryPath := filepath.Join(tmpDir, "bin", "myapp")
 
 	if err := os.MkdirAll(filepath.Dir(binaryPath), 0755); err != nil {
@@ -674,7 +681,7 @@ func TestExpandPathVariables_RpathWithBareLoaderPath(t *testing.T) {
 }
 
 func TestExpandPathVariables_RpathWithBareExecutablePath(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 	binaryPath := filepath.Join(tmpDir, "bin", "myapp")
 
 	if err := os.MkdirAll(filepath.Dir(binaryPath), 0755); err != nil {
@@ -702,7 +709,7 @@ func TestExpandPathVariables_RpathWithBareExecutablePath(t *testing.T) {
 }
 
 func TestExpandPathVariables_RpathFallback_BareLoaderPath(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 	binaryPath := filepath.Join(tmpDir, "bin", "myapp")
 
 	if err := os.MkdirAll(filepath.Dir(binaryPath), 0755); err != nil {
@@ -726,7 +733,7 @@ func TestExpandPathVariables_RpathFallback_BareLoaderPath(t *testing.T) {
 }
 
 func TestExpandPathVariables_RpathSecondMatch(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 	binaryPath := filepath.Join(tmpDir, "bin", "myapp")
 	libDir := filepath.Join(tmpDir, "lib")
 
@@ -760,7 +767,7 @@ func TestExpandPathVariables_RpathSecondMatch(t *testing.T) {
 }
 
 func TestExpandPathVariables_RpathFallback_LoaderPathSuffix(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 	binaryPath := filepath.Join(tmpDir, "bin", "myapp")
 
 	if err := os.MkdirAll(filepath.Dir(binaryPath), 0755); err != nil {

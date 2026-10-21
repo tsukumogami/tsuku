@@ -47,6 +47,12 @@ type fakeEnv struct {
 
 func newFakeEnv(t *testing.T, root string) *fakeEnv {
 	t.Helper()
+	// Discovery walks and keys metadata at resolved paths, so a root with a
+	// symlink in it (t.TempDir() on macOS) bounds and keys nothing it sees.
+	// Fail here rather than let the test run on the real filesystem.
+	if resolved, err := filepath.EvalSymlinks(root); err == nil && resolved != filepath.Clean(root) {
+		t.Fatalf("newFakeEnv: root %s resolves to %s; build it with resolvedTempDir", root, resolved)
+	}
 	return &fakeEnv{
 		uid:        uint32(os.Geteuid()),
 		root:       filepath.Clean(root),
@@ -192,7 +198,7 @@ func writeFile(t *testing.T, path, content string) {
 // test does not own and cannot describe, and every layout built under it is
 // then decided by the real filesystem instead of by the fixture.
 func TestAncestorsStopsAtTheFixtureRoot(t *testing.T) {
-	root := t.TempDir()
+	root := resolvedTempDir(t)
 	deep := filepath.Join(root, "a", "b", "c")
 	if err := os.MkdirAll(deep, 0o755); err != nil {
 		t.Fatal(err)
@@ -214,7 +220,7 @@ func TestAncestorsStopsAtTheFixtureRoot(t *testing.T) {
 // bytes before it has decided to read the file, which is what keeps the
 // shell-prompt path from parsing anything it has not accepted.
 func TestLoadRoutesEveryAccessThroughTheSeams(t *testing.T) {
-	root := t.TempDir()
+	root := resolvedTempDir(t)
 	work := filepath.Join(root, "repo")
 	writeFile(t, filepath.Join(work, ConfigFileName), "[tools]\nnode = \"20.0.0\"\n")
 
@@ -262,7 +268,7 @@ func TestLoadRefusesAFileSwappedBetweenTheCheckAndTheRead(t *testing.T) {
 // TestLoadDoesNotBlockOnANamedPipe covers the denial of service a config path
 // that is a FIFO produces today: every shell prompt waits for a writer.
 func TestLoadDoesNotBlockOnANamedPipe(t *testing.T) {
-	root := t.TempDir()
+	root := resolvedTempDir(t)
 	work := filepath.Join(root, "repo")
 	if err := os.MkdirAll(work, 0o755); err != nil {
 		t.Fatal(err)
@@ -302,7 +308,7 @@ func TestLoadDoesNotBlockOnANamedPipe(t *testing.T) {
 // symlinked $HOME or ceiling stop nothing: the walk is resolved and the
 // ceilings were not, so the two could never match.
 func TestCeilingsAreComparedResolved(t *testing.T) {
-	root := t.TempDir()
+	root := resolvedTempDir(t)
 	realDir := filepath.Join(root, "real")
 	if err := os.MkdirAll(filepath.Join(realDir, "repo"), 0o755); err != nil {
 		t.Fatal(err)
@@ -330,7 +336,7 @@ func TestCeilingsAreComparedResolved(t *testing.T) {
 // TestUnresolvableCeilingIsKeptAsWritten pins that a ceiling naming a directory
 // that does not exist is ignored rather than producing an error.
 func TestUnresolvableCeilingIsKeptAsWritten(t *testing.T) {
-	root := t.TempDir()
+	root := resolvedTempDir(t)
 	work := filepath.Join(root, "repo")
 	writeFile(t, filepath.Join(work, ConfigFileName), "[tools]\nnode = \"20.0.0\"\n")
 
@@ -376,7 +382,7 @@ func TestUnexaminableDirectoryEndsTheWalk(t *testing.T) {
 // TestMissingEntryContinuesTheWalk is the other half of the case above: an
 // entry that simply is not there is ordinary, not a reason to stop.
 func TestMissingEntryContinuesTheWalk(t *testing.T) {
-	root := t.TempDir()
+	root := resolvedTempDir(t)
 	mid := filepath.Join(root, "mid")
 	work := filepath.Join(mid, "repo")
 	if err := os.MkdirAll(work, 0o755); err != nil {
@@ -401,7 +407,7 @@ func TestMissingEntryContinuesTheWalk(t *testing.T) {
 // TestSymlinkToARegularFileStillLoads keeps the existing behavior: a config
 // that is a symlink is read, through the target.
 func TestSymlinkToARegularFileStillLoads(t *testing.T) {
-	root := t.TempDir()
+	root := resolvedTempDir(t)
 	work := filepath.Join(root, "repo")
 	target := filepath.Join(work, "shared.toml")
 	writeFile(t, target, "[tools]\nnode = \"20.0.0\"\n")
@@ -424,7 +430,7 @@ func TestSymlinkToARegularFileStillLoads(t *testing.T) {
 // TestSymlinkChainIsRefused pins that a link to a link is not walked. Each
 // additional hop is another object nothing checked.
 func TestSymlinkChainIsRefused(t *testing.T) {
-	root := t.TempDir()
+	root := resolvedTempDir(t)
 	work := filepath.Join(root, "repo")
 	target := filepath.Join(work, "shared.toml")
 	writeFile(t, target, "[tools]\nnode = \"20.0.0\"\n")

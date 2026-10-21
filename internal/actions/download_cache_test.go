@@ -5,12 +5,18 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/testutil"
 )
+
+// Fixtures here are rooted at testutil.ResolvedTempDir: the cache refuses any
+// path with a symlinked component, and on macOS t.TempDir() is under /var, a
+// symlink, so an unresolved root makes every save and lookup a refusal.
 
 // createSecureCacheDir creates a cache directory with proper 0700 permissions for testing
 func createSecureCacheDir(t *testing.T) string {
 	t.Helper()
-	cacheDir := filepath.Join(t.TempDir(), "cache")
+	cacheDir := filepath.Join(testutil.ResolvedTempDir(t), "cache")
 	if err := os.MkdirAll(cacheDir, 0700); err != nil {
 		t.Fatalf("failed to create secure cache dir: %v", err)
 	}
@@ -22,7 +28,7 @@ func TestDownloadCache_CacheMiss(t *testing.T) {
 	cacheDir := createSecureCacheDir(t)
 	cache := NewDownloadCache(cacheDir)
 
-	destPath := filepath.Join(t.TempDir(), "output.txt")
+	destPath := filepath.Join(testutil.ResolvedTempDir(t), "output.txt")
 	found, err := cache.Check("https://example.com/file.tar.gz", destPath, "", "")
 	if err != nil {
 		t.Fatalf("Check() error = %v", err)
@@ -38,7 +44,7 @@ func TestDownloadCache_SaveAndCheck(t *testing.T) {
 	cache := NewDownloadCache(cacheDir)
 
 	// Create a source file to cache
-	sourceDir := t.TempDir()
+	sourceDir := testutil.ResolvedTempDir(t)
 	sourcePath := filepath.Join(sourceDir, "source.txt")
 	content := []byte("test content for caching")
 	if err := os.WriteFile(sourcePath, content, 0644); err != nil {
@@ -53,7 +59,7 @@ func TestDownloadCache_SaveAndCheck(t *testing.T) {
 	}
 
 	// Check cache - should hit
-	destDir := t.TempDir()
+	destDir := testutil.ResolvedTempDir(t)
 	destPath := filepath.Join(destDir, "output.txt")
 	found, err := cache.Check(url, destPath, "", "")
 	if err != nil {
@@ -79,7 +85,7 @@ func TestDownloadCache_ChecksumVerification(t *testing.T) {
 	cache := NewDownloadCache(cacheDir)
 
 	// Create source file
-	sourceDir := t.TempDir()
+	sourceDir := testutil.ResolvedTempDir(t)
 	sourcePath := filepath.Join(sourceDir, "source.txt")
 	content := []byte("test content")
 	if err := os.WriteFile(sourcePath, content, 0644); err != nil {
@@ -100,7 +106,7 @@ func TestDownloadCache_ChecksumVerification(t *testing.T) {
 	}
 
 	// Check with correct checksum - should hit
-	destPath := filepath.Join(t.TempDir(), "output.txt")
+	destPath := filepath.Join(testutil.ResolvedTempDir(t), "output.txt")
 	found, err := cache.Check(url, destPath, correctChecksum, "sha256")
 	if err != nil {
 		t.Fatalf("Check() with correct checksum error = %v", err)
@@ -110,7 +116,7 @@ func TestDownloadCache_ChecksumVerification(t *testing.T) {
 	}
 
 	// Check with wrong checksum - should miss (invalidates cache)
-	destPath2 := filepath.Join(t.TempDir(), "output2.txt")
+	destPath2 := filepath.Join(testutil.ResolvedTempDir(t), "output2.txt")
 	found, err = cache.Check(url, destPath2, "wrongchecksum", "sha256")
 	if err != nil {
 		t.Fatalf("Check() with wrong checksum error = %v", err)
@@ -120,7 +126,7 @@ func TestDownloadCache_ChecksumVerification(t *testing.T) {
 	}
 
 	// Subsequent check should also miss (cache was invalidated)
-	destPath3 := filepath.Join(t.TempDir(), "output3.txt")
+	destPath3 := filepath.Join(testutil.ResolvedTempDir(t), "output3.txt")
 	found, err = cache.Check(url, destPath3, "", "")
 	if err != nil {
 		t.Fatalf("Check() after invalidation error = %v", err)
@@ -136,7 +142,7 @@ func TestDownloadCache_Clear(t *testing.T) {
 	cache := NewDownloadCache(cacheDir)
 
 	// Create source file and cache it
-	sourceDir := t.TempDir()
+	sourceDir := testutil.ResolvedTempDir(t)
 	sourcePath := filepath.Join(sourceDir, "source.txt")
 	if err := os.WriteFile(sourcePath, []byte("test"), 0644); err != nil {
 		t.Fatalf("failed to create source file: %v", err)
@@ -194,7 +200,7 @@ func TestDownloadCache_Info(t *testing.T) {
 	}
 
 	// Add an entry
-	sourceDir := t.TempDir()
+	sourceDir := testutil.ResolvedTempDir(t)
 	sourcePath := filepath.Join(sourceDir, "source.txt")
 	content := []byte("test content for size calculation")
 	if err := os.WriteFile(sourcePath, content, 0644); err != nil {
@@ -223,7 +229,7 @@ func TestDownloadCache_DifferentURLsDifferentCache(t *testing.T) {
 	cache := NewDownloadCache(cacheDir)
 
 	// Create two source files with different content
-	sourceDir := t.TempDir()
+	sourceDir := testutil.ResolvedTempDir(t)
 	source1 := filepath.Join(sourceDir, "source1.txt")
 	source2 := filepath.Join(sourceDir, "source2.txt")
 	content1 := []byte("content for file 1")
@@ -248,8 +254,8 @@ func TestDownloadCache_DifferentURLsDifferentCache(t *testing.T) {
 	}
 
 	// Retrieve and verify each returns correct content
-	dest1 := filepath.Join(t.TempDir(), "out1.txt")
-	dest2 := filepath.Join(t.TempDir(), "out2.txt")
+	dest1 := filepath.Join(testutil.ResolvedTempDir(t), "out1.txt")
+	dest2 := filepath.Join(testutil.ResolvedTempDir(t), "out2.txt")
 
 	found1, _ := cache.Check(url1, dest1, "", "")
 	found2, _ := cache.Check(url2, dest2, "", "")
@@ -275,7 +281,7 @@ func TestDownloadCache_CorruptedFile(t *testing.T) {
 	cache := NewDownloadCache(cacheDir)
 
 	// Create and cache a file
-	sourceDir := t.TempDir()
+	sourceDir := testutil.ResolvedTempDir(t)
 	sourcePath := filepath.Join(sourceDir, "source.txt")
 	content := []byte("original content")
 	if err := os.WriteFile(sourcePath, content, 0644); err != nil {
@@ -294,7 +300,7 @@ func TestDownloadCache_CorruptedFile(t *testing.T) {
 	}
 
 	// Check should detect corruption and return miss
-	destPath := filepath.Join(t.TempDir(), "output.txt")
+	destPath := filepath.Join(testutil.ResolvedTempDir(t), "output.txt")
 	found, err := cache.Check(url, destPath, "", "")
 	if err != nil {
 		t.Fatalf("Check() error = %v", err)
@@ -336,7 +342,7 @@ func TestContainsSymlink(t *testing.T) {
 		{
 			name: "regular directory",
 			setup: func(t *testing.T) string {
-				return t.TempDir()
+				return testutil.ResolvedTempDir(t)
 			},
 			wantSymlink: false,
 			wantErr:     false,
@@ -344,7 +350,7 @@ func TestContainsSymlink(t *testing.T) {
 		{
 			name: "symlink to directory",
 			setup: func(t *testing.T) string {
-				tmpDir := t.TempDir()
+				tmpDir := testutil.ResolvedTempDir(t)
 				targetDir := filepath.Join(tmpDir, "target")
 				if err := os.MkdirAll(targetDir, 0755); err != nil {
 					t.Fatalf("failed to create target dir: %v", err)
@@ -361,7 +367,7 @@ func TestContainsSymlink(t *testing.T) {
 		{
 			name: "nested path with symlink parent",
 			setup: func(t *testing.T) string {
-				tmpDir := t.TempDir()
+				tmpDir := testutil.ResolvedTempDir(t)
 				targetDir := filepath.Join(tmpDir, "target")
 				if err := os.MkdirAll(targetDir, 0755); err != nil {
 					t.Fatalf("failed to create target dir: %v", err)
@@ -379,7 +385,7 @@ func TestContainsSymlink(t *testing.T) {
 		{
 			name: "nonexistent path (no symlink)",
 			setup: func(t *testing.T) string {
-				tmpDir := t.TempDir()
+				tmpDir := testutil.ResolvedTempDir(t)
 				return filepath.Join(tmpDir, "does", "not", "exist")
 			},
 			wantSymlink: false,
@@ -413,14 +419,14 @@ func TestValidateCacheDirPermissions(t *testing.T) {
 		{
 			name: "nonexistent directory (ok)",
 			setup: func(t *testing.T) string {
-				return filepath.Join(t.TempDir(), "does-not-exist")
+				return filepath.Join(testutil.ResolvedTempDir(t), "does-not-exist")
 			},
 			wantErr: false,
 		},
 		{
 			name: "directory with 0700 permissions (ok)",
 			setup: func(t *testing.T) string {
-				dir := filepath.Join(t.TempDir(), "secure")
+				dir := filepath.Join(testutil.ResolvedTempDir(t), "secure")
 				if err := os.MkdirAll(dir, 0700); err != nil {
 					t.Fatalf("failed to create dir: %v", err)
 				}
@@ -431,7 +437,7 @@ func TestValidateCacheDirPermissions(t *testing.T) {
 		{
 			name: "directory with 0755 permissions (insecure)",
 			setup: func(t *testing.T) string {
-				dir := filepath.Join(t.TempDir(), "insecure")
+				dir := filepath.Join(testutil.ResolvedTempDir(t), "insecure")
 				if err := os.MkdirAll(dir, 0755); err != nil {
 					t.Fatalf("failed to create dir: %v", err)
 				}
@@ -443,7 +449,7 @@ func TestValidateCacheDirPermissions(t *testing.T) {
 		{
 			name: "directory with 0750 permissions (insecure)",
 			setup: func(t *testing.T) string {
-				dir := filepath.Join(t.TempDir(), "group-readable")
+				dir := filepath.Join(testutil.ResolvedTempDir(t), "group-readable")
 				if err := os.MkdirAll(dir, 0750); err != nil {
 					t.Fatalf("failed to create dir: %v", err)
 				}
@@ -455,7 +461,7 @@ func TestValidateCacheDirPermissions(t *testing.T) {
 		{
 			name: "symlink instead of directory",
 			setup: func(t *testing.T) string {
-				tmpDir := t.TempDir()
+				tmpDir := testutil.ResolvedTempDir(t)
 				targetDir := filepath.Join(tmpDir, "target")
 				if err := os.MkdirAll(targetDir, 0700); err != nil {
 					t.Fatalf("failed to create target dir: %v", err)
@@ -472,7 +478,7 @@ func TestValidateCacheDirPermissions(t *testing.T) {
 		{
 			name: "file instead of directory",
 			setup: func(t *testing.T) string {
-				tmpDir := t.TempDir()
+				tmpDir := testutil.ResolvedTempDir(t)
 				filePath := filepath.Join(tmpDir, "file")
 				if err := os.WriteFile(filePath, []byte("test"), 0700); err != nil {
 					t.Fatalf("failed to create file: %v", err)
@@ -503,7 +509,7 @@ func TestValidateCacheDirPermissions(t *testing.T) {
 
 func TestDownloadCache_SaveRejectsSymlink(t *testing.T) {
 	t.Parallel()
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 
 	// Create a target directory and a symlink to it
 	targetDir := filepath.Join(tmpDir, "target")
@@ -534,7 +540,7 @@ func TestDownloadCache_SaveRejectsSymlink(t *testing.T) {
 
 func TestDownloadCache_CheckRejectsSymlink(t *testing.T) {
 	t.Parallel()
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 
 	// Create a target directory and a symlink to it
 	targetDir := filepath.Join(tmpDir, "target")
@@ -560,7 +566,7 @@ func TestDownloadCache_CheckRejectsSymlink(t *testing.T) {
 
 func TestDownloadCache_SaveRejectsInsecurePermissions(t *testing.T) {
 	t.Parallel()
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 
 	// Create cache directory with insecure permissions
 	cacheDir := filepath.Join(tmpDir, "cache")
@@ -587,7 +593,7 @@ func TestDownloadCache_SaveRejectsInsecurePermissions(t *testing.T) {
 
 func TestDownloadCache_CheckRejectsInsecurePermissions(t *testing.T) {
 	t.Parallel()
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 
 	// Create cache directory with insecure permissions
 	cacheDir := filepath.Join(tmpDir, "cache")
@@ -611,7 +617,7 @@ func TestDownloadCache_CheckRejectsInsecurePermissions(t *testing.T) {
 
 func TestDownloadCache_invalidate_NonExistent(t *testing.T) {
 	t.Parallel()
-	cache := NewDownloadCache(t.TempDir())
+	cache := NewDownloadCache(testutil.ResolvedTempDir(t))
 	cache.SetSkipSecurityChecks(true)
 	// invalidating a non-cached URL should not panic
 	cache.invalidate("https://nonexistent.invalid/file.tar.gz")
@@ -621,12 +627,12 @@ func TestDownloadCache_invalidate_NonExistent(t *testing.T) {
 
 func TestDownloadCache_Save_CreatesDir(t *testing.T) {
 	t.Parallel()
-	cacheDir := filepath.Join(t.TempDir(), "new-cache")
+	cacheDir := filepath.Join(testutil.ResolvedTempDir(t), "new-cache")
 	cache := NewDownloadCache(cacheDir)
 	cache.SetSkipSecurityChecks(true)
 
 	// Create a file to save
-	srcDir := t.TempDir()
+	srcDir := testutil.ResolvedTempDir(t)
 	srcFile := filepath.Join(srcDir, "test.bin")
 	if err := os.WriteFile(srcFile, []byte("test content"), 0644); err != nil {
 		t.Fatal(err)
@@ -645,7 +651,7 @@ func TestDownloadCache_Save_CreatesDir(t *testing.T) {
 
 func TestDownloadCache_Clear_Success(t *testing.T) {
 	t.Parallel()
-	cacheDir := filepath.Join(t.TempDir(), "cache")
+	cacheDir := filepath.Join(testutil.ResolvedTempDir(t), "cache")
 	if err := os.MkdirAll(cacheDir, 0700); err != nil {
 		t.Fatal(err)
 	}
@@ -654,7 +660,7 @@ func TestDownloadCache_Clear_Success(t *testing.T) {
 	cache.SetSkipSecurityChecks(true)
 
 	// Save a file first
-	srcFile := filepath.Join(t.TempDir(), "test.bin")
+	srcFile := filepath.Join(testutil.ResolvedTempDir(t), "test.bin")
 	if err := os.WriteFile(srcFile, []byte("content"), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -671,7 +677,7 @@ func TestDownloadCache_Clear_Success(t *testing.T) {
 
 func TestDownloadCache_Info_Empty(t *testing.T) {
 	t.Parallel()
-	cacheDir := filepath.Join(t.TempDir(), "cache")
+	cacheDir := filepath.Join(testutil.ResolvedTempDir(t), "cache")
 	if err := os.MkdirAll(cacheDir, 0700); err != nil {
 		t.Fatal(err)
 	}
@@ -690,7 +696,7 @@ func TestDownloadCache_Info_Empty(t *testing.T) {
 
 func TestDownloadCache_Info_WithEntries(t *testing.T) {
 	t.Parallel()
-	cacheDir := filepath.Join(t.TempDir(), "cache")
+	cacheDir := filepath.Join(testutil.ResolvedTempDir(t), "cache")
 	if err := os.MkdirAll(cacheDir, 0700); err != nil {
 		t.Fatal(err)
 	}
@@ -700,7 +706,7 @@ func TestDownloadCache_Info_WithEntries(t *testing.T) {
 
 	// Save a couple files
 	for i, name := range []string{"a.bin", "b.bin"} {
-		srcFile := filepath.Join(t.TempDir(), name)
+		srcFile := filepath.Join(testutil.ResolvedTempDir(t), name)
 		content := strings.Repeat("x", (i+1)*100)
 		if err := os.WriteFile(srcFile, []byte(content), 0644); err != nil {
 			t.Fatal(err)
@@ -726,7 +732,7 @@ func TestDownloadCache_Info_WithEntries(t *testing.T) {
 
 func TestDownloadCache_CheckAndSave_WithChecksum(t *testing.T) {
 	t.Parallel()
-	cacheDir := filepath.Join(t.TempDir(), "cache")
+	cacheDir := filepath.Join(testutil.ResolvedTempDir(t), "cache")
 	if err := os.MkdirAll(cacheDir, 0700); err != nil {
 		t.Fatal(err)
 	}
@@ -735,7 +741,7 @@ func TestDownloadCache_CheckAndSave_WithChecksum(t *testing.T) {
 	cache.SetSkipSecurityChecks(true)
 
 	// Save a file
-	srcFile := filepath.Join(t.TempDir(), "test.bin")
+	srcFile := filepath.Join(testutil.ResolvedTempDir(t), "test.bin")
 	if err := os.WriteFile(srcFile, []byte("hello world"), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -745,7 +751,7 @@ func TestDownloadCache_CheckAndSave_WithChecksum(t *testing.T) {
 	}
 
 	// Check with correct empty checksum (should match by URL)
-	destFile := filepath.Join(t.TempDir(), "restored.bin")
+	destFile := filepath.Join(testutil.ResolvedTempDir(t), "restored.bin")
 	found, err := cache.Check("https://example.com/test.bin", destFile, "", "sha256")
 	if err != nil {
 		t.Fatalf("Check() error = %v", err)
@@ -804,7 +810,7 @@ func TestDownloadCache_CachePaths(t *testing.T) {
 
 func TestDownloadCache_WriteMeta_ReadMeta(t *testing.T) {
 	t.Parallel()
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 	cache := NewDownloadCache(tmpDir)
 
 	meta := &downloadCacheEntry{
@@ -833,7 +839,7 @@ func TestDownloadCache_WriteMeta_ReadMeta(t *testing.T) {
 
 func TestDownloadCache_Clear_EmptyDir(t *testing.T) {
 	t.Parallel()
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 	cache := NewDownloadCache(tmpDir)
 	if err := cache.Clear(); err != nil {
 		t.Errorf("Clear() on empty dir error: %v", err)
@@ -862,7 +868,7 @@ func TestDownloadCache_Info_NonexistentDir(t *testing.T) {
 
 func TestDownloadCache_Invalidate(t *testing.T) {
 	t.Parallel()
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 	// Cache directory must have 0700 permissions for security checks
 	if err := os.Chmod(tmpDir, 0700); err != nil {
 		t.Fatal(err)
@@ -892,7 +898,7 @@ func TestDownloadCache_Invalidate(t *testing.T) {
 
 func TestDownloadCache_SaveAndCheckNoChecksum(t *testing.T) {
 	t.Parallel()
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 	cacheDir := filepath.Join(tmpDir, "cache")
 	if err := os.MkdirAll(cacheDir, 0700); err != nil {
 		t.Fatal(err)
@@ -932,7 +938,7 @@ func TestDownloadResult_Cleanup(t *testing.T) {
 	})
 
 	t.Run("valid path", func(t *testing.T) {
-		tmpDir := t.TempDir()
+		tmpDir := testutil.ResolvedTempDir(t)
 		subDir := filepath.Join(tmpDir, "downloads")
 		if err := os.MkdirAll(subDir, 0755); err != nil {
 			t.Fatal(err)
@@ -973,7 +979,7 @@ func TestDownloadCache_SetSkipSecurityChecks(t *testing.T) {
 
 func TestDownloadCache_SkipSecurityChecks_SaveAndCheck(t *testing.T) {
 	t.Parallel()
-	tmpDir := t.TempDir()
+	tmpDir := testutil.ResolvedTempDir(t)
 
 	// Create cache dir with overly permissive mode that would normally be rejected
 	cacheDir := filepath.Join(tmpDir, "cache")

@@ -12,6 +12,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/progress"
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/testutil"
 )
 
 // -- homebrew_relocate.go: Dependencies, extractBottlePrefixes --
@@ -1303,7 +1304,11 @@ func TestFutureLoaderDir_RebasesBinaryOntoInstallPath(t *testing.T) {
 func TestComputeChainRpaths_UsesFutureInstallLocation(t *testing.T) {
 	t.Parallel()
 
-	tsukuHome := t.TempDir()
+	// Resolved, like a default $TSUKU_HOME. The loader dir below doesn't
+	// exist yet, so it stays unresolved while the libs dir resolves; under a
+	// symlinked root (macOS's /var) the two disagree and the escape check
+	// fires. That case is #2769.
+	tsukuHome := testutil.ResolvedTempDir(t)
 	libsDir := filepath.Join(tsukuHome, "libs")
 	workDir := filepath.Join(tsukuHome, "work")
 	binDir := filepath.Join(workDir, "bin")

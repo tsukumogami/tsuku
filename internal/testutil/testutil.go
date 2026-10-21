@@ -19,6 +19,22 @@ func TempDir(t *testing.T) (string, func()) {
 	return dir, func() { os.RemoveAll(dir) }
 }
 
+// ResolvedTempDir is t.TempDir() with every symlink in its path resolved.
+//
+// On macOS t.TempDir() sits under /var, a link to /private/var. Code that
+// resolves paths then reports /private/var/... where a test expects /var/...,
+// and the download cache refuses any path with a symlinked component. A
+// fixture standing for an ordinary $TSUKU_HOME or project directory, which
+// has no symlink in its path, uses this instead.
+func ResolvedTempDir(t *testing.T) string {
+	t.Helper()
+	dir, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatalf("resolving temp dir: %v", err)
+	}
+	return dir
+}
+
 // NewTestConfig creates a config with temporary directories for testing
 func NewTestConfig(t *testing.T) (*config.Config, func()) {
 	t.Helper()
