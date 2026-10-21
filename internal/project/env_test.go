@@ -159,6 +159,23 @@ func (f *fakeEnv) open(path string) (File, error) {
 	return &countingFile{File: handle, meta: meta, env: f}, nil
 }
 
+// resolvedTempDir is t.TempDir() resolved through symlinks, for a fixture that
+// presents metadata through the fake.
+//
+// Discovery resolves the start directory before it walks and reads metadata at
+// the resolved paths, and the fake's overrides are keyed by path, so they have
+// to be keyed the same way. On macOS t.TempDir() sits under /var, a link to
+// /private/var, and an unresolved key is never looked up: the test then runs
+// on the real metadata instead of the layout it describes.
+func resolvedTempDir(t *testing.T) string {
+	t.Helper()
+	root, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatalf("resolving the fixture root: %v", err)
+	}
+	return root
+}
+
 func writeFile(t *testing.T, path, content string) {
 	t.Helper()
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
@@ -221,7 +238,7 @@ func TestLoadRoutesEveryAccessThroughTheSeams(t *testing.T) {
 // open-then-check sequence exists for: the bytes parsed belong to the object
 // the decision was made on.
 func TestLoadRefusesAFileSwappedBetweenTheCheckAndTheRead(t *testing.T) {
-	root := t.TempDir()
+	root := resolvedTempDir(t)
 	work := filepath.Join(root, "repo")
 	configPath := filepath.Join(work, ConfigFileName)
 	writeFile(t, configPath, "[tools]\nnode = \"20.0.0\"\n")
@@ -335,7 +352,7 @@ func TestUnresolvableCeilingIsKeptAsWritten(t *testing.T) {
 // and the walk continues past it. Ending there is the change; it is silent
 // because nothing was found, so there is no file to name.
 func TestUnexaminableDirectoryEndsTheWalk(t *testing.T) {
-	root := t.TempDir()
+	root := resolvedTempDir(t)
 	mid := filepath.Join(root, "mid")
 	work := filepath.Join(mid, "repo")
 	if err := os.MkdirAll(work, 0o755); err != nil {

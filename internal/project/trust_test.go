@@ -27,15 +27,7 @@ type layoutFixture struct {
 
 func newLayout(t *testing.T) *layoutFixture {
 	t.Helper()
-	// Resolved, because discovery resolves the start directory before it walks
-	// and reads metadata at the resolved paths. The presented owners and modes
-	// are keyed by path, so they have to be keyed the same way. On macOS
-	// t.TempDir() sits under /var, a link to /private/var, and an unresolved
-	// key is never looked up: every row then runs on the real metadata.
-	root, err := filepath.EvalSymlinks(t.TempDir())
-	if err != nil {
-		t.Fatalf("resolving the fixture root: %v", err)
-	}
+	root := resolvedTempDir(t)
 	// Keep the fixture out from under any resolved home, so the rule applies.
 	// A separate temporary directory is the home for the duration.
 	t.Setenv("HOME", t.TempDir())
