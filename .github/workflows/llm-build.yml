@@ -6,6 +6,10 @@ name: tsuku-llm Build
 # and adds a smoke test. Change the two together; release.yml's comments explain
 # the CUDA and Vulkan version choices copied here.
 #
+# It also runs when release.yml changes. A pull request that edits only the
+# release job (a runner, the toolchain, an install step) otherwise runs nothing
+# that builds tsuku-llm, so a release-side break would first show up at a tag.
+#
 # Before this, nothing built tsuku-llm on macOS until a release tag was pushed
 # (test.yml's LLM job is Linux-only and its paths filter skips tsuku-llm/**).
 # So a runner image change that broke the build, like Homebrew's OpenSSL 4
@@ -19,6 +23,7 @@ on:
       - 'tsuku-llm/**'
       - 'proto/**'
       - '.github/workflows/llm-build.yml'
+      - '.github/workflows/release.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
