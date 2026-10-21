@@ -25,6 +25,28 @@ func TestTempDir(t *testing.T) {
 	}
 }
 
+func TestSymlinkedTempDir(t *testing.T) {
+	link, resolved := SymlinkedTempDir(t)
+
+	if link == resolved {
+		t.Fatalf("SymlinkedTempDir() link and resolved are both %q", link)
+	}
+	got, err := filepath.EvalSymlinks(link)
+	if err != nil {
+		t.Fatalf("EvalSymlinks(%q): %v", link, err)
+	}
+	if got != resolved {
+		t.Errorf("EvalSymlinks(%q) = %q, want %q", link, got, resolved)
+	}
+	info, err := os.Stat(link)
+	if err != nil {
+		t.Fatalf("Stat(%q): %v", link, err)
+	}
+	if !info.IsDir() {
+		t.Errorf("SymlinkedTempDir() link %q does not lead to a directory", link)
+	}
+}
+
 func TestNewTestConfig(t *testing.T) {
 	cfg, cleanup := NewTestConfig(t)
 	defer cleanup()
