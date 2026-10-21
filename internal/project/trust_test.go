@@ -27,7 +27,7 @@ type layoutFixture struct {
 
 func newLayout(t *testing.T) *layoutFixture {
 	t.Helper()
-	root := t.TempDir()
+	root := resolvedTempDir(t)
 	// Keep the fixture out from under any resolved home, so the rule applies.
 	// A separate temporary directory is the home for the duration.
 	t.Setenv("HOME", t.TempDir())
