@@ -33,7 +33,15 @@ fn compile_llama_cpp() -> Result<(), Box<dyn std::error::Error>> {
         .define("BUILD_SHARED_LIBS", "OFF")
         .define("LLAMA_BUILD_TESTS", "OFF")
         .define("LLAMA_BUILD_EXAMPLES", "OFF")
-        .define("LLAMA_BUILD_SERVER", "OFF");
+        .define("LLAMA_BUILD_SERVER", "OFF")
+        // tsuku-llm only calls the C API in llama.h and downloads models
+        // itself (src/models.rs), so it needs neither llama.cpp's common
+        // library nor the vendored cpp-httplib that common builds for model
+        // downloads. httplib is also the only part that links OpenSSL, and it
+        // breaks whenever the runner's OpenSSL moves past what it supports
+        // (OpenSSL 4 on macOS, #2757). Turning both off drops that dependency.
+        .define("LLAMA_BUILD_COMMON", "OFF")
+        .define("LLAMA_HTTPLIB", "OFF");
 
     // Feature-gated GPU backends
     #[cfg(feature = "cuda")]
