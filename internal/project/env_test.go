@@ -485,7 +485,7 @@ func mkfifo(path string) error {
 // which is what distinguishes "decided before opening" from "decided from the
 // open's error".
 func TestSymlinkBranchIsTakenFromMetadataNotFromTheOpenError(t *testing.T) {
-	root := t.TempDir()
+	root := resolvedTempDir(t)
 	work := filepath.Join(root, "repo")
 	target := filepath.Join(work, "shared.toml")
 	writeFile(t, target, "[tools]\nnode = \"20.0.0\"\n")

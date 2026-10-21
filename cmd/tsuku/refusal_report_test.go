@@ -124,7 +124,12 @@ func TestRefusalIsReportedOnceWithAReasonAndARemedy(t *testing.T) {
 // so the path is attacker-chosen. Rendering it unquoted puts a newline and an
 // escape sequence straight into the terminal.
 func TestRefusalQuotesAHostilePath(t *testing.T) {
-	root := t.TempDir()
+	// Resolved for the same reason as refusedLayout: the override below is
+	// keyed by path, and discovery looks it up at the resolved one.
+	root, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("TSUKU_CEILING_PATHS", root)
 
@@ -158,6 +163,12 @@ func TestRefusalQuotesAHostilePath(t *testing.T) {
 		return err
 	})
 
+	// The line has to be the refusal. A config that loaded instead prints a
+	// diagnostic line of its own, which would satisfy the checks below without
+	// any refusal being rendered.
+	if !strings.Contains(outcome.stderr, "not applied") {
+		t.Fatalf("the config was not refused:\n%q", outcome.stderr)
+	}
 	if strings.Contains(outcome.stderr, "\x1b") {
 		t.Error("a raw escape sequence reached the terminal")
 	}
