@@ -71,6 +71,42 @@ mypy-extensions==1.1.0 \
 	}
 }
 
+func TestExtractConstraints_PipPythonVersion(t *testing.T) {
+	pipStep := func(pythonVersion string) ResolvedStep {
+		params := map[string]interface{}{
+			"package":             "meson",
+			"version":             "1.9.2",
+			"locked_requirements": "meson==1.9.2 \\\n    --hash=sha256:abc123\n",
+		}
+		if pythonVersion != "" {
+			params["python_version"] = pythonVersion
+		}
+		return ResolvedStep{Action: "pip_exec", Params: params}
+	}
+
+	tests := []struct {
+		name  string
+		steps []ResolvedStep
+		want  string
+	}{
+		{"present", []ResolvedStep{pipStep("3.11.17")}, "3.11.17"},
+		{"absent", []ResolvedStep{pipStep("")}, ""},
+		{"first pip_exec wins", []ResolvedStep{pipStep("3.10.20"), pipStep("3.11.17")}, "3.10.20"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			plan := &InstallationPlan{FormatVersion: 5, Tool: "meson", Version: "1.9.2", Steps: tt.steps}
+			constraints, err := ExtractConstraintsFromPlan(plan)
+			if err != nil {
+				t.Fatalf("ExtractConstraintsFromPlan failed: %v", err)
+			}
+			if constraints.PipPythonVersion != tt.want {
+				t.Errorf("PipPythonVersion = %q, want %q", constraints.PipPythonVersion, tt.want)
+			}
+		})
+	}
+}
+
 // containsHash checks if the requirements string contains a specific SHA256 hash
 func containsHash(requirements, hash string) bool {
 	return len(requirements) > 0 && len(hash) > 0 &&

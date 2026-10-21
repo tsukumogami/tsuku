@@ -370,11 +370,15 @@ func (a *PipxInstallAction) decomposeWithConstraints(ctx *EvalContext, packageNa
 	// This preserves the original detection result.
 	hasNativeAddons := ctx.Constraints.PipHasNativeAddons
 
-	// Get Python version from the installed python-standalone
-	pythonPath := ResolvePythonStandalone()
-	pythonVersion := ""
-	if pythonPath != "" {
-		pythonVersion, _ = GetPythonVersion(pythonPath)
+	// Use the golden file's python_version. The installed python-standalone is
+	// whatever upstream release --install-deps last fetched, so reading it here
+	// would make the plan drift with every upstream release. Fall back to it only
+	// when the golden file has no python_version.
+	pythonVersion := ctx.Constraints.PipPythonVersion
+	if pythonVersion == "" {
+		if pythonPath := ResolvePythonStandalone(); pythonPath != "" {
+			pythonVersion, _ = GetPythonVersion(pythonPath)
+		}
 	}
 
 	// Build pip_exec params
