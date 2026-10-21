@@ -653,6 +653,12 @@ func TestNixInstallAction_Execute_ShellMetacharExecutable(t *testing.T) {
 
 func TestNixInstallAction_Decompose_NoExecutables(t *testing.T) {
 	t.Parallel()
+	// Decompose rejects a non-Linux host before it reads any parameter,
+	// whatever ctx.OS says; TestNixInstallAction_Decompose_PlatformCheck
+	// covers that path.
+	if runtime.GOOS != "linux" {
+		t.Skip("Skipping on non-Linux")
+	}
 	action := &NixInstallAction{}
 	ctx := &EvalContext{
 		Context:    context.Background(),

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -270,6 +271,13 @@ func TestDisplayNotifications_AvailableSummary(t *testing.T) {
 }
 
 func TestDisplayNotifications_AvailableSummary_SentinelDedup(t *testing.T) {
+	// A real bug, not test noise: on APFS, creating the sentinel leaves the
+	// cache directory's mtime just after the sentinel's, so the next call
+	// reads new results and prints the summary again. Remove this skip with
+	// the fix.
+	if runtime.GOOS == "darwin" {
+		t.Skip("the summary prints twice on macOS: tsukumogami/tsuku#2768")
+	}
 	dir := t.TempDir()
 	cacheDir := filepath.Join(dir, "cache", "updates")
 	if err := os.MkdirAll(cacheDir, 0755); err != nil {

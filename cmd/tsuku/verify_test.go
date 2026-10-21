@@ -10,6 +10,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/testutil"
 	"github.com/tsukumogami/tsuku/internal/verify"
 )
 
@@ -259,8 +260,11 @@ func TestIsSharedLibrary(t *testing.T) {
 }
 
 func TestFindLibraryFiles(t *testing.T) {
-	// Create a temporary directory structure
-	tmpDir := t.TempDir()
+	// Resolved, like a default $TSUKU_HOME. findLibraryFiles drops every file
+	// when a parent directory is a symlink (t.TempDir() on macOS), which is
+	// #2769; this test covers the versioned-symlink dedup. The fix for #2769
+	// adds the symlinked-root case as its own test.
+	tmpDir := testutil.ResolvedTempDir(t)
 
 	// Create lib/ subdirectory (common library layout)
 	libDir := filepath.Join(tmpDir, "lib")

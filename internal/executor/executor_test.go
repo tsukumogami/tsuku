@@ -335,8 +335,8 @@ func TestShouldExecute(t *testing.T) {
 		},
 		{
 			name:     "matching OS",
-			when:     &recipe.WhenClause{OS: []string{"linux"}},
-			expected: true, // assuming test runs on linux
+			when:     &recipe.WhenClause{OS: []string{runtime.GOOS}},
+			expected: true,
 		},
 		{
 			name:     "non-matching OS",
@@ -345,8 +345,8 @@ func TestShouldExecute(t *testing.T) {
 		},
 		{
 			name:     "matching arch",
-			when:     &recipe.WhenClause{Platform: []string{runtime.GOOS + "/amd64"}},
-			expected: true, // assuming test runs on amd64
+			when:     &recipe.WhenClause{Platform: []string{runtime.GOOS + "/" + runtime.GOARCH}},
+			expected: true,
 		},
 		{
 			name:     "non-matching arch",

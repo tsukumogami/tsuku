@@ -104,7 +104,7 @@ func TestLoadProjectConfig_MaxToolsExceeded(t *testing.T) {
 func TestLoadProjectConfig_ParentTraversal(t *testing.T) {
 	// Create structure: root/sub/deep
 	// Place config at root level.
-	root := t.TempDir()
+	root := resolvedTempDir(t)
 	sub := filepath.Join(root, "sub")
 	deep := filepath.Join(sub, "deep")
 	if err := os.MkdirAll(deep, 0755); err != nil {
@@ -175,7 +175,7 @@ func TestLoadProjectConfig_SymlinkResolution(t *testing.T) {
 }
 
 func TestFindProjectDir_Found(t *testing.T) {
-	dir := t.TempDir()
+	dir := resolvedTempDir(t)
 	writeConfig(t, dir, "[tools]\nnode = \"20.0.0\"\n")
 
 	got := FindProjectDir(dir)
@@ -228,7 +228,7 @@ func TestLoadProjectConfig_EmptyToolsSection(t *testing.T) {
 }
 
 func TestLoadProjectConfig_ConfigResultFields(t *testing.T) {
-	dir := t.TempDir()
+	dir := resolvedTempDir(t)
 	writeConfig(t, dir, "[tools]\nnode = \"18.0.0\"\n")
 
 	result, err := LoadProjectConfig(dir)

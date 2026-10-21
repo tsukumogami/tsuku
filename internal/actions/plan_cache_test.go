@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/testutil"
 )
 
 // These cases cover plan generation's use of the download cache: an artifact already in
@@ -12,7 +14,7 @@ import (
 
 func newPlanCache(t *testing.T) *DownloadCache {
 	t.Helper()
-	return NewDownloadCache(filepath.Join(t.TempDir(), "downloads"))
+	return NewDownloadCache(filepath.Join(testutil.ResolvedTempDir(t), "downloads"))
 }
 
 // resolveAndSave mirrors the plan-time call sites: resolve, then save only a download.
@@ -92,7 +94,7 @@ func TestResolveFirstAvailable_HitsUnderAFallbackSource(t *testing.T) {
 func TestDownloadCacheLookup_EntryWithoutRecordedHashIsAMiss(t *testing.T) {
 	const url = "https://a.example/tool.tar.gz"
 	cache := newPlanCache(t)
-	src := filepath.Join(t.TempDir(), "tool.tar.gz")
+	src := filepath.Join(testutil.ResolvedTempDir(t), "tool.tar.gz")
 	if err := os.WriteFile(src, []byte("tool bytes"), 0600); err != nil {
 		t.Fatal(err)
 	}

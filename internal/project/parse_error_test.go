@@ -25,7 +25,7 @@ func writeProject(t *testing.T, dir, contents string) string {
 // A caller has to be able to recover the directory the bad file was in, because
 // the activation path records it to avoid re-reporting on the next prompt.
 func TestLoadProjectConfig_ParseErrorCarriesDir(t *testing.T) {
-	root := t.TempDir()
+	root := resolvedTempDir(t)
 	t.Setenv("TSUKU_CEILING_PATHS", filepath.Dir(root))
 
 	dir := writeProject(t, filepath.Join(root, "proj"), "this is not valid toml {{{\n")
@@ -52,7 +52,7 @@ func TestLoadProjectConfig_ParseErrorCarriesDir(t *testing.T) {
 // The same holds when the file is found by walking up rather than in the
 // starting directory -- Dir is the file's directory, not where the walk began.
 func TestLoadProjectConfig_ParseErrorDirWhenFoundByWalkingUp(t *testing.T) {
-	root := t.TempDir()
+	root := resolvedTempDir(t)
 	t.Setenv("TSUKU_CEILING_PATHS", filepath.Dir(root))
 
 	projDir := writeProject(t, filepath.Join(root, "proj"), "not toml {{{\n")
@@ -76,7 +76,7 @@ func TestLoadProjectConfig_ParseErrorDirWhenFoundByWalkingUp(t *testing.T) {
 // keep the behavior the reporting work exists to stop.
 func TestLoadProjectConfig_ParseErrorCoversEveryFileFailure(t *testing.T) {
 	t.Run("over the tool cap", func(t *testing.T) {
-		root := t.TempDir()
+		root := resolvedTempDir(t)
 		t.Setenv("TSUKU_CEILING_PATHS", filepath.Dir(root))
 
 		var b strings.Builder
@@ -104,7 +104,7 @@ func TestLoadProjectConfig_ParseErrorCoversEveryFileFailure(t *testing.T) {
 		if os.Geteuid() == 0 {
 			t.Skip("running as root; permission bits do not deny reads")
 		}
-		root := t.TempDir()
+		root := resolvedTempDir(t)
 		t.Setenv("TSUKU_CEILING_PATHS", filepath.Dir(root))
 
 		dir := writeProject(t, filepath.Join(root, "proj"), "[tools]\n")
@@ -124,7 +124,7 @@ func TestLoadProjectConfig_ParseErrorCoversEveryFileFailure(t *testing.T) {
 // A valid file is unaffected, and callers that only test for a non-nil error
 // keep working.
 func TestLoadProjectConfig_ValidFileUnaffected(t *testing.T) {
-	root := t.TempDir()
+	root := resolvedTempDir(t)
 	t.Setenv("TSUKU_CEILING_PATHS", filepath.Dir(root))
 
 	dir := writeProject(t, filepath.Join(root, "proj"), "[tools]\njq = \"1.7\"\n")

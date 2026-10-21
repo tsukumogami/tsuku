@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/project"
+	"github.com/tsukumogami/tsuku/internal/testutil"
 )
 
 // refusedLayout builds a .tsuku.toml that discovery refuses, and points the
@@ -24,10 +25,7 @@ func refusedLayout(t *testing.T) (workDir, configPath string) {
 	// Resolved, because discovery reads metadata at the resolved paths and the
 	// presented metadata below is keyed by path. On macOS t.TempDir() sits
 	// under /var, a link to /private/var, and an unresolved key never matches.
-	root, err := filepath.EvalSymlinks(t.TempDir())
-	if err != nil {
-		t.Fatal(err)
-	}
+	root := testutil.ResolvedTempDir(t)
 	// Keep the fixture out from under any resolved home, so the rule applies.
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("TSUKU_CEILING_PATHS", root)
@@ -126,10 +124,7 @@ func TestRefusalIsReportedOnceWithAReasonAndARemedy(t *testing.T) {
 func TestRefusalQuotesAHostilePath(t *testing.T) {
 	// Resolved for the same reason as refusedLayout: the override below is
 	// keyed by path, and discovery looks it up at the resolved one.
-	root, err := filepath.EvalSymlinks(t.TempDir())
-	if err != nil {
-		t.Fatal(err)
-	}
+	root := testutil.ResolvedTempDir(t)
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("TSUKU_CEILING_PATHS", root)
 

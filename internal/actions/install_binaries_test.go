@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/testutil"
 )
 
 // TestValidateBinaryPath tests path traversal security validation
@@ -65,8 +66,9 @@ func TestCreateSymlink(t *testing.T) {
 	t.Parallel()
 	action := &InstallBinariesAction{}
 
-	// Create temp directories
-	tmpDir := t.TempDir()
+	// Resolved, because the check below compares EvalSymlinks(linkFile) with
+	// targetFile, and on macOS t.TempDir() itself is under a symlink.
+	tmpDir := testutil.ResolvedTempDir(t)
 	targetDir := filepath.Join(tmpDir, "tools", "liberica-25.0.1", "bin")
 	linkDir := filepath.Join(tmpDir, "tools", ".install", "bin")
 
