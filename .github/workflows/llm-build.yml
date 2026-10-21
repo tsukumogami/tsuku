@@ -121,5 +121,7 @@ jobs:
         if: startsWith(matrix.runner, 'macos')
         run: codesign -s - tsuku-llm/target/release/tsuku-llm
 
+      # --help, not --version: the CLI defines no version flag. release.yml's
+      # validate step runs the same check on the macOS binaries.
       - name: Smoke-test binary
-        run: tsuku-llm/target/release/tsuku-llm --version
+        run: tsuku-llm/target/release/tsuku-llm --help
