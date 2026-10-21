@@ -21,7 +21,13 @@ import (
 func refusedLayout(t *testing.T) (workDir, configPath string) {
 	t.Helper()
 
-	root := t.TempDir()
+	// Resolved, because discovery reads metadata at the resolved paths and the
+	// presented metadata below is keyed by path. On macOS t.TempDir() sits
+	// under /var, a link to /private/var, and an unresolved key never matches.
+	root, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
 	// Keep the fixture out from under any resolved home, so the rule applies.
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("TSUKU_CEILING_PATHS", root)
