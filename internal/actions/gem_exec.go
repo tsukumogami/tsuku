@@ -6,6 +6,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/tsukumogami/tsuku/internal/realpath"
 )
 
 // GemExecAction implements the gem_exec primitive for deterministic Ruby gem execution.
@@ -393,8 +395,11 @@ func (a *GemExecAction) executeLockDataMode(ctx *ExecutionContext, params map[st
 
 	// Guard: wrapper scripts need a tsuku-managed ruby path for relocatability.
 	// System bundler (e.g., /usr/bin/bundle) would hardcode a non-relocatable path.
+	// The paths are compared as given, not resolved: rubyBinDir goes into the
+	// wrappers as it is, so the raw path is the one that must sit under
+	// ToolsDir. Within keeps a sibling such as tools-backup out.
 	rubyBinDir := filepath.Dir(bundlerPath)
-	if ctx.ToolsDir != "" && !strings.HasPrefix(bundlerPath, ctx.ToolsDir) {
+	if ctx.ToolsDir != "" && !realpath.Within(bundlerPath, ctx.ToolsDir) {
 		return fmt.Errorf("gem_exec lock_data mode requires tsuku-managed ruby (found system bundler at %s)", bundlerPath)
 	}
 

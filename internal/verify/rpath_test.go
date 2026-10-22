@@ -372,12 +372,13 @@ func TestExpandPathVariables_AllowedPrefixSymlinkedRoot(t *testing.T) {
 	libDir := filepath.Join(home, "tools", "myapp", "lib")
 	allowedDir := filepath.Join(home, "tools")
 	outside := filepath.Join(home, "outside")
-	for _, d := range []string{filepath.Dir(binaryPath), libDir, outside} {
+	sibling := filepath.Join(home, "tools-backup", "lib")
+	for _, d := range []string{filepath.Dir(binaryPath), libDir, outside, sibling} {
 		if err := os.MkdirAll(d, 0755); err != nil {
 			t.Fatalf("Failed to create directory: %v", err)
 		}
 	}
-	for _, f := range []string{filepath.Join(libDir, "libfoo.so"), filepath.Join(outside, "libevil.so")} {
+	for _, f := range []string{filepath.Join(libDir, "libfoo.so"), filepath.Join(outside, "libevil.so"), filepath.Join(sibling, "libfoo.so")} {
 		if err := os.WriteFile(f, []byte("dummy"), 0644); err != nil {
 			t.Fatalf("Failed to create %s: %v", f, err)
 		}
@@ -396,6 +397,7 @@ func TestExpandPathVariables_AllowedPrefixSymlinkedRoot(t *testing.T) {
 		{"missing path within allowed directory", "$ORIGIN/../lib/libmissing.so", false},
 		{"path outside allowed directory", "$ORIGIN/../../../../etc/passwd", true},
 		{"link inside allowed directory leading out", "$ORIGIN/../lib/libevil.so", true},
+		{"sibling of allowed directory", "$ORIGIN/../../../tools-backup/lib/libfoo.so", true},
 	}
 
 	for _, tt := range tests {
@@ -439,8 +441,19 @@ func TestExpandPathVariables_AllowedPrefix(t *testing.T) {
 			wantError: false,
 		},
 		{
+			name:      "allowed directory itself",
+			dep:       "$ORIGIN/../..",
+			wantError: false,
+		},
+		{
 			name:      "path outside allowed directory",
 			dep:       "$ORIGIN/../../../../etc/passwd",
+			wantError: true,
+		},
+		{
+			// A plain string prefix reads tools-backup as inside tools.
+			name:      "sibling of allowed directory",
+			dep:       "$ORIGIN/../../../tools-backup/lib/libfoo.so",
 			wantError: true,
 		},
 	}
