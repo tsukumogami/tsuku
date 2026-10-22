@@ -937,11 +937,15 @@ func buildChainEntries(ctx *ExecutionContext, extra []chainEntry, reporter progr
 // entries appear first in the emitted RPATH order; auto-included entries
 // follow.
 //
-// Path form: relative to the binary's directory (loaderDir), computed via
-// filepath.Rel after EvalSymlinks on both ends. Each computed entry is
-// post-checked: filepath.Join(loaderDir, relPath) must resolve back inside
-// ctx.LibsDir. A failed check fails the install with a clear error before
-// any install_name_tool -add_rpath invocation for that entry.
+// Path form: relative to the binary's directory (loaderDir), computed by
+// computeChainRpaths. The loader dir, ctx.LibsDir and each dep's lib dir are
+// resolved with realpath.Resolve, and filepath.Rel runs between the resolved
+// loader dir and the resolved dep lib dir. Each entry is post-checked:
+// relPath joined onto the resolved loader dir must sit inside the resolved
+// ctx.LibsDir. A failed check, or a path Resolve can't settle such as one
+// through a dangling link, fails the install with a clear error before any
+// install_name_tool -add_rpath invocation for that binary; nothing falls
+// back to the raw path.
 //
 // Order: this runs after relocatePlaceholders (which performs the
 // per-binary fixMachoRpath pass that wipes HOMEBREW rpaths via
@@ -1074,12 +1078,14 @@ func (a *HomebrewRelocateAction) addChainEntriesToMachO(
 // $TSUKU_HOME/libs/<dep>-<version>/lib. Author-declared entries appear
 // first in the resulting RPATH; auto-included entries follow.
 //
-// Path form: relative to the binary's directory (loaderDir), computed via
-// filepath.Rel after EvalSymlinks on both ends — the same machinery
-// fixDylibRpathChain uses. Each computed entry is post-checked:
-// filepath.Join(loaderDir, relPath) must resolve back inside ctx.LibsDir.
-// A failed check fails the install with a clear error before any patchelf
-// invocation for that entry.
+// Path form: relative to the binary's directory (loaderDir), computed by
+// computeChainRpathsWithPrefix with the "$ORIGIN" anchor, the same machinery
+// fixDylibRpathChain uses: the loader dir, ctx.LibsDir and each dep's lib
+// dir are resolved with realpath.Resolve, and relPath joined onto the
+// resolved loader dir must sit inside the resolved ctx.LibsDir. A failed
+// check, or a path Resolve can't settle such as one through a dangling link,
+// fails the install with a clear error before any patchelf invocation for
+// that binary.
 //
 // Patchelf primitive: --force-rpath --set-rpath '<colon-joined>' (writes
 // DT_RPATH). --add-rpath would write DT_RUNPATH instead, but DT_RUNPATH
@@ -1424,12 +1430,13 @@ func (a *HomebrewRelocateAction) isMachOBinary(path string) bool {
 // metadata.dependencies field) and adds one @loader_path-relative RPATH
 // entry per declared dep to each .dylib in the library's lib/ directory.
 //
-// Path form: relative to the dylib's directory (loaderDir), computed via
-// filepath.Rel over EvalSymlinks on both ends — same machinery as
-// fixDylibRpathChain (computeChainRpaths). Each computed entry is post-
-// checked: filepath.Join(loaderDir, relPath) must resolve back inside
-// ctx.LibsDir. A failed check fails the install with a clear error before
-// any install_name_tool -add_rpath invocation for that entry.
+// Path form: relative to the dylib's directory (loaderDir), computed by
+// computeChainRpaths, the same machinery as fixDylibRpathChain: the loader
+// dir, ctx.LibsDir and each dep's lib dir are resolved with
+// realpath.Resolve, and relPath joined onto the resolved loader dir must sit
+// inside the resolved ctx.LibsDir. A failed check, or a path Resolve can't
+// settle such as one through a dangling link, fails the install with a clear
+// error before any install_name_tool -add_rpath invocation for that dylib.
 //
 // A trailing @loader_path entry is added so the dylib resolves sibling
 // libraries shipped in the same library bottle (e.g., libevent's

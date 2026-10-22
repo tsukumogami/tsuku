@@ -1145,47 +1145,60 @@ DEPENDENCIES
 }
 
 func TestGemExecAction_LockDataMode_RejectsSystemBundler(t *testing.T) {
-	a := &GemExecAction{}
-	workDir := t.TempDir()
-
-	// Create tools dir but put bundler outside of it (simulating system bundler)
-	toolsDir := filepath.Join(workDir, "tools")
-	if err := os.MkdirAll(toolsDir, 0755); err != nil {
-		t.Fatal(err)
-	}
-	systemBinDir := filepath.Join(workDir, "usr", "bin")
-	if err := os.MkdirAll(systemBinDir, 0755); err != nil {
-		t.Fatal(err)
-	}
-	// Create mock system bundler
-	systemBundle := filepath.Join(systemBinDir, "bundle")
-	if err := os.WriteFile(systemBundle, []byte("#!/bin/sh\nexit 0\n"), 0755); err != nil {
-		t.Fatal(err)
+	tests := []struct {
+		name      string
+		bundleDir string // relative to workDir; the tools dir is workDir/tools
+	}{
+		{"system bin dir", filepath.Join("usr", "bin")},
+		// A plain string prefix reads tools-backup as inside tools.
+		{"sibling of tools dir", filepath.Join("tools-backup", "bin")},
 	}
 
-	// Override PATH so findBundler finds the system bundler
-	origPath := os.Getenv("PATH")
-	t.Setenv("PATH", systemBinDir+":"+origPath)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			a := &GemExecAction{}
+			workDir := t.TempDir()
 
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		WorkDir:    workDir,
-		InstallDir: workDir,
-		ToolsDir:   toolsDir,
-		Version:    "1.0.0",
-	}
+			// Create tools dir but put bundler outside of it
+			toolsDir := filepath.Join(workDir, "tools")
+			if err := os.MkdirAll(toolsDir, 0755); err != nil {
+				t.Fatal(err)
+			}
+			bundleDir := filepath.Join(workDir, tt.bundleDir)
+			if err := os.MkdirAll(bundleDir, 0755); err != nil {
+				t.Fatal(err)
+			}
+			// Create mock bundler
+			bundle := filepath.Join(bundleDir, "bundle")
+			if err := os.WriteFile(bundle, []byte("#!/bin/sh\nexit 0\n"), 0755); err != nil {
+				t.Fatal(err)
+			}
 
-	err := a.Execute(ctx, map[string]interface{}{
-		"gem":         "mytool",
-		"lock_data":   "GEM\n  specs:\n    mytool (1.0.0)\n",
-		"version":     "1.0.0",
-		"executables": []interface{}{"mytool"},
-	})
-	if err == nil {
-		t.Error("Execute() should fail when only system bundler is available")
-	}
-	if err != nil && !strings.Contains(err.Error(), "requires tsuku-managed ruby") {
-		t.Errorf("error should mention tsuku-managed ruby requirement, got: %v", err)
+			// Override PATH so findBundler falls through to this bundler
+			origPath := os.Getenv("PATH")
+			t.Setenv("PATH", bundleDir+":"+origPath)
+
+			ctx := &ExecutionContext{
+				Context:    context.Background(),
+				WorkDir:    workDir,
+				InstallDir: workDir,
+				ToolsDir:   toolsDir,
+				Version:    "1.0.0",
+			}
+
+			err := a.Execute(ctx, map[string]interface{}{
+				"gem":         "mytool",
+				"lock_data":   "GEM\n  specs:\n    mytool (1.0.0)\n",
+				"version":     "1.0.0",
+				"executables": []interface{}{"mytool"},
+			})
+			if err == nil {
+				t.Fatal("Execute() should fail when the only bundler is outside the tools dir")
+			}
+			if !strings.Contains(err.Error(), "requires tsuku-managed ruby") {
+				t.Errorf("error should mention tsuku-managed ruby requirement, got: %v", err)
+			}
+		})
 	}
 }
 

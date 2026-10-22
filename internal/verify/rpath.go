@@ -399,7 +399,9 @@ func ExpandPathVariables(dep, binaryPath string, rpaths []string, allowedPrefix 
 	// with symlinks resolved: expanded is resolved above when it exists, so an
 	// unresolved prefix under a $TSUKU_HOME reached through a link (macOS's
 	// /var, a linked ~/.tsuku) would refuse every path inside it. Where
-	// either can't be resolved, the comparison uses it as it is.
+	// either can't be resolved, the comparison uses it as it is. Within
+	// matches on a whole path component, so a sibling such as tools-backup
+	// doesn't count as inside tools.
 	if allowedPrefix != "" {
 		cleanAllowed := filepath.Clean(allowedPrefix)
 		if resolved, err := realpath.Resolve(cleanAllowed); err == nil {
@@ -409,7 +411,7 @@ func ExpandPathVariables(dep, binaryPath string, rpaths []string, allowedPrefix 
 		if resolved, err := realpath.Resolve(expanded); err == nil {
 			compared = resolved
 		}
-		if !strings.HasPrefix(compared, cleanAllowed) {
+		if !realpath.Within(compared, cleanAllowed) {
 			return "", &ValidationError{
 				Category: ErrPathOutsideAllowed,
 				Path:     expanded,
