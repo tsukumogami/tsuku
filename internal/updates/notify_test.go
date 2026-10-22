@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 	"time"
 
@@ -271,13 +270,6 @@ func TestDisplayNotifications_AvailableSummary(t *testing.T) {
 }
 
 func TestDisplayNotifications_AvailableSummary_SentinelDedup(t *testing.T) {
-	// A real bug, not test noise: on APFS, creating the sentinel leaves the
-	// cache directory's mtime just after the sentinel's, so the next call
-	// reads new results and prints the summary again. Remove this skip with
-	// the fix.
-	if runtime.GOOS == "darwin" {
-		t.Skip("the summary prints twice on macOS: tsukumogami/tsuku#2768")
-	}
 	dir := t.TempDir()
 	cacheDir := filepath.Join(dir, "cache", "updates")
 	if err := os.MkdirAll(cacheDir, 0755); err != nil {
@@ -314,6 +306,173 @@ func TestDisplayNotifications_AvailableSummary_SentinelDedup(t *testing.T) {
 	})
 	if bytes.Contains(output2, []byte("update available")) {
 		t.Errorf("second call should be deduped, got %q", output2)
+	}
+}
+
+// A check result written after the summary was shown must make it show again.
+// Timestamps are set explicitly: Linux file mtimes come from a coarse clock, so
+// a result written right after the sentinel can carry the same mtime.
+func TestDisplayNotifications_AvailableSummary_NewResultReshows(t *testing.T) {
+	dir := t.TempDir()
+	cacheDir := filepath.Join(dir, "cache", "updates")
+	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	writeResult := func(tool string) {
+		t.Helper()
+		entry := &UpdateCheckEntry{
+			Tool:            tool,
+			ActiveVersion:   "1.0.0",
+			LatestWithinPin: "1.1.0",
+			CheckedAt:       time.Now(),
+			ExpiresAt:       time.Now().Add(24 * time.Hour),
+		}
+		if err := WriteEntry(cacheDir, entry); err != nil {
+			t.Fatal(err)
+		}
+	}
+	setMtime := func(path string, mtime time.Time) {
+		t.Helper()
+		if err := os.Chtimes(path, mtime, mtime); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	writeResult("node")
+
+	cfg := &config.Config{HomeDir: dir}
+	f := false
+	userCfg := userconfig.DefaultConfig()
+	userCfg.Updates.AutoApply = &f
+	clearSuppressEnv(t)
+	mockTTY(t, true)
+	display := func() []byte {
+		return captureStderr(t, func() {
+			DisplayNotifications(cfg, userCfg, false, nil)
+		})
+	}
+
+	if out := display(); !bytes.Contains(out, []byte("1 update available")) {
+		t.Fatalf("first call should show summary, got %q", out)
+	}
+	if out := display(); bytes.Contains(out, []byte("update available")) {
+		t.Fatalf("second call should be deduped, got %q", out)
+	}
+
+	// The summary was shown an hour ago; a new check cycle then writes a result.
+	base := time.Now().Add(-time.Hour)
+	setMtime(filepath.Join(cacheDir, "node.json"), base.Add(-time.Minute))
+	setMtime(filepath.Join(cacheDir, NotifiedSentinel), base)
+	if out := display(); bytes.Contains(out, []byte("update available")) {
+		t.Fatalf("call before the new result should be deduped, got %q", out)
+	}
+
+	writeResult("ripgrep")
+	setMtime(filepath.Join(cacheDir, "ripgrep.json"), base.Add(time.Minute))
+	if out := display(); !bytes.Contains(out, []byte("2 updates available")) {
+		t.Errorf("a new result should show the summary again, got %q", out)
+	}
+	if out := display(); bytes.Contains(out, []byte("update available")) {
+		t.Errorf("call after the re-shown summary should be deduped, got %q", out)
+	}
+}
+
+func TestIsSentinelStale(t *testing.T) {
+	base := time.Now().Add(-time.Hour)
+	before := base.Add(-time.Minute)
+	after := base.Add(time.Minute)
+
+	tests := []struct {
+		name          string
+		noSentinel    bool
+		noCacheDir    bool
+		files         map[string]time.Time // name -> mtime, written in the cache dir
+		cacheDirMtime *time.Time           // cache dir mtime, set after the files
+		want          bool
+	}{
+		{
+			name:       "missing sentinel",
+			noSentinel: true,
+			files:      map[string]time.Time{"node.json": before},
+			want:       true,
+		},
+		{
+			name:  "result older than sentinel",
+			files: map[string]time.Time{"node.json": before},
+			want:  false,
+		},
+		{
+			name:  "result newer than sentinel",
+			files: map[string]time.Time{"node.json": before, "jq.json": after},
+			want:  true,
+		},
+		{
+			// The APFS case from #2768: creating the sentinel leaves the
+			// directory's mtime just after the sentinel's.
+			name:          "cache dir newer than sentinel, results older",
+			files:         map[string]time.Time{"node.json": before},
+			cacheDirMtime: &after,
+			want:          false,
+		},
+		{
+			name: "only non-result files newer than sentinel",
+			files: map[string]time.Time{
+				"node.json":          before,
+				OOCFilePrefix + "jq": after,
+				LockFile:             after,
+				SentinelFile:         after,
+				"jq.json.tmp":        after,
+			},
+			want: false,
+		},
+		{
+			name:       "missing cache dir",
+			noCacheDir: true,
+			want:       false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := t.TempDir()
+			cacheDir := filepath.Join(dir, "updates")
+			// The sentinel lives outside the cache dir in the missing-dir case,
+			// so it can still exist.
+			sentinelPath := filepath.Join(dir, NotifiedSentinel)
+			if !tt.noCacheDir {
+				if err := os.MkdirAll(cacheDir, 0755); err != nil {
+					t.Fatal(err)
+				}
+				sentinelPath = filepath.Join(cacheDir, NotifiedSentinel)
+			}
+			if !tt.noSentinel {
+				if err := os.WriteFile(sentinelPath, nil, 0644); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.Chtimes(sentinelPath, base, base); err != nil {
+					t.Fatal(err)
+				}
+			}
+			for name, mtime := range tt.files {
+				path := filepath.Join(cacheDir, name)
+				if err := os.WriteFile(path, []byte("{}"), 0644); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.Chtimes(path, mtime, mtime); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if tt.cacheDirMtime != nil {
+				if err := os.Chtimes(cacheDir, *tt.cacheDirMtime, *tt.cacheDirMtime); err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			if got := isSentinelStale(cacheDir, sentinelPath); got != tt.want {
+				t.Errorf("isSentinelStale() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
 
