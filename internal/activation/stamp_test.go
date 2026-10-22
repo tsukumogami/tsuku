@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/project"
+	"github.com/tsukumogami/tsuku/internal/testutil"
 )
 
 func stampConfig(t *testing.T) *config.Config {
@@ -120,6 +122,115 @@ func TestComputeActivation_NoStateStillShortCircuits(t *testing.T) {
 	}
 	if second != nil {
 		t.Errorf("a machine with no state should short-circuit on the second prompt, got %+v", second)
+	}
+}
+
+// linkTo returns a fresh symlink to dir, the path a shell holds when it reached
+// dir through a link. It is made here rather than relying on t.TempDir, which
+// sits under a link only on some hosts (macOS's /var), so the cases below run
+// on every platform.
+func linkTo(t *testing.T, dir string) string {
+	t.Helper()
+	link := filepath.Join(testutil.ResolvedTempDir(t), "link")
+	if err := os.Symlink(dir, link); err != nil {
+		t.Fatal(err)
+	}
+	return link
+}
+
+// A shell standing at a project root through a symlink short-circuits on the
+// second prompt. Its cwd is the logical path and the recorded directory is
+// the one discovery resolved, so a plain string comparison never matches and
+// every prompt re-ran discovery.
+func TestComputeActivation_SymlinkedCwdShortCircuits(t *testing.T) {
+	projectDir, cfg, installed := setupProject(t, "[tools]\njq = \"latest\"\n", nil)
+	t.Setenv("PATH", "/usr/bin")
+	t.Setenv("HOME", filepath.Dir(projectDir))
+	cwd := linkTo(t, projectDir)
+
+	first, err := ComputeActivation(cwd, "", "", "", cfg, installed)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if first == nil {
+		t.Fatal("expected a result on first entry")
+	}
+	// The premise: what the shell records differs from the cwd it holds.
+	if first.Dir != projectDir || first.Dir == cwd {
+		t.Fatalf("Dir = %q, want the resolved %q rather than the link %q", first.Dir, projectDir, cwd)
+	}
+
+	second, err := ComputeActivation(cwd, first.PrevPath, first.Dir, first.Stamp, cfg, installed)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if second != nil {
+		t.Errorf("a symlinked cwd at the project root should short-circuit on the second prompt, got %+v", second)
+	}
+}
+
+// The early exit resolves cwd only when the plain comparison misses, and
+// through the resolver discovery itself used. When cwd already equals the
+// recorded directory, which is every prompt with no link in the path, it
+// touches nothing on disk beyond the stamp's stat.
+func TestComputeActivation_ShortCircuitResolvesOnlyOnAMiss(t *testing.T) {
+	projectDir, cfg, installed := setupProject(t, "[tools]\njq = \"latest\"\n", nil)
+	t.Setenv("PATH", "/usr/bin")
+	t.Setenv("HOME", filepath.Dir(projectDir))
+	cwd := linkTo(t, projectDir)
+
+	first, err := ComputeActivation(projectDir, "", "", "", cfg, installed)
+	if err != nil || first == nil {
+		t.Fatalf("first entry: result %+v, error %v", first, err)
+	}
+
+	calls := 0
+	env := project.OSDiscoveryEnv()
+	env.EvalSymlinks = func(path string) (string, error) {
+		calls++
+		return filepath.EvalSymlinks(path)
+	}
+
+	got, err := ComputeActivationIn(env, projectDir, first.PrevPath, first.Dir, first.Stamp, cfg, installed)
+	if err != nil || got != nil {
+		t.Fatalf("equal cwd: want a short-circuit, got result %+v, error %v", got, err)
+	}
+	if calls != 0 {
+		t.Errorf("equal cwd resolved symlinks %d times, want 0", calls)
+	}
+
+	got, err = ComputeActivationIn(env, cwd, first.PrevPath, first.Dir, first.Stamp, cfg, installed)
+	if err != nil || got != nil {
+		t.Fatalf("symlinked cwd: want a short-circuit, got result %+v, error %v", got, err)
+	}
+	if calls != 1 {
+		t.Errorf("symlinked cwd resolved symlinks %d times, want 1", calls)
+	}
+}
+
+// tsuku shell defeats the early exit by passing an empty curDir. A cwd that
+// would now resolve to the recorded directory must not change that: the
+// empty curDir has to win before anything is resolved.
+func TestComputeActivation_EmptyCurDirDefeatsSymlinkedShortCircuit(t *testing.T) {
+	projectDir, cfg, installed := setupProject(t, "[tools]\njq = \"latest\"\n", nil)
+	t.Setenv("PATH", "/usr/bin")
+	t.Setenv("HOME", filepath.Dir(projectDir))
+	cwd := linkTo(t, projectDir)
+
+	first, err := ComputeActivation(cwd, "", "", "", cfg, installed)
+	if err != nil || first == nil {
+		t.Fatalf("first entry: result %+v, error %v", first, err)
+	}
+
+	got, err := ComputeActivation(cwd, first.PrevPath, "", first.Stamp, cfg, installed)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got == nil {
+		t.Fatal("an empty curDir must defeat the early exit, got a short-circuit")
+	}
+	if got.Dir != projectDir {
+		t.Errorf("Dir = %q, want %q", got.Dir, projectDir)
 	}
 }
 

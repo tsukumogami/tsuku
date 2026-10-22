@@ -104,7 +104,8 @@ func basePathFrom(prevPath string) string {
 // and builds a prepended PATH.
 //
 // Returns nil (no-op) when:
-//   - cwd equals curDir (directory has not changed)
+//   - cwd names curDir, once symlinks are resolved, and installation state
+//     has not moved since stamp
 //   - no .tsuku.toml is found and no prior activation exists
 //
 // Returns a deactivation result (Active=false) when no .tsuku.toml is found
@@ -144,7 +145,10 @@ func ComputeActivationIn(env project.DiscoveryEnv, cwd, prevPath, curDir, stamp 
 	// The curDir != "" conjunct must stay ahead of the stamp comparison:
 	// tsuku shell defeats this early exit by passing an empty curDir, and
 	// moving the stamp test in front would take that mechanism away.
-	if cwd != "" && curDir != "" && cwd == curDir && stamp != "" && stamp == currentStamp {
+	//
+	// The directory test comes last because it is the one that can touch the
+	// filesystem, and it does so only when the plain comparison misses.
+	if cwd != "" && curDir != "" && stamp != "" && stamp == currentStamp && namesDir(env, cwd, curDir) {
 		return nil, nil
 	}
 
@@ -296,6 +300,27 @@ func ComputeActivationIn(env project.DiscoveryEnv, cwd, prevPath, curDir, stamp 
 		Stamp:       currentStamp,
 		Entered:     result.Dir != curDir,
 	}, nil
+}
+
+// namesDir reports whether cwd is the directory dir, a project directory that
+// discovery reported.
+//
+// The two come from different spaces. cwd is os.Getwd, which returns $PWD when
+// it names the current directory, so it is the shell's logical path. dir was
+// produced by discovery after resolving its start directory through
+// env.EvalSymlinks, so it is the physical one. At a project root reached
+// through a symlink they never compare equal as strings, so cwd is resolved
+// through that same resolver before the second comparison.
+//
+// The string comparison goes first and settles the common case without a
+// syscall; this runs on every prompt. A cwd that cannot be resolved is not a
+// match: the full path then runs and reports whatever is wrong with it.
+func namesDir(env project.DiscoveryEnv, cwd, dir string) bool {
+	if cwd == dir {
+		return true
+	}
+	resolved, err := env.EvalSymlinks(cwd)
+	return err == nil && resolved == dir
 }
 
 // setVar writes one assignment that gives the shell a value and nothing else.

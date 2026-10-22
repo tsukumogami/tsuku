@@ -49,7 +49,7 @@ func setupProject(t *testing.T, tomlContent string, installedTools map[string][]
 
 	// Resolved, because discovery reports the project dir resolved and the
 	// tests compare it with this one. A shell standing in a symlinked path
-	// is #2770's case, not these tests'; its fix adds that case on its own.
+	// is covered on its own, by the tests that pass linkTo's path as cwd.
 	projectDir = testutil.ResolvedTempDir(t)
 	if err := os.WriteFile(filepath.Join(projectDir, ".tsuku.toml"), []byte(tomlContent), 0644); err != nil {
 		t.Fatal(err)
