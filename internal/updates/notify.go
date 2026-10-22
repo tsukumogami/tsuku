@@ -289,20 +289,38 @@ func renderAvailableSummary(cacheDir string) {
 	touchSentinel(sentinelPath)
 }
 
-// isSentinelStale returns true if the sentinel file is older than the cache
-// directory (meaning new check results have arrived) or doesn't exist.
+// isSentinelStale returns true if the sentinel file doesn't exist or a check
+// result was written after it (meaning new check results have arrived).
+//
+// It compares against the result files, not the cache directory's mtime: the
+// directory's mtime also moves when a dotfile is created in it, including the
+// sentinel itself and the out-of-channel throttle files. On APFS the
+// directory's mtime lands just after the new sentinel's, which made the
+// summary print twice (#2768).
 func isSentinelStale(cacheDir, sentinelPath string) bool {
 	sentinelInfo, err := os.Stat(sentinelPath)
 	if err != nil {
 		return true // sentinel doesn't exist, show summary
 	}
 
-	dirInfo, err := os.Stat(cacheDir)
+	entries, err := os.ReadDir(cacheDir)
 	if err != nil {
-		return false // can't stat cache dir, don't show
+		return false // can't read cache dir, don't show
 	}
 
-	return dirInfo.ModTime().After(sentinelInfo.ModTime())
+	for _, e := range entries {
+		if e.IsDir() || !isResultFile(e.Name()) {
+			continue
+		}
+		info, err := e.Info()
+		if err != nil {
+			continue
+		}
+		if info.ModTime().After(sentinelInfo.ModTime()) {
+			return true
+		}
+	}
+	return false
 }
 
 // touchSentinel creates or updates the sentinel file's mtime.

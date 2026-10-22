@@ -94,8 +94,7 @@ func ReadAllEntries(cacheDir string) ([]UpdateCheckEntry, error) {
 			continue
 		}
 		name := e.Name()
-		// Skip dotfiles (sentinel, lock) and non-JSON files
-		if strings.HasPrefix(name, ".") || !strings.HasSuffix(name, ".json") {
+		if !isResultFile(name) {
 			continue
 		}
 		toolName := strings.TrimSuffix(name, ".json")
@@ -106,6 +105,13 @@ func ReadAllEntries(cacheDir string) ([]UpdateCheckEntry, error) {
 		results = append(results, *entry)
 	}
 	return results, nil
+}
+
+// isResultFile reports whether a cache directory entry name is a check result
+// written by WriteEntry. Dotfiles (sentinels, locks, throttle files) and
+// non-JSON files such as WriteEntry's .tmp files are not results.
+func isResultFile(name string) bool {
+	return !strings.HasPrefix(name, ".") && strings.HasSuffix(name, ".json")
 }
 
 // WriteEntry atomically writes an update check entry to the cache directory.
