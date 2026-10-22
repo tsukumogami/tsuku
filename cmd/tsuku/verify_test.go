@@ -260,10 +260,9 @@ func TestIsSharedLibrary(t *testing.T) {
 }
 
 func TestFindLibraryFiles(t *testing.T) {
-	// Resolved, like a default $TSUKU_HOME. findLibraryFiles drops every file
-	// when a parent directory is a symlink (t.TempDir() on macOS), which is
-	// #2769; this test covers the versioned-symlink dedup. The fix for #2769
-	// adds the symlinked-root case as its own test.
+	// Resolved, like a default $TSUKU_HOME; this test covers the
+	// versioned-symlink dedup. TestFindLibraryFiles_SymlinkedRoot covers a
+	// home reached through a link.
 	tmpDir := testutil.ResolvedTempDir(t)
 
 	// Create lib/ subdirectory (common library layout)
@@ -341,6 +340,43 @@ func TestFindLibraryFiles(t *testing.T) {
 	}
 	if foundMap["foo.h"] {
 		t.Error("should not have found foo.h")
+	}
+}
+
+// TestFindLibraryFiles_SymlinkedRoot is #2769. With a link anywhere above the
+// scanned directory ($TSUKU_HOME itself a link, or macOS's /var), each real
+// file's resolved path differs from its walked path, and a check comparing the
+// two dropped every file, so verification passed having examined nothing.
+func TestFindLibraryFiles_SymlinkedRoot(t *testing.T) {
+	home, _ := testutil.SymlinkedTempDir(t)
+	// A library's own directory, as cfg.LibDir builds it: a real directory
+	// below the linked home.
+	libDir := filepath.Join(home, "libs", "foo-1.0")
+	sub := filepath.Join(libDir, "lib")
+	if err := os.MkdirAll(sub, 0755); err != nil {
+		t.Fatalf("failed to create lib dir: %v", err)
+	}
+	for _, name := range []string{"libfoo.so.1.2.3", "libfoo.so", "foo.h"} {
+		if err := os.WriteFile(filepath.Join(sub, name), []byte("dummy"), 0644); err != nil {
+			t.Fatalf("failed to create %s: %v", name, err)
+		}
+	}
+	for _, link := range []string{"libfoo.so.1.2", "libfoo.so.1"} {
+		if err := os.Symlink("libfoo.so.1.2.3", filepath.Join(sub, link)); err != nil {
+			t.Fatalf("failed to create symlink %s: %v", link, err)
+		}
+	}
+
+	found, err := findLibraryFiles(libDir)
+	if err != nil {
+		t.Fatalf("findLibraryFiles failed: %v", err)
+	}
+
+	// The walked paths come back, not resolved ones, so they stay under the
+	// libDir the caller reports against.
+	want := []string{filepath.Join(sub, "libfoo.so"), filepath.Join(sub, "libfoo.so.1.2.3")}
+	if !reflect.DeepEqual(found, want) {
+		t.Errorf("findLibraryFiles(%q) = %v, want %v", libDir, found, want)
 	}
 }
 

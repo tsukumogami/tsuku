@@ -1012,7 +1012,14 @@ func parseJSONOutput(output string, results *[]verify.DlopenResult) error {
 }
 
 // findLibraryFiles walks a directory and returns paths to shared library files.
-// It identifies shared libraries by extension (.so, .dylib) and follows symlinks.
+// It identifies shared libraries by extension (.so, .dylib) and skips symlinks,
+// so a versioned link such as libfoo.so.1 -> libfoo.so.1.2.3 doesn't validate
+// the same file twice. The returned paths are the walked ones, under dir.
+//
+// The check reads each entry's own type rather than comparing its resolved
+// path with its walked one: those differ for every file when a directory above
+// dir is a link ($TSUKU_HOME itself, or macOS's /var), which once dropped every
+// file and let verification pass having examined nothing.
 func findLibraryFiles(dir string) ([]string, error) {
 	var files []string
 
@@ -1026,19 +1033,15 @@ func findLibraryFiles(dir string) ([]string, error) {
 			return nil
 		}
 
-		// Check for shared library extensions
-		name := d.Name()
-		if isSharedLibrary(name) {
-			// Resolve symlinks to avoid validating the same file twice
-			realPath, err := filepath.EvalSymlinks(path)
-			if err != nil {
-				return nil // Skip broken symlinks
-			}
+		// Skip symlinks: versioned links to a real file, broken links, and
+		// links leading out of dir. WalkDir reports the entry's own type, from
+		// lstat, and never descends into a linked directory.
+		if d.Type()&os.ModeSymlink != 0 {
+			return nil
+		}
 
-			// Only add if it's the real file (not a symlink)
-			if realPath == path {
-				files = append(files, path)
-			}
+		if isSharedLibrary(d.Name()) {
+			files = append(files, path)
 		}
 
 		return nil

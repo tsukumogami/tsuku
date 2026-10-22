@@ -13,6 +13,7 @@ import (
 	"sync"
 
 	"github.com/tsukumogami/tsuku/internal/progress"
+	"github.com/tsukumogami/tsuku/internal/realpath"
 	"github.com/tsukumogami/tsuku/internal/version"
 )
 
@@ -1300,9 +1301,9 @@ func (a *HomebrewRelocateAction) isELFBinary(path string) bool {
 // Rebasing strips ctx.WorkDir from the front of binaryPath (preserving
 // any sub-directory like "bin/" or "lib/") and joins the remainder onto
 // installPath, then takes the directory of the result. The rebased
-// directory does not need to exist on disk yet — computeChainRpaths uses
-// EvalSymlinks only on the LibsDir side (which does exist by the time
-// the chain runs) and falls back to the raw path for the loader side.
+// directory does not need to exist on disk yet — computeChainRpaths
+// resolves it with realpath.Resolve, which resolves the part that exists
+// and appends the rest.
 //
 // If binaryPath is not under ctx.WorkDir (defensive: should not happen in
 // production because the chain walk lists binaries from inside WorkDir),
@@ -1323,11 +1324,11 @@ func futureLoaderDir(workDir, installPath, binaryPath string) string {
 // install_name_tool / patchelf.
 //
 // For each entry, it computes a relative path from loaderDir to
-// $LibsDir/<name>-<version>/lib via filepath.Rel over EvalSymlinks on both
-// ends, then verifies filepath.Join(loaderDir, relPath) resolves back
-// inside libsDir. If any entry escapes libsDir, the function returns an
-// error (and emits no RPATHs) so the caller can fail the install before
-// patching anything.
+// $LibsDir/<name>-<version>/lib via filepath.Rel with symlinks resolved on
+// both ends, then verifies the dep's lib dir, resolved, is inside libsDir,
+// resolved. If any entry escapes libsDir, the function returns an error
+// (and emits no RPATHs) so the caller can fail the install before patching
+// anything.
 //
 // labelForError is the file-name used in the error message ("which binary
 // did the bad entry come from?"); pass filepath.Base(binaryPath).
@@ -1340,41 +1341,37 @@ func computeChainRpaths(loaderDir, libsDir string, entries []chainEntry, labelFo
 
 // computeChainRpathsWithPrefix is the platform-parameterized form of
 // computeChainRpaths. macOS calls in via the default-prefix wrapper above
-// ("@loader_path"); Linux passes "$ORIGIN" so the same Rel-over-EvalSymlinks
+// ("@loader_path"); Linux passes "$ORIGIN" so the same resolved-path
 // machinery and the same defense-in-depth post-check apply on both
 // platforms. The prefix is purely cosmetic — patchelf and install_name_tool
 // each have their own anchor token, but the relative path attached to the
 // anchor is computed identically.
+//
+// Every path is compared with symlinks resolved, through realpath.Resolve.
+// The loader dir is the future install location, which doesn't exist at
+// relocate time, and a dep may not be installed yet either; Resolve handles
+// both by resolving the part that exists. Resolving only what EvalSymlinks
+// could reach put the two sides in different spaces whenever $TSUKU_HOME
+// sat under a link (macOS's /var, or a linked ~/.tsuku), and every entry
+// then read as escaping libs/. A path Resolve can't settle, such as one
+// through a dangling link, fails the install rather than falling back to
+// the raw path.
 func computeChainRpathsWithPrefix(loaderDir, libsDir string, entries []chainEntry, labelForError, anchorPrefix string) ([]string, error) {
-	loaderDirReal, err := filepath.EvalSymlinks(loaderDir)
+	loaderDirReal, err := realpath.Resolve(loaderDir)
 	if err != nil {
-		// EvalSymlinks fails if a path component doesn't exist; for the
-		// loader dir (which contains the binary) this should not happen
-		// in production, but in tests with synthetic dirs it's harmless
-		// to fall back to the raw path.
-		loaderDirReal = loaderDir
+		return nil, fmt.Errorf("rpath chain for %s: %w", labelForError, err)
 	}
-
-	// libsDirClean is the post-check anchor: filepath.Join(loaderDir,
-	// relPath) must resolve back inside libsDir. We compare in the
-	// unresolved-path space (matching how the runtime linker will resolve
-	// @loader_path relative to the binary's actual on-disk location)
-	// rather than the EvalSymlinks-resolved space. Rel-over-EvalSymlinks
-	// is what defends against symlink trickery in the underlying paths;
-	// this post-check defends against filepath.Clean collapsing an
-	// attacker-controlled name segment upward and out of the libs root.
-	libsDirClean := filepath.Clean(libsDir)
-	libsDirPrefix := libsDirClean + string(os.PathSeparator)
+	libsDirReal, err := realpath.Resolve(libsDir)
+	if err != nil {
+		return nil, fmt.Errorf("rpath chain for %s: %w", labelForError, err)
+	}
 
 	rpaths := make([]string, 0, len(entries))
 	for _, e := range entries {
 		depLibDir := filepath.Join(libsDir, fmt.Sprintf("%s-%s", e.name, e.version), "lib")
-		depLibDirReal, err := filepath.EvalSymlinks(depLibDir)
+		depLibDirReal, err := realpath.Resolve(depLibDir)
 		if err != nil {
-			// The dep may not yet be installed at relocate time on the
-			// host; fall back to the constructed path. The post-check
-			// below still verifies the join stays inside libs/.
-			depLibDirReal = depLibDir
+			return nil, fmt.Errorf("rpath chain entry %q for %s: %w", e.name, labelForError, err)
 		}
 
 		relPath, err := filepath.Rel(loaderDirReal, depLibDirReal)
@@ -1383,13 +1380,14 @@ func computeChainRpathsWithPrefix(loaderDir, libsDir string, entries []chainEntr
 				loaderDirReal, depLibDirReal, err)
 		}
 
-		// Defense-in-depth: filepath.Join(loaderDir, relPath) must resolve
-		// back inside libsDir. A failed check rejects the entry before
-		// any install_name_tool / patchelf invocation.
-		resolvedBack := filepath.Clean(filepath.Join(loaderDir, relPath))
-		if !strings.HasPrefix(resolvedBack+string(os.PathSeparator), libsDirPrefix) && resolvedBack != libsDirClean {
+		// Defense-in-depth: the relative path, followed from the loader dir,
+		// must land inside libsDir. This refuses a dep name that climbs out
+		// of libs/ ("../etc") and a dep dir that is a link leading out of
+		// it, before any install_name_tool / patchelf invocation.
+		resolvedBack := filepath.Join(loaderDirReal, relPath)
+		if !realpath.Within(resolvedBack, libsDirReal) {
 			return nil, fmt.Errorf("rpath chain entry %q for %s escapes libs dir: resolved path %q is not inside %q",
-				e.name, labelForError, resolvedBack, libsDirClean)
+				e.name, labelForError, resolvedBack, libsDirReal)
 		}
 
 		rpaths = append(rpaths, anchorPrefix+"/"+filepath.ToSlash(relPath))

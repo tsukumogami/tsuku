@@ -35,6 +35,27 @@ func ResolvedTempDir(t *testing.T) string {
 	return dir
 }
 
+// SymlinkedTempDir returns an empty directory reached through a symlink, and
+// the resolved path that link leads to.
+//
+// It stands for a $TSUKU_HOME that is itself a link, ~/.tsuku pointing at
+// another volume, say. Unlike t.TempDir(), which sits under a link only on
+// some hosts (macOS's /var), the returned path has one on every platform, so
+// a test of the symlinked case runs everywhere.
+func SymlinkedTempDir(t *testing.T) (link, resolved string) {
+	t.Helper()
+	base := ResolvedTempDir(t)
+	resolved = filepath.Join(base, "real")
+	if err := os.Mkdir(resolved, 0755); err != nil {
+		t.Fatalf("creating link target: %v", err)
+	}
+	link = filepath.Join(base, "link")
+	if err := os.Symlink(resolved, link); err != nil {
+		t.Fatalf("creating symlink: %v", err)
+	}
+	return link, resolved
+}
+
 // NewTestConfig creates a config with temporary directories for testing
 func NewTestConfig(t *testing.T) (*config.Config, func()) {
 	t.Helper()
