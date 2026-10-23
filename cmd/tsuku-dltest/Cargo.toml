@@ -1,6 +1,6 @@
 [package]
 name = "tsuku-dltest"
-version = "0.15.5"
+version = "0.15.6-dev"
 edition = "2021"
 description = "dlopen verification helper for tsuku"
 license = "MIT"
