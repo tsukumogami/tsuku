@@ -122,8 +122,6 @@ workflow (`release-prepare.yml`). Don't push a version tag by hand.
    and uploads them to the draft.
 3. `release-finalize.yml` publishes the draft once the build has attached its binaries.
 
-Pre-releases: versions with hyphens (e.g., `1.0.0-rc.1`) are marked as pre-releases.
-
 ## Conventions
 
 - All Go code must pass `gofmt` formatting
