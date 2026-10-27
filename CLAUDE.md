@@ -112,13 +112,15 @@ gh --version
 
 ## Release Process
 
-Releases are automated via GitHub Actions using GoReleaser:
+Releases are cut with `/shirabe:release`, which settles the version and the
+notes, writes them to a draft release, and dispatches the Prepare Release
+workflow (`release-prepare.yml`). Don't push a version tag by hand.
 
-1. Push a version tag: `git tag -a v0.1.0 -m "Release v0.1.0"`
-2. Push tag to remote: `git push origin v0.1.0`
-3. GitHub Actions builds binaries and creates the release
-
-Pre-releases: Tags with hyphens (e.g., `v1.0.0-rc.1`) are marked as pre-releases.
+1. Prepare Release stamps the version, tags it with the draft's notes, bumps
+   main to the next dev version and pushes the branch and the tag.
+2. The tag starts `release.yml`, which builds the binaries with GoReleaser
+   and uploads them to the draft.
+3. `release-finalize.yml` publishes the draft once the build has attached its binaries.
 
 ## Conventions
 
