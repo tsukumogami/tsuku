@@ -187,9 +187,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-latest
-          - os: macos-latest
+        # A draft pull request gets the Linux leg only; macOS runners are a small
+        # shared pool. ready_for_review re-runs the workflow with both legs.
+        os: ${{ fromJSON(github.event_name == 'pull_request' && github.event.pull_request.draft && '["ubuntu-latest"]' || '["ubuntu-latest", "macos-latest"]') }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -432,9 +432,17 @@ jobs:
 
       - name: Generate test matrices
         id: matrix
+        env:
+          DRAFT_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.draft }}
         run: |
           LINUX=$(jq -c '[.ci.linux[] as $id | {id: $id, tool: .tests[$id].tool, desc: .tests[$id].desc, recipe: .tests[$id].recipe}]' test-matrix.json)
-          MACOS=$(jq -c '[.ci.macos[] as $id | {id: $id, tool: .tests[$id].tool, desc: .tests[$id].desc, recipe: .tests[$id].recipe}]' test-matrix.json)
+          # A draft pull request runs no macOS integration tests; integration-macos
+          # skips on the empty list until the pull request is marked ready.
+          if [ "$DRAFT_PR" = "true" ]; then
+            MACOS='[]'
+          else
+            MACOS=$(jq -c '[.ci.macos[] as $id | {id: $id, tool: .tests[$id].tool, desc: .tests[$id].desc, recipe: .tests[$id].recipe}]' test-matrix.json)
+          fi
           echo "linux=$LINUX" >> $GITHUB_OUTPUT
           echo "macos=$MACOS" >> $GITHUB_OUTPUT
 
@@ -573,8 +581,9 @@ jobs:
   integration-macos:
     name: "macOS (darwin-arm64)"
     needs: matrix
-    # Run when code files or recipes changed (skip for docs-only changes)
-    if: ${{ needs.matrix.outputs.code == 'true' || needs.matrix.outputs.recipes == 'true' }}
+    # Run when code files or recipes changed (skip for docs-only changes), and
+    # skip on an empty list, which is what a draft pull request gets
+    if: ${{ (needs.matrix.outputs.code == 'true' || needs.matrix.outputs.recipes == 'true') && needs.matrix.outputs.macos != '[]' }}
     runs-on: macos-latest
     timeout-minutes: 60
     steps:
