@@ -306,7 +306,7 @@ mkdir -p "$A"
 cp -r "$REPO_ROOT/.github" "$A/.github"
 step_run assert-coverage "Assert every leg covered its declared set" > "$A/assert.sh" ||
   report FAIL "extract the Assert Coverage step"
-OUT=$(cd "$A" && R2_AVAILABLE=true HEALTH_STATUS=healthy GITHUB_STEP_SUMMARY="$A/summary" bash -e assert.sh 2>&1); RC=$?
+OUT=$(cd "$A" && R2_AVAILABLE=true HEALTH_STATUS=healthy VALIDATE_MACOS_PLANS=true GITHUB_STEP_SUMMARY="$A/summary" bash -e assert.sh 2>&1); RC=$?
 if [ "$RC" != 0 ] && ! grep -qF 'No such file or directory' <<< "$OUT" \
    && grep -qF 'validate-linux: no declared set' <<< "$OUT" \
    && grep -qF 'validate-darwin: no declared set' <<< "$OUT" \
@@ -316,6 +316,43 @@ if [ "$RC" != 0 ] && ! grep -qF 'No such file or directory' <<< "$OUT" \
 else
   report FAIL "with nothing downloaded, Assert Coverage still names every leg and fails on the counts" "exit $RC: $(tail -5 <<< "$OUT")"
 fi
+
+# The macOS switch (#2787). Off, the darwin shards are never scheduled, so Assert Coverage
+# must say the leg is switched off instead of failing on its eight missing receipts, and
+# must still hold the linux leg and the sample to their counts.
+OUT=$(cd "$A" && R2_AVAILABLE=true HEALTH_STATUS=healthy VALIDATE_MACOS_PLANS=false GITHUB_STEP_SUMMARY="$A/summary" bash -e assert.sh 2>&1); RC=$?
+if [ "$RC" != 0 ] && grep -qF 'validate-darwin: switched off by VALIDATE_MACOS_PLANS' <<< "$OUT" \
+   && ! grep -qF 'no receipt from validate-darwin' <<< "$OUT" \
+   && ! grep -qF 'validate-darwin: no declared set' <<< "$OUT" \
+   && grep -qF 'no receipt from validate-linux shard 7' <<< "$OUT" \
+   && grep -qF 'validate-linux: no declared set' <<< "$OUT" \
+   && grep -qF 'execute-sample: declared 26, attempted 0 -- no receipt' <<< "$OUT" \
+   && grep -qF '2 leg(s) asserted, NOT all covered' <<< "$OUT"; then
+  report PASS "with the macOS switch off, Assert Coverage names the darwin leg as switched off and still asserts the rest"
+else
+  report FAIL "with the macOS switch off, Assert Coverage names the darwin leg as switched off and still asserts the rest" "exit $RC: $(tail -5 <<< "$OUT")"
+fi
+
+# The switch reaches the macOS job only through the health check's output, since a job's if:
+# can't read env. A rename on one side would leave the shards always off or always on.
+OUT=$(python3 - "$NRV" <<'PY' 2>&1
+import sys, yaml
+wf = yaml.safe_load(open(sys.argv[1]))
+jobs = wf["jobs"]
+problems = []
+if "VALIDATE_MACOS_PLANS" not in (wf.get("env") or {}):
+    problems.append("no VALIDATE_MACOS_PLANS in the workflow env")
+if jobs["health-check"]["outputs"].get("validate_macos_plans") != "${{ env.VALIDATE_MACOS_PLANS }}":
+    problems.append("health-check does not pass VALIDATE_MACOS_PLANS on as validate_macos_plans")
+if "needs.health-check.outputs.validate_macos_plans == 'true'" not in jobs["validate-plans-macos"]["if"]:
+    problems.append("validate-plans-macos is not gated on validate_macos_plans")
+if "validate_macos_plans" in jobs["validate-plans-linux"]["if"]:
+    problems.append("validate-plans-linux is gated on the macOS switch")
+print("\n".join(problems) or "wired")
+sys.exit(1 if problems else 0)
+PY
+); RC=$?
+expect "the macOS switch gates validate-plans-macos, through the health check, and nothing else" 0 "$RC" "$OUT" "wired"
 
 # The download step, as written, over a bucket large enough to matter. The first scheduled
 # run died here on `find: write error`: the step sets pipefail for its listing, and a later
