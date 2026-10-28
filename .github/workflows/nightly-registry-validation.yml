@@ -45,6 +45,12 @@ env:
   # this prefix and the recipe -- `registry` or a letter -- does not change them (#2448).
   GOLDEN_LISTING_PREFIX: plans/
   GOLDEN_LISTING_EXCLUDE: plans/embedded/
+  # Switch for the macOS Validate Plans shards. Off while #2695 (registry golden plans in R2
+  # drifted from what the code generates) keeps every run red: the macOS shards fail on the
+  # same drift as the Linux ones and add no signal, but take eight jobs from the shared macOS
+  # runner pool each night. Set to 'true' to schedule them again. Assert Coverage follows it,
+  # asserting the darwin leg only while the shards run.
+  VALIDATE_MACOS_PLANS: 'false'
 
 jobs:
   # Check R2 availability before validation
@@ -54,6 +60,8 @@ jobs:
     outputs:
       r2_available: ${{ steps.check.outputs.r2_available }}
       health_status: ${{ steps.check.outputs.health_status }}
+      # A job's if: can't read env, so the switch reaches validate-plans-macos through here.
+      validate_macos_plans: ${{ env.VALIDATE_MACOS_PLANS }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -265,7 +273,8 @@ jobs:
   validate-plans-macos:
     name: Validate Plans (macOS) (shard ${{ matrix.shard }})
     needs: [health-check, download-golden-files]
-    if: needs.health-check.outputs.r2_available == 'true'
+    # Scheduled only while VALIDATE_MACOS_PLANS, at the top of this file, is 'true' (#2695).
+    if: needs.health-check.outputs.r2_available == 'true' && needs.health-check.outputs.validate_macos_plans == 'true'
     runs-on: macos-latest
     timeout-minutes: 90
     strategy:
@@ -651,7 +660,19 @@ jobs:
           # validated either way.
           # The joined file is created only when at least one shard delivered a receipt, so a
           # leg with none at all still reaches the assertion's "no receipt" case.
-          for leg in linux darwin; do
+          # The darwin leg is joined and asserted only while VALIDATE_MACOS_PLANS, at the top
+          # of this file, is 'true' (#2695). Off, its shards were never scheduled, so it is
+          # named as switched off rather than failed for receipts the switch kept from being
+          # written.
+          legs="linux"
+          darwin_leg=()
+          if [ "$VALIDATE_MACOS_PLANS" = "true" ]; then
+            legs="linux darwin"
+            darwin_leg=(--leg validate-darwin=coverage/coverage-declared/declared-darwin.txt:coverage/coverage-receipt-validate-darwin/receipt-validate-darwin.ndjson)
+          else
+            echo "::notice::validate-darwin: switched off by VALIDATE_MACOS_PLANS (#2695), so its shards did not run and the leg is not asserted"
+          fi
+          for leg in $legs; do
             joined="coverage/coverage-receipt-validate-$leg/receipt-validate-$leg.ndjson"
             for shard in 0 1 2 3 4 5 6 7; do
               f="coverage/coverage-receipt-validate-$leg-$shard/receipt-validate-$leg-$shard.ndjson"
@@ -669,7 +690,7 @@ jobs:
 
           python3 .github/scripts/checks/assert-coverage.py \
             --leg validate-linux=coverage/coverage-declared/declared-linux.txt:coverage/coverage-receipt-validate-linux/receipt-validate-linux.ndjson \
-            --leg validate-darwin=coverage/coverage-declared/declared-darwin.txt:coverage/coverage-receipt-validate-darwin/receipt-validate-darwin.ndjson \
+            "${darwin_leg[@]}" \
             --leg execute-sample=coverage/declared-execute-sample.txt:coverage/coverage-receipt-execute-sample/receipt-execute-sample.ndjson \
             --pass-outcomes match,excluded,no-recipe,unsupported-platform,executed \
             --fail-outcomes mismatch,eval-failed,missing-platforms,failed,no-eligible-recipe \
