@@ -1,6 +1,30 @@
 ---
 schema: design/v1
+status: Proposed
+problem: |
+  Two bash checks run on every tsuku pull request beside shirabe's engine:
+  strikethrough-all-docs.sh (every DESIGN issues table must strike a closing
+  issue) and check-issue-status.sh (every DESIGN diagram must mark a closing
+  issue's node done). The engine models issue tables only on PLAN and ROADMAP,
+  MM15 in the kept mermaid check already covers the diagram rule on changed
+  docs, and neither check has failed since 2026-04-28, so each rule has two
+  homes and one can fail a pull request over an untouched 2025 design doc.
+decision: |
+  Retire both checks in one tsuku pull request: delete their two workflows and
+  two scripts, plus the unrun issue-status.sh, its helper get-github-status.sh
+  and the IS01/IS02 reference pages, and fix the one pointer line in
+  .claude/shirabe-extensions/work-on.md. The mermaid check and its helpers stay
+  untouched. A disposition table here and the pull request body record what
+  each check caught and why nothing replaces it. No shirabe change.
+rationale: |
+  Absorbing either check with parity would give the engine a DESIGN
+  issues-table model and a whole-tree, PR-context traversal, which is the
+  cross-document rule shirabe deliberately deferred, to guard a shape new
+  planning no longer uses. The coverage lost is a nudge for four open 2025
+  issues in one doc; PLAN documents keep the rule through FC08 and FC09, and
+  changed design docs keep MM15.
 upstream: docs/prds/PRD-sr7-tsuku-bash-checks.md
+decision_provenance: inline-resolved
 ---
 
 # DESIGN: Retire the duplicate bash document checks in tsuku CI
