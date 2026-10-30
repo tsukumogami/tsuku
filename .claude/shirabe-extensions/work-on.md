@@ -131,5 +131,5 @@ six commands.
 - CI's intermediate-artifact check: a `/work-on` run still holds its staging directory when the
   gate runs, so copying it would fail runs whose correct verdict is passed. It stays a pre-merge
   check.
-- The PR-context checks (PR body, closing issues, diagram status): they read a pull request, not
-  a file a change touches.
+- The PR-context checks (PR body, and the closing-issue rule of the diagram-class check): they
+  read a pull request, not a file a change touches.
