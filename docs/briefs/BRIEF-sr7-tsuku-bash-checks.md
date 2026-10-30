@@ -2,15 +2,15 @@
 schema: brief/v1
 status: Draft
 problem: |
-  Two bash document checks still run on every tsuku pull request beside the
-  shirabe engine's validate-docs workflow. Both guard an issues-table and diagram
-  shape in old DESIGN docs that new planning no longer uses, and neither has
-  caught a real problem in six months, so CI's document rules have two homes.
+  A contributor or maintainer can't tell from tsuku CI which document rules the
+  shirabe engine owns. Two bash checks still run beside it, guarding an old
+  DESIGN-doc shape new planning no longer uses; one repeats a rule the mermaid
+  check already enforces, and neither has caught a real problem in six months.
 outcome: |
   A contributor's pull request meets document rules from one place, the engine,
-  plus the one diagram check that's knowingly deferred. A maintainer can say for
-  each of the two old checks whether the engine now carries it or why nothing
-  does, without reading bash to find out.
+  plus the one diagram check that's knowingly deferred. A maintainer can answer
+  "is this rule still enforced, and where?" for each of the two old checks in
+  one lookup, without reading bash.
 motivating_context: |
   tsuku moved its per-file document checks onto shirabe's reusable
   validate-docs.yml. Two PR-context bash checks were left behind: the corpus-wide
@@ -48,12 +48,16 @@ issue state. New planning work in tsuku lands in `docs/plans/`, which neither
 script reads. Each workflow has run roughly a thousand times with no failure
 since April.
 
-The cost isn't the runtime. It's that a contributor reading CI can't tell
-which document rules the engine owns and which live in scripts nobody
-maintains alongside it, and a maintainer who wants to change a rule has two
-places to look. A check that duplicates or outlives the engine also invites
-the next one: the rule set drifts because nothing says which home is the real
-one.
+The cost isn't the runtime. Two examples show it. First, the diagram-status
+job repeats a rule the kept mermaid check already enforces: `mermaid.sh`'s
+MM15 fails a changed design doc whose diagram doesn't mark a closing issue
+`done`, so that one rule now has two definitions in two workflows. Second,
+`docs/designs/current/DESIGN-version-verification.md` still lists #204, #205,
+#207 and #208 unstruck in its issues table. A contributor whose pull request
+finally closes one of them gets a red strikethrough job that asks them to edit
+a 2025 design doc their change never touched, and nothing in the failure says
+whether the engine knows about the rule. A maintainer who wants to change a
+document rule has two places to look and no record of which one is real.
 
 ## User Outcome
 
@@ -61,11 +65,10 @@ A contributor who opens a pull request sees document checks that come from
 the engine, plus the mermaid diagram check that's deliberately kept for now.
 Nothing else asks them to edit a design doc their change didn't touch.
 
-A maintainer who asks "where is this rule defined?" gets one answer. For each
-of the two old checks there's a record: either the engine carries the rule and
-a captured run shows it reaching the same verdict the script did, or the check
-was retired and the pull request that removed it says what it used to catch
-and why nothing replaces it.
+A maintainer who asks "is this rule still enforced, and where?" answers it in
+one lookup instead of by reading bash. For each of the two old checks the
+answer is already written down: the engine holds the rule, or the check was
+retired on purpose and the reason sits where the removal happened.
 
 ## User Journeys
 
@@ -77,20 +80,20 @@ mermaid diagram check on changed design docs. No job walks every design doc in
 the repository looking for `#N`, and nothing fails because an unrelated old
 design doc still lists the issue unstruck.
 
-### A maintainer looks for a rule's home
+### A maintainer changes a document rule
 
-A maintainer wants to know where the "closed issue must be struck through"
-rule lives. They find it either in the engine, with a parity capture beside
-it, or nowhere, with the retiring pull request explaining the decision. They
-don't have to diff a bash script against engine checks to find out whether
-the two agree.
+A maintainer wants to tighten how closed issues are marked in planning
+documents. They change it in one place, the shirabe engine, and know that no
+tsuku script will keep enforcing the old form beside it. They don't have to
+diff a bash script against engine checks to find out whether the two agree.
 
-### A future reader asks why a check vanished
+### A reviewer audits coverage after the removal
 
-Months later someone notices `validate-closing-issues.yml` is gone and wonders
-if coverage was lost. The pull request that removed it states what the check
-caught, how often, and why the engine's PLAN and ROADMAP checks or the kept
-mermaid check cover what still matters.
+A reviewer looking at the checks list on a tsuku pull request sees that "Validate
+Closing Issues in Design Docs" and "Validate Diagram Status for Closing
+Issues" no longer report and asks whether a gap opened. They follow the
+removal back and find what each check caught in its lifetime, and either the
+engine rule that replaced it or the reason nothing needs to.
 
 ## Scope Boundary
 
