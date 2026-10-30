@@ -101,7 +101,7 @@ mermaid diagram check that's kept for now.
 
 A maintainer can answer "is this rule still enforced, and where?" by reading
 one place: the disposition table in this topic's design,
-`docs/designs/current/DESIGN-sr7-tsuku-bash-checks.md` (planned). Each row names the
+`docs/designs/current/DESIGN-sr7-tsuku-bash-checks.md`. Each row names the
 check, its disposition and the reason, and points at the engine rule or the
 removing pull request.
 
