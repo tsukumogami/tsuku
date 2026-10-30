@@ -295,8 +295,11 @@ Removed, all under `.github/`:
 
 Edited: `.claude/shirabe-extensions/work-on.md`, the bullet "The PR-context
 checks (PR body, closing issues, diagram status)" becomes "The PR-context
-checks (PR body, and the closing-issue rule of the diagram-class check)",
-keeping the reason that follows.
+checks (PR body, and the diagram-class check in
+`validate-diagram-classes.yml`)", with its reason widened to say these checks
+read a pull request or GitHub issue state, not only a file a change touches.
+The verification map has no diagram command, so the whole kept check is what
+the map leaves out, not only its closing-issue rule.
 
 Unchanged, verified by an empty diff against the merge base:
 `scripts/checks/mermaid.sh`, `workflows/validate-diagram-classes.yml`,
