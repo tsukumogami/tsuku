@@ -15,7 +15,8 @@ goals: |
   old checks ends with a written disposition in this topic's design: absorbed
   into the engine with a capture showing the same verdicts, or retired with
   what it caught and why nothing replaces it.
-upstream: docs/briefs/BRIEF-sr7-tsuku-bash-checks.md
+absorbed:
+  - docs/briefs/BRIEF-sr7-tsuku-bash-checks.md
 ---
 
 # PRD: End the duplicate bash document checks in tsuku CI
@@ -23,6 +24,29 @@ upstream: docs/briefs/BRIEF-sr7-tsuku-bash-checks.md
 ## Status
 
 Accepted
+
+Absorbed [BRIEF-sr7-tsuku-bash-checks](docs/briefs/BRIEF-sr7-tsuku-bash-checks.md); carried in Absorbed Brief.
+
+## Absorbed Brief
+
+This feature's framing was written as a separate BRIEF and folded in here: the
+problem and outcome it stated are carried by the Problem Statement, Goals and
+User Stories below, and its scope boundary by the Requirements and Out of
+Scope.
+
+**Why this feature exists.** tsuku's document rules are meant to live in one
+place, the shirabe engine. Two bash checks left over from before the move still
+run beside it, guarding a DESIGN-doc shape new planning doesn't use. One
+repeats a rule the kept mermaid check already enforces, and the other can fail
+a pull request over a 2025 design doc the contributor never touched. Neither
+says whether the engine knows its rule, so a document rule has two possible
+homes and nothing records which is real.
+
+**What should be different afterwards.** A contributor meets document checks
+from the engine plus the deliberately kept mermaid check, and nothing else. A
+maintainer asking "is this rule still enforced, and where?" answers it by
+reading one place. A reviewer who sees the two jobs vanish can tell a
+deliberate retirement from lost coverage.
 
 ## Problem Statement
 
@@ -133,9 +157,9 @@ removing pull request.
   `issue-status.sh`), and `.github/scripts/docs/IS01.md` and `IS02.md`
   (referenced only by `issue-status.sh`). Each is removed when a search for
   its repository path finds no reference from a file that stays, other than
-  this topic's own BRIEF, PRD, DESIGN and PLAN; otherwise it is kept and the
+  this topic's own PRD, DESIGN and PLAN; otherwise it is kept and the
   pull request body names the file that still uses it.
-- **R7.** No tsuku file outside this topic's own BRIEF, PRD, DESIGN and PLAN, and
+- **R7.** No tsuku file outside this topic's own PRD, DESIGN and PLAN, and
   outside `docs/designs/archive/`, describes a removed check as running. Today
   that means updating `.claude/shirabe-extensions/work-on.md`, which lists
   "closing issues, diagram status" among the pull-request-context checks.
@@ -200,7 +224,7 @@ removing pull request.
       labelled as windowed counts, and the reason nothing replaces it.
 - [ ] For each file in R6, either the file is gone and `git grep -n -F
       -e checks/issue-status.sh -e get-github-status.sh -e docs/IS01.md
-      -e docs/IS02.md -- ':!docs/briefs/BRIEF-sr7-tsuku-bash-checks.md'
+      -e docs/IS02.md --
       ':!docs/prds/PRD-sr7-tsuku-bash-checks.md'
       ':!docs/designs/DESIGN-sr7-tsuku-bash-checks.md'
       ':!docs/plans/PLAN-sr7-tsuku-bash-checks.md'` returns no line naming
@@ -208,7 +232,7 @@ removing pull request.
       file that uses it.
 - [ ] `git grep -n -i -e validate-closing-issues -e validate-diagram-status
       -e "Validate Closing Issues" -e "Validate Diagram Status" --
-      ':!docs/designs/archive' ':!docs/briefs/BRIEF-sr7-tsuku-bash-checks.md'
+      ':!docs/designs/archive'
       ':!docs/prds/PRD-sr7-tsuku-bash-checks.md'
       ':!docs/designs/DESIGN-sr7-tsuku-bash-checks.md'
       ':!docs/plans/PLAN-sr7-tsuku-bash-checks.md'` returns no match, and
