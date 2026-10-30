@@ -1,6 +1,6 @@
 ---
 schema: prd/v1
-status: Draft
+status: Accepted
 problem: |
   Two bash PR-context document checks, the corpus-wide strikethrough check and
   the closing-issue diagram-status check, still run on every tsuku pull request
@@ -22,7 +22,7 @@ upstream: docs/briefs/BRIEF-sr7-tsuku-bash-checks.md
 
 ## Status
 
-Draft
+Accepted
 
 ## Problem Statement
 
