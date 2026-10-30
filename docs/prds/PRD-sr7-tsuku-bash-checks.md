@@ -120,8 +120,8 @@ removing pull request.
   and on the set of (issue, document) pairs they flag. The capture's inputs
   include at least: a closing issue struck through (pass), the same issue
   unstruck (fail), a document that doesn't list the issue (no finding), an
-  archive document listing it unstruck (ignored), an issue listed in two
-  documents, and, for the diagram check, a node marked `done` (pass) and one
+  archive document listing it unstruck (ignored), an issue listed unstruck
+  in two documents (both flagged), and, for the diagram check, a node marked `done` (pass) and one
   marked `ready` (fail).
 - **R5.** A retired check is explained in the body of the pull request that
   removes it: what it enforced, its row from the failure table above (window,
@@ -131,10 +131,10 @@ removing pull request.
   The candidates are `.github/scripts/checks/issue-status.sh` (run by no
   workflow), `.github/scripts/get-github-status.sh` (called only by
   `issue-status.sh`), and `.github/scripts/docs/IS01.md` and `IS02.md`
-  (referenced only by `issue-status.sh`). Each is removed when `git grep -n
-  <basename>` over the whole tree finds no reference from a file that stays;
-  otherwise it is kept and the pull request body names the file that still
-  uses it.
+  (referenced only by `issue-status.sh`). Each is removed when a search for
+  its repository path finds no reference from a file that stays, other than
+  this topic's own BRIEF, PRD, DESIGN and PLAN; otherwise it is kept and the
+  pull request body names the file that still uses it.
 - **R7.** No tsuku file outside this topic's own BRIEF, PRD, DESIGN and PLAN, and
   outside `docs/designs/archive/`, describes a removed check as running. Today
   that means updating `.claude/shirabe-extensions/work-on.md`, which lists
@@ -183,7 +183,14 @@ removing pull request.
       `pull_request` paths filter matches `docs/designs/`.
 - [ ] `docs/designs/DESIGN-sr7-tsuku-bash-checks.md` has a disposition table
       with exactly two rows, one per check, each with Disposition set to
-      `absorbed` or `retired` and a non-empty Reason.
+      `absorbed` or `retired`, a non-empty Reason, and a Where cell naming an
+      engine check code (absorbed) or "removing pull request" (retired).
+- [ ] For each check marked `absorbed`, the design has a section naming how
+      the engine receives the pull request's closing issues, and the capture
+      includes a case where the flagged document is not changed by the pull
+      request and both bash and engine flag it.
+- [ ] When any check is absorbed, the shirabe pull request merged before the
+      tsuku pull request that removes the script.
 - [ ] For each check marked `absorbed`, a merged shirabe pull request adds a
       capture under `crates/shirabe/tests/fixtures/absorption-golden/` covering
       every input listed in R4, and the capture's test passes with bash and
@@ -191,9 +198,14 @@ removing pull request.
 - [ ] For each check marked `retired`, the removing pull request's body names
       the check, what it enforced, the check's row of the failure table
       labelled as windowed counts, and the reason nothing replaces it.
-- [ ] For each file in R6, either the file is gone and `git grep -n
-      <basename>` returns nothing, or the file remains and the pull request
-      body names the remaining file that uses it.
+- [ ] For each file in R6, either the file is gone and `git grep -n -F
+      -e checks/issue-status.sh -e get-github-status.sh -e docs/IS01.md
+      -e docs/IS02.md -- ':!docs/briefs/BRIEF-sr7-tsuku-bash-checks.md'
+      ':!docs/prds/PRD-sr7-tsuku-bash-checks.md'
+      ':!docs/designs/DESIGN-sr7-tsuku-bash-checks.md'
+      ':!docs/plans/PLAN-sr7-tsuku-bash-checks.md'` returns no line naming
+      it, or the file remains and the pull request body names the remaining
+      file that uses it.
 - [ ] `git grep -n -i -e validate-closing-issues -e validate-diagram-status
       -e "Validate Closing Issues" -e "Validate Diagram Status" --
       ':!docs/designs/archive' ':!docs/briefs/BRIEF-sr7-tsuku-bash-checks.md'
@@ -222,8 +234,9 @@ removing pull request.
       and no shirabe pull request.
 - [ ] Every check that runs on the pull request's head commit passes,
       including `validate-docs.yml` on the documents the pull request adds.
-- [ ] Across the files the pull request adds or changes, its commit messages
-      and its body: `git grep -n 'wip/'` finds no reference; no
+- [ ] Across the files the pull request adds or changes (read with `git
+      diff`), its commit messages (`git log --format=%B`) and its body (`gh pr
+      view --json body`): no `wip/` path appears; no
       `Co-Authored-By` or "Generated with" line appears; no emoji appears; no
       `tsukumogami/` repository is named other than tsuku, shirabe, koto,
       niwa, dot-niwa and .github; and `shirabe validate` reports no banned-word
