@@ -1,6 +1,6 @@
 ---
 schema: design/v1
-status: Planned
+status: Current
 problem: |
   Two bash checks run on every tsuku pull request beside shirabe's engine:
   strikethrough-all-docs.sh (every DESIGN issues table must strike a closing
@@ -32,7 +32,7 @@ decision_provenance: inline-resolved
 
 ## Status
 
-Planned
+Current
 
 ## Context and Problem Statement
 

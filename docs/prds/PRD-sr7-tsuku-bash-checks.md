@@ -1,6 +1,6 @@
 ---
 schema: prd/v1
-status: In Progress
+status: Done
 problem: |
   Two bash PR-context document checks, the corpus-wide strikethrough check and
   the closing-issue diagram-status check, still run on every tsuku pull request
@@ -23,7 +23,7 @@ absorbed:
 
 ## Status
 
-In Progress
+Done
 
 Absorbed [BRIEF-sr7-tsuku-bash-checks](docs/briefs/BRIEF-sr7-tsuku-bash-checks.md); carried in Absorbed Brief.
 
@@ -101,7 +101,7 @@ mermaid diagram check that's kept for now.
 
 A maintainer can answer "is this rule still enforced, and where?" by reading
 one place: the disposition table in this topic's design,
-`docs/designs/DESIGN-sr7-tsuku-bash-checks.md` (planned). Each row names the
+`docs/designs/current/DESIGN-sr7-tsuku-bash-checks.md` (planned). Each row names the
 check, its disposition and the reason, and points at the engine rule or the
 removing pull request.
 
@@ -133,7 +133,7 @@ removing pull request.
 - **R2.** Each of the two checks gets exactly one disposition, absorbed or
   retired.
 - **R3.** The dispositions are recorded in a table in
-  `docs/designs/DESIGN-sr7-tsuku-bash-checks.md` with one row per check and the
+  `docs/designs/current/DESIGN-sr7-tsuku-bash-checks.md` with one row per check and the
   columns Check, Disposition (`absorbed` or `retired`), Reason, and Where (the
   engine check code for an absorbed check, or "removing pull request" for a
   retired one).
@@ -205,7 +205,7 @@ removing pull request.
       `validate-closing-issues.yml` and `validate-diagram-status.yml`, and of
       the files it lists, `validate-diagram-classes.yml` is the only one whose
       `pull_request` paths filter matches `docs/designs/`.
-- [ ] `docs/designs/DESIGN-sr7-tsuku-bash-checks.md` has a disposition table
+- [ ] `docs/designs/current/DESIGN-sr7-tsuku-bash-checks.md` has a disposition table
       with exactly two rows, one per check, each with Disposition set to
       `absorbed` or `retired`, a non-empty Reason, and a Where cell naming an
       engine check code (absorbed) or "removing pull request" (retired).
@@ -226,7 +226,7 @@ removing pull request.
       -e checks/issue-status.sh -e get-github-status.sh -e docs/IS01.md
       -e docs/IS02.md --
       ':!docs/prds/PRD-sr7-tsuku-bash-checks.md'
-      ':!docs/designs/DESIGN-sr7-tsuku-bash-checks.md'
+      ':!docs/designs/current/DESIGN-sr7-tsuku-bash-checks.md'
       ':!docs/plans/PLAN-sr7-tsuku-bash-checks.md'` returns no line naming
       it, or the file remains and the pull request body names the remaining
       file that uses it.
@@ -234,7 +234,7 @@ removing pull request.
       -e "Validate Closing Issues" -e "Validate Diagram Status" --
       ':!docs/designs/archive'
       ':!docs/prds/PRD-sr7-tsuku-bash-checks.md'
-      ':!docs/designs/DESIGN-sr7-tsuku-bash-checks.md'
+      ':!docs/designs/current/DESIGN-sr7-tsuku-bash-checks.md'
       ':!docs/plans/PLAN-sr7-tsuku-bash-checks.md'` returns no match, and
       `.claude/shirabe-extensions/work-on.md` no longer lists closing issues or
       diagram status among checks.
