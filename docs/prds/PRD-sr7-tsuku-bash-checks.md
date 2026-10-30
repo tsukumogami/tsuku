@@ -1,6 +1,6 @@
 ---
 schema: prd/v1
-status: Accepted
+status: In Progress
 problem: |
   Two bash PR-context document checks, the corpus-wide strikethrough check and
   the closing-issue diagram-status check, still run on every tsuku pull request
@@ -23,7 +23,7 @@ absorbed:
 
 ## Status
 
-Accepted
+In Progress
 
 Absorbed [BRIEF-sr7-tsuku-bash-checks](docs/briefs/BRIEF-sr7-tsuku-bash-checks.md); carried in Absorbed Brief.
 
