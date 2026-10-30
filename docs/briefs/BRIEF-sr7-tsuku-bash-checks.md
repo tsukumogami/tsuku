@@ -1,6 +1,6 @@
 ---
 schema: brief/v1
-status: Draft
+status: Accepted
 problem: |
   A contributor or maintainer can't tell from tsuku CI which document rules the
   shirabe engine owns. Two bash checks still run beside it, guarding an old
@@ -23,7 +23,7 @@ motivating_context: |
 
 ## Status
 
-Draft
+Accepted
 
 ## Problem Statement
 
