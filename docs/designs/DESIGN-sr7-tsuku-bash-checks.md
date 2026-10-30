@@ -341,6 +341,33 @@ Deliverables:
 - the eight deletions and the `work-on.md` edit
 - a pull request body with both retirement records
 
+## Security Considerations
+
+This change only removes code. It adds no workflow, script, dependency or
+permission, so it introduces no new attack surface and no new data flow.
+
+The two removed workflows ran with a read-only token (`contents`, `issues`
+and `pull-requests` read) and processed pull request text, which its author
+controls. `extract-closing-issues.sh` reduces that text to a list of integers
+before any later step uses it, so the removed workflows weren't exploitable
+through the pull request body. `validate-diagram-status.yml` did place a step
+output inside a single-quoted `run:` string, a pattern to avoid even when the
+value is numeric; deleting the workflow removes it.
+
+Removing the checks removes two status checks from each pull request. Before
+merge, the branch rules for `main` are queried to confirm neither is a
+required status check, so no merge gate changes silently. What's given up is
+a bookkeeping nudge on a few legacy design docs, not a security control.
+
+One related finding sits outside this change. The kept
+`validate-diagram-classes.yml` interpolates the list of changed file names
+(`${{ steps.changed.outputs.docs }}`) into a `run:` script, so a branch author
+with write access could in principle craft a file name that runs commands in
+that job. The job uses a read-only token under the `pull_request` trigger, so
+fork pull requests can't exploit it and the risk is low. This design keeps
+that file byte-for-byte unchanged, so the fix (passing the value through
+`env:`) belongs to separate follow-up work, not this change.
+
 ## Consequences
 
 ### Positive
