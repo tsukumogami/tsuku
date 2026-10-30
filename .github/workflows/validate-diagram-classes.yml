@@ -22,23 +22,28 @@ jobs:
 
       - name: Get changed design docs
         id: changed
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
         run: |
-          BASE="${{ github.event.pull_request.base.sha }}"
-
           # Find changed DESIGN-*.md files (not in archive)
           CHANGED=$(git diff --name-only "$BASE"...HEAD -- \
             'docs/designs/DESIGN-*.md' \
             'docs/designs/current/DESIGN-*.md' 2>/dev/null || true)
 
-          # Save for next step
-          echo "docs<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGED" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # Save for next step, under a delimiter generated for this run
+          DELIM="docs_$(openssl rand -hex 16)"
+          {
+            echo "docs<<$DELIM"
+            echo "$CHANGED"
+            echo "$DELIM"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Validate diagram classes (MM15)
         if: steps.changed.outputs.docs != ''
         env:
           GH_TOKEN: ${{ github.token }}
+          CHANGED_DOCS: ${{ steps.changed.outputs.docs }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           # Source common utilities for get_frontmatter_status
           source .github/scripts/checks/common.sh
@@ -61,11 +66,11 @@ jobs:
             fi
 
             # Run MM15 validation with PR context for closing-issue awareness
-            if ! .github/scripts/checks/mermaid.sh -q --pr "${{ github.event.pull_request.number }}" "$doc"; then
+            if ! .github/scripts/checks/mermaid.sh -q --pr "$PR_NUMBER" "$doc"; then
               echo "::error file=$doc::Diagram class validation failed (MM15)"
               FAILED=1
             fi
-          done <<< "${{ steps.changed.outputs.docs }}"
+          done <<< "$CHANGED_DOCS"
 
           if [[ $FAILED -eq 1 ]]; then
             echo "One or more design docs have incorrect diagram classes."
