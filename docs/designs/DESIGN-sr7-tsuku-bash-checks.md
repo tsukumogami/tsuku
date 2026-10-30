@@ -24,6 +24,7 @@ rationale: |
   issues in one doc; PLAN documents keep the rule through FC08 and FC09, and
   changed design docs keep MM15.
 upstream: docs/prds/PRD-sr7-tsuku-bash-checks.md
+user_visible_surface: false
 decision_provenance: inline-resolved
 ---
 
@@ -240,9 +241,10 @@ nobody runs it, and for PLAN documents FC08 and FC09 already do its job.
 
 One tsuku pull request deletes eight files: the workflows
 `validate-closing-issues.yml` and `validate-diagram-status.yml`, the scripts
-`checks/strikethrough-all-docs.sh` and `check-issue-status.sh`, the unrun
-`checks/issue-status.sh`, its helper `get-github-status.sh`, and the reference
-pages `docs/IS01.md` and `docs/IS02.md`, all under `.github/`. It edits one
+`scripts/checks/strikethrough-all-docs.sh` and `scripts/check-issue-status.sh`,
+the unrun `scripts/checks/issue-status.sh`, its helper
+`scripts/get-github-status.sh`, and the reference pages
+`scripts/docs/IS01.md` and `scripts/docs/IS02.md`, all under `.github/`. It edits one
 line in `.claude/shirabe-extensions/work-on.md`. Nothing in shirabe changes.
 The kept mermaid check, its workflow and its helpers are not touched, so
 MM15's closing-issue rule keeps running on changed design docs.
@@ -322,15 +324,26 @@ issues for MM15. No workflow walks unchanged design docs for closing issues.
 
 ### Phase 1: Remove and record (one pull request)
 
-1. Re-run the whole-tree search for each removed file's path, excluding this
-   topic's own PRD, DESIGN and PLAN, and confirm the only hits are among the
-   files being removed.
+1. Re-run the whole-tree search, excluding this topic's own PRD, DESIGN and
+   PLAN and `docs/designs/archive/`, for the patterns
+   `strikethrough-all-docs`, `check-issue-status`, `checks/issue-status.sh`,
+   `get-github-status`, `docs/IS01.md`, `docs/IS02.md`,
+   `validate-closing-issues`, `validate-diagram-status`, "Validate Closing
+   Issues" and "Validate Diagram Status", and confirm the only hits are among
+   the files being removed and the `work-on.md` bullet.
+   `.github/escalation-registry.yml` has no entry for either workflow today.
 2. Delete the eight files with `git rm`.
 3. Edit the `work-on.md` bullet.
 4. Run `.github/scripts/checks/workflow-policy_test.sh` and
    `.github/scripts/checks/ci-patterns-lint.sh`; confirm the empty diff on the
-   kept files and the ruleset check.
-5. Open the pull request. Its body states, for each check: what it enforced,
+   kept files against the merge base, and that `extract-design-issues.sh`,
+   `extract-closing-issues.sh` and `checks/common.sh` still have callers in
+   `mermaid.sh` or `validate-diagram-classes.yml`.
+5. Before merge, query both `gh api repos/tsukumogami/tsuku/rules/branches/main`
+   and `gh api repos/tsukumogami/tsuku/branches/main/protection` (a 404 means
+   unprotected; it returned 404 on 2026-10-30) and confirm no required status
+   check names either removed job.
+6. Open the pull request. Its body states, for each check: what it enforced,
    its windowed failure figures (18 failed runs across 12 pull requests since
    2026-04-13, and 21 across 5 since 2026-03-23), about 322 and 122 failed
    runs in retained history since late January 2026, the last failure on
@@ -364,9 +377,12 @@ One related finding sits outside this change. The kept
 (`${{ steps.changed.outputs.docs }}`) into a `run:` script, so a branch author
 with write access could in principle craft a file name that runs commands in
 that job. The job uses a read-only token under the `pull_request` trigger, so
-fork pull requests can't exploit it and the risk is low. This design keeps
-that file byte-for-byte unchanged, so the fix (passing the value through
-`env:`) belongs to separate follow-up work, not this change.
+fork pull requests can't exploit it and the risk is low. The same step writes
+that list to `$GITHUB_OUTPUT` with a fixed `EOF` delimiter, so a file name
+containing a newline or the delimiter could add extra step outputs. This
+design keeps that file byte-for-byte unchanged, so the fix (passing the value
+through `env:` and using a generated delimiter) belongs to separate follow-up
+work, not this change; the removing pull request names it as a follow-up.
 
 ## Consequences
 
